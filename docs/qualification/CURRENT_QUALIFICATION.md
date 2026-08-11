@@ -22,12 +22,12 @@ mvn "-Dmaven.repo.local=D:\maven-repo" -o clean verify
 | `sir-semantic` | 103 | 0 | 0 | 0 | 含 typed reference-site 契约 |
 | `sir-lowering-api` | 4 | 0 | 0 | 0 | API 契约 |
 | `sir-lowering-spring-boot` | 32 | 0 | 0 | 0 | 含 19 项 `@Nested` hardening 测试 |
-| `sir-generator-spring-boot` | 31 | 0 | 0 | 0 | 已覆盖 canonical 输出、主要 Renderer、跨进程 cwd/Locale/default Charset、LF、UTF-8 和 escaping；生成工程离线编译仍待补齐 |
+| `sir-generator-spring-boot` | 32 | 0 | 0 | 0 | 已覆盖 canonical 输出、主要 Renderer、跨环境字节确定性，并由当前 Generator 输出物化完整工程后以冻结依赖真实离线编译 |
 | `sir-project-graph` | 0 | 0 | 0 | 0 | 无直接模块测试 |
 | `sir-change` | 22 | 0 | 0 | 0 | API/架构/fixture 支撑测试，覆盖不足 |
 | `sir-toolchain-application` | 132 | 0 | 0 | 10 | 不含被 POM 排除的 conformance 包 |
 | `kcg-cli` | 5 | 0 | 0 | 0 | hardening 测试；工作流类被类级 assumption 跳过 |
-| **合计** | **372** | **0** | **0** | **10** | 默认构建无失败、无错误 |
+| **合计** | **373** | **0** | **0** | **10** | 默认构建无失败、无错误 |
 
 ## 3. 跳过与排除
 
@@ -65,6 +65,7 @@ io/kcg/sir/application/conformance/**
 | 资格项 | 当前状态 | 原因 |
 |---|---|---|
 | 默认离线 Reactor | PASS | 标准命令实际运行成功 |
+| 完整生成工程离线编译 | PASS | `campus-market.sir` 的当前 Generator 输出在临时目录以 Java 21、Maven `--offline` 和 `D:\maven-repo` 完成 `compile`，代表性 class 文件存在 |
 | Windows 路径与 junction 定向测试 | PASS/PARTIAL | 当前测试通过；第二卷挂载点未验证 |
 | 外部 MySQL conformance | NOT_RUN / BLOCKED | conformance 包被 POM 排除且当前源码闭包不完整 |
 | 完整 CLI 本地生命周期 | NOT_RUN | 四个写命令未发布，fixtures 和外部资格也未闭合 |
@@ -75,7 +76,7 @@ io/kcg/sir/application/conformance/**
 ## 6. 主要残余风险
 
 1. conformance 包没有参加测试编译和运行。
-2. Generator 已有 31 项直接测试；canonical 输出、主要 Renderer 和跨环境字节确定性契约已冻结，但完整生成工程的冻结依赖离线编译仍未完成。
+2. Generator 已有 32 项直接测试并通过完整生成工程离线编译；“生产模块只能消费 Lowered IR 且不访问磁盘”的边界仍需要在 Q1 总验收中核对是否有足够的可执行约束。
 3. Project Graph 没有直接模块测试。
 4. Change fixtures 缺失造成 Application 和 CLI 测试跳过。
 5. UPDATE/CREATE/DELETE 的完整跨阶段故障注入矩阵尚未形成。

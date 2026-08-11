@@ -10,7 +10,7 @@
 | Parser | 43 | 核心语法、AST、诊断和确定性有直接覆盖 | 维护 |
 | Semantic | 103 | Resolve/Type/Validate/Normalize 与 typed reference-site 有系统覆盖 | 维护 |
 | Lowering API + Spring | 36 | API、Profile、边界、确定性和 hardening 有直接覆盖 | 维护 |
-| Generator | 31 | 已有 canonical 输出、主要 Renderer 和跨环境字节确定性直接契约；生成工程离线编译仍不足 | P0 |
+| Generator | 32 | canonical 输出、主要 Renderer、跨环境字节确定性和完整生成工程离线编译均有直接契约 | Q1 总验收 |
 | Project Graph | 0 | 只有 Application 间接经过，缺直接契约测试 | P0 |
 | Change | 22 | 有 API 与架构测试，操作族/closure/失败矩阵不足 | P1 |
 | Application | 132 + 10 skip | 核心路径部分覆盖，conformance 整包排除 | P0 |
@@ -68,10 +68,17 @@ Q1C 已建立的直接证据：
 - 首轮 4 项测试中，独立 JVM 矩阵、LF/UTF-8 和 XML escaping 通过；Java escaping 因 U+0001 被原样写入源码而得到 1 个有效 failure。
 - `StringEscape` 现在把未专门处理的 ISO control character 渲染为固定小写四位 Unicode escape；定向和完整 Generator reactor 随后全部通过。
 
+Q1D 已建立的直接证据：
+
+- `GeneratedProjectOfflineCompilationTest` 直接使用 `GeneratorTestSupport.generateSuccess("valid/campus-market.sir")` 的 11 个当前输出文件，在 JUnit 临时目录按相对路径和显式 UTF-8 物化，并逐文件读回比对。
+- 独立 Maven 子进程以生成工程自己的 `pom.xml`、Java 21、`--offline`、显式 `D:\maven-repo` 和 `-DskipTests compile` 运行；没有下载依赖、启动 Spring Boot 或连接数据库。
+- 子进程退出码为 0；Application、Entity、DTO、Mapper、Service 和 Controller 的代表性 `.class` 文件均真实存在。
+- 首次真正到达生成工程编译即通过，未触发任何生产 Renderer、POM、Lowered IR 或依赖版本修改。
+- 全量离线 Reactor 中 Generator 为 32 run、0 failure、0 error、0 skip；全工程为 373 run、0 failure、0 error、10 skip。
+
 仍必须新增的行为矩阵：
 
 - Generator 只消费 Lowered IR，不访问 AST、SIR、SymbolTable 或磁盘。
-- 至少一个完整生成工程在冻结依赖下离线编译。
 
 ## 3. Project Graph 缺口
 
