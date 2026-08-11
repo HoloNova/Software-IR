@@ -3,6 +3,7 @@ package io.kcg.sir.semantic;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -537,7 +538,7 @@ class RectificationRegressionTest {
     }
 
     @Test
-    void r22_negativeMinAndMaxAreNumericConstants() {
+    void r22_negativeMinAndMaxAreNumericConstantsAndSurviveNormalization() {
         String source = sir("""
                 entity User persistent {
                   identity id: Int64 generated auto;
@@ -547,6 +548,27 @@ class RectificationRegressionTest {
 
         SemanticAnalysis result = TestSources.analyze(source);
         assertTrue(result.isSuccess(), () -> "Expected success: " + result.diagnostics());
+
+        NormalizedEntity entity = result.model().orElseThrow().declarations().stream()
+                .filter(NormalizedEntity.class::isInstance)
+                .map(NormalizedEntity.class::cast)
+                .findFirst()
+                .orElseThrow();
+        var constraints = entity.fields().getFirst().constraints();
+        assertEquals(List.of("min", "max"), constraints.stream().map(c -> c.name()).toList());
+        assertEquals(List.of(1, 1), constraints.stream().map(c -> c.arguments().size()).toList(),
+                "negative numeric arguments must not disappear during normalization");
+
+        var min = assertInstanceOf(NormalizedExpression.UnaryExpression.class,
+                constraints.getFirst().arguments().getFirst());
+        var max = assertInstanceOf(NormalizedExpression.UnaryExpression.class,
+                constraints.getLast().arguments().getFirst());
+        assertEquals("NEGATE", min.operator().name());
+        assertEquals("NEGATE", max.operator().name());
+        assertEquals("2", assertInstanceOf(NormalizedExpression.IntegerLiteral.class, min.operand())
+                .value().toString());
+        assertEquals("1", assertInstanceOf(NormalizedExpression.IntegerLiteral.class, max.operand())
+                .value().toString());
     }
 
     @Test

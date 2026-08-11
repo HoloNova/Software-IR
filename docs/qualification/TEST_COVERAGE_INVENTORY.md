@@ -10,7 +10,7 @@
 | Parser | 43 | 核心语法、AST、诊断和确定性有直接覆盖 | 维护 |
 | Semantic | 103 | Resolve/Type/Validate/Normalize 与 typed reference-site 有系统覆盖 | 维护 |
 | Lowering API + Spring | 36 | API、Profile、边界、确定性和 hardening 有直接覆盖 | 维护 |
-| Generator | 14 | 已有 canonical 输出及五类简单 Renderer 直接契约；复杂 Renderer、环境确定性与离线编译仍不足 | P0 |
+| Generator | 19 | 已有 canonical 输出、五类简单 Artifact 及 Entity/DTO 直接契约；复杂 Renderer、环境确定性与离线编译仍不足 | P0 |
 | Project Graph | 0 | 只有 Application 间接经过，缺直接契约测试 | P0 |
 | Change | 22 | 有 API 与架构测试，操作族/closure/失败矩阵不足 | P1 |
 | Application | 132 + 10 skip | 核心路径部分覆盖，conformance 整包排除 | P0 |
@@ -34,9 +34,18 @@ Q1B1 已建立的直接证据：
 - Exception 直接验证 Lowered `*Exception` 名、`BAD_REQUEST`、`RuntimeException` 和无参 `super()` 构造外形。
 - 五类测试首次真正执行即通过，未触发生产 Renderer 修改。
 
+Q1B2 已建立的直接证据：
+
+- Entity 直接验证 package、类名、表名、字段和访问器顺序，以及 AUTO/UUID identity 对应的 `IdType.AUTO` / `IdType.ASSIGN_UUID`。
+- Entity 类型矩阵覆盖 Boolean、Int32、Int64、Decimal、String、Uuid、Date、DateTime、Optional、List 和声明 Enum；`Ref<Entity>` 只使用 Lowered IR 已决定的 identity 存储类型、`*Id` Java 字段名和 `*_id` 列名。
+- Entity 即使来源字段带约束，也不擅自获得请求 DTO 的 Jakarta Validation 注解。
+- DTO 直接验证字段顺序、boxed Java 类型、声明类型 import、容器类型和 getter/setter。
+- DTO 直接验证 `notBlank`、`email`、`length`、`min`、`max` 的注解、import、参数文本、顺序和字段归属。
+- 真实 Parser → Semantic → Lowering → Generator 路径发现并修复负数 constraint argument 在 Normalize 阶段丢失的问题；Semantic 回归测试证明 `min(-2)` / `max(-1)` 的 unary 参数完整保留，Generator fixture 证明 `-10.50` 能到达 `@DecimalMin("-10.50")`。
+- 五项 Generator 契约全部通过；未修改 Entity、DTO 或 Type Renderer。
+
 仍必须新增的行为矩阵：
 
-- Entity 与 DTO 的 Java 类型、字段、持久化和验证注解。
 - Service、Controller、Workflow、Unit response、actor identity、复合 Find、Create/Update/Persist 的渲染。
 - 不同默认 Locale 下输出一致。
 - import 排序、换行、字符串转义和大小写稳定。

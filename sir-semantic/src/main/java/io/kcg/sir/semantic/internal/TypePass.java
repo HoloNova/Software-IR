@@ -10,8 +10,10 @@ import io.kcg.sir.ast.AstDecimalLiteral;
 import io.kcg.sir.ast.AstDeclaration;
 import io.kcg.sir.ast.AstEntityDecl;
 import io.kcg.sir.ast.AstExpression;
+import io.kcg.sir.ast.AstField;
 import io.kcg.sir.ast.AstFindStep;
 import io.kcg.sir.ast.AstGroupedExpression;
+import io.kcg.sir.ast.AstInputDecl;
 import io.kcg.sir.ast.AstIntegerLiteral;
 import io.kcg.sir.ast.AstLoadStep;
 import io.kcg.sir.ast.AstMemberExpression;
@@ -92,12 +94,28 @@ final class TypePass {
 
    TypedContext run() {
       for (AstDeclaration decl : this.software.declarations()) {
-         if (decl instanceof AstCapabilityDecl capDecl && this.resolved.declarationBindings().containsKey(capDecl.id())) {
-            this.typeCapabilityWorkflow(capDecl);
+         SymbolId declarationId = this.resolved.declarationBindings().get(decl.id());
+         if (declarationId == null) {
+            continue;
+         }
+
+         switch (decl) {
+            case AstEntityDecl entity -> this.typeFieldConstraints(entity.fields(), declarationId);
+            case AstInputDecl input -> this.typeFieldConstraints(input.fields(), declarationId);
+            case AstCapabilityDecl capability -> this.typeCapabilityWorkflow(capability);
+            default -> {
+            }
          }
       }
 
       return TypedContext.from(this.resolved, this.expressionTypes, List.copyOf(this.diagnostics));
+   }
+
+   private void typeFieldConstraints(List<AstField> fields, SymbolId scopeId) {
+      for (AstField field : fields) {
+         field.constraints().forEach(constraint -> constraint.arguments()
+            .forEach(argument -> this.typeExpression(argument, scopeId, Set.of())));
+      }
    }
 
    private void typeCapabilityWorkflow(AstCapabilityDecl capDecl) {
