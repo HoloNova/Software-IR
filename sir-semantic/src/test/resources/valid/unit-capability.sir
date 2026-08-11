@@ -1,0 +1,26 @@
+sir 0.1
+
+software UnitSample {
+  metadata {
+    displayName "Unit Sample";
+    namespace "example.unit";
+  }
+  target {
+    language java 21;
+    framework spring_boot;
+    persistence mybatis_plus;
+    database mysql;
+    build maven;
+    interface rest;
+  }
+  declarations {
+    capability Ping {
+      output Unit;
+      requires readonly;
+      expose query;
+      workflow {
+        return unit;
+      }
+    }
+  }
+}

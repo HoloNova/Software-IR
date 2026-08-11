@@ -1,0 +1,17 @@
+sir 9.9
+
+software Unsupported {
+  metadata {
+    displayName "Unsupported";
+    namespace "example.unsupported";
+  }
+  target {
+    language java 21;
+    framework spring_boot;
+    persistence mybatis_plus;
+    database mysql;
+    build maven;
+    interface rest;
+  }
+  declarations {}
+}

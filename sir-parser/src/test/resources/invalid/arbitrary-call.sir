@@ -1,0 +1,25 @@
+sir 0.1
+
+software BadCall {
+  metadata {
+    displayName "Bad Call";
+    namespace "example.badcall";
+  }
+  target {
+    language java 21;
+    framework spring_boot;
+    persistence mybatis_plus;
+    database mysql;
+    build maven;
+    interface rest;
+  }
+  declarations {
+    capability Bad {
+      output String;
+      expose command;
+      workflow {
+        return calculatePrice();
+      }
+    }
+  }
+}

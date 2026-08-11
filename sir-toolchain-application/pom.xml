@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.kcg</groupId>
+        <artifactId>kcg-code</artifactId>
+        <version>0.1.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>sir-toolchain-application</artifactId>
+    <name>SIR Toolchain Application</name>
+    <description>Unified orchestration and safe project application for the SIR toolchain</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>io.kcg</groupId>
+            <artifactId>sir-parser</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.kcg</groupId>
+            <artifactId>sir-semantic</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.kcg</groupId>
+            <artifactId>sir-lowering-api</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.kcg</groupId>
+            <artifactId>sir-lowering-spring-boot</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.kcg</groupId>
+            <artifactId>sir-generator-spring-boot</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.kcg</groupId>
+            <artifactId>sir-project-graph</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.kcg</groupId>
+            <artifactId>sir-change</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!--
+            MySQL Connector/J (test scope only) for the Stage E Conformance Harness.
+            The harness opens dedicated control connections (MysqlControlSession,
+            MysqlObserver) for advisory-lock acquisition, schema inventory, and
+            read-only observation. It is intentionally decoupled from the Target's
+            runtime connector version (9.3.0, declared in SpringBootModelLowerer);
+            TargetDependencyInspector records both versions independently in the
+            evidence bundle.
+        -->
+        <dependency>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <version>9.3.0</version>
+            <scope>test</scope>
+        </dependency>
+        <!--
+            JNA is test-scope harness infrastructure only. It reads the native
+            Windows file ID in-process, avoiding an unbounded fsutil child
+            process while retaining a strong identity requirement.
+        -->
+        <dependency>
+            <groupId>net.java.dev.jna</groupId>
+            <artifactId>jna-platform</artifactId>
+            <version>5.17.0</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <!--
+                        RQ-05 recovery state: conformance/ConformanceSuite.java and
+                        conformance/SpringBootTargetConformanceIT.java are partially recovered
+                        (Codex 40KB output truncation gaps in the historical session logs).
+                        Until those gaps are closed (see docs/recovery inventory, RQ-05
+                        missing-closure entry), the conformance package is excluded from
+                        test compilation so the module's non-conformance tests can run.
+                        NO test files are deleted; the exclusion is lifted when the gaps
+                        are closed.
+                    -->
+                    <testExcludes>
+                        <testExclude>io/kcg/sir/application/conformance/**</testExclude>
+                    </testExcludes>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>io/kcg/sir/application/conformance/**</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

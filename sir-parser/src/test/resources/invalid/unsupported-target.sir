@@ -1,0 +1,17 @@
+sir 0.1
+
+software UnsupportedTarget {
+  metadata {
+    displayName "Unsupported Target";
+    namespace "example.unsupported";
+  }
+  target {
+    language java 99;
+    framework spring_boot;
+    persistence mybatis_plus;
+    database mysql;
+    build maven;
+    interface rest;
+  }
+  declarations {}
+}

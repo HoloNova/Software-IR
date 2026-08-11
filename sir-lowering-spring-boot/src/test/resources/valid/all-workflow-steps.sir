@@ -1,0 +1,44 @@
+sir 0.1
+
+software WorkflowSample {
+  metadata {
+    displayName "Workflow Sample";
+    namespace "example.workflow";
+  }
+  target {
+    language java 21;
+    framework spring_boot;
+    persistence mybatis_plus;
+    database mysql;
+    build maven;
+    interface rest;
+  }
+  declarations {
+    enum State { ACTIVE, INACTIVE }
+    entity User persistent {
+      identity id: Uuid generated uuid;
+      field state: State;
+    }
+    input LookupInput {
+      field id: Uuid;
+      field active: Boolean;
+    }
+    error NotFound;
+    capability ExerciseSteps {
+      input LookupInput;
+      output List<Ref<User>>;
+      fails NotFound;
+      requires atomic;
+      expose command;
+      workflow {
+        load User by input.id as user else NotFound;
+        update user {
+          state: State.ACTIVE;
+        }
+        persist user;
+        find User where item.state == State.ACTIVE as users;
+        return users;
+      }
+    }
+  }
+}

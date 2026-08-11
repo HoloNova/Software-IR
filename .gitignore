@@ -1,0 +1,23 @@
+# Maven / Java build outputs
+**/target/
+.m2/
+*.class
+hs_err_pid*
+
+# IDE and operating-system metadata
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+
+# Local agent state and explicitly protected user files
+.claude/
+.trae/
+.codex/
+.agents/
+CompleteCommand.md
+KCG-Code_项目交付蓝图.txt
+
+# Disaster-recovery scratch space must never become project state
+.recovery/
