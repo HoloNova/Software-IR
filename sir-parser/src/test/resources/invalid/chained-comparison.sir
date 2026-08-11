@@ -1,0 +1,34 @@
+sir 0.1
+
+software BadComparison {
+  metadata {
+    displayName "Bad Comparison";
+    namespace "example.badcomparison";
+  }
+  target {
+    language java 21;
+    framework spring_boot;
+    persistence mybatis_plus;
+    database mysql;
+    build maven;
+    interface rest;
+  }
+  declarations {
+    input Values {
+      field a: Int32;
+      field b: Int32;
+      field c: Int32;
+    }
+    error Invalid;
+    capability Bad {
+      input Values;
+      output Int32;
+      fails Invalid;
+      expose command;
+      workflow {
+        validate input.a < input.b < input.c else Invalid;
+        return input.a;
+      }
+    }
+  }
+}
