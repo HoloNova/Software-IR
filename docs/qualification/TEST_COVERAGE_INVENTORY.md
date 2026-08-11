@@ -10,7 +10,7 @@
 | Parser | 43 | 核心语法、AST、诊断和确定性有直接覆盖 | 维护 |
 | Semantic | 103 | Resolve/Type/Validate/Normalize 与 typed reference-site 有系统覆盖 | 维护 |
 | Lowering API + Spring | 36 | API、Profile、边界、确定性和 hardening 有直接覆盖 | 维护 |
-| Generator | 19 | 已有 canonical 输出、五类简单 Artifact 及 Entity/DTO 直接契约；复杂 Renderer、环境确定性与离线编译仍不足 | P0 |
+| Generator | 23 | 已有 canonical 输出、简单 Artifact、Entity/DTO 及 Service/Workflow 直接契约；Controller transport、环境确定性与离线编译仍不足 | P0 |
 | Project Graph | 0 | 只有 Application 间接经过，缺直接契约测试 | P0 |
 | Change | 22 | 有 API 与架构测试，操作族/closure/失败矩阵不足 | P1 |
 | Application | 132 + 10 skip | 核心路径部分覆盖，conformance 整包排除 | P0 |
@@ -44,9 +44,17 @@ Q1B2 已建立的直接证据：
 - 真实 Parser → Semantic → Lowering → Generator 路径发现并修复负数 constraint argument 在 Normalize 阶段丢失的问题；Semantic 回归测试证明 `min(-2)` / `max(-1)` 的 unary 参数完整保留，Generator fixture 证明 `-10.50` 能到达 `@DecimalMin("-10.50")`。
 - 五项 Generator 契约全部通过；未修改 Entity、DTO 或 Type Renderer。
 
+Q1B3A 已建立的直接证据：
+
+- Service 直接验证 package、`@Service`、`@Transactional` / `readOnly = true`、actor/input 方法参数和 Unit/Value/Entity/Optional/List 返回类型。
+- Mapper 字段、构造器参数和赋值按首次 workflow 使用顺序去重；同一 Entity 经 Load、Persist、Find 只注入一个 Mapper。
+- Create、Load、Update、Persist、Validate、Find、Return 的关键 Java 语句保持 workflow 顺序；INSERT 与 UPDATE 使用各自 Lowered persistence action。
+- 复合 Find 直接冻结 AND/OR/NOT 的嵌套 consumer 分组、item getter 和 input 参数绑定，不只检查方法名存在。
+- 四项新契约首次到达真实生成结果时有三项因测试预期使用未 Lowering 的异常名、过宽计数和错误 consumer 编号而失败；修正断言后全部通过，未修改 Service、Workflow、Expression 或 ResponseType Renderer。
+
 仍必须新增的行为矩阵：
 
-- Service、Controller、Workflow、Unit response、actor identity、复合 Find、Create/Update/Persist 的渲染。
+- Controller 的 HTTP 映射、actor identity transport、input binding、response delegation 与 Service 调用。
 - 不同默认 Locale 下输出一致。
 - import 排序、换行、字符串转义和大小写稳定。
 - Generator 只消费 Lowered IR，不访问 AST、SIR、SymbolTable 或磁盘。

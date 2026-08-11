@@ -22,12 +22,12 @@ mvn "-Dmaven.repo.local=D:\maven-repo" -o clean verify
 | `sir-semantic` | 103 | 0 | 0 | 0 | 含 typed reference-site 契约 |
 | `sir-lowering-api` | 4 | 0 | 0 | 0 | API 契约 |
 | `sir-lowering-spring-boot` | 32 | 0 | 0 | 0 | 含 19 项 `@Nested` hardening 测试 |
-| `sir-generator-spring-boot` | 19 | 0 | 0 | 0 | 已覆盖 canonical 输出、五类简单 Artifact，以及 Entity/DTO 类型、持久化、引用与验证约束直接契约；复杂 Renderer、环境确定性与离线编译仍待补齐 |
+| `sir-generator-spring-boot` | 23 | 0 | 0 | 0 | 已覆盖 canonical 输出、简单 Artifact、Entity/DTO，以及 Service/Workflow 的类型、事务、步骤、Find 分组与返回契约；Controller transport、环境确定性与离线编译仍待补齐 |
 | `sir-project-graph` | 0 | 0 | 0 | 0 | 无直接模块测试 |
 | `sir-change` | 22 | 0 | 0 | 0 | API/架构/fixture 支撑测试，覆盖不足 |
 | `sir-toolchain-application` | 132 | 0 | 0 | 10 | 不含被 POM 排除的 conformance 包 |
 | `kcg-cli` | 5 | 0 | 0 | 0 | hardening 测试；工作流类被类级 assumption 跳过 |
-| **合计** | **360** | **0** | **0** | **10** | 默认构建无失败、无错误 |
+| **合计** | **364** | **0** | **0** | **10** | 默认构建无失败、无错误 |
 
 ## 3. 跳过与排除
 
@@ -75,7 +75,7 @@ io/kcg/sir/application/conformance/**
 ## 6. 主要残余风险
 
 1. conformance 包没有参加测试编译和运行。
-2. Generator 已有 19 项直接测试；三组 canonical 输出、POM/Application/Enum/Mapper/Exception 以及 Entity/DTO 类型、持久化、引用和验证约束契约已冻结，但 Service/Controller/Workflow、跨环境确定性和生成工程离线编译仍未完成。
+2. Generator 已有 23 项直接测试；三组 canonical 输出、POM/Application/Enum/Mapper/Exception、Entity/DTO，以及 Service/Workflow 契约已冻结，但 Controller transport、跨环境确定性和生成工程离线编译仍未完成。
 3. Project Graph 没有直接模块测试。
 4. Change fixtures 缺失造成 Application 和 CLI 测试跳过。
 5. UPDATE/CREATE/DELETE 的完整跨阶段故障注入矩阵尚未形成。
