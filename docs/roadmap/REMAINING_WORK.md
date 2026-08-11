@@ -29,7 +29,7 @@
 - [x] Q1B2：Entity 与 DTO 类型/验证约束契约（见 [`completed/Q1B2-generator-entity-dto-contract.md`](completed/Q1B2-generator-entity-dto-contract.md)）。
 - [x] Q1B3A：Service 与 Workflow 行为契约（见 [`completed/Q1B3A-generator-service-workflow-contract.md`](completed/Q1B3A-generator-service-workflow-contract.md)）。
 - [x] Q1B3B：Controller、actor identity transport 与 response 行为契约（见 [`completed/Q1B3B-generator-controller-transport-contract.md`](completed/Q1B3B-generator-controller-transport-contract.md)）。
-- [ ] Q1C：Locale、工作目录、换行、转义和 UTF-8 字节确定性矩阵。
+- [x] Q1C：Locale、工作目录、换行、转义和 UTF-8 字节确定性矩阵（见 [`completed/Q1C-generator-determinism-matrix.md`](completed/Q1C-generator-determinism-matrix.md)）。
 - [ ] Q1D：完整生成工程冻结依赖下的真实离线编译。
 
 ### 目标

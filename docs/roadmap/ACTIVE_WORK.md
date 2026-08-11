@@ -1,23 +1,23 @@
-# 当前唯一工作单：Q1C Generator 环境与字节确定性矩阵
+# 当前唯一工作单：Q1D 完整生成工程冻结依赖下的真实离线编译
 
 - 状态：`READY`
 - 所属阶段：路线图阶段 1 / Generator 系统测试
-- 前置工作：[Q1B3B Generator Controller 与 Transport 行为契约](completed/Q1B3B-generator-controller-transport-contract.md) 已完成
-- 本工作单性质：测试优先；只修复确定性矩阵直接证明的 Generator 局部缺陷
-- 下一张候选工作单：Q1D 完整生成工程冻结依赖下的真实离线编译
+- 前置工作：[Q1C Generator 环境与字节确定性矩阵](completed/Q1C-generator-determinism-matrix.md) 已完成
+- 本工作单性质：测试优先；证明 Generator 输出能够由 Java 21 与冻结 Maven 依赖真实编译
+- 下一阶段：Q1 总验收与远端大版本快照；通过并确认后才进入 Q2
 
 ## 这次只做什么
 
-为纯内存 Generator 建立跨环境、跨进程的确定性证据，证明同一份 Lowered IR 不因默认 Locale、物理工作目录或平台换行设置而改变输出：
+把 `campus-market.sir` 经现有 Parser、Semantic、Spring Boot Lowering 和纯内存 Generator 生成的完整文件集写入 JUnit 临时目录，再启动独立 Maven 子进程做真实离线编译：
 
-1. 同一 fixture 在至少两个不同物理工作目录的独立 JVM 中生成相同文件集合和 UTF-8 字节；
-2. 至少覆盖 `Locale.US` 与 Turkish locale，防止默认 Locale 参与大小写转换；
-3. 每个生成内容只使用 LF、无 CR、以单个 LF 结束，并能严格 UTF-8 round-trip；
-4. 文件路径、顺序、内容、ownership metadata 和 digest 在矩阵中一致；
-5. Java/XML 字符串转义 primitive 对引号、反斜杠、控制字符和 XML 保留字符拥有直接测试；
-6. Generator 仍不读取磁盘、当前目录、时间、随机数、默认 Charset 或 AST/SIR。
+1. 写出的路径和 UTF-8 字节必须逐项来自 `GeneratedFile`，不得手写一份“看起来一样”的示例工程；
+2. 使用生成工程自己的 `pom.xml`，以 Java 21 执行 `compile`；
+3. Maven 必须带 `--offline`，并显式复用父构建传入的本地仓库；
+4. 子进程退出码必须为 0，且目标 `.class` 文件必须真实存在；
+5. 失败信息必须保留完整、可诊断的 Maven stdout/stderr，但不得把临时工程提交进仓库；
+6. 不启动 Spring Boot、不连接 MySQL、不执行 HTTP 或 conformance 场景。
 
-矩阵测试可以使用 test-only 子进程 probe，但不得给生产 API 增加测试入口，也不得把 Application 写盘职责移入 Generator。
+这张工作单证明的是“生成源码可以在冻结依赖下编译”，不是运行时、数据库或发布资格。
 
 ## 开工时怎样加载上下文
 
@@ -29,106 +29,81 @@
 
 直接相关材料：
 
-1. `docs/qualification/TEST_COVERAGE_INVENTORY.md` 的 Generator 部分；
-2. `docs/superpowers/specs/2026-07-16-sir-v0.1-generator-design.md`；
-3. `SpringBootGenerator.java`、`GenerationContext.java`、`ImportSorter.java`；
-4. `StringEscape.java`、XML escaping helper 与使用它们的 Renderer；
-5. `GeneratedFile.java`、`GenerationResult.java`；
-6. `GeneratorTestSupport.java`、`GeneratorOutputContractTest.java` 和现有 fixtures；
-7. 已完成的 Q1A、Q1B1、Q1B2、Q1B3A、Q1B3B 工作单。
-
-## 设计选择
-
-采用“独立 JVM probe + 进程内结构断言”的组合：
-
-- 独立 JVM probe 负责真实改变物理工作目录和默认 Locale，并输出 canonical SHA-256；
-- 进程内测试负责给出可读的文件级失败信息，包括路径、顺序、内容、metadata、LF 和 UTF-8 round-trip；
-- escaping helper 只做直接 primitive 测试，因为当前 SIR 并非所有 Java/XML 转义字符都有可达的生成位置。
-
-不采用只修改 `user.dir` 系统属性的伪工作目录测试；也不通过完整 Maven 子构建来比较输出，避免把 Q1D 的编译职责混入本工作单。
+1. `docs/qualification/CURRENT_QUALIFICATION.md` 与 `TEST_COVERAGE_INVENTORY.md` 的 Generator 部分；
+2. 已归档的 Q1A～Q1C 工作单；
+3. `SpringBootGenerator.java`、`GeneratedFile.java`、`GenerationResult.java`；
+4. `GeneratorTestSupport.java` 与 `valid/campus-market.sir`；
+5. `PomRenderer.java` 和各 Java Renderer；
+6. 根 `pom.xml` 中 Java/Maven 插件版本，以及生成 POM 冻结的 Spring Boot 3.5.3、MyBatis-Plus 3.5.12、MySQL Connector/J 9.3.0。
 
 ## 允许修改的范围
 
 - `sir-generator-spring-boot/src/test/**`
-- 被新增失败测试直接证明有缺陷的 Generator 内部纯函数：
-  - `GenerationContext.java`
-  - `ImportSorter.java`
-  - `StringEscape.java`
-  - XML escaping helper
-  - 直接产生非确定输出的目标 Renderer
+- 被真实编译失败直接证明有缺陷的 Generator Renderer 或转义辅助类
 - 与实际结果同步的：
-  - `docs/qualification/TEST_COVERAGE_INVENTORY.md`
   - `docs/qualification/CURRENT_QUALIFICATION.md`
+  - `docs/qualification/TEST_COVERAGE_INVENTORY.md`
   - 本工作单状态与交接记录
 
-若必须修改 Parser、Semantic、Lowering、Application、CLI、POM、公共模型或文件事务层，停止并报告，不得扩大范围。
+若修复需要改变 SIR 语义、Lowered IR、Application 写盘协议、依赖版本或公共 API，停止并报告，不得扩大范围。
 
 ## 明确不做
 
-- 不把 GeneratedFile 写入真实项目目录。
-- 不做生成工程 Maven 编译；留给 Q1D。
-- 不新增或升级依赖，不修改 Surefire fork/parallel 配置。
-- 不用默认 Charset 读写 probe 协议；必须显式 UTF-8。
-- 不以仅重复同一 JVM 调用代替物理 cwd/Locale 矩阵。
-- 不修改业务 Renderer 外形、SIR 语义或 Lowered IR。
+- 不通过 `ToolchainApplication` 写盘；测试只物化纯内存 Generator 的结果，避免重复验证事务层。
+- 不运行 `test`、`verify`、Spring Boot 启动或数据库连接；生成工程只执行离线 `compile`。
+- 不下载依赖、不修改生成 POM 的版本、不把依赖复制进仓库。
+- 不新增 Maven profile、Surefire skip/exclude 或默认关闭该测试的开关。
+- 不提交 `target/`、临时工程、本地 Maven 仓库或构建日志。
 - 不进入 Project Graph、Change、conformance、事务应用层或 CLI。
-- 不修改 Grammar 或 ANTLR 配置。
 
 ## 测试优先协议
 
-1. 先新增最小矩阵/escaping 测试并执行，记录首次真实结果。
-2. 子进程启动错误、classpath 错误、fixture 缺失或断言错误不是产品 RED，必须先纠正测试基础设施。
-3. 只有测试到达 Generator 并证明输出因环境变化或转义错误时，才修改生产代码。
-4. 新测试首次即通过时，如实记录为现有行为证据，不虚构 RED。
-5. 不减少、禁用或放宽现有测试，不增加 skip/exclude。
-6. 遇到 bug、失败或意外行为时，先按系统化调试流程定位。
+1. 先新增最小的生成工程离线编译测试，并在不改生产代码时执行。
+2. Maven 可执行文件定位、命令行拼接、临时目录或本地仓库发现错误属于测试基础设施错误，先修正测试，不算产品 RED。
+3. 只有子进程真正进入生成工程编译，并由具体生成源码或 POM 导致失败，才允许修改生产代码。
+4. 每个生产修复必须能指向首次失败日志中的具体文件和编译诊断。
+5. 不减少、禁用或放宽 Q1A～Q1C 已有测试。
 
 ## 必须建立的契约
 
-### 1. 跨进程环境矩阵
+### 1. 真实物化
 
-- 使用 `java.home` 下的当前 Java；
-- classpath 使用 Surefire 提供的完整 test classpath；
-- 至少在两个独立临时目录启动 probe；
-- 至少比较 `en-US` 与 `tr-TR`；
-- 子进程退出码必须为 0，stderr 为空或仅包含可解释的 JVM 环境信息；
-- 比较完整 canonical digest，不只比较文件数量。
+- 对 `GeneratorTestSupport.generateSuccess("valid/campus-market.sir")` 返回的每个 `GeneratedFile`：
+  - 以 `relativePath` 解析到 JUnit 临时根目录；
+  - 创建父目录；
+  - 使用显式 UTF-8 写入 `content`；
+  - 写入后按 UTF-8 读回并与原内容相等。
+- 不允许用测试资源中的预生成 Java/POM 替代 Generator 输出。
 
-### 2. 文件集合与 metadata
+### 2. 冻结离线 Maven
 
-- 路径、顺序、内容完全一致；
-- `ownerNode`、`ownerSymbol` 和文件数量一致；
-- digest 编码必须有明确长度/分隔边界，避免字符串拼接歧义。
+- Maven 可执行文件优先从当前 Maven 进程的 home 定位，并提供受控的 PATH 后备查找；Windows 使用 `mvn.cmd`，其他平台使用 `mvn`。
+- 本地仓库来自父构建显式传入的 `maven.repo.local`；缺失或目录不存在时明确失败，不静默改用联网仓库。
+- 子进程命令至少包含：`--offline`、显式 `-Dmaven.repo.local=...`、`-DskipTests`、`compile`。
+- 子进程工作目录必须是物化后的生成工程根目录。
 
-### 3. LF 与 UTF-8
+### 3. 编译结果
 
-- 所有内容不包含 `\r`；
-- 所有内容以 `\n` 结束且不以两个空白尾行结束；
-- `content.getBytes(UTF_8)` 再解码与原字符串完全相等；
-- 非 ASCII fixture 的 UTF-8 字节参与 digest。
-
-### 4. Escaping primitive
-
-- Java string：引号、反斜杠、换行、回车、制表符和低位控制字符；
-- XML text：`&`、`<`、`>`，以及 helper 当前承诺的引号处理；
-- 输出不得依赖 Locale 或默认 Charset。
+- 退出码为 0。
+- 至少验证生成 Application、一个 Entity、一个 DTO、一个 Mapper、一个 Service 和一个 Controller 对应的 `.class` 存在。
+- 错误消息包含命令、工作目录、退出码与完整合并输出，便于新 Agent 直接定位。
+- 子进程设置合理超时；超时必须强制结束并以测试失败报告。
 
 ## 推荐测试组织
 
-- `GeneratorDeterminismMatrixTest`：进程内结构、LF、UTF-8 和独立 JVM 矩阵；
-- `GeneratorDeterminismProbe`：test-only main，读取 classpath fixture 并输出 canonical digest；
-- 在 `internal` 测试包中扩充或新增 escaping helper test；
-- 优先复用 `campus-market.sir`，因为它包含中文和主要 Renderer；必要时再增加一个只覆盖 escaping 可达面的最小 fixture。
+- 新增 `GeneratedProjectOfflineCompilationTest`：负责物化、启动 Maven、验证退出码和代表性 class 文件。
+- 测试辅助方法留在测试类或 test-only support 中，不增加生产 API。
+- 复用 `campus-market.sir`，不新增第二份 canonical 工程。
 
 ## 验证命令
 
 定向：
 
 ```powershell
-mvn "-Dmaven.repo.local=D:\maven-repo" -o -pl sir-generator-spring-boot -am test
+mvn "-Dmaven.repo.local=D:\maven-repo" -o -pl sir-generator-spring-boot -am -Dtest=GeneratedProjectOfflineCompilationTest -Dsurefire.failIfNoSpecifiedTests=false test
 ```
 
-完成门：
+完成闸：
 
 ```powershell
 mvn "-Dmaven.repo.local=D:\maven-repo" -o clean verify
@@ -136,19 +111,17 @@ git diff --check
 git status --short
 ```
 
-## 完成门
+## 完成闸
 
-- 独立 JVM 的 cwd/Locale 矩阵真实运行并产生一致 digest。
-- 全部生成文件通过路径/顺序/metadata、LF 和 UTF-8 契约。
-- Java/XML escaping primitive 有直接测试。
-- 每项生产修改都能指向先失败的测试；无需生产修改时如实记录。
-- 现有 Q1A～Q1B3B 与架构回归继续通过。
-- 新增 skip/exclude 为 0，测试数量不减少。
-- 定向 reactor 与全量离线 reactor 通过。
-- 资格文档与最新 Surefire XML 一致。
-- Q1D 仍明确未完成。
-- 状态更新为 `AWAITING_ACCEPTANCE`，详细证据留在本工作单；聊天中无阻断时只请求项目负责人确认继续。
+- 生成工程确由当前 Generator 输出物化，而非手写 fixture。
+- 独立 Maven 子进程在 `--offline` 与显式冻结本地仓库下完成 Java 21 `compile`。
+- 代表性 `.class` 文件真实存在。
+- 若有生产修复，每项都由首次真实编译失败直接证明。
+- Q1A～Q1C 与全量离线 reactor 继续通过；新增 skip/exclude 为 0。
+- 资格文档与最新 Surefire XML 一致，并明确运行时/MySQL/conformance 仍未执行。
+- 状态更新为 `AWAITING_ACCEPTANCE`；聊天中无阻断时只请求项目负责人确认继续。
+- 项目负责人确认后，归档并创建 Q1D 本地 commit；随后进行 Q1 总验收。Q1 整体确认后才普通推送 `origin`。
 
 ## 交接记录
 
-2026-08-11：项目负责人确认 Q1B3B 通过。Q1B3B 归档后，本工作单以 `READY` 建立；等待 Q1B3B 本地 Git 快照完成后切换为 `IN_PROGRESS`。
+2026-08-11：项目负责人确认 Q1C 通过。Q1C 归档后，本工作单以 `READY` 建立；等待 Q1C 本地 Git 快照完成后切换为 `IN_PROGRESS`。

@@ -27,12 +27,25 @@ final class StringEscape {
                out.append("\\\\");
                break;
             default:
-               out.append(c);
+               if (Character.isISOControl(c)) {
+                  appendUnicodeEscape(out, c);
+               } else {
+                  out.append(c);
+               }
          }
       }
 
       out.append('"');
       return out.toString();
+   }
+
+   private static void appendUnicodeEscape(StringBuilder out, char value) {
+      final char[] hex = "0123456789abcdef".toCharArray();
+      out.append("\\u");
+      out.append(hex[value >>> 12 & 15]);
+      out.append(hex[value >>> 8 & 15]);
+      out.append(hex[value >>> 4 & 15]);
+      out.append(hex[value & 15]);
    }
 
    static String xml(String value) {

@@ -10,7 +10,7 @@
 | Parser | 43 | 核心语法、AST、诊断和确定性有直接覆盖 | 维护 |
 | Semantic | 103 | Resolve/Type/Validate/Normalize 与 typed reference-site 有系统覆盖 | 维护 |
 | Lowering API + Spring | 36 | API、Profile、边界、确定性和 hardening 有直接覆盖 | 维护 |
-| Generator | 27 | 已有 canonical 输出和主要 Renderer 的直接契约；环境确定性与生成工程离线编译仍不足 | P0 |
+| Generator | 31 | 已有 canonical 输出、主要 Renderer 和跨环境字节确定性直接契约；生成工程离线编译仍不足 | P0 |
 | Project Graph | 0 | 只有 Application 间接经过，缺直接契约测试 | P0 |
 | Change | 22 | 有 API 与架构测试，操作族/closure/失败矩阵不足 | P1 |
 | Application | 132 + 10 skip | 核心路径部分覆盖，conformance 整包排除 | P0 |
@@ -60,10 +60,16 @@ Q1B3B 已建立的直接证据：
 - Unit response 只调用 Service、不返回 void 调用；Value、Entity、List、Optional response 均以 Lowered 类型返回 Service 结果。
 - 四项新契约首轮为 4 run、3 failure、0 error、0 skip；三项失败都来自测试 route 预期遗漏 Lowering 已冻结的 `/api` 前缀。对照 Lowerer 和既有 integration test 修正断言后全部通过，未修改 Controller 或 ResponseType Renderer。
 
+Q1C 已建立的直接证据：
+
+- test-only probe 在两个不同物理工作目录启动独立 JVM，分别使用 `en-US` + `ISO-8859-1` 和 `tr-TR` + `UTF-8`；完整文件路径、顺序、内容、artifact owner、可选 SymbolId 经长度前缀 canonical SHA-256 后完全一致。
+- `campus-market.sir` 通过显式 UTF-8 从 classpath 读取；每个生成文件均无 CR、以单个 LF 结束，并通过显式 UTF-8 encode/decode round-trip。
+- Java string escaping 直接覆盖引号、反斜杠、tab、LF、CR 和 U+0001；XML escaping 覆盖引号、`&`、单引号、`<`、`>`。
+- 首轮 4 项测试中，独立 JVM 矩阵、LF/UTF-8 和 XML escaping 通过；Java escaping 因 U+0001 被原样写入源码而得到 1 个有效 failure。
+- `StringEscape` 现在把未专门处理的 ISO control character 渲染为固定小写四位 Unicode escape；定向和完整 Generator reactor 随后全部通过。
+
 仍必须新增的行为矩阵：
 
-- 不同默认 Locale 下输出一致。
-- import 排序、换行、字符串转义和大小写稳定。
 - Generator 只消费 Lowered IR，不访问 AST、SIR、SymbolTable 或磁盘。
 - 至少一个完整生成工程在冻结依赖下离线编译。
 
