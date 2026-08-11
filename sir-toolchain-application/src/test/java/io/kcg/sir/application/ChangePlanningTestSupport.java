@@ -147,11 +147,7 @@ final class ChangePlanningTestSupport {
         }
     }
 
-    /**
-     * True when a classpath test resource exists. Used by recovered tests to skip
-     * (with an explicit reason) when a Change-era SIR fixture was not recoverable
-     * from the historical session logs (RQ-07 missing-resource list).
-     */
+    /** True when an optional classpath fixture exists. */
     static boolean hasResource(String path) {
         return ChangePlanningTestSupport.class.getResourceAsStream("/" + path) != null;
     }

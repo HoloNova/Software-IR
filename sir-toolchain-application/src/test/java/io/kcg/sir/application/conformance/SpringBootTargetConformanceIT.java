@@ -45,10 +45,10 @@ import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
  *
  * <p>Without a real MySQL reference tuple, the suite reports
  * {@code NOT_RUN} and does not claim qualification. The {@code NOT_RUN}
- * guard is enforced before any side effect 鈥?no schema mutation, no
+ * guard is enforced before any side effect—no schema mutation, no
  * ephemeral directory allocation, no Spring process spawn.
  *
- * <p>Per ADR-017 搂7.7 (dual-version authority), the Target runtime
+ * <p>Per ADR-017 section 7.7 (dual-version authority), the Target runtime
  * Connector/J version is <em>not</em> a test constant. It is recorded
  * per-scenario from the real lowered model and the generated
  * {@code pom.xml} via {@link TargetDependencyInspector}. The harness JDBC
@@ -216,7 +216,7 @@ class SpringBootTargetConformanceIT {
             System.out.println("[CONFORMANCE] NOT_RUN. failure=" + n.failure());
         }
         // The terminal result must be one of the three sealed variants.
-        // We do not assert QUALIFIED here 鈥?the external qualification
+        // We do not assert QUALIFIED here—the external qualification
         // matrix is opt-in and depends on the caller-supplied MySQL tuple.
         // The harness itself enforces the QUALIFIED preconditions.
         assertTrue(
@@ -230,7 +230,7 @@ class SpringBootTargetConformanceIT {
      * Construct the full {@link ConformanceSuiteContext} from the validated
      * reference environment and invoke {@link ConformanceSuite#orchestrate}.
      *
-     * <p>Per ADR-017 搂3 / 搂6, the run-specific {@code workRoot} and
+     * <p>Per ADR-017 sections 3 and 6, the run-specific {@code workRoot} and
      * {@code evidenceRoot} are <em>not</em> pre-created here. The caller
      * supplies the parent directories and a run token; the orchestrate
      * method itself creates the run-specific directories at the correct
@@ -272,28 +272,23 @@ class SpringBootTargetConformanceIT {
             secrets.add(controlJdbcUrl);
         }
         // The rendered runtime URL contains the runtime schema name and
-        // endpoint but no credentials 鈥?include it in the secret scan as
+        // endpoint but no credentials—include it in the secret scan as
         // a defensive measure so any accidental credential leak in the
         // URL form is caught.
         secrets.add(runtimeUrl.rendered());
 
-        // Streaming redactor 鈥?must be initializable or the run is FAILED.
+        // Streaming redactor: it must be initializable or the run is FAILED.
         StreamingSecretRedactor redactor = StreamingSecretRedactor.initialize(secrets);
 
-        // Per ADR-017 搂3 / 搂7.2, the dedicated MySQL control connection is
+        // Per ADR-017 sections 3 and 7.2, the dedicated MySQL control connection is
         // NOT pre-opened here. The caller supplies a MysqlControlConfiguration;
         // orchestrate opens the control connection at MYSQL_CONTROL_CONNECT
         // and closes it when the run terminates.
         MysqlControlConfiguration controlConfig = new MysqlControlConfiguration(
                 controlJdbcUrl, controlUsername, controlPassword);
 
-        // [RQ-05 RECOVERY NOTE] Historical session output was truncated by Codex at
-        // this point (…20027 tokens truncated…). The remainder of runFullConformanceSuite
-        // (childEnv build completion, ConformanceSuite construction, per-scenario
-        // execution loop, and terminal result assembly) is NOT available in any session
-        // block; see docs/recovery/TEST_RECOVERY_INVENTORY.md missing-closure entry.
-        // The surviving tail line below (scenario.displayName())) is the last historical
-        // line before the truncation marker.
+        // TODO(conformance): complete child environment construction, scenario
+        // execution, cleanup, and terminal result assembly before enabling this package.
         //      detail,
                 scenario.displayName()));
     }

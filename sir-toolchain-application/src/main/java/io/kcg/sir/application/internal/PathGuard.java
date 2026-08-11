@@ -195,7 +195,7 @@ public final class PathGuard {
    }
 
    private static boolean isLinkLike(Path path) {
-      // [RQ-09] Review finding B2: isSymbolicLink() alone does not report NTFS
+      // isSymbolicLink() alone does not report NTFS
       // junctions (JDK reports them as isOther under NOFOLLOW). Fail closed on
       // any link-or-other type in the chain.
       try {

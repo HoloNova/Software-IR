@@ -303,18 +303,6 @@ final class ChangeTestFixtures {
                 ERROR_AST);
     }
 
-    // [RQ-06 RECOVERY NOTE] Removed methods baseWorkflow/modifiedWorkflow/
-    // searchGoodsCapability/searchGoodsWorkflow: their expression helpers
-    // (priceGeLiteral/priceGtLiteral/unitLiteral/memberOfInput/decimal bodies)
-    // were lost in historical output truncation (session block
-    // 2026-07-19T23:27:16 line 1315; only method signatures survive in block
-    // 2026-07-19T10:29:10 line 1001). See docs/recovery inventory.
-    // [RQ-06 RECOVERY NOTE] Removed methods baseWorkflow/modifiedWorkflow/
-    // searchGoodsCapability/searchGoodsWorkflow: their expression helpers
-    // (priceGeLiteral/priceGtLiteral/unitLiteral/memberOfInput/decimal bodies)
-    // were lost in historical output truncation (session block
-    // 2026-07-19T23:27:16 line 1315; only method signatures survive in block
-    // 2026-07-19T10:29:10 line 1001). See docs/recovery inventory.
     static NormalizedCapability capabilityWithWorkflow(NormalizedWorkflow workflow) {
         return new NormalizedCapability(
                 CAPABILITY_SYMBOL,
@@ -338,21 +326,4 @@ final class ChangeTestFixtures {
      * itself) — matching the SCOPE-101 "exactly one new declaration"
      * invariant. The workflow uses a Find step + Return step.
      */
-    // [RQ-06 RECOVERY NOTE] Removed methods baseWorkflow/modifiedWorkflow/
-    // searchGoodsCapability/searchGoodsWorkflow: their expression helpers
-    // (priceGeLiteral/priceGtLiteral/unitLiteral/memberOfInput/decimal bodies)
-    // were lost in historical output truncation (session block
-    // 2026-07-19T23:27:16 line 1315; only method signatures survive in block
-    // 2026-07-19T10:29:10 line 1001). See docs/recovery inventory.
-    // [RQ-06 RECOVERY NOTE] Removed methods baseWorkflow/modifiedWorkflow/
-    // searchGoodsCapability/searchGoodsWorkflow: their expression helpers
-    // (priceGeLiteral/priceGtLiteral/unitLiteral/memberOfInput/decimal bodies)
-    // were lost in historical output truncation (session block
-    // 2026-07-19T23:27:16 line 1315; only method signatures survive in block
-    // 2026-07-19T10:29:10 line 1001). See docs/recovery inventory.
-
-    // [RQ-06 RECOVERY NOTE] One assertion-helper method (build + assertScope101-style,
-    // with signature in a 25-token historical truncation gap) was NOT recoverable.
-    // Historical evidence: session block 2026-07-19T23:27:16 (rollout-2026-07-18T20-23-06,
-    // line 1315) truncates at 39945 chars; no other block contains the signature.
 }

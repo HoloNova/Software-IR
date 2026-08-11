@@ -26,7 +26,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * RQ-10 recovery state-machine review tests.
+ * Recovery state-machine contract tests.
  *
  * Each test constructs a real interrupted DELETE transaction state (journal + backup
  * hard link + CURRENT) on a temp state root and drives the PUBLIC recovery API

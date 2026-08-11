@@ -17,7 +17,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * RQ-09 targeted security review tests. Each test here documents a review finding:
+ * Targeted path-security regression tests. Each test documents a security invariant:
  * first written as a failing test, then the minimal fix that closes the gap.
  * Review scope: path guards, safe target resolution, manifest verification.
  */

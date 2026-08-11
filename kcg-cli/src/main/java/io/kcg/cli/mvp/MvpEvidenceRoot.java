@@ -15,7 +15,7 @@ import java.util.TreeMap;
 
 /**
  * Evidence-root ownership and final-scan controller for the M4 acceptance IT
- * (ADR-019 搂14, P0-3). Implements the strict test-only equivalent of the
+ * (ADR-019 section 14, P0-3). Implements the strict test-only equivalent of the
  * Stage E evidence ownership semantics:
  *
  * <ul>
@@ -131,9 +131,7 @@ final class MvpEvidenceRoot {
         }
         byte[] bytes = (evidence.serialize() + "\n").getBytes(StandardCharsets.UTF_8);
         Path target = root.resolve(fileName);
-        // [RQ-08 RECOVERY NOTE] M4 hardening: never clobber an existing target.
-        // The surviving test evidenceWriteNeverOverwritesAnExistingTarget requires
-        // write() to reject a pre-existing file (external pre-write scenario).
+        // Evidence publication never overwrites a pre-existing target.
         if (Files.exists(target, LinkOption.NOFOLLOW_LINKS)) {
             throw new IOException("refusing to overwrite existing evidence file: " + fileName);
         }
@@ -195,9 +193,7 @@ final class MvpEvidenceRoot {
         }
         for (String rel : found.keySet()) {
             if (!owned.containsKey(rel)) {
-                // [RQ-08 RECOVERY NOTE] M4 hardening: unknown files must be scanned for
-                // secrets BEFORE the unknown-file reconciliation failure is recorded
-                // (test unknownFileContainingSecretIsReportedAndSurvivesOwnedOnlyBreachCleanup).
+                // Scan unknown files for secrets before reporting the ownership mismatch.
                 List<String> hits = MvpEvidence.scanBytes(Files.readAllBytes(found.get(rel)), secrets);
                 if (!hits.isEmpty()) {
                     problems.add("SECRET:" + rel + ":" + hits);

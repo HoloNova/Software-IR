@@ -27,7 +27,7 @@ public final class OutputManifestVerifier {
          List<ChangeExecutionDiagnostic> errors = new ArrayList<>();
          Path rawRoot = outputRoot.toAbsolutePath();
 
-         // [RQ-09] Review finding B: reject duplicate relative paths up front.
+         // Reject duplicate relative paths up front.
          // Two entries for one path mean the plan/generator emitted an ambiguous
          // target; verifying the same file twice could mask a swap between the
          // two verifications. Fail closed instead.
@@ -130,7 +130,7 @@ public final class OutputManifestVerifier {
       for (Path current = path.getParent(); current != null && !current.equals(root) && current.startsWith(root); current = current.getParent()) {
          try {
             BasicFileAttributes attrs = Files.readAttributes(current, BasicFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
-            // [RQ-09] Review finding B2: also reject NTFS junctions (isOther under NOFOLLOW).
+            // Also reject NTFS junctions (isOther under NOFOLLOW).
             if (attrs.isSymbolicLink() || attrs.isOther()) {
                return current.toString();
             }

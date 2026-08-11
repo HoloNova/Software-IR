@@ -682,7 +682,7 @@ public final class DeleteTransactionJournal {
       ROLLED_BACK_DURABLE;
 
       /**
-       * [RQ-11] The transition table is deliberately strict: every durable
+       * The transition table is deliberately strict: every durable
        * journal state is reached through exactly one legal predecessor, so a
        * parsed journal can never be ambiguous about how far a file got.
        * ROLLED_BACK_DURABLE is terminal. Verified by

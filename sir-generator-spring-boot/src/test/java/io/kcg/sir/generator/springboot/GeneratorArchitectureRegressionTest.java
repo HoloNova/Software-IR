@@ -17,9 +17,9 @@ class GeneratorArchitectureRegressionTest {
 
     @Test
     void unitOutputUsesBareReturnAndVoidControllerDelegation() {
-        List<GeneratedFile> files = generate("valid/unit-output.sir");
-        String service = contentEndingWith(files, "PingService.java");
-        String controller = contentEndingWith(files, "PingController.java");
+        List<GeneratedFile> files = GeneratorTestSupport.generateSuccess("valid/unit-output.sir");
+        String service = GeneratorTestSupport.contentEndingWith(files, "PingService.java");
+        String controller = GeneratorTestSupport.contentEndingWith(files, "PingController.java");
 
         assertTrue(service.contains("public void ping()"));
         assertTrue(service.contains("        return;"), service);
@@ -30,7 +30,8 @@ class GeneratorArchitectureRegressionTest {
 
     @Test
     void compoundFindUsesNestedAndOrNotConsumers() {
-        String service = contentEndingWith(generate("valid/compound-find.sir"),
+        String service = GeneratorTestSupport.contentEndingWith(
+                GeneratorTestSupport.generateSuccess("valid/compound-find.sir"),
                 "FilterUsersService.java");
 
         assertTrue(service.contains(".and("), service);
@@ -71,21 +72,4 @@ class GeneratorArchitectureRegressionTest {
                 failure.diagnostics().toString());
     }
 
-    private static List<GeneratedFile> generate(String resource) {
-        GenerationResult result = new SpringBootGenerator().generate(
-                GeneratorTestSupport.lowerSuccess(resource));
-        assertTrue(result instanceof GenerationResult.Success,
-                () -> result instanceof GenerationResult.Failure failure
-                        ? failure.diagnostics().toString()
-                        : result.toString());
-        return ((GenerationResult.Success) result).files();
-    }
-
-    private static String contentEndingWith(List<GeneratedFile> files, String suffix) {
-        return files.stream()
-                .filter(file -> file.relativePath().endsWith(suffix))
-                .map(GeneratedFile::content)
-                .findFirst()
-                .orElseThrow(() -> new AssertionError("missing generated file: " + suffix));
-    }
 }

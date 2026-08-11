@@ -78,7 +78,7 @@ public final class ChangeDeleteTransaction {
    }
 
    /**
-    * [RQ-11] Why this orchestration exists: prepare/commit/publish are journaled
+    * Why this orchestration exists: prepare/commit/publish are journaled
     * separately so an interruption at any boundary leaves a durable intent. A
     * commit failure is compensated by rollback, but the moment rollback cannot be
     * proven complete (RollbackResult.Incomplete) the result is RECOVERY_REQUIRED
@@ -422,12 +422,12 @@ public final class ChangeDeleteTransaction {
    }
 
    /**
-    * [RQ-11] The NOFOLLOW_LINKS regular-file proof on BOTH ends is mandatory
+    * The NOFOLLOW_LINKS regular-file proof on BOTH ends is mandatory
     * before Files.isSameFile: isSameFile follows links, so a symlink swapped in
     * after backup creation would otherwise make an external file "the same" as
     * the backup and the SHA proof would still read through it. Verified by
     * RecoveryStateMachineTest.currentB0_deleted_restoresTargetFromBackupLink and
-    * the RQ-09 reparse-point review.
+    * the reparse-point regression tests.
     */
    private ChangeExecutionDiagnostic proveBackupLinkage(Path target, Path backup, DeleteFilePayload payload) {
       String rel = payload.relativePath();

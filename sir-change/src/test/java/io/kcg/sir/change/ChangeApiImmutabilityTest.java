@@ -48,9 +48,7 @@ class ChangeApiImmutabilityTest {
 
     @Test
     void changeIrVersionIsSingletonV0_1() {
-        // [RQ-06 RECOVERY NOTE] v0.1-era assertion updated to current v0.1-v0.6 reality:
-        // the historical test asserted a single version; the current main source (which
-        // this task must preserve) has V0_1..V0_6. No new version was added by this task.
+        // The current public protocol contains exactly v0.1 through v0.6.
         assertEquals(6, ChangeIrVersion.values().length, "v0.1-v0.6 are the current versions");
         assertEquals(ChangeIrVersion.V0_1, ChangeIrVersion.valueOf("V0_1"));
     }
@@ -133,11 +131,7 @@ class ChangeApiImmutabilityTest {
 
     @Test
     void changeOperationIsSealedPermittingOnlyModifyCapabilityWorkflow() {
-        // [RQ-06 RECOVERY NOTE] v0.1-era assertion updated to current v0.1-v0.6 reality:
-        // historical test permitted only ModifyCapabilityWorkflow; current main source
-        // permits all six operation types (v0.2 AddCapability / RemoveCapability /
-        // ModifyInputFieldConstraints / ModifyUnreferencedInputFieldType /
-        // ModifyActorlessReadonlyCapabilityExposure). No new operation was added here.
+        // The sealed API permits the six current operation types.
         assertEquals(6, ChangeOperation.class.getPermittedSubclasses().length,
                 "ChangeOperation permits all six current operation types");
         assertEquals(ModifyCapabilityWorkflow.class,
@@ -242,10 +236,7 @@ class ChangeApiImmutabilityTest {
 
     // --- helpers ---
 
-    // [RQ-06 RECOVERY NOTE] baseRevision() helper was in the truncated tail of the
-    // historical dump (session block 2026-07-19T10:31:02, rollout-2026-07-18T16-06,
-    // line 1033). Reconstructed from the ChangeBaseRevision record signature; digest
-    // values are placeholders that satisfy the immutability/validation assertions.
+    // Minimal valid base revision for API validation assertions.
     private static ChangeBaseRevision baseRevision() {
         return new ChangeBaseRevision(
                 SourceId.of("campus-market.sir"),
@@ -255,11 +246,7 @@ class ChangeApiImmutabilityTest {
                 ProjectGraphCanonicalFormatVersion.V1);
     }
 
-    // [RQ-06 RECOVERY NOTE] buildPlan() helper was in the truncated tail of the
-    // historical dump (same evidence as baseRevision()). Reconstructed from the
-    // ChangePlan 3-arg convenience constructor plus a minimal legal ArtifactChange
-    // (FileChange -> ImpactedArtifact -> ArtifactChange chain); used only by
-    // plannedRejectsErrorDiagnostics, whose assertion does not depend on plan contents.
+    // Minimal legal FileChange -> ImpactedArtifact -> ArtifactChange chain.
     private static ChangePlan buildPlan() {
         FileChange fileChange = new FileChange(
                 "src/main/java/x/YService.java",
@@ -282,11 +269,6 @@ class ChangeApiImmutabilityTest {
         return new ChangeTarget(
                 new SymbolId("sir://software/x/capability/Y"),
                 new AstNodeId("x/y"),
-                // [RQ-06 RECOVERY NOTE] third record component (targetNodeId) was in the
-                // truncated tail of the historical dump (session block 2026-07-19T10:31:02,
-                // rollout-2026-07-18T16-06, line 1033); value reconstructed as declaration
-                // node id. All call sites share this helper, so record equality semantics
-                // of the immutability tests are unaffected.
                 new AstNodeId("x/y"));
     }
 }

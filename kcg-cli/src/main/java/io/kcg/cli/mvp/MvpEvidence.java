@@ -13,7 +13,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
- * Sanitized evidence store for the M4 acceptance IT (ADR-019 搂14, P0-1).
+ * Sanitized evidence store for the M4 acceptance IT (ADR-019 section 14, P0-1).
  *
  * <p>Evidence contains only non-sensitive versions, outcomes, exit codes,
  * manifest/sentinel proofs, cleanup proofs, and a final credential scan
@@ -24,9 +24,10 @@ import java.util.regex.Pattern;
  * <p>Cross-run normalization is STRUCTURED and allowlist-based: only the
  * explicitly documented root-bound fields are replaced ({@code baselineId}
  * family, {@code schemaName}, {@code runTag}, the {@code ports} list, and
- * absolute path values under the run roots). All other content 鈥?candidate
+ * absolute path values under the run roots). All other content—including candidate
  * digests, graph digests, context/target/transaction identity values,
- * protocols, diagnostics, relative paths, and Maven/HTTP/MySQL outcomes 鈥? * must be byte-identical across independent runs. No blanket hex or regex
+ * protocols, diagnostics, relative paths, and Maven/HTTP/MySQL outcomes—must be
+ * byte-identical across independent runs. No blanket hex or regex
  * replacement is performed.
  */
 final class MvpEvidence {
@@ -221,8 +222,7 @@ final class MvpEvidence {
             if (secret != null && !secret.isEmpty() && text.contains("\"" + secret + "\"")) {
                 hits.add("secret-token");
             }
-            // [RQ-08 RECOVERY NOTE] M4 hardening: percent-encoded registered secrets
-            // must be detected (test percentEncodedSecretOutsideAKeyValuePairIsDetected).
+            // Percent-encoded registered secrets must be detected as well.
             // URL-encode the secret once (space -> +, non-ASCII -> %XX) and look for the
             // encoded form inside an opaque value.
             if (secret != null && !secret.isEmpty()) {

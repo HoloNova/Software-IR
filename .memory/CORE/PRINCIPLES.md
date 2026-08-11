@@ -25,9 +25,9 @@ SIR v0.1 优先使用冻结、严格的语法和 canonical semantic model，避�
 
 确定性不是“模型每次写出相似代码”，而是稳定 ID、不可变快照、确定顺序、结构化诊断、独立 Lowered IR 和纯渲染 Generator 共同保证的属性。
 
-## 原则 5：支持局部修改，但不覆盖用户工程
+## 原则 5：局部修改必须绑定稳定身份
 
-未来 Change SIR 应使用 SymbolId/AstNodeId 定位目标，经 Project Symbol Graph 计算影响范围，只重新 Lower/Generate 受影响 Artifact，并保护用户手写区域；不能整份重生成后无条件覆盖工程。
+当前 Change planning 使用稳定身份计算 scope、impact 和 closure；实际 Apply 必须重新验证 candidate、baseline、输出和物理文件身份。后续扩展仍应只修改已证明属于计划的 Artifact，不得按名称模糊匹配或整份重生成后无条件覆盖工程。
 
 ## 非协商条款
 

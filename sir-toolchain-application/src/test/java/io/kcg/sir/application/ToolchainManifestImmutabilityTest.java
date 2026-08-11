@@ -126,9 +126,8 @@ class ToolchainManifestImmutabilityTest {
                 () -> success.diagnostics().clear());
     }
 
-    // [RQ-07 RECOVERY NOTE] Success's record gained a graph component after the
-    // historical test was written; this helper builds a minimal empty graph via the
-    // public ProjectGraphBuilder so the migration does not depend on a full pipeline run.
+    // Build a minimal empty graph through the public API so this immutability test
+    // does not depend on a full compilation pipeline.
     private static ProjectGraph emptyGraph() {
         ProjectGraphAnalysis analysis = new ProjectGraphBuilder().build(
                 new ProjectGraphInput(

@@ -1,47 +1,41 @@
 ---
 created: 2026-07-16
-updated: 2026-07-16
+updated: 2026-08-11
 importance: critical
 confidence: confirmed
-source: document
+source: accepted_architecture
 status: active
 ---
 
 # 约束条件
 
-## 模块与依赖约束
+## 模块边界
 
-- `sir-parser` 只负责 ANTLR4 词法/语法、AST、SourceSpan、稳定 AstNodeId 和解析诊断。
-- `sir-semantic` 只依赖 `sir-parser`，不得依赖 Spring Boot、MyBatis-Plus、Redis 或具体 Generator。
-- Lowering 必须以 `NormalizedSemanticModel` 为输入并产生独立 Lowered IR；Generator 只能渲染 Lowered IR，不能读取 AST。
-- Core Semantic Model 不得出现 Spring 注解、MyBatis API、Redis 命令或 React/Vue 结构。
+- Parser 不包含 Target 或业务框架语义。
+- Semantic 只依赖 Parser。
+- Lowering 输入为 Normalized model，并产生独立可验证 Lowered IR。
+- Generator 只渲染 Lowered IR，不读 AST/SIR/SymbolTable，不写磁盘。
+- Project Graph 不访问文件系统，不重新解析名称。
+- Application 独占 Bundle、CURRENT、LOCK、Journal 和工程写入。
+- CLI 只适配 typed Application API，不成为第二状态权威。
 
-## 语义与确定性约束
+## 语义与确定性
 
-- 每个 `AstNameRef` 是正式 AST 节点，并拥有稳定、结构化、与 Locale、时间和随机数无关的 AstNodeId。
-- SymbolId 是项目公共黑板中的稳定语义身份；任何重复 SymbolId 必须立即失败。
-- 后续 Pass 只消费 `referenceBindings` 和 SymbolTable，不重新按名称解析。
-- `TypePass` 负责类型推导/兼容，`ValidatePass` 负责跨节点、Workflow 和 Constraint 规则，符号存在性只归 `ResolvePass`；同一问题不得多 Pass 重复诊断。
-- `NormalizePass` 不修改 AST、不解析名称；合法结果不得包含 `sir://unknown`。
-- 非法 SIR 返回结构化 `SemanticAnalysis.Failure`，普通用户错误不得逃逸为 NPE 等运行时异常。
-- 公开集合保持不可变、迭代顺序确定；大小写转换使用 `Locale.ROOT`。
+- 名称只在 Resolve 解析一次。
+- 每个真实引用拥有稳定 AstNodeId、ReferenceRole 和唯一 SymbolId binding。
+- 公开集合不可变且顺序确定；大小写转换使用 `Locale.ROOT`。
+- 普通非法输入返回结构化 Failure，不逃逸为内部异常。
 
-## 已冻结的 v0.1 规则
+## 文件事务
 
-- Entity 在字段、actor、output 等位置通过 `Ref<Entity>` 使用；裸 Entity、`Optional<Entity>`、`List<Entity>` 非法。
-- Workflow 局部变量按步骤顺序可见；Find 的 `item` 仅在该谓词内可见。
-- 无分支 Workflow 恰好一个 Return，且 Return 必须是最后一步。
-- Create 绑定所有非 Optional 字段，且不能绑定 generated identity。
-- Update/Persist 目标为 `Ref<Entity>`，Update 不得修改 identity。
-- `notBlank`、`email`、`length` 只适用于 String；`min`、`max` 只适用于 Int32/Int64/Decimal。
-- `min/max` 接受可带负号的数字常量；`length(min,max)` 接受非负整数且 `min <= max`。
-- Normalized Capability 的 `fails` 保存 Error SymbolId。
+- `CURRENT=B0` 只向后补偿；`CURRENT=B1` 只向前验证/清理。
+- 方向、路径、链接、文件类型、物理身份或补偿证据不确定时 fail closed。
+- DELETE backup 使用同卷 hard link，无 copy/move/replace fallback。
+- 路径检查覆盖 Windows 保留名、大小写重复、symlink、junction/reparse point 和提交时重检。
 
-## 修改与验收协议
+## 验收
 
-- 先添加能复现问题的最小测试，再修根因。
-- 新增引用语法时同步补齐 AstNameRef ID、Resolve 绑定、Normalized 表达和确定性测试。
-- 新增诊断时验证唯一所属 Pass、错误码、精确数量、SourceSpan，必要时验证 RelatedLocation。
-- 完成前运行 `mvn "-Dmaven.repo.local=D:\maven-repo" -o clean verify`、`git diff --check` 和 `git status --short`。
-- 当前测试下限为 parser 41、semantic 78、合计 119；减少必须说明原因。
-- 不提交或覆盖用户本地 `.claude/`。
+- 测试数量来自当次运行，不在长期约束中冻结。
+- exclude、skip、BLOCKED、NOT_RUN 与 PASS 分开报告。
+- 完成前运行标准离线 `clean verify`、`git diff --check` 和 `git status --short`。
+- 不读取或提交用户本地受保护目录和交付文件。

@@ -20,7 +20,7 @@ import java.util.Optional;
  * APPLY-DELETE.
  *
  * <p>The {@link #orchestrate(ConformanceSuiteContext)} method performs the
- * real end-to-end call chain mandated by ADR-017 搂4 / 搂8 / 搂9:
+ * real end-to-end call chain mandated by ADR-017 sections 4, 8, and 9:
  *
  * <pre>
  *   static precondition
@@ -401,9 +401,6 @@ public final class ConformanceSuite {
                     jarPath, ctx.serverPort(),
                     ctx.evidenceWriter().openStream(base + "/spring.stdout.log"),
                 
-    // [RQ-05 RECOVERY NOTE] Historical session output truncated here by Codex
-    // (…11600 tokens truncated…). ConformanceSuite.orchestrate() body after the
-    // SPRING_START process.start(...) call is NOT recoverable: every session block
-    // containing this file was cut at the same 40KB output limit (blocks at session
-    // lines 642/729/834/999/1164 all truncate at ~19600 chars). The surviving
-    // 403 lines are verbatim historical content.
+    // TODO(conformance): complete orchestration after the Spring process starts.
+    // The conformance package remains excluded until this class forms a complete,
+    // directly testable suite; see docs/qualification/TEST_COVERAGE_INVENTORY.md.

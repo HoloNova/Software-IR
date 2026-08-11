@@ -295,6 +295,8 @@ RECOVERY_REQUIRED
   -- proof failure --> RECOVERY_REQUIRED
 ```
 
+Recovery direction is not defined by this proposed CLI surface. It is inherited from accepted ADR-020: `CURRENT=Bn` permits only backward compensation to Bn, while `CURRENT=Bn+1` permits only forward verification and cleanup of the published state. No command may infer direction from file contents.
+
 Building and running the generated Spring project do not change KCG baseline state. They are acceptance activities controlled by the test-only harness.
 
 ## 8. Failure contract

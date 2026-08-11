@@ -149,11 +149,11 @@ public final class SafeTargetResolver {
          try {
             attrs = Files.readAttributes(current, BasicFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
          } catch (NoSuchFileException e) {
-            // [RQ-11] Only a direct NoSuchFileException proves the segment is
+            // Only a direct NoSuchFileException proves the segment is
             // absent; any other IOException fails closed via UnsafePathException.
             // Walking up past an absent leaf is safe because every existing
             // ancestor gets its own NOFOLLOW attribute check on the next
-            // iteration — including reparse points (see RQ-09 junction review).
+            // iteration, including reparse points.
             current = current.getParent();
             continue;
          } catch (IOException | SecurityException e) {
@@ -224,7 +224,7 @@ public final class SafeTargetResolver {
    }
 
    private static boolean isReparsePoint(Path path, BasicFileAttributes attrs) {
-      // [RQ-09] Review finding B: JDK isSymbolicLink() does NOT report NTFS junctions
+      // JDK isSymbolicLink() does NOT report NTFS junctions
       // (IO_REPARSE_TAG_MOUNT_POINT) as symlinks, and this JDK build does not expose
       // the dos:reparsePoint attribute. Under NOFOLLOW, a junction is reported as
       // isOther() while being isDirectory()==true — a combination a plain directory

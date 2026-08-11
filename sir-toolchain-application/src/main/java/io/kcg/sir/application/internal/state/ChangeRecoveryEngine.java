@@ -41,7 +41,7 @@ public final class ChangeRecoveryEngine {
    }
 
    /**
-    * [RQ-11] Recovery is only ever reachable through ChangeExecutionApplication
+    * Recovery is only ever reachable through ChangeExecutionApplication
     * .recover (explicit API) — never implicitly after a failed apply. When no
     * active journal remains the engine returns idempotentResult instead of
     * inventing work, so repeated recovery of an already-closed transaction is a

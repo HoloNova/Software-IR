@@ -248,7 +248,6 @@ final class RealRuntimeOps implements RuntimeOps {
                     "DB assertion query failed: " + e.getMessage());
             return false;
         }
-        // [RQ-05 RECOVERY NOTE] remainder of this method + class lost to
-        // historical output truncation; closed for compilation.
+        // TODO(conformance): complete runtime cleanup and terminal verification.
         }
     }

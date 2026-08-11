@@ -59,7 +59,7 @@ public final class ChangeDeleteRecoveryEngine {
    }
 
    /**
-    * [RQ-11] Direction is decided ONLY by CURRENT against the journal's B0/B1
+    * Direction is decided ONLY by CURRENT against the journal's B0/B1
     * ids, never by inspecting files: CURRENT=B0 means the transaction never
     * published, so backward compensation is legal; CURRENT=B1 means the delete
     * was published, so only forward verification/cleanup is legal and deleted

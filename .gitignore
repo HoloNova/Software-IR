@@ -31,6 +31,3 @@ Thumbs.db
 .agents/
 CompleteCommand.md
 KCG-Code_项目交付蓝图.txt
-
-# Disaster-recovery scratch space must never become project state
-.recovery/

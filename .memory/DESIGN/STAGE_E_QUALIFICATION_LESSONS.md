@@ -4,18 +4,18 @@ updated: 2026-07-30
 importance: high
 confidence: confirmed
 source: experiment
-status: active
+status: reference
 ---
 
 # Stage E Qualification Lessons
 
-## Verified outcome
+## Historical verified outcome
 
-Stage E is accepted for its declared local MySQL reference-environment tuple.
+The 2026-07-30 Stage E run was accepted for its declared local MySQL reference-environment tuple.
 ADR-016 and ADR-017 are accepted. The default Reactor passed, and two fresh
 opt-in conformance runs each reached `QUALIFIED` after all five scenarios,
 real advisory-lock checks, cleanup, and sanitized-evidence sealing completed.
-This is not a production, all-platform, or future-environment qualification.
+This is a dated method and evidence record, not the current checkout's qualification and not a production, all-platform, or future-environment qualification. Current status is maintained only in `docs/qualification/CURRENT_QUALIFICATION.md`.
 
 ## Non-negotiable completion gate
 

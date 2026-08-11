@@ -22,12 +22,12 @@ import java.util.Properties;
  *   <li>schema absence query (parameterized);</li>
  *   <li>CREATE/DROP DATABASE (via {@link SchemaSqlRenderer});</li>
  *   <li>owner-marker table and run-token;</li>
- *   <li>fixture DDL (executed via {@link Connection#setCatalog} 鈥?never raw {@code USE <schema>} SQL);</li>
+ *   <li>fixture DDL (executed via {@link Connection#setCatalog}—never raw {@code USE <schema>} SQL);</li>
  *   <li>schema inventory;</li>
  *   <li>RELEASE_LOCK.</li>
  * </ul>
  *
- * <p>Per ADR-017 搂7.2/搂10.4 the control session rechecks lock and connection
+ * <p>Per ADR-017 sections 7.2 and 10.4, the control session rechecks lock and connection
  * identity at every boundary: schema metadata/DDL, generation/Apply, Spring
  * start, inventory, cleanup, DROP, post-DROP absence proof.
  *
@@ -133,10 +133,9 @@ public final class MysqlControlSession implements AutoCloseable {
      * authorize progress.
      *
      * @param expectedServerUuid the expected server UUID (must match observed)
-     * @param schemaName the schema name (truncated in historical output)
-     * [RQ-05 RECOVERY NOTE: acquireAdvisoryLock body and subsequent methods not recoverable from any session block]
-     */
+     * @param schemaName the exact owned schema name
+     * */
 
-    // [RQ-05 RECOVERY NOTE] Method bodies lost to Codex 40KB output truncation (4141 tokens).
-    // Class closed for compilation; callers referencing missing methods will fail at compile time.
+    // TODO(conformance): implement advisory-lock acquisition and the remaining
+    // fail-closed control-session operations before enabling this package.
 }

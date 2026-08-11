@@ -91,7 +91,7 @@ public final class EvidenceSecretScanner {
     }
 
     // ------------------------------------------------------------------
-    // P0-3 搂3.3: Full tree reconciliation scan
+    // P0-3 section 3.3: Full tree reconciliation scan
     // ------------------------------------------------------------------
 
     /**
@@ -109,7 +109,7 @@ public final class EvidenceSecretScanner {
      * Full reconciliation scan combining secret-content scanning,
      * inventory tree-shape verification, and root/chain proof.
      *
-     * <p>Per P0-3 搂3.3:
+     * <p>Per P0-3 section 3.3:
      * <ul>
      *   <li>reprove root and chain BEFORE traversal</li>
      *   <li>collect ALL disk objects (directories + files) via NOFOLLOW</li>
@@ -248,15 +248,11 @@ public final class EvidenceSecretScanner {
         }
         try (entries) {
             for (Path entry : entries) {
-                // [RQ-05 RECOVERY NOTE] loop body lost to historical output
-                // truncation (250-line cap). Recovery evidence: session block
-                // line 9370 output ends here; no other block contains the rest.
+                // TODO(conformance): scan and reconcile every owned entry.
                 break;
             }
         }
     }
 
-    // [RQ-05 RECOVERY NOTE] File truncated at 250 lines in historical output; remainder lost.
-    // Class closed for compilation; missing methods (scan entrypoints etc.) will surface
-    // as compile errors at call sites.
+    // TODO(conformance): implement the remaining scanner entry points and result model.
 }

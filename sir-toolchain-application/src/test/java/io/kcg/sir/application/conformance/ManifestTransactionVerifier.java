@@ -25,7 +25,7 @@ import java.util.TreeMap;
 
 /**
  * Verifies the structured {@link MaterializationEvidence} for one scenario
- * on the real run path (ADR-017 搂7.5 / 搂7.6, Stage E Task 4).
+ * on the real run path (ADR-017 sections 7.5 and 7.6, Stage E Task 4).
  *
  * <p>Replaces the former "manifest non-null = determinism" check with
  * explicit, structured transactional assertions. For IG-* scenarios the
@@ -39,7 +39,7 @@ import java.util.TreeMap;
  *   B1 receipt != B0
  *   CURRENT points to B1
  *   complete B1 on-disk manifest (byteCount + SHA-256 per entry)
- *   B0鈫払1 exact manifest delta == plan
+ *   B0 -&gt; B1 exact manifest delta == plan
  *   closure-external bytes unchanged
  *   transaction gate clean (no active journal, no CURRENT.new)
  * </pre>
@@ -47,7 +47,7 @@ import java.util.TreeMap;
  * <p>For DELETE family, the verifier additionally proves each planned
  * deletion target is absent on disk via direct
  * {@code readAttributes(..., NOFOLLOW_LINKS)} throwing
- * {@link NoSuchFileException} 鈥?never {@code Files.exists}.
+ * {@link NoSuchFileException}—never {@code Files.exists}.
  *
  * <p>Any assertion failure produces a {@link Result.Failure} with a stable
  * message key. The conformance orchestration must not invoke the Maven
@@ -188,7 +188,7 @@ public final class ManifestTransactionVerifier {
             b1Map.put(e.relativePath(), new FileDigest(e.byteCount(), e.sha256Hex()));
         }
 
-        // 7. Compute B0鈫払1 delta and verify plan family.
+        // 7. Compute B0 -> B1 delta and verify plan family.
         Delta delta = computeDelta(b0Map, b1Map);
         PlanFamily expectedFamily = expectedFamilyFor(scenario);
         Result familyResult = verifyPlanFamily(delta, expectedFamily, scenario, evidenceWriter);
@@ -228,7 +228,6 @@ public final class ManifestTransactionVerifier {
                     "expected FILES_AND_BASELINE, got " + evidence.outcome());
         }
 
-        // [RQ-05 RECOVERY NOTE] remainder of this method + class lost to
-        // historical output truncation; closed for compilation.
+        // TODO(conformance): complete manifest-delta and terminal evidence checks.
     }
 }

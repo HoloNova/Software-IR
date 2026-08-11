@@ -13,11 +13,9 @@ import java.util.List;
 
 class KcgCliWorkflowTest {
 
-    // [RQ-08 RECOVERY NOTE] The Change-era SIR fixtures (v01-c.sir, campus-market-candidate.sir,
-    // campus-market-minimal.sir, ...) were not recoverable from the historical session logs
-    // (only filename previews exist, ~134 chars each). Tests skip with an explicit reason
-    // until those fixtures are restored. campus-market.sir is present (recovered from
-    // sir-parser's identical resource) but no workflow test can run without its candidate.
+    // The Change workflow requires reviewed base/candidate SIR pairs that are not yet
+    // present. Keep the skip explicit until the fixtures listed in the coverage inventory
+    // are implemented; campus-market.sir alone cannot exercise a Change plan.
     private static final List<String> MISSING_FIXTURES = java.util.List.of(
             "v01-c.sir", "v02-c.sir", "v03-c.sir", "v04-c.sir", "v05-base.sir",
             "v05-c.sir", "v05-candidate.sir", "v06-c.sir", "sc-a.sir", "sc-b.sir",
@@ -34,7 +32,7 @@ class KcgCliWorkflowTest {
     static void requireChangeEraFixtures() {
         org.junit.jupiter.api.Assumptions.assumeTrue(
                 CliTestFixtures.resourceExists("campus-market-candidate.sir"),
-                "Change-era SIR fixtures not recovered (RQ-08): " + MISSING_FIXTURES);
+                "required Change SIR fixtures are unavailable: " + MISSING_FIXTURES);
     }
 
     @TempDir Path tempDir;

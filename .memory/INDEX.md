@@ -1,48 +1,38 @@
 # 项目记忆索引
 
-> **灾后首要入口（2026-08-10）：** 先读 [REBUILD_CONTEXT_2026-08-10.md](REBUILD_CONTEXT_2026-08-10.md)。该文件汇总磁盘损坏后的恢复来源、较新项目状态、关键安全不变量、历史提交元数据和重建顺序。下方旧记录可能停留在更早阶段或包含重复内容。
+> 最后更新：2026-08-11
+> 作用：为新会话提供精炼上下文；当前状态仍以 `AGENTS.md` 和 `docs/PROJECT_STATUS.md` 为入口
 
-最后更新: 2026-07-16
+项目可以在不加载本目录的情况下继续。面向项目负责人的独立路由是 `docs/PROJECT_OWNER_GUIDE.md`，当前唯一工作单是 `docs/roadmap/ACTIVE_WORK.md`。
 
-## CORE — 项目核心
+## 首要入口
 
-- [PROJECT.md](CORE/PROJECT.md) — 项目目标、定位与协作背景
+1. [PROJECT_CONTEXT.md](PROJECT_CONTEXT.md) — 项目身份、当前闭环、权威分工和工作边界
+2. [CORE/PROJECT.md](CORE/PROJECT.md) — 产品目标与模块概览
+3. [ACTIVE/DEVELOPMENT.md](ACTIVE/DEVELOPMENT.md) — 当前实现与资格状态
+4. [ACTIVE/TODO.md](ACTIVE/TODO.md) — 当前优先工作
+5. [ACTIVE/BUGS.md](ACTIVE/BUGS.md) — 已知缺口和环境注意事项
+
+## CORE — 长期不变量
+
+- [PROJECT.md](CORE/PROJECT.md) — WHAT / WHY
 - [PRINCIPLES.md](CORE/PRINCIPLES.md) — 长期设计原则
-- [CONSTRAINTS.md](CORE/CONSTRAINTS.md) — 不可破坏的工程约束
+- [CONSTRAINTS.md](CORE/CONSTRAINTS.md) — 不可破坏边界
 
-## DESIGN — 设计文档
+## DESIGN — 架构与决策摘要
 
-- [ARCHITECTURE.md](DESIGN/ARCHITECTURE.md) — 长期架构、当前管线与模块职责
-- [DECISIONS.md](DESIGN/DECISIONS.md) — 已确认的关键技术决策
-- [RESEARCH.md](DESIGN/RESEARCH.md) — 尚待研究的问题
-- [EXPERIMENTS.md](DESIGN/EXPERIMENTS.md) — 已验证的构建与语义基线
+- [ARCHITECTURE.md](DESIGN/ARCHITECTURE.md) — 当前九模块架构
+- [DECISIONS.md](DESIGN/DECISIONS.md) — 已接受关键决策摘要
+- [RESEARCH.md](DESIGN/RESEARCH.md) — 待研究主题
+- [EXPERIMENTS.md](DESIGN/EXPERIMENTS.md) — 日期化运行证据
+- [STAGE_E_QUALIFICATION_LESSONS.md](DESIGN/STAGE_E_QUALIFICATION_LESSONS.md) — 外部资格方法论历史记录
 
-- [STAGE_E_QUALIFICATION_LESSONS.md](DESIGN/STAGE_E_QUALIFICATION_LESSONS.md) — Stage E qualification completion gate, evidence rules, Windows notes, and review lessons
+## LOG / ARCHIVE
 
-- [STAGE_E_QUALIFICATION_LESSONS.md](DESIGN/STAGE_E_QUALIFICATION_LESSONS.md) — Stage E qualification completion gate, evidence rules, Windows notes, and review lessons
+`LOG/` 和 `ARCHIVE/` 仅用于追溯，不默认加载，也不作为当前状态权威。
 
-## ACTIVE — 当前状态
+## 当前摘要
 
-- [TODO.md](ACTIVE/TODO.md) — 下一阶段待办与范围边界
-- [DEVELOPMENT.md](ACTIVE/DEVELOPMENT.md) — 当前实现进度和 Git 基线
-- [BUGS.md](ACTIVE/BUGS.md) — 当前缺陷与环境注意事项
+KCG-Code 已包含 Parser、Semantic、Lowering、Generator、Project Graph、Change、Application 和 CLI 九模块闭环。默认离线 Reactor 最近运行通过，精确数字见当前资格报告；conformance 包仍被 POM 排除，完整外部资格和 CLI 写生命周期均未完成。
 
-## LOG — 对话记录
-
-- [2026-07-16-sir-v0.1-stage-summary.md](LOG/CONVERSATIONS/2026-07-16-sir-v0.1-stage-summary.md) — 从架构讨论到第三轮验收的提炼记录
-
-## ARCHIVE — 归档
-
-- [README.md](ARCHIVE/README.md) — 归档规则；当前暂无归档条目
-
-## 阶段状态（2026-07-30）
-
-Stage E 已在声明的本地 MySQL reference-environment tuple 上完成并接受：默认 Reactor 通过，两个全新的 opt-in 外部资格运行均为 `QUALIFIED`。资格不泛化为生产或所有环境；Stage F 仅可进入单一最小目标的设计评估，尚未获准实施。
-
-## 阶段状态（2026-07-30）
-
-Stage E 已在声明的本地 MySQL reference-environment tuple 上完成并接受：默认 Reactor 通过，两个全新的 opt-in 外部资格运行均为 `QUALIFIED`。资格不泛化为生产或所有环境；Stage F 仅可进入单一最小目标的设计评估，尚未获准实施。
-
-## 快速摘要
-
-KCG-Code 是面向 Coding Agent 的 Software IR 编译与确定性代码生成工具链，不是普通 CRUD DSL，也不允许模型绕过 IR 直接生成 Java。当前已形成 `sir-parser -> sir-semantic -> sir-lowering-api -> sir-lowering-spring-boot` 的 v0.1 最小闭环，输出为可独立验证的 `SpringBootLoweredModel`，尚未生成文件。阶段测试为 parser 41 + semantic 78 + lowering-api 4 + spring-lowering 12 = 135 项通过。下一阶段应实现只读取 Lowered IR 的最小确定性 Generator；Redis、算法、前端联调和 Change SIR 暂不并行展开。
+当前唯一任务以 `docs/roadmap/ACTIVE_WORK.md` 为准；长期顺序见 `docs/roadmap/REMAINING_WORK.md`。

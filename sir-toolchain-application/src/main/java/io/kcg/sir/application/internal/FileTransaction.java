@@ -140,12 +140,12 @@ public final class FileTransaction {
     }
 
     /**
-    * [RQ-11] Each file is re-validated (assertSafeTarget + conflict policy)
+    * Each file is re-validated (assertSafeTarget + conflict policy)
     * immediately before its backup and again before its move: preflight
     * guarantees do not survive into the commit window, so a symlink or new
     * target inserted between checks must fail closed at the point of use.
-    * Verified by FileTransactionFaultInjectionTest and the RQ-09 junction
-    * review (fileTransactionRejectsJunctionInTargetParentChain).
+    * Verified by FileTransactionFaultInjectionTest and
+    * fileTransactionRejectsJunctionInTargetParentChain.
     */
    private TransactionResult publishExistingRoot(
             Path stagingDir, List<StagedFile> staged, List<Path> createdAncestorDirs) {
@@ -395,7 +395,7 @@ public final class FileTransaction {
     }
 
     private static boolean isLinkLike(Path path) {
-        // [RQ-09] Review finding B2: isSymbolicLink() alone does not report NTFS
+        // isSymbolicLink() alone does not report NTFS
         // junctions (JDK reports them as isOther under NOFOLLOW). Fail closed on
         // any link-or-other type in the chain.
         try {

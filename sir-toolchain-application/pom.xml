@@ -91,14 +91,12 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
                     <!--
-                        RQ-05 recovery state: conformance/ConformanceSuite.java and
-                        conformance/SpringBootTargetConformanceIT.java are partially recovered
-                        (Codex 40KB output truncation gaps in the historical session logs).
-                        Until those gaps are closed (see docs/recovery inventory, RQ-05
-                        missing-closure entry), the conformance package is excluded from
-                        test compilation so the module's non-conformance tests can run.
-                        NO test files are deleted; the exclusion is lifted when the gaps
-                        are closed.
+                        The current conformance package contains incomplete suite,
+                        runtime, and evidence helpers. It remains excluded from test
+                        compilation until the closure documented in
+                        docs/qualification/TEST_COVERAGE_INVENTORY.md is implemented.
+                        The default build must not be described as conformance-qualified
+                        while this exclusion exists.
                     -->
                     <testExcludes>
                         <testExclude>io/kcg/sir/application/conformance/**</testExclude>

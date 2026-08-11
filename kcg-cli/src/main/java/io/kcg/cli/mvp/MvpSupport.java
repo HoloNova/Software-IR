@@ -235,10 +235,8 @@ final class MvpSupport {
             }
 
             boolean sameIdentityAs(Entry o) {
-                // [RQ-08 RECOVERY NOTE] M4 hardening: identity-unavailable must fail CLOSED
-                // (two entries can never be proven to be the same file without identity).
-                // Historical dump had fail-open here; the surviving hardening test
-                // missingFileKeyCannotMakeDifferentIdentityEqual requires fail-closed.
+                // Identity-unavailable must fail closed: two entries cannot be proven
+                // to be the same physical file without a strong identity.
                 if (identity == null || o.identity == null
                         || identity.equals("<none>") || o.identity.equals("<none>")) {
                     return false;
@@ -348,8 +346,7 @@ final class MvpSupport {
     }
 }
 
-    // [RQ-08 RECOVERY NOTE] isReparsePoint(Path, BasicFileAttributes) recovered verbatim
-    // from the later MvpSupport snapshot in the same session (line 4005 block).
+    // Fail closed on Windows reparse points, including junctions reported as isOther.
 private static boolean isReparsePoint(Path path, BasicFileAttributes attrs) {
         try {
             Object val = Files.getAttribute(path, "dos:reparsePoint",
@@ -358,7 +355,7 @@ private static boolean isReparsePoint(Path path, BasicFileAttributes attrs) {
         } catch (UnsupportedOperationException e) {
             return false;
         } catch (IllegalArgumentException e) {
-            // Attribute not recognized on this JDK 鈥?fall back to
+            // Attribute not recognized on this JDK—fall back to
             // isSymbolicLink() || isOther(). Symlinks and non-directory
             // reparse points are caught. Junctions are caught by the
             // strong identity check.
@@ -369,16 +366,13 @@ private static boolean isReparsePoint(Path path, BasicFileAttributes attrs) {
         }
     }
 
-    // [RQ-08 RECOVERY NOTE] fileKey() helper lost in the historical output
-    // truncation gap; reconstructed from the standard BasicFileAttributes API
-    // contract (returns null when the platform has no file key).
+    // A platform without a file key returns null; callers must not treat null as identity.
     private static String fileKey(BasicFileAttributes attrs) {
         Object fk = attrs.fileKey();
         return fk == null ? null : fk.toString();
     }
 
-    // [RQ-08 RECOVERY NOTE] sha256Hex() recovered verbatim from the earlier
-    // MvpSupport snapshot in the same session (line 333 of the historical dump).
+    // Canonical lowercase SHA-256 for evidence identity.
     static String sha256Hex(byte[] bytes) {
         try {
             byte[] d = MessageDigest.getInstance("SHA-256").digest(bytes);
@@ -396,6 +390,3 @@ private static boolean isReparsePoint(Path path, BasicFileAttributes attrs) {
         }
     }
 }
-
-// [RQ-08 RECOVERY NOTE] tail of TreeSnapshot comparison method lost in historical
-// output truncation; minimal closure appended at the block boundary.

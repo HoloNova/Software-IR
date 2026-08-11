@@ -495,7 +495,7 @@ public final class TransactionJournal {
                return "relative path must not contain '..' segment";
             }
 
-            // [RQ-09] Review finding A: align with PathGuard's segment strength.
+            // Align journal paths with PathGuard's segment strength.
             // Windows normalizes trailing dot/space away ("file." -> "file"), so two
             // distinct plan paths could silently collide on one physical file; reserved
             // device names and illegal characters would either collide or fail

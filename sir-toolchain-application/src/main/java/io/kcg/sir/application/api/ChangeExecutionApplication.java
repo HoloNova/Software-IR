@@ -1351,7 +1351,7 @@ public final class ChangeExecutionApplication {
    }
 
    /**
-    * [RQ-11] The CURRENT bundle is loaded and its boundOutputRoot checked BEFORE
+    * The CURRENT bundle is loaded and its boundOutputRoot checked BEFORE
     * any recovery engine runs: an unreadable or foreign CURRENT must fail closed
     * before the engine could act on stale files. Absent CURRENT is a plain
     * failure ("nothing to recover"), not a silent no-op. Verified by

@@ -47,7 +47,7 @@ import org.junit.jupiter.api.io.TempDir;
  *   <li>Zero disk: no files created/deleted/modified during any result
  *       (input + output trees both unchanged).</li>
  *   <li>Unrelated files: extra files in the same directory do not block.</li>
- *   <li>ToolchainApplication regression: PREFLIGHT 鈫?GRAPH 鈫?WRITE still
+ *   <li>ToolchainApplication regression: PREFLIGHT -&gt; GRAPH -&gt; WRITE still
  *       works after the sir-change dependency addition and the shared
  *       SirCompilation refactor.</li>
  * </ul>
@@ -66,7 +66,7 @@ class ChangePlanningApplicationTest {
         Path outputRoot = base.outputRoot();
         org.junit.jupiter.api.Assumptions.assumeTrue(
                 ChangePlanningTestSupport.hasResource("valid/campus-market-candidate.sir"),
-                "campus-market-candidate.sir not recovered (RQ-07 missing resource; see inventory)");
+                "required fixture valid/campus-market-candidate.sir is unavailable; see test coverage inventory");
         Path candidateSir = ChangePlanningTestSupport.writeCandidateSir(temporaryDirectory);
         Path snapshotFile = writeSnapshotFile(base.snapshotBytes());
 
@@ -103,7 +103,7 @@ class ChangePlanningApplicationTest {
         Files.writeString(base.sourceFile(), modified, StandardCharsets.UTF_8);
         org.junit.jupiter.api.Assumptions.assumeTrue(
                 ChangePlanningTestSupport.hasResource("valid/campus-market-candidate.sir"),
-                "campus-market-candidate.sir not recovered (RQ-07 missing resource; see inventory)");
+                "required fixture valid/campus-market-candidate.sir is unavailable; see test coverage inventory");
         Path candidateSir = ChangePlanningTestSupport.writeCandidateSir(temporaryDirectory);
         Path snapshotFile = writeSnapshotFile(base.snapshotBytes());
 
@@ -125,7 +125,7 @@ class ChangePlanningApplicationTest {
         BaseFixture base = compileBase();
         org.junit.jupiter.api.Assumptions.assumeTrue(
                 ChangePlanningTestSupport.hasResource("valid/campus-market-candidate.sir"),
-                "campus-market-candidate.sir not recovered (RQ-07 missing resource; see inventory)");
+                "required fixture valid/campus-market-candidate.sir is unavailable; see test coverage inventory");
         Path candidateSir = ChangePlanningTestSupport.writeCandidateSir(temporaryDirectory);
         // Corrupt the snapshot bytes.
         byte[] corrupt = base.snapshotBytes().clone();
@@ -150,7 +150,7 @@ class ChangePlanningApplicationTest {
         BaseFixture base = compileBase();
         org.junit.jupiter.api.Assumptions.assumeTrue(
                 ChangePlanningTestSupport.hasResource("valid/campus-market-candidate.sir"),
-                "campus-market-candidate.sir not recovered (RQ-07 missing resource; see inventory)");
+                "required fixture valid/campus-market-candidate.sir is unavailable; see test coverage inventory");
         Path candidateSir = ChangePlanningTestSupport.writeCandidateSir(temporaryDirectory);
         Path snapshotFile = writeSnapshotFile(base.snapshotBytes());
         // Construct a ChangeBaseRevision with a wrong graph canonical digest.
@@ -184,7 +184,7 @@ class ChangePlanningApplicationTest {
         BaseFixture base = compileBase();
         org.junit.jupiter.api.Assumptions.assumeTrue(
                 ChangePlanningTestSupport.hasResource("valid/campus-market-candidate.sir"),
-                "campus-market-candidate.sir not recovered (RQ-07 missing resource; see inventory)");
+                "required fixture valid/campus-market-candidate.sir is unavailable; see test coverage inventory");
         Path candidateSir = ChangePlanningTestSupport.writeCandidateSir(temporaryDirectory);
         Path snapshotFile = writeSnapshotFile(base.snapshotBytes());
 
@@ -247,7 +247,7 @@ class ChangePlanningApplicationTest {
         BaseFixture base = compileBase();
         org.junit.jupiter.api.Assumptions.assumeTrue(
                 ChangePlanningTestSupport.hasResource("valid/campus-market-candidate.sir"),
-                "campus-market-candidate.sir not recovered (RQ-07 missing resource; see inventory)");
+                "required fixture valid/campus-market-candidate.sir is unavailable; see test coverage inventory");
         Path candidateSir = ChangePlanningTestSupport.writeCandidateSir(temporaryDirectory);
         Path snapshotFile = writeSnapshotFile(base.snapshotBytes());
         // Output root does not exist.
@@ -266,11 +266,9 @@ class ChangePlanningApplicationTest {
         assertHasCode(failure, "SIR-APP-CHANGE-PROTECT-102");
     }
 
-    // [RQ-07 RECOVERY NOTE] an @Test annotation whose method signature was lost in the
-    // historical output truncation gap was removed; the following test method is intact.
     @Test
     void existingToolchainApplicationStillWorks() throws Exception {
-        // Verify that the existing ToolchainApplication's PREFLIGHT 鈫?GRAPH 鈫?WRITE
+        // Verify that the existing ToolchainApplication's PREFLIGHT -> GRAPH -> WRITE
         // flow still works after the shared SirCompilation refactor.
         Path source = io.kcg.sir.application.ApplicationTestSupport.writeCampusMarketSource(
                 temporaryDirectory);
@@ -407,12 +405,8 @@ class ChangePlanningApplicationTest {
      * canonical snapshot bytes, raw SHA-256, graph version, a
      * pre-constructed {@link ChangeSet} targeting the PublishGoods workflow,
      * and the {@link ChangeTarget} used inside that ChangeSet.
-     * [RQ-07 RECOVERY NOTE] javadoc tail lost in historical output; closed here.
      */
-    // [RQ-07 RECOVERY NOTE] BaseFixture record declaration was lost in the historical
-    // output truncation gap; reconstructed from the compileBase() constructor call
-    // (7 args) and the accessor names used by the test methods
-    // (sourceFile/outputRoot/snapshotBytes/baseSha256/graphVersion/changeSet/baseTarget).
+    // Minimal base compilation fixture shared by the planning tests.
     record BaseFixture(
             Path sourceFile,
             Path outputRoot,
