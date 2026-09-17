@@ -2,7 +2,7 @@
 
 - 状态：`ACCEPTED`
 - 所属阶段：路线图阶段 1 / Generator 系统测试
-- 前置工作：[Q1B3B Generator Controller 与 Transport 行为契约](completed/Q1B3B-generator-controller-transport-contract.md) 已完成
+- 前置工作：[Q1B3B Generator Controller 与 Transport 行为契约](Q1B3B-generator-controller-transport-contract.md) 已完成
 - 本工作单性质：测试优先；只修复确定性矩阵直接证明的 Generator 局部缺陷
 - 下一张候选工作单：Q1D 完整生成工程冻结依赖下的真实离线编译
 

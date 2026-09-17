@@ -2,7 +2,7 @@
 
 - 状态：`DONE`
 - 所属阶段：路线图阶段 1 / Generator 系统测试
-- 前置工作：[Q1B3A Generator Service 与 Workflow 行为契约](completed/Q1B3A-generator-service-workflow-contract.md) 已完成
+- 前置工作：[Q1B3A Generator Service 与 Workflow 行为契约](Q1B3A-generator-service-workflow-contract.md) 已完成
 - 本工作单性质：测试优先；只修复新增失败测试直接证明的 Controller/transport Renderer 局部缺陷
 - 下一张候选工作单：Q1C Locale、工作目录、换行、转义与 UTF-8 字节确定性矩阵
 
@@ -35,7 +35,7 @@
 4. `ControllerRenderer.java`、`ResponseTypeRenderer.java`、`ServiceRenderer.java`；
 5. `ActorBinding.java`、`TransportPlan.java`、`SpringBootDeclaration.CapabilityDeclaration`；
 6. `GeneratorTestSupport.java`、现有 Generator 契约测试和 canonical fixtures；
-7. [Q1B3A 已完成工作单](completed/Q1B3A-generator-service-workflow-contract.md)。
+7. [Q1B3A 已完成工作单](Q1B3A-generator-service-workflow-contract.md)。
 
 ## 允许修改的范围
 

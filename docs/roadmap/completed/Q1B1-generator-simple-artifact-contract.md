@@ -2,7 +2,7 @@
 
 - 状态：`DONE`
 - 所属阶段：路线图阶段 1 / Generator 系统测试
-- 前置工作：[Q1A Generator 输出契约基线](completed/Q1A-generator-output-contract.md) 已完成
+- 前置工作：[Q1A Generator 输出契约基线](Q1A-generator-output-contract.md) 已完成
 - 本工作单性质：测试优先；只允许修复新增测试直接证明的 Generator 局部缺陷
 - 下一张候选工作单：Q1B2 Entity 与 DTO Renderer 类型/约束契约
 

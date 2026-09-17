@@ -23,6 +23,8 @@
 | [`PROJECT_STATUS.md`](PROJECT_STATUS.md) | 想知道项目现在能做什么时 | 当前真实能力和未发布边界 |
 | [`qualification/CURRENT_QUALIFICATION.md`](qualification/CURRENT_QUALIFICATION.md) | 想知道哪些结论真的跑过时 | 测试、skip、exclude、BLOCKED 和 NOT_RUN |
 | [`roadmap/REMAINING_WORK.md`](roadmap/REMAINING_WORK.md) | 想看完整后续顺序时 | 长期阶段顺序和各阶段完成门 |
+| [`roadmap/README.md`](roadmap/README.md) | 以主设计控制后续方向时 | G0–G7 阶段入口和交给 Agent 的 Prompt |
+| [`design/`](design/) | 需要确认目标设计时 | 主设计的目标契约和实现边界，不替代当前工作单 |
 | [`../AGENTS.md`](../AGENTS.md) | 任何人准备改代码前 | 不可破坏规则、权威层级和统一验收命令 |
 | [`architecture/`](architecture/) | 工作单点名某个 ADR 时 | 已冻结的架构决定和理由 |
 
@@ -33,6 +35,7 @@
 - 当前唯一任务只看 `ACTIVE_WORK.md`。
 - 已完成证据只在 `roadmap/completed/` 追溯，不得继续留在 `ACTIVE_WORK.md`。
 - 长期顺序只看 `REMAINING_WORK.md`。
+- 主设计的 G 阶段只负责方向和阶段完成门；实际执行仍以 `ACTIVE_WORK.md` 为准。
 - 不要从旧聊天、日期化报告或某个 Agent 的口头总结恢复“当前状态”。
 
 ## 同一对话续作提示词

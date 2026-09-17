@@ -1,17 +1,129 @@
 # 当前唯一工作单：Q1 Generator 系统测试总验收
 
-- 状态：`DESIGN_REVIEW`
+- 状态：`SPEC_REVIEW`
 - 所属阶段：路线图阶段 1 / Generator 系统测试
 - 前置工作：Q1A、Q1B1、Q1B2、Q1B3A、Q1B3B、Q1C、Q1D 均已完成
-- 当前动作：等待项目负责人确认 Q1 总验收的架构边界验证方案
-- 版本规则：方案确认后实施；Q1 整体通过并再次确认后，才归档、创建本地快照并普通推送 `origin`
+- 已确认方案：编译后生产字节码边界扫描 + 公开入口反射检查
+- 当前动作：等待项目负责人复核本工作单；确认后才进入实现
+- 版本规则：Q1 整体通过并再次确认后，归档、创建本地快照并普通推送 `origin`；不改写历史、不强推
 
-## 当前唯一未闭合判断
+## 目标
 
-主要 Renderer、完整有序输出、Transport、跨环境字节确定性和完整生成工程离线编译已有直接证据。资格清单仍明确保留一项：需要把“生产 Generator 只消费 Lowered IR，不读取 AST、SIR、SymbolTable、文件系统、环境、时间或随机源”从人工判断升级为可重复执行的架构边界证据。
+关闭路线图阶段 1 最后一项未被直接执行的判断：证明生产 `sir-generator-spring-boot` 只以 `SpringBootLoweredModel` 为生成输入，不读取 AST、SIR、SymbolTable、文件系统、进程环境、时间或随机源。
 
-本工作单在方案确认前不修改代码。确认后补充完整设计、允许范围、测试协议、验证命令和交接证据。
+Q1A～Q1D 已证明输出完整性、Renderer 行为、Transport、字节确定性和完整生成工程离线编译。本工作单只增加架构边界闸门和 Q1 汇总验收，不重复已有契约。
+
+## 已比较方案与决定
+
+1. **编译后字节码扫描 + 反射检查（已确认）**：不依赖源码目录，检查真正进入产物的依赖；需要一个小型 test-only class-file constant-pool reader。
+2. 源码/import 扫描：可读性高，但可能漏掉全限定名、方法描述符或非 import 引用，也依赖源码布局。
+3. 人工审查 + POM：实现成本低，但不能阻止后续回归。
+
+采用方案 1。不得同时加入源码扫描或第三方架构测试依赖。
+
+## 边界设计
+
+### 1. 公开生成入口
+
+通过反射检查生产 `SpringBootGenerator`：
+
+- 唯一公开生成方法为 `generate(SpringBootLoweredModel)`；
+- 返回类型为 `GenerationResult`；
+- 不出现 AST、SIR、Normalized Model、SymbolTable、路径或文件参数；
+- 不为测试增加新的生产入口、构造器或可见性。
+
+`GeneratedFile` 保留现有 `SymbolId` ownership metadata 是已冻结输出契约，不等于 Generator 重新消费 Semantic Model；本工作单明确允许这一项精确依赖，不允许扩大为其他 Semantic API。
+
+### 2. 编译后生产字节码扫描
+
+从 `SpringBootGenerator.class` 的 code source 定位当前模块生产 `target/classes`，递归读取其中全部 `.class`。test-only reader 解析 class-file constant pool 的 UTF-8 项，并检查内部类名、描述符和符号文本中是否出现禁止引用。
+
+禁止集合：
+
+- Parser / AST / Semantic 输入：
+  - `io/kcg/sir/ast/`
+  - `io/kcg/sir/api/`
+  - `io/kcg/sir/internal/`
+  - `io/kcg/sir/source/`
+  - `io/kcg/sir/semantic/api/`
+  - `io/kcg/sir/semantic/model/`
+  - `io/kcg/sir/semantic/symbol/` 下除精确 `SymbolId` 之外的类型，尤其 `SymbolTable`
+- 磁盘和流式 I/O：`java/nio/file/`、`java/io/`
+- 环境入口：`java/lang/System`
+- 时间：`java/time/`
+- 随机源：`java/util/Random`、`java/util/concurrent/ThreadLocalRandom`、`java/security/SecureRandom`、`java/util/UUID`
+
+允许集合：Generator 自身 API/internal、Lowering API、`io/kcg/sir/lowering/springboot/model/`、JDK 纯内存集合/字符串工具，以及精确的 `io/kcg/sir/semantic/symbol/SymbolId` 输出 metadata。
+
+扫描必须至少发现当前生产 class 数量大于零，并明确包含 `SpringBootGenerator.class` 与一个内部 Renderer，防止空目录或错误 code source 产生假绿。
+
+### 3. 闸门灵敏度
+
+测试侧定义一个故意调用 `Files` 和 `System` 的最小探针 class。先用同一个 constant-pool reader 扫描该探针，并断言能够报告 `java/nio/file/` 与 `java/lang/System`；随后才扫描生产 class。
+
+探针只存在于 `src/test` / `target/test-classes`，不得被纳入生产扫描或 JAR。它证明闸门不是“永远返回空集合”的假测试。
+
+## 错误处理与证据
+
+- constant-pool reader 遇到非法 magic、截断数据或未知 tag 时立即失败，报告 class 文件和偏移/标签；不得跳过。
+- 生产扫描失败时列出每个 class 与对应禁止引用，使用确定顺序，便于另一个 Agent 直接定位。
+- code source 不是普通目录、缺少代表性 class 或扫描数量为零时立即失败。
+- 若首次生产扫描发现真实违规，先确认不是字符串假阳性；确认后按测试先行协议只修对应 Generator 局部实现。若需要改 Lowered IR、公共 API、模块依赖或 Generator 职责，停止并请求项目负责人裁决。
+
+## 允许修改的范围
+
+- `sir-generator-spring-boot/src/test/**`
+- 被新架构测试直接证明违规的 `sir-generator-spring-boot/src/main/**` 局部实现
+- 与实际结果同步的：
+  - `docs/qualification/CURRENT_QUALIFICATION.md`
+  - `docs/qualification/TEST_COVERAGE_INVENTORY.md`
+  - `docs/roadmap/REMAINING_WORK.md`
+  - 本工作单状态与交接记录
+
+不得新增依赖、修改 Generator 公共契约、修改 Parser/Semantic/Lowering/Application/Graph/Change/CLI，也不得触碰受保护路径。
+
+## 实现与测试顺序
+
+1. 新增 `GeneratorProductionBoundaryTest` 的 test-only constant-pool reader 和故意违规探针。
+2. 先验证探针能被识别，排除空扫描和无效规则。
+3. 运行生产 class 扫描和公开入口反射检查，记录首次真实结果。
+4. 若生产边界首次即通过，如实记录“现有行为获得直接证据”，不虚构 RED、不修改生产代码。
+5. 若首次失败，只有确认的真实生产违规才进入最小修复；修复后重跑定向测试。
+6. 执行 Generator reactor 和全量离线 Reactor；同步测试计数、残余风险和 Q1 完成状态。
+
+由于预期是给既有正确边界补直接证据，本阶段可能没有生产 RED。测试灵敏度由故意违规的 test-only 探针证明；任何生产修改仍必须先有真实失败。
+
+## 验证命令
+
+定向：
+
+```powershell
+mvn "-Dmaven.repo.local=D:\maven-repo" -o clean -pl sir-generator-spring-boot -am "-Dtest=GeneratorProductionBoundaryTest" "-Dsurefire.failIfNoSpecifiedTests=false" test
+```
+
+完成闸：
+
+```powershell
+mvn "-Dmaven.repo.local=D:\maven-repo" -o clean verify
+git diff --check
+git status --short
+```
+
+## Q1 完成闸
+
+- Q1A～Q1D 的归档工作单和当前资格文档互相一致。
+- 公开 `generate` 输入只为 `SpringBootLoweredModel`，输出为 `GenerationResult`。
+- 故意违规的测试探针被闸门稳定识别。
+- 全部生产 Generator class 通过禁止依赖扫描；扫描非空且包含入口与 Renderer。
+- 不新增依赖、skip、exclude 或生产测试入口。
+- Generator 定向 Reactor 与十模块全量离线 Reactor 通过；Surefire XML 统计与资格文档一致。
+- 完整生成工程离线编译仍在全量 Reactor 中真实执行。
+- 运行时、MySQL、HTTP、conformance、Project Graph 直接测试和后续路线不得被表述为 Q1 已完成内容。
+- 状态更新为 `AWAITING_ACCEPTANCE`，等待项目负责人确认 Q1 整体通过。
+- 项目负责人确认后，归档本工作单、创建 Q1 本地提交并普通推送 `main` 到 `origin`；推送成功后才建立 Q2 工作单。
 
 ## 交接记录
 
-2026-08-11：项目负责人确认 Q1D 通过。Q1D 进入归档和本地快照流程；Q1 总验收建立为 `DESIGN_REVIEW`，等待架构边界验证方案确认。
+2026-08-11：项目负责人确认 Q1D 通过。Q1D 已归档，本地快照为 `5bba6ea`，`origin/main` 仍为 `55fc610`，没有推送远端。
+
+2026-08-11：项目负责人从三种方案中确认采用“编译后生产字节码边界扫描 + 公开入口反射检查”。本工作单完成设计展开和自检，进入 `SPEC_REVIEW`；方案复核前不修改测试或生产代码。
