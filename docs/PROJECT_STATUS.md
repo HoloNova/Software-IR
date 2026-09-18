@@ -1,6 +1,6 @@
 # KCG-Code 当前项目状态
 
-> 更新日期：2026-08-11
+> 更新日期：2026-09-18（补主设计入口、G0 阶段定位与待裁决证据冲突；第 3、5 节能力结论沿用 2026-08-11 的运行记录）
 > 状态：正常开发中的 v0.1 工程；默认离线构建可运行，完整资格尚未完成
 
 ## 1. 项目定位
@@ -11,7 +11,7 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 
 ## 2. 当前实现
 
-父 Maven Reactor 包含九个子模块：
+父 Maven Reactor 包含九个业务子模块（父工程与九个子模块共十个 Reactor 模块）：
 
 | 模块 | 当前职责 |
 |---|---|
@@ -55,12 +55,20 @@ mvn "-Dmaven.repo.local=D:\maven-repo" -o clean verify
 
 当前结论：
 
-- 默认离线 Reactor：通过。
+- 默认离线 Reactor：Windows 2026-08-11 通过；Linux 2026-09-18 新仓库下模块 1–8 通过、模块 9 有 5 项软链接失败、模块 10 未运行（精确数字见资格文档 1.2）。
 - 外部 MySQL conformance：`NOT_RUN / BLOCKED`。
 - 完整本地 MVP：`NOT_RUN`。
 - 生产、安全认证、性能、HA 和全平台资格：未声明。
 
 精确模块数字与阻断原因见 `docs/qualification/CURRENT_QUALIFICATION.md`。
+
+### 待裁决的证据冲突
+
+`docs/design/implementation-baseline.md`（2026-09-08，源码基点 `5bba6ea`）记录标准命令 `mvn "-Dmaven.repo.local=D:\maven-repo" -o clean verify` 失败于 `sir-parser:testCompile`（报告找不到 `io.kcg.sir.api`、`io.kcg.sir.ast` 等包，后续模块未验证）；而本文件与 `CURRENT_QUALIFICATION.md`（2026-08-11）记录同一命令为 `BUILD SUCCESS`。两者使用同一命令与同一源码基点、不同日期和不同环境。在该冲突被一次当次 `clean verify` 复跑裁决之前：
+
+- 两处的 `PASS` 只代表各自那次运行，不自动延伸为今天的结论；
+- 不得据任一方推断当前 `clean verify` 一定会成功或一定失败；
+- 复跑结果直接写回 `CURRENT_QUALIFICATION.md`，不新增互相竞争的报告。
 
 ## 5. 已冻结的高风险契约
 
@@ -76,7 +84,7 @@ mvn "-Dmaven.repo.local=D:\maven-repo" -o clean verify
 
 ## 6. 当前优先工作
 
-当前真正可以派发的唯一任务见 `docs/roadmap/ACTIVE_WORK.md`。下面是长期顺序，不应一次全部交给一个执行者：
+当前 G 阶段是 **G0：现有链路资格收口**（阶段定义见 `docs/roadmap/README.md`）。当前真正可以派发的唯一任务见 `docs/roadmap/ACTIVE_WORK.md`。下面是 G0 内部的长期顺序，不应一次全部交给一个执行者：
 
 1. 为 Generator 建立系统行为测试和生成工程编译验收。
 2. 为 Project Graph 建立直接模块测试。
@@ -85,11 +93,13 @@ mvn "-Dmaven.repo.local=D:\maven-repo" -o clean verify
 5. 补齐 UPDATE/CREATE/DELETE 故障注入矩阵。
 6. 在上述前置完成后决定是否发布 ADR-019 的完整 CLI 生命周期。
 
-详细任务和完成条件见 `docs/roadmap/REMAINING_WORK.md`。
+详细任务和完成条件见 `docs/roadmap/REMAINING_WORK.md`。G0 之后的 G1–G7 产品方向与阶段完成门见 `docs/roadmap/README.md` 和 `docs/design/README.md`；它们不改变本文件的能力结论，也不解除未发布边界。
 
 ## 7. 文档状态规则
 
 - `docs/PROJECT_OWNER_GUIDE.md` 是项目负责人的操作入口。
+- `docs/design/README.md` 与 `docs/design/implementation-baseline.md` 是目标产品设计和当次实现校准的入口；它们描述的是目标与当时边界，不证明当前能力。
+- `docs/roadmap/README.md` 是 G0–G7 阶段方向与阶段 Prompt 的入口；G0–G7 负责方向，Q 系列工作单负责执行授权。
 - `docs/roadmap/ACTIVE_WORK.md` 是本轮唯一工作单。
 - 本文件是当前能力入口。
 - `docs/qualification/` 只记录实际运行证据和覆盖缺口。

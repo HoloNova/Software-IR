@@ -10,9 +10,24 @@
 2. Accepted ADR 负责已经冻结的架构意图和跨模块契约。
 3. 当前生产代码与实际执行的测试负责证明现有行为；被排除、跳过或未运行的测试不构成行为证据。
 4. `docs/PROJECT_STATUS.md` 和 `docs/qualification/CURRENT_QUALIFICATION.md` 负责当前能力与资格状态。
-5. `.memory/` 是提炼后的长期上下文；日期化 spec、LOG 和 Git 历史只作为背景证据，不是当前状态权威。
+5. `docs/design/` 主设计文档集与 `docs/roadmap/README.md` 负责目标产品契约、验收场景和 G0–G7 阶段方向；它们是**后续功能方向的主入口**（导航见 `docs/README.md`），但不证明任何能力当前已经实现。
+6. `.memory/` 是提炼后的长期上下文；日期化 spec、LOG 和 Git 历史只作为背景证据，不是当前状态权威。
 
 如果 Accepted ADR 与当前代码或可执行测试冲突，必须先停止普通功能开发并显式裁决，不得用旧报告静默覆盖代码，也不得把当前偶然行为自动升格为新架构。
+
+问题分两类，不使用同一把尺子：
+
+- **“应该实现什么、下一步做什么”**：以主设计和 G0–G7 阶段门为主入口。
+- **“现在已经实现什么”**：以当前源码、实际执行的测试、`PROJECT_STATUS.md` 和资格文档为准。
+
+两类文档冲突时按上面 1–6 的层级裁决，不得用任一方的表述覆盖另一方。目标契约尚未实现时只能记为“尚未实现”，不得因为设计已经写出、或某个模块已经存在同名代码而记为完成。
+
+阶段编号有两套，职责不同，不得混用：
+
+- **G0–G7**（`docs/roadmap/README.md`、`docs/design/07-validation-and-direction-roadmap.md`）负责产品方向、阶段进入条件与阶段完成门。
+- **Q 系列**（`docs/roadmap/completed/` 与本文件点名的工作单编号）是仓库中实际执行的工作单编号，执行授权只来自 `docs/roadmap/ACTIVE_WORK.md`。
+
+同一个 G 阶段可以包含多张 Q 工作单；Q 工作单不得跳过当前 G 阶段的完成门。G 阶段描述、设计文档正文和其中附带的 Agent Prompt 都不构成修改生产代码的授权，实际授权仍只来自 `docs/roadmap/ACTIVE_WORK.md`。
 
 上下文加载分为两种路径。
 
@@ -25,7 +40,8 @@
 3. `docs/PROJECT_STATUS.md`
 4. `docs/roadmap/ACTIVE_WORK.md`
 5. `docs/qualification/CURRENT_QUALIFICATION.md`
-6. 当前工作单直接相关的 ADR、代码和测试
+6. `docs/design/README.md` 与 `docs/roadmap/README.md`（目标设计与当前 G 阶段方向）
+7. 当前工作单直接相关的 ADR、代码和测试
 
 ### 连续续作：同一对话且上下文完整
 
@@ -148,21 +164,27 @@ ANTLR4 Grammar、严格 UTF-8、不可变 AST、SourceSpan、稳定 AstNodeId �
 11. 完成前执行：
 
 ```powershell
-mvn "-Dmaven.repo.local=D:\maven-repo" -o clean verify
+mvn "-Dmaven.repo.local=D:\maven-repo" -o clean verify          # Windows 工作机
+mvn -Dmaven.repo.local=/root/.m2/repository -o clean verify     # Linux 工作机
 git diff --check
 git status --short
 ```
+
+离线仓库路径按机器选择，两条命令等价；全新机器必须先在线 priming 一次本地仓库（含生成工程依赖），之后才能在 `-o` 下运行，过程见 `docs/qualification/CURRENT_QUALIFICATION.md` 的 1.2。
 
 最新资格数据及缺口只记录在 `docs/qualification/CURRENT_QUALIFICATION.md`，不在本文件冻结测试数量。
 
 ## 6. 当前工作边界
 
-当前剩余工作按 `docs/roadmap/REMAINING_WORK.md` 分阶段推进；本轮唯一授权工作由 `docs/roadmap/ACTIVE_WORK.md` 定义。优先顺序是 Generator 测试、PSG 测试、Change fixtures、conformance harness、事务故障矩阵和 CLI 产品边界。
+当前 G 阶段是 **G0：现有链路资格收口**（见 `docs/roadmap/README.md`）。`docs/roadmap/REMAINING_WORK.md` 的阶段 1–7 是 G0 内部的 Q 系列排队表；本轮唯一授权工作仍由 `docs/roadmap/ACTIVE_WORK.md` 定义。优先顺序是 Generator 测试、PSG 测试、Change fixtures、conformance harness、事务故障矩阵和 CLI 产品边界。
 
-在这些基础资格缺口收口前，不并行展开 Redis、第二 Target、Constraint VM、PSG `REFERENCES` 扩展、Snapshot V2、Change IR v0.7、GUI/daemon、多用户、Java 反向解析或新的增量编译系统。
+在这些基础资格缺口收口、G0 完成门闭合前，不并行展开 Redis、第二 Target、Constraint VM、PSG `REFERENCES` 扩展、Snapshot V2、Change IR v0.7、GUI/daemon、多用户、Java 反向解析或新的增量编译系统。
+
+同理，主设计中 G1–G7 的目标能力（单文件课程业务切片、持久身份与受控多文件、数据库生命周期、完整源码包与 Docker 交付、完整课程业务、网页平台与可靠发布、独立换题试用）在各自上一个 G 阶段完成门闭合并写出对应的 Q 工作单之前，不得展开实现。设计中“某项实现可提前准备”的表述不构成提前开工的授权。
 
 ## 7. 文档入口
 
+- 文档总入口与导航：`docs/README.md`
 - 项目介绍：`README.md`
 - 项目负责人操作手册：`docs/PROJECT_OWNER_GUIDE.md`
 - 当前唯一工作单：`docs/roadmap/ACTIVE_WORK.md`
@@ -170,12 +192,17 @@ git status --short
 - 当前架构：`docs/KCG-Code_系统架构与实现指南.md`
 - 当前资格：`docs/qualification/CURRENT_QUALIFICATION.md`
 - 测试覆盖清单：`docs/qualification/TEST_COVERAGE_INVENTORY.md`
-- 剩余路线图：`docs/roadmap/REMAINING_WORK.md`
+- 剩余路线图（G0 内部 Q 系列顺序）：`docs/roadmap/REMAINING_WORK.md`
+- 主设计入口（目标产品与新阶段方向）：`docs/design/README.md`
+- 现有实现与目标能力的当次校准：`docs/design/implementation-baseline.md`
+- 阶段控制与阶段 Prompt（G0–G7）：`docs/roadmap/README.md`
 - Resolve-once：`docs/architecture/ADR-001-resolve-once-and-bind-by-node-id.md`
 - Application ownership：`docs/architecture/ADR-003-toolchain-application-owns-project-application.md`
 - 本地 MVP 提议：`docs/architecture/ADR-019-local-software-ir-mvp-delivery-contract.md`
 - CURRENT 事务方向：`docs/architecture/ADR-020-current-baseline-transaction-direction.md`
 
 日期化 spec 记录当时设计背景；若其状态描述与当前入口冲突，以本文件的权威分工处理。
+
+`docs/README.md` 是全部文档的导航入口。`docs/design/` 是目标设计的唯一入口：需要判断“应该实现什么”“下一步做什么”“某能力是否属于目标范围”“阶段完成门是什么”时以它和 `docs/roadmap/README.md` 为准。需要判断“现在实际能做什么”时以代码、可执行测试、`docs/PROJECT_STATUS.md` 和资格文档为准。
 
 不要读取、修改、暂存或提交用户本地 `.claude/`、`.trae/`、`.codex/`、`.agents/`、`CompleteCommand.md` 或交付蓝图，除非用户对具体路径明确授权。
