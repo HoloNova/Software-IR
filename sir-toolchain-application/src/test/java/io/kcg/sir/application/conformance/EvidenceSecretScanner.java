@@ -248,11 +248,83 @@ public final class EvidenceSecretScanner {
         }
         try (entries) {
             for (Path entry : entries) {
-                // TODO(conformance): scan and reconcile every owned entry.
-                break;
+                BasicFileAttributes attrs = Files.readAttributes(entry,
+                        BasicFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
+                if (attrs.isDirectory()) {
+                    collectDiskTreeRecursive(entry, dirs, files);
+                } else {
+                    // Regular files, symlinks, and every other object type are recorded as
+                    // files. A symlink or special object therefore shows up as an object the
+                    // inventory does not know, so the scan reports the tree dirty instead of
+                    // silently following or ignoring it.
+                    files.add(entry);
+                }
             }
         }
     }
 
-    // TODO(conformance): implement the remaining scanner entry points and result model.
+    // ------------------------------------------------------------------
+    // Internal: flat NOFOLLOW collection and byte search
+    // ------------------------------------------------------------------
+
+    /**
+     * Collect every regular file under {@code root} using a NOFOLLOW traversal.
+     *
+     * @param root the directory to traverse
+     * @return the regular file paths in traversal order
+     * @throws IOException if a directory cannot be listed
+     */
+    private List<Path> collectRegularFiles(Path root) throws IOException {
+        List<Path> collected = new ArrayList<>();
+        collectRegularFilesRecursive(root, collected);
+        return collected;
+    }
+
+    private void collectRegularFilesRecursive(Path dir, List<Path> collected) throws IOException {
+        DirectoryStream<Path> entries;
+        try {
+            entries = Files.newDirectoryStream(dir);
+        } catch (IOException e) {
+            throw new IOException("SCAN_IO_ERROR", e);
+        }
+        try (entries) {
+            for (Path entry : entries) {
+                BasicFileAttributes attrs = Files.readAttributes(entry,
+                        BasicFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
+                if (attrs.isDirectory()) {
+                    collectRegularFilesRecursive(entry, collected);
+                } else if (attrs.isRegularFile()) {
+                    collected.add(entry);
+                }
+                // Symlinks and other object types are neither followed nor scanned;
+                // scanAndReconcile is the gate that refuses to accept them.
+            }
+        }
+    }
+
+    /**
+     * Search for an exact byte sequence inside a larger buffer.
+     *
+     * @param haystack the buffer to search
+     * @param needle   the sequence to find (an empty sequence matches trivially)
+     * @return true iff the sequence occurs in the buffer
+     */
+    private static boolean containsBytes(byte[] haystack, byte[] needle) {
+        if (needle.length == 0) {
+            return true;
+        }
+        if (needle.length > haystack.length) {
+            return false;
+        }
+        outer:
+        for (int i = 0; i <= haystack.length - needle.length; i++) {
+            for (int j = 0; j < needle.length; j++) {
+                if (haystack[i + j] != needle[j]) {
+                    continue outer;
+                }
+            }
+            return true;
+        }
+        return false;
+    }
 }

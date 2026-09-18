@@ -161,7 +161,7 @@ public final class SafeTargetResolver {
          }
 
          if (attrs.isSymbolicLink() || isReparsePoint(current, attrs)) {
-            throw new SafeTargetResolver.UnsafePathException("link in raw chain: " + current);
+            throw new SafeTargetResolver.UnsafePathException("symlink or reparse point in raw chain: " + current);
          }
 
          current = current.getParent();

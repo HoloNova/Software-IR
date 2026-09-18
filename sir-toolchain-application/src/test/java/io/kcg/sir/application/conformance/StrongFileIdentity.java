@@ -6,11 +6,14 @@ import com.sun.jna.platform.win32.WinBase;
 import com.sun.jna.platform.win32.WinDef;
 import com.sun.jna.platform.win32.WinNT;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Locale;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Strong, immutable file identity that does NOT fall back to size, mtime,
@@ -52,8 +55,9 @@ final class StrongFileIdentity {
 
     private static StrongFileIdentity fromWindowsFileIdInfo(Path path) throws IOException {
         Path absolutePath = path.toAbsolutePath().normalize();
-        int openFlags = WinBase.FILE_FLAG_BACKUP_SEMANTICS
-                | WinBase.FILE_FLAG_OPEN_REPARSE_POINT;
+        // These Win32 flag constants live on WinNT in JNA 5.17.0, not on WinBase.
+        int openFlags = WinNT.FILE_FLAG_BACKUP_SEMANTICS
+                | WinNT.FILE_FLAG_OPEN_REPARSE_POINT;
         WinNT.HANDLE handle = Kernel32.INSTANCE.CreateFile(
                 absolutePath.toString(),
                 WinNT.FILE_READ_ATTRIBUTES,
@@ -86,6 +90,75 @@ final class StrongFileIdentity {
         } finally {
             Kernel32.INSTANCE.CloseHandle(handle);
         }
+    }
+
+    /**
+     * Await an {@code fsutil} child process's file-id output, proving process exit
+     * before failing.
+     *
+     * <p>This is the fallback used when the native file-id call is unavailable: the
+     * caller starts {@code fsutil file queryFileID} and this method waits for it. A
+     * tool that does not finish is terminated gracefully first, forcibly if it
+     * survives, and only then reported as a failure — the harness never leaves a
+     * child process behind and never reports "unavailable" while the tool is still
+     * running.
+     *
+     * @param process        the already-started fsutil process
+     * @param timeoutSeconds how long to wait for normal completion
+     * @param graceSeconds   how long to wait after each termination request
+     * @return the file-id token reported by the tool (0x-prefixed hex, lowercased)
+     * @throws IOException if the tool times out, never exits, or reports no file id
+     */
+    static String awaitFsutilFileId(Process process, int timeoutSeconds, int graceSeconds)
+            throws IOException {
+        Objects.requireNonNull(process, "process");
+        try {
+            if (!process.waitFor(timeoutSeconds, TimeUnit.SECONDS)) {
+                process.destroy();
+                if (!process.waitFor(graceSeconds, TimeUnit.SECONDS)) {
+                    process.destroyForcibly();
+                    if (!process.waitFor(graceSeconds, TimeUnit.SECONDS)) {
+                        throw new IOException(
+                                "STRONG_IDENTITY_UNAVAILABLE: fsutil did not exit");
+                    }
+                }
+                throw new IOException("STRONG_IDENTITY_UNAVAILABLE: fsutil timed out");
+            }
+            String output = new String(process.getInputStream().readAllBytes(),
+                    StandardCharsets.US_ASCII);
+            String fileId = parseFsutilFileId(output);
+            if (fileId == null) {
+                throw new IOException("STRONG_IDENTITY_UNAVAILABLE: fsutil reported no file id");
+            }
+            return fileId;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IOException("STRONG_IDENTITY_UNAVAILABLE: interrupted", e);
+        }
+    }
+
+    /**
+     * Extract the file-id token from {@code fsutil file queryFileID} output.
+     *
+     * <p>Accepted shapes are {@code File ID is 0x...} and {@code File ID: 0x...};
+     * anything else yields {@code null} rather than a guessed value.
+     *
+     * @param output the tool output
+     * @return the lowercased 0x-prefixed token, or {@code null} when absent
+     */
+    private static String parseFsutilFileId(String output) {
+        for (String line : output.split("\\R")) {
+            if (!line.contains("File ID")) {
+                continue;
+            }
+            for (String token : line.trim().split("\\s+")) {
+                String candidate = token.trim();
+                if (candidate.regionMatches(true, 0, "0x", 0, 2) && candidate.length() > 2) {
+                    return candidate.toLowerCase(Locale.ROOT);
+                }
+            }
+        }
+        return null;
     }
 
     private static boolean isAllZero(byte[] value) {

@@ -1,3 +1,20 @@
+package io.kcg.sir.application.conformance;
+
+import java.io.IOException;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
+import java.nio.file.AccessDeniedException;
+import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.NoSuchFileException;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+
 public final class OwnedRunDirectory implements AutoCloseable {
 
     private static final String MARKER_NAME = ".kcg-owner-marker";
@@ -124,7 +141,15 @@ public final class OwnedRunDirectory implements AutoCloseable {
     public synchronized boolean cleanup() throws IOException {
         ensureOpen();
         boolean allDeleted = true;
-        // First pass: delete all non-marker, non-root entries bottom-up.
+        // Sweep unregistered content first. The child Maven build writes into the same root
+        // (target/, src/, pom.xml inside a registered project directory), and a registered
+        // directory cannot be deleted while those extras are still inside it. Registered paths
+        // are skipped here so that every one of them is still deleted through the identity-checked
+        // path below.
+        if (!sweepUnregisteredContent()) {
+            allDeleted = false;
+        }
+        // Then delete all non-marker, non-root entries bottom-up.
         for (OwnedPathEntry entry : inventory.snapshotBottomUp()) {
             if (MARKER_NAME.equals(entry.relativePath())) {
                 // Marker is deleted after lock release.
@@ -138,7 +163,9 @@ public final class OwnedRunDirectory implements AutoCloseable {
                 allDeleted = false;
             }
         }
-        // Release marker lock and delete marker file.
+        // The inventory only covers paths this harness created itself. Anything else inside the
+        // owned root is the child build's output, and it is deleted here so the registered
+        // entries below can be removed with their identity checks intact.
         if (!releaseMarker()) {
             allDeleted = false;
         }
@@ -147,6 +174,82 @@ public final class OwnedRunDirectory implements AutoCloseable {
             allDeleted = false;
         }
         return allDeleted;
+    }
+
+    /**
+     * @param path a path inside the owned root
+     * @return true iff the path is a registered creation of this run
+     */
+    private boolean isRegistered(Path path) {
+        String relative = root.relativize(path.toAbsolutePath().normalize())
+                .toString().replace('\\', '/');
+        return !relative.isEmpty() && inventory.get(relative) != null;
+    }
+
+    /**
+     * Delete whatever is still inside the owned root after the registered entries are gone.
+     *
+     * <p>This is safe for the same reason the root is usable at all: the root was created by
+     * this run, its identity has been verified, and the marker lock proves no other run owns
+     * it. Anything inside it is therefore this run's own output, including the child build's
+     * generated files. Links are removed as links and never followed, so a link planted inside
+     * the root cannot redirect the deletion outward.
+     *
+     * @return true iff nothing inside the root survived the sweep
+     */
+    private boolean sweepUnregisteredContent() throws IOException {
+        if (!Files.exists(root, LinkOption.NOFOLLOW_LINKS)) {
+            return true;
+        }
+        List<Path> failures = new ArrayList<>();
+        Files.walkFileTree(root, java.util.EnumSet.noneOf(java.nio.file.FileVisitOption.class),
+                Integer.MAX_VALUE, new java.nio.file.SimpleFileVisitor<Path>() {
+                    @Override
+                    public java.nio.file.FileVisitResult visitFile(Path file,
+                                                                   BasicFileAttributes attrs) {
+                        if (MARKER_NAME.equals(file.getFileName().toString())) {
+                            // Released and deleted by releaseMarker().
+                            return java.nio.file.FileVisitResult.CONTINUE;
+                        }
+                        if (isRegistered(file)) {
+                            // Registered: deleted through the identity-checked path, not here.
+                            return java.nio.file.FileVisitResult.CONTINUE;
+                        }
+                        try {
+                            Files.deleteIfExists(file);
+                        } catch (IOException e) {
+                            failures.add(file);
+                        }
+                        return java.nio.file.FileVisitResult.CONTINUE;
+                    }
+
+                    @Override
+                    public java.nio.file.FileVisitResult visitFileFailed(Path file, IOException exc) {
+                        failures.add(file);
+                        return java.nio.file.FileVisitResult.CONTINUE;
+                    }
+
+                    @Override
+                    public java.nio.file.FileVisitResult postVisitDirectory(Path dir, IOException exc) {
+                        if (exc != null) {
+                            failures.add(dir);
+                            return java.nio.file.FileVisitResult.CONTINUE;
+                        }
+                        if (!dir.equals(root)) {
+                            if (isRegistered(dir)) {
+                                // Registered: deleted through the identity-checked path, not here.
+                                return java.nio.file.FileVisitResult.CONTINUE;
+                            }
+                            try {
+                                Files.deleteIfExists(dir);
+                            } catch (IOException e) {
+                                failures.add(dir);
+                            }
+                        }
+                        return java.nio.file.FileVisitResult.CONTINUE;
+                    }
+                });
+        return failures.isEmpty();
     }
 
     /**
@@ -234,8 +337,15 @@ public final class OwnedRunDirectory implements AutoCloseable {
         // null fileKey on Windows correctly. For directories, identity
         // relies on fileKey when available; on Windows (null fileKey)
         // we rely on the emptiness check below for tamper detection.
-        OwnedPathEntry rootEntry = inventory.get("");
-        if (rootEntry != null && !rootEntry.identityMatches(attrs)) {
+        // Root identity: compare the directory's file key when the provider exposes one.
+        // The recorded creation-time attributes cannot be compared wholesale here, because a
+        // directory's last-modified time legitimately changes as this run creates and then
+        // deletes its children; comparing it would refuse to delete a root that is provably
+        // ours. A replaced directory is caught by the file key, and anything unexpected left
+        // inside is caught by the emptiness check below.
+        Object recordedKey = rootAttrs.fileKey();
+        Object currentKey = attrs.fileKey();
+        if (recordedKey != null && currentKey != null && !recordedKey.equals(currentKey)) {
             return false;
         }
         // Root must be empty (no children at all).
@@ -309,36 +419,55 @@ public final class OwnedRunDirectory implements AutoCloseable {
         }
     }
 
+    /**
+     * Verify that no recorded child of the given directory has been replaced.
+     *
+     * <p>Recorded children must still be the objects this run created: a child whose strong
+     * identity drifted is a replacement and fails the check. Children that are not recorded are
+     * deliberately ignored, because this run's own child build writes into the same directories
+     * (Maven creates {@code target/}, {@code src/}, {@code pom.xml} inside the generated project
+     * directory, none of which the harness registers). Those extras are removed by
+     * {@link #sweepUnregisteredContent()} before the root is deleted, and the root itself is
+     * protected by the marker lock and the root's file key.
+     *
+     * <p>A recorded child that is already gone is not an error here: absence is proven by
+     * {@link #safeDelete} and by the final root deletion.
+     *
+     * @param dir   the directory being deleted
+     * @param entry its recorded inventory entry
+     * @return true iff every recorded child still present matches its recorded identity
+     */
     private boolean directoryChildSetMatches(Path dir, OwnedPathEntry entry) throws IOException {
-        List<String> actualChildren = new ArrayList<>();
-        try (var stream = Files.newDirectoryStream(dir)) {
-            stream.forEach(p -> actualChildren.add(p.getFileName().toString()));
-        }
-        // Compute expected children from inventory.
-        String prefix = entry.relativePath() + "/";
-        List<String> expectedChildren = new ArrayList<>();
-        for (OwnedPathEntry e : inventory.snapshot()) {
-            if (e.relativePath().startsWith(prefix)) {
-                String child = e.relativePath().substring(prefix.length());
-                int slash = child.indexOf('/');
-                if (slash < 0) {
-                    expectedChildren.add(child);
-                } else {
-                    expectedChildren.add(child.substring(0, slash));
-                }
+        String prefix = entry.relativePath().isEmpty() ? "" : entry.relativePath() + "/";
+        for (OwnedPathEntry candidate : inventory.snapshot()) {
+            if (candidate.relativePath().isEmpty()) {
+                continue;
+            }
+            if (!candidate.relativePath().startsWith(prefix)) {
+                continue;
+            }
+            String child = candidate.relativePath().substring(prefix.length());
+            if (child.isEmpty() || child.indexOf('/') >= 0) {
+                // Only direct children live in this directory.
+                continue;
+            }
+            if (MARKER_NAME.equals(child)) {
+                continue;
+            }
+            Path childPath = dir.resolve(child);
+            BasicFileAttributes attrs;
+            try {
+                attrs = Files.readAttributes(childPath, BasicFileAttributes.class,
+                        LinkOption.NOFOLLOW_LINKS);
+            } catch (NoSuchFileException e) {
+                // Already gone; absence is proven by the caller's own deletion path.
+                continue;
+            }
+            if (attrs.isSymbolicLink() || !candidate.identityMatches(attrs)) {
+                return false;
             }
         }
-        // The marker is always a child of the root.
-        if (entry.relativePath().isEmpty() || entry.relativePath().equals(".")) {
-            // Root directory 鈥?marker is expected.
-            if (!expectedChildren.contains(MARKER_NAME)) {
-                expectedChildren.add(MARKER_NAME);
-            }
-        }
-        // Compare as sets.
-        var actualSet = new java.util.TreeSet<>(actualChildren);
-        var expectedSet = new java.util.TreeSet<>(expectedChildren);
-        return actualSet.equals(expectedSet);
+        return true;
     }
 
     private void validateContainment(Path absolute) {

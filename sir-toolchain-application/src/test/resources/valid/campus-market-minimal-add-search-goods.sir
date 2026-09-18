@@ -1,0 +1,95 @@
+sir 0.1
+
+software CampusMarketMinimal {
+  metadata {
+    displayName "校园二手交易最小示例";
+    namespace "com.example.campusmarketminimal";
+  }
+
+  target {
+    language java 21;
+    framework spring_boot;
+    persistence mybatis_plus;
+    database mysql;
+    build maven;
+    interface rest;
+  }
+
+  declarations {
+    enum GoodsStatus {
+      AVAILABLE,
+      SOLD
+    }
+
+    entity User persistent {
+      identity id: Int64 generated auto;
+      field name: String where notBlank;
+      field email: String where email;
+    }
+
+    entity Goods persistent {
+      identity id: Int64 generated auto;
+      field title: String where notBlank, length(1, 100);
+      field price: Decimal where min(0.01);
+      field seller: Ref<User>;
+      field status: GoodsStatus;
+    }
+
+    input PublishGoodsInput {
+      field title: String where notBlank;
+      field price: Decimal where min(0.01);
+    }
+
+    error InvalidGoodsPrice;
+
+    input SearchGoodsInput {
+      field title: String where notBlank;
+    }
+
+    capability PublishGoods {
+      actor Ref<User>;
+      input PublishGoodsInput;
+      output Ref<Goods>;
+      fails InvalidGoodsPrice;
+      requires authenticated;
+      requires atomic;
+      expose command;
+
+      workflow {
+        validate input.price >= 0.01 else InvalidGoodsPrice;
+        create Goods as goods {
+          title: input.title;
+          price: input.price;
+          seller: actor;
+          status: GoodsStatus.AVAILABLE;
+        }
+        persist goods;
+        return goods;
+      }
+    }
+
+    capability ListAvailableGoods {
+      input SearchGoodsInput;
+      output List<Ref<Goods>>;
+      requires readonly;
+      expose query;
+
+      workflow {
+        find Goods where item.status == GoodsStatus.AVAILABLE as goods;
+        return goods;
+      }
+    }
+
+    capability SearchGoods {
+      input SearchGoodsInput;
+      output List<Ref<Goods>>;
+      requires readonly;
+      expose query;
+
+      workflow {
+        find Goods where item.status == GoodsStatus.AVAILABLE as goods;
+        return goods;
+      }
+    }
+  }
+}

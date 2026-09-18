@@ -63,6 +63,14 @@
 
 ## 5. 当次执行证据与限制
 
+> **2026-09-18 裁决（后来者补记，不修改下方原始记录）**：本节的失败观察属于 **2026-09-08、源码基点 `5bba6ea`** 的带日期快照。2026-09-18 在 Linux 全新本地仓库（Java 21.0.12 + Maven 3.6.3 + `/root/.m2/repository`）以同一条标准命令复跑，**未复现** `sir-parser:testCompile` 失败：冻结与完成两种形式均为 BUILD SUCCESS，九个模块全部完成，合计 **554 run / 0 fail / 0 error / 5 skip**。
+>
+> 裁决归属与完整证据见 [`docs/qualification/CURRENT_QUALIFICATION.md`](../qualification/CURRENT_QUALIFICATION.md) 的 1.1 与 G0 完成门一节；本节保留原样，是因为它记录的是**当时**的观察，不是当前状态。
+>
+> 另需注意本节最后两条的历史性：Application POM 里的两处 conformance 包排除**已于 Q4+Q5 删除**（该包现参加编译与运行），且外部 MySQL conformance 矩阵已在 2026-09-18 产出 `QUALIFIED`（见资格文档 1.6）。
+
+
+
 本节只记录本轮设计校准命令，不替代正式资格验收。测试结果按实际执行补记；没有运行 Docker 或真实 MySQL 业务/迁移验收。
 
 - 标准命令 `mvn "-Dmaven.repo.local=D:\maven-repo" -o clean verify`：失败于 `sir-parser:testCompile`，测试编译报告找不到 `io.kcg.sir.api`、`io.kcg.sir.ast` 等包；后续模块未由该次运行验证。

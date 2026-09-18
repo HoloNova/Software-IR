@@ -61,7 +61,7 @@ public final class PathGuard {
          for (GeneratedFile file : files) {
             String targetLink = checkTargetSymlinks(outputRoot, file.relativePath());
             if (targetLink != null) {
-               errors.add(diag("SIR-APP-PATH-003", "symbolic link in target chain for " + file.relativePath() + ": " + targetLink));
+               errors.add(diag("SIR-APP-PATH-003", "symbolic link in target parent chain for " + file.relativePath() + ": " + targetLink));
             }
          }
 
@@ -183,7 +183,12 @@ public final class PathGuard {
 
    private static String checkTargetSymlinks(Path outputRoot, String relativePath) throws IOException {
       Path target = outputRoot.resolve(relativePath).normalize();
-      Path existing = findExistingAncestor(target);
+
+      // Only strict ancestors are checked here. A symlink that IS the target is not a parent-chain
+      // violation: it is a conflict with the requested write, and conflictCheck reports the
+      // policy-specific code (SIR-APP-CONFLICT-001 or SIR-APP-CONFLICT-002) for it. Checking the
+      // target here as well would shadow those branches and reject the write with the wrong code.
+      Path existing = findExistingAncestor(target.getParent());
 
       for (Path current = existing; current != null && !current.equals(outputRoot); current = current.getParent()) {
          if (isLinkLike(current)) {
@@ -191,7 +196,7 @@ public final class PathGuard {
          }
       }
 
-      return Files.exists(target, LinkOption.NOFOLLOW_LINKS) && Files.isSymbolicLink(target) ? "target is a symbolic link: " + target : null;
+      return null;
    }
 
    private static boolean isLinkLike(Path path) {

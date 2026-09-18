@@ -1,6 +1,8 @@
 package io.kcg.sir.application.conformance;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -39,6 +41,27 @@ public final class SpringApplicationProcess {
      * @return the process (started)
      */
     public synchronized Process start(Path jarPath, int serverPort) throws IOException {
+        return start(jarPath, serverPort, null, null);
+    }
+
+    /**
+     * Start the Spring application, streaming both output streams through the
+     * redactor into caller-supplied evidence streams.
+     *
+     * <p>The conformance harness uses this overload so the application's stdout and
+     * stderr become redacted evidence while it runs, rather than only after it exits.
+     * Both streams are drained on daemon threads, so an application that logs heavily
+     * cannot block on a full pipe buffer.
+     *
+     * @param jarPath    the executable jar path
+     * @param serverPort the loopback port
+     * @param stdout     the destination for redacted stdout, or {@code null} to leave
+     *                   the stream undrained (the two-argument behavior)
+     * @param stderr     the destination for redacted stderr, or {@code null}
+     * @return the started process
+     */
+    public synchronized Process start(Path jarPath, int serverPort,
+                                      OutputStream stdout, OutputStream stderr) throws IOException {
         Objects.requireNonNull(jarPath, "jarPath");
         if (process != null && process.isAlive()) {
             throw new IllegalStateException("process already running");
@@ -55,7 +78,27 @@ public final class SpringApplicationProcess {
         pb.environment().putAll(environment);
         pb.redirectErrorStream(false);
         process = pb.start();
+        if (stdout != null) {
+            pump(process.getInputStream(), redactor.wrap(stdout));
+        }
+        if (stderr != null) {
+            pump(process.getErrorStream(), redactor.wrap(stderr));
+        }
         return process;
+    }
+
+    private static void pump(InputStream source, OutputStream destination) {
+        Thread thread = new Thread(() -> {
+            try (InputStream in = source; OutputStream out = destination) {
+                in.transferTo(out);
+                out.flush();
+            } catch (IOException ignored) {
+                // A closed evidence stream must not fail the run; process exit proof and
+                // the evidence scan remain the authorities.
+            }
+        }, "kcg-conformance-spring-pump");
+        thread.setDaemon(true);
+        thread.start();
     }
 
     /**

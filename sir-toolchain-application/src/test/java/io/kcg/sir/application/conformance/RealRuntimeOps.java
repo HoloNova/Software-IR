@@ -31,26 +31,88 @@ final class RealRuntimeOps implements RuntimeOps {
                                            EvidenceWriter evidenceWriter) {
         String harnessVersion;
         try {
-            harnessVersion = HarnessJdbcVersion.readFromConnection(control.rawConnection());
+            harnessVersion = readHarnessJdbcDriverVersion(control.rawConnection());
         } catch (RuntimeException e) {
             failScenario(run, scenario, "JDBC_HARNESS_VERSION_UNREADABLE",
                     "harness JDBC driver version could not be read: " + sanitizedMessage(e));
             return false;
         }
-        JdbcVersionInspection.Result result = JdbcVersionInspection.inspect(
-                loweredModel,
-                loweredSourceKind,
-                candidateSirSha256,
-                b1BaselineId,
-                outputRoot.resolve("pom.xml"),
-                harnessVersion,
-                evidenceWriter,
-                scenario.displayName());
-        if (!result.passed()) {
-            failScenario(run, scenario, result.messageKey(), result.detail());
+        if (loweredModel.isEmpty()) {
+            failScenario(run, scenario, "TARGET_DEPENDENCY_MODEL_MISSING",
+                    "no lowered model is available for source kind " + loweredSourceKind
+                            + ", so the target Connector/J version cannot be inspected");
+            return false;
+        }
+        TargetDependencyInspector inspection;
+        try {
+            inspection = TargetDependencyInspector.inspect(loweredModel.get(),
+                    outputRoot.resolve("pom.xml"), harnessVersion);
+        } catch (IOException e) {
+            failScenario(run, scenario, "TARGET_DEPENDENCY_INSPECTION_IO_ERROR",
+                    "cannot read the generated pom.xml: " + sanitizedMessage(e));
+            return false;
+        }
+        writeInspectionEvidence(evidenceWriter, scenario, loweredSourceKind,
+                candidateSirSha256, b1BaselineId, inspection);
+        if (!inspection.versionsAgree()) {
+            failScenario(run, scenario, "TARGET_DEPENDENCY_VERSION_MISMATCH",
+                    "target Connector/J=" + inspection.targetRuntimeConnectorVersion()
+                            + " generated pom=" + inspection.generatedPomConnectorVersion()
+                            + " harness driver=" + inspection.harnessJdbcDriverVersion());
             return false;
         }
         return true;
+    }
+
+    /**
+     * Read the JDBC driver version of the connection the harness itself opened.
+     *
+     * <p>This is the "harness driver version" the target dependency inspection
+     * records independently, so the evidence distinguishes the driver the run
+     * actually used from the version the generated project declares.
+     *
+     * @param connection the control connection
+     * @return the driver version string
+     * @throws IllegalStateException if the metadata cannot be read
+     */
+    private static String readHarnessJdbcDriverVersion(java.sql.Connection connection) {
+        try {
+            return connection.getMetaData().getDriverVersion();
+        } catch (SQLException e) {
+            throw new IllegalStateException("cannot read JDBC driver version", e);
+        }
+    }
+
+    /**
+     * Record the target dependency inspection as evidence.
+     *
+     * <p>Best effort by design: the evidence tree is reconciled separately (the
+     * ownership inventory plus the secret scanner require every registered file to
+     * exist and the scan fails closed otherwise), and a write failure must not replace
+     * the inspection verdict with an I/O exception.
+     */
+    private static void writeInspectionEvidence(EvidenceWriter evidenceWriter,
+                                                ConformanceScenario scenario,
+                                                String loweredSourceKind,
+                                                Optional<String> candidateSirSha256,
+                                                Optional<String> b1BaselineId,
+                                                TargetDependencyInspector inspection) {
+        String content = "sourceKind=" + loweredSourceKind
+                + " candidateSirSha256=" + candidateSirSha256.orElse("NONE")
+                + " b1BaselineId=" + b1BaselineId.orElse("NONE")
+                + " targetRuntimeConnectorVersion="
+                + inspection.targetRuntimeConnectorVersion()
+                + " generatedPomConnectorVersion="
+                + inspection.generatedPomConnectorVersion()
+                + " harnessJdbcDriverVersion=" + inspection.harnessJdbcDriverVersion()
+                + " versionsAgree=" + inspection.versionsAgree()
+                + "\n";
+        try (OutputStream out = evidenceWriter.openStream(
+                "scenarios/" + scenario.displayName() + "/target-dependency-inspection.txt")) {
+            out.write(content.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        } catch (IOException ignored) {
+            // See the method javadoc: the evidence scan is the gate for this.
+        }
     }
 
     @Override
@@ -248,6 +310,92 @@ final class RealRuntimeOps implements RuntimeOps {
                     "DB assertion query failed: " + e.getMessage());
             return false;
         }
-        // TODO(conformance): complete runtime cleanup and terminal verification.
-        }
     }
+
+    // ------------------------------------------------------------------
+    // Helpers
+    // ------------------------------------------------------------------
+
+    /**
+     * Record a scenario failure on the run and return.
+     *
+     * <p>The call sites (existing code) pass only a stable key, so the failure kind
+     * is derived from that key. The mapping keeps the taxonomy meaningful — a build
+     * failure is reported as {@code BUILD}, not as a generic harness fault — and
+     * anything unrecognised falls back to {@link ConformanceFailureKind#HARNESS}
+     * rather than being silently mislabelled as a business failure.
+     *
+     * @param run      the run to record on
+     * @param scenario the scenario being executed
+     * @param key      stable machine-readable failure key
+     * @param message  short explanation, already sanitized
+     */
+    private static void failScenario(ConformanceRun run, ConformanceScenario scenario,
+                                     String key, String message) {
+        run.recordFailure(new ConformanceFailure(kindFor(key), key,
+                scenario.displayName() + ": " + message));
+    }
+
+    private static ConformanceFailureKind kindFor(String key) {
+        return switch (key) {
+            case "JAR_NOT_FOUND", "CONTEXT_NOT_READY", "SPRING_START_IO_ERROR" ->
+                    ConformanceFailureKind.STARTUP;
+            case "BUILD_FAILED", "BUILD_IO_ERROR" -> ConformanceFailureKind.BUILD;
+            case "VALIDATION_NOT_EXPECTED" -> ConformanceFailureKind.VALIDATION;
+            case "HTTP_STATUS_UNEXPECTED", "REMOVED_ROUTE_NOT_404",
+                 "SECONDARY_ROUTE_NOT_EXPECTED", "HTTP_IO_ERROR" -> ConformanceFailureKind.HTTP;
+            case "DB_DELTA_MISMATCH", "DB_QUERY_FAILED" -> ConformanceFailureKind.DATABASE;
+            default -> ConformanceFailureKind.HARNESS;
+        };
+    }
+
+    /**
+     * Find the generated project's executable Spring Boot jar under
+     * {@code outputRoot/target}.
+     *
+     * <p>Only a regular file ending in {@code .jar} that is not the Maven
+     * {@code *-sources.jar} or {@code *.original} artifact qualifies; when several
+     * candidates exist the lexicographically first is chosen so the result does not
+     * depend on directory iteration order.
+     *
+     * @param outputRoot the generated project root
+     * @return the jar path, or {@code null} when no candidate exists
+     */
+    private static Path findBuiltJar(Path outputRoot) {
+        Path target = outputRoot.resolve("target");
+        java.util.List<Path> candidates = new java.util.ArrayList<>();
+        try (java.nio.file.DirectoryStream<Path> entries = Files.newDirectoryStream(target)) {
+            for (Path entry : entries) {
+                String name = entry.getFileName().toString();
+                if (name.endsWith(".jar")
+                        && !name.endsWith("-sources.jar")
+                        && !name.endsWith("-javadoc.jar")
+                        && Files.isRegularFile(entry)) {
+                    candidates.add(entry);
+                }
+            }
+        } catch (IOException e) {
+            return null;
+        }
+        if (candidates.isEmpty()) {
+            return null;
+        }
+        candidates.sort(java.util.Comparator.comparing(p -> p.getFileName().toString()));
+        return candidates.get(0);
+    }
+
+    /**
+     * Reduce a throwable to a short, credential-free message.
+     *
+     * @param t the throwable
+     * @return the message, truncated to 200 characters, or the class name when the
+     *         throwable carries no message
+     */
+    private static String sanitizedMessage(Throwable t) {
+        String msg = t.getMessage();
+        if (msg == null) {
+            return t.getClass().getSimpleName();
+        }
+        return msg.length() > 200 ? msg.substring(0, 200) : msg;
+    }
+}

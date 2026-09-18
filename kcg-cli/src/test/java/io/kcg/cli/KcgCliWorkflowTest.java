@@ -1,6 +1,5 @@
 package io.kcg.cli;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import static org.junit.jupiter.api.Assertions.*;
@@ -13,32 +12,26 @@ import java.util.List;
 
 class KcgCliWorkflowTest {
 
-    // The Change workflow requires reviewed base/candidate SIR pairs that are not yet
-    // present. Keep the skip explicit until the fixtures listed in the coverage inventory
-    // are implemented; campus-market.sir alone cannot exercise a Change plan.
-    private static final List<String> MISSING_FIXTURES = java.util.List.of(
-            "v01-c.sir", "v02-c.sir", "v03-c.sir", "v04-c.sir", "v05-base.sir",
-            "v05-c.sir", "v05-candidate.sir", "v06-c.sir", "sc-a.sir", "sc-b.sir",
-            "inc-c.sir", "base.sir", "campus-market-candidate.sir",
-            "campus-market-candidate-add-capability.sir",
-            "campus-market-candidate-modify-input-field-constraints.sir",
-            "campus-market-minimal.sir", "campus-market-minimal-add-search-goods.sir",
-            "campus-market-two-capabilities.sir",
-            "campus-market-two-capabilities-remove-publish-goods.sir",
-            "campus-market-actorless-readonly-base.sir",
-            "campus-market-actorless-readonly-candidate.sir");
-
-    @BeforeAll
-    static void requireChangeEraFixtures() {
-        org.junit.jupiter.api.Assumptions.assumeTrue(
-                CliTestFixtures.resourceExists("campus-market-candidate.sir"),
-                "required Change SIR fixtures are unavailable: " + MISSING_FIXTURES);
+    // Each test declares the shared fixtures it actually needs. The previous class-level gate
+    // named every fixture at once, which hid which one was missing and, once only part of them
+    // existed, would have reported pending work as failures instead of skips. All of these now
+    // resolve, so the Change workflow below runs for real rather than being skipped.
+    private static void requireFixtures(String... names) {
+        List<String> missing = new ArrayList<>();
+        for (String name : names) {
+            if (!CliTestFixtures.resourceExists(name)) {
+                missing.add(name);
+            }
+        }
+        org.junit.jupiter.api.Assumptions.assumeTrue(missing.isEmpty(),
+                "required Change SIR fixtures are unavailable: " + missing);
     }
 
     @TempDir Path tempDir;
 
     // === v0.1 ModifyCapabilityWorkflow ===
     @Test void v01_modifyCapabilityWorkflow_planned_update() throws Exception {
+        requireFixtures("campus-market.sir", "campus-market-candidate.sir");
         var rb = CliTestFixtures.registerBase(tempDir, "campus-market.sir", "v01-base");
         Path c = CliTestFixtures.writeSir(tempDir, "v01-c.sir", "campus-market-candidate.sir");
         ProcResult cr = runCli("context","--state-root",s(rb.stateRoot()),"--output-root",s(rb.outputRoot()),"--candidate-sir",s(c));
@@ -55,6 +48,7 @@ class KcgCliWorkflowTest {
 
     // === v0.2 AddCapability ===
     @Test void v02_addCapability_planned_create() throws Exception {
+        requireFixtures("campus-market-minimal.sir", "campus-market-minimal-add-search-goods.sir");
         var rb = CliTestFixtures.registerBase(tempDir,"campus-market-minimal.sir","v02-base");
         Path c = CliTestFixtures.writeSir(tempDir,"v02-c.sir","campus-market-minimal-add-search-goods.sir");
         ProcResult cr = runCli("context","--state-root",s(rb.stateRoot()),"--output-root",s(rb.outputRoot()),"--candidate-sir",s(c));
@@ -71,6 +65,8 @@ class KcgCliWorkflowTest {
 
     // === v0.3 RemoveCapability ===
     @Test void v03_removeCapability_planned_delete() throws Exception {
+        requireFixtures("campus-market-two-capabilities.sir",
+                "campus-market-two-capabilities-remove-publish-goods.sir");
         var rb = CliTestFixtures.registerBase(tempDir,"campus-market-two-capabilities.sir","v03-base");
         Path c = CliTestFixtures.writeSir(tempDir,"v03-c.sir","campus-market-two-capabilities-remove-publish-goods.sir");
         ProcResult cr = runCli("context","--state-root",s(rb.stateRoot()),"--output-root",s(rb.outputRoot()),"--candidate-sir",s(c));
@@ -87,6 +83,7 @@ class KcgCliWorkflowTest {
 
     // === v0.4 ModifyInputFieldConstraints ===
     @Test void v04_modifyInputFieldConstraints_planned_update() throws Exception {
+        requireFixtures("campus-market.sir", "campus-market-candidate-modify-input-field-constraints.sir");
         var rb = CliTestFixtures.registerBase(tempDir,"campus-market.sir","v04-base");
         Path c = CliTestFixtures.writeSir(tempDir,"v04-c.sir","campus-market-candidate-modify-input-field-constraints.sir");
         ProcResult cr = runCli("context","--state-root",s(rb.stateRoot()),"--output-root",s(rb.outputRoot()),"--candidate-sir",s(c));
@@ -103,6 +100,7 @@ class KcgCliWorkflowTest {
 
     // === v0.5 ModifyUnreferencedInputFieldType ===
     @Test void v05_modifyUnreferencedInputFieldType_planned_update() throws Exception {
+        requireFixtures("v05-base.sir", "v05-candidate.sir");
         var rb = CliTestFixtures.registerBase(tempDir,"v05-base.sir","v05-base");
         Path c = CliTestFixtures.writeSir(tempDir,"v05-c.sir","v05-candidate.sir");
         ProcResult cr = runCli("context","--state-root",s(rb.stateRoot()),"--output-root",s(rb.outputRoot()),"--candidate-sir",s(c));
@@ -119,6 +117,8 @@ class KcgCliWorkflowTest {
 
     // === v0.6 ModifyActorlessReadonlyCapabilityExposure ===
     @Test void v06_modifyActorlessReadonlyCapabilityExposure_planned_update() throws Exception {
+        requireFixtures("campus-market-actorless-readonly-base.sir",
+                "campus-market-actorless-readonly-candidate.sir");
         var rb = CliTestFixtures.registerBase(tempDir,"campus-market-actorless-readonly-base.sir","v06-base");
         Path c = CliTestFixtures.writeSir(tempDir,"v06-c.sir","campus-market-actorless-readonly-candidate.sir");
         ProcResult cr = runCli("context","--state-root",s(rb.stateRoot()),"--output-root",s(rb.outputRoot()),"--candidate-sir",s(c));
@@ -135,6 +135,7 @@ class KcgCliWorkflowTest {
 
     // === NoChanges ===
     @Test void noChanges_identicalCandidate_returnsNoChanges() throws Exception {
+        requireFixtures("campus-market.sir");
         var rb = CliTestFixtures.registerBase(tempDir,"campus-market.sir","nc-base");
         Path c = rb.sourceFile();
         ProcResult cr = runCli("context","--state-root",s(rb.stateRoot()),"--output-root",s(rb.outputRoot()),"--candidate-sir",s(c));
@@ -146,6 +147,7 @@ class KcgCliWorkflowTest {
 
     // === Version-operation incompatibility ===
     @Test void versionOperationIncompatibility_v01_addCapability() throws Exception {
+        requireFixtures("campus-market.sir", "campus-market-candidate-add-capability.sir");
         var rb = CliTestFixtures.registerBase(tempDir,"campus-market.sir","inc-base");
         Path c = CliTestFixtures.writeSir(tempDir,"inc-c.sir","campus-market-candidate-add-capability.sir");
         ProcResult cr = runCli("context","--state-root",s(rb.stateRoot()),"--output-root",s(rb.outputRoot()),"--candidate-sir",s(c));
@@ -158,6 +160,8 @@ class KcgCliWorkflowTest {
 
     // === Stale candidate ===
     @Test void stale_candidate_returnsContext002() throws Exception {
+        requireFixtures("campus-market.sir", "campus-market-candidate-modify-input-field-constraints.sir",
+                "campus-market-candidate.sir");
         var rb = CliTestFixtures.registerBase(tempDir,"campus-market.sir","sc-base");
         Path ca = CliTestFixtures.writeSir(tempDir,"sc-a.sir","campus-market-candidate-modify-input-field-constraints.sir");
         ProcResult cr = runCli("context","--state-root",s(rb.stateRoot()),"--output-root",s(rb.outputRoot()),"--candidate-sir",s(ca));
@@ -171,6 +175,7 @@ class KcgCliWorkflowTest {
 
     // === Wrong outputRoot ===
     @Test void wrongOutputRoot_contextReturnsFailure() throws Exception {
+        requireFixtures("campus-market.sir");
         var rb = CliTestFixtures.registerBase(tempDir,"campus-market.sir","wr-base");
         Path wo = tempDir.resolve("wrong").toAbsolutePath();
         Files.createDirectories(wo);
@@ -181,6 +186,7 @@ class KcgCliWorkflowTest {
 
     // === Unknown target key ===
     @Test void unknownTargetKey_returnsContext003() throws Exception {
+        requireFixtures("campus-market.sir");
         var rb = CliTestFixtures.registerBase(tempDir,"campus-market.sir","ut-base");
         ProcResult cr = runCli("context","--state-root",s(rb.stateRoot()),"--output-root",s(rb.outputRoot()),"--candidate-sir",s(rb.sourceFile()));
         assertEquals(CliExit.OK,cr.exit,cr.combined());
@@ -191,6 +197,7 @@ class KcgCliWorkflowTest {
 
     // === Active journal → exit 4 ===
     @Test void activeJournal_contextReturnsRecoveryRequired_exits4() throws Exception {
+        requireFixtures("campus-market.sir");
         var rb = CliTestFixtures.registerBase(tempDir,"campus-market.sir","aj-base");
         Path td = rb.stateRoot().resolve("transactions/tx-aj");
         Files.createDirectories(td);
@@ -202,6 +209,7 @@ class KcgCliWorkflowTest {
 
     // === Context determinism ===
     @Test void contextJson_deterministicAcrossInvocations() throws Exception {
+        requireFixtures("campus-market.sir");
         var rb = CliTestFixtures.registerBase(tempDir,"campus-market.sir","det-base");
         ProcResult r1 = runCli("context","--state-root",s(rb.stateRoot()),"--output-root",s(rb.outputRoot()),"--candidate-sir",s(rb.sourceFile()));
         ProcResult r2 = runCli("context","--state-root",s(rb.stateRoot()),"--output-root",s(rb.outputRoot()),"--candidate-sir",s(rb.sourceFile()));

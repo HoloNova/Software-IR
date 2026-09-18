@@ -1,6 +1,6 @@
 # KCG-Code 剩余工作路线图
 
-> 更新日期：2026-09-18（补主设计与 G0–G7 对应关系；阶段内容未变）
+> 更新日期：2026-09-18（补主设计与 G0–G7 对应关系；阶段 1 的 Q1、阶段 2 的 Q2、阶段 3 的 Q3 均已验收归档；阶段 4 的 Q4 已立项待复核）
 > 读者：项目负责人和后续执行 Agent
 > 定位：本文件的阶段 1–7 是 **G0：现有链路资格收口**内部的 Q 系列执行顺序。产品方向、阶段进入条件与阶段完成门见 [`README.md`](README.md) 和 [`../design/README.md`](../design/README.md)；两者不替代本文件的执行顺序。
 
@@ -23,7 +23,7 @@
 
 ## 阶段 1：Generator 系统测试
 
-阶段归属：G0（现有链路资格收口）的最后一项。Q1 完成门闭合后，G0 才具备关闭条件。
+阶段归属：G0（现有链路资格收口）的第 1 项。G0 还包含阶段 2–6（PSG、Change fixtures、conformance、事务故障矩阵、CLI 产品边界），全部完成后 G0 才具备关闭条件。
 
 ### 当前拆分与进度
 
@@ -34,6 +34,7 @@
 - [x] Q1B3B：Controller、actor identity transport 与 response 行为契约（见 [`completed/Q1B3B-generator-controller-transport-contract.md`](completed/Q1B3B-generator-controller-transport-contract.md)）。
 - [x] Q1C：Locale、工作目录、换行、转义和 UTF-8 字节确定性矩阵（见 [`completed/Q1C-generator-determinism-matrix.md`](completed/Q1C-generator-determinism-matrix.md)）。
 - [x] Q1D：完整生成工程冻结依赖下的真实离线编译（见 [`completed/Q1D-generated-project-offline-compilation.md`](completed/Q1D-generated-project-offline-compilation.md)）。
+- [x] Q1：生产字节码边界闸门与 Q1 汇总验收（已验收归档，见 [`completed/Q1-generator-production-boundary-and-acceptance.md`](completed/Q1-generator-production-boundary-and-acceptance.md)）：定向 6 run / 0 fail；全量完成形式 379 run / 5 fail（全部为已登记的 `sir-toolchain-application` 软链接断言）/ 0 error / 11 skip；生产 class 禁止引用 0 违规，未修改生产代码。证据见资格文档 1.3。项目负责人 2026-09-18 确认通过，但决定**暂不提交 Git**（初定 G1 完成后统一提交）。
 
 ### 目标
 
@@ -44,7 +45,7 @@
 1. 为 POM、Application、Enum、Entity、Mapper、DTO、Exception、Service、Controller 建立直接测试。
 2. 覆盖 Unit response、actor identity、复合 Find、Create/Update/Persist。
 3. 验证相同输入重复运行、不同 Locale 和不同工作目录下路径、顺序和 UTF-8 字节一致。
-4. 验证 Generator 不读取 AST、SIR、SymbolTable 或磁盘。
+4. 验证 Generator 不读取 AST、SIR、SymbolTable 或磁盘（Q1 已建立静态字节码边界证据：生产 census 37 个 class / 0 违规 / 公开入口反射，见资格文档 1.3）。
 5. 建立一个完整 campus-market canonical fixture，并验证生成工程在冻结依赖下离线编译。
 
 ### 完成门
@@ -54,6 +55,14 @@
 - 至少一个生成工程真实离线编译。
 
 ## 阶段 2：Project Graph 直接测试
+
+阶段归属：G0（现有链路资格收口）内部的阶段 2。
+
+### 当前拆分与进度
+
+- [x] Q2：`sir-project-graph` 直接模块契约测试（已验收归档，见 [`completed/Q2-project-graph-direct-module-contracts.md`](completed/Q2-project-graph-direct-module-contracts.md)）：模块由 0 → 72 项直接测试全绿（契约 9、规则矩阵 31、canonicalization 6、serialization 20、只读边界 6）；全量完成形式 451/5/0/11，除已登记的 5 项外无新增 fail/error/skip；未修改生产代码、未新增依赖。项目负责人 2026-09-18 确认通过，暂不提交 Git。
+
+现有间接证据（不重复实现，仍归 `sir-toolchain-application`）：`ToolchainProjectGraphIntegrationTest` 已用真实链路覆盖四类边与摘要稳定性，`ToolchainGraphStageFailureTest` 已覆盖 Graph 失败在写盘前终止；Q2 补齐的是模块内直接契约。
 
 ### 目标
 
@@ -75,17 +84,21 @@
 
 ## 阶段 3：Change fixtures 与操作族测试
 
+### 当前拆分与进度
+
+- [x] Q3：Change fixtures 与操作族测试 + 软链接失败收口（已验收归档，见 [`completed/Q3-change-fixtures-and-symlink-closure.md`](completed/Q3-change-fixtures-and-symlink-closure.md)）：新增 13 个 fixture；`ChangePlanningApplicationTest` 9/0/0/0、`KcgCliWorkflowTest` 13/0/0/0；5 项软链接失败修复（2 处生产诊断改动）；全量冻结与完成两种形式均 BUILD SUCCESS，合计 **465 run / 0 fail / 0 error / 5 skip**。仍未做：操作族跨版本组合矩阵与完整 `SIR-CHANGE-*` 失败矩阵。
+
 ### 目标
 
 补齐当前 Change planner、Application 和 CLI 共同依赖的 base/candidate SIR 集合，消除 assumption skip。
 
 ### 任务
 
-1. 按 Change IR v0.1-v0.6 为每个操作建立最小 base/candidate 对。
-2. 覆盖 workflow 修改、添加/删除 capability、字段约束、未引用字段类型和 actorless readonly exposure。
-3. 覆盖版本、target、scope、impact、closure、冲突和 canonical 表达。
-4. 恢复 `ChangePlanningApplicationTest` 当前跳过的 6 项。
-5. 让 `KcgCliWorkflowTest` 不再整类跳过。
+1. ~~按 Change IR v0.1-v0.6 为每个操作建立最小 base/candidate 对。~~ 已完成。
+2. ~~覆盖 workflow 修改、添加/删除 capability、字段约束、未引用字段类型和 actorless readonly exposure。~~ 已完成。
+3. 覆盖版本、target、scope、impact、closure、冲突和 canonical 表达——**部分**：现有测试覆盖版本/操作不兼容、stale、未知 target key、错误 outputRoot、活动 journal 与 `NO_CHANGES`；完整跨版本组合矩阵与 `SIR-CHANGE-*` 诊断矩阵仍未建立。
+4. ~~恢复 `ChangePlanningApplicationTest` 当前跳过的 6 项。~~ 已完成（9/0/0/0）。
+5. ~~让 `KcgCliWorkflowTest` 不再整类跳过。~~ 已完成（13/0/0/0，并改为逐测试 assumption）。
 
 ### 完成门
 
@@ -93,11 +106,22 @@
 - Application 和 CLI 不再因资源缺失跳过。
 - Change v0.1-v0.6 都有成功与失败路径。
 
-## 阶段 4：Application conformance harness
+## 阶段 4：Application conformance harness（已完成并归档）
 
-### 目标
+### 当前拆分与进度
 
-使现有 conformance 包重新参加 testCompile，并重新建立安全、显式 opt-in 的外部 MySQL 资格入口。
+- [x] **Q4+Q5（合并，已验收归档）**：conformance 包恢复编译与运行，并在真实 MySQL 8.4.11 上产出 **QUALIFIED**。
+  **2026-09-18 实证修正（重要）**：早期两次估计都不准——“缺口只有 4 处”来自**语法错误抑制符号错误**；“100 个错误”来自 **javac 默认 `-Xmaxerrs 100` 的截断**。在提高上限并修掉三个根因（`OwnedRunDirectory` 缺 package/import、`StrongFileIdentity` 用错 JNA 类、IT 缺 9 个 import）后，**实测基线为 56 个不同错误 / 13 个文件**，全部是真正缺失的类型与方法（精确符号→文件对照表见 `docs/roadmap/ACTIVE_WORK.md`）。
+  另发现：包内至少有 3 个可运行单元测试类（`ConformanceFixtureSqlTest`、`MysqlSqlConstructionTest`、`StrongFileIdentityTest`）被 surefire 包级排除隐藏；`ConformanceFixtureSqlTest` 依赖的 `/conformance/mysql/campus-market-ddl.sql` 尚不存在。
+  因负责人 2026-09-18 裁定 **Q4 与 Q5 合并为一张工作单**（“Q4+Q5 Conformance harness 恢复与真实 MySQL 验证”），Q4 单独立项已取消。
+- [x] Q5 的参考环境与矩阵：**已执行**（连续两次 QUALIFIED，五场景全通过；运行后 workParent 为空、schema 不存在）。参考环境**已就绪**：`mysql:8.4` 容器（版本 8.4.11、`@@server_uuid` 稳定）+ 控制凭据（已验证 advisory lock）+ 无 CREATE/DROP 的运行凭据（已验证 CREATE 被拒）；提供脚本 `/root/kcg-conformance/provision-mysql.sh` 与 `env.sh`（均在仓库外，凭据不入库）。需补：上述 12 个类型与 14 个方法、两处被截断的编排、`EvidenceWriter` 的写入面、以及 P0-C2（运行库 URL 只由已验证 SchemaName + 控制端点渲染）的实现与测试。
+  已裁定（负责人 2026-09-18）：容器化 MySQL 可作为资格记录的参考环境元组；结论只对该元组成立。
+
+### 目标（已达成）
+
+conformance 包重新参加 testCompile 与运行（编译错误 56 → 0，两个 POM 排除已删除），并在真实 MySQL 上重新建立安全、显式 opt-in 的外部资格入口：默认构建 478 run / 0 fail / 0 error / 5 skip，外部矩阵 QUALIFIED。
+
+残余缺口：包内并非每个辅助类都有独立单元测试（见 `TEST_COVERAGE_INVENTORY.md`）；结论只在单一参考环境元组上验证过。
 
 ### 任务
 
@@ -114,7 +138,7 @@
 - 无外部环境时为 `NOT_RUN`，不是 `QUALIFIED`。
 - 显式外部运行的每个副作用都拥有 cleanup 和 sealed evidence。
 
-## 阶段 5：事务故障矩阵
+## 阶段 5：事务故障矩阵（已完成并归档）
 
 ### 目标
 
@@ -134,7 +158,7 @@
 - 模糊状态全部 fail closed。
 - 无 copy/move fallback 绕过 DELETE hard-link 约束。
 
-## 阶段 6：CLI 产品边界
+## 阶段 6：CLI 产品边界（已完成并归档；形态 A）
 
 ### 推荐选择
 
@@ -148,7 +172,7 @@
 - Maven exec 可运行完整 generate → register → context/plan → apply → recover。
 - thin JAR/发行包作为独立发布任务处理，不混入业务资格。
 
-## 阶段 7：最终资格
+## 阶段 7：最终资格（Q8 已执行完成，待验收；G0 关闭动作）
 
 完成前述阶段后执行：
 

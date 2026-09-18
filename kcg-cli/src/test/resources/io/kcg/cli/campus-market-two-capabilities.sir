@@ -1,0 +1,67 @@
+sir 0.1
+
+software CampusMarket {
+  metadata {
+    displayName "校园二手交易双能力示例";
+    namespace "com.example.campusmarket";
+  }
+
+  target {
+    language java 21;
+    framework spring_boot;
+    persistence mybatis_plus;
+    database mysql;
+    build maven;
+    interface rest;
+  }
+
+  declarations {
+    enum GoodsStatus {
+      AVAILABLE,
+      SOLD
+    }
+
+    entity Goods persistent {
+      identity id: Int64 generated auto;
+      field title: String where notBlank;
+      field status: GoodsStatus;
+    }
+
+    input PublishGoodsInput {
+      field title: String where notBlank;
+    }
+
+    error InvalidGoodsPrice;
+
+    // Both capabilities are deliberately actorless: the generated Application.java switches body
+    // when an actor identity transport plan exists, so a fixture used for a clean remove-capability
+    // plan must not change that plan by removing a capability. See Q3 evidence.
+    capability PublishGoods {
+      input PublishGoodsInput;
+      output Ref<Goods>;
+      fails InvalidGoodsPrice;
+      requires atomic;
+      expose command;
+
+      workflow {
+        create Goods as goods {
+          title: input.title;
+          status: GoodsStatus.AVAILABLE;
+        }
+        persist goods;
+        return goods;
+      }
+    }
+
+    capability SearchGoods {
+      output List<Ref<Goods>>;
+      requires readonly;
+      expose query;
+
+      workflow {
+        find Goods where item.status == GoodsStatus.AVAILABLE as goods;
+        return goods;
+      }
+    }
+  }
+}
