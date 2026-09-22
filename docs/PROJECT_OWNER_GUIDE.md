@@ -9,7 +9,7 @@
 1. 打开 [`roadmap/ACTIVE_WORK.md`](roadmap/ACTIVE_WORK.md)，看当前唯一工作单。
 2. 新开对话就使用下面的“新对话/新 Agent 开工提示词”；同一对话继续就使用“同一对话续作提示词”。
 3. 等它按工作单完成后，用本手册的验收清单检查。
-4. 验收通过后把旧工作单移入 `roadmap/completed/`，立即用下一张 `READY` 工作单替换 `ACTIVE_WORK.md`；随后按你的授权提交 Git。
+4. 验收通过后把旧工作单移入 `roadmap/completed/`；如果当前阶段已关闭且没有下一张授权工作单，就把 `ACTIVE_WORK.md` 置为 `IDLE`。随后按你的授权提交 Git。
 
 不要一次把整个路线图交给一个 Agent。路线图是排队表，`ACTIVE_WORK.md` 才是本轮授权执行的任务。
 
@@ -26,7 +26,7 @@
 | [`roadmap/REMAINING_WORK.md`](roadmap/REMAINING_WORK.md) | 想看完整后续顺序时 | 长期阶段顺序和各阶段完成门 |
 | [`roadmap/README.md`](roadmap/README.md) | 以主设计控制后续方向时 | G0–G7 阶段入口和交给 Agent 的 Prompt |
 | [`design/`](design/) | 需要确认目标设计时 | 主设计的目标契约和实现边界，不替代当前工作单 |
-| [`../AGENTS.md`](../AGENTS.md) | 任何人准备改代码前 | 不可破坏规则、权威层级和统一验收命令 |
+| [`../AGENTS.md`](../AGENTS.md) + [`../MAIN.md`](../MAIN.md) | 任何人准备改代码前 | 全局规则、项目主体说明、权威层级和统一验收命令 |
 | [`architecture/`](architecture/) | 工作单点名某个 ADR 时 | 已冻结的架构决定和理由 |
 
 这套分工很重要：
@@ -51,7 +51,7 @@
 
 | 阶段 | 一句话目标 | 进入条件 | 完成时你应该能看到的证据 | 当前状态 |
 |---|---|---|---|---|
-| G0 | 收口现有单文件编译、Lowering、Generator、Project Graph、Change 与文件事务的资格 | **完成门已闭合**（Q8 待验收）；阶段 1–6 全部归档；全量 554/0/0/5；外部 MySQL 矩阵 QUALIFIED |待复核 | 标准 clean 构建、生成工程编译、边界与确定性测试、文件事务恢复证据 | 当前，Q1–Q3 已通过（未提交）；Q4 待复核 |
+| G0 | 收口现有单文件编译、Lowering、Generator、Project Graph、Change 和文件事务的资格 | Q1–Q8 已完成 | 标准 clean 构建、生成工程编译、边界与确定性测试、文件事务恢复证据 | **已完成**（554/0/0/5；外部 MySQL `QUALIFIED`） |
 | G1 | 单文件课程业务切片：先一个实体 + 一个查询跑通 | G0 关闭 | 真实 MySQL 与 HTTP 下的 BIZ-01..06 及反例 | 未开始 |
 | G2 | 持久身份与受控多文件模块 | G1 关闭 | LANG-01..05：改名、移动、重复 ID、引用闭包、旧 Bundle 兼容 | 未开始 |
 | G3 | 数据库生命周期：INITIALIZE/UPDATE、历史、漂移、恢复 | G2 关闭 | DB-01..11；连续两次更新保留数据；DDL 中断可判定 | 未开始 |
@@ -62,22 +62,21 @@
 
 注意两套编号容易混淆：设计里的 **G0–G7** 是产品阶段；`REMAINING_WORK.md` 里的**阶段 1–6** 全部属于 G0 内部，阶段 7（最终资格）就是 G0 的关闭动作。G1 之后就属于新的产品能力，不再沿用那张清单。
 
-### G0 内部的工作单序列（建议顺序）
+### G0 内部的工作单序列（已完成）
 
-下表第 3–6 项是本文给出的排队建议，仓库里还没有对应的已提交工作单；每张工作单派发前都要按当时证据重写，编号和边界都可以调整。
+G0 的 Q1–Q8 已完成并归档。下一张候选是 G1 的新 Q 工作单；派发前必须按当时证据重新写明编号、边界和完成门。
 
 | 顺序 | Q 工作单 | 范围 | 现状 |
 |---|---|---|---|
-| 1 | Q1 Generator 系统测试总验收（Q1A–Q1D 已完成） | 生产 Generator 边界闸门 + Q1 汇总 | 已完成并归档（`DONE`，2026-09-18）；按负责人决定暂未提交 |
-| 2 | Q2 Project Graph 直接测试 | Graph 从 0 项直接测试到契约测试 | 已完成并归档（72 项全绿，`DONE`，2026-09-18）；按负责人决定暂未提交 |
-| 3 | Q3 Change fixtures 与软链接失败收口 | Change fixtures + 5 项软链接失败 | 已完成并归档（`DONE`，2026-09-18，该阶段全量 465/0/0/5，当前总数 554/0/0/5） |
-| 4 | Q4+Q5 Conformance harness 恢复与真实 MySQL 验证（已合并） | conformance 包重新参加编译 + 保留 opt-in + 真跑矩阵 | 执行中（`IN_PROGRESS`，2026-09-18）：实测基线 **56 个编译错误 / 13 个文件**，均为缺失类型与方法；MySQL 参考环境已就绪 |
-| 3 | Q3 Change fixtures 与操作族测试 | 补齐 base/candidate SIR，消除 assumption skip | 未开始 |
-| 4 | ~~Q4 Application conformance harness~~ | 已与 Q5 合并（见上一行） | 已完成 |
-| 5 | Q5 事务故障矩阵 | UPDATE/CREATE/DELETE 全中断点 | 未开始 |
-| 6 | Q6 CLI 产品边界 | 维持只读 context/plan，或按 ADR-019 发布 | 未开始 |
+| 1 | Q1 | Generator 生产边界 | 已完成并归档（`DONE`）；已包含在实现提交 `24eec6d` |
+| 2 | Q2 | Project Graph 直接契约 | 已完成并归档（72 项全绿）；已包含在实现提交 `24eec6d` |
+| 3 | Q3 | Change fixtures 与软链接收口 | 已完成并归档（465/0/0/5 阶段计数） |
+| 4 | Q4+Q5 | conformance 恢复与真实 MySQL 矩阵 | 已完成并归档（MySQL 8.4.11 `QUALIFIED`） |
+| 5 | Q6 | 文件事务故障矩阵 | 已完成并归档（64 项全绿） |
+| 6 | Q7 | CLI 只读产品边界 | 已完成并归档（12 项新增测试） |
+| 7 | Q8 | G0 最终资格关闭 | 已完成并归档（554/0/0/5；G0 已关闭） |
 
-Q 编号沿用仓库既有习惯（已完成的 Q1A–Q1D 就是这种命名），G1 起继续往后编；若要换编号方案，先改 `ACTIVE_WORK.md` 再派发。
+G1 开始前，先建立新的 `ACTIVE_WORK.md` 工作单并经负责人确认。
 
 ### 每次派发只做三个动作
 
@@ -119,11 +118,12 @@ Q 编号沿用仓库既有习惯（已完成的 Q1A–Q1D 就是这种命名）�
 
 不要假设你知道任何旧聊天、旧 Agent 记忆或历史结论。先按顺序完整读取：
 1. AGENTS.md
-2. docs/PROJECT_OWNER_GUIDE.md
-3. docs/PROJECT_STATUS.md
-4. docs/roadmap/ACTIVE_WORK.md
-5. docs/qualification/CURRENT_QUALIFICATION.md
-6. ACTIVE_WORK 点名的 ADR、代码和测试
+2. MAIN.md
+3. docs/PROJECT_OWNER_GUIDE.md
+4. docs/PROJECT_STATUS.md
+5. docs/roadmap/ACTIVE_WORK.md
+6. docs/qualification/CURRENT_QUALIFICATION.md
+7. ACTIVE_WORK 点名的 ADR、代码和测试
 
 本轮只执行 docs/roadmap/ACTIVE_WORK.md 这一张工作单，不要顺手进入下一阶段，也不要展开 Redis、第二 Target、Constraint VM、GUI 等远期方向。
 

@@ -5,6 +5,7 @@ import io.kcg.sir.lowering.api.LoweredNodeId;
 import io.kcg.sir.lowering.springboot.model.SpringArtifact;
 import io.kcg.sir.lowering.springboot.model.SpringBootDeclaration;
 import io.kcg.sir.lowering.springboot.model.SpringBootLoweredModel;
+import io.kcg.sir.lowering.springboot.model.ProjectArtifact;
 import io.kcg.sir.lowering.springboot.model.ProjectArtifact.ApplicationMain;
 import io.kcg.sir.lowering.springboot.model.ProjectArtifact.MavenProject;
 import io.kcg.sir.lowering.springboot.model.SpringArtifact.Role;
@@ -30,6 +31,7 @@ import io.kcg.sir.semantic.model.NormalizedEntity;
 import io.kcg.sir.semantic.model.NormalizedEnum;
 import io.kcg.sir.semantic.model.NormalizedError;
 import io.kcg.sir.semantic.model.NormalizedInput;
+import io.kcg.sir.semantic.model.NormalizedView;
 import io.kcg.sir.semantic.symbol.SymbolId;
 import io.kcg.sir.semantic.symbol.SymbolKind;
 import io.kcg.sir.source.SourceId;
@@ -87,6 +89,12 @@ public final class SpringBootProjectGraphInputFactory {
       artifacts.add(new ArtifactInput(app.id(), Optional.empty(), app.origin(), ProjectRole.APPLICATION_MAIN, app.path()));
       edges.add(new EdgeBinding(GraphEdgeKind.OWNS_ARTIFACT, projectId, new Lowered(app.id())));
 
+      for (ProjectArtifact projectArtifact : loweredModel.projectArtifacts()) {
+         ArtifactRole role = mapProjectRole(projectArtifact);
+         artifacts.add(new ArtifactInput(projectArtifact.id(), Optional.empty(), projectArtifact.origin(), role, projectArtifactPath(projectArtifact)));
+         edges.add(new EdgeBinding(GraphEdgeKind.OWNS_ARTIFACT, projectId, new Lowered(projectArtifact.id())));
+      }
+
       for (GeneratedFile gf : generatedFiles) {
          String content = gf.content();
          long byteCount = Sha256.utf8ByteCount(content);
@@ -105,6 +113,8 @@ public final class SpringBootProjectGraphInputFactory {
          return SymbolKind.ENTITY;
       } else if (decl instanceof NormalizedInput) {
          return SymbolKind.INPUT;
+      } else if (decl instanceof NormalizedView) {
+         return SymbolKind.VIEW;
       } else if (decl instanceof NormalizedError) {
          return SymbolKind.ERROR;
       } else if (decl instanceof NormalizedCapability) {
@@ -114,12 +124,45 @@ public final class SpringBootProjectGraphInputFactory {
       }
    }
 
+   /**
+    * The role a project-level artifact plays in the graph.
+    *
+    * <p>Each artifact kind has its own role so the graph distinguishes, for example, the response
+    * envelope from the failure advice instead of collapsing them into one "support file" role.
+    */
+   private static ArtifactRole.ProjectRole mapProjectRole(ProjectArtifact projectArtifact) {
+      return switch (projectArtifact) {
+         case ProjectArtifact.PageResponse page -> ProjectRole.PAGE_RESPONSE;
+         case ProjectArtifact.ApiErrorResponse error -> ProjectRole.API_ERROR_RESPONSE;
+         case ProjectArtifact.ApiExceptionBase base -> ProjectRole.API_EXCEPTION_BASE;
+         case ProjectArtifact.ApiExceptionAdvice advice -> ProjectRole.API_EXCEPTION_ADVICE;
+         case ProjectArtifact.ValidationSupport support -> ProjectRole.VALIDATION_SUPPORT;
+         case ProjectArtifact.ApplicationConfig config -> ProjectRole.APPLICATION_CONFIG;
+         case ProjectArtifact.MavenProject pom -> ProjectRole.MAVEN_PROJECT;
+         case ProjectArtifact.ApplicationMain main -> ProjectRole.APPLICATION_MAIN;
+      };
+   }
+
+   private static String projectArtifactPath(ProjectArtifact projectArtifact) {
+      return switch (projectArtifact) {
+         case ProjectArtifact.PageResponse page -> page.path();
+         case ProjectArtifact.ApiErrorResponse error -> error.path();
+         case ProjectArtifact.ApiExceptionBase base -> base.path();
+         case ProjectArtifact.ApiExceptionAdvice advice -> advice.path();
+         case ProjectArtifact.ValidationSupport support -> support.path();
+         case ProjectArtifact.ApplicationConfig config -> config.path();
+         case ProjectArtifact.MavenProject pom -> pom.path();
+         case ProjectArtifact.ApplicationMain main -> main.path();
+      };
+   }
+
    private static ArtifactRole mapDeclarationRole(Role role) {
       return switch (role) {
          case ENUM -> DeclarationRole.ENUM;
          case ENTITY_MODEL -> DeclarationRole.ENTITY_MODEL;
          case MAPPER -> DeclarationRole.MAPPER;
          case REQUEST_DTO -> DeclarationRole.REQUEST_DTO;
+         case VIEW_DTO -> DeclarationRole.VIEW_DTO;
          case EXCEPTION -> DeclarationRole.EXCEPTION;
          case SERVICE -> DeclarationRole.SERVICE;
          case CONTROLLER -> DeclarationRole.CONTROLLER;

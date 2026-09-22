@@ -37,8 +37,15 @@ final class ControllerRenderer {
       imports.add("org.springframework.web.bind.annotation.RequestMapping");
       if (decl.httpMethod() == HttpMethod.POST) {
          imports.add("org.springframework.web.bind.annotation.PostMapping");
+      } else if (decl.httpMethod() == HttpMethod.PATCH) {
+         imports.add("org.springframework.web.bind.annotation.PatchMapping");
       } else {
          imports.add("org.springframework.web.bind.annotation.GetMapping");
+      }
+
+      if (createsEntity(decl)) {
+         imports.add("org.springframework.http.HttpStatus");
+         imports.add("org.springframework.web.bind.annotation.ResponseStatus");
       }
 
       if (decl.actor().isPresent() && decl.actorBinding().isPresent()) {
@@ -96,8 +103,16 @@ final class ControllerRenderer {
       out.append("    public ").append(decl.controllerName()).append("(").append(serviceSimpleName(ctx, decl)).append(" service) {\n");
       out.append("        this.service = service;\n");
       out.append("    }\n\n");
-      String httpMapping = decl.httpMethod() == HttpMethod.POST ? "@PostMapping" : "@GetMapping";
+      String httpMapping = switch (decl.httpMethod()) {
+         case POST -> "@PostMapping";
+         case PATCH -> "@PatchMapping";
+         case GET -> "@GetMapping";
+      };
       out.append("    ").append(httpMapping).append('\n');
+      if (createsEntity(decl)) {
+         out.append("    @ResponseStatus(HttpStatus.CREATED)\n");
+      }
+
       String outputType = ResponseTypeRenderer.render(ctx, decl);
       out.append("    public ").append(outputType).append(' ').append(decl.methodName()).append('(');
       boolean firstParam = true;
@@ -150,13 +165,34 @@ final class ControllerRenderer {
       return out.toString();
    }
 
+   /**
+   * Whether the capability creates the row it answers with.
+   *
+   * <p>A creation reports it, so the status is read from the workflow the lowering produced rather than
+   * from the capability's name.
+   */
+   private static boolean createsEntity(CapabilityDeclaration decl) {
+      return decl.workflow().steps().stream()
+         .anyMatch(step -> step instanceof io.kcg.sir.lowering.springboot.model.SpringBootWorkflow.CreateStep);
+   }
+
    private static String serviceSimpleName(GenerationContext ctx, CapabilityDeclaration decl) {
       SpringArtifact serviceArtifact = ctx.artifact(decl.sourceSymbol(), Role.SERVICE);
       return serviceArtifact.simpleName();
    }
 
+   /**
+   * Whether the request payload has to be validated before the workflow runs.
+   *
+   * <p>A change set is validated even though none of its changes carries a constraint: the envelope
+   * itself declares which members are mandatory.
+   */
    private static boolean inputDeclarationHasConstraints(GenerationContext ctx, SymbolId inputSymbolId) {
       if (ctx.declaration(inputSymbolId) instanceof InputDeclaration inputDecl) {
+         if (inputDecl.patch().isPresent()) {
+            return true;
+         }
+
          for (Property field : inputDecl.fields()) {
             if (!field.constraints().isEmpty()) {
                return true;

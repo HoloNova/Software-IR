@@ -126,15 +126,22 @@ class GeneratorSimpleArtifactContractTest {
         String source = generatedContent(model, javaPath(artifact));
 
         assertTrue(source.startsWith("package " + artifact.packageName() + ";\n"), source);
-        assertTrue(source.contains("@ResponseStatus(HttpStatus.BAD_REQUEST)\n"), source);
-        assertTrue(source.contains("public class " + error.javaName() + " extends RuntimeException {\n"), source);
-        assertTrue(source.contains("public " + error.javaName() + "() {\n"
-                + "        super();\n"
-                + "    }"), source);
+
+        // A declared failure states its own code and status through the shared failure base, so the
+        // advice maps it without knowing any error by name.
+        assertTrue(source.contains("public class " + error.javaName() + " extends ApiException {\n"), source);
+        assertTrue(source.contains("super(\"" + sirErrorName(error) + "\", HttpStatus."
+                + error.httpStatus().name() + ");"), source);
         assertEquals(error.javaName(), artifact.simpleName(),
                 "exception file and declaration must use the Lowered IR Java name");
         assertFalse(source.contains("public class InvalidGoodsPrice extends"),
                 "renderer must not reconstruct the Java type from the original SIR name");
+    }
+
+    /** The declared error's own name, which is the stable code the generated failure carries. */
+    private static String sirErrorName(ErrorDeclaration error) {
+        String symbol = error.sourceSymbol().value();
+        return symbol.substring(symbol.lastIndexOf('/') + 1);
     }
 
     private static String generatedContent(SpringBootLoweredModel model, String path) {

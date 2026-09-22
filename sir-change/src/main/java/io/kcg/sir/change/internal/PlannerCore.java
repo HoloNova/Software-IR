@@ -52,6 +52,7 @@ import io.kcg.sir.semantic.model.NormalizedEnum;
 import io.kcg.sir.semantic.model.NormalizedError;
 import io.kcg.sir.semantic.model.NormalizedField;
 import io.kcg.sir.semantic.model.NormalizedInput;
+import io.kcg.sir.semantic.model.NormalizedView;
 import io.kcg.sir.semantic.symbol.SymbolId;
 import io.kcg.sir.semantic.type.PrimitiveType;
 import io.kcg.sir.semantic.type.SirType;
@@ -4784,6 +4785,8 @@ public final class PlannerCore {
          return "ENTITY";
       } else if (decl instanceof NormalizedInput) {
          return "INPUT";
+      } else if (decl instanceof NormalizedView) {
+         return "VIEW";
       } else if (decl instanceof NormalizedError) {
          return "ERROR";
       } else {

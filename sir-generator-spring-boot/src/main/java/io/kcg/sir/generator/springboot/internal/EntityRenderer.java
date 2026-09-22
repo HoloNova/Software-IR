@@ -29,7 +29,8 @@ final class EntityRenderer {
       collectIdentityImports(imports, decl.identity(), packageName, ctx);
 
       for (Property field : decl.fields()) {
-         ctx.collectTypeImports(imports, field.type(), packageName);
+         // A nullable field contributes its element type: the column is written as plain NULL.
+         ctx.collectTypeImports(imports, GenerationContext.entityPropertyType(field.type()), packageName);
       }
 
       String body = renderBody(ctx, decl, packageName);
@@ -61,7 +62,7 @@ final class EntityRenderer {
       renderGetterSetter(out, identity.javaName(), identityJavaType);
 
       for (Property field : decl.fields()) {
-         String fieldType = TypeRenderer.renderBoxedType(field.type());
+         String fieldType = TypeRenderer.renderBoxedType(GenerationContext.entityPropertyType(field.type()));
          renderGetterSetter(out, field.javaName(), fieldType);
       }
 
@@ -71,7 +72,7 @@ final class EntityRenderer {
 
    private static void renderField(StringBuilder out, Property field) {
       String column = field.columnName().orElseThrow(() -> new IllegalStateException("entity field must have column name: " + field.javaName()));
-      String javaType = TypeRenderer.renderBoxedType(field.type());
+      String javaType = TypeRenderer.renderBoxedType(GenerationContext.entityPropertyType(field.type()));
       out.append("    @TableField(").append(StringEscape.javaString(column)).append(")\n");
       out.append("    private ").append(javaType).append(' ').append(field.javaName()).append(";\n\n");
    }

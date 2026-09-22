@@ -64,6 +64,28 @@ public final class HttpAssertionClient {
     }
 
     /**
+     * Send a PATCH request with a JSON body.
+     *
+     * <p>A change set is delivered as PATCH, so the write slice's requests have to be sent the way a
+     * client would send them rather than tunnelled through POST.
+     */
+    public Response patchJson(String url, Map<String, String> headers, String jsonBody)
+            throws IOException, InterruptedException {
+        Objects.requireNonNull(url, "url");
+        Objects.requireNonNull(headers, "headers");
+        Objects.requireNonNull(jsonBody, "jsonBody");
+        HttpRequest.Builder builder = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .timeout(Duration.ofSeconds(10))
+                .header("Content-Type", "application/json")
+                .method("PATCH", HttpRequest.BodyPublishers.ofString(jsonBody));
+        headers.forEach(builder::header);
+        HttpResponse<String> response = httpClient.send(builder.build(),
+                HttpResponse.BodyHandlers.ofString());
+        return new Response(response.statusCode(), response.body());
+    }
+
+    /**
      * One HTTP response.
      *
      * @param statusCode the HTTP status code

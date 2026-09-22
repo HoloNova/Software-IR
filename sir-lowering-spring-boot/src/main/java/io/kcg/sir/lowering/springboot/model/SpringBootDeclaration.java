@@ -11,6 +11,7 @@ public sealed interface SpringBootDeclaration
    permits SpringBootDeclaration.EnumDeclaration,
    SpringBootDeclaration.EntityDeclaration,
    SpringBootDeclaration.InputDeclaration,
+   SpringBootDeclaration.ViewDeclaration,
    SpringBootDeclaration.ErrorDeclaration,
    SpringBootDeclaration.CapabilityDeclaration {
    LoweredNodeId id();
@@ -104,14 +105,24 @@ public sealed interface SpringBootDeclaration
       String javaName,
       String tableName,
       SpringBootDeclaration.Identity identity,
-      List<SpringBootDeclaration.Property> fields
+      List<SpringBootDeclaration.Property> fields,
+      Optional<SpringBootDeclaration.VersionSpec> version
    ) implements SpringBootDeclaration {
       public EntityDeclaration {
          SpringBootDeclaration.requireDeclaration(id, origin, sourceSymbol, javaName);
          SpringBootDeclaration.requireText(tableName, "tableName");
          Objects.requireNonNull(identity, "identity");
          fields = List.copyOf(Objects.requireNonNull(fields, "fields"));
+         Objects.requireNonNull(version, "version");
       }
+
+      public EntityDeclaration(
+         LoweredNodeId id, LoweredOrigin origin, SymbolId sourceSymbol, String javaName, String tableName,
+         SpringBootDeclaration.Identity identity, List<SpringBootDeclaration.Property> fields
+      ) {
+         this(id, origin, sourceSymbol, javaName, tableName, identity, fields, Optional.empty());
+      }
+
    }
 
    record EnumDeclaration(LoweredNodeId id, LoweredOrigin origin, SymbolId sourceSymbol, String javaName, List<SpringBootDeclaration.EnumMember> members)
@@ -136,6 +147,23 @@ public sealed interface SpringBootDeclaration
       }
    }
 
+   /** An entity's concurrency token, with the value the target initializes a new row to. */
+   record VersionSpec(
+      LoweredNodeId id,
+      LoweredOrigin origin,
+      SymbolId fieldSymbol,
+      String javaName,
+      String columnName,
+      LoweredJavaType.Scalar type,
+      long initialValue
+   ) {
+      public VersionSpec {
+         SpringBootDeclaration.requireDeclaration(id, origin, fieldSymbol, javaName);
+         SpringBootDeclaration.requireText(columnName, "columnName");
+         Objects.requireNonNull(type, "type");
+      }
+   }
+
    enum Generation {
       AUTO_INCREMENT,
       UUID;
@@ -143,11 +171,14 @@ public sealed interface SpringBootDeclaration
 
    enum HttpMethod {
       GET,
-      POST;
+      POST,
+      PATCH;
    }
 
    enum HttpStatus {
-      BAD_REQUEST;
+      BAD_REQUEST,
+      NOT_FOUND,
+      CONFLICT;
    }
 
    record Identity(
@@ -167,11 +198,109 @@ public sealed interface SpringBootDeclaration
       }
    }
 
-   record InputDeclaration(LoweredNodeId id, LoweredOrigin origin, SymbolId sourceSymbol, String javaName, List<SpringBootDeclaration.Property> fields)
-      implements SpringBootDeclaration {
+   record InputDeclaration(
+      LoweredNodeId id,
+      LoweredOrigin origin,
+      SymbolId sourceSymbol,
+      String javaName,
+      List<SpringBootDeclaration.Property> fields,
+      Optional<SpringBootDeclaration.PatchSpec> patch
+   ) implements SpringBootDeclaration {
       public InputDeclaration {
          SpringBootDeclaration.requireDeclaration(id, origin, sourceSymbol, javaName);
          fields = List.copyOf(Objects.requireNonNull(fields, "fields"));
+         Objects.requireNonNull(patch, "patch");
+      }
+
+      public InputDeclaration(LoweredNodeId id, LoweredOrigin origin, SymbolId sourceSymbol, String javaName, List<SpringBootDeclaration.Property> fields) {
+         this(id, origin, sourceSymbol, javaName, fields, Optional.empty());
+      }
+   }
+
+   /**
+   * A patch payload's transport contract.
+   *
+   * <p>The identity travels beside the change set rather than inside it, and every change carries the
+   * entity member it applies to, so a request can never be applied by matching names again.
+   */
+   record PatchSpec(
+      SymbolId sourceEntitySymbol,
+      String sourceEntityJavaName,
+      SymbolId identityFieldSymbol,
+      String identityPropertyName,
+      String changesPropertyName,
+      String expectedVersionPropertyName,
+      List<SpringBootDeclaration.PatchChange> changes
+   ) {
+      public PatchSpec {
+         Objects.requireNonNull(sourceEntitySymbol, "sourceEntitySymbol");
+         SpringBootDeclaration.requireText(sourceEntityJavaName, "sourceEntityJavaName");
+         Objects.requireNonNull(identityFieldSymbol, "identityFieldSymbol");
+         SpringBootDeclaration.requireText(identityPropertyName, "identityPropertyName");
+         SpringBootDeclaration.requireText(changesPropertyName, "changesPropertyName");
+         SpringBootDeclaration.requireText(expectedVersionPropertyName, "expectedVersionPropertyName");
+         changes = List.copyOf(Objects.requireNonNull(changes, "changes"));
+         if (changes.isEmpty()) {
+         throw new IllegalArgumentException("a patch payload must declare at least one change");
+         }
+      }
+   }
+
+   /** One payload field of a patch, with the entity column it changes. */
+   record PatchChange(
+      SymbolId payloadFieldSymbol,
+      String payloadPropertyName,
+      SymbolId entityFieldSymbol,
+      String entityPropertyName,
+      String entityColumnName
+   ) {
+      public PatchChange {
+         Objects.requireNonNull(payloadFieldSymbol, "payloadFieldSymbol");
+         SpringBootDeclaration.requireText(payloadPropertyName, "payloadPropertyName");
+         Objects.requireNonNull(entityFieldSymbol, "entityFieldSymbol");
+         SpringBootDeclaration.requireText(entityPropertyName, "entityPropertyName");
+         SpringBootDeclaration.requireText(entityColumnName, "entityColumnName");
+      }
+   }
+
+   /**
+   * A read-only response projection of {@code sourceEntitySymbol}.
+   *
+   * <p>Each field keeps both its own identity and the entity field it reads, together with the target
+   * property name of that entity field, so the generator maps a row to a response DTO without
+   * re-deriving anything from names.
+   */
+   record ViewDeclaration(
+      LoweredNodeId id,
+      LoweredOrigin origin,
+      SymbolId sourceSymbol,
+      String javaName,
+      SymbolId sourceEntitySymbol,
+      String sourceEntityJavaName,
+      List<SpringBootDeclaration.ViewField> fields
+   ) implements SpringBootDeclaration {
+      public ViewDeclaration {
+         SpringBootDeclaration.requireDeclaration(id, origin, sourceSymbol, javaName);
+         Objects.requireNonNull(sourceEntitySymbol, "sourceEntitySymbol");
+         SpringBootDeclaration.requireText(sourceEntityJavaName, "sourceEntityJavaName");
+         fields = List.copyOf(Objects.requireNonNull(fields, "fields"));
+      }
+   }
+
+   record ViewField(
+      LoweredNodeId id,
+      LoweredOrigin origin,
+      SymbolId sourceSymbol,
+      String javaName,
+      LoweredJavaType type,
+      SymbolId sourceFieldSymbol,
+      String sourcePropertyName
+   ) {
+      public ViewField {
+         SpringBootDeclaration.requireDeclaration(id, origin, sourceSymbol, javaName);
+         Objects.requireNonNull(type, "type");
+         Objects.requireNonNull(sourceFieldSymbol, "sourceFieldSymbol");
+         SpringBootDeclaration.requireText(sourcePropertyName, "sourcePropertyName");
       }
    }
 

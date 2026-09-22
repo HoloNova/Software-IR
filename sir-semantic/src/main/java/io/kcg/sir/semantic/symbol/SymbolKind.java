@@ -5,6 +5,7 @@ public enum SymbolKind {
    ENUM,
    ENTITY,
    INPUT,
+   VIEW,
    ERROR,
    CAPABILITY,
    VARIABLE,

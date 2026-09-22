@@ -5,6 +5,7 @@ import io.kcg.sir.lowering.api.LoweredOrigin;
 import io.kcg.sir.semantic.symbol.SymbolId;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.List;
 import java.util.Objects;
 
 public sealed interface SpringExpression
@@ -17,7 +18,8 @@ public sealed interface SpringExpression
    SpringExpression.NameExpression,
    SpringExpression.MemberExpression,
    SpringExpression.UnaryExpression,
-   SpringExpression.BinaryExpression {
+   SpringExpression.BinaryExpression,
+   SpringExpression.PayloadPresence {
    LoweredNodeId id();
 
    LoweredOrigin origin();
@@ -56,7 +58,33 @@ public sealed interface SpringExpression
       LT,
       LE,
       GT,
-      GE;
+      GE,
+      CONTAINS_LITERAL;
+   }
+
+   /**
+   * The literal-match plan for one {@code CONTAINS_LITERAL} node of a find predicate.
+   *
+   * <p>{@link #expressionId()} is the lowered node of the operator it describes, so the plan and the
+   * predicate can be checked against each other in both directions. {@link #escapeCharacter()} and
+   * {@link #escapedLiterals()} come from the target query policy, never from the renderer.
+   */
+   record StringMatch(
+      LoweredNodeId id, LoweredOrigin origin, LoweredNodeId expressionId, char escapeCharacter, List<String> escapedLiterals
+   ) {
+      public StringMatch {
+         Objects.requireNonNull(id, "id");
+         Objects.requireNonNull(origin, "origin");
+         Objects.requireNonNull(expressionId, "expressionId");
+         if (escapeCharacter == 0) {
+         throw new IllegalArgumentException("escapeCharacter must not be NUL");
+         }
+
+         escapedLiterals = List.copyOf(Objects.requireNonNull(escapedLiterals, "escapedLiterals"));
+         if (escapedLiterals.isEmpty()) {
+         throw new IllegalArgumentException("escapedLiterals must not be empty");
+         }
+      }
    }
 
    record BooleanLiteral(LoweredNodeId id, LoweredOrigin origin, LoweredJavaType type, boolean value) implements SpringExpression {
@@ -95,6 +123,19 @@ public sealed interface SpringExpression
          SpringExpression.requireNode(id, origin, type);
          Objects.requireNonNull(resolvedSymbol, "resolvedSymbol");
          SpringExpression.requireText(targetName, "targetName");
+      }
+   }
+
+   /**
+   * Whether a patch request carried the named change property.
+   *
+   * <p>This is the normalized form of {@code input.x.present}: the property name comes from resolution,
+   * so the renderer asks the target's own presence flag instead of re-deriving a name.
+   */
+   record PayloadPresence(LoweredNodeId id, LoweredOrigin origin, LoweredJavaType type, String sourcePropertyName) implements SpringExpression {
+      public PayloadPresence {
+         SpringExpression.requireNode(id, origin, type);
+         SpringExpression.requireText(sourcePropertyName, "sourcePropertyName");
       }
    }
 

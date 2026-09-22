@@ -18,6 +18,7 @@ public record ResolvedContext(
    Map<AstNodeId, SymbolId> referenceBindings,
    Map<AstNodeId, SirType> typeRefTypes,
    Map<AstNodeId, SymbolId> findItemBindings,
+   Map<SymbolId, SymbolId> patchFieldBindings,
    ReferenceSiteBindings referenceSiteBindings,
    Map<AstNodeId, SymbolId> declarationBindings,
    List<Diagnostic> diagnostics
@@ -28,6 +29,7 @@ public record ResolvedContext(
       referenceBindings = Collections.unmodifiableMap(new LinkedHashMap<>(Objects.requireNonNull(referenceBindings, "referenceBindings")));
       typeRefTypes = Collections.unmodifiableMap(new LinkedHashMap<>(Objects.requireNonNull(typeRefTypes, "typeRefTypes")));
       findItemBindings = Collections.unmodifiableMap(new LinkedHashMap<>(Objects.requireNonNull(findItemBindings, "findItemBindings")));
+      patchFieldBindings = Collections.unmodifiableMap(new LinkedHashMap<>(Objects.requireNonNull(patchFieldBindings, "patchFieldBindings")));
       Objects.requireNonNull(referenceSiteBindings, "referenceSiteBindings");
       declarationBindings = Collections.unmodifiableMap(new LinkedHashMap<>(Objects.requireNonNull(declarationBindings, "declarationBindings")));
       diagnostics = List.copyOf(Objects.requireNonNull(diagnostics, "diagnostics"));

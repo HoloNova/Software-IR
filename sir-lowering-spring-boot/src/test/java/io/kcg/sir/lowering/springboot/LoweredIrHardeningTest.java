@@ -260,6 +260,7 @@ class LoweredIrHardeningTest {
                     capability(model, "ExerciseSteps").workflow());
             assertThrows(NullPointerException.class, () -> new SpringBootWorkflow.FindStep(
                     valid.id(), valid.origin(), valid.entitySymbol(), valid.predicate(),
+                    valid.orderKeys(), valid.page(), valid.stringMatches(),
                     valid.result(), null));
         }
 

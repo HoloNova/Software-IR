@@ -36,12 +36,13 @@
 不依赖旧聊天或任何 Agent 私人记忆，按以下最低顺序完整加载：
 
 1. `AGENTS.md`
-2. `docs/PROJECT_OWNER_GUIDE.md`
-3. `docs/PROJECT_STATUS.md`
-4. `docs/roadmap/ACTIVE_WORK.md`
-5. `docs/qualification/CURRENT_QUALIFICATION.md`
-6. `docs/design/README.md` 与 `docs/roadmap/README.md`（目标设计与当前 G 阶段方向）
-7. 当前工作单直接相关的 ADR、代码和测试
+2. `MAIN.md`（项目主体说明）
+3. `docs/PROJECT_OWNER_GUIDE.md`
+4. `docs/PROJECT_STATUS.md`
+5. `docs/roadmap/ACTIVE_WORK.md`
+6. `docs/qualification/CURRENT_QUALIFICATION.md`
+7. `docs/design/README.md` 与 `docs/roadmap/README.md`（目标设计与当前 G 阶段方向）
+8. 当前工作单直接相关的 ADR、代码和测试
 
 ### 连续续作：同一对话且上下文完整
 

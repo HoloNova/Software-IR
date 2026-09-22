@@ -15,6 +15,9 @@ import io.kcg.sir.ast.AstErrorDecl;
 import io.kcg.sir.ast.AstExpression;
 import io.kcg.sir.ast.AstFailsClause;
 import io.kcg.sir.ast.AstField;
+import io.kcg.sir.ast.AstFindPage;
+import io.kcg.sir.ast.AstFindOrder;
+import io.kcg.sir.ast.AstFindOrderKey;
 import io.kcg.sir.ast.AstFindStep;
 import io.kcg.sir.ast.AstGenerationStrategy;
 import io.kcg.sir.ast.AstGroupedExpression;
@@ -30,7 +33,9 @@ import io.kcg.sir.ast.AstNameRef;
 import io.kcg.sir.ast.AstNamedTypeRef;
 import io.kcg.sir.ast.AstNodeId;
 import io.kcg.sir.ast.AstOptionalTypeRef;
+import io.kcg.sir.ast.AstPageTypeRef;
 import io.kcg.sir.ast.AstPersistStep;
+import io.kcg.sir.ast.AstPresentExpression;
 import io.kcg.sir.ast.AstRefTypeRef;
 import io.kcg.sir.ast.AstReturnStep;
 import io.kcg.sir.ast.AstSoftware;
@@ -39,6 +44,8 @@ import io.kcg.sir.ast.AstTypeRef;
 import io.kcg.sir.ast.AstUnaryExpression;
 import io.kcg.sir.ast.AstUpdateStep;
 import io.kcg.sir.ast.AstValidateStep;
+import io.kcg.sir.ast.AstViewDecl;
+import io.kcg.sir.ast.AstViewField;
 import io.kcg.sir.semantic.api.ReferenceRole;
 import io.kcg.sir.semantic.api.ReferenceSite;
 import io.kcg.sir.semantic.api.ReferenceSiteBinding;
@@ -51,6 +58,7 @@ import io.kcg.sir.semantic.symbol.SymbolTable;
 import io.kcg.sir.semantic.type.DeclaredType;
 import io.kcg.sir.semantic.type.ListType;
 import io.kcg.sir.semantic.type.OptionalType;
+import io.kcg.sir.semantic.type.PageType;
 import io.kcg.sir.semantic.type.PrimitiveType;
 import io.kcg.sir.semantic.type.RefType;
 import io.kcg.sir.semantic.type.SirType;
@@ -84,6 +92,7 @@ final class ResolvePass {
    private final Map<String, SymbolKind> declarationKinds = new LinkedHashMap<>();
    private final Map<String, AstEntityDecl> entityDecls = new LinkedHashMap<>();
    private final Map<String, AstInputDecl> inputDecls = new LinkedHashMap<>();
+   private final Map<String, AstViewDecl> viewDecls = new LinkedHashMap<>();
    private final Map<String, Map<String, SirType>> entityFieldTypes = new LinkedHashMap<>();
    private final Map<String, Map<String, SymbolId>> entityFieldSymbols = new LinkedHashMap<>();
    private final Map<String, SirType> entityIdentityTypes = new LinkedHashMap<>();
@@ -94,6 +103,12 @@ final class ResolvePass {
    private final Map<String, Map<String, SymbolId>> enumMemberSymbols = new LinkedHashMap<>();
    private final Map<String, Set<String>> capabilityFails = new LinkedHashMap<>();
    private final Map<String, SymbolId> capabilityScopeIds = new LinkedHashMap<>();
+   /** Input scope id -> the entity a patch payload changes. */
+   private final Map<SymbolId, SymbolId> patchInputEntities = new LinkedHashMap<>();
+   /** The input field symbols that belong to a patch payload, i.e. the fields a presence test may read. */
+   private final Set<SymbolId> patchPayloadFieldSymbols = new LinkedHashSet<>();
+   /** Patch payload input field symbol -> the entity member it changes. */
+   private final Map<SymbolId, SymbolId> patchFieldBindings = new LinkedHashMap<>();
 
    ResolvePass(AstSoftware software) {
       this.software = software;
@@ -106,6 +121,7 @@ final class ResolvePass {
       this.registerPrimitives();
       this.registerDeclarations();
       this.resolveMembersAndTypes();
+      this.resolvePatchPayloadBindings();
       this.resolveCapabilities();
       SymbolTable table = this.buildSymbolTable();
       return new ResolvedContext(
@@ -114,6 +130,7 @@ final class ResolvePass {
          this.referenceBindings,
          this.typeRefTypes,
          this.findItemBindings,
+         this.patchFieldBindings,
          ReferenceSiteBindings.of(this.referenceSiteBindings.values()),
          this.declarationBindings,
          List.copyOf(this.diagnostics)
@@ -168,6 +185,12 @@ final class ResolvePass {
             this.declarationKinds.put(name, SymbolKind.INPUT);
             this.typeByName.put(name, new DeclaredType(DeclaredType.DeclaredKind.INPUT, name, id));
             break;
+         case AstViewDecl e:
+         symbol = new Symbol.TypeSymbol(id, name, span, SymbolKind.VIEW, e);
+         this.viewDecls.put(name, e);
+         this.declarationKinds.put(name, SymbolKind.VIEW);
+         this.typeByName.put(name, new DeclaredType(DeclaredType.DeclaredKind.VIEW, name, id));
+         break;
          case AstErrorDecl e:
             symbol = new Symbol.ErrorSymbol(id, name, span, e);
             this.declarationKinds.put(name, SymbolKind.ERROR);
@@ -207,6 +230,9 @@ final class ResolvePass {
                   break;
                case AstInputDecl e:
                   this.resolveInputMembers(e);
+                  break;
+               case AstViewDecl e:
+                  this.resolveViewMembers(e);
                   break;
                default:
             }
@@ -306,6 +332,64 @@ final class ResolvePass {
       }
    }
 
+   /**
+   * Binds every patch payload field to the entity member it changes.
+   *
+   * <p>This runs after all entity members are resolved, so a payload may be declared
+   * before the entity it targets. The bound member is what makes a change applicable
+   * without a later phase matching field names again, and the resolved field symbols
+   * are what makes a {@code .present} test decidable.
+   */
+   private void resolvePatchPayloadBindings() {
+      for (AstDeclaration decl : this.software.declarations()) {
+         if (!(decl instanceof AstInputDecl inputDecl) || inputDecl.patchSourceEntity().isEmpty()) {
+            continue;
+         }
+
+         if (!this.registeredDeclIds.contains(inputDecl.id())) {
+            continue;
+         }
+
+         String inputName = inputDecl.name().text();
+         SymbolId inputScopeId = SymbolIdFactory.declaration(this.softwareName, "input", inputName);
+         AstNameRef sourceEntity = inputDecl.patchSourceEntity().orElseThrow();
+         this.resolveEntityRef(sourceEntity, ReferenceRole.PATCH_SOURCE_ENTITY);
+         SymbolId entitySymbolId = this.referenceBindings.get(sourceEntity.id());
+         if (entitySymbolId == null) {
+            continue;
+         }
+
+         this.patchInputEntities.put(inputScopeId, entitySymbolId);
+         String entityName = sourceEntity.text();
+         Map<String, SymbolId> entityMembers = this.entityFieldSymbols.getOrDefault(entityName, Map.of());
+         Map<String, SymbolId> inputFields = this.inputFieldSymbols.getOrDefault(inputName, Map.of());
+         for (AstField field : inputDecl.fields()) {
+            String fieldName = field.name().text();
+            SymbolId memberSymId = entityMembers.get(fieldName);
+            if (memberSymId == null
+               && this.entityDecls.containsKey(entityName)
+               && this.entityDecls.get(entityName).identity().name().text().equals(fieldName)) {
+               memberSymId = this.entityIdentitySymbols.get(entityName);
+            }
+
+            SymbolId inputFieldSymId = inputFields.get(fieldName);
+            if (memberSymId == null) {
+               this.diagnostics.add(DiagnosticBuilder.error(
+                  "SIR-SYMBOL-002",
+                  "未定义字段: " + entityName + "." + fieldName,
+                  field.name().span()
+               ));
+            } else if (inputFieldSymId != null) {
+               this.patchFieldBindings.put(inputFieldSymId, memberSymId);
+            }
+
+            if (inputFieldSymId != null) {
+               this.patchPayloadFieldSymbols.add(inputFieldSymId);
+            }
+         }
+      }
+   }
+
    private void resolveInputMembers(AstInputDecl inputDecl) {
       String inputName = inputDecl.name().text();
       SymbolId inputScopeId = SymbolIdFactory.declaration(this.softwareName, "input", inputName);
@@ -335,6 +419,64 @@ final class ResolvePass {
             this.bind(field.id(), fieldSymId);
          }
       }
+   }
+
+   /**
+   * Registers the view's own field symbols in a view scope, then binds every projected name to the
+   * field of the source entity it reads. The view must name a declared entity and each projected
+   * name must exist on it; everything else about a projection is a later-phase rule.
+   */
+   private void resolveViewMembers(AstViewDecl viewDecl) {
+      String viewName = viewDecl.name().text();
+      SymbolId viewScopeId = SymbolIdFactory.declaration(this.softwareName, "view", viewName);
+      this.scopeSymbols.put(viewScopeId, new ArrayList<>());
+      this.scopeParents.put(viewScopeId, this.projectScopeId);
+      this.resolveEntityRef(viewDecl.sourceEntity(), ReferenceRole.VIEW_SOURCE_ENTITY);
+      String entityName = this.entityDecls.containsKey(viewDecl.sourceEntity().text()) ? viewDecl.sourceEntity().text() : null;
+      Set<String> seenFields = new LinkedHashSet<>();
+
+      for (AstViewField field : viewDecl.fields()) {
+         String fieldName = field.name().text();
+         if (!seenFields.add(fieldName)) {
+         AstViewField first = this.findFirstViewField(viewDecl.fields(), fieldName);
+         RelatedLocation related = new RelatedLocation("首次声明在此处", first.span());
+         this.diagnostics.add(DiagnosticBuilder.errorWithRelated("SIR-SYMBOL-001", "重复字段: " + fieldName, field.span(), related));
+         continue;
+         }
+
+         SirType declaredType = this.resolveTypeRef(field.type(), viewName, "view field");
+         SymbolId fieldSymId = SymbolIdFactory.viewField(this.softwareName, viewName, fieldName);
+         Symbol.FieldSymbol fieldSym = new Symbol.FieldSymbol(fieldSymId, fieldName, field.span(), declaredType, viewScopeId);
+         this.addSymbol(fieldSym, viewScopeId);
+         this.bindProjectedField(field, entityName, fieldName);
+      }
+   }
+
+   private void bindProjectedField(AstViewField field, String entityName, String fieldName) {
+      if (entityName == null) {
+         return;
+      }
+
+      SymbolId fieldSymId = this.entityFieldSymbols.getOrDefault(entityName, Map.of()).get(fieldName);
+      if (fieldSymId == null && this.entityDecls.get(entityName).identity().name().text().equals(fieldName)) {
+         fieldSymId = this.entityIdentitySymbols.get(entityName);
+      }
+
+      if (fieldSymId != null) {
+         this.bindReference(field.name(), ReferenceRole.VIEW_FIELD, fieldSymId);
+      } else {
+         this.diagnostics.add(DiagnosticBuilder.error("SIR-SYMBOL-002", "未定义字段: " + entityName + "." + fieldName, field.name().span()));
+      }
+   }
+
+   private AstViewField findFirstViewField(List<AstViewField> fields, String name) {
+      for (AstViewField field : fields) {
+         if (field.name().text().equals(name)) {
+         return field;
+         }
+      }
+
+      throw new IllegalStateException("view field not found: " + name);
    }
 
    private void resolveCapabilities() {
@@ -464,7 +606,9 @@ final class ResolvePass {
                Set<String> predVars = new LinkedHashSet<>(visibleVars);
                predVars.add("item");
                this.resolveExpression(s.predicate(), capName, stepScopeId, predVars, itemId);
-               SirType resultType = itemType == null ? null : new ListType(itemType);
+            s.order().ifPresent(order -> this.resolveOrder(order, s.entity().text()));
+            s.page().ifPresent(page -> this.resolvePage(page, capName, capScopeId, visibleVars));
+            SirType resultType = s.page().isPresent() ? outputType : itemType == null ? null : new ListType(itemType);
                this.registerStepResultVar(s.result(), s.id(), capName, capScopeId, visibleVars, resultType);
                break;
             case AstCreateStep s:
@@ -489,6 +633,7 @@ final class ResolvePass {
                break;
             case AstPersistStep s:
                this.resolveVarTarget(s.target(), capName, capScopeId, visibleVars, ReferenceRole.PERSIST_TARGET);
+               s.failure().ifPresent(failure -> this.resolveErrorRef(failure, capName, ReferenceRole.PERSIST_FAILURE));
                break;
             case AstReturnStep var29:
                AstReturnStep s = (AstReturnStep)var8;
@@ -497,6 +642,36 @@ final class ResolvePass {
             default:
          }
       }
+   }
+
+   private void resolveOrder(AstFindOrder order, String entityName) {
+      for (AstFindOrderKey key : order.keys()) {
+         this.resolveOrderKey(key, entityName);
+      }
+   }
+
+   private void resolveOrderKey(AstFindOrderKey key, String entityName) {
+      if (entityName == null || !this.entityDecls.containsKey(entityName)) {
+         return;
+      }
+
+      String fieldName = key.field().text();
+      SymbolId fieldSymId = this.entityFieldSymbols.getOrDefault(entityName, Map.of()).get(fieldName);
+      if (fieldSymId == null && this.entityDecls.get(entityName).identity().name().text().equals(fieldName)) {
+         fieldSymId = this.entityIdentitySymbols.get(entityName);
+      }
+
+      if (fieldSymId != null) {
+         this.bindReference(key.field(), ReferenceRole.ORDER_FIELD, fieldSymId);
+      } else {
+         this.diagnostics.add(DiagnosticBuilder.error("SIR-SYMBOL-002", "未知字段: " + fieldName, key.field().span()));
+      }
+   }
+
+   private void resolvePage(AstFindPage page, String capName, SymbolId capScopeId, Set<String> visibleVars) {
+      this.resolveExpression(page.page(), capName, capScopeId, visibleVars, null);
+      this.resolveExpression(page.size(), capName, capScopeId, visibleVars, null);
+      this.resolveErrorRef(page.error(), capName, ReferenceRole.PAGE_ERROR);
    }
 
    private SymbolId referenceSiteBindingsTarget(AstNodeId siteId) {
@@ -596,6 +771,9 @@ final class ResolvePass {
             case AstGroupedExpression e:
                this.resolveExpression(e.inner(), capName, scopeId, visibleVars, currentItemSymbol);
                break;
+            case AstPresentExpression e:
+               this.resolvePresentExpression(e, capName, scopeId, visibleVars, currentItemSymbol);
+               break;
             case AstUnaryExpression e:
                this.resolveExpression(e.operand(), capName, scopeId, visibleVars, currentItemSymbol);
                break;
@@ -683,13 +861,44 @@ final class ResolvePass {
    }
 
    private AstNodeId receiverReferenceId(AstExpression receiver) {
+      return receiverReferenceIdOf(receiver);
+   }
+
+   private static AstNodeId receiverReferenceIdOf(AstExpression receiver) {
       if (receiver instanceof AstGroupedExpression ge) {
-         return this.receiverReferenceId(ge.inner());
+         return receiverReferenceIdOf(ge.inner());
       } else if (receiver instanceof AstNameExpression ne) {
          return ne.name().id();
       } else {
          return receiver instanceof AstMemberExpression me ? me.member().id() : receiver.id();
       }
+   }
+
+   /**
+   * Resolves {@code <reference>.present}.
+   *
+   * <p>Resolution records the binding the test reads and rejects the construct where it
+   * cannot have meaning: presence exists only for a field of a patch payload, because a
+   * payload is the only place where "absent" and "explicitly null" differ. The bound
+   * field symbol is what a later phase renders the presence flag from.
+   */
+   private void resolvePresentExpression(AstPresentExpression expr, String capName, SymbolId scopeId, Set<String> visibleVars, SymbolId currentItemSymbol) {
+      this.resolveExpression(expr.target(), capName, scopeId, visibleVars, currentItemSymbol);
+      AstNodeId targetSiteId = receiverReferenceIdOf(expr.target());
+      SymbolId targetSymbolId = this.referenceBindings.get(targetSiteId);
+      if (targetSymbolId == null) {
+         return;
+      }
+
+      if (!this.patchPayloadFieldSymbols.contains(targetSymbolId)) {
+         ReferenceSiteBinding site = this.referenceSiteBindings.get(targetSiteId);
+         this.diagnostics.add(DiagnosticBuilder.error(
+            "SIR-FLOW-001", "present 只适用于 patch 载荷字段: " + site.site().text(), expr.span()
+         ));
+         return;
+      }
+
+      this.bindReference(expr.id(), expr.span(), "present", ReferenceRole.PATCH_FIELD_PRESENCE, targetSymbolId);
    }
 
    private SirType receiverTypeFor(SymbolId receiverSymbolId) {
@@ -778,6 +987,20 @@ final class ResolvePass {
                this.typeRefTypes.put(ref.id(), result);
                return result;
             }
+         case AstPageTypeRef ref:
+         SirType pageElement = this.resolveTypeRef(ref.elementType(), ownerName, "Page");
+         if (pageElement == null) {
+               return null;
+         }
+
+         if (pageElement instanceof PrimitiveType pt && pt == PrimitiveType.UNIT) {
+               this.diagnostics.add(DiagnosticBuilder.error("SIR-TYPE-001", "Page<Unit> 非法", ref.span()));
+               return null;
+         }
+
+         SirType pageType = new PageType(pageElement);
+         this.typeRefTypes.put(ref.id(), pageType);
+         return pageType;
          case AstRefTypeRef ref:
             String name = ref.targetName().text();
             SirType resolved = this.typeByName.get(name);
@@ -822,24 +1045,28 @@ final class ResolvePass {
    }
 
    private void bindReference(AstNameRef ref, ReferenceRole role, SymbolId targetSymbolId) {
+      this.bindReference(ref.id(), ref.span(), ref.text(), role, targetSymbolId);
+   }
+
+   private void bindReference(AstNodeId siteId, SourceSpan span, String text, ReferenceRole role, SymbolId targetSymbolId) {
       Symbol target = this.symbolsById.get(targetSymbolId);
       if (target == null) {
-         throw new IllegalStateException("bindReference target Symbol not found: " + targetSymbolId + " (site " + ref.id().value() + ")");
+         throw new IllegalStateException("bindReference target Symbol not found: " + targetSymbolId + " (site " + siteId.value() + ")");
       }
 
       if (!role.accepts(target.kind())) {
          throw new IllegalStateException(
-            "ReferenceRole " + role + " does not accept SymbolKind " + target.kind() + " (target " + targetSymbolId + ", site " + ref.id().value() + ")"
+            "ReferenceRole " + role + " does not accept SymbolKind " + target.kind() + " (target " + targetSymbolId + ", site " + siteId.value() + ")"
          );
       }
 
-      this.bind(ref.id(), targetSymbolId);
-      ReferenceSite site = new ReferenceSite(ref.id(), ref.span(), ref.text(), role);
+      this.bind(siteId, targetSymbolId);
+      ReferenceSite site = new ReferenceSite(siteId, span, text, role);
       ReferenceSiteBinding typedBinding = new ReferenceSiteBinding(site, targetSymbolId);
-      ReferenceSiteBinding previous = this.referenceSiteBindings.put(ref.id(), typedBinding);
+      ReferenceSiteBinding previous = this.referenceSiteBindings.put(siteId, typedBinding);
       if (previous != null) {
          throw new IllegalStateException(
-            "ReferenceSite already bound: " + ref.id().value() + " (first target: " + previous.targetSymbol() + ", second target: " + targetSymbolId + ")"
+            "ReferenceSite already bound: " + siteId.value() + " (first target: " + previous.targetSymbol() + ", second target: " + targetSymbolId + ")"
          );
       }
    }
@@ -871,6 +1098,7 @@ final class ResolvePass {
          case AstEnumDecl e -> SymbolKind.ENUM;
          case AstEntityDecl e -> SymbolKind.ENTITY;
          case AstInputDecl e -> SymbolKind.INPUT;
+         case AstViewDecl e -> SymbolKind.VIEW;
          case AstErrorDecl e -> SymbolKind.ERROR;
          case AstCapabilityDecl e -> SymbolKind.CAPABILITY;
          default -> throw new MatchException(null, null);
@@ -882,6 +1110,7 @@ final class ResolvePass {
          case AstEnumDecl e -> e.name().text();
          case AstEntityDecl e -> e.name().text();
          case AstInputDecl e -> e.name().text();
+         case AstViewDecl e -> e.name().text();
          case AstErrorDecl e -> e.name().text();
          case AstCapabilityDecl e -> e.name().text();
          default -> throw new MatchException(null, null);
@@ -893,6 +1122,7 @@ final class ResolvePass {
          case ENUM -> "enum";
          case ENTITY -> "entity";
          case INPUT -> "input";
+         case VIEW -> "view";
          case ERROR -> "error";
          case CAPABILITY -> "capability";
          case PRIMITIVE -> "primitive";

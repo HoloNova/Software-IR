@@ -52,6 +52,10 @@ final class SymbolIdFactory {
       return new SymbolId("sir://" + encode(softwareName) + "/input/" + encode(inputName) + "/field/" + encode(fieldName));
    }
 
+   static SymbolId viewField(String softwareName, String viewName, String fieldName) {
+       return new SymbolId("sir://" + encode(softwareName) + "/view/" + encode(viewName) + "/field/" + encode(fieldName));
+   }
+
    static SymbolId enumMember(String softwareName, String enumName, String memberName) {
       return new SymbolId("sir://" + encode(softwareName) + "/enum/" + encode(enumName) + "/member/" + encode(memberName));
    }

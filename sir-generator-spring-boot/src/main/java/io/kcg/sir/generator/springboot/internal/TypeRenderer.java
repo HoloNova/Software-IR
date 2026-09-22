@@ -5,6 +5,7 @@ import io.kcg.sir.lowering.springboot.model.LoweredJavaType.Declared;
 import io.kcg.sir.lowering.springboot.model.LoweredJavaType.EntityReference;
 import io.kcg.sir.lowering.springboot.model.LoweredJavaType.ListValue;
 import io.kcg.sir.lowering.springboot.model.LoweredJavaType.OptionalValue;
+import io.kcg.sir.lowering.springboot.model.LoweredJavaType.PageValue;
 import io.kcg.sir.lowering.springboot.model.LoweredJavaType.Scalar;
 import io.kcg.sir.lowering.springboot.model.LoweredJavaType.ScalarKind;
 import java.util.Optional;
@@ -20,6 +21,8 @@ final class TypeRenderer {
          case OptionalValue o -> "java.util.Optional<" + renderBoxedType(o.elementType()) + ">";
          case ListValue l -> "java.util.List<" + renderBoxedType(l.elementType()) + ">";
          case EntityReference ref -> scalarBoxed(ref.identityStorageType().kind());
+         case PageValue ignored -> throw new IllegalStateException(
+                 "Page values are response carriers and are rendered by ResponseTypeRenderer");
          default -> throw new MatchException(null, null);
       };
    }
@@ -31,6 +34,8 @@ final class TypeRenderer {
          case OptionalValue o -> "java.util.Optional<" + renderBoxedType(o.elementType()) + ">";
          case ListValue l -> "java.util.List<" + renderBoxedType(l.elementType()) + ">";
          case EntityReference ref -> scalarBoxed(ref.identityStorageType().kind());
+         case PageValue ignored -> throw new IllegalStateException(
+                 "Page values are response carriers and are rendered by ResponseTypeRenderer");
          default -> throw new MatchException(null, null);
       };
    }
@@ -48,6 +53,7 @@ final class TypeRenderer {
             yield inner.isPresent() ? inner : Optional.of("java.util.List");
          }
          case EntityReference ref -> scalarImport(ref.identityStorageType().kind());
+         case PageValue ignored -> Optional.empty();
          default -> throw new MatchException(null, null);
       };
    }

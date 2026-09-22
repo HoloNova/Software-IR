@@ -26,6 +26,18 @@ final class ExpressionRenderer {
    }
 
    static String renderExpression(SpringExpression expression, Map<SymbolId, String> variableNames) {
+      return renderExpression(expression, variableNames, null);
+   }
+
+   /**
+   * Renders an expression, with the payload envelope in scope when it may be asked about.
+   *
+   * <p>A presence test reads the change set of the capability's own payload, so it is only renderable
+   * where that payload is known; anywhere else it is a mistake rather than something to guess at.
+   */
+   static String renderExpression(
+      SpringExpression expression, Map<SymbolId, String> variableNames, PresenceScope presence
+   ) {
       Objects.requireNonNull(expression, "expression");
       Objects.requireNonNull(variableNames, "variableNames");
 
@@ -43,11 +55,29 @@ final class ExpressionRenderer {
             String override = variableNames.get(name.resolvedSymbol());
             yield override != null ? override : name.targetName();
          }
-         case MemberExpression member -> renderMember(member, variableNames);
-         case UnaryExpression unary -> renderUnary(unary, variableNames);
-         case BinaryExpression binary -> renderBinary(binary, variableNames);
+         case MemberExpression member -> renderMember(member, variableNames, presence);
+         case UnaryExpression unary -> renderUnary(unary, variableNames, presence);
+         case BinaryExpression binary -> renderBinary(binary, variableNames, presence);
+         case SpringExpression.PayloadPresence payloadPresence -> renderPresence(payloadPresence, presence);
          default -> throw new MatchException(null, null);
       };
+   }
+
+   /** The payload envelope a presence test reads, as the generator arranged it. */
+   record PresenceScope(String payloadName, String changesPropertyName) {
+      PresenceScope {
+         Objects.requireNonNull(payloadName, "payloadName");
+         Objects.requireNonNull(changesPropertyName, "changesPropertyName");
+      }
+   }
+
+   private static String renderPresence(SpringExpression.PayloadPresence presence, PresenceScope scope) {
+      if (scope == null) {
+         throw new IllegalStateException("a presence test needs the capability's payload in scope: " + presence.id());
+      }
+
+      return scope.payloadName() + "." + getter(scope.changesPropertyName()) + ".has("
+         + StringEscape.javaString(presence.sourcePropertyName()) + ")";
    }
 
    private static String renderNow(LoweredJavaType type) {
@@ -62,19 +92,19 @@ final class ExpressionRenderer {
       }
    }
 
-   private static String renderMember(MemberExpression member, Map<SymbolId, String> variableNames) {
+   private static String renderMember(MemberExpression member, Map<SymbolId, String> variableNames, PresenceScope presence) {
       SpringExpression receiver = member.receiver();
       if (receiver instanceof NameExpression nameExpr && nameExpr.type() instanceof Declared declared && declared.kind() == DeclaredKind.ENUM) {
          String receiverName = variableNames.getOrDefault(nameExpr.resolvedSymbol(), nameExpr.targetName());
          return receiverName + "." + member.targetMember();
       } else {
-         String receiverText = renderExpression(receiver, variableNames);
+         String receiverText = renderExpression(receiver, variableNames, presence);
          return receiverText + "." + getter(member.targetMember());
       }
    }
 
-   private static String renderUnary(UnaryExpression unary, Map<SymbolId, String> variableNames) {
-      String operand = renderExpression(unary.operand(), variableNames);
+   private static String renderUnary(UnaryExpression unary, Map<SymbolId, String> variableNames, PresenceScope presence) {
+      String operand = renderExpression(unary.operand(), variableNames, presence);
 
       return switch (unary.operator()) {
          case NOT -> "!(" + operand + ")";
@@ -82,9 +112,9 @@ final class ExpressionRenderer {
       };
    }
 
-   private static String renderBinary(BinaryExpression binary, Map<SymbolId, String> variableNames) {
-      String left = renderExpression(binary.left(), variableNames);
-      String right = renderExpression(binary.right(), variableNames);
+   private static String renderBinary(BinaryExpression binary, Map<SymbolId, String> variableNames, PresenceScope presence) {
+      String left = renderExpression(binary.left(), variableNames, presence);
+      String right = renderExpression(binary.right(), variableNames, presence);
       LoweredJavaType operandType = binary.left().type();
 
       return switch (binary.operator()) {
@@ -96,6 +126,8 @@ final class ExpressionRenderer {
          case LE -> renderOrdering(left, right, operandType, "<=");
          case GT -> renderOrdering(left, right, operandType, ">");
          case GE -> renderOrdering(left, right, operandType, ">=");
+         case CONTAINS_LITERAL -> throw new IllegalStateException(
+                 "literal matching is a query predicate, not a value expression: " + binary.id());
       };
    }
 

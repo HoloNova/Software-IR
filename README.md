@@ -26,7 +26,7 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 
 1. [项目负责人操作与交接手册](docs/PROJECT_OWNER_GUIDE.md)
 2. [当前唯一工作单](docs/roadmap/ACTIVE_WORK.md)
-3. [全局工程规则](AGENTS.md)
+3. [全局工程规则](AGENTS.md) 与 [项目主体说明](MAIN.md)
 4. [当前项目状态](docs/PROJECT_STATUS.md)
 5. [系统架构与实现指南](docs/KCG-Code_%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E4%B8%8E%E5%AE%9E%E7%8E%B0%E6%8C%87%E5%8D%97.md)
 6. [当前资格报告](docs/qualification/CURRENT_QUALIFICATION.md)

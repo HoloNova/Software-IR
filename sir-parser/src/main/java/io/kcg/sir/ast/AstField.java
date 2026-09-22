@@ -9,7 +9,17 @@ public record AstField(
         SourceSpan span,
         AstName name,
         AstTypeRef type,
-        List<AstConstraint> constraints) implements AstNode {
+        List<AstConstraint> constraints,
+        boolean versioned) implements AstNode {
+
+    public AstField(
+            AstNodeId id,
+            SourceSpan span,
+            AstName name,
+            AstTypeRef type,
+            List<AstConstraint> constraints) {
+        this(id, span, name, type, constraints, false);
+    }
 
     public AstField {
         Objects.requireNonNull(id, "id");

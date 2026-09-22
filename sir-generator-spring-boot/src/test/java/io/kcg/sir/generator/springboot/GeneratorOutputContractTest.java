@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import io.kcg.sir.generator.springboot.api.GeneratedFile;
 import io.kcg.sir.lowering.springboot.model.SpringBootLoweredModel;
 import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -15,6 +16,11 @@ class GeneratorOutputContractTest {
     private static final List<String> CAMPUS_MARKET_PATHS = List.of(
             "pom.xml",
             "src/main/java/com/example/campusmarket/Application.java",
+            "src/main/java/com/example/campusmarket/api/ApiErrorResponse.java",
+            "src/main/java/com/example/campusmarket/api/ApiException.java",
+            "src/main/java/com/example/campusmarket/api/ApiExceptionAdvice.java",
+            "src/main/java/com/example/campusmarket/api/ValidationSupport.java",
+            "src/main/resources/application.yml",
             "src/main/java/com/example/campusmarket/domain/GoodsStatus.java",
             "src/main/java/com/example/campusmarket/domain/User.java",
             "src/main/java/com/example/campusmarket/persistence/UserMapper.java",
@@ -28,12 +34,22 @@ class GeneratorOutputContractTest {
     private static final List<String> UNIT_OUTPUT_PATHS = List.of(
             "pom.xml",
             "src/main/java/example/unitoutput/Application.java",
+            "src/main/java/example/unitoutput/api/ApiErrorResponse.java",
+            "src/main/java/example/unitoutput/api/ApiException.java",
+            "src/main/java/example/unitoutput/api/ApiExceptionAdvice.java",
+            "src/main/java/example/unitoutput/api/ValidationSupport.java",
+            "src/main/resources/application.yml",
             "src/main/java/example/unitoutput/application/PingService.java",
             "src/main/java/example/unitoutput/api/PingController.java");
 
     private static final List<String> COMPOUND_FIND_PATHS = List.of(
             "pom.xml",
             "src/main/java/example/compoundfind/Application.java",
+            "src/main/java/example/compoundfind/api/ApiErrorResponse.java",
+            "src/main/java/example/compoundfind/api/ApiException.java",
+            "src/main/java/example/compoundfind/api/ApiExceptionAdvice.java",
+            "src/main/java/example/compoundfind/api/ValidationSupport.java",
+            "src/main/resources/application.yml",
             "src/main/java/example/compoundfind/domain/State.java",
             "src/main/java/example/compoundfind/domain/User.java",
             "src/main/java/example/compoundfind/persistence/UserMapper.java",
@@ -71,10 +87,22 @@ class GeneratorOutputContractTest {
                     () -> "generated content must end with LF: " + file.relativePath());
         }
 
-        assertTrue(files.get(0).symbolId().isEmpty(), "pom.xml is a project artifact");
-        assertTrue(files.get(1).symbolId().isEmpty(), "Application.java is a project artifact");
-        assertTrue(files.subList(2, files.size()).stream().allMatch(file -> file.symbolId().isPresent()),
-                "declaration-owned artifacts must retain their SymbolId");
+        // Project-level artifacts carry no SymbolId; everything else is owned by a declaration, and the
+        // set of project-level files is read from the lowered model rather than assumed by position.
+        SpringBootLoweredModel model = GeneratorTestSupport.lowerSuccess("valid/campus-market.sir");
+        Set<String> projectPaths = new LinkedHashSet<>();
+        projectPaths.add(model.mavenProject().path());
+        projectPaths.add(model.applicationMain().path());
+        model.projectArtifacts().forEach(artifact -> projectPaths.add(artifact.path()));
+        for (GeneratedFile file : files) {
+            if (projectPaths.contains(file.relativePath())) {
+                assertTrue(file.symbolId().isEmpty(),
+                        () -> "project artifact must not claim a declaration: " + file.relativePath());
+            } else {
+                assertTrue(file.symbolId().isPresent(),
+                        () -> "declaration-owned artifact must retain its SymbolId: " + file.relativePath());
+            }
+        }
         assertEquals(files.size(), files.stream().map(GeneratedFile::artifactId).distinct().count(),
                 "every generated file must retain a unique LoweredNodeId");
     }

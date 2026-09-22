@@ -19,6 +19,8 @@ public record TransportPlan(TransportPlan.InputBinding inputBinding, TransportPl
       VALUE,
       ENTITY_BODY,
       LIST,
-      OPTIONAL;
+      OPTIONAL,
+      PAGE,
+      PROJECTION;
    }
 }

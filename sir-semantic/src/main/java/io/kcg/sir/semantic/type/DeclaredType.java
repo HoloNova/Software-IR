@@ -13,6 +13,7 @@ public record DeclaredType(DeclaredType.DeclaredKind kind, String name, SymbolId
    public enum DeclaredKind {
       ENUM,
       ENTITY,
-      INPUT;
+      INPUT,
+      VIEW;
    }
 }

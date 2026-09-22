@@ -1,7 +1,7 @@
 # KCG-Code 当前项目状态
 
-> 更新日期：2026-09-18（**G0 完成门已关闭**：阶段 1–6 的 Q1–Q7 全部完成并归档；证据冲突已裁决；第 3、5 节能力结论沿用 2026-08-11 的运行记录）
-> 状态：正常开发中的 v0.1 工程；默认离线构建可运行，完整资格尚未完成
+> 更新日期：2026-09-21（**G0 完成门已关闭**：Q1–Q8 全部完成并归档；G1 第一张工作单 Q9 已完成、验收并归档（全量 620/0/0/5，真实 MySQL/HTTP 场景 40 项断言 0 失败）；第二张工作单 Q10（Course 写侧）实现与验证完成，状态 `AWAITING_ACCEPTANCE`：全量 **702/0/0/5**，真实 MySQL/HTTP 写侧场景 **61 项断言 0 失败**（含并发同版本竞态），Q9 场景同树回归 40 项 0 失败；第 3、5 节能力结论沿用日期化运行记录）
+> 状态：正常开发中的 v0.1 工程；G0 资格已完成，完整产品资格尚未完成
 
 ## 1. 项目定位
 
@@ -30,6 +30,8 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 ### 已实现
 
 - SIR v0.1 Parser、Semantic、Spring Boot Lowering 与确定性 Generator。
+- 单文件查询切片（G1 首切片，2026-09-18）：`view` 响应投影、`Page<T>` 分页、显式 `order by`、字面匹配 `containsLiteral` 已贯穿 Parser → Semantic → Lowering → Generator，并在真实 MySQL 8.4.11 + HTTP 上端到端验证（分页/排序/投影/字面 `%` 与 `_` 对照/越界页/非法分页 400，共 40 项断言）。
+- 单文件写侧切片（G1 第二切片，2026-09-21）：`versioned` 并发字段、声明式错误状态码、`persist … else` 条件持久化、`input … patch of` 局部更新载荷、`.present` 存在性表达式与统一结构化错误信封已贯穿全链，并在真实 MySQL 8.4.11 + HTTP 上验证创建/读取/局部更新/显式清空/陈旧版本 409/空变更集 400/未知字段 400/并发竞态（恰好一成功一 409、版本只 +1），共 61 项断言；产品侧 DELETE、路由模板、关联读取与 `EXISTS` 过滤仍未实现。
 - 显式输出根上的路径/冲突预检、Graph 构建、同卷 staging、原子发布和结构化失败。
 - Project Graph 的只读模型、canonical encoder/decoder 和 validator。
 - Change IR v0.1-v0.6 planner。
@@ -39,7 +41,7 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 ### 尚未作为当前产品能力发布
 
 - CLI `generate`、`register`、`apply`、`recover` 完整本地生命周期。
-- 可重复执行的完整外部 MySQL conformance。
+- Docker / 迁移 / Web / 完整交付等 G1+ 能力尚未作为当前产品能力发布；外部 MySQL conformance 的资格结果见第 4 节。
 - fat JAR 或独立 CLI 发行包；当前验证入口是 Maven exec。
 - Redis Extension、第二 Target、Constraint VM、Java 反向解析、GUI/daemon、多用户和新的增量编译系统。
 
@@ -51,15 +53,16 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 mvn -B -Dmaven.repo.local=/root/.m2/repository -o clean verify -Dmaven.test.failure.ignore=true
 ```
 
-十个 Reactor 模块全部完成，Surefire 合计 **554 run / 0 fail / 0 error / 5 skip**（Q7 后：5 项软链接失败已修复，Change 工作流 13 项与应用模块 6 项解除跳过）。**冻结形式与完成形式均为 BUILD SUCCESS**。剩余 5 项 skip 全为 `PathSecurityReviewTest` 的 Windows junction 用例。精确模块数字、skip、POM 排除和未运行范围只以 `docs/qualification/CURRENT_QUALIFICATION.md` 的最近一次实际记录为准。
+十个 Reactor 模块全部完成，Surefire 合计 **702 run / 0 fail / 0 error / 5 skip**（Q9 后记录合计 620；Q10 的实现与测试把合计推进到 702，见资格报告第 2 节的重测口径订正）。**冻结形式与完成形式均为 BUILD SUCCESS**。剩余 5 项 skip 全为 `PathSecurityReviewTest` 的 Windows junction 用例。精确模块数字、skip、POM 排除和未运行范围只以 `docs/qualification/CURRENT_QUALIFICATION.md` 的最近一次实际记录为准。
 
 当前结论：
 
-- 默认离线 Reactor：Linux 2026-09-18 冻结与完成两种形式均 BUILD SUCCESS，十模块完成、合计 **554/0/0/5**（剩余 5 skip 为 Windows junction）。Windows 2026-08-11 那次 `0 failed` 不能证明软链接拒绝路径可用（当次用例未真实执行），该证据现由 Linux 提供。
+- 默认离线 Reactor：Linux 2026-09-21 冻结与完成两种形式均 BUILD SUCCESS，十模块完成、合计 **702/0/0/5**（Q10 后；剩余 5 skip 为 Windows junction）。Windows 2026-08-11 那次 `0 failed` 不能证明软链接拒绝路径可用（当次用例未真实执行），该证据现由 Linux 提供。
+- G1 首切片（Q9，2026-09-18）：单文件 `Course` 分页查询在真实 MySQL 8.4.11 + HTTP 上 40 项业务断言全通过（含字面 `%`/`_` 的灵敏度对照、越界页、4 种非法分页 400、行指纹不变）；生成工程离线编译通过。schema 为测试 fixture（`schemaSource=TEST_FIXTURE_DDL`），**产品 INITIALIZE/UPDATE 仍未实现**；该 IT 为 opt-in，默认构建不跑。
 - Generator 生产边界闸门（Q1，2026-09-18）：生产 census 37 个 class 禁止引用 0 违规、公开入口只为 `generate(SpringBootLoweredModel)`；未修改生产代码。
 - 软链接拒绝路径（Q3，2026-09-18）：5 项失败已定性并修复——4 项为诊断消息拼写（`link in raw chain` → `symlink or reparse point in raw chain`），1 项为 `PathGuard` 叶子链诊断遮蔽（现只检查严格祖先链，叶子符号链接恢复报 `CONFLICT-001/002`）。新增 FAIL_IF_EXISTS 侧守卫测试，保证“不再检查叶子”不被错实现为“删掉叶子拒绝”。
 - Change fixtures（Q3，2026-09-18）：新增 13 个 fixture，`ChangePlanningApplicationTest` 6 项与 `KcgCliWorkflowTest` 13 项从 skip 变为真实执行并通过。
-- Project Graph 直接模块测试：已从 0 项补齐到 72 项全绿（Q2，2026-09-18，已验收归档、暂未提交）：四类边、规则矩阵、canonical 往返、只读边界闸门与不可信字节守卫；该阶段全量完成形式 465/0/0/5，无失败（当前总数为 554/0/0/5）。
+- Project Graph 直接模块测试：已从 0 项补齐到 72 项全绿（Q2，2026-09-18，已验收归档）：四类边、规则矩阵、canonical 往返、只读边界闸门与不可信字节守卫；Q2 阶段全量完成形式为 451/5/0/11，当前总数为 554/0/0/5。
 - 外部 MySQL conformance：**QUALIFIED**（MySQL 8.4.11 参考环境，五场景全通过、两次可复现；G0 完成门见 `CURRENT_QUALIFICATION.md` 第 0 节）。
 - 完整本地 MVP：`NOT_RUN`。
 - 生产、安全认证、性能、HA 和全平台资格：未声明。
@@ -86,14 +89,14 @@ mvn -B -Dmaven.repo.local=/root/.m2/repository -o clean verify -Dmaven.test.fail
 
 ## 6. 当前优先工作
 
-当前 G 阶段是 **G0：现有链路资格收口**（阶段定义见 `docs/roadmap/README.md`）。**G0 完成门已闭合**（见 `docs/qualification/CURRENT_QUALIFICATION.md` 第 0 节），当前工作单是 **Q8 阶段 7 最终资格关闭动作**（待负责人验收；此前 Q4+Q5 为 Conformance harness 恢复与真实 MySQL 验证**（两单已按负责人 2026-09-18 裁定合并），状态 `IN_PROGRESS`。实测基线为 **56 个编译错误 / 13 个文件**（早前的“4 处”是被语法错误抑制的假象，“100 个”是 javac `-Xmaxerrs` 上限的截断）；精确符号→文件清单、参考 MySQL 环境事实与完成闸见 `docs/roadmap/ACTIVE_WORK.md`。下面是 G0 内部的长期顺序，不应一次全部交给一个执行者：
+当前 G 阶段是 **G1：单文件课程业务切片**（阶段定义见 `docs/roadmap/README.md`）。**G0 完成门已闭合**（见 `docs/qualification/CURRENT_QUALIFICATION.md` 第 0 节），Q1–Q8 已完成并归档；**G1 的第一张工作单 Q9（Course 单实体分页查询端到端）已完成、验收并归档**（全量 554 → 620；真实 MySQL/HTTP 场景 40 项断言 0 失败）。当前工作单为 **Q10（Course 写侧：Create + Get + PATCH 三态 + version 冲突 + 结构化字段错误）**，`docs/roadmap/ACTIVE_WORK.md` 状态为 `AWAITING_ACCEPTANCE`：负责人 2026-09-21 批准 D0–D16 全部推荐项，实现与验证已完成（702/0/0/5、写侧场景 61 项断言 0 失败），等待验收。Q11（关联过滤）与 Q12（路由模板）尚未立项。
 
 **阶段 1–6 的六张工作单全部完成并归档**（`docs/roadmap/completed/`）：Q1 Generator 生产边界、Q2 Project Graph 直接契约（0→72）、Q3 Change fixtures 与软链接收口、Q4+Q5 conformance 恢复与真实 MySQL 矩阵（QUALIFIED）、Q6 三路径故障矩阵（64 项，零生产改动）、Q7 CLI 只读边界（12 项）。以下为逐条历史记录：
 
-1. ~~为 Generator 建立系统行为测试和生成工程编译验收。~~ 已完成（Q1，2026-09-18 验收并归档；未提交 Git，按负责人决定推迟到 G1 完成后统一提交）。
-2. ~~为 Project Graph 建立直接模块测试。~~ 已完成（Q2，2026-09-18 验收并归档，72 项全绿；未提交 Git，按负责人决定推迟到 G1 完成后统一提交）。
+1. ~~为 Generator 建立系统行为测试和生成工程编译验收。~~ 已完成（Q1，2026-09-18 验收并归档；已包含在 G0 实现提交 `24eec6d`）。
+2. ~~为 Project Graph 建立直接模块测试。~~ 已完成（Q2，2026-09-18 验收并归档，72 项全绿；已包含在 G0 实现提交 `24eec6d`）。
 3. ~~补齐 Change base/candidate fixtures，消除 assumption skip。~~ **已完成并验收**（Q3，2026-09-18，该阶段全量 465/0/0/5；当前总数为 554/0/0/5）：13 个 fixture，两个测试类共 19 项从 skip 变为真实执行并通过。仍未做：Change 操作族跨版本组合矩阵与完整 `SIR-CHANGE-*` 失败矩阵。
-4. ~~恢复 conformance harness 并对着真实 MySQL 验证。~~ **已完成**（Q4+Q5 已合并执行并归档：编译错误 56 → 0，两个 POM 排除已删除，真实 MySQL 8.4.11 上五场景 QUALIFIED；原记录：实测基线 56 个编译错误，精确符号清单见 `ACTIVE_WORK.md`；参考 MySQL 环境已就绪）
+4. ~~恢复 conformance harness 并对着真实 MySQL 验证。~~ **已完成**（Q4+Q5 已合并执行并归档：编译错误 56 → 0，两个 POM 排除已删除，真实 MySQL 8.4.11 上五场景 QUALIFIED；原记录：实测基线 56 个编译错误，精确符号清单见 `completed/Q45-conformance-harness-and-real-mysql-matrix.md`；参考 MySQL 环境已就绪）
 5. ~~补齐 UPDATE/CREATE/DELETE 故障注入矩阵。~~ **已完成**（Q6，2026-09-18 验收并归档：三路径同一套中断点矩阵，64 项新测试全绿，零生产代码改动）。
 6. ~~决定是否发布 ADR-019 的完整 CLI 生命周期。~~ **已决定**：Q7 按形态 A 冻结并证明当前只读边界（四个写命令仍未发布）；是否发布完整生命周期留待 G1+。
 

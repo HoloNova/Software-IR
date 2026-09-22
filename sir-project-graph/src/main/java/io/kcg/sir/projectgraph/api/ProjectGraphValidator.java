@@ -119,13 +119,14 @@ public final class ProjectGraphValidator {
             boolean allowed = kind == SymbolKind.ENUM
                || kind == SymbolKind.ENTITY
                || kind == SymbolKind.INPUT
+               || kind == SymbolKind.VIEW
                || kind == SymbolKind.ERROR
                || kind == SymbolKind.CAPABILITY;
             if (!allowed) {
                diagnostics.add(
                   ProjectGraphDiagnostic.error(
                      "SIR-GRAPH-NODE-004",
-                     "top-level SemanticDeclaration has illegal SymbolKind " + kind + " (only ENUM, ENTITY, INPUT, ERROR, CAPABILITY are allowed)",
+                     "top-level SemanticDeclaration has illegal SymbolKind " + kind + " (only ENUM, ENTITY, INPUT, VIEW, ERROR, CAPABILITY are allowed)",
                      s.id(),
                      null
                   )

@@ -19,6 +19,7 @@ public record TypedContext(
    Map<AstNodeId, SymbolId> referenceBindings,
    Map<AstNodeId, SirType> typeRefTypes,
    Map<AstNodeId, SymbolId> findItemBindings,
+   Map<SymbolId, SymbolId> patchFieldBindings,
    ReferenceSiteBindings referenceSiteBindings,
    Map<AstNodeId, SymbolId> declarationBindings,
    Map<AstNodeId, SirType> expressionTypes,
@@ -30,6 +31,7 @@ public record TypedContext(
       referenceBindings = Collections.unmodifiableMap(new LinkedHashMap<>(Objects.requireNonNull(referenceBindings, "referenceBindings")));
       typeRefTypes = Collections.unmodifiableMap(new LinkedHashMap<>(Objects.requireNonNull(typeRefTypes, "typeRefTypes")));
       findItemBindings = Collections.unmodifiableMap(new LinkedHashMap<>(Objects.requireNonNull(findItemBindings, "findItemBindings")));
+      patchFieldBindings = Collections.unmodifiableMap(new LinkedHashMap<>(Objects.requireNonNull(patchFieldBindings, "patchFieldBindings")));
       Objects.requireNonNull(referenceSiteBindings, "referenceSiteBindings");
       declarationBindings = Collections.unmodifiableMap(new LinkedHashMap<>(Objects.requireNonNull(declarationBindings, "declarationBindings")));
       expressionTypes = Collections.unmodifiableMap(new LinkedHashMap<>(Objects.requireNonNull(expressionTypes, "expressionTypes")));
@@ -45,6 +47,7 @@ public record TypedContext(
          resolved.referenceBindings(),
          resolved.typeRefTypes(),
          resolved.findItemBindings(),
+         resolved.patchFieldBindings(),
          resolved.referenceSiteBindings(),
          resolved.declarationBindings(),
          expressionTypes,

@@ -6,7 +6,7 @@ import java.util.EnumSet;
 import java.util.Set;
 
 public enum ReferenceRole {
-   NAMED_TYPE(SymbolKind.PRIMITIVE, SymbolKind.ENUM, SymbolKind.ENTITY, SymbolKind.INPUT),
+   NAMED_TYPE(SymbolKind.PRIMITIVE, SymbolKind.ENUM, SymbolKind.ENTITY, SymbolKind.INPUT, SymbolKind.VIEW),
    REF_TYPE_TARGET(SymbolKind.ENTITY),
    CAPABILITY_FAILS_ERROR(SymbolKind.ERROR),
    VALIDATE_ERROR(SymbolKind.ERROR),
@@ -18,7 +18,14 @@ public enum ReferenceRole {
    PERSIST_TARGET(SymbolKind.VARIABLE),
    BINDING_FIELD(SymbolKind.FIELD),
    EXPRESSION_NAME(SymbolKind.VARIABLE, SymbolKind.ENUM),
-   MEMBER_ACCESS(SymbolKind.FIELD, SymbolKind.ENUM_MEMBER);
+   MEMBER_ACCESS(SymbolKind.FIELD, SymbolKind.ENUM_MEMBER),
+   VIEW_SOURCE_ENTITY(SymbolKind.ENTITY),
+   VIEW_FIELD(SymbolKind.FIELD),
+   ORDER_FIELD(SymbolKind.FIELD),
+   PAGE_ERROR(SymbolKind.ERROR),
+   PATCH_SOURCE_ENTITY(SymbolKind.ENTITY),
+   PATCH_FIELD_PRESENCE(SymbolKind.FIELD),
+   PERSIST_FAILURE(SymbolKind.ERROR);
 
    private final Set<SymbolKind> allowedTargetKinds;
 

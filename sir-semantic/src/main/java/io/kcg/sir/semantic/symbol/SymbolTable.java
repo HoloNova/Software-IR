@@ -62,6 +62,7 @@ public interface SymbolTable {
                case ENUM:
                case ENTITY:
                case INPUT:
+               case VIEW:
                case ERROR:
                case CAPABILITY:
                   names.put(s.name(), s);

@@ -11,7 +11,10 @@ import io.kcg.sir.ast.AstDeclaration;
 import io.kcg.sir.ast.AstEntityDecl;
 import io.kcg.sir.ast.AstExpression;
 import io.kcg.sir.ast.AstField;
+import io.kcg.sir.ast.AstFindOrderKey;
+import io.kcg.sir.ast.AstFindPage;
 import io.kcg.sir.ast.AstFindStep;
+import io.kcg.sir.ast.AstErrorDecl;
 import io.kcg.sir.ast.AstGroupedExpression;
 import io.kcg.sir.ast.AstInputDecl;
 import io.kcg.sir.ast.AstIntegerLiteral;
@@ -20,6 +23,7 @@ import io.kcg.sir.ast.AstMemberExpression;
 import io.kcg.sir.ast.AstNameExpression;
 import io.kcg.sir.ast.AstNodeId;
 import io.kcg.sir.ast.AstNowExpression;
+import io.kcg.sir.ast.AstPresentExpression;
 import io.kcg.sir.ast.AstPersistStep;
 import io.kcg.sir.ast.AstReturnStep;
 import io.kcg.sir.ast.AstSoftware;
@@ -29,13 +33,18 @@ import io.kcg.sir.ast.AstUnaryExpression;
 import io.kcg.sir.ast.AstUnitLiteral;
 import io.kcg.sir.ast.AstUpdateStep;
 import io.kcg.sir.ast.AstValidateStep;
+import io.kcg.sir.ast.AstViewDecl;
+import io.kcg.sir.ast.AstViewField;
 import io.kcg.sir.semantic.context.ResolvedContext;
 import io.kcg.sir.semantic.context.TypedContext;
 import io.kcg.sir.semantic.symbol.Symbol;
 import io.kcg.sir.semantic.symbol.SymbolId;
 import io.kcg.sir.semantic.symbol.SymbolKind;
 import io.kcg.sir.semantic.type.DeclaredType;
+import io.kcg.sir.semantic.type.OptionalType;
+import io.kcg.sir.semantic.type.PageType;
 import io.kcg.sir.semantic.type.PrimitiveType;
+import io.kcg.sir.semantic.type.RefType;
 import io.kcg.sir.semantic.type.SirType;
 import io.kcg.sir.semantic.type.TypeRules;
 import java.util.ArrayList;
@@ -47,6 +56,9 @@ import java.util.Optional;
 import java.util.Set;
 
 final class TypePass {
+   /** The statuses the Spring Boot target can report for the failure kinds this slice implements. */
+   private static final Set<Integer> ALLOWED_ERROR_STATUSES = Set.of(400, 404, 409);
+
    private final AstSoftware software;
    private final String softwareName;
    private final ResolvedContext resolved;
@@ -54,6 +66,8 @@ final class TypePass {
    private final List<Diagnostic> diagnostics = new ArrayList<>();
    private final Map<SymbolId, SirType> entityIdentityTypes = new LinkedHashMap<>();
    private final Map<SymbolId, DeclaredType> declaredTypesBySymbolId = new LinkedHashMap<>();
+   /** View symbol -> the entity it projects, for the return-projection rule. */
+   private final Map<SymbolId, SymbolId> viewSourceEntities = new LinkedHashMap<>();
 
    TypePass(AstSoftware software, ResolvedContext resolved) {
       this.software = software;
@@ -78,6 +92,16 @@ final class TypePass {
             this.declaredTypesBySymbolId.put(dt.symbolId(), dt);
          }
       }
+
+      for (AstDeclaration decl : this.software.declarations()) {
+         if (decl instanceof AstViewDecl view) {
+            SymbolId viewId = this.resolved.declarationBindings().get(view.id());
+            if (viewId != null) {
+               this.resolved.referenceSiteBindings().targetFor(view.sourceEntity().id())
+                  .ifPresent(source -> this.viewSourceEntities.put(viewId, source));
+            }
+         }
+      }
    }
 
    private List<AstEntityDecl> entityDeclarations() {
@@ -100,8 +124,16 @@ final class TypePass {
          }
 
          switch (decl) {
-            case AstEntityDecl entity -> this.typeFieldConstraints(entity.fields(), declarationId);
-            case AstInputDecl input -> this.typeFieldConstraints(input.fields(), declarationId);
+            case AstEntityDecl entity -> {
+               this.typeFieldConstraints(entity.fields(), declarationId);
+               this.typeEntityVersionField(entity);
+            }
+            case AstInputDecl input -> {
+               this.typeFieldConstraints(input.fields(), declarationId);
+               this.typePatchFields(input);
+            }
+         case AstViewDecl view -> this.typeViewFields(view);
+            case AstErrorDecl error -> this.typeErrorStatus(error);
             case AstCapabilityDecl capability -> this.typeCapabilityWorkflow(capability);
             default -> {
             }
@@ -118,6 +150,114 @@ final class TypePass {
       }
    }
 
+   /**
+     * A projected field must declare exactly the type of the entity field it reads. Anything else
+     * would let the response contract drift away from the column it claims to project.
+     */
+   private void typeViewFields(AstViewDecl view) {
+       for (AstViewField field : view.fields()) {
+          SirType declaredType = this.resolved.typeRefTypes().get(field.type().id());
+          SymbolId boundFieldId = this.resolved.referenceSiteBindings().targetFor(field.name().id()).orElse(null);
+          Symbol boundField = boundFieldId == null ? null : this.resolved.symbols().byId(boundFieldId).orElse(null);
+          if (declaredType == null || !(boundField instanceof Symbol.FieldSymbol fieldSymbol)) {
+             continue;
+          }
+
+          if (fieldSymbol.type() == null || !declaredType.equals(fieldSymbol.type())) {
+             this.diagnostics.add(DiagnosticBuilder.error(
+            "SIR-TYPE-001",
+            "投影字段类型与实体字段不一致: " + view.name().text() + "." + field.name().text() + " 声明为 " + declaredType
+                   + " 但实体字段为 " + fieldSymbol.type(),
+            field.type().span()));
+          }
+       }
+   }
+
+   /**
+   * The version field is the concurrency token, so only an integer can carry it: a
+   * version that could be absent, hold a list, or point at another entity would make
+   * "compare and increment" undecidable for the target.
+   */
+   private void typeEntityVersionField(AstEntityDecl entity) {
+      for (AstField field : entity.fields()) {
+         if (!field.versioned()) {
+            continue;
+         }
+
+         SirType declaredType = this.resolved.typeRefTypes().get(field.type().id());
+         if (declaredType != null && declaredType != PrimitiveType.INT64) {
+            this.diagnostics.add(DiagnosticBuilder.error(
+               "SIR-TYPE-001",
+               "version 字段必须是 Int64: " + entity.name().text() + "." + field.name().text() + " 声明为 " + declaredType,
+               field.type().span()
+            ));
+         }
+      }
+   }
+
+   /**
+   * A patch payload field must declare exactly the type of the entity member it applies
+   * to; otherwise a request could carry a value the target cannot store.
+   */
+   private void typePatchFields(AstInputDecl input) {
+      if (input.patchSourceEntity().isEmpty()) {
+         return;
+      }
+
+      for (AstField field : input.fields()) {
+         SirType declaredType = this.resolved.typeRefTypes().get(field.type().id());
+         SymbolId boundFieldId = this.patchedMemberOf(input, field);
+         Symbol boundField = boundFieldId == null ? null : this.resolved.symbols().byId(boundFieldId).orElse(null);
+         if (declaredType == null || !(boundField instanceof Symbol.FieldSymbol fieldSymbol)) {
+            continue;
+         }
+
+         if (fieldSymbol.type() == null || !declaredType.equals(fieldSymbol.type())) {
+            this.diagnostics.add(DiagnosticBuilder.error(
+               "SIR-TYPE-001",
+               "patch 字段类型与实体字段不一致: " + input.name().text() + "." + field.name().text() + " 声明为 " + declaredType
+                  + " 但实体字段为 " + fieldSymbol.type(),
+               field.type().span()
+            ));
+         }
+      }
+   }
+
+   /**
+   * The entity member a patch payload field applies to, resolved once by the resolver.
+   */
+   private SymbolId patchedMemberOf(AstInputDecl input, AstField field) {
+      SymbolId inputFieldId = SymbolIdFactory.inputField(
+         this.softwareName, input.name().text(), field.name().text());
+      return this.resolved.patchFieldBindings().get(inputFieldId);
+   }
+
+   /**
+   * A declared error may only report a status the target can produce for the failure
+   * kinds this slice implements. Anything else would be a promise the generated
+   * application cannot keep, so it is rejected here rather than rendered.
+   */
+   private void typeErrorStatus(AstErrorDecl error) {
+      error.httpStatus().ifPresent(status -> {
+         Integer value = this.statusOrNull(status);
+         if (value == null || !ALLOWED_ERROR_STATUSES.contains(value)) {
+            this.diagnostics.add(DiagnosticBuilder.error(
+               "SIR-TYPE-001",
+               "error 状态码只允许 400/404/409: " + error.name().text() + " 声明为 " + status,
+               error.span()
+            ));
+         }
+      });
+   }
+
+   private Integer statusOrNull(java.math.BigInteger status) {
+      try {
+         return status.intValueExact();
+      } catch (ArithmeticException e) {
+         return null;
+      }
+   }
+
    private void typeCapabilityWorkflow(AstCapabilityDecl capDecl) {
       SymbolId capScopeId = SymbolIdFactory.declaration(this.softwareName, "capability", capDecl.name().text());
       Set<String> visibleVars = new LinkedHashSet<>();
@@ -130,6 +270,7 @@ final class TypePass {
       }
 
       SirType outputType = this.resolved.typeRefTypes().get(capDecl.output().type().id());
+       this.typePageOutput(capDecl, outputType);
 
       for (AstStep step : capDecl.workflow().steps()) {
          AstStep var7 = step;
@@ -159,6 +300,8 @@ final class TypePass {
                   this.diagnostics.add(DiagnosticBuilder.error("SIR-TYPE-001", "find 谓词必须是 Boolean", s.predicate().span()));
                }
 
+               s.order().ifPresent(order -> order.keys().forEach(this::typeOrderKey));
+               s.page().ifPresent(page -> this.typePageClause(page, capScopeId, visibleVars));
                visibleVars.add(s.result().text());
                break;
             case AstCreateStep s:
@@ -205,7 +348,7 @@ final class TypePass {
                      }
                   } else if (this.ungroup(s.value()) instanceof AstUnitLiteral) {
                      this.diagnostics.add(DiagnosticBuilder.error("SIR-TYPE-001", "非 Unit output 不能返回 unit", s.value().span()));
-                  } else if (!TypeRules.isAssignable(valueType, outputType)) {
+                  } else if (!TypeRules.isAssignable(valueType, outputType) && !this.isProjectionReturn(valueType, outputType)) {
                      this.diagnostics.add(DiagnosticBuilder.error("SIR-TYPE-001", "返回类型不匹配", s.value().span()));
                   }
                }
@@ -224,6 +367,27 @@ final class TypePass {
       return expr;
    }
 
+   /**
+   * Whether returning this value satisfies a projected output.
+   *
+   * <p>A write capability normally answers with the projection it declares, but the entity a
+   * handler holds is a {@code Ref<Entity>}, not a view. Returning that entity is therefore legal
+   * exactly when the declared output is a view of that same entity; the target then renders the
+   * projection from the returned entity. Any other mismatch stays a type error.
+   */
+   private boolean isProjectionReturn(SirType valueType, SirType outputType) {
+      if (!(outputType instanceof DeclaredType view) || view.kind() != DeclaredType.DeclaredKind.VIEW) {
+         return false;
+      }
+
+      if (!(valueType instanceof RefType ref)) {
+         return false;
+      }
+
+      SymbolId sourceEntity = this.viewSourceEntities.get(view.symbolId());
+      return sourceEntity != null && sourceEntity.equals(ref.entityId());
+   }
+
    private SirType typeExpression(AstExpression expr, SymbolId scopeId, Set<String> visibleVars) {
       if (expr == null) {
          return null;
@@ -239,6 +403,10 @@ final class TypePass {
          case AstNameExpression e -> this.typeNameExpression(e, scopeId, visibleVars);
          case AstMemberExpression e -> this.typeMemberExpression(e, scopeId, visibleVars);
          case AstGroupedExpression e -> this.typeExpression(e.inner(), scopeId, visibleVars);
+         case AstPresentExpression e -> {
+            this.typeExpression(e.target(), scopeId, visibleVars);
+            yield PrimitiveType.BOOLEAN;
+         }
          case AstUnaryExpression e -> this.typeUnaryExpression(e, scopeId, visibleVars);
          case AstBinaryExpression e -> this.typeBinaryExpression(e, scopeId, visibleVars);
          default -> throw new IllegalStateException("unexpected expression: " + expr);
@@ -283,6 +451,54 @@ final class TypePass {
       }
    }
 
+   private void typePageOutput(AstCapabilityDecl capDecl, SirType outputType) {
+       if (outputType instanceof PageType page && !(page.element() instanceof DeclaredType element && element.kind() == DeclaredType.DeclaredKind.VIEW)) {
+          this.diagnostics.add(DiagnosticBuilder.error(
+             "SIR-TYPE-001", "Page 的元素类型必须是 view: " + page.element(), capDecl.output().type().span()));
+       }
+   }
+
+   /**
+     * An order key must name a field the database can order by. Nullable comparable columns are
+     * allowed because SQL orders NULLs deterministically; everything else is rejected here rather
+     * than left for the target to guess.
+     */
+   private void typeOrderKey(AstFindOrderKey key) {
+       SirType fieldType = this.boundFieldType(key.field().id());
+       if (fieldType == null) {
+          return;
+       }
+
+       SirType ordered = fieldType instanceof OptionalType optional ? optional.element() : fieldType;
+       if (!TypeRules.isComparable(ordered)) {
+          this.diagnostics.add(DiagnosticBuilder.error(
+             "SIR-TYPE-001", "排序字段类型不可比较: " + key.field().text() + " (" + fieldType + ")", key.field().span()));
+       }
+   }
+
+   private void typePageClause(AstFindPage page, SymbolId capScopeId, Set<String> visibleVars) {
+       this.typePageSource(page.page(), capScopeId, visibleVars, "page");
+       this.typePageSource(page.size(), capScopeId, visibleVars, "size");
+   }
+
+   private void typePageSource(AstExpression source, SymbolId capScopeId, Set<String> visibleVars, String role) {
+       SirType type = this.typeExpression(source, capScopeId, visibleVars);
+       if (type != null && type != PrimitiveType.INT32) {
+          this.diagnostics.add(DiagnosticBuilder.error(
+             "SIR-TYPE-001", "分页参数 " + role + " 必须是 Int32", source.span()));
+       }
+   }
+
+   private SirType boundFieldType(AstNodeId referenceSiteId) {
+       SymbolId fieldId = this.resolved.referenceSiteBindings().targetFor(referenceSiteId).orElse(null);
+       if (fieldId == null) {
+          return null;
+       }
+
+       Symbol field = this.resolved.symbols().byId(fieldId).orElse(null);
+       return field instanceof Symbol.FieldSymbol fieldSymbol ? fieldSymbol.type() : null;
+   }
+
    private SirType boundFieldType(AstBinding binding) {
       Optional<SymbolId> fieldIdOpt = this.resolved.referenceSiteBindings().targetFor(binding.fieldName().id());
       if (fieldIdOpt.isEmpty()) {
@@ -324,6 +540,15 @@ final class TypePass {
       SirType rightType = this.typeExpression(expr.right(), scopeId, visibleVars);
       if (leftType != null && rightType != null) {
          switch (expr.operator()) {
+               case CONTAINS_LITERAL:
+                  SirType matchable = leftType instanceof OptionalType optional ? optional.element() : leftType;
+                  if (matchable != PrimitiveType.STRING || rightType != PrimitiveType.STRING) {
+                     this.diagnostics.add(DiagnosticBuilder.error(
+                  "SIR-TYPE-001", "containsLiteral 的左侧必须是 String 字段，右侧必须是 String 值", expr.span()));
+                     return null;
+                  }
+
+                  return PrimitiveType.BOOLEAN;
             case EQ:
             case NE:
                if (!leftType.equals(rightType)) {

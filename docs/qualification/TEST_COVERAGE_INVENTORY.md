@@ -1,3 +1,32 @@
+## Q9 单文件查询切片覆盖（2026-09-18 G1 首切片）
+
+| 组 | 已覆盖 | 未覆盖/边界 |
+|---|---|---|
+| 投影声明 `view` | 源实体必为实体、字段必存在于源实体、类型逐字段相等、字段名唯一、响应侧不允许 `where` 约束 | 投影不允许嵌套/计算字段；投影继承（view from view）未实现 |
+| `Page<T>` | 元素只允许 `view`；只允许 `expose query`；`page`/`size` 必为两个不同 `Int32` 字段；带分页的 `find` 必须输出 `Page<view>` 且根实体为投影源；`Page<Unit>` 被拒 | 无游标分页、无多列分页键、无“分页 + 非分页”混合输出 |
+| 排序 | `order by` 字段必须属于根实体、类型可比较（可空可比较列允许）、字段不重复；Lowering 追加 identity 升序作为 tiebreaker | 无关联字段排序、无表达式排序、无 collation/大小写敏感性声明 |
+| 字面匹配 `containsLiteral` | 左侧必为字符串字段、右侧不得为实体字段；转义字符与转义字面集由 Profile 固定并写入 Lowered IR；**真实 MySQL 灵敏度对照**（`%` 与 `_` 未转义会多命中，断言会失败） | 无“前缀/后缀”形态、无大小写不敏感声明、无 `in`/`isNull`/可选过滤 |
+| 分页运行时 | 生成 `selectCount` + `selectList(... LIMIT offset, size)`；page∈[1,10000]、size∈[1,100]，默认 1/20；非法值 400 且无记录；越界页为空且 `total` 仍准确 | 无 `total` 上限策略、无分页缓存、无 `LIMIT` 以外的下推优化 |
+| 响应形状 | 投影 DTO 只含声明字段；`PageResponse` 字段为 `total`/`page`/`size`/`records`；实体主键与未投影列不出现 | 不提供响应包装可配置项（字段名/无包装）；无 JSON 契约测试（只断言键存在与值） |
+| 只读性 | 场景前/后独立 JDBC 行指纹相同，读取路径不修改任何行 | 未测高并发下的读一致性 |
+| 真实业务验证 | MySQL 8.4.11 + HTTP：分页翻页、默认值、投影、字面 `%`/`_` 对照、越界页、4 种非法分页 400、空/缺关键字 400，共 40 项断言 0 失败 | 只在单一参考环境元组上执行；IT 为 opt-in，默认构建不跑；**产品 INITIALIZE/UPDATE 未实现**（DDL/seed 均为测试 fixture） |
+| 写侧与并发 | — | **本单不覆盖**：CRUD 业务验证、PATCH 三态、`version` 乐观锁/409、业务 DELETE、关联读取与 `EXISTS` 过滤 |
+
+## Q10 Course 写侧切片覆盖（2026-09-21 G1 第二切片）
+
+| 组 | 已覆盖 | 未覆盖/边界 |
+|---|---|---|
+| 版本字段 `versioned` | 每实体最多一个、类型必须 `Int64`、不得带约束、create 与 update 都不得绑定；versioned UPDATE 必须条件持久化；非 versioned 实体声明 `versioned` 字段被拒 | 无多版本列、无业务自定义并发令牌；初始值固定为 0（Profile） |
+| 错误状态码 | `error <Name> status <code>;` 只允许 400/404/409，省略默认 400；生成异常携带声明码与状态；`persist … else` / 分页 `else` 必须引用本能力 `fails` 集合内的错误 | 无 422/409 之外的码；无错误响应头/重试语义 |
+| 条件持久化 | 仅 versioned UPDATE 允许 `persist <var> else <Err>;`；生成 `SELECT ... FOR UPDATE` + 显式 `@Update`（`SET` 仅含变更列、`WHERE id=? AND version=?`、`version=version+1`），影响行数 ≠ 1 抛声明错误；响应报告已提交版本 | 无重试/退避策略；无批量条件更新 |
+| 局部更新三态 | `input X patch of Course`：字段同名同类型、必须声明 identity、不得声明 version、不得带约束；变更集记录"请求是否携带该属性"；缺席=保持、显式 null=清空、有值=替换；空变更集 400 `EmptyChange` | 无 `when present` 语法的独立表达（用 `input.x.present` + `validate … else`）；无嵌套对象补丁、无批量补丁 |
+| 存在性表达式 | `<ref>.present` 仅对 patch 载荷字段合法、产出 Boolean、可用于 `validate … else` | 不覆盖数组/集合存在性、不覆盖 `absent` 的一等语法 |
+| 结构化错误信封 | 统一 `{code, message, fields:[{path, code, message}]}`；声明失败经基类携带码与状态；`@RestControllerAdvice` 统一处理声明失败、载荷校验失败与解码失败；未知属性由 `fail-on-unknown-properties` 拒绝并由 advice 拼出完整路径（`changes.code`） | 字段码词汇为 Bean Validation 约束码（`notBlank|email|length|min|max|NotNull`），与设计 02 的码名逐字一致性待裁决；无 i18n 消息、无 `errors` 版本化字段 |
+| 信封必填与三态边界 | `id` 与 `expectedVersion` 加 `@NotNull` + 控制器 `@Valid`；缺失成员 400 且 `fields[].path` 点名；未知信封属性 400 | 无跨字段校验（如 `expectedVersion` 与 `id` 的业务联动） |
+| 可空字段边界 | 实体可空字段映射为普通可空 Java 属性（MyBatis 无 `Optional` 参数类型处理器）；载荷与视图保留 `Optional`，边界处显式 `orElse(null)` / `Optional.ofNullable`；可空载荷字段的约束为容器元素约束（`Optional<@Size(...) String>`） | 无 MyBatis 自定义 TypeHandler 方案（当前不依赖任何自定义组件）；无损可空值的读写已覆盖，未做 NULL 与空串的区分断言 |
+| 真实业务验证 | MySQL 8.4.11 + HTTP：创建 201 与投影 + 数据库 version=0；读取 200 / 未知 404；局部变更仅动被点名列并 `version+1`；显式 null 清空、缺席保持；陈旧版本 409 且整行指纹不变；行 3 以存量版本 4 为准；空变更集/未知变更属性/缺成员/未知信封属性 400 且不写入；创建违反约束 400 且不落库；**并发同版本竞态恰好一成功一 409、版本只 +1**，共 **61 项断言 0 失败** | 只在单一参考环境元组执行；IT 为 opt-in；**产品 INITIALIZE/UPDATE 未实现**（schema/DDL/seed 均为测试 fixture）；Q9 场景在同树回归（40 项断言 0 失败） |
+| 其它写路径 | — | **本单不覆盖**：DELETE、路由模板与嵌套 `/courses/{id}`（登记 Q12）、`in`/`isNull` 等过滤算子、关联读取/`EXISTS`（Q11）、字段错误码与主设计逐条对齐 |
+
 ## Q7 CLI 产品边界覆盖（2026-09-18）
 
 | 组 | 已覆盖 | 未覆盖/边界 |
@@ -19,14 +48,14 @@
 
 | 模块 | 当前直接测试 | 覆盖判断 | 优先级 |
 |---|---:|---|---|
-| Parser | 43 | 核心语法、AST、诊断和确定性有直接覆盖 | 维护 |
-| Semantic | 103 | Resolve/Type/Validate/Normalize 与 typed reference-site 有系统覆盖 | 维护 |
-| Lowering API + Spring | 36 | API、Profile、边界、确定性和 hardening 有直接覆盖 | 维护 |
-| Generator | 38 | canonical 输出、主要 Renderer、跨环境字节确定性和完整生成工程离线编译均有直接契约，并有生产 class 静态边界闸门 | 维护 |
+| Parser | 55 | 核心语法、AST、诊断和确定性有直接覆盖；含 Q9 查询切片正反例（`view`/`Page<T>`/`order by`/`Page … else`/`containsLiteral`） | 维护 |
+| Semantic | 131 | Resolve/Type/Validate/Normalize 与 typed reference-site 有系统覆盖；Q9 新增投影绑定/类型、分页与排序约束和四类新 ReferenceRole | 维护 |
+| Lowering API + Spring | 52 | API、Profile、边界、确定性和 hardening 有直接覆盖；Q9 新增投影/排序/分页/字面量计划与 IR 校验 | 维护 |
+| Generator | 48 | canonical 输出、主要 Renderer、跨环境字节确定性和完整生成工程离线编译均有直接契约，并有生产 class 静态边界闸门；Q9 新增投影 DTO/分页响应/分页配置/分页查询渲染契约 | 维护 |
 | Project Graph | 72 | 四类边、规则矩阵、canonical 序列化/加载/摘要往返、只读边界闸门与不可信字节版本/来源类型/不可编码标量守卫均有直接契约；`REFERENCES` 与增量能力不在范围 | 维护 |
 | Change | 22 | 有 API 与架构测试，操作族/closure/失败矩阵不足 | P1 |
-| Application | 133（0 fail）+ 5 skip | 核心路径部分覆盖，conformance 整包排除；Q3 已修复 5 项软链接断言失败 | P0 |
-| CLI | 18 | 5 项 hardening + 13 项 Change 工作流（Q3 前整类类级跳过） | P1 |
+| Application | 210（0 fail）+ 5 skip | 核心路径覆盖 + conformance 包编译/运行；Q9 新增 opt-in 业务场景（真实 MySQL + HTTP，默认构建不跑） | P0 |
+| CLI | 30 | 5 项 hardening + 13 项 Change 工作流 + Q7 新增 12 项（产品边界 6、生产边界闸门 4、内部失败 2） | P1 |
 
 ## 2. Generator 缺口
 

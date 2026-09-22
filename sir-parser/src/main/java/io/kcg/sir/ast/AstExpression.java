@@ -8,6 +8,7 @@ public sealed interface AstExpression extends AstNode permits
         AstUnitLiteral,
         AstNameExpression,
         AstMemberExpression,
+        AstPresentExpression,
         AstNowExpression,
         AstGroupedExpression,
         AstUnaryExpression,

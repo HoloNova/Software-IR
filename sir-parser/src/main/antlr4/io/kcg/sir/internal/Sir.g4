@@ -42,6 +42,7 @@ declaration
     : enumDecl
     | entityDecl
     | inputDecl
+    | viewDecl
     | errorDecl
     | capabilityDecl
     ;
@@ -69,11 +70,15 @@ generationStrategy
     ;
 
 inputDecl
-    : INPUT IDENT LBRACE fieldDecl* RBRACE
+    : INPUT IDENT (PATCH OF patchSourceEntity=IDENT)? LBRACE fieldDecl* RBRACE
+    ;
+
+viewDecl
+    : VIEW viewName=IDENT FROM sourceEntity=IDENT LBRACE fieldDecl* RBRACE
     ;
 
 fieldDecl
-    : FIELD IDENT COLON typeRef constraintList? SEMI
+    : FIELD IDENT COLON typeRef constraintList? VERSIONED? SEMI
     ;
 
 constraintList
@@ -86,7 +91,7 @@ constraintCall
     ;
 
 errorDecl
-    : ERROR IDENT SEMI
+    : ERROR IDENT (HTTP INT)? SEMI
     ;
 
 capabilityDecl
@@ -154,7 +159,19 @@ loadStep
     ;
 
 findStep
-    : FIND IDENT WHERE expression AS IDENT SEMI
+    : FIND entity=IDENT WHERE predicate=expression findOrderClause? findPageClause? AS result=IDENT SEMI
+    ;
+
+findOrderClause
+    : ORDER BY orderKey (COMMA orderKey)*
+    ;
+
+orderKey
+    : field=IDENT direction=(ASCENDING | DESCENDING)?
+    ;
+
+findPageClause
+    : PAGE pageExpr=expression COMMA sizeExpr=expression ELSE error=IDENT
     ;
 
 createStep
@@ -166,7 +183,7 @@ updateStep
     ;
 
 persistStep
-    : PERSIST IDENT SEMI
+    : PERSIST IDENT (ELSE IDENT)? SEMI
     ;
 
 returnStep
@@ -180,6 +197,7 @@ binding
 typeRef
     : OPTIONAL LT typeRef GT
     | LIST LT typeRef GT
+    | PAGE LT typeRef GT
     | REF LT IDENT GT
     | IDENT
     ;
@@ -209,7 +227,11 @@ andExpression
     ;
 
 equalityExpression
-    : relationalExpression ((EQ | NE) relationalExpression)?
+    : stringMatchExpression ((EQ | NE) stringMatchExpression)?
+    ;
+
+stringMatchExpression
+    : relationalExpression (CONTAINS_LITERAL relationalExpression)?
     ;
 
 relationalExpression
@@ -222,7 +244,7 @@ unaryExpression
     ;
 
 postfixExpression
-    : primaryExpression (DOT IDENT)*
+    : primaryExpression (DOT IDENT)* (DOT PRESENT)?
     ;
 
 primaryExpression
@@ -269,9 +291,21 @@ GENERATED       : 'generated';
 AUTO            : 'auto';
 UUID_KW         : 'uuid';
 FIELD           : 'field';
+VERSIONED       : 'versioned';
+PRESENT         : 'present';
 WHERE           : 'where';
 INPUT           : 'input';
+PATCH           : 'patch';
+OF              : 'of';
+VIEW            : 'view';
+FROM            : 'from';
+ORDER           : 'order';
+ASCENDING       : 'ascending';
+DESCENDING      : 'descending';
+PAGE            : 'Page';
+CONTAINS_LITERAL: 'containsLiteral';
 ERROR           : 'error';
+HTTP            : 'http';
 CAPABILITY      : 'capability';
 ACTOR           : 'actor';
 OUTPUT          : 'output';

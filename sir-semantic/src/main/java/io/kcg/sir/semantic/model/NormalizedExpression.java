@@ -20,7 +20,8 @@ public sealed interface NormalizedExpression
    NormalizedExpression.NameExpression,
    NormalizedExpression.MemberExpression,
    NormalizedExpression.UnaryExpression,
-   NormalizedExpression.BinaryExpression {
+   NormalizedExpression.BinaryExpression,
+   NormalizedExpression.PresentExpression {
    AstNodeId sourceNodeId();
 
    SourceSpan span();
@@ -93,6 +94,25 @@ public sealed interface NormalizedExpression
          Objects.requireNonNull(sourceNodeId, "sourceNodeId");
          Objects.requireNonNull(span, "span");
          Objects.requireNonNull(type, "type");
+      }
+   }
+
+   /**
+   * The {@code <patch field>.present} test: whether a request carried that field.
+   *
+   * <p>{@link #target()} is the normalized member access the test reads, so a target
+   * can render the same accessor chain and ask its own presence flag; {@link #field()}
+   * is the patch payload field whose presence is being asked about.
+   */
+   record PresentExpression(
+      AstNodeId sourceNodeId, SourceSpan span, SirType type, NormalizedExpression target, SymbolId field
+   ) implements NormalizedExpression {
+      public PresentExpression {
+         Objects.requireNonNull(sourceNodeId, "sourceNodeId");
+         Objects.requireNonNull(span, "span");
+         Objects.requireNonNull(type, "type");
+         Objects.requireNonNull(target, "target");
+         Objects.requireNonNull(field, "field");
       }
    }
 

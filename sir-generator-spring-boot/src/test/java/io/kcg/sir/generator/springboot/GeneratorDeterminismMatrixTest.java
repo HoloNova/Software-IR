@@ -17,6 +17,8 @@ import org.junit.jupiter.api.io.TempDir;
 class GeneratorDeterminismMatrixTest {
 
     private static final String CAMPUS_MARKET = "valid/campus-market.sir";
+    private static final String COURSE_CATALOG = "valid/course-catalog.sir";
+    private static final String COURSE_ADMIN = "valid/course-admin.sir";
 
     @TempDir
     Path tempDir;
@@ -44,10 +46,12 @@ class GeneratorDeterminismMatrixTest {
             throws Exception {
         ProbeResult english = runProbe(
                 Files.createDirectory(tempDir.resolve("english-cwd")),
-                "en", "US", "ISO-8859-1");
+                "en", "US", "ISO-8859-1",
+                CAMPUS_MARKET);
         ProbeResult turkish = runProbe(
                 Files.createDirectory(tempDir.resolve("turkish-cwd")),
-                "tr", "TR", "UTF-8");
+                "tr", "TR", "UTF-8",
+                CAMPUS_MARKET);
 
         assertEquals(0, english.exitCode(), english::diagnostic);
         assertEquals(0, turkish.exitCode(), turkish::diagnostic);
@@ -59,11 +63,50 @@ class GeneratorDeterminismMatrixTest {
                         + english.diagnostic() + "\n" + turkish.diagnostic());
     }
 
+    @Test
+    void pagedQuerySliceKeepsItsDigestAcrossCwdLocaleAndCharset() throws Exception {
+        ProbeResult english = runProbe(
+                Files.createDirectory(tempDir.resolve("paged-english-cwd")),
+                "en", "US", "ISO-8859-1",
+                COURSE_CATALOG);
+        ProbeResult turkish = runProbe(
+                Files.createDirectory(tempDir.resolve("paged-turkish-cwd")),
+                "tr", "TR", "UTF-8",
+                COURSE_CATALOG);
+
+        assertEquals(0, english.exitCode(), english::diagnostic);
+        assertEquals(0, turkish.exitCode(), turkish::diagnostic);
+        assertEquals(english.stdout().trim(), turkish.stdout().trim(),
+                () -> "Paged generator digest changed across cwd/Locale/default Charset:\n"
+                        + english.diagnostic() + "\n" + turkish.diagnostic());
+        assertTrue(english.stdout().trim().matches("[0-9a-f]{64}"), english::diagnostic);
+    }
+
+    @Test
+    void writeSliceKeepsItsDigestAcrossCwdLocaleAndCharset() throws Exception {
+        ProbeResult english = runProbe(
+                Files.createDirectory(tempDir.resolve("write-english-cwd")),
+                "en", "US", "ISO-8859-1",
+                COURSE_ADMIN);
+        ProbeResult turkish = runProbe(
+                Files.createDirectory(tempDir.resolve("write-turkish-cwd")),
+                "tr", "TR", "UTF-8",
+                COURSE_ADMIN);
+
+        assertEquals(0, english.exitCode(), english::diagnostic);
+        assertEquals(0, turkish.exitCode(), turkish::diagnostic);
+        assertEquals(english.stdout().trim(), turkish.stdout().trim(),
+                () -> "Write slice generator digest changed across cwd/Locale/default Charset:\n"
+                        + english.diagnostic() + "\n" + turkish.diagnostic());
+        assertTrue(english.stdout().trim().matches("[0-9a-f]{64}"), english::diagnostic);
+    }
+
     private static ProbeResult runProbe(
             Path workingDirectory,
             String language,
             String country,
-            String fileEncoding
+            String fileEncoding,
+            String resource
     ) throws IOException, InterruptedException {
         String executable = System.getProperty("os.name").startsWith("Windows")
                 ? "java.exe"
@@ -79,7 +122,7 @@ class GeneratorDeterminismMatrixTest {
                 "-Dfile.encoding=" + fileEncoding,
                 "-cp", classpath,
                 GeneratorDeterminismProbe.class.getName(),
-                CAMPUS_MARKET)
+                resource)
                 .directory(workingDirectory.toFile())
                 .start();
 

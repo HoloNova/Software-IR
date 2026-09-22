@@ -9,6 +9,10 @@ import io.kcg.sir.lowering.springboot.model.SpringArtifact.Role;
 import io.kcg.sir.lowering.springboot.model.SpringBootDeclaration.CapabilityDeclaration;
 import io.kcg.sir.lowering.springboot.model.SpringBootDeclaration.TransactionMode;
 import io.kcg.sir.lowering.springboot.model.SpringBootWorkflow.Variable;
+import io.kcg.sir.lowering.springboot.model.SpringExpression;
+import io.kcg.sir.lowering.springboot.model.TransportPlan.ResponseRepresentation;
+import java.util.ArrayList;
+import java.util.List;
 import io.kcg.sir.semantic.symbol.SymbolId;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -143,8 +147,53 @@ final class ServiceRenderer {
       }
 
       out.append("    }\n");
+      if (!workflow.stringMatches().isEmpty()) {
+         out.append('\n');
+         renderLikeEscapeHelper(out, workflow.stringMatches().getFirst());
+      }
+
       out.append("}\n");
       return out.toString();
+   }
+
+   /**
+   * The escape helper makes literal matching literal: without it a requested {@code %} or {@code _}
+   * would act as a wildcard. The escape character and the escaped literals come from the lowered
+   * match plan rather than from a choice made here.
+   */
+   private static void renderLikeEscapeHelper(StringBuilder out, SpringExpression.StringMatch match) {
+      List<String> conditions = new ArrayList<>();
+      for (String literal : match.escapedLiterals()) {
+         if (literal.length() == 1) {
+         conditions.add("current == " + javaCharacterLiteral(literal.charAt(0)));
+         }
+      }
+
+      out.append("    private static String escapeLikeLiteral(String value) {\n");
+      out.append("        if (value == null) {\n");
+      out.append("            return null;\n");
+      out.append("        }\n\n");
+      out.append("        StringBuilder escaped = new StringBuilder(value.length());\n");
+      out.append("        for (int index = 0; index < value.length(); index++) {\n");
+      out.append("            char current = value.charAt(index);\n");
+      out.append("            if (").append(String.join(" || ", conditions)).append(") {\n");
+      out.append("                escaped.append(").append(javaCharacterLiteral(match.escapeCharacter())).append(");\n");
+      out.append("            }\n\n");
+      out.append("            escaped.append(current);\n");
+      out.append("        }\n\n");
+      out.append("        return escaped.toString();\n");
+      out.append("    }\n");
+   }
+
+   private static String javaCharacterLiteral(char value) {
+      return switch (value) {
+         case '\'' -> "'\\''";
+         case '\\' -> "'\\\\'";
+         case '\n' -> "'\\n'";
+         case '\r' -> "'\\r'";
+         case '\t' -> "'\\t'";
+         default -> "'" + value + "'";
+      };
    }
 
    private static boolean samePackage(String fqn, String currentPackage) {

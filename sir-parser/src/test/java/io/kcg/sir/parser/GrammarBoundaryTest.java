@@ -124,6 +124,106 @@ class GrammarBoundaryTest {
         assertGrammarRejected(document("enum State { ACTIVE, }"));
     }
 
+    @Test
+    void viewDeclarationMustNameItsSourceEntity() {
+        assertGrammarRejected(document("""
+                entity Course persistent {
+                  identity id: Int64 generated auto;
+                  field code: String;
+                }
+                view CourseSummary {
+                  field code: String;
+                }
+                """));
+        assertGrammarRejected(document("""
+                entity Course persistent {
+                  identity id: Int64 generated auto;
+                  field code: String;
+                }
+                view CourseSummary from {
+                  field code: String;
+                }
+                """));
+    }
+
+    @Test
+    void findClausesHaveOneCanonicalOrder() {
+        assertGrammarRejected(queryDocument("""
+                find Course
+                  where item.name containsLiteral input.keyword
+                  Page input.page, input.size else InvalidPageParam
+                  order by code ascending
+                  as courses;
+                """));
+        assertGrammarRejected(queryDocument("""
+                find Course
+                  where item.name containsLiteral input.keyword
+                  as courses
+                  order by code ascending;
+                """));
+    }
+
+    @Test
+    void orderClauseRequiresByAndAPageClauseRequiresElse() {
+        assertGrammarRejected(queryDocument(
+                "find Course where item.name containsLiteral input.keyword order code ascending as courses;"));
+        assertGrammarRejected(queryDocument(
+                "find Course where item.name containsLiteral input.keyword Page input.page, input.size as courses;"));
+    }
+
+    @Test
+    void stringMatchComparisonCannotBeChained() {
+        assertGrammarRejected(queryDocument(
+                "find Course where item.name containsLiteral input.keyword containsLiteral input.keyword as courses;"));
+    }
+
+    @Test
+    void pageContainerNeedsAnElementType() {
+        assertGrammarRejected(document("""
+                entity Course persistent {
+                  identity id: Int64 generated auto;
+                  field code: String;
+                }
+                capability BadPage {
+                  output Page;
+                  expose query;
+                  workflow {
+                    find Course where item.code == "x" as courses;
+                    return courses;
+                  }
+                }
+                """));
+    }
+
+    private static String queryDocument(String workflow) {
+        return document("""
+                entity Course persistent {
+                  identity id: Int64 generated auto;
+                  field code: String;
+                  field name: String;
+                }
+                view CourseSummary from Course {
+                  field code: String;
+                }
+                input SearchCoursesInput {
+                  field keyword: String;
+                  field page: Int32;
+                  field size: Int32;
+                }
+                error InvalidPageParam;
+                capability SearchCourses {
+                  input SearchCoursesInput;
+                  output Page<CourseSummary>;
+                  fails InvalidPageParam;
+                  requires readonly;
+                  expose query;
+                  workflow {
+                    %s
+                  }
+                }
+                """.formatted(workflow));
+    }
+
     private void assertGrammarRejected(String content) {
         ParseResult result = parse(content);
         String diagnostics = messages(result.diagnostics());
