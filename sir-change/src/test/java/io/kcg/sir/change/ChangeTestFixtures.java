@@ -277,7 +277,9 @@ final class ChangeTestFixtures {
                         span(),
                         new AstNodeId("software/campus-market/entity/User/field/name"),
                         PrimitiveType.STRING,
-                        List.of())));
+                        List.of())),
+                // The declared concurrency token of the entity, if any. This fixture declares none.
+                java.util.Optional.empty());
     }
 
     static NormalizedInput inputDecl() {

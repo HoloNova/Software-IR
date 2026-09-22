@@ -28,6 +28,7 @@ import java.util.Objects;
 public final class EvidenceDirectory implements AutoCloseable {
 
     private final Path root;
+    private EvidenceRootProof rootProof;
     private boolean closed;
 
     private EvidenceDirectory(Path root) {
@@ -67,6 +68,45 @@ public final class EvidenceDirectory implements AutoCloseable {
 
     public Path root() {
         return root;
+    }
+
+    /**
+     * Attach the creation-time chain proof so {@link #reproveRoot()} can verify the
+     * whole parent chain, not just the root's own attributes.
+     *
+     * <p>Called once by the orchestration immediately after creation. When no proof is
+     * attached, {@link #reproveRoot()} falls back to reading the root's attributes; that
+     * fallback cannot detect a swapped ancestor, which is why the run always attaches the
+     * proof.
+     *
+     * @param rootProof the immutable creation-time proof
+     */
+    void attachRootProof(EvidenceRootProof rootProof) {
+        this.rootProof = Objects.requireNonNull(rootProof, "rootProof");
+    }
+
+    /**
+     * Re-prove that the evidence root is still the directory this run created.
+     *
+     * <p>The evidence scanner calls this immediately before and after its traversal. A
+     * root (or ancestor) that has been swapped for a link between those two points would
+     * mean the scan inspected a different tree than the one this run created, so the proof
+     * is re-run rather than trusted from creation time.
+     *
+     * @return true iff the root and its chain are unchanged
+     */
+    public boolean reproveRoot() {
+        if (rootProof != null) {
+            return rootProof.reprove();
+        }
+        try {
+            BasicFileAttributes attrs = Files.readAttributes(root,
+                    BasicFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
+            return attrs.isDirectory() && !attrs.isSymbolicLink();
+        } catch (IOException e) {
+            // A root that cannot be read is not a proven root.
+            return false;
+        }
     }
 
     /**

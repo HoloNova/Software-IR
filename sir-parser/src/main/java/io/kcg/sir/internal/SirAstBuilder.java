@@ -86,6 +86,9 @@ final class SirAstBuilder {
         if (context.inputDecl() != null) {
             return inputDeclaration(context.inputDecl(), parent);
         }
+        if (context.viewDecl() != null) {
+            return viewDeclaration(context.viewDecl(), parent);
+        }
         if (context.errorDecl() != null) {
             return errorDeclaration(context.errorDecl(), parent);
         }
@@ -117,16 +120,42 @@ final class SirAstBuilder {
     }
 
     private AstInputDecl inputDeclaration(SirParser.InputDeclContext context, String parent) {
-        AstName name = name(context.IDENT());
+        AstName name = name(context.IDENT().get(0));
         String path = ids.named(parent, "input", name.text());
+        Optional<AstNameRef> patchSourceEntity = context.patchSourceEntity == null
+                ? Optional.empty()
+                : Optional.of(nameRef(context.patchSourceEntity, path, "patch"));
         List<AstField> fields = context.fieldDecl().stream().map(value -> field(value, path)).toList();
-        return new AstInputDecl(ids.id(path), source.span(context), name, fields);
+        return new AstInputDecl(ids.id(path), source.span(context), name, patchSourceEntity, fields);
+    }
+
+    private AstViewDecl viewDeclaration(SirParser.ViewDeclContext context, String parent) {
+        AstName name = name(context.viewName);
+        String path = ids.named(parent, "view", name.text());
+        AstNameRef sourceEntity = nameRef(context.sourceEntity, path, "from");
+        List<AstViewField> fields = context.fieldDecl().stream().map(value -> viewField(value, path)).toList();
+        return new AstViewDecl(ids.id(path), source.span(context), name, sourceEntity, fields);
+    }
+
+    private AstViewField viewField(SirParser.FieldDeclContext context, String parent) {
+        String path = ids.named(parent, "field", context.IDENT().getText());
+        List<AstConstraint> constraints = context.constraintList() == null
+                ? List.of()
+                : context.constraintList().constraintCall().stream()
+                        .map(value -> constraint(value, path))
+                        .toList();
+        return new AstViewField(
+                ids.id(path), source.span(context), nameRef(context.IDENT(), path, "name"),
+                type(context.typeRef(), path), constraints, context.VERSIONED() != null);
     }
 
     private AstErrorDecl errorDeclaration(SirParser.ErrorDeclContext context, String parent) {
         AstName name = name(context.IDENT());
         String path = ids.named(parent, "error", name.text());
-        return new AstErrorDecl(ids.id(path), source.span(context), name);
+        Optional<BigInteger> httpStatus = context.INT() == null
+                ? Optional.empty()
+                : Optional.of(new BigInteger(context.INT().getText()));
+        return new AstErrorDecl(ids.id(path), source.span(context), name, httpStatus);
     }
 
     private AstIdentity identity(SirParser.IdentityDeclContext context, String parent) {
@@ -147,7 +176,9 @@ final class SirAstBuilder {
                 : context.constraintList().constraintCall().stream()
                         .map(value -> constraint(value, path))
                         .toList();
-        return new AstField(ids.id(path), source.span(context), name, type(context.typeRef(), path), constraints);
+        return new AstField(
+                ids.id(path), source.span(context), name, type(context.typeRef(), path), constraints,
+                context.VERSIONED() != null);
     }
 
     private AstConstraint constraint(SirParser.ConstraintCallContext context, String parent) {
@@ -201,6 +232,9 @@ final class SirAstBuilder {
         }
         if (context.LIST() != null) {
             return new AstListTypeRef(ids.id(path), source.span(context), type(context.typeRef(), path));
+        }
+        if (context.PAGE() != null) {
+            return new AstPageTypeRef(ids.id(path), source.span(context), type(context.typeRef(), path));
         }
         if (context.REF() != null) {
             return new AstRefTypeRef(
@@ -295,12 +329,19 @@ final class SirAstBuilder {
         }
         if (context.findStep() != null) {
             var value = context.findStep();
+            AstExpression predicate = expression(value.predicate, path);
+            Optional<AstFindOrder> order = Optional.ofNullable(value.findOrderClause())
+                    .map(clause -> findOrder(clause, path));
+            Optional<AstFindPage> page = Optional.ofNullable(value.findPageClause())
+                    .map(clause -> findPage(clause, path));
             return new AstFindStep(
                     ids.id(path),
                     source.span(value),
-                    nameRef(value.IDENT(0), path, "entity"),
-                    expression(value.expression(), path),
-                    name(value.IDENT(1)));
+                    nameRef(value.entity, path, "entity"),
+                    predicate,
+                    order,
+                    page,
+                    name(value.result));
         }
         if (context.createStep() != null) {
             var value = context.createStep();
@@ -320,13 +361,41 @@ final class SirAstBuilder {
         if (context.persistStep() != null) {
             var value = context.persistStep();
             return new AstPersistStep(
-                    ids.id(path), source.span(value), nameRef(value.IDENT(), path, "target"));
+                    ids.id(path), source.span(value), nameRef(value.IDENT().get(0), path, "target"),
+                    value.IDENT().size() > 1
+                            ? Optional.of(nameRef(value.IDENT().get(1), path, "failure"))
+                            : Optional.empty());
         }
         if (context.returnStep() != null) {
             var value = context.returnStep();
             return new AstReturnStep(ids.id(path), source.span(value), expression(value.expression(), path));
         }
         throw new IllegalStateException("unknown workflow step parse tree");
+    }
+
+    private AstFindOrder findOrder(SirParser.FindOrderClauseContext context, String parent) {
+        String path = ids.fixed(parent, "order");
+        List<AstFindOrderKey> keys = context.orderKey().stream()
+                .map(value -> {
+                    String keyPath = ids.indexed(path, "key");
+                    return new AstFindOrderKey(
+                            ids.id(keyPath),
+                            source.span(value),
+                            nameRef(value.field, keyPath, "field"),
+                            value.direction != null && value.direction.getType() == SirParser.DESCENDING);
+                })
+                .toList();
+        return new AstFindOrder(ids.id(path), source.span(context), keys);
+    }
+
+    private AstFindPage findPage(SirParser.FindPageClauseContext context, String parent) {
+        String path = ids.fixed(parent, "page");
+        return new AstFindPage(
+                ids.id(path),
+                source.span(context),
+                expression(context.pageExpr, path),
+                expression(context.sizeExpr, path),
+                nameRef(context.error, path, "error"));
     }
 
     private List<AstBinding> bindings(List<SirParser.BindingContext> contexts, String parent) {
@@ -363,13 +432,22 @@ final class SirAstBuilder {
     }
 
     private AstExpression equalityExpression(SirParser.EqualityExpressionContext context, String parent) {
+        List<SirParser.StringMatchExpressionContext> operands = context.stringMatchExpression();
+        AstExpression left = stringMatchExpression(operands.getFirst(), parent);
+        if (operands.size() == 1) {
+            return left;
+        }
+        AstBinaryOperator operator = context.EQ() == null ? AstBinaryOperator.NE : AstBinaryOperator.EQ;
+        return binary(left, operator, stringMatchExpression(operands.get(1), parent), parent);
+    }
+
+    private AstExpression stringMatchExpression(SirParser.StringMatchExpressionContext context, String parent) {
         List<SirParser.RelationalExpressionContext> operands = context.relationalExpression();
         AstExpression left = relationalExpression(operands.getFirst(), parent);
         if (operands.size() == 1) {
             return left;
         }
-        AstBinaryOperator operator = context.EQ() == null ? AstBinaryOperator.NE : AstBinaryOperator.EQ;
-        return binary(left, operator, relationalExpression(operands.get(1), parent), parent);
+        return binary(left, AstBinaryOperator.CONTAINS_LITERAL, relationalExpression(operands.get(1), parent), parent);
     }
 
     private AstExpression relationalExpression(SirParser.RelationalExpressionContext context, String parent) {
@@ -408,6 +486,11 @@ final class SirAstBuilder {
             result = new AstMemberExpression(
                     ids.id(path), combine(result.span(), source.span(member.getSymbol())), result,
                     nameRef(member, path, "member"));
+        }
+        if (context.PRESENT() != null) {
+            String path = ids.indexed(parent, "expression");
+            result = new AstPresentExpression(
+                    ids.id(path), combine(result.span(), source.span(context.PRESENT().getSymbol())), result);
         }
         return result;
     }
@@ -464,12 +547,20 @@ final class SirAstBuilder {
     }
 
     private AstName name(TerminalNode node) {
-        return new AstName(node.getText(), source.span(node.getSymbol()));
+        return name(node.getSymbol());
+    }
+
+    private AstName name(Token token) {
+        return new AstName(token.getText(), source.span(token));
     }
 
     private AstNameRef nameRef(TerminalNode node, String parent, String role) {
+        return nameRef(node.getSymbol(), parent, role);
+    }
+
+    private AstNameRef nameRef(Token token, String parent, String role) {
         String path = ids.fixed(parent, role);
-        return new AstNameRef(ids.id(path), source.span(node.getSymbol()), node.getText());
+        return new AstNameRef(ids.id(path), source.span(token), token.getText());
     }
 
     private SourceSpan combine(Token start, Token end) {

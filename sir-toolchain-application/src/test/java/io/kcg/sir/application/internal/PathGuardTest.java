@@ -313,6 +313,31 @@ class PathGuardTest {
                         + errors);
     }
 
+    /**
+     * The FAIL_IF_EXISTS counterpart of the test above, and the guard that keeps the leaf symlink
+     * rejection intact: {@code checkTargetSymlinks} must not report a parent-chain violation for a
+     * symlink that IS the target, so this case has to be refused by the conflict check instead.
+     *
+     * <p>Without this test, "stop checking the leaf" could be implemented by dropping the leaf
+     * rejection entirely, which the REPLACE_EXISTING test alone would not catch.
+     */
+    @Test
+    @EnabledOnOs({OS.LINUX, OS.MAC})
+    void targetItselfIsSymlinkIsRejectedUnderFailIfExists() throws Exception {
+        Path root = temporaryDirectory.resolve("out").toAbsolutePath();
+        Files.createDirectories(root);
+        Path realFile = temporaryDirectory.resolve("real-file").toAbsolutePath();
+        Files.writeString(realFile, "x");
+        Path targetLink = root.resolve("pom.xml");
+        Files.createSymbolicLink(targetLink, realFile);
+
+        List<ExecutionDiagnostic> errors = preflight(
+                root, List.of(file("pom.xml")), ConflictPolicy.FAIL_IF_EXISTS);
+        assertTrue(hasCode(errors, "SIR-APP-CONFLICT-001"),
+                "expected SIR-APP-CONFLICT-001 when the target symlink already exists under "
+                        + "FAIL_IF_EXISTS: " + errors);
+    }
+
     // ---- Normalization escape (defense-in-depth) ----
     //
     // GeneratedFile rejects ".." segments at construction, so an attacker who

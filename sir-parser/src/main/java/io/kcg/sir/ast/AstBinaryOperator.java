@@ -8,5 +8,6 @@ public enum AstBinaryOperator {
     GT,
     GE,
     LT,
-    LE
+    LE,
+    CONTAINS_LITERAL
 }

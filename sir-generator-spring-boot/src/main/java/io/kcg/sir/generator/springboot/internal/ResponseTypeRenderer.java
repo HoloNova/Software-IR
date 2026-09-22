@@ -27,6 +27,11 @@ final class ResponseTypeRenderer {
                 LoweredJavaType.OptionalValue optional = requireOptional(outputType);
                 yield "java.util.Optional<" + renderPayloadType(optional.elementType()) + ">";
             }
+            case PAGE -> {
+                LoweredJavaType.PageValue page = requirePage(outputType);
+                yield "PageResponse<" + renderPayloadType(page.elementType()) + ">";
+            }
+            case PROJECTION -> renderPayloadType(outputType);
         };
     }
 
@@ -51,6 +56,11 @@ final class ResponseTypeRenderer {
                 imports.add("java.util.Optional");
                 collectPayloadImports(ctx, imports, requireOptional(outputType).elementType(), currentPackage);
             }
+            case PROJECTION -> collectPayloadImports(ctx, imports, outputType, currentPackage);
+            case PAGE -> {
+                imports.add(ctx.model().basePackage() + ".api.PageResponse");
+                collectPayloadImports(ctx, imports, requirePage(outputType).elementType(), currentPackage);
+            }
         }
     }
 
@@ -73,6 +83,8 @@ final class ResponseTypeRenderer {
                     "java.util.List<" + renderPayloadType(list.elementType()) + ">";
             case LoweredJavaType.OptionalValue optional ->
                     "java.util.Optional<" + renderPayloadType(optional.elementType()) + ">";
+            case LoweredJavaType.PageValue page ->
+                    "PageResponse<" + renderPayloadType(page.elementType()) + ">";
         };
     }
 
@@ -104,6 +116,10 @@ final class ResponseTypeRenderer {
                 imports.add("java.util.Optional");
                 collectPayloadImports(ctx, imports, optional.elementType(), currentPackage);
             }
+            case LoweredJavaType.PageValue page -> {
+                imports.add(ctx.model().basePackage() + ".api.PageResponse");
+                collectPayloadImports(ctx, imports, page.elementType(), currentPackage);
+            }
         }
     }
 
@@ -119,5 +135,12 @@ final class ResponseTypeRenderer {
             return optional;
         }
         throw new IllegalStateException("OPTIONAL response requires OptionalValue outputType, got: " + type);
+    }
+
+    private static LoweredJavaType.PageValue requirePage(LoweredJavaType type) {
+        if (type instanceof LoweredJavaType.PageValue page) {
+            return page;
+        }
+        throw new IllegalStateException("PAGE response requires PageValue outputType, got: " + type);
     }
 }

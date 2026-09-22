@@ -113,7 +113,11 @@ public final class ScenarioMaterializer {
                 outputRoot,
                 Optional.empty(),
                 Optional.empty(),
+                Optional.empty(),
                 Optional.of(success.graph()),
+                Optional.empty(),
+                Optional.empty(),
+                lowerModel(sirFile),
                 success.manifest());
     }
 
@@ -131,7 +135,11 @@ public final class ScenarioMaterializer {
                 outputRoot,
                 Optional.empty(),
                 Optional.empty(),
+                Optional.empty(),
                 Optional.of(success.graph()),
+                Optional.empty(),
+                Optional.empty(),
+                lowerModel(sirFile),
                 success.manifest());
     }
 
@@ -176,8 +184,12 @@ public final class ScenarioMaterializer {
                 ConformanceScenario.APPLY_UPDATE,
                 outputRoot,
                 Optional.of(stateRoot),
+                Optional.of(registration.receipt()),
                 Optional.of(applied.newBaselineReceipt()),
                 Optional.of(b0Graph),
+                Optional.of(b0.manifest()),
+                Optional.of(applied.outcome()),
+                lowerModel(candidateSir),
                 applied.outputManifest());
     }
 
@@ -217,8 +229,12 @@ public final class ScenarioMaterializer {
                 ConformanceScenario.APPLY_CREATE,
                 outputRoot,
                 Optional.of(stateRoot),
+                Optional.of(registration.receipt()),
                 Optional.of(applied.newBaselineReceipt()),
                 Optional.of(b0Graph),
+                Optional.of(b0.manifest()),
+                Optional.of(applied.outcome()),
+                lowerModel(candidateSir),
                 applied.outputManifest());
     }
 
@@ -259,8 +275,12 @@ public final class ScenarioMaterializer {
                 ConformanceScenario.APPLY_DELETE,
                 outputRoot,
                 Optional.of(stateRoot),
+                Optional.of(registration.receipt()),
                 Optional.of(applied.newBaselineReceipt()),
                 Optional.of(b0Graph),
+                Optional.of(b0.manifest()),
+                Optional.of(applied.outcome()),
+                lowerModel(candidateSir),
                 applied.outputManifest());
     }
 
@@ -355,8 +375,7 @@ public final class ScenarioMaterializer {
         return new ChangeSet(ChangeIrVersion.V0_3, revision, List.of(new RemoveCapability(target)));
     }
 
-    private NormalizedSemanticModel compileModel(Path sourceFile) throws IOException {
-        String sourceText = Files.readString(sourceFile, StandardCharsets.UTF_8);
+    private NormalizedSemanticModel compileModel(Path sourceFile) throws IOException {        String sourceText = Files.readString(sourceFile, StandardCharsets.UTF_8);
         List<io.kcg.sir.application.api.ExecutionDiagnostic> diagnostics = new java.util.ArrayList<>();
         Optional<io.kcg.sir.application.internal.SirCompilation.CompilationSnapshot> compiled =
                 io.kcg.sir.application.internal.SirCompilation.compile(
@@ -367,6 +386,34 @@ public final class ScenarioMaterializer {
             throw new IllegalStateException("SirCompilation.compile failed: " + diagnostics);
         }
         return compiled.get().semanticModel();
+    }
+
+    /**
+     * Lower the given SIR source into its Spring Boot lowered model.
+     *
+     * <p>The orchestration needs the lowered model of the SIR that will actually run
+     * so the target dependency inspection can compare the target runtime's Connector/J
+     * against the generated POM. It is computed here, next to the other compilation
+     * entry points, rather than re-derived in the orchestration.
+     *
+     * @param sourceFile the SIR source file
+     * @return the lowered model
+     * @throws IOException if the source cannot be read
+     * @throws IllegalStateException if compilation or lowering fails
+     */
+    private io.kcg.sir.lowering.springboot.model.SpringBootLoweredModel lowerModel(Path sourceFile)
+            throws IOException {
+        String sourceText = Files.readString(sourceFile, StandardCharsets.UTF_8);
+        List<io.kcg.sir.application.api.ExecutionDiagnostic> diagnostics = new java.util.ArrayList<>();
+        Optional<io.kcg.sir.application.internal.SirCompilation.CompilationSnapshot> compiled =
+                io.kcg.sir.application.internal.SirCompilation.compile(
+                        sourceText, SOURCE_ID,
+                        model -> new io.kcg.sir.generator.springboot.api.SpringBootGenerator().generate(model),
+                        diagnostics);
+        if (compiled.isEmpty()) {
+            throw new IllegalStateException("lowering failed: " + diagnostics);
+        }
+        return compiled.get().loweredModel();
     }
 
     private NormalizedInput findInput(NormalizedSemanticModel model, String name) {
@@ -433,15 +480,31 @@ public final class ScenarioMaterializer {
      * for IG-* scenarios (from {@link io.kcg.sir.application.api.ToolchainResult.Success})
      * and {@link io.kcg.sir.application.api.ChangeOutputManifest} for APPLY-*
      * scenarios (from {@link io.kcg.sir.application.api.ChangeApplyResult.Applied}).
-     * The conformance suite only verifies the manifest is non-null as a
-     * DETERMINISM stage check; it never inspects manifest internals.
+     *
+     * <p>The manifest, receipt, outcome, and lowered-model values the orchestration
+     * needs are carried here rather than re-derived later, because they exist only
+     * inside the materialization calls:
+     * <ul>
+     *   <li>{@code b0Receipt} / {@code b0Manifest}: the registered B0 baseline receipt
+     *       and its {@link io.kcg.sir.application.api.ExecutionManifest} (APPLY-* only),
+     *       required for the B0 to B1 delta;</li>
+     *   <li>{@code outcome}: the {@link io.kcg.sir.application.api.ChangeApplyOutcome}
+     *       the apply reported (APPLY-* only);</li>
+     *   <li>{@code loweredModel}: the lowered model of the SIR that will actually run
+     *       (the base SIR for IG-*, the candidate SIR for APPLY-*), required for the
+     *       target dependency inspection.</li>
+     * </ul>
      *
      * @param scenario       the scenario
      * @param outputRoot     the generated project output root (B0 for IG-*,
      *                       B1 for APPLY-*)
      * @param stateRoot      the Application state root (only for APPLY-*)
+     * @param b0Receipt      the B0 baseline receipt (only for APPLY-*)
      * @param b1Receipt      the B1 baseline receipt (only for APPLY-*)
      * @param b0Graph        the B0 project graph
+     * @param b0Manifest     the B0 ExecutionManifest (only for APPLY-*)
+     * @param outcome        the apply outcome (only for APPLY-*)
+     * @param loweredModel   the lowered model of the SIR that will run
      * @param outputManifest the final output manifest (ExecutionManifest for
      *                       IG-* scenarios, ChangeOutputManifest for APPLY-*
      *                       scenarios)
@@ -450,15 +513,23 @@ public final class ScenarioMaterializer {
             ConformanceScenario scenario,
             Path outputRoot,
             Optional<Path> stateRoot,
+            Optional<io.kcg.sir.application.api.ChangeBaselineReceipt> b0Receipt,
             Optional<io.kcg.sir.application.api.ChangeBaselineReceipt> b1Receipt,
             Optional<ProjectGraph> b0Graph,
+            Optional<io.kcg.sir.application.api.ExecutionManifest> b0Manifest,
+            Optional<io.kcg.sir.application.api.ChangeApplyOutcome> outcome,
+            io.kcg.sir.lowering.springboot.model.SpringBootLoweredModel loweredModel,
             Object outputManifest) {
         public ScenarioMaterialization {
             Objects.requireNonNull(scenario, "scenario");
             Objects.requireNonNull(outputRoot, "outputRoot");
             Objects.requireNonNull(stateRoot, "stateRoot");
+            Objects.requireNonNull(b0Receipt, "b0Receipt");
             Objects.requireNonNull(b1Receipt, "b1Receipt");
             Objects.requireNonNull(b0Graph, "b0Graph");
+            Objects.requireNonNull(b0Manifest, "b0Manifest");
+            Objects.requireNonNull(outcome, "outcome");
+            Objects.requireNonNull(loweredModel, "loweredModel");
             Objects.requireNonNull(outputManifest, "outputManifest");
         }
     }

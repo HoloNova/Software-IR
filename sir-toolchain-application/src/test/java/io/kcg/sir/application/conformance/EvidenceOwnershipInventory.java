@@ -7,9 +7,11 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * Append-only ownership inventory tracking the owned-file lifecycle:
@@ -332,6 +334,91 @@ final class EvidenceOwnershipInventory {
         } catch (java.security.NoSuchAlgorithmException e) {
             throw new IllegalStateException("SHA-256 not available", e);
         }
+    }
+
+    // ------------------------------------------------------------------
+    // Reconciliation views used by EvidenceSecretScanner
+    // ------------------------------------------------------------------
+
+    /**
+     * Whether every registered file stream has been sealed.
+     *
+     * <p>Treatment of the states is deliberately conservative: a file still in
+     * {@link FileState#PENDING_CREATED} (created, never finalized) or
+     * {@link FileState#REPORT_UNSEALED} (report stream still open) counts as pending,
+     * because the scanner must not reconcile a tree that is still being written.
+     *
+     * @return true iff no registered file is in a pending or unsealed state
+     */
+    synchronized boolean hasNoPendingStreams() {
+        for (OwnedFile owned : files.values()) {
+            if (owned.state == FileState.PENDING_CREATED || owned.state == FileState.REPORT_UNSEALED) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * The directories this inventory owns: the evidence root plus every ancestor
+     * directory of every registered file, up to (but not above) the root.
+     *
+     * <p>The inventory registers files, not directories, so the directory view is
+     * derived from the registered file paths. That is the only directory set the
+     * inventory can prove ownership of, and it is what makes the scanner's
+     * bidirectional directory reconciliation meaningful: a directory on disk that is
+     * not in this set was not created by this run.
+     *
+     * @return the owned directory paths
+     */
+    synchronized Set<Path> directoryPathSet() {
+        Set<Path> directories = new LinkedHashSet<>();
+        directories.add(evidenceRoot);
+        for (OwnedFile owned : files.values()) {
+            Path path = pathOf(owned);
+            if (path == null) {
+                continue;
+            }
+            Path parent = path.getParent();
+            while (parent != null && parent.startsWith(evidenceRoot) && !parent.equals(evidenceRoot)) {
+                directories.add(parent);
+                parent = parent.getParent();
+            }
+        }
+        return Set.copyOf(directories);
+    }
+
+    /**
+     * The files that must exist on disk when the final evidence scan runs: every
+     * finalized evidence file plus the sealed report.
+     *
+     * <p>Files that are still pending, unsealed, or already proved deleted are
+     * excluded, so an extra file on disk is reported as unknown rather than silently
+     * accepted.
+     *
+     * @return the expected final file paths
+     */
+    synchronized Set<Path> finalizedAndReportPathSet() {
+        Set<Path> expected = new LinkedHashSet<>();
+        for (OwnedFile owned : files.values()) {
+            if (owned.state == FileState.FINALIZED_EVIDENCE || owned.state == FileState.REPORT_SEALED) {
+                Path path = pathOf(owned);
+                if (path != null) {
+                    expected.add(path);
+                }
+            }
+        }
+        return Set.copyOf(expected);
+    }
+
+    private static Path pathOf(OwnedFile owned) {
+        if (owned.finalized != null) {
+            return owned.finalized.absolutePath();
+        }
+        if (owned.pending != null) {
+            return owned.pending.absolutePath();
+        }
+        return null;
     }
 
     // ------------------------------------------------------------------

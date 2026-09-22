@@ -3,6 +3,8 @@ package io.kcg.sir.semantic.internal;
 import io.kcg.sir.api.Diagnostic;
 import io.kcg.sir.api.RelatedLocation;
 import io.kcg.sir.ast.AstBinding;
+import io.kcg.sir.ast.AstBinaryExpression;
+import io.kcg.sir.ast.AstBinaryOperator;
 import io.kcg.sir.ast.AstCapabilityDecl;
 import io.kcg.sir.ast.AstConstraint;
 import io.kcg.sir.ast.AstCreateStep;
@@ -13,12 +15,18 @@ import io.kcg.sir.ast.AstExposureKind;
 import io.kcg.sir.ast.AstExpression;
 import io.kcg.sir.ast.AstFailsClause;
 import io.kcg.sir.ast.AstField;
+import io.kcg.sir.ast.AstFindOrderKey;
+import io.kcg.sir.ast.AstFindPage;
+import io.kcg.sir.ast.AstFindStep;
 import io.kcg.sir.ast.AstGroupedExpression;
 import io.kcg.sir.ast.AstInputDecl;
 import io.kcg.sir.ast.AstIntegerLiteral;
 import io.kcg.sir.ast.AstLoadStep;
+import io.kcg.sir.ast.AstMemberExpression;
+import io.kcg.sir.ast.AstNameExpression;
 import io.kcg.sir.ast.AstNameRef;
 import io.kcg.sir.ast.AstPersistStep;
+import io.kcg.sir.ast.AstPresentExpression;
 import io.kcg.sir.ast.AstRequirementKind;
 import io.kcg.sir.ast.AstRequiresClause;
 import io.kcg.sir.ast.AstReturnStep;
@@ -28,11 +36,15 @@ import io.kcg.sir.ast.AstUnaryExpression;
 import io.kcg.sir.ast.AstUnaryOperator;
 import io.kcg.sir.ast.AstUpdateStep;
 import io.kcg.sir.ast.AstValidateStep;
+import io.kcg.sir.ast.AstViewDecl;
+import io.kcg.sir.ast.AstViewField;
 import io.kcg.sir.semantic.context.TypedContext;
 import io.kcg.sir.semantic.context.ValidatedContext;
 import io.kcg.sir.semantic.symbol.Symbol;
 import io.kcg.sir.semantic.symbol.SymbolId;
+import io.kcg.sir.semantic.type.DeclaredType;
 import io.kcg.sir.semantic.type.OptionalType;
+import io.kcg.sir.semantic.type.PageType;
 import io.kcg.sir.semantic.type.PrimitiveType;
 import io.kcg.sir.semantic.type.RefType;
 import io.kcg.sir.semantic.type.SirType;
@@ -52,14 +64,24 @@ import java.util.Map.Entry;
 final class ValidatePass {
    private final AstSoftware software;
    private final TypedContext typed;
+   private final String softwareName;
    private final List<Diagnostic> diagnostics = new ArrayList<>();
    private final Map<SymbolId, Map<SymbolId, SirType>> entityFieldTypes = new LinkedHashMap<>();
    private final Map<SymbolId, SymbolId> entityIdentitySymbolIds = new LinkedHashMap<>();
    private final Map<SymbolId, Set<SymbolId>> capabilityFails = new LinkedHashMap<>();
    private final Set<SymbolId> declaredEntities = new LinkedHashSet<>();
+   private final Map<SymbolId, AstViewDecl> viewDecls = new LinkedHashMap<>();
+   private final Map<SymbolId, SymbolId> viewSourceEntities = new LinkedHashMap<>();
+   /** Entity symbol -> its version field, for entities that declare one. */
+   private final Map<SymbolId, SymbolId> entityVersionFields = new LinkedHashMap<>();
+   /** Patch payload symbol -> the entity it changes. */
+   private final Map<SymbolId, SymbolId> patchInputSourceEntities = new LinkedHashMap<>();
+   /** AST input declarations by symbol, for the payload-shape rules. */
+   private final Map<SymbolId, AstInputDecl> inputDeclarations = new LinkedHashMap<>();
 
    ValidatePass(AstSoftware software, TypedContext typed) {
       this.software = software;
+      this.softwareName = software.name().text();
       this.typed = typed;
       this.buildHelperMaps();
    }
@@ -80,6 +102,10 @@ final class ValidatePass {
                      if (ft != null && fieldSymId != null) {
                         this.entityFieldTypes.get(declSymId).put(fieldSymId, ft);
                      }
+
+                     if (f.versioned() && fieldSymId != null) {
+                        this.entityVersionFields.put(declSymId, fieldSymId);
+                     }
                   }
 
                   SymbolId identitySymId = this.typed.referenceBindings().get(e.identity().id());
@@ -97,6 +123,27 @@ final class ValidatePass {
 
                   this.capabilityFails.put(declSymId, fails);
                   continue;
+               case AstViewDecl var17:
+                  AstViewDecl viewDecl = (AstViewDecl)var4;
+                  this.viewDecls.put(declSymId, viewDecl);
+                  this.typed.referenceSiteBindings().targetFor(viewDecl.sourceEntity().id())
+                     .ifPresent(source -> this.viewSourceEntities.put(declSymId, source));
+                  continue;
+               case AstInputDecl var18:
+                  AstInputDecl inputDecl = (AstInputDecl)var4;
+                  if (inputDecl.patchSourceEntity().isEmpty()) {
+                     continue;
+                  }
+
+                  SymbolId patchSource = this.typed.referenceSiteBindings()
+                     .targetFor(inputDecl.patchSourceEntity().orElseThrow().id())
+                     .orElse(null);
+                  if (patchSource == null) {
+                     continue;
+                  }
+
+                  this.patchInputSourceEntities.put(declSymId, patchSource);
+                  continue;
                default:
             }
          }
@@ -104,6 +151,14 @@ final class ValidatePass {
    }
 
    ValidatedContext run() {
+      // Payload shapes are consulted while validating capabilities, so the input declarations must be
+      // indexed before that pass rather than alongside the declaration checks below.
+      for (AstDeclaration decl : this.software.declarations()) {
+         if (decl instanceof AstInputDecl inputDecl && this.typed.declarationBindings().containsKey(inputDecl.id())) {
+            this.inputDeclarations.put(this.typed.declarationBindings().get(inputDecl.id()), inputDecl);
+         }
+      }
+
       for (AstDeclaration decl : this.software.declarations()) {
          if (decl instanceof AstCapabilityDecl capDecl && this.typed.declarationBindings().containsKey(capDecl.id())) {
             this.validateCapability(capDecl);
@@ -114,8 +169,12 @@ final class ValidatePass {
          if (this.typed.declarationBindings().containsKey(decl.id())) {
             if (decl instanceof AstEntityDecl entityDecl) {
                this.validateEntityConstraints(entityDecl);
+               this.validateEntityVersionField(entityDecl);
             } else if (decl instanceof AstInputDecl inputDecl) {
                this.validateInputConstraints(inputDecl);
+               this.validatePatchPayload(inputDecl);
+         } else if (decl instanceof AstViewDecl viewDecl) {
+               this.validateViewFields(viewDecl);
             }
          }
       }
@@ -150,6 +209,8 @@ final class ValidatePass {
       }
 
       this.validateReturnPlacement(capDecl);
+      this.validatePageUsage(capDecl, isQuery);
+      this.validateWriteWorkflow(capDecl, failsSet);
       int returnCount = 0;
       boolean returnSeen = false;
 
@@ -196,7 +257,17 @@ final class ValidatePass {
                }
 
                this.validatePersistStep(s);
+               s.failure().ifPresent(failure -> {
+                  Optional<SymbolId> failureSymId = this.typed.referenceSiteBindings().targetFor(failure.id());
+                  if (failureSymId.isPresent() && failsSet != null && !failsSet.contains(failureSymId.get())) {
+                     this.diagnostics.add(DiagnosticBuilder.error(
+                        "SIR-FLOW-003", "persist 引用未声明的 Error: " + failure.text(), failure.span()));
+                  }
+               });
                continue;
+         case AstFindStep s:
+               this.validateFindStep(s, capDecl, failsSet);
+               break;
             default:
          }
       }
@@ -209,6 +280,436 @@ final class ValidatePass {
 
       this.validateFailsOrder(capDecl);
       this.validateRequiresOrder(capDecl);
+   }
+
+   /**
+     * {@code Page<T>} is a response contract for read-only queries; the element rule itself (the
+     * element must be a declared projection) belongs to {@code TypePass} and is reported as
+     * {@code SIR-TYPE-001}. This method only owns the exposure rule, so that a paged envelope can
+     * never leak into a write command.
+     */
+   private void validatePageUsage(AstCapabilityDecl capDecl, boolean isQuery) {
+       SirType outputType = this.typed.typeRefTypes().get(capDecl.output().type().id());
+       if (outputType instanceof PageType && !isQuery) {
+          this.diagnostics.add(DiagnosticBuilder.error(
+             "SIR-VALID-001", "Page 输出只允许用于 expose query 的能力", capDecl.exposure().span()));
+       }
+   }
+
+   private void validateFindStep(AstFindStep step, AstCapabilityDecl capDecl, Set<SymbolId> failsSet) {
+      step.page().ifPresent(page -> this.validatePageClause(step, capDecl, failsSet, page));
+      step.order().ifPresent(order -> this.validateOrderKeys(order.keys()));
+      this.validateStringMatchShape(step.predicate());
+   }
+
+   private void validatePageClause(AstFindStep step, AstCapabilityDecl capDecl, Set<SymbolId> failsSet, AstFindPage page) {
+      SirType outputType = this.typed.typeRefTypes().get(capDecl.output().type().id());
+      if (!(outputType instanceof PageType pageType)) {
+         this.diagnostics.add(DiagnosticBuilder.error(
+         "SIR-VALID-001", "带分页的 find 需要 Page<view> 输出", capDecl.output().type().span()));
+      } else if (pageType.element() instanceof DeclaredType viewType && viewType.kind() == DeclaredType.DeclaredKind.VIEW) {
+         SymbolId viewSource = this.viewSourceEntities.get(viewType.symbolId());
+         SymbolId rootEntity = this.typed.referenceSiteBindings().targetFor(step.entity().id()).orElse(null);
+         if (viewSource != null && rootEntity != null && !viewSource.equals(rootEntity)) {
+         AstViewDecl viewDecl = this.viewDecls.get(viewType.symbolId());
+         this.diagnostics.add(DiagnosticBuilder.error(
+               "SIR-VALID-001",
+               "分页 find 的根实体必须是投影 " + viewType.name() + " 的来源实体",
+               viewDecl == null ? step.span() : viewDecl.span()));
+         }
+      }
+
+      SymbolId pageField = this.memberTarget(page.page());
+      SymbolId sizeField = this.memberTarget(page.size());
+      if (pageField != null && pageField.equals(sizeField)) {
+         this.diagnostics.add(DiagnosticBuilder.error(
+         "SIR-VALID-001", "page 与 size 必须使用两个不同的字段", page.size().span()));
+      }
+
+      SymbolId errorSymbol = this.typed.referenceSiteBindings().targetFor(page.error().id()).orElse(null);
+      if (errorSymbol != null && failsSet != null && !failsSet.contains(errorSymbol)) {
+         this.diagnostics.add(DiagnosticBuilder.error(
+         "SIR-FLOW-003", "分页 find 引用未声明的 Error: " + page.error().text(), page.error().span()));
+      }
+   }
+
+   private void validateOrderKeys(List<AstFindOrderKey> keys) {
+      Set<SymbolId> seen = new LinkedHashSet<>();
+      for (AstFindOrderKey key : keys) {
+         SymbolId fieldSymbol = this.typed.referenceSiteBindings().targetFor(key.field().id()).orElse(null);
+         if (fieldSymbol != null && !seen.add(fieldSymbol)) {
+         this.diagnostics.add(DiagnosticBuilder.error(
+               "SIR-VALID-001", "排序字段重复: " + key.field().text(), key.field().span()));
+         }
+      }
+   }
+
+   /**
+   * {@code containsLiteral} lowers to a single {@code LIKE} comparison, so its left side must be an
+   * entity field of the find item and its right side must be a value. Anything else has no
+   * parameterized single-statement form and is rejected before lowering.
+   */
+   private void validateStringMatchShape(AstExpression expression) {
+      AstExpression ungrouped = this.ungroup(expression);
+      if (ungrouped instanceof AstBinaryExpression binary) {
+         if (binary.operator() == AstBinaryOperator.CONTAINS_LITERAL) {
+         if (!(this.ungroup(binary.left()) instanceof AstMemberExpression leftMember) || !this.isItemName(leftMember.receiver())) {
+               this.diagnostics.add(DiagnosticBuilder.error(
+                  "SIR-VALID-001", "containsLiteral 的左侧必须是 item.<字段>", binary.span()));
+         }
+
+         if (this.ungroup(binary.right()) instanceof AstMemberExpression rightMember && this.isItemName(rightMember.receiver())) {
+               this.diagnostics.add(DiagnosticBuilder.error(
+                  "SIR-VALID-001", "containsLiteral 的右侧不能是实体字段", binary.span()));
+         }
+         }
+
+         this.validateStringMatchShape(binary.left());
+         this.validateStringMatchShape(binary.right());
+      } else if (ungrouped instanceof AstUnaryExpression unary) {
+         this.validateStringMatchShape(unary.operand());
+      }
+   }
+
+   private boolean isItemName(AstExpression expression) {
+      return this.ungroup(expression) instanceof AstNameExpression name && "item".equals(name.name().text());
+   }
+
+   private SymbolId memberTarget(AstExpression expression) {
+      return this.ungroup(expression) instanceof AstMemberExpression member
+         ? this.typed.referenceSiteBindings().targetFor(member.member().id()).orElse(null)
+         : null;
+   }
+
+   private void validateViewFields(AstViewDecl viewDecl) {
+      for (AstViewField field : viewDecl.fields()) {
+         if (field.versioned()) {
+         this.diagnostics.add(DiagnosticBuilder.error(
+               "SIR-VALID-002", "version 标记只允许用于实体字段: " + viewDecl.name().text() + "." + field.name().text(), field.name().span()));
+         }
+
+         for (AstConstraint constraint : field.constraints()) {
+         this.diagnostics.add(DiagnosticBuilder.error(
+               "SIR-VALID-001", "响应投影字段不能声明约束: " + field.name().text(), constraint.span()));
+         }
+      }
+   }
+
+   /**
+   * The version marker's own rules: one per entity, integer, author-unconstrained.
+   *
+   * <p>A second version field would leave the concurrency token ambiguous, and a
+   * constraint on it would have to hold for a value the client does not author, so
+   * both are rejected where they are declared.
+   */
+   private void validateEntityVersionField(AstEntityDecl entityDecl) {
+      SymbolId entitySymId = this.typed.declarationBindings().get(entityDecl.id());
+      AstField firstMarked = null;
+
+      for (AstField field : entityDecl.fields()) {
+         if (!field.versioned()) {
+            continue;
+         }
+
+         if (firstMarked != null) {
+            RelatedLocation related = new RelatedLocation("首次声明在此处", firstMarked.span());
+            this.diagnostics.add(DiagnosticBuilder.errorWithRelated(
+               "SIR-VALID-002", "一个实体最多只能有一个 version 字段: " + entityDecl.name().text(), field.span(), related));
+         } else {
+            firstMarked = field;
+         }
+
+         for (AstConstraint constraint : field.constraints()) {
+            this.diagnostics.add(DiagnosticBuilder.error(
+               "SIR-VALID-002", "version 字段不能声明约束: " + field.name().text(), constraint.span()));
+         }
+      }
+
+   }
+
+   /**
+   * Patch payload rules: which entity may be changed, which of its members the payload
+   * may name, and what a payload may not promise.
+   *
+   * <p>Everything here is a statement about the payload as a contract. Whether a
+   * capability actually respects that contract is checked by {@link #validateWriteWorkflow}.
+   */
+   private void validatePatchPayload(AstInputDecl inputDecl) {
+      if (inputDecl.patchSourceEntity().isEmpty()) {
+         for (AstField field : inputDecl.fields()) {
+            if (field.versioned()) {
+               this.diagnostics.add(DiagnosticBuilder.error(
+                  "SIR-VALID-002", "version 标记只允许用于实体字段: " + inputDecl.name().text() + "." + field.name().text(), field.name().span()));
+            }
+         }
+
+         return;
+      }
+
+      SymbolId inputSymId = this.typed.declarationBindings().get(inputDecl.id());
+      SymbolId entitySymId = this.patchInputSourceEntities.get(inputSymId);
+      String entityName = inputDecl.patchSourceEntity().orElseThrow().text();
+      SymbolId identitySymId = entitySymId == null ? null : this.entityIdentitySymbolIds.get(entitySymId);
+      SymbolId versionSymId = entitySymId == null ? null : this.entityVersionFields.get(entitySymId);
+      boolean identityDeclared = false;
+      int changeFieldCount = 0;
+
+      for (AstField field : inputDecl.fields()) {
+         if (field.versioned()) {
+            this.diagnostics.add(DiagnosticBuilder.error(
+               "SIR-VALID-002", "version 标记只允许用于实体字段: " + inputDecl.name().text() + "." + field.name().text(), field.name().span()));
+         }
+
+         for (AstConstraint constraint : field.constraints()) {
+            this.diagnostics.add(DiagnosticBuilder.error(
+               "SIR-VALID-003", "patch 字段不能声明约束（约束的权威来源是实体字段）: " + field.name().text(), constraint.span()));
+         }
+
+         SymbolId inputFieldSymId = SymbolIdFactory.inputField(this.softwareName, inputDecl.name().text(), field.name().text());
+         SymbolId memberSymId = this.typed.patchFieldBindings().get(inputFieldSymId);
+         if (memberSymId == null) {
+            continue;
+         }
+
+         if (versionSymId != null && memberSymId.equals(versionSymId)) {
+            this.diagnostics.add(DiagnosticBuilder.error(
+               "SIR-VALID-003", "patch 载荷不能声明 version 字段: " + field.name().text(), field.name().span()));
+            continue;
+         }
+
+         if (identitySymId != null && memberSymId.equals(identitySymId)) {
+            if (identityDeclared) {
+               this.diagnostics.add(DiagnosticBuilder.error(
+                  "SIR-VALID-003", "patch 载荷只能声明一次 identity 字段: " + field.name().text(), field.name().span()));
+            }
+
+            identityDeclared = true;
+         } else {
+            changeFieldCount++;
+         }
+      }
+
+      if (!identityDeclared) {
+         this.diagnostics.add(DiagnosticBuilder.error(
+            "SIR-VALID-003", "patch 载荷必须声明 " + entityName + " 的 identity 字段: " + inputDecl.name().text(), inputDecl.span()));
+      }
+
+      if (changeFieldCount == 0) {
+         this.diagnostics.add(DiagnosticBuilder.error(
+            "SIR-VALID-003", "patch 载荷必须至少声明一个可变字段: " + inputDecl.name().text(), inputDecl.span()));
+      }
+
+      if (entitySymId != null && this.entityVersionFields.get(entitySymId) == null) {
+         this.diagnostics.add(DiagnosticBuilder.error(
+            "SIR-VALID-003", "patch 载荷的实体必须声明 version 字段: " + entityName, inputDecl.span()));
+      }
+   }
+
+   /**
+   * How a capability may use versioned entities and patch payloads.
+   *
+   * <p>A version can only be honoured if the request carries the expected value and the
+   * update applies to the versioned entity itself, so every combination that would
+   * silently skip the check is rejected here.
+   */
+   private void validateWriteWorkflow(AstCapabilityDecl capDecl, Set<SymbolId> failsSet) {
+      SymbolId candidateInputSymId = this.capabilityInputSymbolId(capDecl);
+      SymbolId patchInputSymId = candidateInputSymId != null && this.patchInputSourceEntities.containsKey(candidateInputSymId)
+         ? candidateInputSymId
+         : null;
+      SymbolId patchInputEntity = patchInputSymId == null ? null : this.patchInputSourceEntities.get(patchInputSymId);
+      AstStep lastPersist = null;
+      AstStep lastUpdate = null;
+
+      for (AstStep step : capDecl.workflow().steps()) {
+         if (step instanceof AstPersistStep persist) {
+            lastPersist = persist;
+         } else if (step instanceof AstUpdateStep update) {
+            lastUpdate = update;
+         }
+      }
+
+      if (lastUpdate instanceof AstUpdateStep updateStep) {
+         SymbolId updateEntity = this.updateTargetEntitySymId(updateStep);
+         if (updateEntity != null && this.entityVersionFields.get(updateEntity) != null && !updateEntity.equals(patchInputEntity)) {
+            this.diagnostics.add(DiagnosticBuilder.error(
+               "SIR-VALID-004",
+               "versioned 实体的 update 必须使用该实体的 patch 载荷作为 input",
+               capDecl.input().isPresent() ? capDecl.input().orElseThrow().span() : capDecl.span()));
+         }
+      }
+
+      if (lastPersist instanceof AstPersistStep persist) {
+         SymbolId targetEntity = this.persistTargetEntitySymId(persist);
+         SymbolId targetVariable = this.typed.referenceSiteBindings().targetFor(persist.target().id()).orElse(null);
+         // The version check only guards a conditional update: an insert always writes its row,
+         // so a create-only workflow has no zero-rows outcome to report.
+         boolean conditionalUpdate = targetEntity != null
+            && this.entityVersionFields.get(targetEntity) != null
+            && lastUpdate instanceof AstUpdateStep updateStep
+            && targetVariable != null
+            && targetVariable.equals(this.typed.referenceSiteBindings().targetFor(updateStep.target().id()).orElse(null));
+         if (conditionalUpdate && persist.failure().isEmpty()) {
+            this.diagnostics.add(DiagnosticBuilder.error(
+               "SIR-VALID-004", "versioned 实体的条件更新 persist 必须声明 else 错误", persist.span()));
+         }
+
+         if (!conditionalUpdate && persist.failure().isPresent()) {
+            this.diagnostics.add(DiagnosticBuilder.error(
+               "SIR-VALID-004", "persist ... else 只适用于 versioned 实体的条件更新（插入行数恒为 1）", persist.failure().orElseThrow().span()));
+         }
+      }
+
+      if (patchInputSymId != null) {
+         this.validatePatchCapabilityUsage(capDecl, patchInputSymId, patchInputEntity, failsSet);
+      }
+   }
+
+   private void validatePatchCapabilityUsage(
+      AstCapabilityDecl capDecl, SymbolId patchInputSymId, SymbolId patchInputEntity, Set<SymbolId> failsSet
+   ) {
+      boolean readonly = capDecl.requirements().stream().anyMatch(r -> r.requirement() == AstRequirementKind.READONLY);
+      if (readonly || capDecl.exposure().exposure() != AstExposureKind.COMMAND) {
+         this.diagnostics.add(DiagnosticBuilder.error(
+            "SIR-VALID-003", "patch 载荷只允许用于 expose command 的写能力", capDecl.span()));
+      }
+
+      boolean changesEntity = false;
+      for (AstStep step : capDecl.workflow().steps()) {
+         if (step instanceof AstUpdateStep update) {
+            SymbolId updateEntity = this.updateTargetEntitySymId(update);
+            if (updateEntity != null && updateEntity.equals(patchInputEntity)) {
+               changesEntity = true;
+            }
+         } else if (step instanceof AstPersistStep persist) {
+            SymbolId persistEntity = this.persistTargetEntitySymId(persist);
+            if (persistEntity != null && persistEntity.equals(patchInputEntity)) {
+               changesEntity = true;
+            }
+         }
+      }
+
+      if (!changesEntity) {
+         this.diagnostics.add(DiagnosticBuilder.error(
+            "SIR-VALID-003", "patch 载荷对应的能力必须包含该实体的写步骤", capDecl.span()));
+      }
+
+      SymbolId identityMemberSymId = patchInputEntity == null ? null : this.entityIdentitySymbolIds.get(patchInputEntity);
+
+      // Every change the payload can carry must reach the entity through an authored binding: a
+      // payload field nobody binds would otherwise be accepted and silently dropped.
+      Set<SymbolId> boundMembers = new LinkedHashSet<>();
+      for (AstStep step : capDecl.workflow().steps()) {
+         if (step instanceof AstUpdateStep update && patchInputEntity != null
+            && patchInputEntity.equals(this.updateTargetEntitySymId(update))) {
+            for (AstBinding binding : update.bindings()) {
+               this.typed.referenceSiteBindings().targetFor(binding.fieldName().id()).ifPresent(boundMembers::add);
+            }
+         }
+      }
+
+      AstInputDecl patchInputDecl = this.inputDeclarations.get(patchInputSymId);
+      if (patchInputDecl != null) {
+         for (AstField field : patchInputDecl.fields()) {
+            SymbolId payloadFieldSymId = SymbolIdFactory.inputField(
+               this.softwareName, patchInputDecl.name().text(), field.name().text());
+            SymbolId member = this.typed.patchFieldBindings().get(payloadFieldSymId);
+            if (member == null || member.equals(identityMemberSymId) || boundMembers.contains(member)) {
+               continue;
+            }
+
+            this.diagnostics.add(DiagnosticBuilder.error(
+               "SIR-VALID-004", "patch 载荷字段必须在 update 步骤中被绑定: " + field.name().text(), field.name().span()));
+         }
+      }
+
+      for (AstStep step : capDecl.workflow().steps()) {
+         this.forEachPresentExpression(step, present -> {
+            // The presence test binds the payload field; the rule is about the entity member it
+            // applies to, because the identity is carried outside the change set.
+            SymbolId presentField = this.typed.referenceSiteBindings().targetFor(present.id()).orElse(null);
+            SymbolId presentMember = presentField == null ? null : this.typed.patchFieldBindings().get(presentField);
+            if (presentMember == null || identityMemberSymId == null) {
+               return;
+            }
+
+            if (presentMember.equals(identityMemberSymId)) {
+               this.diagnostics.add(DiagnosticBuilder.error(
+                  "SIR-VALID-004", "present 不能用于 patch 载荷的 identity 字段（identity 不在 changes 内）", present.span()));
+            }
+         });
+      }
+   }
+
+   private SymbolId capabilityInputSymbolId(AstCapabilityDecl capDecl) {
+      if (capDecl.input().isEmpty()) {
+         return null;
+      }
+
+      SirType inputType = this.typed.typeRefTypes().get(capDecl.input().orElseThrow().type().id());
+      if (inputType instanceof DeclaredType declared && declared.kind() == DeclaredType.DeclaredKind.INPUT) {
+         return declared.symbolId();
+      }
+
+      return null;
+   }
+
+   private SymbolId updateTargetEntitySymId(AstUpdateStep step) {
+      SymbolId targetVarId = this.typed.referenceSiteBindings().targetFor(step.target().id()).orElse(null);
+      SymbolId identitySiteTarget = null;
+      if (targetVarId != null) {
+         Symbol targetSym = this.typed.symbols().byId(targetVarId).orElse(null);
+         if (targetSym instanceof Symbol.VariableSymbol vs && vs.type() instanceof RefType rt) {
+            identitySiteTarget = rt.entityId();
+         }
+      }
+
+      return identitySiteTarget;
+   }
+
+   private SymbolId persistTargetEntitySymId(AstPersistStep step) {
+      SymbolId targetVarId = this.typed.referenceSiteBindings().targetFor(step.target().id()).orElse(null);
+      if (targetVarId == null) {
+         return null;
+      }
+
+      Symbol targetSym = this.typed.symbols().byId(targetVarId).orElse(null);
+      return targetSym instanceof Symbol.VariableSymbol vs && vs.type() instanceof RefType rt ? rt.entityId() : null;
+   }
+
+   /**
+   * Walks a step's expressions looking for presence tests. Presence is a leaf question, so
+   * only the expression shapes that can contain one are traversed.
+   */
+   private void forEachPresentExpression(AstStep step, java.util.function.Consumer<AstPresentExpression> action) {
+      switch (step) {
+         case AstValidateStep s -> walkPresent(s.condition(), action);
+         case AstLoadStep s -> walkPresent(s.idExpression(), action);
+         case AstFindStep s -> walkPresent(s.predicate(), action);
+         case AstCreateStep s -> s.bindings().forEach(binding -> walkPresent(binding.value(), action));
+         case AstUpdateStep s -> s.bindings().forEach(binding -> walkPresent(binding.value(), action));
+         case AstReturnStep s -> walkPresent(s.value(), action);
+         default -> {
+         }
+      }
+   }
+
+   private void walkPresent(AstExpression expression, java.util.function.Consumer<AstPresentExpression> action) {
+      if (expression == null) {
+         return;
+      }
+
+      switch (expression) {
+         case AstPresentExpression e -> action.accept(e);
+         case AstGroupedExpression e -> this.walkPresent(e.inner(), action);
+         case AstUnaryExpression e -> this.walkPresent(e.operand(), action);
+         case AstBinaryExpression e -> {
+            this.walkPresent(e.left(), action);
+            this.walkPresent(e.right(), action);
+         }
+         default -> {
+         }
+      }
    }
 
    private void validateReturnPlacement(AstCapabilityDecl capDecl) {
@@ -249,10 +750,18 @@ final class ValidatePass {
 
          Map<SymbolId, SirType> fieldTypes = this.entityFieldTypes.get(entityId);
          if (fieldTypes != null) {
+            SymbolId versionSymId = this.entityVersionFields.get(entityId);
             for (Entry<SymbolId, SirType> entry : fieldTypes.entrySet()) {
                SymbolId fieldSymId = entry.getKey();
                SirType fieldType = entry.getValue();
-               if (!(fieldType instanceof OptionalType) && !boundFieldIds.contains(fieldSymId)) {
+               if (versionSymId != null && fieldSymId.equals(versionSymId)) {
+                  // The framework initializes the version: binding it is wrong, and leaving it
+                  // unbound is the required shape, so it is exempt from the required-field rule.
+                  if (boundFieldIds.contains(fieldSymId)) {
+                     this.diagnostics.add(DiagnosticBuilder.error(
+                        "SIR-VALID-004", "create 不能绑定 version 字段（由框架初始化）: " + this.displayName(fieldSymId, "version"), step.span()));
+                  }
+               } else if (!(fieldType instanceof OptionalType) && !boundFieldIds.contains(fieldSymId)) {
                   String displayName = this.displayName(fieldSymId, "unknown");
                   this.diagnostics.add(DiagnosticBuilder.error("SIR-FLOW-001", "create 未绑定必填字段: " + displayName, step.span()));
                }
@@ -284,6 +793,9 @@ final class ValidatePass {
                         boundFieldIds.add(fieldSymId);
                         if (identitySymId != null && fieldSymId.equals(identitySymId)) {
                            this.diagnostics.add(DiagnosticBuilder.error("SIR-VALID-001", "不能修改 identity: " + displayName, binding.span()));
+                        } else if (this.entityVersionFields.get(entityId) != null
+                           && fieldSymId.equals(this.entityVersionFields.get(entityId))) {
+                           this.diagnostics.add(DiagnosticBuilder.error("SIR-VALID-004", "update 不能绑定 version 字段（由框架递增）: " + displayName, binding.span()));
                         }
                      }
                   }
@@ -372,6 +884,10 @@ final class ValidatePass {
    }
 
    private void validateInputConstraints(AstInputDecl inputDecl) {
+      if (inputDecl.patchSourceEntity().isPresent()) {
+         return;
+      }
+
       for (AstField field : inputDecl.fields()) {
          SirType fieldType = this.typed.typeRefTypes().get(field.type().id());
          if (fieldType != null) {

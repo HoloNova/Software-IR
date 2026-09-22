@@ -6,6 +6,15 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.IOException;
+import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.NoSuchFileException;
+import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -65,6 +74,9 @@ class SpringBootTargetConformanceIT {
     private static final long READINESS_POLL_MS = 500L;
     private static final long MAVEN_GRACE_MS = 300_000L;
     private static final long SPRING_GRACE_MS = 30_000L;
+
+    /** The local-fixed actor identity used for actor scenarios (User.id). */
+    private static final long LOCAL_ACTOR_ID = 1L;
 
     private static boolean conformanceEnabled;
     private static java.nio.file.Path workParent;
@@ -241,56 +253,170 @@ class SpringBootTargetConformanceIT {
      *       (only after schema + marker + fixture have succeeded)</li>
      * </ul>
      */
+    // INTERIM (Q4 scaffold): real assembly is part of the merged Q4+Q5 work order.
     private ConformanceResult runFullConformanceSuite() {
-        // P0-C2: the runtime JDBC URL is built ONLY from the validated
-        // SchemaName and the MySQL server endpoint parsed from the control
-        // JDBC URL. There is no caller-supplied runtime URL bypass and no
-        // fallback to using the control JDBC URL as the runtime datasource.
-        // The schema identity is authoritative only via SchemaName.
+        // Precondition (fail closed, before any schema or lock work): the runtime
+        // datasource endpoint must be derivable from the control JDBC URL plus the
+        // validated schema name. An endpoint that cannot be derived is a precondition
+        // conflict, not a run failure — nothing has been created yet, so the run is
+        // NOT_RUN and the caller can correct the environment and retry.
         MysqlRuntimeJdbcUrl runtimeUrl;
         try {
-            runtimeUrl = MysqlRuntimeJdbcUrl.fromControlEndpoint(
-                    controlJdbcUrl, schemaName);
-        } catch (IllegalArgumentException e) {
-            // This occurs before any suite operation, filesystem allocation,
-            // control connection, schema mutation, or child-process launch.
-            // Do not include the raw endpoint or exception text in the result:
-            // either may contain caller-controlled sensitive material.
+            runtimeUrl = MysqlRuntimeJdbcUrl.fromControlEndpoint(controlJdbcUrl, schemaName);
+        } catch (RuntimeException e) {
             return new ConformanceResult.NotRun(new ConformanceFailure(
                     ConformanceFailureKind.PRECONDITION,
                     "RUNTIME_JDBC_URL_INVALID",
-                    "runtime JDBC endpoint rejected by the strict URL contract"));
+                    "the runtime datasource endpoint could not be derived from the control "
+                            + "JDBC URL: " + sanitizedMessage(e)));
         }
-        MysqlRuntimeFixture runtimeFixture = new MysqlRuntimeFixture(
-                runtimeUrl, schemaName, runtimeUsername, runtimePassword);
 
-        // Build the secret list for redaction + scan.
-        List<String> secrets = new ArrayList<>();
-        secrets.add(controlPassword);
-        secrets.add(runtimePassword);
-        if (controlJdbcUrl != null) {
-            secrets.add(controlJdbcUrl);
+        List<String> secrets;
+        StreamingSecretRedactor redactor;
+        EvidenceSecretScanner secretScanner;
+        try {
+            SecretCatalog catalog = SecretCatalog.build(controlUsername, controlPassword,
+                    runtimeUsername, runtimePassword, controlJdbcUrl, runtimeUrl.rendered());
+            secrets = catalog.allSecretStrings();
+            redactor = StreamingSecretRedactor.initialize(secrets);
+            secretScanner = EvidenceSecretScanner.from(catalog);
+        } catch (RuntimeException e) {
+            // No side effect has happened yet: the redactor/scanner boundary is a
+            // precondition, so the run is NOT_RUN rather than FAILED.
+            return new ConformanceResult.NotRun(new ConformanceFailure(
+                    ConformanceFailureKind.HARNESS_CREDENTIAL_BOUNDARY,
+                    "SECRET_BOUNDARY_NOT_INITIALIZABLE",
+                    "the credential boundary could not be initialized: " + sanitizedMessage(e)));
         }
-        // The rendered runtime URL contains the runtime schema name and
-        // endpoint but no credentials—include it in the secret scan as
-        // a defensive measure so any accidental credential leak in the
-        // URL form is caught.
-        secrets.add(runtimeUrl.rendered());
 
-        // Streaming redactor: it must be initializable or the run is FAILED.
-        StreamingSecretRedactor redactor = StreamingSecretRedactor.initialize(secrets);
+        java.nio.file.Path javaExecutable = java.nio.file.Path.of(
+                System.getProperty("java.home"), "bin", "java");
+        // The run token names the owned work root and evidence root. It is unique per
+        // invocation (both roots are created with CREATE_NEW semantics, so a repeat run
+        // must never reuse a previous run's directory).
+        String runToken = "run-" + Long.toHexString(System.currentTimeMillis())
+                + "-" + java.util.concurrent.ThreadLocalRandom.current().nextInt(0x10000);
 
-        // Per ADR-017 sections 3 and 7.2, the dedicated MySQL control connection is
-        // NOT pre-opened here. The caller supplies a MysqlControlConfiguration;
-        // orchestrate opens the control connection at MYSQL_CONTROL_CONNECT
-        // and closes it when the run terminates.
-        MysqlControlConfiguration controlConfig = new MysqlControlConfiguration(
-                controlJdbcUrl, controlUsername, controlPassword);
+        try (MysqlControlSession control = MysqlControlSession.open(
+                controlJdbcUrl, controlUsername, controlPassword)) {
+            ChildEnvironmentBuilder childEnvironment = new ChildEnvironmentBuilder()
+                    .copyOsAllowlist()
+                    .mavenRepoLocal(mavenRepo.toString())
+                    .deterministicLocaleTimezone()
+                    .serverPort(serverPort)
+                    .datasourceUrl(runtimeUrl)
+                    .datasourceUsername(runtimeUsername)
+                    .datasourcePassword(runtimePassword)
+                    .actorMode("local-fixed")
+                    .actorLocalId(LOCAL_ACTOR_ID)
+                    .springProfilesActive("kcg-actor-local");
+            Map<String, String> childEnv = childEnvironment.build();
+            MavenProjectRunner mavenRunner = new MavenProjectRunner(
+                    mavenExecutable, mavenRepo, childEnv, redactor);
+            SpringApplicationProcess springProcess = new SpringApplicationProcess(
+                    javaExecutable, childEnv, redactor);
+            String mavenVersion = mavenRunner.mavenVersion();
 
-        // TODO(conformance): complete child environment construction, scenario
-        // execution, cleanup, and terminal result assembly before enabling this package.
-        //      detail,
-                scenario.displayName()));
+            ConformanceEnvironment environment = new ConformanceEnvironment(
+                    CONTRACT_REVISION,
+                    TARGET_PROFILE_ID,
+                    LOWERED_IR_VERSION,
+                    System.getProperty("java.vendor"),
+                    System.getProperty("java.version"),
+                    System.getProperty("os.name"),
+                    System.getProperty("os.arch"),
+                    filesystemProvider(),
+                    mavenExecutable,
+                    mavenVersion,
+                    mavenRepo,
+                    true,
+                    expectedMysqlServerUuid,
+                    control.observedServerUuid(),
+                    control.observedServerVersion(),
+                    // Recorded per scenario from the real lowered model and generated POM.
+                    null,
+                    resolveHarnessJdbcDriverVersion(controlJdbcUrl),
+                    schemaName,
+                    workParent,
+                    evidenceParent,
+                    serverPort);
+
+            ConformanceSuiteContext ctx = new ConformanceSuiteContext(
+                    environment,
+                    workParent,
+                    evidenceParent,
+                    runToken,
+                    control,
+                    new MysqlRuntimeFixture(runtimeUrl.rendered(), runtimeUsername, runtimePassword),
+                    redactor,
+                    secretScanner,
+                    mavenRunner,
+                    springProcess,
+                    childEnvironment,
+                    serverPort,
+                    MAVEN_GRACE_MS,
+                    SPRING_GRACE_MS,
+                    READINESS_TIMEOUT_MS,
+                    READINESS_POLL_MS,
+                    secrets);
+            return new ConformanceSuite().orchestrate(ctx);
+        } catch (Exception e) {
+            return new ConformanceResult.Failed(new ConformanceFailure(
+                    ConformanceFailureKind.HARNESS,
+                    "SUITE_ASSEMBLY_FAILED",
+                    "the suite context could not be assembled or the run failed: "
+                            + sanitizedMessage(e)), List.of(), java.util.Optional.empty());
+        }
+    }
+
+    /**
+     * The file-store type of the work parent, recorded in the environment tuple.
+     *
+     * <p>The tuple records the host filesystem provider because path identity and
+     * symlink behavior are provider-specific, so the evidence must name the provider the
+     * run actually used.
+     *
+     * @return the file store type, or {@code "unknown"} when it cannot be read
+     */
+    private static String filesystemProvider() {
+        try {
+            return java.nio.file.Files.getFileStore(workParent).type();
+        } catch (java.io.IOException e) {
+            return "unknown";
+        }
+    }
+
+    /**
+     * Resolve the harness JDBC driver version for a JDBC URL <em>without</em> opening
+     * any connection.
+     *
+     * <p>The version is read from the driver that accepts the URL: the registered
+     * driver's implementation version when its jar declares one, otherwise its
+     * declared major/minor version. Driver identification goes through
+     * {@link DriverManager#getDriver}, which only asks each registered driver whether
+     * it {@code acceptsURL} — it never establishes a connection.
+     *
+     * <p>This is deliberate: a run must never open a connection just to learn a
+     * version string, and a URL that no registered driver accepts must yield
+     * {@code "unknown"} rather than a speculative value.
+     *
+     * @param jdbcUrl the JDBC URL whose accepting driver is inspected
+     * @return the driver version, or {@code "unknown"} when it cannot be determined
+     */
+    private static String resolveHarnessJdbcDriverVersion(String jdbcUrl) {
+        try {
+            Driver driver = DriverManager.getDriver(jdbcUrl);
+            Package driverPackage = driver.getClass().getPackage();
+            String implementationVersion = driverPackage == null
+                    ? null
+                    : driverPackage.getImplementationVersion();
+            if (implementationVersion != null && !implementationVersion.isBlank()) {
+                return implementationVersion;
+            }
+            return driver.getMajorVersion() + "." + driver.getMinorVersion();
+        } catch (SQLException | RuntimeException e) {
+            return "unknown";
+        }
     }
 
     private static String sanitizedMessage(Throwable t) {
@@ -383,170 +509,4 @@ class SpringBootTargetConformanceIT {
         return sb.toString();
     }
 
-    // ------------------------------------------------------------------
-    // Per-scenario endpoint configuration
-    // ------------------------------------------------------------------
-
-    static final class ScenarioEndpoint {
-        private final String readinessUrl;
-        private final String readinessMethod;
-        private final String readinessBody;
-        private final int expectedReadinessStatus;
-        private final String assertionMethod;
-        private final String assertionUrl;
-        private final String assertionBody;
-        private final int expectedAssertionStatus;
-        private final String invalidMethod;
-        private final String invalidUrl;
-        private final String invalidBody;
-        private final int expectedInvalidStatus;
-        private final String secondaryMethod;
-        private final String secondaryUrl;
-        private final String secondaryBody;
-        private final int expectedSecondaryStatus;
-        private final String removedUrl;
-        private final int expectedRemovedStatus;
-        private final String dbTable;
-        private final int expectedDbDelta;
-
-        ScenarioEndpoint(ConformanceScenario scenario, int serverPort) {
-            String base = "http://127.0.0.1:" + serverPort;
-            switch (scenario) {
-                case IG_ACTOR -> {
-                    this.readinessUrl = base + "/api/publish-goods";
-                    this.readinessMethod = "POST";
-                    this.readinessBody = "{\"title\":\"\",\"price\":0}";
-                    this.expectedReadinessStatus = 400;
-                    this.assertionMethod = "POST";
-                    this.assertionUrl = base + "/api/publish-goods";
-                    this.assertionBody = "{\"title\":\"Conf-Actor-Good\",\"price\":1.00}";
-                    this.expectedAssertionStatus = 200;
-                    this.invalidMethod = "POST";
-                    this.invalidUrl = base + "/api/publish-goods";
-                    this.invalidBody = "{\"title\":\"\",\"price\":0}";
-                    this.expectedInvalidStatus = 400;
-                    this.secondaryMethod = null;
-                    this.secondaryUrl = null;
-                    this.secondaryBody = null;
-                    this.expectedSecondaryStatus = 0;
-                    this.removedUrl = null;
-                    this.expectedRemovedStatus = 0;
-                    this.dbTable = "goods";
-                    this.expectedDbDelta = 1;
-                }
-                case IG_READONLY -> {
-                    this.readinessUrl = base + "/api/search-goods?title=Intro%20to%20Algorithms&price=59.90";
-                    this.readinessMethod = "GET";
-                    this.readinessBody = null;
-                    this.expectedReadinessStatus = 200;
-                    this.assertionMethod = "GET";
-                    this.assertionUrl = base + "/api/search-goods?title=Intro%20to%20Algorithms&price=59.90";
-                    this.assertionBody = null;
-                    this.expectedAssertionStatus = 200;
-                    this.invalidMethod = "GET";
-                    this.invalidUrl = base + "/api/search-goods?price=-invalid";
-                    this.invalidBody = null;
-                    this.expectedInvalidStatus = 400;
-                    this.secondaryMethod = null;
-                    this.secondaryUrl = null;
-                    this.secondaryBody = null;
-                    this.expectedSecondaryStatus = 0;
-                    this.removedUrl = null;
-                    this.expectedRemovedStatus = 0;
-                    this.dbTable = "goods";
-                    this.expectedDbDelta = 0;
-                }
-                case APPLY_UPDATE -> {
-                    this.readinessUrl = base + "/api/publish-goods";
-                    this.readinessMethod = "POST";
-                    this.readinessBody = "{\"title\":\"" + "x".repeat(201)
-                            + "\",\"price\":1.00}";
-                    this.expectedReadinessStatus = 400;
-                    this.assertionMethod = "POST";
-                    this.assertionUrl = base + "/api/publish-goods";
-                    this.assertionBody = "{\"title\":\"Conf-Update-Good\",\"price\":1.00}";
-                    this.expectedAssertionStatus = 200;
-                    this.invalidMethod = "POST";
-                    this.invalidUrl = base + "/api/publish-goods";
-                    this.invalidBody = "{\"title\":\"" + "x".repeat(201)
-                            + "\",\"price\":1.00}";
-                    this.expectedInvalidStatus = 400;
-                    this.secondaryMethod = null;
-                    this.secondaryUrl = null;
-                    this.secondaryBody = null;
-                    this.expectedSecondaryStatus = 0;
-                    this.removedUrl = null;
-                    this.expectedRemovedStatus = 0;
-                    this.dbTable = "goods";
-                    this.expectedDbDelta = 1;
-                }
-                case APPLY_CREATE -> {
-                    this.readinessUrl = base + "/api/search-goods?title=Intro%20to%20Algorithms&price=59.90";
-                    this.readinessMethod = "GET";
-                    this.readinessBody = null;
-                    this.expectedReadinessStatus = 200;
-                    this.assertionMethod = "POST";
-                    this.assertionUrl = base + "/api/publish-goods";
-                    this.assertionBody = "{\"title\":\"Conf-Create-Good\",\"price\":1.00}";
-                    this.expectedAssertionStatus = 200;
-                    this.invalidMethod = "GET";
-                    this.invalidUrl = base + "/api/search-goods?price=-invalid";
-                    this.invalidBody = null;
-                    this.expectedInvalidStatus = 400;
-                    this.secondaryMethod = "GET";
-                    this.secondaryUrl = base + "/api/search-goods?title=Conf-Create-Good&price=1.00";
-                    this.secondaryBody = null;
-                    this.expectedSecondaryStatus = 200;
-                    this.removedUrl = null;
-                    this.expectedRemovedStatus = 0;
-                    this.dbTable = "goods";
-                    this.expectedDbDelta = 1;
-                }
-                case APPLY_DELETE -> {
-                    this.readinessUrl = base + "/api/search-goods?title=Intro%20to%20Algorithms&price=59.90";
-                    this.readinessMethod = "GET";
-                    this.readinessBody = null;
-                    this.expectedReadinessStatus = 200;
-                    this.assertionMethod = "GET";
-                    this.assertionUrl = base + "/api/search-goods?title=Intro%20to%20Algorithms&price=59.90";
-                    this.assertionBody = null;
-                    this.expectedAssertionStatus = 200;
-                    this.invalidMethod = "GET";
-                    this.invalidUrl = base + "/api/search-goods?price=-invalid";
-                    this.invalidBody = null;
-                    this.expectedInvalidStatus = 400;
-                    this.secondaryMethod = null;
-                    this.secondaryUrl = null;
-                    this.secondaryBody = null;
-                    this.expectedSecondaryStatus = 0;
-                    this.removedUrl = base + "/api/publish-goods";
-                    this.expectedRemovedStatus = 404;
-                    this.dbTable = "goods";
-                    this.expectedDbDelta = 0;
-                }
-                default -> throw new IllegalArgumentException("unknown scenario: " + scenario);
-            }
-        }
-
-        String readinessUrl() { return readinessUrl; }
-        String readinessMethod() { return readinessMethod; }
-        String readinessBody() { return readinessBody; }
-        int expectedReadinessStatus() { return expectedReadinessStatus; }
-        String assertionMethod() { return assertionMethod; }
-        String assertionUrl() { return assertionUrl; }
-        String assertionBody() { return assertionBody; }
-        int expectedAssertionStatus() { return expectedAssertionStatus; }
-        String invalidMethod() { return invalidMethod; }
-        String invalidUrl() { return invalidUrl; }
-        String invalidBody() { return invalidBody; }
-        int expectedInvalidStatus() { return expectedInvalidStatus; }
-        String secondaryMethod() { return secondaryMethod; }
-        String secondaryUrl() { return secondaryUrl; }
-        String secondaryBody() { return secondaryBody; }
-        int expectedSecondaryStatus() { return expectedSecondaryStatus; }
-        String removedUrl() { return removedUrl; }
-        int expectedRemovedStatus() { return expectedRemovedStatus; }
-        String dbTable() { return dbTable; }
-        int expectedDbDelta() { return expectedDbDelta; }
-    }
 }

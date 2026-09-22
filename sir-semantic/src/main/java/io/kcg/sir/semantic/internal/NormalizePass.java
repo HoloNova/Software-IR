@@ -16,6 +16,8 @@ import io.kcg.sir.ast.AstErrorDecl;
 import io.kcg.sir.ast.AstExpression;
 import io.kcg.sir.ast.AstFailsClause;
 import io.kcg.sir.ast.AstField;
+import io.kcg.sir.ast.AstFindOrderKey;
+import io.kcg.sir.ast.AstFindPage;
 import io.kcg.sir.ast.AstFindStep;
 import io.kcg.sir.ast.AstGroupedExpression;
 import io.kcg.sir.ast.AstIdentity;
@@ -28,6 +30,7 @@ import io.kcg.sir.ast.AstNamedTypeRef;
 import io.kcg.sir.ast.AstNodeId;
 import io.kcg.sir.ast.AstNowExpression;
 import io.kcg.sir.ast.AstPersistStep;
+import io.kcg.sir.ast.AstPresentExpression;
 import io.kcg.sir.ast.AstRequirementKind;
 import io.kcg.sir.ast.AstRequiresClause;
 import io.kcg.sir.ast.AstReturnStep;
@@ -38,6 +41,8 @@ import io.kcg.sir.ast.AstUnaryExpression;
 import io.kcg.sir.ast.AstUnitLiteral;
 import io.kcg.sir.ast.AstUpdateStep;
 import io.kcg.sir.ast.AstValidateStep;
+import io.kcg.sir.ast.AstViewDecl;
+import io.kcg.sir.ast.AstViewField;
 import io.kcg.sir.ast.AstWorkflow;
 import io.kcg.sir.semantic.api.NormalizedSemanticModel;
 import io.kcg.sir.semantic.api.SemanticAnalysis;
@@ -54,6 +59,8 @@ import io.kcg.sir.semantic.model.NormalizedField;
 import io.kcg.sir.semantic.model.NormalizedIdentity;
 import io.kcg.sir.semantic.model.NormalizedInput;
 import io.kcg.sir.semantic.model.NormalizedStep;
+import io.kcg.sir.semantic.model.NormalizedView;
+import io.kcg.sir.semantic.model.NormalizedViewField;
 import io.kcg.sir.semantic.model.NormalizedWorkflow;
 import io.kcg.sir.semantic.symbol.SymbolId;
 import io.kcg.sir.semantic.type.PrimitiveType;
@@ -130,6 +137,7 @@ final class NormalizePass {
          case AstEnumDecl e -> this.normalizeEnum(e, id);
          case AstEntityDecl e -> this.normalizeEntity(e, id);
          case AstInputDecl e -> this.normalizeInput(e, id);
+         case AstViewDecl e -> this.normalizeView(e, id);
          case AstErrorDecl e -> this.normalizeError(e, id);
          case AstCapabilityDecl e -> this.normalizeCapability(e, id);
          default -> throw new MatchException(null, null);
@@ -155,18 +163,33 @@ final class NormalizePass {
       NormalizedIdentity identity = this.normalizeIdentity(decl.identity(), decl.name().text());
       List<NormalizedField> fields = new ArrayList<>();
       Set<String> seen = new LinkedHashSet<>();
+      SymbolId versionFieldId = null;
 
       for (AstField f : decl.fields()) {
          String fieldName = f.name().text();
          if (seen.add(fieldName) && !fieldName.equals(decl.identity().name().text())) {
             NormalizedField field = this.normalizeField(f, decl.name().text(), "entity");
             if (field != null) {
+               if (f.versioned()) {
+                  field = field.withVersioned(true);
+                  versionFieldId = field.id();
+               }
+
                fields.add(field);
             }
          }
       }
 
-      return new NormalizedEntity(id, decl.name().text(), decl.span(), decl.id(), true, identity, List.copyOf(fields));
+      return new NormalizedEntity(
+         id,
+         decl.name().text(),
+         decl.span(),
+         decl.id(),
+         true,
+         identity,
+         List.copyOf(fields),
+         Optional.ofNullable(versionFieldId)
+      );
    }
 
    private NormalizedIdentity normalizeIdentity(AstIdentity identity, String entityName) {
@@ -180,22 +203,71 @@ final class NormalizePass {
    private NormalizedInput normalizeInput(AstInputDecl decl, SymbolId id) {
       List<NormalizedField> fields = new ArrayList<>();
       Set<String> seen = new LinkedHashSet<>();
+      boolean patch = decl.patchSourceEntity().isPresent();
 
       for (AstField f : decl.fields()) {
          String fieldName = f.name().text();
          if (seen.add(fieldName)) {
             NormalizedField field = this.normalizeField(f, decl.name().text(), "input");
             if (field != null) {
+               if (patch) {
+                  field = field.withPatchSourceField(this.patchSourceFieldOrUnknown(decl.name().text(), fieldName));
+               }
+
                fields.add(field);
             }
          }
       }
 
-      return new NormalizedInput(id, decl.name().text(), decl.span(), decl.id(), List.copyOf(fields));
+      SymbolId patchSourceEntity = patch ? this.siteTargetOrUnknown(decl.patchSourceEntity().orElseThrow().id()) : null;
+      return new NormalizedInput(
+         id,
+         decl.name().text(),
+         decl.span(),
+         decl.id(),
+         patch ? NormalizedInput.Kind.PATCH : NormalizedInput.Kind.PLAIN,
+         Optional.ofNullable(patchSourceEntity),
+         List.copyOf(fields)
+      );
+   }
+
+   private NormalizedView normalizeView(AstViewDecl decl, SymbolId id) {
+      List<NormalizedViewField> fields = new ArrayList<>();
+      Set<String> seen = new LinkedHashSet<>();
+
+      for (AstViewField field : decl.fields()) {
+         String fieldName = field.name().text();
+         if (!seen.add(fieldName)) {
+         continue;
+         }
+
+         SirType type = this.validated.typeRefTypes().get(field.type().id());
+         if (type == null) {
+         continue;
+         }
+
+         fields.add(new NormalizedViewField(
+         SymbolIdFactory.viewField(this.softwareName, decl.name().text(), fieldName),
+         fieldName,
+         field.span(),
+         field.id(),
+         type,
+         this.siteTargetOrUnknown(field.name().id()),
+         field.type() instanceof AstNamedTypeRef named ? Optional.of(named.name().id()) : Optional.empty()));
+      }
+
+      return new NormalizedView(
+         id,
+         decl.name().text(),
+         decl.span(),
+         decl.id(),
+         this.siteTargetOrUnknown(decl.sourceEntity().id()),
+         List.copyOf(fields));
    }
 
    private NormalizedError normalizeError(AstErrorDecl decl, SymbolId id) {
-      return new NormalizedError(id, decl.name().text(), decl.span(), decl.id());
+      int httpStatus = decl.httpStatus().map(java.math.BigInteger::intValue).orElse(NormalizedError.DEFAULT_HTTP_STATUS);
+      return new NormalizedError(id, decl.name().text(), decl.span(), decl.id(), httpStatus);
    }
 
    private NormalizedField normalizeField(AstField field, String ownerName, String ownerKind) {
@@ -313,7 +385,19 @@ final class NormalizePass {
             SymbolId resultVar = this.definitionBindingOrUnknown(s.id());
             SymbolId itemVar = this.validated.findItemBindings().getOrDefault(s.id(), resultVar);
             NormalizedExpression predicate = this.normalizeExpression(s.predicate());
-            yield new NormalizedStep.FindStep(s.id(), s.span(), entitySym, predicate != null ? predicate : this.unitExpr(s.span()), resultVar, itemVar);
+         List<NormalizedStep.OrderKey> orderKeys = s.order()
+               .map(order -> order.keys().stream().map(this::normalizeOrderKey).toList())
+               .orElseGet(List::of);
+         Optional<NormalizedStep.PageSpec> page = s.page().map(this::normalizePageSpec);
+         yield new NormalizedStep.FindStep(
+               s.id(),
+               s.span(),
+               entitySym,
+               predicate != null ? predicate : this.unitExpr(s.span()),
+               orderKeys,
+               page,
+               resultVar,
+               itemVar);
          }
          case AstCreateStep s -> {
             SymbolId entitySym = this.siteTargetOrUnknown(s.entity().id());
@@ -328,7 +412,8 @@ final class NormalizePass {
          }
          case AstPersistStep s -> {
             SymbolId targetVar = this.siteTargetOrUnknown(s.target().id());
-            yield new NormalizedStep.PersistStep(s.id(), s.span(), targetVar);
+            Optional<SymbolId> failure = s.failure().flatMap(ref -> this.validated.referenceSiteBindings().targetFor(ref.id()));
+            yield new NormalizedStep.PersistStep(s.id(), s.span(), targetVar, failure);
          }
          case AstReturnStep s -> {
             NormalizedExpression value = this.normalizeExpression(s.value());
@@ -336,6 +421,28 @@ final class NormalizePass {
          }
          default -> throw new MatchException(null, null);
       };
+   }
+
+   private NormalizedStep.OrderKey normalizeOrderKey(AstFindOrderKey key) {
+      return new NormalizedStep.OrderKey(key.id(), key.span(), this.siteTargetOrUnknown(key.field().id()), key.descending());
+   }
+
+   private NormalizedStep.PageSpec normalizePageSpec(AstFindPage page) {
+      return new NormalizedStep.PageSpec(
+         page.id(),
+         page.span(),
+         this.siteTargetOrUnknown(this.memberSiteId(page.page())),
+         this.siteTargetOrUnknown(this.memberSiteId(page.size())),
+         this.siteTargetOrUnknown(page.error().id()));
+   }
+
+   /**
+   * The pagination sources are member accesses such as {@code input.page}; their bound reference
+   * site is the member name, not the whole expression.
+   */
+   private AstNodeId memberSiteId(AstExpression expression) {
+      AstExpression ungrouped = this.ungroup(expression);
+      return ungrouped instanceof AstMemberExpression member ? member.member().id() : ungrouped.id();
    }
 
    private List<NormalizedBinding> normalizeBindings(List<AstBinding> bindings, String capName) {
@@ -392,6 +499,14 @@ final class NormalizePass {
                : null;
          }
          case AstGroupedExpression e -> this.normalizeExpression(e.inner());
+         case AstPresentExpression e -> {
+            NormalizedExpression target = this.normalizeExpression(e.target());
+            SirType type = this.typeOf(e.id(), PrimitiveType.BOOLEAN);
+            SymbolId field = this.siteTargetOrUnknown(e.id());
+            yield target != null && type != null && !isUnknown(field)
+               ? new NormalizedExpression.PresentExpression(e.id(), e.span(), type, target, field)
+               : null;
+         }
          default -> null;
       });
    }
@@ -412,6 +527,15 @@ final class NormalizePass {
 
    private NormalizedExpression unitExpr(SourceSpan span) {
       return new NormalizedExpression.UnitLiteral(new AstNodeId("synthetic"), span, PrimitiveType.UNIT);
+   }
+
+   /**
+   * The entity member a patch payload field applies to, or the unknown symbol when resolution
+   * could not bind it (in which case a diagnostic already exists).
+   */
+   private SymbolId patchSourceFieldOrUnknown(String inputName, String fieldName) {
+      return this.validated.patchFieldBindings().getOrDefault(
+         SymbolIdFactory.inputField(this.softwareName, inputName, fieldName), UNKNOWN_SYMBOL_ID);
    }
 
    private SymbolId siteTargetOrUnknown(AstNodeId sourceNodeId) {

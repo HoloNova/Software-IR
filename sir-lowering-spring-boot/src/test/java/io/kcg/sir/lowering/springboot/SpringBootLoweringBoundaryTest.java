@@ -101,7 +101,7 @@ class SpringBootLoweringBoundaryTest {
                         List.of(unsupported));
                 declarations.set(index, new NormalizedEntity(
                         entity.id(), entity.name(), entity.span(), entity.sourceNodeId(), entity.persistent(),
-                        entity.identity(), List.of(damagedField, entity.fields().get(1))));
+                        entity.identity(), List.of(damagedField, entity.fields().get(1)), entity.versionField()));
             }
         }
 

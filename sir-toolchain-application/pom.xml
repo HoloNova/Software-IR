@@ -86,32 +86,6 @@
 
     <build>
         <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <!--
-                        The current conformance package contains incomplete suite,
-                        runtime, and evidence helpers. It remains excluded from test
-                        compilation until the closure documented in
-                        docs/qualification/TEST_COVERAGE_INVENTORY.md is implemented.
-                        The default build must not be described as conformance-qualified
-                        while this exclusion exists.
-                    -->
-                    <testExcludes>
-                        <testExclude>io/kcg/sir/application/conformance/**</testExclude>
-                    </testExcludes>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
-                    <excludes>
-                        <exclude>io/kcg/sir/application/conformance/**</exclude>
-                    </excludes>
-                </configuration>
-            </plugin>
         </plugins>
     </build>
 </project>

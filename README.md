@@ -18,7 +18,7 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 - Toolchain Application、Bundle、事务与显式恢复
 - 只读 `context` / `plan` CLI
 
-当前代码可以离线完成默认 Reactor 构建，但仍有明确的测试和外部资格缺口，因此不宣称生产就绪或完整 MySQL conformance。
+当前代码可以离线完成默认 Reactor 构建（10 个 Reactor 模块，554 run / 0 fail / 0 error / 5 skip，冻结与完成两种形式均 BUILD SUCCESS），并已在**登记过的参考环境**上得到外部 MySQL conformance 的 `QUALIFIED` 结论。但仍有明确的未覆盖项（Windows 平台证据、thin JAR/发行包、完整 CLI 本地生命周期），因此不宣称生产就绪。精确结论与缺口登记见 [CURRENT_QUALIFICATION.md](docs/qualification/CURRENT_QUALIFICATION.md) 第 0 节。
 
 ## 从这里开始
 
@@ -26,7 +26,7 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 
 1. [项目负责人操作与交接手册](docs/PROJECT_OWNER_GUIDE.md)
 2. [当前唯一工作单](docs/roadmap/ACTIVE_WORK.md)
-3. [全局工程规则](AGENTS.md)
+3. [全局工程规则](AGENTS.md) 与 [项目主体说明](MAIN.md)
 4. [当前项目状态](docs/PROJECT_STATUS.md)
 5. [系统架构与实现指南](docs/KCG-Code_%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E4%B8%8E%E5%AE%9E%E7%8E%B0%E6%8C%87%E5%8D%97.md)
 6. [当前资格报告](docs/qualification/CURRENT_QUALIFICATION.md)

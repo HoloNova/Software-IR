@@ -8,6 +8,7 @@ public sealed interface LoweredJavaType
    LoweredJavaType.Declared,
    LoweredJavaType.OptionalValue,
    LoweredJavaType.ListValue,
+   LoweredJavaType.PageValue,
    LoweredJavaType.EntityReference {
    private static void requireText(String value, String name) {
       Objects.requireNonNull(value, name);
@@ -27,7 +28,8 @@ public sealed interface LoweredJavaType
    enum DeclaredKind {
       ENUM,
       ENTITY,
-      INPUT;
+      INPUT,
+      VIEW;
    }
 
    record EntityReference(SymbolId entitySymbol, String entityJavaName, LoweredJavaType.Scalar identityStorageType) implements LoweredJavaType {
@@ -40,6 +42,13 @@ public sealed interface LoweredJavaType
 
    record ListValue(LoweredJavaType elementType) implements LoweredJavaType {
       public ListValue {
+         Objects.requireNonNull(elementType, "elementType");
+      }
+   }
+
+   /** The {@code Page<T>} query response carrier; the element is always a view DTO. */
+   record PageValue(LoweredJavaType elementType) implements LoweredJavaType {
+      public PageValue {
          Objects.requireNonNull(elementType, "elementType");
       }
    }

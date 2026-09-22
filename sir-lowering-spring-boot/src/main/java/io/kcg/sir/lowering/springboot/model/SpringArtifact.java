@@ -31,6 +31,7 @@ public record SpringArtifact(LoweredNodeId id, LoweredOrigin origin, SymbolId ow
       ENTITY_MODEL,
       MAPPER,
       REQUEST_DTO,
+      VIEW_DTO,
       EXCEPTION,
       SERVICE,
       CONTROLLER;

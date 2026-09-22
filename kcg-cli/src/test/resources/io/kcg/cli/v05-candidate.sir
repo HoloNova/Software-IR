@@ -1,0 +1,68 @@
+sir 0.1
+
+software CampusMarket {
+  metadata {
+    displayName "校园二手交易系统";
+    namespace "com.example.campusmarket";
+  }
+
+  target {
+    language java 21;
+    framework spring_boot;
+    persistence mybatis_plus;
+    database mysql;
+    build maven;
+    interface rest;
+  }
+
+  declarations {
+    enum GoodsStatus {
+      AVAILABLE,
+      SOLD
+    }
+
+    entity User persistent {
+      identity id: Int64 generated auto;
+      field name: String where notBlank;
+      field email: String where email;
+    }
+
+    entity Goods persistent {
+      identity id: Int64 generated auto;
+      field title: String where notBlank, length(1, 100);
+      field price: Decimal where min(0.01);
+      field seller: Ref<User>;
+      field status: GoodsStatus;
+    }
+
+    input PublishGoodsInput {
+      field title: String where notBlank;
+      field price: Decimal where min(0.01);
+      field unusedTag: Int64;
+    }
+
+    error InvalidGoodsPrice;
+
+    capability PublishGoods {
+      actor Ref<User>;
+      input PublishGoodsInput;
+      output Ref<Goods>;
+      fails InvalidGoodsPrice;
+      requires authenticated;
+      requires atomic;
+      expose command;
+
+      workflow {
+        validate input.price >= 0.01 else InvalidGoodsPrice;
+        create Goods as goods {
+          title: input.title;
+          price: input.price;
+          seller: actor;
+          status: GoodsStatus.AVAILABLE;
+        }
+        persist goods;
+        return goods;
+      }
+    }
+  }
+}

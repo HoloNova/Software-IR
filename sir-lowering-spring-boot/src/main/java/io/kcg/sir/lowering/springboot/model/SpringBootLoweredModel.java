@@ -15,7 +15,8 @@ public record SpringBootLoweredModel(
    List<SpringBootDeclaration> declarations,
    List<SpringArtifact> artifacts,
    ProjectArtifact.MavenProject mavenProject,
-   ProjectArtifact.ApplicationMain applicationMain
+   ProjectArtifact.ApplicationMain applicationMain,
+   List<ProjectArtifact> projectArtifacts
 ) implements LoweredModel {
    public SpringBootLoweredModel {
       Objects.requireNonNull(irVersion, "irVersion");
@@ -27,6 +28,21 @@ public record SpringBootLoweredModel(
       artifacts = List.copyOf(Objects.requireNonNull(artifacts, "artifacts"));
       Objects.requireNonNull(mavenProject, "mavenProject");
       Objects.requireNonNull(applicationMain, "applicationMain");
+      projectArtifacts = List.copyOf(Objects.requireNonNull(projectArtifacts, "projectArtifacts"));
+   }
+
+   public SpringBootLoweredModel(
+      LoweredIrVersion irVersion,
+      SpringBootTargetProfile profile,
+      String softwareName,
+      String displayName,
+      String basePackage,
+      List<SpringBootDeclaration> declarations,
+      List<SpringArtifact> artifacts,
+      ProjectArtifact.MavenProject mavenProject,
+      ProjectArtifact.ApplicationMain applicationMain
+   ) {
+      this(irVersion, profile, softwareName, displayName, basePackage, declarations, artifacts, mavenProject, applicationMain, List.of());
    }
 
    @Override

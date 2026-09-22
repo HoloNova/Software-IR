@@ -81,6 +81,35 @@ public enum ConformanceStateMachine {
     QUALIFIED;
 
     /**
+     * @return true if this state is in the repeatable per-scenario block
+     */
+    public boolean isInScenarioBlock() {
+        return SCENARIO_BLOCK.contains(this);
+    }
+
+    /**
+     * The repeatable per-scenario block, re-entered once per scenario in canonical order.
+     *
+     * <p>All five scenarios are run end to end, one at a time: each owns its own
+     * generated project, its own Spring process on the run's loopback port, and its own
+     * HTTP and database assertions. The block is therefore re-entered for each scenario
+     * rather than executed once for all five.
+     */
+    private static final Set<ConformanceStateMachine> SCENARIO_BLOCK =
+            EnumSet.of(
+                    MATERIALIZE,
+                    DETERMINISM,
+                    REGISTER,
+                    APPLY,
+                    MAVEN_BUILD,
+                    SPRING_START,
+                    CONTEXT_PROOF,
+                    HTTP_ASSERT,
+                    VALIDATION_ASSERT,
+                    DATABASE_ASSERT,
+                    SPRING_STOP);
+
+    /**
      * The states at or after which the side-effect boundary is crossed.
      * Once any of these has begun, failures must be {@code FAILED}, not
      * {@code NOT_RUN}.
@@ -146,11 +175,50 @@ public enum ConformanceStateMachine {
      *         for lock revalidation). Any other non-adjacent forward jump is
      *         forbidden 鈥?skipping a stage is not permitted.
      */
+    /**
+     * Validate a state transition.
+     *
+     * <p>Three transitions are permitted, and nothing else:
+     * <ol>
+     *   <li><b>Self-recheck</b> ({@code next == current}): repeat the current stage, which
+     *       is how one stage processes several items (for example one artifact per
+     *       scenario).</li>
+     *   <li><b>Adjacent forward</b> ({@code next} is the immediately following stage):
+     *       never skipping.</li>
+     *   <li>The two block transitions the real run path needs:
+     *     <ul>
+     *       <li>re-entering the repeatable per-scenario block at {@code MATERIALIZE} from
+     *           any state inside that block — the second and later scenarios run the whole
+     *           block again, because each scenario starts its own Spring process on the
+     *           run's single loopback port and therefore cannot overlap with another;</li>
+     *       <li>jumping to the cleanup phase start ({@code MYSQL_LOCK_RECHECK}) from any
+     *           state inside the scenario block — a failing scenario must still reach the
+     *           cleanup and proof phases, and the states it did not execute must not be
+     *           reported as visited.</li>
+     *     </ul>
+     *   </li>
+     * </ol>
+     *
+     * <p>Run-level phases before and after the scenario block stay strictly adjacent, so
+     * a skipped or reordered schema, cleanup, or evidence stage is still rejected.
+     *
+     * @param current the current state
+     * @param next    the requested next state
+     * @return true if the transition is permitted
+     */
     public static boolean isValidForward(ConformanceStateMachine current,
                                          ConformanceStateMachine next) {
         Objects.requireNonNull(current, "current");
         Objects.requireNonNull(next, "next");
         if (current == next) {
+            return true;
+        }
+        // Re-enter the repeatable per-scenario block for the next scenario.
+        if (next == MATERIALIZE && current.isInScenarioBlock()) {
+            return true;
+        }
+        // A failure inside the block still has to reach cleanup and proofs.
+        if (next == MYSQL_LOCK_RECHECK && current.isInScenarioBlock()) {
             return true;
         }
         ConformanceStateMachine[] order = values();
@@ -164,7 +232,7 @@ public enum ConformanceStateMachine {
                 nextIndex = i;
             }
         }
-        // Only the immediate next stage is permitted; no skipping.
+        // Otherwise only the immediate next stage is permitted; no skipping.
         return nextIndex == currentIndex + 1;
     }
 }

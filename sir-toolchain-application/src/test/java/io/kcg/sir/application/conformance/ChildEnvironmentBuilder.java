@@ -55,6 +55,8 @@ public final class ChildEnvironmentBuilder {
             "SPRING_DATASOURCE_PASSWORD",
             "KCG_ACTOR_MODE",
             "KCG_ACTOR_LOCAL_ID",
+            "KCG_ACTOR_IDENTITY_MODE",
+            "KCG_ACTOR_IDENTITY_LOCAL_ID",
             "SPRING_PROFILES_ACTIVE",
             "MAVEN_OPTS",
             "M2_HOME",
@@ -149,18 +151,31 @@ public final class ChildEnvironmentBuilder {
 
     /**
      * Set actor mode (e.g. "local-fixed" or "external").
+     *
+     * <p>Sets both the legacy {@code KCG_ACTOR_MODE} name and the Spring-relaxed
+     * {@code KCG_ACTOR_IDENTITY_MODE}: the generated application reads the property
+     * {@code kcg.actor-identity.mode} from its Spring {@code Environment}, and Spring
+     * resolves that property from the environment variable with dashes replaced by
+     * underscores. Setting only the legacy name would leave the generated application
+     * without a mode and it would refuse to start, so the canonical name is the one that
+     * matters.
      */
     public ChildEnvironmentBuilder actorMode(String mode) {
         Objects.requireNonNull(mode, "mode");
         env.put("KCG_ACTOR_MODE", mode);
+        env.put("KCG_ACTOR_IDENTITY_MODE", mode);
         return this;
     }
 
     /**
      * Set the local-fixed actor ID.
+     *
+     * <p>See {@link #actorMode(String)} for why both the legacy and the Spring-relaxed
+     * variable names are set (property {@code kcg.actor-identity.local.id}).
      */
     public ChildEnvironmentBuilder actorLocalId(long actorId) {
         env.put("KCG_ACTOR_LOCAL_ID", Long.toString(actorId, 10));
+        env.put("KCG_ACTOR_IDENTITY_LOCAL_ID", Long.toString(actorId, 10));
         return this;
     }
 

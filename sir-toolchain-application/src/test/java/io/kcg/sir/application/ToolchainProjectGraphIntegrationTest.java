@@ -21,6 +21,7 @@ import io.kcg.sir.lowering.api.LoweredNodeId;
 import io.kcg.sir.lowering.api.LoweredOrigin;
 import io.kcg.sir.lowering.springboot.api.SpringBootTargetLowering;
 import io.kcg.sir.lowering.springboot.model.SpringBootLoweredModel;
+import io.kcg.sir.lowering.springboot.model.ProjectArtifact;
 import io.kcg.sir.projectgraph.api.ArtifactRole;
 import io.kcg.sir.projectgraph.api.GraphEdgeKind;
 import io.kcg.sir.projectgraph.api.GraphNodeId;
@@ -92,15 +93,18 @@ class ToolchainProjectGraphIntegrationTest {
         ProjectGraph graph = success.graph();
 
         // 1 Project + 6 Semantic (enum, 2 entities, input, error, capability)
-        // + 6 Lowered + 11 Artifacts (9 declaration + 2 project) + 11 Files
-        // = 35 nodes.
-        assertEquals(35, graph.nodes().size(),
-                "expected 35 graph nodes: " + summarizeNodes(graph));
+        // + 6 Lowered + 16 Artifacts (9 declaration + 7 project) + 16 Files
+        // = 45 nodes.
+        // The project-level count grew from 2 to 7 with the error contract the write slice needs:
+        // the response envelope, the failure base class, the failure advice, the constraint
+        // primitives, and the application configuration are artifacts of the target itself.
+        assertEquals(45, graph.nodes().size(),
+                "expected 45 graph nodes: " + summarizeNodes(graph));
 
-        // 6 DECLARES + 6 LOWERS_TO + 11 OWNS_ARTIFACT + 11 GENERATES_FILE
-        // = 34 edges.
-        assertEquals(34, graph.edges().size(),
-                "expected 34 graph edges: " + summarizeEdges(graph));
+        // 6 DECLARES + 6 LOWERS_TO + 16 OWNS_ARTIFACT + 16 GENERATES_FILE
+        // = 44 edges.
+        assertEquals(44, graph.edges().size(),
+                "expected 44 graph edges: " + summarizeEdges(graph));
     }
 
     @Test
@@ -192,6 +196,16 @@ class ToolchainProjectGraphIntegrationTest {
                 "must generate PublishGoodsController.java: " + generatedPaths);
     }
 
+    /** Every project-level role the Spring Boot target emits, whatever the program declares. */
+    private static final Set<ArtifactRole> PROJECT_ROLES = Set.of(
+            ArtifactRole.ProjectRole.MAVEN_PROJECT,
+            ArtifactRole.ProjectRole.APPLICATION_MAIN,
+            ArtifactRole.ProjectRole.API_ERROR_RESPONSE,
+            ArtifactRole.ProjectRole.API_EXCEPTION_BASE,
+            ArtifactRole.ProjectRole.API_EXCEPTION_ADVICE,
+            ArtifactRole.ProjectRole.VALIDATION_SUPPORT,
+            ArtifactRole.ProjectRole.APPLICATION_CONFIG);
+
     @Test
     void projectRootTracesToPomXmlAndApplicationJava() throws Exception {
         ToolchainResult.Success success = runCampusMarket();
@@ -201,8 +215,9 @@ class ToolchainProjectGraphIntegrationTest {
         List<ProjectGraphEdge> ownsEdges = graph.outgoing(projectId).stream()
                 .filter(e -> e.kind() == GraphEdgeKind.OWNS_ARTIFACT)
                 .toList();
-        assertEquals(2, ownsEdges.size(),
-                "Project root must own exactly 2 project artifacts");
+        // Project root must own every project-level artifact the target emits, exactly once each.
+        assertEquals(PROJECT_ROLES.size(), ownsEdges.size(),
+                "Project root must own every project artifact: " + ownsEdges.size());
 
         Set<String> projectFilePaths = new HashSet<>();
         Set<ArtifactRole> projectRoles = new HashSet<>();
@@ -364,16 +379,19 @@ class ToolchainProjectGraphIntegrationTest {
                         && a.role() instanceof ArtifactRole.ProjectRole)
                 .map(n -> (ProjectGraphNode.Artifact) n)
                 .toList();
-        assertEquals(2, projectArtifacts.size(),
-                "must have exactly two ProjectRole artifacts (MavenProject + ApplicationMain): "
-                        + projectArtifacts);
+        // The project carries the target's own supporting artifacts beside the build file and the
+        // entry point; which ones exist is the lowering's decision, so the graph must mirror it
+        // exactly rather than a fixed pair.
+        assertEquals(PROJECT_ROLES.size(), projectArtifacts.size(),
+                "must mirror every project artifact the lowering emits (MavenProject, ApplicationMain, and "
+                        + "the target's own support artifacts): " + projectArtifacts);
 
         Set<ArtifactRole> seenRoles = new HashSet<>();
         for (ProjectGraphNode.Artifact artifact : projectArtifacts) {
             GraphProvenance.ArtifactProvenance prov = artifact.provenance();
-            LoweredOrigin expectedOrigin = artifact.role() == ArtifactRole.ProjectRole.MAVEN_PROJECT
-                    ? lowered.mavenProject().origin()
-                    : lowered.applicationMain().origin();
+            // Each project artifact carries the origin of the lowered artifact behind it, looked up by
+            // role rather than assumed from a two-file shape.
+            LoweredOrigin expectedOrigin = expectedProjectOrigin(lowered, artifact.role());
             // graph-level sourceId is the SIR SourceId
             assertEquals(SourceId.of("campus-market.sir"), prov.sourceId(),
                     "graph-level sourceId must be the SIR SourceId for " + artifact.id());
@@ -390,6 +408,31 @@ class ToolchainProjectGraphIntegrationTest {
                 "must include MAVEN_PROJECT: " + seenRoles);
         assertTrue(seenRoles.contains(ArtifactRole.ProjectRole.APPLICATION_MAIN),
                 "must include APPLICATION_MAIN: " + seenRoles);
+        assertEquals(PROJECT_ROLES, seenRoles, "every emitted project role must reach the graph");
+    }
+
+    /** The lowered artifact's origin for one project role, read from the lowered model itself. */
+    private static LoweredOrigin expectedProjectOrigin(
+            SpringBootLoweredModel lowered, ArtifactRole role) {
+        return switch ((ArtifactRole.ProjectRole) role) {
+            case MAVEN_PROJECT -> lowered.mavenProject().origin();
+            case APPLICATION_MAIN -> lowered.applicationMain().origin();
+            case PAGE_RESPONSE -> lowerProjectArtifact(lowered, ProjectArtifact.PageResponse.class);
+            case API_ERROR_RESPONSE -> lowerProjectArtifact(lowered, ProjectArtifact.ApiErrorResponse.class);
+            case API_EXCEPTION_BASE -> lowerProjectArtifact(lowered, ProjectArtifact.ApiExceptionBase.class);
+            case API_EXCEPTION_ADVICE -> lowerProjectArtifact(lowered, ProjectArtifact.ApiExceptionAdvice.class);
+            case VALIDATION_SUPPORT -> lowerProjectArtifact(lowered, ProjectArtifact.ValidationSupport.class);
+            case APPLICATION_CONFIG -> lowerProjectArtifact(lowered, ProjectArtifact.ApplicationConfig.class);
+        };
+    }
+
+    private static LoweredOrigin lowerProjectArtifact(
+            SpringBootLoweredModel lowered, Class<? extends ProjectArtifact> kind) {
+        return lowered.projectArtifacts().stream()
+                .filter(kind::isInstance)
+                .map(ProjectArtifact::origin)
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("the lowered model emits no " + kind.getSimpleName()));
     }
 
     private ToolchainResult.Success runCampusMarket() throws Exception {

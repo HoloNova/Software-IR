@@ -16,8 +16,12 @@ final class ExceptionRenderer {
       String packageName = artifact.packageName();
       ImportSorter imports = new ImportSorter();
       imports.add("org.springframework.http.HttpStatus");
-      imports.add("org.springframework.web.bind.annotation.ResponseStatus");
-      String body = renderBody(decl);
+      WriteSupport support = WriteSupport.of(ctx.model());
+      if (!samePackage(support.exceptionBaseFqn(), packageName)) {
+         imports.add(support.exceptionBaseFqn());
+      }
+
+      String body = renderBody(ctx, decl, packageName);
       String content = GenerationContext.assembleSource(packageName, imports, body);
       String path = GenerationContext.javaPath(packageName, artifact.simpleName());
       LoweredNodeId artifactId = artifact.id();
@@ -25,17 +29,39 @@ final class ExceptionRenderer {
       return new GeneratedFile(path, content, artifactId, symbolId);
    }
 
-   private static String renderBody(ErrorDeclaration decl) {
+   /**
+   * A declared failure states its own code and status.
+   *
+   * <p>The code is the SIR error's name, so a client can branch on it, and the status comes from the
+   * declaration rather than from a default the renderer picked.
+   */
+   private static String renderBody(GenerationContext ctx, ErrorDeclaration decl, String currentPackage) {
+      WriteSupport support = WriteSupport.of(ctx.model());
+      String simpleBase = simpleName(support.exceptionBaseFqn());
       StringBuilder out = new StringBuilder();
-      out.append("@ResponseStatus(HttpStatus.");
-      out.append(httpStatusName(decl.httpStatus()));
-      out.append(")\n");
-      out.append("public class ").append(decl.javaName()).append(" extends RuntimeException {\n\n");
+      out.append("public class ").append(decl.javaName()).append(" extends ").append(simpleBase).append(" {\n\n");
       out.append("    public ").append(decl.javaName()).append("() {\n");
-      out.append("        super();\n");
+      out.append("        super(\"").append(sirErrorName(decl)).append("\", HttpStatus.").append(httpStatusName(decl.httpStatus())).append(");\n");
       out.append("    }\n");
       out.append("}\n");
       return out.toString();
+   }
+
+   /** The declared error's own name, which is the stable code a client sees. */
+   private static String sirErrorName(ErrorDeclaration decl) {
+      String symbol = decl.sourceSymbol().value();
+      int lastSlash = symbol.lastIndexOf('/');
+      return lastSlash < 0 ? symbol : symbol.substring(lastSlash + 1);
+   }
+
+   private static boolean samePackage(String fqn, String currentPackage) {
+      int lastDot = fqn.lastIndexOf(46);
+      return lastDot >= 0 && fqn.substring(0, lastDot).equals(currentPackage);
+   }
+
+   private static String simpleName(String fqn) {
+      int lastDot = fqn.lastIndexOf(46);
+      return lastDot < 0 ? fqn : fqn.substring(lastDot + 1);
    }
 
    private static String httpStatusName(HttpStatus status) {

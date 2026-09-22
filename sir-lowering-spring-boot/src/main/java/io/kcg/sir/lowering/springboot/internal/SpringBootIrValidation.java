@@ -15,6 +15,8 @@ import io.kcg.sir.lowering.springboot.model.SpringBootLoweredModel;
 import io.kcg.sir.lowering.springboot.model.SpringBootWorkflow;
 import io.kcg.sir.lowering.springboot.model.SpringExpression;
 import io.kcg.sir.lowering.springboot.model.TransportPlan;
+import io.kcg.sir.lowering.springboot.profile.SpringBootQueryPolicy;
+import io.kcg.sir.lowering.springboot.profile.SpringBootQueryPolicy;
 import io.kcg.sir.lowering.springboot.profile.SpringBootTargetProfile;
 import io.kcg.sir.semantic.symbol.SymbolId;
 import java.util.ArrayList;
@@ -102,6 +104,56 @@ public final class SpringBootIrValidation {
       if (!app.mapperScanPackage().equals(this.model.basePackage() + ".persistence")) {
          this.error(app.origin(), "ApplicationMain mapperScanPackage must be '<basePackage>.persistence': " + app.mapperScanPackage());
       }
+
+      this.validatePaginationSupport(app);
+   }
+
+   /**
+   * The page envelope has to appear exactly when a capability pages, and its identity must match the
+   * package the generator writes it to.
+   */
+   private void validatePaginationSupport(ProjectArtifact.ApplicationMain app) {
+      List<ProjectArtifact.PageResponse> pages = this.model.projectArtifacts().stream()
+         .filter(ProjectArtifact.PageResponse.class::isInstance)
+         .map(ProjectArtifact.PageResponse.class::cast)
+         .toList();
+      boolean pagesQuery = this.model.declarations().stream()
+         .filter(SpringBootDeclaration.CapabilityDeclaration.class::isInstance)
+         .map(SpringBootDeclaration.CapabilityDeclaration.class::cast)
+         .flatMap(capability -> capability.workflow().steps().stream())
+         .anyMatch(step -> step instanceof SpringBootWorkflow.FindStep find && find.page().isPresent());
+
+      for (ProjectArtifact artifact : this.model.projectArtifacts()) {
+         this.addNode(artifact.id(), artifact.origin(), "project artifact");
+      }
+
+      for (ProjectArtifact.PageResponse page : pages) {
+         if (!page.path().startsWith("src/main/java/") || !page.path().endsWith(".java")) {
+         this.error(page.origin(), "PageResponse path must be a Java source path: " + page.path());
+         }
+
+         String expectedPackage = this.model.basePackage() + ".api";
+         if (!page.packageName().equals(expectedPackage)) {
+         this.error(page.origin(), "PageResponse packageName must be '" + expectedPackage + "': " + page.packageName());
+         }
+
+         String expectedPath = "src/main/java/" + expectedPackage.replace('.', '/') + "/" + page.simpleName() + ".java";
+         if (!page.path().equals(expectedPath)) {
+         this.error(page.origin(), "PageResponse path must be '" + expectedPath + "': " + page.path());
+         }
+      }
+
+      if (pagesQuery && pages.size() != 1) {
+         this.error(app.origin(), "pagination requires exactly one PageResponse project artifact: " + pages.size());
+      }
+
+      if (!pagesQuery && !pages.isEmpty()) {
+         this.error(app.origin(), "PageResponse is present but no capability declares a paged find");
+      }
+   }
+
+   private SpringBootQueryPolicy queryPolicy() {
+      return SpringBootQueryPolicy.V0_1;
    }
 
    private SpringBootIrValidation.VersionProfileStatus validateRoot() {
@@ -330,6 +382,12 @@ public final class SpringBootIrValidation {
             break;
          case SpringBootDeclaration.ErrorDeclaration ignored:
             break;
+         case SpringBootDeclaration.ViewDeclaration value:
+         value.fields().forEach(field -> {
+               this.knownSymbols.add(field.sourceSymbol());
+               this.knownSymbols.add(field.sourceFieldSymbol());
+         });
+         break;
          case SpringBootDeclaration.CapabilityDeclaration value:
             value.actor().ifPresent(variable -> this.knownSymbols.add(variable.symbol()));
             value.input().ifPresent(variable -> this.knownSymbols.add(variable.symbol()));
@@ -356,12 +414,19 @@ public final class SpringBootIrValidation {
             for (SpringBootDeclaration.Property field : value.fields()) {
                this.validateProperty(field, value);
             }
+
+            this.validateEntityVersion(value);
             break;
          case SpringBootDeclaration.InputDeclaration value:
             for (SpringBootDeclaration.Property field : value.fields()) {
                this.validateProperty(field, value);
             }
+
+            this.validatePatchSpec(value);
             break;
+         case SpringBootDeclaration.ViewDeclaration value:
+         this.validateView(value);
+         break;
          case SpringBootDeclaration.ErrorDeclaration ignored:
             break;
          case SpringBootDeclaration.CapabilityDeclaration value:
@@ -370,6 +435,130 @@ public final class SpringBootIrValidation {
          default:
             throw new MatchException(null, null);
       }
+   }
+
+   /**
+   * The version spec must point at a declared field of its own entity and carry an integer type.
+   *
+   * <p>The version column is written by the target's conditional update, so an entity that declares a
+   * version but no matching field would leave that update with nothing to compare against.
+   */
+   private void validateEntityVersion(SpringBootDeclaration.EntityDeclaration entity) {
+      if (entity.version().isEmpty()) {
+         return;
+      }
+
+      SpringBootDeclaration.VersionSpec version = entity.version().orElseThrow();
+      this.addNode(version.id(), version.origin(), "version");
+      this.knownSymbols.add(version.fieldSymbol());
+      this.validateType(version.type(), entity);
+      SpringBootDeclaration.Property field = entity.fields().stream()
+         .filter(property -> property.sourceSymbol().equals(version.fieldSymbol()))
+         .findFirst()
+         .orElse(null);
+      if (field == null) {
+         this.error(entity, "the version field must be a declared field of " + entity.javaName());
+         return;
+      }
+
+      if (!version.javaName().equals(field.javaName()) || !version.columnName().equals(field.columnName().orElse(null))) {
+         this.error(entity, "the version spec must name its own field and column: " + version.fieldSymbol());
+      }
+   }
+
+   /**
+   * A patch payload's envelope must match the entity: the identity, and a change set that covers
+   * exactly the payload fields outside it.
+   */
+   private void validatePatchSpec(SpringBootDeclaration.InputDeclaration input) {
+      if (input.patch().isEmpty()) {
+         return;
+      }
+
+      SpringBootDeclaration.PatchSpec patch = input.patch().orElseThrow();
+      this.requireDeclaration(patch.sourceEntitySymbol(), SpringBootDeclaration.EntityDeclaration.class, input);
+      SpringBootDeclaration.EntityDeclaration entity = this.declarations.get(patch.sourceEntitySymbol())
+         instanceof SpringBootDeclaration.EntityDeclaration value ? value : null;
+
+      if (input.fields().stream().noneMatch(field -> field.sourceSymbol().equals(patch.identityFieldSymbol()))) {
+         this.error(input, "the patch identity field must be a declared payload field: " + patch.identityFieldSymbol());
+      }
+
+      if (entity != null && !entity.identity().sourceSymbol().equals(
+            entity.fields().stream()
+               .filter(field -> field.javaName().equals(patch.identityPropertyName()))
+               .map(SpringBootDeclaration.Property::sourceSymbol)
+               .findFirst()
+               .orElse(entity.identity().sourceSymbol()))) {
+         this.error(input, "the patch identity must name the entity's own identity: " + patch.identityPropertyName());
+      }
+
+      List<SymbolId> payloadFields = input.fields().stream().map(SpringBootDeclaration.Property::sourceSymbol).toList();
+      List<SymbolId> changeFields = patch.changes().stream().map(SpringBootDeclaration.PatchChange::payloadFieldSymbol).toList();
+      if (changeFields.stream().anyMatch(field -> !payloadFields.contains(field))) {
+         this.error(input, "every patch change must be a declared payload field");
+      }
+
+      if (new java.util.LinkedHashSet<>(changeFields).size() != changeFields.size()) {
+         this.error(input, "a patch change must appear once per payload field");
+      }
+
+      if (payloadFields.size() != changeFields.size() + 1) {
+         this.error(input, "the change set must be exactly the payload fields outside its identity");
+      }
+
+      for (SpringBootDeclaration.PatchChange change : patch.changes()) {
+         this.knownSymbols.add(change.payloadFieldSymbol());
+         this.knownSymbols.add(change.entityFieldSymbol());
+         if (entity != null && entity.fields().stream().noneMatch(field -> field.sourceSymbol().equals(change.entityFieldSymbol()))) {
+            this.error(input, "a patch change must name a field of its entity: " + change.entityFieldSymbol());
+         }
+      }
+   }
+
+   /**
+   * A view must project an entity, and each projected field must carry the very type of the entity
+   * field it reads.
+   */
+   private void validateView(SpringBootDeclaration.ViewDeclaration view) {
+      this.requireDeclaration(view.sourceEntitySymbol(), SpringBootDeclaration.EntityDeclaration.class, view);
+      SpringBootDeclaration.EntityDeclaration entity = this.declarations.get(view.sourceEntitySymbol()) instanceof SpringBootDeclaration.EntityDeclaration value
+         ? value
+         : null;
+      if (entity != null && !entity.javaName().equals(view.sourceEntityJavaName())) {
+         this.error(view, "view source entity Java name must match its entity: " + view.sourceEntityJavaName());
+      }
+
+      for (SpringBootDeclaration.ViewField field : view.fields()) {
+         this.addNode(field.id(), field.origin(), "view field");
+         this.knownSymbols.add(field.sourceSymbol());
+         this.knownSymbols.add(field.sourceFieldSymbol());
+         this.validateType(field.type(), view);
+         if (entity == null) {
+         continue;
+         }
+
+         LoweredJavaType sourceType = this.entityFieldType(entity, field.sourceFieldSymbol());
+         if (sourceType == null) {
+         this.error(view, "view field does not project a field of " + entity.javaName() + ": " + field.sourceFieldSymbol());
+         } else if (!sourceType.equals(field.type())) {
+         this.error(view, "view field type must equal its source entity field type: " + field.javaName());
+         }
+      }
+   }
+
+   private LoweredJavaType entityFieldType(SpringBootDeclaration.EntityDeclaration entity, SymbolId fieldSymbol) {
+      if (entity.identity().sourceSymbol().equals(fieldSymbol)) {
+         return entity.identity().type();
+      }
+
+      for (SpringBootDeclaration.Property property : entity.fields()) {
+         if (property.sourceSymbol().equals(fieldSymbol)) {
+         return property.type();
+         }
+      }
+
+      return null;
    }
 
    private void validateProperty(SpringBootDeclaration.Property property, SpringBootDeclaration owner) {
@@ -406,13 +595,180 @@ public final class SpringBootIrValidation {
          this.error(capability, "query capability must use GET and a read-only transaction");
       }
 
-      if (capability.kind() == SpringBootDeclaration.CapabilityKind.COMMAND && capability.httpMethod() != SpringBootDeclaration.HttpMethod.POST) {
-         this.error(capability, "command capability must use POST");
+      if (capability.kind() == SpringBootDeclaration.CapabilityKind.COMMAND
+         && capability.httpMethod() != SpringBootDeclaration.HttpMethod.POST
+         && capability.httpMethod() != SpringBootDeclaration.HttpMethod.PATCH) {
+         this.error(capability, "command capability must use POST or PATCH");
+      }
+
+      boolean patchPayload = this.payloadOf(capability).flatMap(SpringBootDeclaration.InputDeclaration::patch).isPresent();
+      if (patchPayload && capability.httpMethod() != SpringBootDeclaration.HttpMethod.PATCH) {
+         this.error(capability, "a capability whose payload patches an entity must use PATCH");
       }
 
       this.validateActorBinding(capability);
       this.validateTransportPlan(capability);
       this.validateWorkflow(capability);
+      this.validatePageDemand(capability);
+      this.validateWriteWorkflow(capability);
+   }
+
+   /**
+   * The write slice's invariants: a projection answers with a declared view, and a conditional update
+   * only appears for a versioned entity whose payload supplies every assigned column.
+   */
+   private void validateWriteWorkflow(SpringBootDeclaration.CapabilityDeclaration capability) {
+      if (capability.transportPlan().responseRepresentation() == TransportPlan.ResponseRepresentation.PROJECTION
+         && !(this.declarations.get(this.declaredTypeSymbol(capability.outputType())) instanceof SpringBootDeclaration.ViewDeclaration)) {
+         this.error(capability, "a projected response must declare a view output");
+      }
+
+      SpringBootDeclaration.PatchSpec patch = this.payloadOf(capability)
+         .flatMap(SpringBootDeclaration.InputDeclaration::patch)
+         .orElse(null);
+      long conditionalUpdates = 0L;
+      for (SpringBootWorkflow.Step step : capability.workflow().steps()) {
+         if (!(step instanceof SpringBootWorkflow.UpdateStep update)) {
+            if (step instanceof SpringBootWorkflow.LoadStep load && load.forUpdate()) {
+               if (this.versionedEntity(load.entitySymbol()) == null) {
+                  this.error(capability, "only a versioned entity is loaded for update: " + load.entitySymbol());
+               }
+
+               // A lock without a version-bounded write would hold a row for no reason, which is the
+               // shape the target must never generate by accident.
+               boolean underConditionalUpdate = capability.workflow().steps().stream()
+                  .anyMatch(candidate -> candidate instanceof SpringBootWorkflow.UpdateStep update
+                     && update.conditional().isPresent()
+                     && update.targetVariable().equals(load.result().symbol()));
+               if (!underConditionalUpdate) {
+                  this.error(capability,
+                     "a load for update must precede a conditional update on the same variable: " + load.result().symbol());
+               }
+            }
+
+            if (step instanceof SpringBootWorkflow.ValidateStep validate) {
+               this.validatePresence(capability, validate.condition(), patch);
+            }
+
+            if (step instanceof SpringBootWorkflow.PersistStep persist) {
+               persist.conditional().ifPresent(conditional -> this.validateConditionalUpdate(capability, conditional, patch));
+            }
+
+            continue;
+         }
+
+         if (update.conditional().isEmpty()) {
+            continue;
+         }
+
+         conditionalUpdates++;
+         this.validateConditionalUpdate(capability, update.conditional().orElseThrow(), patch);
+      }
+
+      if (conditionalUpdates > 1L) {
+         this.error(capability, "a capability performs at most one conditional update");
+      }
+   }
+
+   /**
+   * A presence test must ask about a property of this capability's change set.
+   *
+   * <p>Presence is a fact of the decoded payload, so a test naming anything else would compile into a
+   * question the request cannot answer.
+   */
+   private void validatePresence(
+      SpringBootDeclaration.CapabilityDeclaration capability,
+      SpringExpression expression,
+      SpringBootDeclaration.PatchSpec patch
+   ) {
+      switch (expression) {
+         case SpringExpression.PayloadPresence presence -> {
+            if (patch == null) {
+               this.error(capability, "a presence test requires its entity's patch payload");
+               return;
+            }
+
+            boolean known = patch.changes().stream()
+               .anyMatch(change -> change.payloadPropertyName().equals(presence.sourcePropertyName()));
+            if (!known) {
+               this.error(capability, "a presence test must name a change set property, got an unknown change set property: "
+                  + presence.sourcePropertyName());
+            }
+         }
+         case SpringExpression.UnaryExpression unary -> this.validatePresence(capability, unary.operand(), patch);
+         case SpringExpression.BinaryExpression binary -> {
+            this.validatePresence(capability, binary.left(), patch);
+            this.validatePresence(capability, binary.right(), patch);
+         }
+         default -> {
+         }
+      }
+   }
+
+   private void validateConditionalUpdate(
+      SpringBootDeclaration.CapabilityDeclaration capability,
+      SpringBootWorkflow.ConditionalUpdate conditional,
+      SpringBootDeclaration.PatchSpec patch
+   ) {
+      SpringBootDeclaration.EntityDeclaration entity = this.versionedEntity(conditional.entitySymbol());
+      if (entity == null) {
+         this.error(capability, "a conditional update must target a versioned entity: " + conditional.entitySymbol());
+         return;
+      }
+
+      SpringBootDeclaration.VersionSpec version = entity.version().orElseThrow();
+      if (!version.fieldSymbol().equals(conditional.versionFieldSymbol())
+         || !version.columnName().equals(conditional.versionColumnName())) {
+         this.error(capability, "a conditional update must bound on its own entity's version column");
+      }
+
+      if (!entity.identity().sourceSymbol().equals(conditional.identityFieldSymbol())
+         || !entity.identity().javaName().equals(conditional.identityPropertyName())) {
+         this.error(capability, "a conditional update must bound on its own entity's identity");
+      }
+
+      if (patch == null) {
+         this.error(capability, "a conditional update requires its entity's patch payload");
+         return;
+      }
+
+      List<SymbolId> assigned = conditional.assignments().stream()
+         .map(SpringBootWorkflow.ColumnAssignment::entityFieldSymbol)
+         .toList();
+      List<SymbolId> changed = patch.changes().stream()
+         .map(SpringBootDeclaration.PatchChange::entityFieldSymbol)
+         .toList();
+      if (!assigned.equals(changed)) {
+         this.error(capability, "a conditional update must assign exactly the payload's change set, in order");
+      }
+   }
+
+   /**
+   * The payload declaration a capability is given.
+   *
+   * <p>The capability's input is its input variable, whose declared type names the payload, so the
+   * lookup follows the resolved type rather than guessing from a name.
+   */
+   private java.util.Optional<SpringBootDeclaration.InputDeclaration> payloadOf(
+      SpringBootDeclaration.CapabilityDeclaration capability
+   ) {
+      return capability.input()
+         .map(SpringBootWorkflow.Variable::type)
+         .filter(LoweredJavaType.Declared.class::isInstance)
+         .map(LoweredJavaType.Declared.class::cast)
+         .map(LoweredJavaType.Declared::symbolId)
+         .map(this.declarations::get)
+         .filter(SpringBootDeclaration.InputDeclaration.class::isInstance)
+         .map(SpringBootDeclaration.InputDeclaration.class::cast);
+   }
+
+   private SpringBootDeclaration.EntityDeclaration versionedEntity(SymbolId entitySymbol) {
+      return this.declarations.get(entitySymbol) instanceof SpringBootDeclaration.EntityDeclaration entity
+         && entity.version().isPresent() ? entity : null;
+   }
+
+   private SymbolId declaredTypeSymbol(LoweredJavaType type) {
+      return type instanceof LoweredJavaType.Declared declared ? declared.symbolId() : null;
    }
 
    private void validateActorBinding(SpringBootDeclaration.CapabilityDeclaration capability) {
@@ -458,7 +814,8 @@ public final class SpringBootIrValidation {
       TransportPlan.InputBinding expectedInput;
       if (capability.input().isEmpty()) {
          expectedInput = TransportPlan.InputBinding.NONE;
-      } else if (capability.httpMethod() == SpringBootDeclaration.HttpMethod.POST) {
+      } else if (capability.httpMethod() == SpringBootDeclaration.HttpMethod.POST
+         || capability.httpMethod() == SpringBootDeclaration.HttpMethod.PATCH) {
          expectedInput = TransportPlan.InputBinding.REQUEST_BODY;
       } else {
          expectedInput = TransportPlan.InputBinding.MODEL_ATTRIBUTE;
@@ -471,6 +828,12 @@ public final class SpringBootIrValidation {
       }
 
       TransportPlan.ResponseRepresentation expectedResponse = this.expectedResponse(capability.outputType());
+      if (plan.responseRepresentation() == TransportPlan.ResponseRepresentation.PROJECTION
+         && capability.outputType() instanceof LoweredJavaType.Declared declared
+         && declared.kind() == LoweredJavaType.DeclaredKind.VIEW) {
+         return;
+      }
+
       if (plan.responseRepresentation() != expectedResponse) {
          this.error(
             capability,
@@ -495,8 +858,26 @@ public final class SpringBootIrValidation {
             : TransportPlan.ResponseRepresentation.VALUE;
          case LoweredJavaType.ListValue ignored -> TransportPlan.ResponseRepresentation.LIST;
          case LoweredJavaType.OptionalValue ignored -> TransportPlan.ResponseRepresentation.OPTIONAL;
+         case LoweredJavaType.PageValue ignored -> TransportPlan.ResponseRepresentation.PAGE;
          default -> throw new MatchException(null, null);
       };
+   }
+
+   /** A page output and a paged find step only make sense together. */
+   private void validatePageDemand(SpringBootDeclaration.CapabilityDeclaration capability) {
+      long paged = capability.workflow().steps().stream()
+         .filter(SpringBootWorkflow.FindStep.class::isInstance)
+         .map(SpringBootWorkflow.FindStep.class::cast)
+         .filter(find -> find.page().isPresent())
+         .count();
+      boolean pageOutput = capability.outputType() instanceof LoweredJavaType.PageValue;
+      if (pageOutput && paged != 1L) {
+         this.error(capability, "Page output requires exactly one paged find step, found " + paged);
+      }
+
+      if (!pageOutput && paged > 0L) {
+         this.error(capability, "a paged find step requires a Page output");
+      }
    }
 
    private void validateWorkflow(SpringBootDeclaration.CapabilityDeclaration capability) {
@@ -530,6 +911,7 @@ public final class SpringBootIrValidation {
             this.validateExpression(value.predicate(), owner);
             this.requireKnown(value.result().symbol(), owner, "find result variable");
             this.requireKnown(value.itemVariable().symbol(), owner, "find item variable");
+             this.validateFindQuery(value, owner);
             break;
          case SpringBootWorkflow.CreateStep value:
             this.requireDeclaration(value.entitySymbol(), SpringBootDeclaration.EntityDeclaration.class, owner);
@@ -548,6 +930,95 @@ public final class SpringBootIrValidation {
             break;
          default:
             throw new MatchException(null, null);
+      }
+   }
+
+   /**
+   * Ordering, pagination and literal matches must all point at declared entity fields, and the
+   * literal-match plan must describe exactly the predicate's literal matches — in both directions.
+   */
+   private void validateFindQuery(SpringBootWorkflow.FindStep find, SpringBootDeclaration.CapabilityDeclaration owner) {
+      SpringBootDeclaration.EntityDeclaration entity = this.declarations.get(find.entitySymbol()) instanceof SpringBootDeclaration.EntityDeclaration value
+         ? value
+         : null;
+      for (SpringBootWorkflow.OrderKey key : find.orderKeys()) {
+         this.requireKnown(key.fieldSymbol(), owner, "order key");
+         if (entity != null && this.entityFieldType(entity, key.fieldSymbol()) == null) {
+         this.error(owner, "order key is not a field of the find entity: " + key.fieldSymbol());
+         }
+      }
+
+      find.page().ifPresent(page -> this.validatePageSpec(owner, page));
+      this.validateStringMatches(find, owner);
+
+      if (find.page().isPresent() && !(find.result().type() instanceof LoweredJavaType.PageValue)) {
+         this.error(owner, "a paged find must produce a Page value: " + find.result().type());
+      }
+   }
+
+   private void validatePageSpec(SpringBootDeclaration.CapabilityDeclaration owner, SpringBootWorkflow.PageSpec page) {
+      this.requireDeclaration(page.errorSymbol(), SpringBootDeclaration.ErrorDeclaration.class, owner);
+      this.requireKnown(page.pageFieldSymbol(), owner, "pagination page field");
+      this.requireKnown(page.sizeFieldSymbol(), owner, "pagination size field");
+      if (page.pageFieldSymbol().equals(page.sizeFieldSymbol())) {
+         this.error(owner, "pagination requires two distinct input fields");
+      }
+
+      if (!owner.failures().contains(page.errorSymbol())) {
+         this.error(owner, "pagination error must be declared in the capability failures: " + page.errorSymbol());
+      }
+
+      if (page.defaultSize() != this.queryPolicy().pageDefaultSize()
+         || page.maxSize() != this.queryPolicy().pageMaxSize()
+         || page.maxPageNumber() != this.queryPolicy().pageMaxNumber()) {
+         this.error(owner, "pagination bounds must match the target query policy: default=" + page.defaultSize()
+         + " maxSize=" + page.maxSize() + " maxPageNumber=" + page.maxPageNumber());
+      }
+   }
+
+   private void validateStringMatches(SpringBootWorkflow.FindStep find, SpringBootDeclaration.CapabilityDeclaration owner) {
+      Set<LoweredNodeId> planned = new LinkedHashSet<>();
+      for (SpringExpression.StringMatch match : find.stringMatches()) {
+         this.addNode(match.id(), match.origin(), "string match plan");
+         if (!planned.add(match.expressionId())) {
+         this.error(owner, "duplicate literal-match plan entry: " + match.expressionId());
+         }
+
+         if (match.escapeCharacter() != this.queryPolicy().likeEscapeCharacter()
+         || !match.escapedLiterals().equals(this.queryPolicy().likeEscapedLiterals())) {
+         this.error(owner, "literal-match escaping must match the target query policy: " + match.escapedLiterals());
+         }
+      }
+
+      Set<LoweredNodeId> actual = new LinkedHashSet<>();
+      this.collectLiteralMatches(find.predicate(), actual);
+      for (LoweredNodeId expressionId : actual) {
+         if (!planned.contains(expressionId)) {
+         this.error(owner, "literal match in the predicate has no plan entry: " + expressionId);
+         }
+      }
+
+      for (LoweredNodeId expressionId : planned) {
+         if (!actual.contains(expressionId)) {
+         this.error(owner, "literal-match plan entry has no predicate node: " + expressionId);
+         }
+      }
+   }
+
+   private void collectLiteralMatches(SpringExpression expression, Set<LoweredNodeId> sink) {
+      switch (expression) {
+         case SpringExpression.BinaryExpression binary:
+         if (binary.operator() == SpringExpression.BinaryOperator.CONTAINS_LITERAL) {
+               sink.add(binary.id());
+         }
+
+         this.collectLiteralMatches(binary.left(), sink);
+         this.collectLiteralMatches(binary.right(), sink);
+         break;
+         case SpringExpression.UnaryExpression unary:
+         this.collectLiteralMatches(unary.operand(), sink);
+         break;
+         default:
       }
    }
 
@@ -588,6 +1059,9 @@ public final class SpringBootIrValidation {
          case LoweredJavaType.ListValue value:
             this.validateType(value.elementType(), owner);
             break;
+         case LoweredJavaType.PageValue value:
+         this.validateType(value.elementType(), owner);
+         break;
          case LoweredJavaType.EntityReference value:
             this.requireDeclaration(value.entitySymbol(), SpringBootDeclaration.EntityDeclaration.class, owner);
             break;
@@ -596,6 +1070,7 @@ public final class SpringBootIrValidation {
                case ENUM -> SpringBootDeclaration.EnumDeclaration.class;
                case ENTITY -> SpringBootDeclaration.EntityDeclaration.class;
                case INPUT -> SpringBootDeclaration.InputDeclaration.class;
+               case VIEW -> SpringBootDeclaration.ViewDeclaration.class;
             };
             this.requireDeclaration(value.symbolId(), expected, owner);
             break;
@@ -635,6 +1110,7 @@ public final class SpringBootIrValidation {
          case SpringBootDeclaration.EnumDeclaration ignored -> EnumSet.of(SpringArtifact.Role.ENUM);
          case SpringBootDeclaration.EntityDeclaration ignored -> EnumSet.of(SpringArtifact.Role.ENTITY_MODEL, SpringArtifact.Role.MAPPER);
          case SpringBootDeclaration.InputDeclaration ignored -> EnumSet.of(SpringArtifact.Role.REQUEST_DTO);
+          case SpringBootDeclaration.ViewDeclaration ignored -> EnumSet.of(SpringArtifact.Role.VIEW_DTO);
          case SpringBootDeclaration.ErrorDeclaration ignored -> EnumSet.of(SpringArtifact.Role.EXCEPTION);
          case SpringBootDeclaration.CapabilityDeclaration ignored -> EnumSet.of(SpringArtifact.Role.SERVICE, SpringArtifact.Role.CONTROLLER);
          default -> throw new MatchException(null, null);

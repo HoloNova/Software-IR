@@ -22,6 +22,8 @@ import io.kcg.sir.semantic.model.NormalizedExpression;
 import io.kcg.sir.semantic.model.NormalizedField;
 import io.kcg.sir.semantic.model.NormalizedInput;
 import io.kcg.sir.semantic.model.NormalizedStep;
+import io.kcg.sir.semantic.model.NormalizedView;
+import io.kcg.sir.semantic.model.NormalizedViewField;
 import io.kcg.sir.semantic.model.NormalizedEnum.NormalizedEnumMember;
 import io.kcg.sir.semantic.model.NormalizedExpression.BinaryExpression;
 import io.kcg.sir.semantic.model.NormalizedExpression.DecimalLiteral;
@@ -44,6 +46,7 @@ import io.kcg.sir.semantic.symbol.Symbol.VariableSymbol;
 import io.kcg.sir.semantic.type.DeclaredType;
 import io.kcg.sir.semantic.type.ListType;
 import io.kcg.sir.semantic.type.OptionalType;
+import io.kcg.sir.semantic.type.PageType;
 import io.kcg.sir.semantic.type.PrimitiveType;
 import io.kcg.sir.semantic.type.RefType;
 import io.kcg.sir.semantic.type.SirType;
@@ -235,6 +238,9 @@ public final class SpringBootInputValidator {
          case NormalizedInput value:
             value.fields().forEach(field -> this.validateField(field, false));
             break;
+         case NormalizedView value:
+         this.validateView(value);
+         break;
          case NormalizedError ignored:
             break;
          case NormalizedCapability value:
@@ -243,6 +249,56 @@ public final class SpringBootInputValidator {
          default:
             throw new MatchException(null, null);
       }
+   }
+
+   /**
+   * A view is lowerable only if its source really is an entity and every projected field reads a
+   * field of that entity with the very same type.
+   */
+   private void validateView(NormalizedView view) {
+      this.validateDeclarationKind(view.sourceEntity(), NormalizedEntity.class, view.span(), view.id(), view.sourceNodeId());
+      NormalizedDeclaration source = this.declarationsById.get(view.sourceEntity());
+      for (NormalizedViewField field : view.fields()) {
+         this.validateBound(field.id(), field.span(), field.sourceNodeId(), FieldSymbol.class);
+         this.validateBound(field.sourceField(), field.span(), field.sourceNodeId(), FieldSymbol.class);
+         this.validateType(field.type(), field.span(), field.id(), field.sourceNodeId());
+         if (!(source instanceof NormalizedEntity entity)) {
+         continue;
+         }
+
+         SirType sourceType = this.entityFieldType(entity, field.sourceField());
+         if (sourceType == null) {
+         this.error(
+               "SIR-LOWER-BINDING-001",
+               "projected field does not reference a field of " + view.sourceEntity() + ": " + field.sourceField(),
+               field.span(),
+               field.id(),
+               field.sourceNodeId()
+         );
+         } else if (!sourceType.equals(field.type())) {
+         this.error(
+               "SIR-LOWER-TYPE-001",
+               "projected field type does not match its source entity field: " + field.name(),
+               field.span(),
+               field.id(),
+               field.sourceNodeId()
+         );
+         }
+      }
+   }
+
+   private SirType entityFieldType(NormalizedEntity entity, SymbolId fieldSymbol) {
+      if (entity.identity().id().equals(fieldSymbol)) {
+         return entity.identity().type();
+      }
+
+      for (NormalizedField field : entity.fields()) {
+         if (field.id().equals(fieldSymbol)) {
+         return field.type();
+         }
+      }
+
+      return null;
    }
 
    private void validateField(NormalizedField field, boolean persistent) {
@@ -341,6 +397,8 @@ public final class SpringBootInputValidator {
             this.validateExpression(value.predicate(), capability.id(), actorAccess);
             this.validateVariable(value.resultVariable(), capability);
             this.validateVariable(value.itemVariable(), capability);
+         this.validateOrderKeys(value, capability);
+         this.validatePageSpec(value, capability);
             break;
          case CreateStep value:
             this.validateDeclarationKind(value.entitySymbol(), NormalizedEntity.class, capability);
@@ -360,6 +418,66 @@ public final class SpringBootInputValidator {
          default:
             throw new MatchException(null, null);
       }
+   }
+
+   /** Order keys must name declared fields of the very entity the find step reads. */
+   private void validateOrderKeys(FindStep step, NormalizedCapability capability) {
+      NormalizedDeclaration declaration = this.declarationsById.get(step.entitySymbol());
+      for (NormalizedStep.OrderKey key : step.orderKeys()) {
+         this.validateBound(key.fieldSymbol(), key.span(), key.sourceNodeId(), FieldSymbol.class);
+         if (declaration instanceof NormalizedEntity entity && this.entityFieldType(entity, key.fieldSymbol()) == null) {
+         this.error(
+               "SIR-LOWER-BINDING-001",
+               "order key is not a field of the find entity: " + key.fieldSymbol(),
+               key.span(),
+               capability.id(),
+               key.sourceNodeId()
+         );
+         }
+      }
+   }
+
+   /** A pagination clause needs two distinct input fields and a declared error. */
+   private void validatePageSpec(FindStep step, NormalizedCapability capability) {
+      if (step.page().isEmpty()) {
+         return;
+      }
+
+      NormalizedStep.PageSpec page = step.page().get();
+      this.validateDeclarationKind(page.errorSymbol(), NormalizedError.class, capability);
+      if (page.pageField().equals(page.sizeField())) {
+         this.error(
+         "SIR-LOWER-FEATURE-001",
+         "pagination requires two distinct input fields",
+         step.span(),
+         capability.id(),
+         step.sourceNodeId()
+         );
+      }
+
+      NormalizedDeclaration input = capability.inputSymbol().isEmpty() ? null : this.declarationsById.get(capability.inputSymbol().get());
+      for (SymbolId fieldSymbol : List.of(page.pageField(), page.sizeField())) {
+         this.validateBound(fieldSymbol, step.span(), step.sourceNodeId(), FieldSymbol.class);
+         if (input instanceof NormalizedInput inputDeclaration && this.inputFieldType(inputDeclaration, fieldSymbol) == null) {
+         this.error(
+               "SIR-LOWER-BINDING-001",
+               "pagination source is not a field of the capability input: " + fieldSymbol,
+               step.span(),
+               capability.id(),
+               step.sourceNodeId()
+         );
+         }
+      }
+   }
+
+   private SirType inputFieldType(NormalizedInput input, SymbolId fieldSymbol) {
+      for (NormalizedField field : input.fields()) {
+         if (field.id().equals(fieldSymbol)) {
+         return field.type();
+         }
+      }
+
+      return null;
    }
 
    private void validateBinding(NormalizedBinding binding, NormalizedCapability capability, SpringBootInputValidator.ActorAccess actorAccess) {
@@ -414,6 +532,9 @@ public final class SpringBootInputValidator {
          case ListType value:
             this.validateType(value.element(), span, owner, nodeId);
             break;
+         case PageType value:
+         this.validateType(value.element(), span, owner, nodeId);
+         break;
          case RefType value:
             this.validateDeclarationKind(value.entityId(), NormalizedEntity.class, span, owner, nodeId);
             break;
@@ -422,6 +543,7 @@ public final class SpringBootInputValidator {
                case ENUM -> NormalizedEnum.class;
                case ENTITY -> NormalizedEntity.class;
                case INPUT -> NormalizedInput.class;
+               case VIEW -> NormalizedView.class;
             };
             this.validateDeclarationKind(value.symbolId(), expected, span, owner, nodeId);
             break;

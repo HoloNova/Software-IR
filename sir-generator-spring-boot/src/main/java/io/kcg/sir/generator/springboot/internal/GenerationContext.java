@@ -7,6 +7,7 @@ import io.kcg.sir.lowering.springboot.model.LoweredJavaType;
 import io.kcg.sir.lowering.springboot.model.SpringArtifact;
 import io.kcg.sir.lowering.springboot.model.SpringBootDeclaration;
 import io.kcg.sir.lowering.springboot.model.SpringBootLoweredModel;
+import io.kcg.sir.lowering.springboot.model.SpringBootWorkflow;
 import io.kcg.sir.lowering.springboot.model.LoweredJavaType.Declared;
 import io.kcg.sir.lowering.springboot.model.LoweredJavaType.EntityReference;
 import io.kcg.sir.lowering.springboot.model.LoweredJavaType.ListValue;
@@ -66,6 +67,48 @@ final class GenerationContext {
       }
    }
 
+   /**
+   * The payload declaration a capability is given.
+   *
+   * <p>The capability's input is its input variable, whose declared type names the payload; following
+   * the resolved type is what keeps the generator from matching anything by name.
+   */
+   Optional<SpringBootDeclaration.InputDeclaration> payloadOf(SpringBootDeclaration.CapabilityDeclaration capability) {
+      return capability
+         .input()
+         .map(SpringBootWorkflow.Variable::type)
+         .filter(Declared.class::isInstance)
+         .map(Declared.class::cast)
+         .map(Declared::symbolId)
+         .map(this::tryDeclaration)
+         .flatMap(value -> value)
+         .filter(SpringBootDeclaration.InputDeclaration.class::isInstance)
+         .map(SpringBootDeclaration.InputDeclaration.class::cast);
+   }
+
+   /**
+   * The Java type of an entity property.
+   *
+   * <p>A nullable SIR field is stored as a plain nullable value, not as an {@code Optional}: the
+   * persistence layer binds SQL NULL through the driver, and it has no type handler for an
+   * {@code Optional} parameter — handing it one fails at runtime rather than at compile time. An
+   * {@code Optional} therefore belongs to payloads and views, and the generated code converts between
+   * the two forms at the boundary.
+   */
+   static LoweredJavaType entityPropertyType(LoweredJavaType type) {
+      return type instanceof OptionalValue optional ? optional.elementType() : type;
+   }
+
+   /** Whether a declared field may hold no value. */
+   static boolean isNullable(LoweredJavaType type) {
+      return type instanceof OptionalValue;
+   }
+
+   /** The patch contract of a capability's payload, when the payload is a patch. */
+   Optional<SpringBootDeclaration.PatchSpec> patchSpecOf(SpringBootDeclaration.CapabilityDeclaration capability) {
+      return this.payloadOf(capability).map(SpringBootDeclaration.InputDeclaration::patch).flatMap(value -> value);
+   }
+
    SpringArtifact artifact(SymbolId owner, Role role) {
       Map<Role, SpringArtifact> byRole = this.artifactsByOwner.get(owner);
       if (byRole == null) {
@@ -109,7 +152,7 @@ final class GenerationContext {
    String declaredPackage(Declared declared) {
       return switch (declared.kind()) {
          case ENUM, ENTITY -> this.model.basePackage() + ".domain";
-         case INPUT -> this.model.basePackage() + ".api";
+            case INPUT, VIEW -> this.model.basePackage() + ".api";
       };
    }
 

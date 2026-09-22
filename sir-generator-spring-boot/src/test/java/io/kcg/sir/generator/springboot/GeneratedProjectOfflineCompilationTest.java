@@ -28,7 +28,71 @@ class GeneratedProjectOfflineCompilationTest {
         Path projectRoot = tempDir.resolve("generated-project");
         List<GeneratedFile> files = GeneratorTestSupport.generateSuccess("valid/campus-market.sir");
         materialize(files, projectRoot);
+        compileOffline(projectRoot, tempDir);
 
+        for (String classFile : List.of(
+                "com/example/campusmarket/Application.class",
+                "com/example/campusmarket/domain/User.class",
+                "com/example/campusmarket/api/PublishGoodsInput.class",
+                "com/example/campusmarket/persistence/UserMapper.class",
+                "com/example/campusmarket/application/PublishGoodsService.class",
+                "com/example/campusmarket/api/PublishGoodsController.class")) {
+            assertTrue(Files.isRegularFile(projectRoot.resolve("target/classes").resolve(classFile)),
+                    () -> "offline Maven compile did not create representative class: " + classFile);
+        }
+    }
+
+    @Test
+    void completePagedQueryProjectCompilesWithFrozenDependenciesOffline(@TempDir Path tempDir)
+            throws Exception {
+        Path projectRoot = tempDir.resolve("generated-project");
+        List<GeneratedFile> files = GeneratorTestSupport.generateSuccess("valid/course-catalog.sir");
+        materialize(files, projectRoot);
+        compileOffline(projectRoot, tempDir);
+
+        for (String classFile : List.of(
+                "com/example/coursecatalog/Application.class",
+                "com/example/coursecatalog/domain/Course.class",
+                "com/example/coursecatalog/api/CourseSummary.class",
+                "com/example/coursecatalog/api/PageResponse.class",
+                "com/example/coursecatalog/api/InvalidPageParamException.class",
+                "com/example/coursecatalog/application/SearchCoursesService.class",
+                "com/example/coursecatalog/api/SearchCoursesController.class")) {
+            assertTrue(Files.isRegularFile(projectRoot.resolve("target/classes").resolve(classFile)),
+                    () -> "offline Maven compile did not create representative class: " + classFile);
+        }
+    }
+
+    @Test
+    void completeWriteSliceProjectCompilesWithFrozenDependenciesOffline(@TempDir Path tempDir)
+            throws Exception {
+        Path projectRoot = tempDir.resolve("generated-project");
+        List<GeneratedFile> files = GeneratorTestSupport.generateSuccess("valid/course-admin.sir");
+        materialize(files, projectRoot);
+        compileOffline(projectRoot, tempDir);
+
+        for (String classFile : List.of(
+                "com/example/courseadmin/Application.class",
+                "com/example/courseadmin/domain/Course.class",
+                "com/example/courseadmin/api/CourseDetail.class",
+                "com/example/courseadmin/api/UpdateCourseInput.class",
+                "com/example/courseadmin/api/UpdateCourseInput$Changes.class",
+                "com/example/courseadmin/api/ApiErrorResponse.class",
+                "com/example/courseadmin/api/ApiErrorResponse$FieldError.class",
+                "com/example/courseadmin/api/ApiException.class",
+                "com/example/courseadmin/api/ApiExceptionAdvice.class",
+                "com/example/courseadmin/api/ValidationSupport.class",
+                "com/example/courseadmin/api/StaleVersionException.class",
+                "com/example/courseadmin/persistence/CourseMapper.class",
+                "com/example/courseadmin/application/CreateCourseService.class",
+                "com/example/courseadmin/application/UpdateCourseService.class",
+                "com/example/courseadmin/api/UpdateCourseController.class")) {
+            assertTrue(Files.isRegularFile(projectRoot.resolve("target/classes").resolve(classFile)),
+                    () -> "offline Maven compile did not create representative class: " + classFile);
+        }
+    }
+
+    private static void compileOffline(Path projectRoot, Path tempDir) throws Exception {
         Path maven = locateMavenExecutable();
         Path localRepository = frozenLocalRepository();
         Path buildLog = tempDir.resolve("generated-project-maven.log");
@@ -60,17 +124,6 @@ class GeneratedProjectOfflineCompilationTest {
         }
         assertEquals(0, process.exitValue(),
                 () -> failureMessage(command, projectRoot, "exit code " + process.exitValue(), output));
-
-        for (String classFile : List.of(
-                "com/example/campusmarket/Application.class",
-                "com/example/campusmarket/domain/User.class",
-                "com/example/campusmarket/api/PublishGoodsInput.class",
-                "com/example/campusmarket/persistence/UserMapper.class",
-                "com/example/campusmarket/application/PublishGoodsService.class",
-                "com/example/campusmarket/api/PublishGoodsController.class")) {
-            assertTrue(Files.isRegularFile(projectRoot.resolve("target/classes").resolve(classFile)),
-                    () -> "offline Maven compile did not create representative class: " + classFile);
-        }
     }
 
     private static void materialize(List<GeneratedFile> files, Path projectRoot) throws IOException {

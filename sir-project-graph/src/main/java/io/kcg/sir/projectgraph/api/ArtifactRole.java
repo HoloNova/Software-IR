@@ -6,6 +6,7 @@ public sealed interface ArtifactRole permits ArtifactRole.DeclarationRole, Artif
       ENTITY_MODEL,
       MAPPER,
       REQUEST_DTO,
+      VIEW_DTO,
       EXCEPTION,
       SERVICE,
       CONTROLLER;
@@ -13,6 +14,12 @@ public sealed interface ArtifactRole permits ArtifactRole.DeclarationRole, Artif
 
    enum ProjectRole implements ArtifactRole {
       MAVEN_PROJECT,
-      APPLICATION_MAIN;
+      APPLICATION_MAIN,
+      PAGE_RESPONSE,
+      API_ERROR_RESPONSE,
+      API_EXCEPTION_BASE,
+      API_EXCEPTION_ADVICE,
+      VALIDATION_SUPPORT,
+      APPLICATION_CONFIG;
    }
 }

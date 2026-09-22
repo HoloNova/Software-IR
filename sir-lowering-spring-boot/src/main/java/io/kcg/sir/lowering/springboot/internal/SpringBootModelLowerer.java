@@ -1,58 +1,7 @@
 /*
- * Decompiled with CFR 0.152.
- * 
- * Could not load the following classes:
- *  io.kcg.sir.ast.AstExposureKind
- *  io.kcg.sir.ast.AstGenerationStrategy
- *  io.kcg.sir.ast.AstNodeId
- *  io.kcg.sir.ast.AstRequirementKind
- *  io.kcg.sir.lowering.api.LoweredIrVersion
- *  io.kcg.sir.lowering.api.LoweredNodeId
- *  io.kcg.sir.lowering.api.LoweredOrigin
- *  io.kcg.sir.semantic.api.NormalizedSemanticModel
- *  io.kcg.sir.semantic.model.NormalizedBinding
- *  io.kcg.sir.semantic.model.NormalizedCapability
- *  io.kcg.sir.semantic.model.NormalizedConstraint
- *  io.kcg.sir.semantic.model.NormalizedDeclaration
- *  io.kcg.sir.semantic.model.NormalizedEntity
- *  io.kcg.sir.semantic.model.NormalizedEnum
- *  io.kcg.sir.semantic.model.NormalizedEnum$NormalizedEnumMember
- *  io.kcg.sir.semantic.model.NormalizedError
- *  io.kcg.sir.semantic.model.NormalizedExpression
- *  io.kcg.sir.semantic.model.NormalizedExpression$BinaryExpression
- *  io.kcg.sir.semantic.model.NormalizedExpression$BooleanLiteral
- *  io.kcg.sir.semantic.model.NormalizedExpression$DecimalLiteral
- *  io.kcg.sir.semantic.model.NormalizedExpression$IntegerLiteral
- *  io.kcg.sir.semantic.model.NormalizedExpression$MemberExpression
- *  io.kcg.sir.semantic.model.NormalizedExpression$NameExpression
- *  io.kcg.sir.semantic.model.NormalizedExpression$NowExpression
- *  io.kcg.sir.semantic.model.NormalizedExpression$StringLiteral
- *  io.kcg.sir.semantic.model.NormalizedExpression$UnaryExpression
- *  io.kcg.sir.semantic.model.NormalizedExpression$UnitLiteral
- *  io.kcg.sir.semantic.model.NormalizedField
- *  io.kcg.sir.semantic.model.NormalizedIdentity
- *  io.kcg.sir.semantic.model.NormalizedInput
- *  io.kcg.sir.semantic.model.NormalizedStep
- *  io.kcg.sir.semantic.model.NormalizedStep$CreateStep
- *  io.kcg.sir.semantic.model.NormalizedStep$FindStep
- *  io.kcg.sir.semantic.model.NormalizedStep$LoadStep
- *  io.kcg.sir.semantic.model.NormalizedStep$PersistStep
- *  io.kcg.sir.semantic.model.NormalizedStep$ReturnStep
- *  io.kcg.sir.semantic.model.NormalizedStep$UpdateStep
- *  io.kcg.sir.semantic.model.NormalizedStep$ValidateStep
- *  io.kcg.sir.semantic.symbol.Symbol
- *  io.kcg.sir.semantic.symbol.Symbol$VariableSymbol
- *  io.kcg.sir.semantic.symbol.SymbolId
- *  io.kcg.sir.semantic.type.DeclaredType
- *  io.kcg.sir.semantic.type.DeclaredType$DeclaredKind
- *  io.kcg.sir.semantic.type.ListType
- *  io.kcg.sir.semantic.type.OptionalType
- *  io.kcg.sir.semantic.type.PrimitiveType
- *  io.kcg.sir.semantic.type.RefType
- *  io.kcg.sir.semantic.type.SirType
- *  io.kcg.sir.source.SourceId
- *  io.kcg.sir.source.SourcePosition
- *  io.kcg.sir.source.SourceSpan
+ * Spring Boot target lowering: expresses a resolved, validated SIR program as the flat model the
+ * Java/Spring generator renders. It reads the normalized semantic model, never the syntax tree, and
+ * never touches the file system.
  */
 package io.kcg.sir.lowering.springboot.internal;
 
@@ -75,6 +24,8 @@ import io.kcg.sir.lowering.springboot.model.SpringBootLoweredModel;
 import io.kcg.sir.lowering.springboot.model.SpringBootWorkflow;
 import io.kcg.sir.lowering.springboot.model.SpringExpression;
 import io.kcg.sir.lowering.springboot.model.TransportPlan;
+import io.kcg.sir.lowering.springboot.profile.SpringBootQueryPolicy;
+import io.kcg.sir.lowering.springboot.profile.SpringBootWritePolicy;
 import io.kcg.sir.lowering.springboot.profile.SpringBootTargetProfile;
 import io.kcg.sir.semantic.api.NormalizedSemanticModel;
 import io.kcg.sir.semantic.model.NormalizedBinding;
@@ -89,11 +40,14 @@ import io.kcg.sir.semantic.model.NormalizedField;
 import io.kcg.sir.semantic.model.NormalizedIdentity;
 import io.kcg.sir.semantic.model.NormalizedInput;
 import io.kcg.sir.semantic.model.NormalizedStep;
+import io.kcg.sir.semantic.model.NormalizedView;
+import io.kcg.sir.semantic.model.NormalizedViewField;
 import io.kcg.sir.semantic.symbol.Symbol;
 import io.kcg.sir.semantic.symbol.SymbolId;
 import io.kcg.sir.semantic.type.DeclaredType;
 import io.kcg.sir.semantic.type.ListType;
 import io.kcg.sir.semantic.type.OptionalType;
+import io.kcg.sir.semantic.type.PageType;
 import io.kcg.sir.semantic.type.PrimitiveType;
 import io.kcg.sir.semantic.type.RefType;
 import io.kcg.sir.semantic.type.SirType;
@@ -114,11 +68,28 @@ import java.util.Set;
 
 public final class SpringBootModelLowerer {
     private final NormalizedSemanticModel source;
+    private final SpringBootQueryPolicy queryPolicy;
+    private final SpringBootWritePolicy writePolicy;
     private final Map<SymbolId, NormalizedEntity> entities = new LinkedHashMap<SymbolId, NormalizedEntity>();
     private final Map<SymbolId, String> targetMemberNames = new LinkedHashMap<SymbolId, String>();
+    private final Map<SymbolId, NormalizedView> views = new LinkedHashMap<SymbolId, NormalizedView>();
+    private final Map<SymbolId, NormalizedInput> inputs = new LinkedHashMap<SymbolId, NormalizedInput>();
+    private final Map<SymbolId, SymbolId> viewSourceEntities = new LinkedHashMap<SymbolId, SymbolId>();
+    /** Entity member symbol -> the column it persists to, for the entities of this software. */
+    private final Map<SymbolId, String> columns = new LinkedHashMap<SymbolId, String>();
 
     public SpringBootModelLowerer(NormalizedSemanticModel source) {
+        this(source, SpringBootQueryPolicy.V0_1);
+    }
+
+    public SpringBootModelLowerer(NormalizedSemanticModel source, SpringBootQueryPolicy queryPolicy) {
+        this(source, queryPolicy, SpringBootWritePolicy.V0_1);
+    }
+
+    public SpringBootModelLowerer(NormalizedSemanticModel source, SpringBootQueryPolicy queryPolicy, SpringBootWritePolicy writePolicy) {
         this.source = source;
+        this.queryPolicy = Objects.requireNonNull(queryPolicy, "queryPolicy");
+        this.writePolicy = Objects.requireNonNull(writePolicy, "writePolicy");
         for (NormalizedDeclaration declaration : source.declarations()) {
             if (declaration instanceof NormalizedEntity) {
                 NormalizedEntity entity = (NormalizedEntity)declaration;
@@ -126,13 +97,28 @@ public final class SpringBootModelLowerer {
                 this.targetMemberNames.put(entity.identity().id(), entity.identity().name());
                 for (NormalizedField field : entity.fields()) {
                     this.targetMemberNames.put(field.id(), this.targetPropertyName(field, true));
+                    this.columns.put(
+                        field.id(), field.type() instanceof RefType ? this.snake(field.name()) + "_id" : this.snake(field.name()));
                 }
                 continue;
             }
             if (declaration instanceof NormalizedInput) {
                 NormalizedInput input = (NormalizedInput)declaration;
+                this.inputs.put(input.id(), input);
                 for (NormalizedField field : input.fields()) {
                     this.targetMemberNames.put(field.id(), this.targetPropertyName(field, false));
+                }
+                continue;
+            }
+            if (declaration instanceof NormalizedView) {
+                NormalizedView view = (NormalizedView)declaration;
+                this.views.put(view.id(), view);
+                if (view.sourceEntity() != null) {
+                    this.viewSourceEntities.put(view.id(), view.sourceEntity());
+                }
+
+                for (NormalizedViewField field : view.fields()) {
+                    this.targetMemberNames.put(field.id(), field.name());
                 }
                 continue;
             }
@@ -153,7 +139,20 @@ public final class SpringBootModelLowerer {
             artifacts.addAll(this.artifactsFor(declaration, lowered));
         }
         Optional<ActorIdentityTransportPlan> transportPlan = this.buildActorIdentityTransportPlan(declarations);
-        return new SpringBootLoweredModel(LoweredIrVersion.V0_2, SpringBootTargetProfile.V0_2, this.source.softwareName(), this.source.metadata().displayName(), this.source.metadata().namespace(), declarations, artifacts, this.lowerMavenProject(), this.lowerApplicationMain(transportPlan));
+        ArrayList<ProjectArtifact> projectArtifacts = new ArrayList<ProjectArtifact>();
+        if (this.hasPagedFind(declarations)) {
+            projectArtifacts.add(this.pageResponseArtifact());
+        }
+
+        // The error contract and its constraint primitives belong to the target, not to the mix of
+        // capabilities that happen to be declared: a project's supporting files must not appear and
+        // disappear as capabilities are added or removed, because a change plan has to account for
+        // every artifact that a candidate no longer produces.
+        projectArtifacts.addAll(this.errorContractArtifacts());
+        projectArtifacts.add(this.validationSupportArtifact());
+        projectArtifacts.add(this.applicationConfigArtifact());
+
+        return new SpringBootLoweredModel(LoweredIrVersion.V0_2, SpringBootTargetProfile.V0_2, this.source.softwareName(), this.source.metadata().displayName(), this.source.metadata().namespace(), declarations, artifacts, this.lowerMavenProject(), this.lowerApplicationMain(transportPlan), projectArtifacts);
     }
 
     private ProjectArtifact.MavenProject lowerMavenProject() {
@@ -162,10 +161,99 @@ public final class SpringBootModelLowerer {
         return new ProjectArtifact.MavenProject(this.nodeId("project", "maven"), this.projectOrigin(), "pom.xml", this.source.metadata().namespace(), this.kebab(this.source.softwareName()), "0.1.0-SNAPSHOT", SpringBootTargetProfile.V0_1.javaVersion(), SpringBootTargetProfile.V0_1.springBootVersion(), dependencies, plugins);
     }
 
-    private ProjectArtifact.ApplicationMain lowerApplicationMain(Optional<ActorIdentityTransportPlan> transportPlan) {
+    private ProjectArtifact.ApplicationMain lowerApplicationMain(
+            Optional<ActorIdentityTransportPlan> transportPlan) {
         String basePackage = this.source.metadata().namespace();
         String simpleName = "Application";
         return new ProjectArtifact.ApplicationMain(this.nodeId("project", "application-main"), this.projectOrigin(), "src/main/java/" + basePackage.replace('.', '/') + "/" + simpleName + ".java", basePackage, simpleName, basePackage + ".persistence", transportPlan);
+    }
+
+    /**
+     * Whether any capability writes through a request payload.
+     *
+     * <p>That is where candidate validation, field errors, and declared failure statuses become part of
+     * the generated contract, so the supporting artifacts are emitted exactly then.
+     */
+    private boolean hasWritableCapability(List<SpringBootDeclaration> declarations) {
+        return declarations.stream()
+                .filter(SpringBootDeclaration.CapabilityDeclaration.class::isInstance)
+                .map(SpringBootDeclaration.CapabilityDeclaration.class::cast)
+                .anyMatch(capability -> capability.kind() == SpringBootDeclaration.CapabilityKind.COMMAND
+                        && capability.input().isPresent());
+    }
+
+    /**
+     * The error envelope, the exception base, the advice, and the constraint primitives.
+     *
+     * <p>The advice maps every failure the write slice can produce onto those artifacts: a declared
+     * failure, a field-level rejection of the candidate, and a request the payload decoder refused.
+     */
+    private List<ProjectArtifact> errorContractArtifacts() {
+        String packageName = this.source.metadata().namespace() + ".api";
+        String packagePath = "src/main/java/" + packageName.replace('.', '/') + "/";
+        String errorResponse = "ApiErrorResponse";
+        String fieldError = "FieldError";
+        String exceptionBase = "ApiException";
+        return List.of(
+                new ProjectArtifact.ApiErrorResponse(
+                        this.nodeId("project", "api-error-response"), this.projectOrigin(),
+                        packagePath + errorResponse + ".java", packageName, errorResponse, fieldError,
+                        this.writePolicy.invalidRequestCode()),
+                new ProjectArtifact.ApiExceptionBase(
+                        this.nodeId("project", "api-exception-base"), this.projectOrigin(),
+                        packagePath + exceptionBase + ".java", packageName, exceptionBase, errorResponse,
+                        fieldError, this.writePolicy.invalidRequestCode()),
+                new ProjectArtifact.ApiExceptionAdvice(
+                        this.nodeId("project", "api-exception-advice"), this.projectOrigin(),
+                        packagePath + "ApiExceptionAdvice.java", packageName, "ApiExceptionAdvice", exceptionBase,
+                        errorResponse, fieldError, this.writePolicy.invalidRequestCode()));
+    }
+
+    /**
+     * The constraint primitives a generated candidate check calls.
+     *
+     * <p>They are emitted only where a payload can write an entity, because that is the only place a
+     * merged candidate has to be judged.
+     */
+    private ProjectArtifact.ValidationSupport validationSupportArtifact() {
+        String packageName = this.source.metadata().namespace() + ".api";
+        String packagePath = "src/main/java/" + packageName.replace('.', '/') + "/";
+        List<String> codes = SpringBootWritePolicy.V0_1.validatedConstraintCodes();
+        return new ProjectArtifact.ValidationSupport(
+                this.nodeId("project", "validation-support"), this.projectOrigin(),
+                packagePath + "ValidationSupport.java", packageName, "ValidationSupport",
+                "ApiErrorResponse.FieldError", codes);
+    }
+
+    private String softwareName() {
+        return this.source.softwareName();
+    }
+
+    /** The generated application configuration, including the decoder's unknown-property rule. */
+    private ProjectArtifact.ApplicationConfig applicationConfigArtifact() {
+        return new ProjectArtifact.ApplicationConfig(
+                this.nodeId("project", "application-config"), this.projectOrigin(), "src/main/resources/application.yml",
+                this.kebab(this.softwareName()), true);
+    }
+
+    private ProjectArtifact.PageResponse pageResponseArtifact() {
+        String packageName = this.source.metadata().namespace() + ".api";
+        String simpleName = "PageResponse";
+        return new ProjectArtifact.PageResponse(this.nodeId("project", "page-response"), this.projectOrigin(), "src/main/java/" + packageName.replace('.', '/') + "/" + simpleName + ".java", packageName, simpleName);
+    }
+
+    /** The page envelope is emitted only when a declared workflow actually pages. */
+    private boolean hasPagedFind(List<SpringBootDeclaration> declarations) {
+        for (SpringBootDeclaration declaration : declarations) {
+            if (!(declaration instanceof SpringBootDeclaration.CapabilityDeclaration)) continue;
+            SpringBootDeclaration.CapabilityDeclaration capability = (SpringBootDeclaration.CapabilityDeclaration)declaration;
+            for (SpringBootWorkflow.Step step : capability.workflow().steps()) {
+                if (step instanceof SpringBootWorkflow.FindStep findStep && findStep.page().isPresent()) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private Optional<ActorIdentityTransportPlan> buildActorIdentityTransportPlan(List<SpringBootDeclaration> declarations) {
@@ -216,12 +304,38 @@ public final class SpringBootModelLowerer {
             case NormalizedEnum value -> lowerEnum(value);
             case NormalizedEntity value -> lowerEntity(value);
             case NormalizedInput value -> lowerInput(value);
+            case NormalizedView value -> lowerView(value);
             case NormalizedError value -> new SpringBootDeclaration.ErrorDeclaration(
                     symbolId(value.id(), "exception"),
                     origin(value.id(), value.sourceNodeId(), value.span()),
-                    value.id(), value.name() + "Exception", SpringBootDeclaration.HttpStatus.BAD_REQUEST);
+                    value.id(), value.name() + "Exception", this.lowerHttpStatus(value));
             case NormalizedCapability value -> lowerCapability(value);
         };
+    }
+
+    private SpringBootDeclaration.ViewDeclaration lowerView(NormalizedView value) {
+        NormalizedEntity entity = this.entities.get(value.sourceEntity());
+        if (entity == null) {
+            throw new IllegalStateException("view source entity is not a lowered entity: " + value.sourceEntity());
+        }
+
+        String entityJavaName = entity.name();
+        List<SpringBootDeclaration.ViewField> fields = value.fields().stream().map(field -> new SpringBootDeclaration.ViewField(
+                this.symbolId(field.id(), "view-field"),
+                this.origin(value.id(), field.sourceNodeId(), field.span()),
+                field.id(),
+                field.name(),
+                this.lowerType(field.type()),
+                field.sourceField(),
+                this.targetMemberName(field.sourceField(), field.name()))).toList();
+        return new SpringBootDeclaration.ViewDeclaration(
+                this.symbolId(value.id(), "view"),
+                this.origin(value.id(), value.sourceNodeId(), value.span()),
+                value.id(), value.name(), value.sourceEntity(), entityJavaName, fields);
+    }
+
+    private String targetMemberName(SymbolId symbol, String fallback) {
+        return this.targetMemberNames.getOrDefault(symbol, fallback);
     }
 
     private SpringBootDeclaration.EnumDeclaration lowerEnum(NormalizedEnum value) {
@@ -229,16 +343,110 @@ public final class SpringBootModelLowerer {
         return new SpringBootDeclaration.EnumDeclaration(this.symbolId(value.id(), "enum"), this.origin(value.id(), value.sourceNodeId(), value.span()), value.id(), value.name(), members);
     }
 
+    /** The response status a declared failure reports, taken from the resolved declaration. */
+    private SpringBootDeclaration.HttpStatus lowerHttpStatus(NormalizedError error) {
+        return switch (error.httpStatus()) {
+            case 404 -> SpringBootDeclaration.HttpStatus.NOT_FOUND;
+            case 409 -> SpringBootDeclaration.HttpStatus.CONFLICT;
+            case 400 -> SpringBootDeclaration.HttpStatus.BAD_REQUEST;
+            default -> throw new IllegalStateException(
+                    "validated error status is unsupported by this target: " + error.httpStatus());
+        };
+    }
+
     private SpringBootDeclaration.EntityDeclaration lowerEntity(NormalizedEntity value) {
         NormalizedIdentity identity = value.identity();
         SpringBootDeclaration.Identity loweredIdentity = new SpringBootDeclaration.Identity(this.symbolId(identity.id(), "identity"), this.origin(value.id(), identity.sourceNodeId(), identity.span()), identity.id(), identity.name(), this.snake(identity.name()), this.scalar(identity.type()), identity.generation() == AstGenerationStrategy.AUTO ? SpringBootDeclaration.Generation.AUTO_INCREMENT : SpringBootDeclaration.Generation.UUID);
         List<SpringBootDeclaration.Property> fields = value.fields().stream().map(field -> this.lowerProperty((NormalizedField)field, value.id(), true)).toList();
-        return new SpringBootDeclaration.EntityDeclaration(this.symbolId(value.id(), "entity"), this.origin(value.id(), value.sourceNodeId(), value.span()), value.id(), value.name(), this.snake(value.name()), loweredIdentity, fields);
+        return new SpringBootDeclaration.EntityDeclaration(this.symbolId(value.id(), "entity"), this.origin(value.id(), value.sourceNodeId(), value.span()), value.id(), value.name(), this.snake(value.name()), loweredIdentity, fields, this.lowerVersionSpec(value));
+    }
+
+    /** The entity's version field, with the value the target profile initializes a new row to. */
+    private Optional<SpringBootDeclaration.VersionSpec> lowerVersionSpec(NormalizedEntity entity) {
+        return entity.versionField().flatMap(fieldSymbol -> entity.fields().stream()
+                .filter(field -> field.id().equals(fieldSymbol))
+                .findFirst()
+                .map(field -> new SpringBootDeclaration.VersionSpec(
+                        this.symbolId(field.id(), "version"),
+                        this.origin(entity.id(), field.sourceNodeId(), field.span()),
+                        field.id(),
+                        this.targetPropertyName(field, true),
+                        this.snake(field.name()),
+                        this.scalar(field.type()),
+                        this.writePolicy.versionInitialValue())));
     }
 
     private SpringBootDeclaration.InputDeclaration lowerInput(NormalizedInput value) {
         List<SpringBootDeclaration.Property> fields = value.fields().stream().map(field -> this.lowerProperty((NormalizedField)field, value.id(), false)).toList();
-        return new SpringBootDeclaration.InputDeclaration(this.symbolId(value.id(), "input"), this.origin(value.id(), value.sourceNodeId(), value.span()), value.id(), value.name(), fields);
+        return new SpringBootDeclaration.InputDeclaration(this.symbolId(value.id(), "input"), this.origin(value.id(), value.sourceNodeId(), value.span()), value.id(), value.name(), fields, this.lowerPatchSpec(value));
+    }
+
+    /**
+     * The payload's transport contract, taken from resolution's payload-field bindings.
+     *
+     * <p>The identity field is the payload field bound to the entity's identity, and the change set
+     * is everything else in authored order; nothing here is matched by name.
+     */
+    /**
+     * The payload declaration behind an input variable.
+     *
+     * <p>{@code capability.inputSymbol()} is the variable; its declared type names the payload, so this
+     * follows the resolved type instead of matching a name.
+     */
+    private Optional<NormalizedInput> inputDeclaration(SymbolId inputVariableSymbol) {
+        Symbol symbol = this.source.symbols().byId(inputVariableSymbol).orElse(null);
+        if (!(symbol instanceof Symbol.VariableSymbol variable)
+                || !(variable.type() instanceof DeclaredType declared)
+                || declared.kind() != DeclaredType.DeclaredKind.INPUT) {
+            return Optional.empty();
+        }
+
+        return Optional.ofNullable(this.inputs.get(declared.symbolId()));
+    }
+
+    private Optional<SpringBootDeclaration.PatchSpec> lowerPatchSpec(NormalizedInput input) {
+        if (input.kind() != NormalizedInput.Kind.PATCH) {
+            return Optional.empty();
+        }
+
+        SymbolId sourceEntitySymbol = input.patchSourceEntity().orElseThrow();
+        NormalizedEntity entity = this.entities.get(sourceEntitySymbol);
+        if (entity == null) {
+            throw new IllegalStateException("patch payload source entity is not an entity of this software: " + sourceEntitySymbol);
+        }
+
+        SymbolId identityFieldSymbol = null;
+        String identityPropertyName = null;
+        List<SpringBootDeclaration.PatchChange> changes = new ArrayList<SpringBootDeclaration.PatchChange>();
+        for (NormalizedField field : input.fields()) {
+            SymbolId entityMember = field.patchSourceField().orElseThrow();
+            String payloadProperty = this.targetPropertyName(field, false);
+            if (entityMember.equals(entity.identity().id())) {
+                identityFieldSymbol = field.id();
+                identityPropertyName = payloadProperty;
+                continue;
+            }
+
+            changes.add(new SpringBootDeclaration.PatchChange(
+                    field.id(),
+                    payloadProperty,
+                    entityMember,
+                    this.targetMemberName(entityMember, "unknown"),
+                    this.columns.getOrDefault(entityMember, this.snake(entityMember.value()))));
+        }
+
+        if (identityFieldSymbol == null) {
+            throw new IllegalStateException("a validated patch payload declares its identity: " + input.name());
+        }
+
+        return Optional.of(new SpringBootDeclaration.PatchSpec(
+                sourceEntitySymbol,
+                entity.name(),
+                identityFieldSymbol,
+                identityPropertyName,
+                this.writePolicy.patchChangesPropertyName(),
+                this.writePolicy.patchExpectedVersionPropertyName(),
+                changes));
     }
 
     private SpringBootDeclaration.Property lowerProperty(NormalizedField field, SymbolId owner, boolean persistent) {
@@ -271,7 +479,7 @@ public final class SpringBootModelLowerer {
             case AstExposureKind.COMMAND -> SpringBootDeclaration.CapabilityKind.COMMAND;
             case AstExposureKind.QUERY -> SpringBootDeclaration.CapabilityKind.QUERY;
         };
-        SpringBootDeclaration.HttpMethod httpMethod = kind == SpringBootDeclaration.CapabilityKind.QUERY ? SpringBootDeclaration.HttpMethod.GET : SpringBootDeclaration.HttpMethod.POST;
+        SpringBootDeclaration.HttpMethod httpMethod = this.lowerHttpMethod(kind, value.inputSymbol());
         Optional<SpringBootWorkflow.Variable> actor = value.actorSymbol().map(this::variable);
         Optional<SpringBootWorkflow.Variable> input = value.inputSymbol().map(this::variable);
         Optional<ActorBinding> actorBinding = value.actorSymbol().map(this::lowerActorBinding);
@@ -297,14 +505,34 @@ public final class SpringBootModelLowerer {
         return new ActorBinding(ActorBinding.ActorKind.REQUEST_ATTRIBUTE, "actorId", identityStorageType);
     }
 
+    /**
+     * The HTTP method a capability is exposed as: a query reads with GET, a patch changes with PATCH,
+     * and every other command posts.
+     */
+    private SpringBootDeclaration.HttpMethod lowerHttpMethod(SpringBootDeclaration.CapabilityKind kind, Optional<SymbolId> inputSymbol) {
+        if (kind == SpringBootDeclaration.CapabilityKind.QUERY) {
+            return SpringBootDeclaration.HttpMethod.GET;
+        }
+
+        boolean patchPayload = inputSymbol
+                .flatMap(this::inputDeclaration)
+                .map(input -> input.kind() == NormalizedInput.Kind.PATCH)
+                .orElse(false);
+        return patchPayload ? SpringBootDeclaration.HttpMethod.PATCH : SpringBootDeclaration.HttpMethod.POST;
+    }
+
     private TransportPlan lowerTransportPlan(NormalizedCapability capability, SpringBootDeclaration.HttpMethod httpMethod, boolean hasInput) {
-        TransportPlan.InputBinding inputBinding = !hasInput ? TransportPlan.InputBinding.NONE : (httpMethod == SpringBootDeclaration.HttpMethod.POST ? TransportPlan.InputBinding.REQUEST_BODY : TransportPlan.InputBinding.MODEL_ATTRIBUTE);
-        TransportPlan.ResponseRepresentation response = this.lowerResponseRepresentation(capability.outputType());
+        TransportPlan.InputBinding inputBinding = !hasInput ? TransportPlan.InputBinding.NONE : (httpMethod == SpringBootDeclaration.HttpMethod.GET ? TransportPlan.InputBinding.MODEL_ATTRIBUTE : TransportPlan.InputBinding.REQUEST_BODY);
+        TransportPlan.ResponseRepresentation response = this.lowerResponseRepresentation(capability);
         return new TransportPlan(inputBinding, response);
     }
 
-    private TransportPlan.ResponseRepresentation lowerResponseRepresentation(SirType outputType) {
-        return switch (outputType) {
+    private TransportPlan.ResponseRepresentation lowerResponseRepresentation(NormalizedCapability capability) {
+        if (this.projectsReturnedEntity(capability)) {
+            return TransportPlan.ResponseRepresentation.PROJECTION;
+        }
+
+        return switch (capability.outputType()) {
             case PrimitiveType value -> value == PrimitiveType.UNIT
                     ? TransportPlan.ResponseRepresentation.VOID
                     : TransportPlan.ResponseRepresentation.VALUE;
@@ -314,7 +542,36 @@ public final class SpringBootModelLowerer {
                     : TransportPlan.ResponseRepresentation.VALUE;
             case OptionalType ignored -> TransportPlan.ResponseRepresentation.OPTIONAL;
             case ListType ignored -> TransportPlan.ResponseRepresentation.LIST;
+            case PageType ignored -> TransportPlan.ResponseRepresentation.PAGE;
         };
+    }
+
+    /**
+     * Whether this capability answers with a projection of the entity it returns.
+     *
+     * <p>That is exactly the case the type rule allowed: a declared view output for the very entity the
+     * returned reference points at. The response is then rendered from the projection, never from the
+     * entity's own shape.
+     */
+    private boolean projectsReturnedEntity(NormalizedCapability capability) {
+        if (!(capability.outputType() instanceof DeclaredType view) || view.kind() != DeclaredType.DeclaredKind.VIEW) {
+            return false;
+        }
+
+        SymbolId sourceEntity = this.viewSourceEntities.get(view.symbolId());
+        if (sourceEntity == null) {
+            return false;
+        }
+
+        for (NormalizedStep step : capability.workflow().steps()) {
+            if (step instanceof NormalizedStep.ReturnStep returnStep
+                    && returnStep.value() != null
+                    && returnStep.value().type() instanceof RefType ref) {
+                return ref.entityId().equals(sourceEntity);
+            }
+        }
+
+        return false;
     }
 
     private SpringBootWorkflow lowerWorkflow(NormalizedCapability capability) {
@@ -356,16 +613,18 @@ public final class SpringBootModelLowerer {
                     id, origin, lowerExpression(value.condition(), owner, actorSymbol), value.errorSymbol());
             case NormalizedStep.LoadStep value -> new SpringBootWorkflow.LoadStep(
                     id, origin, value.entitySymbol(), lowerExpression(value.idExpression(), owner, actorSymbol),
-                    variable(value.resultVariable()), value.errorSymbol());
+                    variable(value.resultVariable()), value.errorSymbol(), this.locksRow(value, owner));
             case NormalizedStep.FindStep value -> new SpringBootWorkflow.FindStep(
                     id, origin, value.entitySymbol(), lowerExpression(value.predicate(), owner, actorSymbol),
+                    this.lowerOrderKeys(value), this.lowerPageSpec(value), this.lowerStringMatches(value, owner),
                     variable(value.resultVariable()), variable(value.itemVariable()));
             case NormalizedStep.CreateStep value -> new SpringBootWorkflow.CreateStep(
                     id, origin, value.entitySymbol(), variable(value.resultVariable()),
                     value.bindings().stream().map(binding -> lowerBinding(binding, owner, actorSymbol)).toList());
             case NormalizedStep.UpdateStep value -> new SpringBootWorkflow.UpdateStep(
                     id, origin, value.targetVariable(),
-                    value.bindings().stream().map(binding -> lowerBinding(binding, owner, actorSymbol)).toList());
+                    value.bindings().stream().map(binding -> lowerBinding(binding, owner, actorSymbol)).toList(),
+                    this.lowerConditionalUpdate(value, owner, actorSymbol));
             case NormalizedStep.PersistStep value -> {
                 Provenance p = provenance.get(value.targetVariable());
                 if (p == null) {
@@ -373,20 +632,252 @@ public final class SpringBootModelLowerer {
                             "cannot determine persistence action: unknown provenance for " + value.targetVariable());
                 }
                 PersistenceAction action = p == Provenance.NEW ? PersistenceAction.INSERT : PersistenceAction.UPDATE;
-                yield new SpringBootWorkflow.PersistStep(id, origin, value.targetVariable(), action);
+                NormalizedCapability capability = this.capability(owner);
+                NormalizedStep.UpdateStep update = capability == null ? null : this.updateStepFor(capability, value.targetVariable());
+                Optional<SpringBootWorkflow.ConditionalUpdate> conditional = action == PersistenceAction.UPDATE
+                        ? this.lowerConditionalUpdate(update, owner, actorSymbol)
+                        : Optional.empty();
+                yield new SpringBootWorkflow.PersistStep(id, origin, value.targetVariable(), action, value.failure(), conditional);
             }
             case NormalizedStep.ReturnStep value -> new SpringBootWorkflow.ReturnStep(
                     id, origin, lowerExpression(value.value(), owner, actorSymbol));
         };
     }
 
+    /**
+     * Whether this load must lock the row it reads.
+     *
+     * <p>A versioned entity that the same capability then conditionally updates needs the row held for
+     * the duration of the transaction, so the version the conditional update compares against is the
+     * version this load saw.
+     */
+    private boolean locksRow(NormalizedStep.LoadStep step, SymbolId owner) {
+        NormalizedCapability capability = this.capability(owner);
+        if (capability == null) {
+            return false;
+        }
+
+        NormalizedStep.UpdateStep update = this.updateStepFor(capability, step.resultVariable());
+        return update != null && this.versionedEntityOfUpdate(update) != null
+                && this.conditionalUpdateAllowed(update, owner);
+    }
+
+    private Optional<SpringBootWorkflow.ConditionalUpdate> lowerConditionalUpdate(
+            NormalizedStep.UpdateStep update, SymbolId owner, Optional<SymbolId> actorSymbol) {
+        if (update == null || !this.conditionalUpdateAllowed(update, owner)) {
+            return Optional.empty();
+        }
+
+        NormalizedEntity entity = this.versionedEntityOfUpdate(update);
+        if (entity == null) {
+            return Optional.empty();
+        }
+
+        SpringBootDeclaration.VersionSpec version = this.lowerVersionSpec(entity).orElseThrow();
+        SpringBootDeclaration.PatchSpec patch = this.patchSpecOfCapability(owner);
+        if (patch == null) {
+            throw new IllegalStateException("a versioned update must use its entity's patch payload: " + owner);
+        }
+
+        List<SpringBootWorkflow.ColumnAssignment> assignments = patch.changes().stream()
+                .map(change -> new SpringBootWorkflow.ColumnAssignment(
+                        change.entityFieldSymbol(),
+                        change.entityPropertyName(),
+                        change.entityColumnName(),
+                        change.payloadPropertyName()))
+                .toList();
+        return Optional.of(new SpringBootWorkflow.ConditionalUpdate(
+                entity.id(),
+                this.snake(entity.name()),
+                entity.identity().id(),
+                entity.identity().name(),
+                this.snake(entity.identity().name()),
+                version.fieldSymbol(),
+                version.javaName(),
+                version.columnName(),
+                this.writePolicy.versionIncrement(),
+                this.persistFailureOf(owner, update.targetVariable()),
+                assignments));
+    }
+
+    /** The declared failure the conditional persist reports when no row matched its version. */
+    private Optional<SymbolId> persistFailureOf(SymbolId owner, SymbolId variable) {
+        NormalizedCapability capability = this.capability(owner);
+        if (capability == null) {
+            return Optional.empty();
+        }
+
+        return capability.workflow().steps().stream()
+                .filter(NormalizedStep.PersistStep.class::isInstance)
+                .map(NormalizedStep.PersistStep.class::cast)
+                .filter(persist -> persist.targetVariable().equals(variable))
+                .findFirst()
+                .flatMap(NormalizedStep.PersistStep::failure);
+    }
+
+    /**
+     * A versioned update is conditional only when the same variable is the target of both the update
+     * and the persist, which is what the semantic rules already guarantee for versioned entities.
+     */
+    private boolean conditionalUpdateAllowed(NormalizedStep.UpdateStep update, SymbolId owner) {
+        NormalizedCapability capability = this.capability(owner);
+        if (capability == null) {
+            return false;
+        }
+
+        return capability.workflow().steps().stream()
+                .filter(NormalizedStep.PersistStep.class::isInstance)
+                .map(NormalizedStep.PersistStep.class::cast)
+                .anyMatch(persist -> persist.targetVariable().equals(update.targetVariable()));
+    }
+
+    private NormalizedEntity versionedEntityOfUpdate(NormalizedStep.UpdateStep update) {
+        SymbolId entitySymbol = this.entityOfVariable(update.targetVariable());
+        if (entitySymbol == null) {
+            return null;
+        }
+
+        NormalizedEntity entity = this.entities.get(entitySymbol);
+        return entity != null && entity.versionField().isPresent() ? entity : null;
+    }
+
+    private SymbolId entityOfVariable(SymbolId variableSymbol) {
+        Symbol symbol = this.source.symbols().byId(variableSymbol).orElse(null);
+        return symbol instanceof Symbol.VariableSymbol variable
+                ? switch (variable.type()) {
+                    case RefType ref -> ref.entityId();
+                    case DeclaredType declared when declared.kind() == DeclaredType.DeclaredKind.ENTITY -> declared.symbolId();
+                    default -> null;
+                }
+                : null;
+    }
+
+    private NormalizedStep.UpdateStep updateStepFor(NormalizedCapability capability, SymbolId variable) {
+        return capability.workflow().steps().stream()
+                .filter(NormalizedStep.UpdateStep.class::isInstance)
+                .map(NormalizedStep.UpdateStep.class::cast)
+                .filter(step -> step.targetVariable().equals(variable))
+                .findFirst()
+                .orElse(null);
+    }
+
+    private NormalizedCapability capability(SymbolId owner) {
+        for (NormalizedDeclaration declaration : this.source.declarations()) {
+            if (declaration instanceof NormalizedCapability capability && capability.id().equals(owner)) {
+                return capability;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * The patch payload this capability is given, if any.
+     *
+     * <p>{@code capability.inputSymbol()} names the capability's input <em>variable</em>, so the payload
+     * declaration is reached through that variable's declared type; inferring it from anything else
+     * would mean matching by name again.
+     */
+    private SpringBootDeclaration.PatchSpec patchSpecOfCapability(SymbolId owner) {
+        NormalizedCapability capability = this.capability(owner);
+        if (capability == null || capability.inputSymbol().isEmpty()) {
+            return null;
+        }
+
+        NormalizedInput input = this.inputDeclaration(capability.inputSymbol().orElseThrow()).orElse(null);
+        return input == null ? null : this.lowerPatchSpec(input).orElse(null);
+    }
+
+    private List<SpringBootWorkflow.OrderKey> lowerOrderKeys(NormalizedStep.FindStep step) {
+        return step.orderKeys().stream().map(key -> new SpringBootWorkflow.OrderKey(
+                key.fieldSymbol(), this.targetMemberName(key.fieldSymbol(), "unknown"), key.descending())).toList();
+    }
+
+    private Optional<SpringBootWorkflow.PageSpec> lowerPageSpec(NormalizedStep.FindStep step) {
+        return step.page().map(page -> new SpringBootWorkflow.PageSpec(
+                page.pageField(),
+                page.sizeField(),
+                this.targetMemberName(page.pageField(), "page"),
+                this.targetMemberName(page.sizeField(), "size"),
+                this.queryPolicy.pageDefaultSize(),
+                this.queryPolicy.pageMaxSize(),
+                this.queryPolicy.pageMaxNumber(),
+                page.errorSymbol()));
+    }
+
+    /**
+     * Every literal string match of the predicate becomes an explicit plan entry, so the renderer
+     * never has to decide on its own which comparisons need escaping.
+     */
+    private List<SpringExpression.StringMatch> lowerStringMatches(NormalizedStep.FindStep step, SymbolId owner) {
+        ArrayList<SpringExpression.StringMatch> matches = new ArrayList<SpringExpression.StringMatch>();
+        this.collectStringMatches(step.predicate(), owner, matches);
+        return List.copyOf(matches);
+    }
+
+    private void collectStringMatches(NormalizedExpression expression, SymbolId owner, List<SpringExpression.StringMatch> matches) {
+        if (!(expression instanceof NormalizedExpression.BinaryExpression binary)) {
+            return;
+        }
+
+        if (binary.operator().name().equals("CONTAINS_LITERAL")) {
+            matches.add(new SpringExpression.StringMatch(
+                    this.nodeId(binary.sourceNodeId().value(), "string-match"),
+                    this.origin(owner, binary.sourceNodeId(), binary.span()),
+                    this.nodeId(binary.sourceNodeId().value(), "expression"),
+                    this.queryPolicy.likeEscapeCharacter(),
+                    this.queryPolicy.likeEscapedLiterals()));
+        }
+
+        this.collectStringMatches(binary.left(), owner, matches);
+        this.collectStringMatches(binary.right(), owner, matches);
+    }
+
+    /**
+     * The request property a binding reads, when its value is a plain reference to an input member.
+     *
+     * <p>A field error must point at the property the client actually sent, so this is recorded from
+     * the resolved expression shape rather than assumed to equal the entity member's name.
+     */
+    private Optional<String> sourcePropertyName(SpringExpression value, SymbolId owner) {
+        if (value instanceof SpringExpression.MemberExpression member
+                && member.receiver() instanceof SpringExpression.NameExpression receiver) {
+            Symbol symbol = this.source.symbols().byId(receiver.resolvedSymbol()).orElse(null);
+            boolean inputVariable = symbol instanceof Symbol.VariableSymbol variable
+                    && "input".equals(variable.name())
+                    && variable.id().value().startsWith(owner.value() + "/");
+            if (inputVariable) {
+                return Optional.of(member.targetMember());
+            }
+        }
+
+        return Optional.empty();
+    }
+
     private SpringBootWorkflow.Binding lowerBinding(NormalizedBinding binding, SymbolId owner, Optional<SymbolId> actorSymbol) {
         String targetName = this.targetMemberNames.get(binding.fieldSymbol());
-        return new SpringBootWorkflow.Binding(binding.fieldSymbol(), targetName, this.lowerExpression(binding.value(), owner, actorSymbol));
+        SpringExpression value = this.lowerExpression(binding.value(), owner, actorSymbol);
+        return new SpringBootWorkflow.Binding(binding.fieldSymbol(), targetName, value, this.sourcePropertyName(value, owner));
     }
 
     private SpringExpression lowerExpression(NormalizedExpression expression, SymbolId owner) {
         return this.lowerExpression(expression, owner, Optional.empty());
+    }
+
+    /**
+     * The request property a presence test reads.
+     *
+     * <p>The test's target is a member access on the input payload, and its resolved member is the
+     * payload field; the property name comes from the target's own naming, so the renderer asks the
+     * payload's presence flag by the name the client used.
+     */
+    private String presencePropertyName(NormalizedExpression.PresentExpression expression) {
+        if (expression.target() instanceof NormalizedExpression.MemberExpression member
+                && member.resolvedMember().equals(expression.field())) {
+            return this.targetMemberNames.getOrDefault(member.resolvedMember(), "unknown");
+        }
+
+        throw new IllegalStateException("validated presence test must read an input member: " + expression.sourceNodeId());
     }
 
     private SpringExpression lowerExpression(NormalizedExpression expression, SymbolId owner, Optional<SymbolId> actorSymbol) {
@@ -429,6 +920,8 @@ public final class SpringBootModelLowerer {
                     id, origin, type, lowerExpression(value.left(), owner, actorSymbol),
                     SpringExpression.BinaryOperator.valueOf(value.operator().name()),
                     lowerExpression(value.right(), owner, actorSymbol));
+            case NormalizedExpression.PresentExpression value -> new SpringExpression.PayloadPresence(
+                    id, origin, type, this.presencePropertyName(value));
         };
     }
 
@@ -467,6 +960,7 @@ public final class SpringBootModelLowerer {
             case PrimitiveType value -> scalar(value);
             case OptionalType value -> new LoweredJavaType.OptionalValue(lowerType(value.element()));
             case ListType value -> new LoweredJavaType.ListValue(lowerType(value.element()));
+            case PageType value -> new LoweredJavaType.PageValue(lowerType(value.element()));
             case DeclaredType value -> new LoweredJavaType.Declared(
                     LoweredJavaType.DeclaredKind.valueOf(value.kind().name()), value.symbolId(), value.name());
             case RefType value -> {
@@ -505,6 +999,8 @@ public final class SpringBootModelLowerer {
             }
             case SpringBootDeclaration.InputDeclaration value ->
                 result.add(this.artifact(sourceDeclaration, value.origin(), SpringArtifact.Role.REQUEST_DTO, this.source.metadata().namespace() + ".api", value.javaName()));
+            case SpringBootDeclaration.ViewDeclaration value ->
+                result.add(this.artifact(sourceDeclaration, value.origin(), SpringArtifact.Role.VIEW_DTO, this.source.metadata().namespace() + ".api", value.javaName()));
             case SpringBootDeclaration.ErrorDeclaration value ->
                 result.add(this.artifact(sourceDeclaration, value.origin(), SpringArtifact.Role.EXCEPTION, this.source.metadata().namespace() + ".api", value.javaName()));
             case SpringBootDeclaration.CapabilityDeclaration value -> {

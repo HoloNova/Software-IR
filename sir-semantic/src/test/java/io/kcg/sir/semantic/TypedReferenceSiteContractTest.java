@@ -42,7 +42,7 @@ import org.junit.jupiter.api.Test;
  * Contract tests for the typed reference-site contract (ADR-005).
  *
  * <p>These tests assert the invariants of {@link ReferenceSiteBindings}, {@link ReferenceSite} and
- * {@link ReferenceSiteBinding}, and verify that a single legal SIR source covering all thirteen
+ * {@link ReferenceSiteBinding}, and verify that a single legal SIR source covering every
  * {@link ReferenceRole} values produces a deterministic, immutable, fully-bound reference-site
  * collection. They also verify that undefined references and role/Kind mismatches produce only
  * Resolve-stage diagnostics (no duplicate diagnostics from later passes).
@@ -55,11 +55,36 @@ class TypedReferenceSiteContractTest {
               identity id: Int64 generated auto;
               field state: Status;
             }
+            entity Account persistent {
+              identity id: Int64 generated auto;
+              field state: Status;
+              field version: Int64 versioned;
+            }
             input LookupInput {
               field id: Int64;
               field active: Boolean;
             }
+            view UserSummary from User {
+              field id: Int64;
+              field state: Status;
+            }
+            view AccountSummary from Account {
+              field id: Int64;
+              field state: Status;
+            }
+            input SearchInput {
+              field keyword: String;
+              field page: Int32;
+              field size: Int32;
+            }
+            input AccountPatch patch of Account {
+              field id: Int64;
+              field state: Status;
+            }
             error NotFound;
+            error InvalidPage;
+            error Stale;
+            error InvalidChange;
             capability ExerciseAll {
               input LookupInput;
               output List<Ref<User>>;
@@ -73,6 +98,37 @@ class TypedReferenceSiteContractTest {
                 update user { state: Status.ACTIVE; }
                 persist user;
                 find User where item.id == input.id as users;
+                return users;
+              }
+            }
+            capability PatchAccount {
+              input AccountPatch;
+              output AccountSummary;
+              fails InvalidChange;
+              fails NotFound;
+              fails Stale;
+              requires atomic;
+              expose command;
+              workflow {
+                validate input.state.present else InvalidChange;
+                load Account by input.id as account else NotFound;
+                update account { state: input.state; }
+                persist account else Stale;
+                return account;
+              }
+            }
+            capability SearchUsers {
+              input SearchInput;
+              output Page<UserSummary>;
+              fails InvalidPage;
+              requires readonly;
+              expose query;
+              workflow {
+                find User
+                  where item.state == Status.ACTIVE
+                  order by id descending
+                  Page input.page, input.size else InvalidPage
+                  as users;
                 return users;
               }
             }
@@ -90,7 +146,7 @@ class TypedReferenceSiteContractTest {
     }
 
     @Test
-    void allThirteenRolesAreCoveredByAtLeastOneBinding() {
+    void everyReferenceRoleIsCoveredByAtLeastOneBinding() {
         NormalizedSemanticModel model = analyzeContract().model().orElseThrow();
         ReferenceSiteBindings bindings = model.referenceSiteBindings();
         assertFalse(bindings.all().isEmpty(), "ReferenceSiteBindings must not be empty");
@@ -100,7 +156,7 @@ class TypedReferenceSiteContractTest {
             presentRoles.add(b.site().role());
         }
         assertEquals(EnumSet.allOf(ReferenceRole.class), presentRoles,
-                "Every ReferenceRole (13 total) must be exercised by the contract source");
+                "Every ReferenceRole must be exercised by the contract source");
     }
 
     @Test
@@ -525,7 +581,15 @@ class TypedReferenceSiteContractTest {
                     }
                 }
                 case io.kcg.sir.ast.AstInputDecl e -> {
+                    e.patchSourceEntity().ifPresent(source -> sink.put(source.id(), source.text()));
                     for (io.kcg.sir.ast.AstField f : e.fields()) {
+                        collectTypeRef(f.type(), sink);
+                    }
+                }
+                case io.kcg.sir.ast.AstViewDecl e -> {
+                    sink.put(e.sourceEntity().id(), e.sourceEntity().text());
+                    for (io.kcg.sir.ast.AstViewField f : e.fields()) {
+                        sink.put(f.name().id(), f.name().text());
                         collectTypeRef(f.type(), sink);
                     }
                 }
@@ -547,6 +611,7 @@ class TypedReferenceSiteContractTest {
             case AstRefTypeRef r -> sink.put(r.targetName().id(), r.targetName().text());
             case io.kcg.sir.ast.AstListTypeRef l -> collectTypeRef(l.elementType(), sink);
             case io.kcg.sir.ast.AstOptionalTypeRef o -> collectTypeRef(o.elementType(), sink);
+            case io.kcg.sir.ast.AstPageTypeRef p -> collectTypeRef(p.elementType(), sink);
             default -> { }
         }
     }
@@ -565,6 +630,12 @@ class TypedReferenceSiteContractTest {
             case AstFindStep s -> {
                 sink.put(s.entity().id(), s.entity().text());
                 collectExpressionRefs(s.predicate(), sink);
+                s.order().ifPresent(order -> order.keys().forEach(key -> sink.put(key.field().id(), key.field().text())));
+                s.page().ifPresent(page -> {
+                    collectExpressionRefs(page.page(), sink);
+                    collectExpressionRefs(page.size(), sink);
+                    sink.put(page.error().id(), page.error().text());
+                });
             }
             case AstCreateStep s -> {
                 sink.put(s.entity().id(), s.entity().text());
@@ -580,7 +651,10 @@ class TypedReferenceSiteContractTest {
                     collectExpressionRefs(b.value(), sink);
                 }
             }
-            case AstPersistStep s -> sink.put(s.target().id(), s.target().text());
+            case AstPersistStep s -> {
+                sink.put(s.target().id(), s.target().text());
+                s.failure().ifPresent(failure -> sink.put(failure.id(), failure.text()));
+            }
             case io.kcg.sir.ast.AstReturnStep s -> collectExpressionRefs(s.value(), sink);
             default -> { }
         }
@@ -600,6 +674,10 @@ class TypedReferenceSiteContractTest {
                 collectExpressionRefs(b.right(), sink);
             }
             case io.kcg.sir.ast.AstGroupedExpression g -> collectExpressionRefs(g.inner(), sink);
+            case io.kcg.sir.ast.AstPresentExpression p -> {
+                sink.put(p.id(), "present");
+                collectExpressionRefs(p.target(), sink);
+            }
             default -> { }
         }
     }

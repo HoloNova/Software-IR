@@ -29,6 +29,8 @@ import io.kcg.sir.semantic.model.NormalizedExpression;
 import io.kcg.sir.semantic.model.NormalizedField;
 import io.kcg.sir.semantic.model.NormalizedIdentity;
 import io.kcg.sir.semantic.model.NormalizedInput;
+import io.kcg.sir.semantic.model.NormalizedView;
+import io.kcg.sir.semantic.model.NormalizedViewField;
 import io.kcg.sir.semantic.model.NormalizedStep;
 import io.kcg.sir.semantic.model.NormalizedWorkflow;
 import io.kcg.sir.semantic.model.NormalizedExpression.BinaryExpression;
@@ -82,6 +84,10 @@ final class SemanticProjection {
          );
       } else if (decl instanceof NormalizedInput i) {
          return new SemanticProjection.DeclarationProjection.InputP(i.id().value(), i.name(), i.fields().stream().map(SemanticProjection::fieldP).toList());
+      } else if (decl instanceof NormalizedView v) {
+         return new SemanticProjection.DeclarationProjection.ViewP(
+            v.id().value(), v.name(), v.sourceEntity().value(), v.fields().stream().map(SemanticProjection::viewFieldP).toList()
+         );
       } else if (decl instanceof NormalizedError er) {
          return new SemanticProjection.DeclarationProjection.ErrorP(er.id().value(), er.name());
       } else if (decl instanceof NormalizedCapability c) {
@@ -225,6 +231,10 @@ final class SemanticProjection {
 
    private static SemanticProjection.IdentityP identityP(NormalizedIdentity identity) {
       return new SemanticProjection.IdentityP(identity.id().value(), identity.name(), typeP(identity.type()), identity.generation());
+   }
+
+   private static SemanticProjection.ViewFieldP viewFieldP(NormalizedViewField f) {
+      return new SemanticProjection.ViewFieldP(f.id().value(), f.name(), typeP(f.type()), f.sourceField().value());
    }
 
    private static SemanticProjection.FieldP fieldP(NormalizedField f) {
@@ -390,6 +400,7 @@ final class SemanticProjection {
       permits SemanticProjection.DeclarationProjection.EnumP,
       SemanticProjection.DeclarationProjection.EntityP,
       SemanticProjection.DeclarationProjection.InputP,
+      SemanticProjection.DeclarationProjection.ViewP,
       SemanticProjection.DeclarationProjection.ErrorP,
       SemanticProjection.DeclarationProjection.CapabilityP {
       record CapabilityP(
@@ -453,6 +464,17 @@ final class SemanticProjection {
          public InputP {
             Objects.requireNonNull(symbolId, "symbolId");
             Objects.requireNonNull(name, "name");
+            fields = List.copyOf(Objects.requireNonNull(fields, "fields"));
+         }
+      }
+
+      /** A response projection: its identity, the entity it reads, and the projected fields. */
+      record ViewP(String symbolId, String name, String sourceEntity, List<SemanticProjection.ViewFieldP> fields)
+         implements SemanticProjection.DeclarationProjection {
+         public ViewP {
+            Objects.requireNonNull(symbolId, "symbolId");
+            Objects.requireNonNull(name, "name");
+            Objects.requireNonNull(sourceEntity, "sourceEntity");
             fields = List.copyOf(Objects.requireNonNull(fields, "fields"));
          }
       }
@@ -534,6 +556,16 @@ final class SemanticProjection {
          Objects.requireNonNull(name, "name");
          Objects.requireNonNull(sourceNodeId, "sourceNodeId");
          Objects.requireNonNull(type, "type");
+      }
+   }
+
+   /** A projected field never carries constraints: it names the entity field it reads instead. */
+   record ViewFieldP(String symbolId, String name, SemanticProjection.TypeP type, String sourceField) {
+      public ViewFieldP {
+         Objects.requireNonNull(symbolId, "symbolId");
+         Objects.requireNonNull(name, "name");
+         Objects.requireNonNull(type, "type");
+         Objects.requireNonNull(sourceField, "sourceField");
       }
    }
 

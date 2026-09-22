@@ -5,6 +5,7 @@ import io.kcg.sir.semantic.symbol.SymbolId;
 import io.kcg.sir.source.SourceSpan;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 public sealed interface NormalizedStep
    permits NormalizedStep.ValidateStep,
@@ -18,6 +19,30 @@ public sealed interface NormalizedStep
 
    SourceSpan span();
 
+   /** One key of a {@code find} step's declared {@code order by} clause, in authored order. */
+   record OrderKey(AstNodeId sourceNodeId, SourceSpan span, SymbolId fieldSymbol, boolean descending) {
+      public OrderKey {
+         Objects.requireNonNull(sourceNodeId, "sourceNodeId");
+         Objects.requireNonNull(span, "span");
+         Objects.requireNonNull(fieldSymbol, "fieldSymbol");
+      }
+   }
+
+   /**
+   * The declared pagination sources and the error raised for an illegal page or size.
+   *
+   * <p>Defaults and legal bounds are Lowering decisions, so they are absent here on purpose.
+   */
+   record PageSpec(AstNodeId sourceNodeId, SourceSpan span, SymbolId pageField, SymbolId sizeField, SymbolId errorSymbol) {
+      public PageSpec {
+         Objects.requireNonNull(sourceNodeId, "sourceNodeId");
+         Objects.requireNonNull(span, "span");
+         Objects.requireNonNull(pageField, "pageField");
+         Objects.requireNonNull(sizeField, "sizeField");
+         Objects.requireNonNull(errorSymbol, "errorSymbol");
+      }
+   }
+
    record CreateStep(AstNodeId sourceNodeId, SourceSpan span, SymbolId entitySymbol, SymbolId resultVariable, List<NormalizedBinding> bindings)
       implements NormalizedStep {
       public CreateStep {
@@ -30,13 +55,22 @@ public sealed interface NormalizedStep
    }
 
    record FindStep(
-      AstNodeId sourceNodeId, SourceSpan span, SymbolId entitySymbol, NormalizedExpression predicate, SymbolId resultVariable, SymbolId itemVariable
+      AstNodeId sourceNodeId,
+      SourceSpan span,
+      SymbolId entitySymbol,
+      NormalizedExpression predicate,
+      List<OrderKey> orderKeys,
+      Optional<PageSpec> page,
+      SymbolId resultVariable,
+      SymbolId itemVariable
    ) implements NormalizedStep {
       public FindStep {
          Objects.requireNonNull(sourceNodeId, "sourceNodeId");
          Objects.requireNonNull(span, "span");
          Objects.requireNonNull(entitySymbol, "entitySymbol");
          Objects.requireNonNull(predicate, "predicate");
+         orderKeys = List.copyOf(Objects.requireNonNull(orderKeys, "orderKeys"));
+         Objects.requireNonNull(page, "page");
          Objects.requireNonNull(resultVariable, "resultVariable");
          Objects.requireNonNull(itemVariable, "itemVariable");
       }
@@ -55,11 +89,16 @@ public sealed interface NormalizedStep
       }
    }
 
-   record PersistStep(AstNodeId sourceNodeId, SourceSpan span, SymbolId targetVariable) implements NormalizedStep {
+   record PersistStep(AstNodeId sourceNodeId, SourceSpan span, SymbolId targetVariable, Optional<SymbolId> failure) implements NormalizedStep {
       public PersistStep {
          Objects.requireNonNull(sourceNodeId, "sourceNodeId");
          Objects.requireNonNull(span, "span");
          Objects.requireNonNull(targetVariable, "targetVariable");
+         Objects.requireNonNull(failure, "failure");
+      }
+
+      public PersistStep(AstNodeId sourceNodeId, SourceSpan span, SymbolId targetVariable) {
+         this(sourceNodeId, span, targetVariable, Optional.empty());
       }
    }
 

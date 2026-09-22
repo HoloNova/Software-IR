@@ -9,7 +9,7 @@
 1. 打开 [`roadmap/ACTIVE_WORK.md`](roadmap/ACTIVE_WORK.md)，看当前唯一工作单。
 2. 新开对话就使用下面的“新对话/新 Agent 开工提示词”；同一对话继续就使用“同一对话续作提示词”。
 3. 等它按工作单完成后，用本手册的验收清单检查。
-4. 验收通过后把旧工作单移入 `roadmap/completed/`，立即用下一张 `READY` 工作单替换 `ACTIVE_WORK.md`；随后按你的授权提交 Git。
+4. 验收通过后把旧工作单移入 `roadmap/completed/`；如果当前阶段已关闭且没有下一张授权工作单，就把 `ACTIVE_WORK.md` 置为 `IDLE`。随后按你的授权提交 Git。
 
 不要一次把整个路线图交给一个 Agent。路线图是排队表，`ACTIVE_WORK.md` 才是本轮授权执行的任务。
 
@@ -17,13 +17,16 @@
 
 | 文件 | 你什么时候看 | 它负责回答什么 |
 |---|---|---|
+| [`README.md`](README.md) | 不知道该看哪份文档时 | 全部文档的导航入口和两类问题（该做什么 / 已实现什么）的分工 |
 | [`PROJECT_OWNER_GUIDE.md`](PROJECT_OWNER_GUIDE.md) | 不知道怎么继续时 | 你该怎么派活、验收和换阶段 |
 | [`roadmap/ACTIVE_WORK.md`](roadmap/ACTIVE_WORK.md) | 每次开工前 | 这一次只做什么、做到什么算完成 |
 | [`roadmap/completed/`](roadmap/completed/) | 需要追溯已经完成的工作时 | 已验收工作单及其实际证据；不参与当前任务裁决 |
 | [`PROJECT_STATUS.md`](PROJECT_STATUS.md) | 想知道项目现在能做什么时 | 当前真实能力和未发布边界 |
 | [`qualification/CURRENT_QUALIFICATION.md`](qualification/CURRENT_QUALIFICATION.md) | 想知道哪些结论真的跑过时 | 测试、skip、exclude、BLOCKED 和 NOT_RUN |
 | [`roadmap/REMAINING_WORK.md`](roadmap/REMAINING_WORK.md) | 想看完整后续顺序时 | 长期阶段顺序和各阶段完成门 |
-| [`../AGENTS.md`](../AGENTS.md) | 任何人准备改代码前 | 不可破坏规则、权威层级和统一验收命令 |
+| [`roadmap/README.md`](roadmap/README.md) | 以主设计控制后续方向时 | G0–G7 阶段入口和交给 Agent 的 Prompt |
+| [`design/`](design/) | 需要确认目标设计时 | 主设计的目标契约和实现边界，不替代当前工作单 |
+| [`../AGENTS.md`](../AGENTS.md) + [`../MAIN.md`](../MAIN.md) | 任何人准备改代码前 | 全局规则、项目主体说明、权威层级和统一验收命令 |
 | [`architecture/`](architecture/) | 工作单点名某个 ADR 时 | 已冻结的架构决定和理由 |
 
 这套分工很重要：
@@ -33,7 +36,62 @@
 - 当前唯一任务只看 `ACTIVE_WORK.md`。
 - 已完成证据只在 `roadmap/completed/` 追溯，不得继续留在 `ACTIVE_WORK.md`。
 - 长期顺序只看 `REMAINING_WORK.md`。
+- 主设计的 G 阶段只负责方向和阶段完成门；实际执行仍以 `ACTIVE_WORK.md` 为准。
 - 不要从旧聊天、日期化报告或某个 Agent 的口头总结恢复“当前状态”。
+
+## 阶段总览与派发方式
+
+主设计把工作分成 **G0–G7 共八个阶段**，方向与完成门见 [`roadmap/README.md`](roadmap/README.md)。派发前先记住一条：**派发的单位永远是一张 Q 工作单，不是一整个 G 阶段。**
+
+- G 阶段回答“这一步要证明什么、什么时候算完成”。
+- Q 工作单回答“这一次只改什么、跑什么命令、交出什么证据”。
+- 一个 G 阶段通常拆成多张 Q 工作单，按 [`roadmap/REMAINING_WORK.md`](roadmap/REMAINING_WORK.md) 排队。
+
+### 八个阶段
+
+| 阶段 | 一句话目标 | 进入条件 | 完成时你应该能看到的证据 | 当前状态 |
+|---|---|---|---|---|
+| G0 | 收口现有单文件编译、Lowering、Generator、Project Graph、Change 和文件事务的资格 | Q1–Q8 已完成 | 标准 clean 构建、生成工程编译、边界与确定性测试、文件事务恢复证据 | **已完成**（554/0/0/5；外部 MySQL `QUALIFIED`） |
+| G1 | 单文件课程业务切片：先一个实体 + 一个查询跑通 | G0 关闭 | 真实 MySQL 与 HTTP 下的 BIZ-01..06 及反例 | 未开始 |
+| G2 | 持久身份与受控多文件模块 | G1 关闭 | LANG-01..05：改名、移动、重复 ID、引用闭包、旧 Bundle 兼容 | 未开始 |
+| G3 | 数据库生命周期：INITIALIZE/UPDATE、历史、漂移、恢复 | G2 关闭 | DB-01..11；连续两次更新保留数据；DDL 中断可判定 | 未开始 |
+| G4 | 完整源码包与 Docker 独立交付 | G3 关闭 | GEN-03/04、DEP-01..08；仅有 Docker 的机器能构建并部署 | 未开始 |
+| G5 | 完整课程业务：登录、角色、归属、选课、名额、事务 | G4 关闭 | BIZ-07..13；真实并发不超额、失败回滚 | 未开始 |
+| G6 | 网页平台与可靠发布 | G5 关闭 | WEB/JOB/PUB 场景；网页到本地部署闭环 | 未开始 |
+| G7 | 换第二道题验证工具链 | G6 关闭 | 第二题首次生成 + 两轮修改 + 数据保留 + 人工介入记录 | 未开始 |
+
+注意两套编号容易混淆：设计里的 **G0–G7** 是产品阶段；`REMAINING_WORK.md` 里的**阶段 1–6** 全部属于 G0 内部，阶段 7（最终资格）就是 G0 的关闭动作。G1 之后就属于新的产品能力，不再沿用那张清单。
+
+### G0 内部的工作单序列（已完成）
+
+G0 的 Q1–Q8 已完成并归档。下一张候选是 G1 的新 Q 工作单；派发前必须按当时证据重新写明编号、边界和完成门。
+
+| 顺序 | Q 工作单 | 范围 | 现状 |
+|---|---|---|---|
+| 1 | Q1 | Generator 生产边界 | 已完成并归档（`DONE`）；已包含在实现提交 `24eec6d` |
+| 2 | Q2 | Project Graph 直接契约 | 已完成并归档（72 项全绿）；已包含在实现提交 `24eec6d` |
+| 3 | Q3 | Change fixtures 与软链接收口 | 已完成并归档（465/0/0/5 阶段计数） |
+| 4 | Q4+Q5 | conformance 恢复与真实 MySQL 矩阵 | 已完成并归档（MySQL 8.4.11 `QUALIFIED`） |
+| 5 | Q6 | 文件事务故障矩阵 | 已完成并归档（64 项全绿） |
+| 6 | Q7 | CLI 只读产品边界 | 已完成并归档（12 项新增测试） |
+| 7 | Q8 | G0 最终资格关闭 | 已完成并归档（554/0/0/5；G0 已关闭） |
+
+G1 开始前，先建立新的 `ACTIVE_WORK.md` 工作单并经负责人确认。
+
+### 每次派发只做三个动作
+
+1. **换工作单**：把验收通过的旧工作单移进 `roadmap/completed/`，写一张新的 `ACTIVE_WORK.md`（目标、允许修改范围、完成门、验证命令、报告位置）。
+2. **改状态**：`READY` → `IN_PROGRESS`。
+3. **贴提示词**：新对话用“新对话 / 新 Agent 开工提示词”，同一对话用“同一对话续作提示词”；两者都只授权 `ACTIVE_WORK.md` 里的那一张工作单。
+
+[`roadmap/README.md`](roadmap/README.md) 里的 G 阶段 Prompt 不要单独当任务派出去：它是阶段背景，正确用法是和当前 Q 工作单一并给出，并写明“只做当前工作单”。
+
+### 接到交付后先看四件事
+
+1. 改动是否只落在工作单允许的范围；
+2. 命令是否真的跑过，run/fail/error/skip/exclude 分别是多少；
+3. 完成门是否逐条有对应证据；
+4. 没有失败或待裁决事项时，是否只发了一句确认请求。
 
 ## 同一对话续作提示词
 
@@ -60,11 +118,12 @@
 
 不要假设你知道任何旧聊天、旧 Agent 记忆或历史结论。先按顺序完整读取：
 1. AGENTS.md
-2. docs/PROJECT_OWNER_GUIDE.md
-3. docs/PROJECT_STATUS.md
-4. docs/roadmap/ACTIVE_WORK.md
-5. docs/qualification/CURRENT_QUALIFICATION.md
-6. ACTIVE_WORK 点名的 ADR、代码和测试
+2. MAIN.md
+3. docs/PROJECT_OWNER_GUIDE.md
+4. docs/PROJECT_STATUS.md
+5. docs/roadmap/ACTIVE_WORK.md
+6. docs/qualification/CURRENT_QUALIFICATION.md
+7. ACTIVE_WORK 点名的 ADR、代码和测试
 
 本轮只执行 docs/roadmap/ACTIVE_WORK.md 这一张工作单，不要顺手进入下一阶段，也不要展开 Redis、第二 Target、Constraint VM、GUI 等远期方向。
 
@@ -137,7 +196,9 @@ git status --short
 test(generator): establish canonical output contract baseline
 ```
 
-Q1A、Q1B1、Q1B2 这类小版本只提交到本地，不推送。Q1、Q2 这类大版本全部完成并经你确认后，把累计本地提交以普通 push 推送到当前 `origin`。任何情况下都不自动 force-push、rebase 或改写历史。
+Q1A、Q1B1、Q1B2 这类小版本只提交到本地，不推送；Q1、Q2 这类大版本本应在完成后推送 `origin`。当前的有效覆盖是：项目负责人 2026-09-18 明确要求 Q1、Q2 不单独提交，与后续工作合并到 **G1 完成后统一提交**——该指示优先于本文件的默认规则，直到负责人另行确认。任何情况下都不自动 force-push、rebase 或改写历史。
+
+2026-09-18：项目负责人决定 Q1–Q7 的成果**不在执行期间提交**；**G0 完成后由项目负责人手动提交**，执行者只准备可提交状态并给出提交内容清单，不执行提交或推送。
 
 你的“确认”“认可”“继续”同时表示：当前工作单验收通过、允许切换下一张工作单，并授权执行对应级别的快照动作。若工作区存在未验收、任务外或受保护内容，执行者必须先从快照范围中排除。
 
@@ -157,20 +218,23 @@ Q1A、Q1B1、Q1B2 这类小版本只提交到本地，不推送。Q1、Q2 这类
 
 `ACTIVE_WORK.md` 只使用以下状态：
 
+- `SPEC_REVIEW`：方案已经写清但尚未批准；等待项目负责人复核，复核通过前不得修改生产代码。
 - `READY`：已经写清楚，可以派给执行者。
 - `IN_PROGRESS`：有人正在做，其他人不要并行修改同一范围。
 - `BLOCKED`：确实缺权限、环境、输入或架构裁决；必须写清阻断证据。
 - `AWAITING_ACCEPTANCE`：实现者完成了，等你或复核者验收。
 - `DONE`：完成门已经被实际证据闭合。
+- `IDLE`：当前没有任何已授权工作单（`ACTIVE_WORK.md` 的唯一占位状态）；此时不得修改生产代码，等下一张工作单写入后再开工。
 
 推荐操作：
 
-1. 开工时把状态从 `READY` 改为 `IN_PROGRESS`。
-2. 执行者完成后改为 `AWAITING_ACCEPTANCE`，同时填写证据。
-3. 你明确说“确认”“认可”“可以继续”或指出本轮已经完成，就视为验收；如果你提出缺陷，则保持原工作单继续修正。
-4. 验收后把状态改为 `DONE`，移入 `roadmap/completed/`。
-5. 根据 `REMAINING_WORK.md` 立即写下一张更小的 `READY` 工作单，成为新的 `ACTIVE_WORK.md`。
-6. 小版本在本次确认后创建本地提交；大版本在全部子项完成并确认后普通推送 `origin`。用户确认已经是这两类对应动作的明确授权。
+1. 需要你先定方案的工作单停在第 `SPEC_REVIEW`；你说“方案可以”或“按这个做”之后才进入下一步。
+2. 开工时把状态从 `READY`（或刚获批准的 `SPEC_REVIEW`）改为 `IN_PROGRESS`。
+3. 执行者完成后改为 `AWAITING_ACCEPTANCE`，同时填写证据。
+4. 你明确说“确认”“认可”“可以继续”或指出本轮已经完成，就视为验收；如果你提出缺陷，则保持原工作单继续修正。
+5. 验收后把状态改为 `DONE`，移入 `roadmap/completed/`。
+6. 根据 `REMAINING_WORK.md` 立即写下一张更小的 `READY` 工作单，成为新的 `ACTIVE_WORK.md`；在写出来之前，`ACTIVE_WORK.md` 保持 `IDLE` 占位（意味着没有授权，而不是意味着自由开工）。
+7. 小版本在本次确认后创建本地提交；大版本在全部子项完成并确认后普通推送 `origin`。用户确认已经是这两类对应动作的明确授权。**当前有效例外：负责人 2026-09-18 要求 Q1、Q2 不单独提交，合并到 G1 完成后统一提交。**
 
 任何时候都只能有一个 `ACTIVE_WORK.md`。已验收的工作不能继续占着活动入口，completed 目录里的文件也不能被当成当前授权。
 
@@ -209,6 +273,8 @@ Q1A、Q1B1、Q1B2 这类小版本只提交到本地，不推送。Q1、Q2 这类
 6. 再裁决 CLI 完整生命周期。
 
 当前阶段内部也要继续拆小。例如 Generator 阶段会分成输出契约、renderer 行为、确定性矩阵和生成工程离线编译，而不是一次全部交给一个 Agent。
+
+上面这六项对应 G0 内部的阶段 1–6（见上一章“阶段总览与派发方式”）；G0 之后的 G1–G7 产品方向见 [`roadmap/README.md`](roadmap/README.md)，不经 G0 完成门不展开。
 
 ## 你真正需要记住的一句话
 

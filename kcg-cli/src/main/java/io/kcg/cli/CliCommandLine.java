@@ -35,7 +35,13 @@ public final class CliCommandLine {
       if (args.length >= 2 && isHelp(args[1])) {
          return new CliCommandLine.Help("context");
       } else {
-         Map<String, String> opts = Map.of("--state-root", "stateRoot", "--output-root", "outputRoot", "--candidate-sir", "candidateSir");
+         // Declared order, not Map.of: the missing-required-option diagnostic below reports the
+         // first absent option, and an unspecified iteration order would make that message differ
+         // between two runs of the same command line.
+         Map<String, String> opts = new LinkedHashMap<>();
+         opts.put("--state-root", "stateRoot");
+         opts.put("--output-root", "outputRoot");
+         opts.put("--candidate-sir", "candidateSir");
          Object om = parseOptions(args, 1, opts, "context");
          if (om instanceof CliCommandLine.UsageError ue) {
             return ue;
@@ -63,22 +69,16 @@ public final class CliCommandLine {
       if (args.length >= 2 && isHelp(args[1])) {
          return new CliCommandLine.Help("plan");
       } else {
-         Map<String, String> opts = Map.of(
-            "--state-root",
-            "stateRoot",
-            "--output-root",
-            "outputRoot",
-            "--candidate-sir",
-            "candidateSir",
-            "--expected-context-id",
-            "expectedContextId",
-            "--target-key",
-            "targetKey",
-            "--change-ir-version",
-            "changeIrVersion",
-            "--operation",
-            "operation"
-         );
+         // Declared order, not Map.of: see the note in parseContext — the first missing required
+         // option must be the same one on every run.
+         Map<String, String> opts = new LinkedHashMap<>();
+         opts.put("--state-root", "stateRoot");
+         opts.put("--output-root", "outputRoot");
+         opts.put("--candidate-sir", "candidateSir");
+         opts.put("--expected-context-id", "expectedContextId");
+         opts.put("--target-key", "targetKey");
+         opts.put("--change-ir-version", "changeIrVersion");
+         opts.put("--operation", "operation");
          Object om = parseOptions(args, 1, opts, "plan");
          if (om instanceof CliCommandLine.UsageError ue) {
             return ue;

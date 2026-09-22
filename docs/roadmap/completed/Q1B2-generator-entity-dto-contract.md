@@ -2,7 +2,7 @@
 
 - 状态：`DONE`
 - 所属阶段：路线图阶段 1 / Generator 系统测试
-- 前置工作：[Q1B1 Generator 项目与简单 Artifact Renderer 契约](completed/Q1B1-generator-simple-artifact-contract.md) 已完成
+- 前置工作：[Q1B1 Generator 项目与简单 Artifact Renderer 契约](Q1B1-generator-simple-artifact-contract.md) 已完成
 - 本工作单性质：测试优先；只允许修复新增测试直接证明的 Generator 局部缺陷
 - 下一张候选工作单：Q1B3 Service、Controller、Workflow、actor 与 response 行为契约
 
@@ -39,7 +39,7 @@
 2. `docs/KCG-Code_系统架构与实现指南.md` 的 4.5、6、9、10 节；
 3. `docs/superpowers/specs/2026-07-16-sir-v0.1-lowering-design.md` 的 5.2、5.4、6、8 节；
 4. `docs/superpowers/specs/2026-07-13-sir-v0.1-minimal-language-design.md` 的 4.2、4.3、5.2、5.3 节；
-5. [Q1B1 已完成工作单](completed/Q1B1-generator-simple-artifact-contract.md)；
+5. [Q1B1 已完成工作单](Q1B1-generator-simple-artifact-contract.md)；
 6. 以下生产实现和直接模型：
    - `EntityRenderer.java`
    - `DtoRenderer.java`

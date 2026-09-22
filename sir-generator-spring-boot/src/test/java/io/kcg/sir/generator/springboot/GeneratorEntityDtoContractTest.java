@@ -78,7 +78,9 @@ class GeneratorEntityDtoContractTest {
                 new JavaField("externalKey", "java.util.UUID"),
                 new JavaField("openedOn", "java.time.LocalDate"),
                 new JavaField("updatedAt", "java.time.Instant"),
-                new JavaField("nickname", "java.util.Optional<String>"),
+                // A nullable column is a plain nullable property: the persistence layer binds SQL NULL
+                // and has no type handler for an Optional parameter.
+                new JavaField("nickname", "String"),
                 new JavaField("aliases", "java.util.List<String>"),
                 new JavaField("state", "AccountState"));
         assertEntityFieldsAndAccessors(source, fields);
@@ -88,7 +90,6 @@ class GeneratorEntityDtoContractTest {
                 "java.time.Instant",
                 "java.time.LocalDate",
                 "java.util.List",
-                "java.util.Optional",
                 "java.util.UUID"));
         assertFalse(source.contains("jakarta.validation"),
                 "entity source must remain a persistence model even when source fields have constraints: " + source);

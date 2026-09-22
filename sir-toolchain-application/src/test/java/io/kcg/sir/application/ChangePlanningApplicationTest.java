@@ -3,6 +3,7 @@ package io.kcg.sir.application;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.kcg.sir.application.api.ChangePlanningRequest;
@@ -98,8 +99,16 @@ class ChangePlanningApplicationTest {
         BaseFixture base = compileBase();
         // Rewrite the base SIR file with different content of the same length.
         String original = Files.readString(base.sourceFile(), StandardCharsets.UTF_8);
-        // Same length, different content (change displayName length compensated).
-        String modified = original.replace("鏍″洯浜屾墜浜ゆ槗绯荤粺", "鏍″洯浜屾墜浜ゆ槗绯荤粺X").substring(0, original.length());
+        // Same length, different content: extend the display name by one character and truncate back
+        // to the original length (the dropped trailing newline keeps the document valid). The display
+        // name is written with unicode escapes so this mutation cannot be silently defeated by a
+        // source-encoding mismatch; the previous revision pasted a mojibake copy of the fixture's
+        // display name, so replace() matched nothing and the file was left unchanged. That latent
+        // defect was invisible while this test was skipped for the missing candidate fixture.
+        String displayName = "\u6821\u56ed\u4e8c\u624b\u4ea4\u6613\u7cfb\u7edf";
+        String modified = original.replace(displayName, displayName + "X").substring(0, original.length());
+        assertNotEquals(original, modified,
+                "the same-length rewrite must actually change the base SIR bytes");
         Files.writeString(base.sourceFile(), modified, StandardCharsets.UTF_8);
         org.junit.jupiter.api.Assumptions.assumeTrue(
                 ChangePlanningTestSupport.hasResource("valid/campus-market-candidate.sir"),

@@ -2,7 +2,7 @@
 
 - 状态：`ACCEPTED`
 - 所属阶段：路线图阶段 1 / Generator 系统测试
-- 前置工作：[Q1C Generator 环境与字节确定性矩阵](completed/Q1C-generator-determinism-matrix.md) 已完成
+- 前置工作：[Q1C Generator 环境与字节确定性矩阵](Q1C-generator-determinism-matrix.md) 已完成
 - 本工作单性质：测试优先；证明 Generator 输出能够由 Java 21 与冻结 Maven 依赖真实编译
 - 下一阶段：Q1 总验收与远端大版本快照；通过并确认后才进入 Q2
 
