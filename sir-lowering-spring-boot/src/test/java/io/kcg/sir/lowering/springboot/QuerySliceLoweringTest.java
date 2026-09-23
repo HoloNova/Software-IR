@@ -126,7 +126,7 @@ class QuerySliceLoweringTest {
         assertRejected(
                 withFindStep(LoweringTestSupport.lowerSuccess(SOURCE), find -> new SpringBootWorkflow.FindStep(
                         find.id(), find.origin(), find.entitySymbol(), find.predicate(), find.orderKeys(),
-                        find.page(), List.of(), find.result(), find.itemVariable())),
+                        find.page(), List.of(), find.statementBudget(), find.result(), find.itemVariable())),
                 "has no plan entry");
     }
 
@@ -138,7 +138,7 @@ class QuerySliceLoweringTest {
                         List.of(new SpringExpression.StringMatch(
                                 find.stringMatches().getFirst().id(), find.stringMatches().getFirst().origin(),
                                 new io.kcg.sir.lowering.api.LoweredNodeId("lir://absent"), '\\', List.of("\\", "%", "_"))),
-                        find.result(), find.itemVariable())),
+                        find.statementBudget(), find.result(), find.itemVariable())),
                 "has no predicate node");
     }
 
@@ -150,7 +150,7 @@ class QuerySliceLoweringTest {
                         List.of(new SpringExpression.StringMatch(
                                 find.stringMatches().getFirst().id(), find.stringMatches().getFirst().origin(),
                                 find.stringMatches().getFirst().expressionId(), '!', List.of("!", "%", "_"))),
-                        find.result(), find.itemVariable())),
+                        find.statementBudget(), find.result(), find.itemVariable())),
                 "escaping must match the target query policy");
     }
 
@@ -164,7 +164,7 @@ class QuerySliceLoweringTest {
                             Optional.of(new SpringBootWorkflow.PageSpec(
                                     page.pageFieldSymbol(), page.sizeFieldSymbol(), page.pagePropertyName(),
                                     page.sizePropertyName(), 10, page.maxSize(), page.maxPageNumber(), page.errorSymbol())),
-                            find.stringMatches(), find.result(), find.itemVariable());
+                            find.stringMatches(), find.statementBudget(), find.result(), find.itemVariable());
                 }),
                 "pagination bounds must match the target query policy");
     }
@@ -179,7 +179,7 @@ class QuerySliceLoweringTest {
                             Optional.of(new SpringBootWorkflow.PageSpec(
                                     page.pageFieldSymbol(), page.sizeFieldSymbol(), page.pagePropertyName(),
                                     page.sizePropertyName(), page.defaultSize(), page.maxSize(), 5_000, page.errorSymbol())),
-                            find.stringMatches(), find.result(), find.itemVariable());
+                            find.stringMatches(), find.statementBudget(), find.result(), find.itemVariable());
                 }),
                 "pagination bounds must match the target query policy");
     }
@@ -212,7 +212,7 @@ class QuerySliceLoweringTest {
         SpringBootLoweredModel model = LoweringTestSupport.lowerSuccess(SOURCE);
         SpringBootLoweredModel damaged = withFindStep(model, find -> new SpringBootWorkflow.FindStep(
                 find.id(), find.origin(), find.entitySymbol(), find.predicate(), find.orderKeys(), Optional.empty(),
-                find.stringMatches(), find.result(), find.itemVariable()));
+                find.stringMatches(), find.statementBudget(), find.result(), find.itemVariable()));
 
         assertRejected(damaged, "PageResponse is present but no capability declares a paged find");
     }

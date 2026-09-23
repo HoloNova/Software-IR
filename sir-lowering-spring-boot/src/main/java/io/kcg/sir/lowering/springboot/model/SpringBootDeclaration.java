@@ -147,7 +147,12 @@ public sealed interface SpringBootDeclaration
       }
    }
 
-   /** An entity's concurrency token, with the value the target initializes a new row to. */
+   /**
+    * An entity's concurrency token: the value the target initializes a new row to, and the step the
+    * statement adds to it. The step lives here rather than only in the write policy so that an
+    * entity-level artifact (its mapper) can be rendered from the entity declaration alone — nothing
+    * about that artifact may depend on which capabilities currently exist (Q15).
+    */
    record VersionSpec(
       LoweredNodeId id,
       LoweredOrigin origin,
@@ -155,12 +160,16 @@ public sealed interface SpringBootDeclaration
       String javaName,
       String columnName,
       LoweredJavaType.Scalar type,
-      long initialValue
+      long initialValue,
+      long versionIncrement
    ) {
       public VersionSpec {
          SpringBootDeclaration.requireDeclaration(id, origin, fieldSymbol, javaName);
          SpringBootDeclaration.requireText(columnName, "columnName");
          Objects.requireNonNull(type, "type");
+         if (versionIncrement < 1) {
+            throw new IllegalArgumentException("versionIncrement must be positive");
+         }
       }
    }
 
@@ -294,13 +303,76 @@ public sealed interface SpringBootDeclaration
       String javaName,
       LoweredJavaType type,
       SymbolId sourceFieldSymbol,
-      String sourcePropertyName
+      String sourcePropertyName,
+      Optional<SpringBootDeclaration.ViewRelationPlan> relation
    ) {
       public ViewField {
          SpringBootDeclaration.requireDeclaration(id, origin, sourceSymbol, javaName);
          Objects.requireNonNull(type, "type");
          Objects.requireNonNull(sourceFieldSymbol, "sourceFieldSymbol");
          SpringBootDeclaration.requireText(sourcePropertyName, "sourcePropertyName");
+         Objects.requireNonNull(relation, "relation");
+      }
+
+      public ViewField(
+         LoweredNodeId id,
+         LoweredOrigin origin,
+         SymbolId sourceSymbol,
+         String javaName,
+         LoweredJavaType type,
+         SymbolId sourceFieldSymbol,
+         String sourcePropertyName
+      ) {
+         this(id, origin, sourceSymbol, javaName, type, sourceFieldSymbol, sourcePropertyName, Optional.empty());
+      }
+   }
+
+   /** How many related rows a nested projection reads. */
+   enum RelationCardinality {
+      /** At most one related row, found through the reference on this entity. */
+      TO_ONE,
+      /** A collection of related rows, found through the reference the related rows hold. */
+      TO_MANY
+   }
+
+   /**
+   * The batch read a nested projection needs, as a plan the renderer follows.
+   *
+   * <p>{@link #sourceKeyPropertyName()} names the property read from the rows already loaded to
+   * build the query, {@link #targetLookupPropertyName()} the property it is compared against on the
+   * related entity, {@link #indexKeyPropertyName()} the property a loaded related row is indexed by,
+   * and {@link #orderPropertyName()} the identity a collection is ordered by so the same page always
+   * yields the same response. Which side holds the reference is a decision recorded here — a single
+   * related row is reached through the reference on this entity, a collection through the reference
+   * the related rows hold — so the renderer never has to look for one.
+   */
+   record ViewRelationPlan(
+      LoweredNodeId id,
+      LoweredOrigin origin,
+      SymbolId viewFieldSymbol,
+      SpringBootDeclaration.RelationCardinality cardinality,
+      SymbolId targetViewSymbol,
+      SymbolId targetEntitySymbol,
+      String sourceKeyPropertyName,
+      String targetLookupPropertyName,
+      String indexKeyPropertyName,
+      Optional<String> orderPropertyName
+   ) {
+      public ViewRelationPlan {
+         Objects.requireNonNull(id, "id");
+         Objects.requireNonNull(origin, "origin");
+         Objects.requireNonNull(viewFieldSymbol, "viewFieldSymbol");
+         Objects.requireNonNull(cardinality, "cardinality");
+         Objects.requireNonNull(targetViewSymbol, "targetViewSymbol");
+         Objects.requireNonNull(targetEntitySymbol, "targetEntitySymbol");
+         SpringBootDeclaration.requireText(sourceKeyPropertyName, "sourceKeyPropertyName");
+         SpringBootDeclaration.requireText(targetLookupPropertyName, "targetLookupPropertyName");
+         SpringBootDeclaration.requireText(indexKeyPropertyName, "indexKeyPropertyName");
+         Objects.requireNonNull(orderPropertyName, "orderPropertyName");
+         orderPropertyName.ifPresent(name -> SpringBootDeclaration.requireText(name, "orderPropertyName"));
+         if (cardinality == SpringBootDeclaration.RelationCardinality.TO_MANY && orderPropertyName.isEmpty()) {
+            throw new IllegalArgumentException("a collection relation must state the order it is read in");
+         }
       }
    }
 

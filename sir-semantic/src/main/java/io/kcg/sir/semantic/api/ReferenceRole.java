@@ -25,7 +25,10 @@ public enum ReferenceRole {
    PAGE_ERROR(SymbolKind.ERROR),
    PATCH_SOURCE_ENTITY(SymbolKind.ENTITY),
    PATCH_FIELD_PRESENCE(SymbolKind.FIELD),
-   PERSIST_FAILURE(SymbolKind.ERROR);
+   PERSIST_FAILURE(SymbolKind.ERROR),
+   EXISTS_SOURCE_ENTITY(SymbolKind.ENTITY),
+   EXISTS_CONDITION_FIELD(SymbolKind.FIELD),
+   VIEW_RELATION_FIELD(SymbolKind.FIELD);
 
    private final Set<SymbolKind> allowedTargetKinds;
 

@@ -1,6 +1,7 @@
 package io.kcg.sir.semantic.internal;
 
 import io.kcg.sir.api.Diagnostic;
+import io.kcg.sir.ast.AstAnyExpression;
 import io.kcg.sir.ast.AstBinaryExpression;
 import io.kcg.sir.ast.AstBinding;
 import io.kcg.sir.ast.AstBooleanLiteral;
@@ -63,6 +64,8 @@ import io.kcg.sir.semantic.model.NormalizedView;
 import io.kcg.sir.semantic.model.NormalizedViewField;
 import io.kcg.sir.semantic.model.NormalizedWorkflow;
 import io.kcg.sir.semantic.symbol.SymbolId;
+import io.kcg.sir.semantic.type.DeclaredType;
+import io.kcg.sir.semantic.type.ListType;
 import io.kcg.sir.semantic.type.PrimitiveType;
 import io.kcg.sir.semantic.type.SirType;
 import io.kcg.sir.source.SourceSpan;
@@ -253,6 +256,7 @@ final class NormalizePass {
          field.id(),
          type,
          this.siteTargetOrUnknown(field.name().id()),
+         this.relationOf(type),
          field.type() instanceof AstNamedTypeRef named ? Optional.of(named.name().id()) : Optional.empty()));
       }
 
@@ -499,16 +503,46 @@ final class NormalizePass {
                : null;
          }
          case AstGroupedExpression e -> this.normalizeExpression(e.inner());
-         case AstPresentExpression e -> {
-            NormalizedExpression target = this.normalizeExpression(e.target());
-            SirType type = this.typeOf(e.id(), PrimitiveType.BOOLEAN);
-            SymbolId field = this.siteTargetOrUnknown(e.id());
-            yield target != null && type != null && !isUnknown(field)
-               ? new NormalizedExpression.PresentExpression(e.id(), e.span(), type, target, field)
-               : null;
-         }
+          case AstPresentExpression e -> {
+             NormalizedExpression target = this.normalizeExpression(e.target());
+             SirType type = this.typeOf(e.id(), PrimitiveType.BOOLEAN);
+             SymbolId field = this.siteTargetOrUnknown(e.id());
+             yield target != null && type != null && !isUnknown(field)
+                ? new NormalizedExpression.PresentExpression(e.id(), e.span(), type, target, field)
+                : null;
+          }
+          case AstAnyExpression e -> {
+             NormalizedExpression conditions = this.normalizeExpression(e.conditions());
+             SymbolId entity = this.siteTargetOrUnknown(e.entity().id());
+             SymbolId connectionField = ExistenceConnection.fieldOf(
+                e.conditions(), this.validated.referenceSiteBindings(), this.validated.findItemBindings());
+             SirType type = this.typeOf(e.id(), PrimitiveType.BOOLEAN);
+             yield conditions != null && !isUnknown(entity) && connectionField != null && type != null
+                ? new NormalizedExpression.ExistsExpression(e.id(), e.span(), type, entity, connectionField, conditions)
+                : null;
+          }
          default -> null;
       });
+   }
+
+   /**
+   * The relation a nested projection reads, or an empty value for a column projection.
+   *
+   * <p>The reference field itself is already the field's source; what this records is how many
+   * related rows it yields and which view projects them, so a target renders the relation without
+   * inspecting the declared type again.
+   */
+   private Optional<NormalizedViewField.Relation> relationOf(SirType type) {
+      SirType element = type instanceof ListType list ? list.element() : type;
+      if (!(element instanceof DeclaredType declared) || declared.kind() != DeclaredType.DeclaredKind.VIEW) {
+         return Optional.empty();
+      }
+
+      return Optional.of(new NormalizedViewField.Relation(
+         type instanceof ListType
+            ? NormalizedViewField.Cardinality.TO_MANY
+            : NormalizedViewField.Cardinality.TO_ONE,
+         declared.symbolId()));
    }
 
    private AstExpression ungroup(AstExpression expr) {

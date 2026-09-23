@@ -19,7 +19,11 @@
 
 **G0 内部工作单与关闭动作全部完成并归档**：Q1（Generator 生产边界）、Q2（Project Graph 直接契约 0→72）、Q3（Change fixtures + 软链接收口，全量首次 BUILD SUCCESS）、Q4+Q5（conformance 包恢复 + 真实 MySQL 矩阵 QUALIFIED）、Q6（三路径故障矩阵，64 项，零生产改动）、Q7（CLI 只读边界，12 项，修复 1 处生产缺陷）、Q8（G0 最终资格关闭）。见 `docs/roadmap/completed/`。
 
-**本节之后的进展**：Q9（G1 第一切片：单文件 Course 分页查询端到端）已于 2026-09-18 完成实现与验证，全量计数 **620 / 0 / 0 / 5**（两条命令均 BUILD SUCCESS），真实 MySQL + HTTP 业务场景 40 项断言全通过；详见 1.9。本节的 G0 记录不因此改写。
+**本节之后的进展**：G1 的前两张工作单已完成、验收并归档——Q9（单文件 Course 分页查询端到端：2026-09-18 验证、2026-09-21 验收，全量计数 620 / 0 / 0 / 5，业务场景 40 项断言全通过，见 1.9）；Q10（Course 写侧：Create + PATCH 三态 + version 冲突 + 结构化字段错误：2026-09-21 验证、2026-09-23 验收，全量计数 702 / 0 / 0 / 5，业务场景 61 项断言全通过，见 1.10）。G1 第三张工作单 Q11（关联过滤与关联读取：存在性语义、根不重复、批量读取与 SQL 次数预算）已实现、验证并完成验收归档，业务场景 36 项断言全通过（见 1.11）；归档件 `docs/roadmap/completed/Q11-relation-filter-and-batch-reads.md`。
+
+**G1 第四张工作单 Q13（变更闭环）已完成验收归档**（见 1.12），它的两张前置修复单 **Q14**（变更层语义投影与 Q9–Q11 语言面对齐，`docs/roadmap/completed/Q14-change-layer-projection-parity.md`）与 **Q15**（实体级片段与能力集合解耦，`docs/roadmap/completed/Q15-entity-artifact-decoupling.md`）亦已归档。**由此 G1 的完成门全部满足**：BIZ-01..06 由 Q9（BIZ-05）、Q10（BIZ-01..04）、Q11（BIZ-06）覆盖；GEN-01/02 由各切片生成契约与确定性矩阵覆盖；门禁里"**继续生成 SIR/修改 SIR**"由 Q13 在真实环境中以行为变化钉住（见 1.12 的 G1 完成门小节）。
+
+**全量计数 775 / 0 / 0 / 5**（Q11 后为 749；+26 全部来自 Q14/Q15/Q13 的新增测试），由 GitHub CI 一次跑完（见 1.13）。G1 的 Q9、Q10、Q11、Q13 至此全部验收归档（Q12 未立项）。本节的 G0 记录不因此改写。
 
 **登记表（NOT_RUN / 未覆盖 / 平台条件）**：
 
@@ -33,12 +37,12 @@
 | POM 硬排除 | **已全部移除** | 原 `io/kcg/sir/application/conformance/**` 的两处排除已删除，该包现参加编译与运行 |
 | Docker / 迁移 / 源码包 / Web 场景 | **未实现** | G1+ 范围，不构成本门缺口 |
 
-**数字口径（D1）**：本报告 1.2–1.8 记录的是**各阶段当时的计数**（374／451／465／478／542 等），它们保留原值以保全历史证据；**G0 关闭时的权威总数为本节与报告开头的 554 / 0 / 0 / 5**。G1 开工后该总数已推进：**当前权威总数为 620 / 0 / 0 / 5**（Q9，2026-09-18，见 1.9 与第 2 节；差量 66 已逐模块归因）。
+**数字口径（D1）**：本报告 1.2–1.8 记录的是**各阶段当时的计数**（374／451／465／478／542 等），它们保留原值以保全历史证据；**G0 关闭时的权威总数为本节与报告开头的 554 / 0 / 0 / 5**。G1 开工后该总数已推进两次：620 / 0 / 0 / 5（Q9，差量 66）与 **702 / 0 / 0 / 5**（Q10，2026-09-21，差量 82；**当前权威总数**，见 1.10 与第 2 节）。
 
 
 - 资格日期：2026-08-11（Windows）；2026-09-18 在 Linux 新机器以全新本地仓库复跑，并完成 Q1–Q8（G0 阶段 1–7），见 1.2–1.8 与第 0 节
 - 运行环境：Windows 11 + 离线仓库 `D:\maven-repo`（2026-08-11 历史记录）；Linux + Java 21.0.12 + Maven 3.6.3 + `/root/.m2/repository`（2026-09-18 当前资格依据）
-- 总体结论：Linux 冻结与完成两种形式的离线 Reactor 均为 **BUILD SUCCESS**，合计 **554 run / 0 fail / 0 error / 5 skip**；5 项剩余 skip 全为 Windows junction。Generator 生产边界、Project Graph 只读边界、Change/事务故障矩阵和 CLI 只读边界均有直接证据；外部 MySQL conformance 在登记的参考环境元组上 `QUALIFIED`；完整本地 CLI MVP、Windows 侧和发行包仍按第 0 节登记为未完成或未运行。
+- 总体结论：Linux 冻结与完成两种形式的离线 Reactor 均为 **BUILD SUCCESS**，合计 **702 run / 0 fail / 0 error / 5 skip**（G0 关闭时为 554；G1 的 Q9/Q10 依次推进到 620、702，见第 0 节数字口径与 1.9、1.10）；5 项剩余 skip 全为 Windows junction。Generator 生产边界、Project Graph 只读边界、Change/事务故障矩阵和 CLI 只读边界均有直接证据；外部 MySQL conformance 在登记的参考环境元组上 `QUALIFIED`；完整本地 CLI MVP、Windows 侧和发行包仍按第 0 节登记为未完成或未运行。
 
 ## 1. 标准命令
 
@@ -295,9 +299,6 @@ skip 11 → 5 的逐条解释：`PathSecurityReviewTest` 5 项 Windows junction 
 2. 声明错误到 HTTP 的映射只有 `@ResponseStatus(BAD_REQUEST)`，代码库中不存在 `TransportPlan.ErrorMapping`；完成门只断言“400 且不返回记录”，不要求响应体携带声明错误码（字段级稳定错误码属 Q10）。
 3. 业务验证必须跑在 harness 已 provision 的 schema（`KCG_CONF_SCHEMA_NAME=kcg_conf_run`）：runtime 凭据只在该 schema 上有权限，自造 schema 名会让生成应用在首次查询报 500（证据：`Access denied for user ... to database`，已修正后重跑）。IT 因此复用 harness 的 advisory lock（`AdvisoryLockKey` + `GET_LOCK/RELEASE_LOCK`）与五场景矩阵互斥，取锁失败记 `NOT_RUN` 且不触碰 schema。
 
-7. **C7 支撑文件必须是无条件的 target 产物**：若让 `ValidationSupport` 只在"存在写入能力"时生成，删除最后一个写能力的变更计划会被 `SIR-CHANGE-IMPACT-203`（"候选中消失但不在被删闭包内的 project 级 artifact"）拒绝——真实证据来自 `DeleteFaultMatrixTest` 的 17 项失败（`result=Failure[failedStage=PLAN, disposition=NO_CHANGES, diagnostics=[SIR-CHANGE-IMPACT-203 ... validation-support/project]]`）。修复：错误契约与校验原语改为无条件产物；`ToolchainProjectGraphIntegrationTest` 的 node/edge/artifact 计数随之从 35/34/2 更新为 45/44/7（并按 lowering 实际产物集合断言角色，而非固定数字）。
-8. **C8 一个既有源文件是反编译产物**：`SpringBootModelLowerer.java` 在 `24eec6d` 中即为 CFR 反编译文本（无注释、`this.` 前缀、冗余泛型）。Q9/Q10 的改动都在该文本上继续；本单一次的批量文本编辑切坏了注释块并造成文件内出现"截断副本 + 完整副本"，**修复方式是保留从第二个 `package` 行到 EOF 的完整副本**，随后以 `sir-lowering-spring-boot` 全量测试（69 项）与两个业务 IT（61/40 项）证明行为等价。该文件保留反编译形态属既有状态，本单不做重写（重写会把 Q10 的审阅边界扩大到整文件）。
-
 **该结果的有效边界（引用时必须一并说明）**：
 - 验收：负责人 2026-09-21 回复“继续推进”，即视为验收通过并授权进入 G1 下一张工作单；工作单已归档至 `docs/roadmap/completed/Q9-query-slice-course-pagination.md`。
 - 结论只对上述参考环境元组成立（MySQL 8.4.11、宿主端口 33306、应用端口 18080、离线仓库 `/root/.m2/repository`、Java 21.0.12）。
@@ -328,7 +329,7 @@ skip 11 → 5 的逐条解释：`PathSecurityReviewTest` 5 项 Windows junction 
 | 全量 | 冻结与完成两种形式均 **BUILD SUCCESS**，合计 **702 run / 0 fail / 0 error / 5 skip**（对比上一次记录的合计 620：+82；本次重测的各模块计数见第 2 节，其中既有模块行也按完成形式复跑重新取值）；5 项 skip 仍全为 Windows junction |
 | 生产改动范围 | Parser（语法/AST/构建器）、Semantic（`SymbolKind.VIEW` 复用 + 13→18 个 ReferenceRole + `patchFieldBindings` + Resolve/Type/Validate/Normalize 新规则）、Lowering（`EntityDeclaration.Version`、`PatchSpec`、`ConditionalUpdate`、新 `ProjectArtifact` 变体、IR 校验）、Generator（五个新产物 + patch/条件更新/候选校验/投影/可空边界渲染）、Project Graph（`ArtifactRole.VIEW`）、Change（新种类分发）、Application（Graph 输入映射 + 业务 IT 与共享 harness）；无 POM/依赖改动 |
 
-**六个实施期订正（均已写入工作单 Q10）**，其中 C1–C3 是**真实运行发现的产品缺陷**，无法由单元测试、生成工程编译或 conformance harness 自身证明：
+**八项实施期订正（C1–C8，均已写入工作单 Q10）**，其中 C1–C3 是**真实运行发现的产品缺陷**，无法由单元测试、生成工程编译或 conformance harness 自身证明：
 
 1. **C1 实体可空字段不能用 `java.util.Optional` 承载**：冻结依赖中 MyBatis（3.5.19）与 MyBatis-Plus（3.5.12）都没有 `Optional` 参数类型处理器；真实运行证据为插入路径 `Type handler was null on parameter mapping for property 'description' (javaType java.util.Optional)` 与条件更新路径 `Cannot convert class java.util.Optional to SQL type`，两者都是 HTTP 500。修复：实体可空字段映射为普通可空属性，`Optional` 只保留在载荷与视图，边界处显式 `orElse(null)` / `Optional.ofNullable`。
 2. **C2 条件更新后的响应必须报告已提交版本**：`WHERE version=? … version=version+1` 只改数据库，内存实体仍是加载时的版本（首次运行：库中 `version=1`、响应 `"version":0`）。修复：影响行数为 1 后显式设置 `expectedVersion + 1`。
@@ -336,20 +337,90 @@ skip 11 → 5 的逐条解释：`PathSecurityReviewTest` 5 项 Windows junction 
 4. **C4 信封必填成员**：`id` 与 `expectedVersion` 加 `@NotNull`、控制器对 patch 载荷加 `@Valid`（SIR 无法表达"必填"，落在生成的信封 DTO 上），缺失成员由此得到 400 且路径点名；此前会先撞版本预检（409）或身份解析（404）。
 5. **C5 未知变更属性的拒绝点**：若载荷用 `@JsonAnySetter` 收集未知属性，请求会先被 `validate … else EmptyChange` 拦成 `EmptyChange`，未知属性名不会出现在响应里。修复：载荷不吞未知属性，交由 `fail-on-unknown-properties` 拒绝，advice 用 Jackson 引用路径拼出 `changes.code`。
 6. **C6 参考环境 control JDBC URL 不得自带 schema**：`provision-mysql.sh` 曾把 schema 写进 control URL，被 harness 断言拒绝；已改回不带 schema，且脚本不再预建运行 schema（harness 自己 CREATE/DROP 以证明所有权），fixture DDL/seed 经 `USE` 落在本次运行的 schema 内。该脚本在仓库外，未进入生产代码。
+7. **C7 支撑文件必须是无条件的 target 产物**：若让 `ValidationSupport` 只在“存在写入能力”时生成，删除最后一个写能力的变更计划会被 `SIR-CHANGE-IMPACT-203`（候选中消失但不在被删闭包内的 project 级 artifact）拒绝——真实证据来自 `DeleteFaultMatrixTest` 的 17 项失败（`result=Failure[failedStage=PLAN, disposition=NO_CHANGES, diagnostics=[SIR-CHANGE-IMPACT-203 ... validation-support/project]]`）。修复：错误契约与校验原语改为无条件产物；`ToolchainProjectGraphIntegrationTest` 的 node/edge/artifact 计数随之从 35/34/2 更新为 45/44/7（并按 lowering 实际产物集合断言角色，而非固定数字）。
+8. **C8 一个既有源文件是反编译产物**：`SpringBootModelLowerer.java` 在 `24eec6d` 中即为 CFR 反编译文本（文件头为描述性注释、`this.` 前缀、冗余泛型）。Q9/Q10 的改动都在该文本上继续；本单一次的批量文本编辑切坏了注释块并造成文件内出现“截断副本 + 完整副本”，**修复方式是保留从第二个 `package` 行到 EOF 的完整副本**，随后以 `sir-lowering-spring-boot` 全量测试（69 项）与两个业务 IT（61/40 项）证明行为等价。该文件保留反编译形态属既有状态，本单不做重写（重写会把 Q10 的审阅边界扩大到整文件）。
 
 **该结果的有效边界（引用时必须一并说明）**：
+- 验收：负责人 2026-09-23 回复“直接验收并让我收口归档”，即验收通过；工作单已归档至 `docs/roadmap/completed/Q10-course-write-slice.md`。裁决记录：C1–C8 全部接受（含 C7 的结构约束与 C6 的参考环境脚本修复）；错误信封码名保留现状，与设计 02 的逐字对齐登记为后续独立项；C8 的反编译文件重写不在本单范围（登记为独立清理项）。
 - 结论只对上述参考环境元组成立（MySQL 8.4.11、宿主端口 33306、应用端口 18080、离线仓库 `/root/.m2/repository`、Java 21.0.12）。
 - 该 IT 是 **opt-in**，默认构建不运行它；默认全量计数**不含**该场景。
 - **`NOT_RUN` 不等于通过**：环境或 schema 锁不可得时如实记 `NOT_RUN`，且参考库在运行中不可达时同样记 `NOT_RUN`（不把基础设施故障伪装成产品失败），此时 G1 完成门不成立。
 - **产品 schema 生命周期仍未实现**：DDL 与 seed 都是测试侧 fixture（`schemaSource=TEST_FIXTURE_DDL`），产品没有 INITIALIZE/UPDATE（G3）。
 - **未覆盖**：DELETE、路由模板与嵌套 `/courses/{id}`（登记 Q12）、`in`/`isNull` 等过滤算子、关联读取与 `EXISTS` 过滤（Q11）、多实体/多文件与持久身份（G2）、数据库迁移生命周期（G3）、Web 平台与 docker 交付包（G4/G6）。
-- 字段级错误码当前为 Bean Validation 约束码（`notBlank|email|length|min|max|NotNull`）+ 信封级 `INVALID_REQUEST`；与设计 02 的码名逐字一致性尚未裁决（见工作单"与 D 裁决的差异"）。
+- 字段级错误码当前为 Bean Validation 约束码（`notBlank|email|length|min|max|NotNull`）+ 信封级 `INVALID_REQUEST`；与设计 02 的 `REQUEST_INVALID`/`UNKNOWN_FIELD` 的逐字对齐未做，2026-09-23 验收裁决为保留现状并登记为后续独立项（见工作单“与 D 裁决的差异”）。
+
+### 1.11 2026-09-23 Linux Q11 G1 第三切片：关联过滤（存在性语义）与关联读取（批量、预算）
+
+**结果：G1 的第三个切片真实成立——SIR 只表达软件层面的两件事（"存在一条报名满足条件"与"这个投影带出报名列表"），而 EXISTS 过滤、根去重分页、每个关联一条批量读取、语句次数预算与只读事务隔离全部由 Lowering 决策并写入 Lowered IR，Generator 只渲染；真实 MySQL + HTTP 上 36 项断言全通过，且计数与原始 SQL 均取自数据库自身。**
+
+| 项 | 证据 |
+|---|---|
+| 新增 SIR 表面（只有两处） | 存在性谓词 `any(<实体>, <条件>)`（示例：`find Course where any(Enrollment, course == item and status == EnrollmentStatus.ACTIVE)`）与 view 嵌套 view（对一 `student: StudentSummary`、对多 `List<EnrollmentSummary>`，深度上限 2 层）。不引入关系声明表、不引入 `via`/`many`/`one` 消歧语法：关系由相关实体上恰好一个指向父实体的 `Ref` 自动判定，两个则报诊断 |
+| 新增诊断归属 | 各规则落在唯一阶段并有反例（码 + 数量 + span）：Parser（`RelationGrammarTest` 10）、Semantic（`RelationSliceSemanticsTest` 17：`any` 位置/嵌套/连接要求、投影方向与深度、绑定歧义）、Lowering + IR 校验（`RelationSliceLoweringTest` 13）、Generator 契约（`GeneratorRelationSliceContractTest` 6） |
+| Lowering 决策面（写入 Lowered IR） | `SpringExpression.ExistsPredicate`（相关子查询文本 `SELECT 1 FROM enrollment enrollment_rel WHERE enrollment_rel.course_id = course.id AND enrollment_rel.status = {0}` + 按序绑定的类型化取值）；`ViewRelationPlan`（基数、目标 view/实体、取键属性、比较属性、索引属性、集合排序属性）；`StatementBudget`（页读取数 + 关联读取数，空页只算页读取）。连接比较（`course == item`）从子查询条件里摘掉，因为它已变成连接本身 |
+| 目标能力边界（Lowering 前拒绝，不静默丢弃） | 条件里出现工作流变量/`containsLiteral`/函数等无法译为相关子查询的形态 → `SIR-LOWER-FEATURE-001`（保留原 span）；带关联投影的**非分页** find → 同码拒绝（批量读取以已加载的行集合为起点） |
+| IR 自洽校验（GEN-02 式拒绝） | 预算必须等于「页读取数 + 投影里实际嵌套的关联数」；关系计划必须投影它声明的那个 view；索引属性必须等于读取所用属性；对一不得带排序、对多必须带排序；相关子查询占位符与取值必须一一对应且无缺口。五项损坏模型各有一条配对断言，另有正例（无关联的 find 预算为 2/0/2，证明只投影标量与外键不产生额外读取） |
+| 生成契约 | 谓词渲染为 `.apply("EXISTS (…)", <按序取值>)`；每个关联一条批量读取（取键 → 空键短路 → 一次 `selectList(... in(属性, 键列表) ...)` → 建索引）；对多按目标身份升序、对一按目标身份索引；嵌套投影递归渲染；读路径为 `@Transactional(readOnly = true)`。关联切片在 en-US/ISO-8859-1 与 tr-TR/UTF-8、不同工作目录下生成字节一致（确定性矩阵新增探针） |
+| 真实业务场景 | `RelationSliceBusinessConformanceIT`（`sir-toolchain-application`，opt-in）在 MySQL 8.4.11 上对 `/api/search-course-enrollments` 做四组请求：**36 项断言全部通过、0 失败**；生成工程 22 个文件（combined sha256 `b143ae3e…`）、离线 `mvn clean verify` 成功；证据 `/root/kcg-conformance/evidence/relation-slice-1a0cd62f220-3526/relation-slice-report.txt` |
+| BIZ-06 核心（根不重复 / total 口径） | 场景数据 7 门课、3 名学生、37 条报名：CS101（两条 ACTIVE）、CS102（一条 ACTIVE + 一条 CANCELLED）、ART101（只有 CANCELLED）、PHY101（无报名）、MAT101（一条 ACTIVE）、ENG101（只有 CANCELLED）、ZOO101（三十条 ACTIVE）。请求 `page=1&size=10` 得 `total=4`、`records` 恰为 `[CS101, CS102, MAT101, ZOO101]` 各一次（join 式实现会得 `total=5`、CS101 出现两次）；ART101/PHY101 不出现 |
+| 存在性语义（一个谓词不能被两行分别满足） | **ENG101 不出现**：它的那条报名满足「属于该课程」，表中另有 ACTIVE 报名（其它课程），但没有**同一条**报名同时满足两者；把一个存在性谓词拆成两个独立判断的实现会把它选出来，所以该断言专门排除这种读法 |
+| 根过滤 ≠ 投影过滤 | CS102 的嵌套集合仍包含那条 `CANCELLED` 报名（连同其学生 Cara）：存在性谓词只决定根是否入选，嵌套投影读的是该根的全部关联行 |
+| 关联读取（批量、非 N+1） | ZOO101 的三十条关联行全部投影（断言嵌套条目数 = 30）而语句数不变；对一嵌套（每条报名带出学生）由按身份索引的一次读取完成；对多按 `id` 升序，保证同页同序 |
+| 语句次数预算（真实测量） | `page=1&size=10` → **4** 条 SELECT（count + page + enrollment 批量 + student 批量）；`page=2&size=2`（含 ZOO101 三十条关联）→ **4**；越界页 `page=99` → **2**（空页跳过批量读取）；非法页 `page=0` → **0**（分页校验先于任何读取，400 `InvalidPage`）。原始 SQL 例：`… WHERE ((EXISTS (SELECT 1 FROM enrollment enrollment_rel WHERE enrollment_rel.course_id = course.id AND enrollment_rel.status = 'ACTIVE'))) …`、`… WHERE (course_id IN (1,2,5,7)) ORDER BY id ASC`、`… WHERE (id IN (1,2,3))` |
+| 测量手段（诚实口径） | **计数**取自 `performance_schema.events_statements_summary_by_digest` 中归属本次 schema 的 `SELECT` 摘要增量（避免把 `SET autocommit`/`COMMIT` 这类事务簿记算成查询成本），并另有「每一条被计入的摘要都必须提到 fixture 表」的守门断言；**原始 SQL** 取自 general log 的运行时账号片段。两者都经 **control** 账号读取：实测 MySQL 8.4.11 下运行时账号对摘要表无 `SELECT` 权限（`ERROR 1142`） |
+| 读事务一致性（直接证据） | `performance_schema.events_transactions_summary_global_by_event_name` 增量显示一次请求恰为 **1 个只读事务**（transactions=1、readOnly=1）：count、page 与两次批量读取在同一只读事务内完成（该版本此表没有 `COUNT_COMMIT`/`COUNT_ROLLBACK` 列，故取只读事务计数） |
+| 只读性 | 四次请求前后 fixture 行数不变（7→7），整行指纹与 seed 逐字符相同 |
+| 同树回归 | Q9 `QuerySliceBusinessConformanceIT` **PASSED 40/40**（`…/query-slice-1a0cd67e8fd-39548/…`）、Q10 `WriteSliceBusinessConformanceIT` **PASSED 61/61**（`…/write-slice-1a0cd6876b4-2401/…`）：`WorkflowRenderer` 的分页路径被重构后，既有查询与写侧切片行为未变 |
+| 全量 | 冻结与完成两种形式均 **BUILD SUCCESS**，合计 **749 run / 0 fail / 0 error / 5 skip**（对比基线 702：+47，全部来自本单；本次重测的各模块计数见第 2 节）；5 项 skip 仍全为 Windows junction，无新增 skip/exclude |
+| 生产改动范围 | Parser（`any` 保留字、`anyPredicate`、`AstAnyExpression`）、Semantic（3 个新 ReferenceRole、`ExistsExpression`、`NormalizedViewField.relation`、Resolve/Type/Validate/Normalize 新规则）、Lowering（`ExistsPredicate`、`ViewRelationPlan`、`StatementBudget`、存在性条件可译性检查、非分页关联拒绝、IR 自洽校验）、Generator（EXISTS 渲染 + 批量读取 + 嵌套投影渲染）；无 POM/依赖改动 |
+
+**该结果的有效边界（引用时必须一并说明）**：
+- **CI 复跑（2026-09-23，GitHub Actions）**：本切片 IT 在 CI 的 MySQL 8.4 service container 上复跑**通过**（`verdict=PASSED`，36 项检查 0 失败，run `35854153833`）。首次 CI 运行时本切片曾因语句计数失败 5 项：CI 的 MySQL 把 Connector/J 的**连接级语句**（`SELECT @@SESSION.transaction_read_only` 与连接初始化查询）记到 run schema 上（本机记为 `SCHEMA_NAME=NULL` 或落在测量窗口外），使 `A1 reads` 由 4 变 6、`A8 reads` 由 0 变 1。**订正（实施期订正 C8，2026-09-23）**：预算改为只统计**触及 fixture 表**的语句（查询计划真正发出的业务读取），并新增守卫"其余被计数的语句必须都是会话探针（digest 含 `@@`）"，原始计数与 digest 仍全部写进报告；语义未放宽——多一次业务读取（N+1、额外关联读）仍会被计数。业务断言两次运行完全一致。
+- 验收：负责人 2026-09-23 回复“确认”，即验收通过；工作单已归档至 `docs/roadmap/completed/Q11-relation-filter-and-batch-reads.md`。验收裁决记录：C1–C8 全部接受（含 C4 预算按投影使用点计数、C5 带关联投影的 find 必须分页、C7 计数口径从 general log 改为摘要增量）；本单范围外事项继续作为独立项（错误信封码名对齐、`SpringBootModelLowerer.java` 重写），另登记非分页 find 的关联读取、深度 3 层及以上、`in`/`isNull`/when-present/按关联字段排序。
+- 结论只对上述参考环境元组成立（MySQL 8.4.11、宿主端口 33306、应用端口 18080、离线仓库 `/root/.m2/repository`、Java 21.0.12）；证据在 HEAD=`92c505c` + 本单未提交工作区上取得。
+- 该 IT 是 **opt-in**，默认构建不运行它；默认全量计数**不含**该场景。参考库不可达或 measurement 权限不可得时如实记 `NOT_RUN`。
+- **语句计数按“投影使用点”而非“关系计划”去重**：同一个 view 在两个位置被投影时每个位置各读一次（计数与渲染口径一致，已写入 IR 注释）。
+- **非分页 find 不支持关联投影**（Lowering 前以 `SIR-LOWER-FEATURE-001` 拒绝）；`in`/`isNull`、when-present 可选过滤、按关联字段排序、关联集合自身分页均未实现。
+- **产品 schema 生命周期仍未实现**：DDL 与 seed 都是测试侧 fixture（`schemaSource=TEST_FIXTURE_DDL`），产品没有 INITIALIZE/UPDATE（G3）。
+- **未覆盖**：关联写入与嵌套多实体保存、DELETE/归档与级联、权限与 401/403（G5）、报名并发与名额（BIZ-07..13）、深度 3 层及以上、路由模板与嵌套 `/courses/{id}`（Q12）、多实体/多文件（G2）、Web 平台与交付包（G4/G6）。
+
+### 1.12 2026-09-23 GitHub CI Q13 G1 第四切片：变更闭环（真实 MySQL + HTTP）
+
+**单元**：`Q13`（G1 第四张工作单，门禁"继续生成 SIR/修改 SIR"），外加两张前置修复单 `Q14`（变更层语义投影补齐 `.present`/`any(...)`/`Page<...>` 与五处静默盲区 + 语言面闸门）、`Q15`（实体级片段按实体声明发射，删除能力重新是纯删除）。归档件：`docs/roadmap/completed/Q13-g1-change-loop.md`、`Q14-change-layer-projection-parity.md`、`Q15-entity-artifact-decoupling.md`。
+
+| 证据 | 结果 |
+|---|---|
+| 契约层 `ChangeLoopPlanningContractTest`（`sir-toolchain-application`） | 6/6 通过：完整链 R1→R4 每轮计划族纯度、支撑产物在删除最后一个写能力后存活、**增量应用结果 == 同一候选从零生成结果（逐相对路径、逐字节）**、幂等（已落地新增再声明 → `SIR-CHANGE-TARGET-101`；未改动内容重新规划 → `NoChanges`）、N1 目标拒绝的候选计划失败且盘面不变、N2 陈旧基线 apply 失败且盘面不变 |
+| 变更闭环 IT `ChangeLoopBusinessConformanceIT`（真实 MySQL 8.4 + HTTP，CI run `35854153833`） | `verdict=PASSED`，**63 项检查 / 0 失败**；`schemaName=kcg_conf_run`、advisory lock 持有、`schemaSource=TEST_FIXTURE_DDL`、`productInitializeImplemented=false`、`productUpdateImplemented=false`、schema DROP 后缺席证明 |
+| 行为变化（同一份数据、同一个服务，只有 SIR 变了） | 基线 `total=3`、codes `[CS101,CS102,MAT101]`；R1 放宽过滤后 `total=4`、codes `[ART101,CS101,CS102,MAT101]`（ART101 只有 CANCELLED 报名；无报名的 PHY101 仍不出现），写入口仍 201 |
+| R2（收紧 `CreateCourseInput.name` 到 20） | 25 字符 → 400 且 `fields[0].path=name`、`code=Size`、落库行数不变；15 字符 → 201；检索结果不受影响 |
+| R3（删掉两个写能力，含最后一个） | `POST /api/create-course` 与 `PATCH /api/update-course` 均 **404**、无写入、检索仍 200 且结果不变；`?page=0` 仍得 `400 {"code":"InvalidPage"}` —— **Q10 C7 的运行证据**（信封与校验原语在最后一个写能力消失后仍然存在） |
+| R4（新增复用既有声明的能力） | 新路由 `/api/list-course-refs` 200 且服务有报名的四门课、不服务无报名课程；旧检索仍可用；写路由未被"复活" |
+| 每轮交付 | 每轮 plan → apply → **重新构建同一个落盘工程根**（`mvn clean verify` 四次 exit 0）→ 重启（旧进程 `stopped=true`）→ 断言；计划族纯度与 manifest-vs-盘面一致性每轮断言（如 R3b `deletions=2`、manifest 31 条） |
+
+**G1 完成门逐条对照**（`docs/design/07-validation-and-direction-roadmap.md` G1 行）：BIZ-01..04 见 1.10、BIZ-05 见 1.9、BIZ-06 见 1.11；GEN-01/02 见各切片生成契约与确定性矩阵；"真实 MySQL 中验证 HTTP 和数据结果"见 1.9–1.12；"测试建库设施不冒称产品 INITIALIZE"在每份报告里以 `schemaSource=TEST_FIXTURE_DDL`、`productInitializeImplemented=false`、`productUpdateImplemented=false` 记录；"继续生成 SIR/修改 SIR"见本节四轮变更的行为证据。
+
+### 1.13 2026-09-23 GitHub CI 承担重活（本机资源约束）
+
+开发机为 2 vCPU / 约 3 GB 内存，不足以承担十模块 Reactor 加真实 MySQL 与生成工程构建。按负责人 2026-09-23 的指示，重活改由 GitHub CI 承担（`.github/workflows/verify.yml`，公共仓库托管 runner），本机只跑受影响的定向测试；本机确需重活时必须 `systemd-run --scope -p MemoryMax=… -p CPUQuota=…` 包裹（权威规则见 `AGENTS.md`「测试资源约束」）。
+
+一次 CI 运行顺序执行：在线预热 → 生成工程依赖预热（在线跑一次 Q9 IT）→ **冻结形式全量闸门** → **完成形式全量闸门** → 四个业务场景 IT，并把 `evidence/**` 与 surefire 报告作为 artifact 上传，与 commit SHA、run URL 绑定。
+
+| 项 | 结果 |
+|---|---|
+| run | `35854153833`（commit `1218a31`，`main`；该批提交随后按负责人指示收敛为单个提交，内容相同、仅文档差异，收敛后的提交在推送上重跑同一条流水线） |
+| 冻结形式 | `mvn -B -o clean verify` **BUILD SUCCESS**（十模块） |
+| 收敛后单提交的重跑 | run `35854950479`（commit `1dd0e5b`）：与上表结果一致——两条闸门 BUILD SUCCESS、合计 775 / 0 / 0 / 5、四个 IT 全部 `PASSED`。提交收敛只改历史与文档，不改被验证的代码内容 |
+| 完成形式 | `mvn -B -o clean verify -Dmaven.test.failure.ignore=true` **BUILD SUCCESS**，合计 **775 run / 0 fail / 0 error / 5 skip** |
+| 业务场景 IT | Q9 40/0、Q10 61/0、Q11 36/0、Q13 63/0，全部 `verdict=PASSED` |
+| 差量归因（相对 749） | +26：`sir-change` +11（Q14 投影测试）、`sir-generator-spring-boot` +3（Q15 不变性探针）、`sir-toolchain-application` +12（Q13 契约与投影行为测试） |
+| 首跑（`35853320345`）的两次修正 | ① workflow 文件错误（`runner.temp` 不允许出现在 job 级 `env`，已用 `actionlint` 复核后改为 `github.workspace/ci-work|ci-evidence`）；② Q11 IT 的语句计数口径（见 1.11 的 C8）；③ 证据 artifact 因目录名以点开头被 upload-artifact 跳过，已改名并加 `include-hidden-files: true` |
 
 ## 2. 模块测试统计
 
-以下为 **2026-09-21 Linux Q10 后完成形式复跑** 的记录（裸 `mvn -o clean verify` 与 `-Dmaven.test.failure.ignore=true` 两种形式同样的每模块计数），命令与模块明细见 1.3、1.4、1.9、1.10；2026-08-11 Windows 运行见本节末尾对比。
+以下为 **2026-09-23 GitHub CI Q13 后完成形式复跑** 的记录（run `35854153833`；本机 Q11 后的 749 计数已被本次取代；裸 `mvn -o clean verify` 与 `-Dmaven.test.failure.ignore=true` 两种形式同样的每模块计数），命令与模块明细见 1.3、1.4、1.9、1.10、1.12、1.13；2026-08-11 Windows 运行见本节末尾对比。
 
-**口径订正**：本节此前记录的各模块单元数字取自不同批次的部分运行（例如 Q9 之前 `sir-toolchain-application` 尚未完整跑完），与 Q9/Q10 的完成形式复跑不一致；本次以实测 Surefire 结果重新取值。上一次记录的合计为 620，本次为 702。
+**口径订正**：本节此前记录的各模块单元数字取自不同批次的部分运行（例如 Q9 之前 `sir-toolchain-application` 尚未完整跑完），与 Q9/Q10 的完成形式复跑不一致；本次以 CI 完成形式复跑的实测 Surefire 结果取值。**上一次记录的合计为 749（本机 Q11 后），本次为 775**——差量 +26 全部来自 Q14/Q15/Q13 的新增测试：`sir-change` 22→33（Q14 投影测试 11 项）、`sir-generator-spring-boot` 74→77（Q15 不变性探针 3 项）、`sir-toolchain-application` 210→222（Q13 契约 6 项 + 投影行为 6 项）。
 
 统计以 Surefire XML 为准；JUnit `@Nested` 容器和类级 assumption 的展示差异不改变实际 testcase 统计。
 
@@ -359,14 +430,14 @@ skip 11 → 5 的逐条解释：`PathSecurityReviewTest` 5 项 Windows junction 
 | `sir-semantic` | 159 | 0 | 0 | 0 | 含 typed reference-site 契约；Q9 新增 28 项（投影绑定与类型、分页/排序/字面量约束与四类新 ReferenceRole）、Q10 新增 21 项（`WriteSliceSemanticsTest`：版本字段、状态码、条件持久化、patch 载荷与存在性表达式） |
 | `sir-lowering-api` | 4 | 0 | 0 | 0 | API 契约 |
 | `sir-lowering-spring-boot` | 69 | 0 | 0 | 0 | 含 19 项 `@Nested` hardening 测试；Q9 新增 16 项（投影/排序/分页/字面量计划、IR 校验与策略一致性、冲突模型拒绝）、Q10 新增 21 项（`WriteSliceLoweringTest`：版本规格、patch 计划、条件更新、候选校验、错误契约 artifact 与 GEN-02 三类损坏模型） |
-| `sir-generator-spring-boot` | 67 | 0 | 0 | 0 | canonical 输出、主要 Renderer、跨环境字节确定性和完整生成工程离线编译，另加 Q1 生产边界闸门（生产 census 37 个 class、禁止引用 0 违规、公开入口反射）；Q9 新增 10 项（投影 DTO/分页响应/分页配置/分页查询渲染契约）、Q10 新增 21 项（`GeneratorWriteSliceContractTest`：信封/变更集/条件更新/候选校验/投影/可空边界）并扩展确定性矩阵与离线编译覆盖写侧切片 |
+| `sir-generator-spring-boot` | 77 | 0 | 0 | 0 | canonical 输出、主要 Renderer、跨环境字节确定性和完整生成工程离线编译，另加 Q1 生产边界闸门（生产 census、禁止引用 0 违规、公开入口反射）；Q9 新增 10 项、Q10 新增 21 项、Q11 新增 6 项（`GeneratorRelationSliceContractTest`：EXISTS 渲染与绑定值、每关联一条批量读取、对一按身份读取、嵌套投影无 N+1、只读事务注解、嵌套 view 各成响应类型）并把关联切片加入确定性矩阵 |
 | `sir-project-graph` | 72 | 0 | 0 | 0 | Q2 建立的直接模块契约：四类边、规则矩阵、canonical 序列化/加载/摘要往返、只读边界闸门（生产 census 69 个 class、0 违规）与不可信字节版本/来源类型/不可编码标量守卫 |
 | `sir-change` | 22 | 0 | 0 | 0 | API/架构/fixture 支撑测试，覆盖不足 |
 | `sir-toolchain-application` | 210 | 0 | 0 | 5 | conformance 包已恢复编译与运行（含 13 项此前被隐藏的模块内测试）；5 项软链接失败已在 Q3 修复（剩 5 skip 全为 Windows junction）；见 1.6 |
 | `kcg-cli` | 30 | 0 | 0 | 0 | 含 Q7 新增 12 项（产品边界 6、生产边界闸门 4、内部失败 2）；另有 5 项 hardening + 13 项 Change 工作流（Q3 前整类被类级 assumption 跳过）；见 1.8 |
-| **合计** | **702** | **0** | **0** | **5** | 2026-09-21 Q10 后完成形式复跑；冻结与完成两种形式均为 BUILD SUCCESS；无失败、无错误 |
+| **合计** | **775** | **0** | **0** | **5** | 2026-09-23 GitHub CI 完成形式复跑（run `35854153833`）；冻结与完成两种形式均为 BUILD SUCCESS；无失败、无错误（相对 749 的差量 +26 全部来自 Q14/Q15/Q13）|
 
-对比 2026-08-11 Windows 运行：合计 373 / 0 / 0 / 10；该平台未真实执行软链接用例，因此那次 `0 failed` 不能证明软链接拒绝路径可用。当前 Linux 计数为 702（本次完成形式复跑）：Q1–Q3 阶段记录为 465，Q4+Q5 增加 13 项，Q6 增加 64 项，Q7 增加 12 项，Q9 增加 66 项（记录合计 620），Q10 增加 82 项（重测口径，见上）；5 项 skip 仍为 Windows junction。各阶段证据见 1.3–1.10。
+对比 2026-08-11 Windows 运行：合计 373 / 0 / 0 / 10；该平台未真实执行软链接用例，因此那次 `0 failed` 不能证明软链接拒绝路径可用。当前计数为 775（CI 完成形式复跑）：Q1–Q3 阶段记录为 465，Q4+Q5 增加 13 项，Q6 增加 64 项，Q7 增加 12 项，Q9 增加 66 项（记录合计 620），Q10 增加 82 项（重测口径），Q11 增加 47 项（parser +10、semantic +17、lowering +13、generator +7），Q13/Q14/Q15 合计增加 26 项（change +11、generator +3、application +12）；5 项 skip 仍为 Windows junction。各阶段证据见 1.3–1.13。
 
 ## 3. 跳过与排除
 

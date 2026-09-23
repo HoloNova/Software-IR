@@ -3,6 +3,7 @@ package io.kcg.sir.semantic.internal;
 import io.kcg.sir.api.Diagnostic;
 import io.kcg.sir.api.RelatedLocation;
 import io.kcg.sir.ast.AstActorClause;
+import io.kcg.sir.ast.AstAnyExpression;
 import io.kcg.sir.ast.AstBinaryExpression;
 import io.kcg.sir.ast.AstBinding;
 import io.kcg.sir.ast.AstCapabilityDecl;
@@ -448,8 +449,71 @@ final class ResolvePass {
          SymbolId fieldSymId = SymbolIdFactory.viewField(this.softwareName, viewName, fieldName);
          Symbol.FieldSymbol fieldSym = new Symbol.FieldSymbol(fieldSymId, fieldName, field.span(), declaredType, viewScopeId);
          this.addSymbol(fieldSym, viewScopeId);
-         this.bindProjectedField(field, entityName, fieldName);
+         if (declaredType != null) {
+            String nestedView = this.nestedViewName(field.type());
+            if (nestedView != null) {
+               this.bindProjectedRelation(field, entityName, nestedView, field.type() instanceof AstListTypeRef);
+            } else {
+               this.bindProjectedField(field, entityName, fieldName);
+            }
+         }
       }
+   }
+
+   /**
+   * The view a projected field nests, or {@code null} when the field names a column.
+   *
+   * <p>Detected from the declaration kind rather than from the shape of the name so that a nested
+   * projection is a relation from the first phase on, and never quietly becomes a column lookup.
+   */
+   private String nestedViewName(AstTypeRef typeRef) {
+      AstTypeRef element = typeRef instanceof AstListTypeRef list ? list.elementType() : typeRef;
+      if (element instanceof AstNamedTypeRef named
+         && this.declarationKinds.get(named.name().text()) == SymbolKind.VIEW) {
+         return named.name().text();
+      }
+
+      return null;
+   }
+
+   /**
+   * Binds a nested projection to the reference field that already carries the relation.
+   *
+   * <p>The reference lives on this entity for a single related row and on the related entity for a
+   * collection. The document has no syntax to say which of several candidate references was meant,
+   * so an ambiguous relation is rejected here instead of silently picking one.
+   */
+   private void bindProjectedRelation(AstViewField field, String sourceEntityName, String targetViewName, boolean collection) {
+      AstViewDecl targetView = this.viewDecls.get(targetViewName);
+      String targetEntityName = targetView == null ? null : targetView.sourceEntity().text();
+      if (sourceEntityName == null || targetEntityName == null) {
+         return;
+      }
+
+      String owner = collection ? targetEntityName : sourceEntityName;
+      String referenced = collection ? sourceEntityName : targetEntityName;
+      List<SymbolId> candidates = this.referenceFieldsTo(owner, referenced);
+      if (candidates.isEmpty()) {
+         this.diagnostics.add(DiagnosticBuilder.error(
+            "SIR-SYMBOL-002", "找不到关联: " + owner + " 没有指向 " + referenced + " 的 Ref 字段", field.name().span()));
+      } else if (candidates.size() > 1) {
+         this.diagnostics.add(DiagnosticBuilder.error(
+            "SIR-SYMBOL-003", "关联不唯一: " + owner + " 有多个指向 " + referenced + " 的 Ref 字段", field.name().span()));
+      } else {
+         this.bindReference(field.name(), ReferenceRole.VIEW_RELATION_FIELD, candidates.getFirst());
+      }
+   }
+
+   private List<SymbolId> referenceFieldsTo(String ownerEntityName, String referencedEntityName) {
+      List<SymbolId> result = new ArrayList<>();
+      Map<String, SirType> types = this.entityFieldTypes.getOrDefault(ownerEntityName, Map.of());
+      for (Map.Entry<String, SymbolId> entry : this.entityFieldSymbols.getOrDefault(ownerEntityName, Map.of()).entrySet()) {
+         if (types.get(entry.getKey()) instanceof RefType ref && ref.entityName().equals(referencedEntityName)) {
+            result.add(entry.getValue());
+         }
+      }
+
+      return result;
    }
 
    private void bindProjectedField(AstViewField field, String entityName, String fieldName) {
@@ -584,11 +648,11 @@ final class ResolvePass {
          AstStep var8 = step;
          switch (var8) {
             case AstValidateStep s:
-               this.resolveExpression(s.condition(), capName, capScopeId, visibleVars, null);
+               this.resolveExpression(s.condition(), capName, capScopeId, visibleVars, null, null);
                this.resolveErrorRef(s.error(), capName, ReferenceRole.VALIDATE_ERROR);
                break;
             case AstLoadStep s:
-               this.resolveExpression(s.idExpression(), capName, capScopeId, visibleVars, null);
+               this.resolveExpression(s.idExpression(), capName, capScopeId, visibleVars, null, null);
                this.resolveEntityRef(s.entity(), ReferenceRole.LOAD_ENTITY);
                this.resolveErrorRef(s.error(), capName, ReferenceRole.LOAD_ERROR);
                this.registerStepResultVar(s.result(), s.id(), capName, capScopeId, visibleVars, this.buildRefType(s.entity().text()));
@@ -605,7 +669,7 @@ final class ResolvePass {
                this.findItemBindings.put(s.id(), itemId);
                Set<String> predVars = new LinkedHashSet<>(visibleVars);
                predVars.add("item");
-               this.resolveExpression(s.predicate(), capName, stepScopeId, predVars, itemId);
+               this.resolveExpression(s.predicate(), capName, stepScopeId, predVars, itemId, null);
             s.order().ifPresent(order -> this.resolveOrder(order, s.entity().text()));
             s.page().ifPresent(page -> this.resolvePage(page, capName, capScopeId, visibleVars));
             SirType resultType = s.page().isPresent() ? outputType : itemType == null ? null : new ListType(itemType);
@@ -615,7 +679,7 @@ final class ResolvePass {
                this.resolveEntityRef(s.entity(), ReferenceRole.CREATE_ENTITY);
 
                for (AstBinding binding : s.bindings()) {
-                  this.resolveExpression(binding.value(), capName, capScopeId, visibleVars, null);
+                  this.resolveExpression(binding.value(), capName, capScopeId, visibleVars, null, null);
                   this.resolveBindingField(binding, s.entity().text());
                }
 
@@ -627,7 +691,7 @@ final class ResolvePass {
                String entityName = this.entityNameFromBinding(targetVarSymId);
 
                for (AstBinding binding : s.bindings()) {
-                  this.resolveExpression(binding.value(), capName, capScopeId, visibleVars, null);
+                  this.resolveExpression(binding.value(), capName, capScopeId, visibleVars, null, null);
                   this.resolveBindingField(binding, entityName);
                }
                break;
@@ -637,7 +701,7 @@ final class ResolvePass {
                break;
             case AstReturnStep var29:
                AstReturnStep s = (AstReturnStep)var8;
-               this.resolveExpression(s.value(), capName, capScopeId, visibleVars, null);
+               this.resolveExpression(s.value(), capName, capScopeId, visibleVars, null, null);
                break;
             default:
          }
@@ -669,8 +733,8 @@ final class ResolvePass {
    }
 
    private void resolvePage(AstFindPage page, String capName, SymbolId capScopeId, Set<String> visibleVars) {
-      this.resolveExpression(page.page(), capName, capScopeId, visibleVars, null);
-      this.resolveExpression(page.size(), capName, capScopeId, visibleVars, null);
+      this.resolveExpression(page.page(), capName, capScopeId, visibleVars, null, null);
+      this.resolveExpression(page.size(), capName, capScopeId, visibleVars, null, null);
       this.resolveErrorRef(page.error(), capName, ReferenceRole.PAGE_ERROR);
    }
 
@@ -759,43 +823,72 @@ final class ResolvePass {
       return sym instanceof Symbol.VariableSymbol vs && vs.type() instanceof RefType rt ? rt.entityName() : null;
    }
 
-   private void resolveExpression(AstExpression expr, String capName, SymbolId scopeId, Set<String> visibleVars, SymbolId currentItemSymbol) {
-      if (expr != null) {
-         switch (expr) {
-            case AstNameExpression e:
-               this.resolveNameExpression(e, capName, scopeId, visibleVars, currentItemSymbol);
-               break;
-            case AstMemberExpression e:
-               this.resolveMemberExpression(e, capName, scopeId, visibleVars, currentItemSymbol);
-               break;
-            case AstGroupedExpression e:
-               this.resolveExpression(e.inner(), capName, scopeId, visibleVars, currentItemSymbol);
-               break;
-            case AstPresentExpression e:
-               this.resolvePresentExpression(e, capName, scopeId, visibleVars, currentItemSymbol);
-               break;
-            case AstUnaryExpression e:
-               this.resolveExpression(e.operand(), capName, scopeId, visibleVars, currentItemSymbol);
-               break;
-            case AstBinaryExpression e:
-               this.resolveExpression(e.left(), capName, scopeId, visibleVars, currentItemSymbol);
-               this.resolveExpression(e.right(), capName, scopeId, visibleVars, currentItemSymbol);
-               break;
-            default:
-         }
-      }
-   }
+    private void resolveExpression(AstExpression expr, String capName, SymbolId scopeId, Set<String> visibleVars, SymbolId currentItemSymbol, String anyEntityName) {
+       if (expr != null) {
+          switch (expr) {
+             case AstNameExpression e:
+                this.resolveNameExpression(e, capName, scopeId, visibleVars, currentItemSymbol, anyEntityName);
+                break;
+             case AstMemberExpression e:
+                this.resolveMemberExpression(e, capName, scopeId, visibleVars, currentItemSymbol, anyEntityName);
+                break;
+             case AstGroupedExpression e:
+                this.resolveExpression(e.inner(), capName, scopeId, visibleVars, currentItemSymbol, anyEntityName);
+                break;
+             case AstPresentExpression e:
+                this.resolvePresentExpression(e, capName, scopeId, visibleVars, currentItemSymbol, anyEntityName);
+                break;
+             case AstAnyExpression e:
+                this.resolveAnyExpression(e, capName, scopeId, visibleVars, currentItemSymbol);
+                break;
+             case AstUnaryExpression e:
+                this.resolveExpression(e.operand(), capName, scopeId, visibleVars, currentItemSymbol, anyEntityName);
+                break;
+             case AstBinaryExpression e:
+                this.resolveExpression(e.left(), capName, scopeId, visibleVars, currentItemSymbol, anyEntityName);
+                this.resolveExpression(e.right(), capName, scopeId, visibleVars, currentItemSymbol, anyEntityName);
+                break;
+             default:
+          }
+       }
+    }
 
-   private void resolveNameExpression(AstNameExpression expr, String capName, SymbolId scopeId, Set<String> visibleVars, SymbolId currentItemSymbol) {
-      String name = expr.name().text();
-      if ("item".equals(name)) {
-         if (currentItemSymbol != null) {
-            this.bindReference(expr.name(), ReferenceRole.EXPRESSION_NAME, currentItemSymbol);
-         } else {
-            this.diagnostics.add(DiagnosticBuilder.error("SIR-FLOW-001", "item 仅在 Find 谓词内可用: " + name, expr.span()));
-         }
-      } else {
-         Symbol found = this.lookupInScope(name, scopeId);
+    /**
+    * Resolves an existence predicate's two parts.
+    *
+    * <p>The first argument is a reference to the entity the predicate tests, so it is bound as an
+    * entity reference or rejected with a diagnostic. The conditions are then resolved with that
+    * entity in scope: inside them a bare name means one of its fields, which is the only place in
+    * the language where a name means an entity column rather than a variable.
+    */
+    private void resolveAnyExpression(AstAnyExpression expr, String capName, SymbolId scopeId, Set<String> visibleVars, SymbolId currentItemSymbol) {
+       String entityName = expr.entity().text();
+       Symbol resolved = this.projectNames.get(entityName);
+       boolean isEntity = resolved instanceof Symbol.TypeSymbol ts && ts.kind() == SymbolKind.ENTITY;
+       if (resolved == null) {
+          this.diagnostics.add(DiagnosticBuilder.error("SIR-SYMBOL-002", "未定义符号: " + entityName, expr.entity().span()));
+       } else if (!isEntity) {
+          this.diagnostics.add(DiagnosticBuilder.error("SIR-TYPE-001", "目标必须是 Entity: " + entityName, expr.entity().span()));
+       } else {
+          this.bindReference(expr.entity(), ReferenceRole.EXISTS_SOURCE_ENTITY, resolved.id());
+       }
+
+       this.resolveExpression(expr.conditions(), capName, scopeId, visibleVars, currentItemSymbol, isEntity ? entityName : null);
+    }
+
+    private void resolveNameExpression(AstNameExpression expr, String capName, SymbolId scopeId, Set<String> visibleVars, SymbolId currentItemSymbol, String anyEntityName) {
+       String name = expr.name().text();
+       if ("item".equals(name)) {
+          if (currentItemSymbol != null) {
+             this.bindReference(expr.name(), ReferenceRole.EXPRESSION_NAME, currentItemSymbol);
+          } else {
+             this.diagnostics.add(DiagnosticBuilder.error("SIR-FLOW-001", "item 仅在 Find 谓词内可用: " + name, expr.span()));
+          }
+       } else if (anyEntityName != null && this.entityFieldSymbols.getOrDefault(anyEntityName, Map.of()).containsKey(name)) {
+          this.bindReference(
+             expr.name(), ReferenceRole.EXISTS_CONDITION_FIELD, this.entityFieldSymbols.get(anyEntityName).get(name));
+       } else {
+          Symbol found = this.lookupInScope(name, scopeId);
          if (found instanceof Symbol.VariableSymbol vs) {
             if (!visibleVars.contains(name)) {
                this.diagnostics.add(DiagnosticBuilder.error("SIR-FLOW-001", "变量先使用后声明或不在作用域内: " + name, expr.span()));
@@ -812,8 +905,8 @@ final class ResolvePass {
       }
    }
 
-   private void resolveMemberExpression(AstMemberExpression expr, String capName, SymbolId scopeId, Set<String> visibleVars, SymbolId currentItemSymbol) {
-      this.resolveExpression(expr.receiver(), capName, scopeId, visibleVars, currentItemSymbol);
+    private void resolveMemberExpression(AstMemberExpression expr, String capName, SymbolId scopeId, Set<String> visibleVars, SymbolId currentItemSymbol, String anyEntityName) {
+       this.resolveExpression(expr.receiver(), capName, scopeId, visibleVars, currentItemSymbol, anyEntityName);
       String memberName = expr.member().text();
       SymbolId receiverSymbolId = this.referenceBindings.get(this.receiverReferenceId(expr.receiver()));
       SirType receiverType = this.receiverTypeFor(receiverSymbolId);
@@ -882,8 +975,8 @@ final class ResolvePass {
    * payload is the only place where "absent" and "explicitly null" differ. The bound
    * field symbol is what a later phase renders the presence flag from.
    */
-   private void resolvePresentExpression(AstPresentExpression expr, String capName, SymbolId scopeId, Set<String> visibleVars, SymbolId currentItemSymbol) {
-      this.resolveExpression(expr.target(), capName, scopeId, visibleVars, currentItemSymbol);
+    private void resolvePresentExpression(AstPresentExpression expr, String capName, SymbolId scopeId, Set<String> visibleVars, SymbolId currentItemSymbol, String anyEntityName) {
+       this.resolveExpression(expr.target(), capName, scopeId, visibleVars, currentItemSymbol, anyEntityName);
       AstNodeId targetSiteId = receiverReferenceIdOf(expr.target());
       SymbolId targetSymbolId = this.referenceBindings.get(targetSiteId);
       if (targetSymbolId == null) {

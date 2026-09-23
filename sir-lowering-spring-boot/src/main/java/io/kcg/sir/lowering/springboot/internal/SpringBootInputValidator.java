@@ -9,6 +9,8 @@ import io.kcg.sir.ast.AstLanguage;
 import io.kcg.sir.ast.AstNodeId;
 import io.kcg.sir.ast.AstPersistence;
 import io.kcg.sir.ast.AstTarget;
+import io.kcg.sir.ast.AstBinaryOperator;
+import io.kcg.sir.ast.AstUnaryOperator;
 import io.kcg.sir.lowering.api.LoweringDiagnostic;
 import io.kcg.sir.semantic.api.NormalizedSemanticModel;
 import io.kcg.sir.semantic.model.NormalizedBinding;
@@ -26,10 +28,13 @@ import io.kcg.sir.semantic.model.NormalizedView;
 import io.kcg.sir.semantic.model.NormalizedViewField;
 import io.kcg.sir.semantic.model.NormalizedEnum.NormalizedEnumMember;
 import io.kcg.sir.semantic.model.NormalizedExpression.BinaryExpression;
+import io.kcg.sir.semantic.model.NormalizedExpression.BooleanLiteral;
 import io.kcg.sir.semantic.model.NormalizedExpression.DecimalLiteral;
+import io.kcg.sir.semantic.model.NormalizedExpression.ExistsExpression;
 import io.kcg.sir.semantic.model.NormalizedExpression.IntegerLiteral;
 import io.kcg.sir.semantic.model.NormalizedExpression.MemberExpression;
 import io.kcg.sir.semantic.model.NormalizedExpression.NameExpression;
+import io.kcg.sir.semantic.model.NormalizedExpression.StringLiteral;
 import io.kcg.sir.semantic.model.NormalizedExpression.UnaryExpression;
 import io.kcg.sir.semantic.model.NormalizedStep.CreateStep;
 import io.kcg.sir.semantic.model.NormalizedStep.FindStep;
@@ -40,6 +45,7 @@ import io.kcg.sir.semantic.model.NormalizedStep.UpdateStep;
 import io.kcg.sir.semantic.model.NormalizedStep.ValidateStep;
 import io.kcg.sir.semantic.symbol.Symbol;
 import io.kcg.sir.semantic.symbol.SymbolId;
+import io.kcg.sir.semantic.symbol.SymbolKind;
 import io.kcg.sir.semantic.symbol.Symbol.EnumMemberSymbol;
 import io.kcg.sir.semantic.symbol.Symbol.FieldSymbol;
 import io.kcg.sir.semantic.symbol.Symbol.VariableSymbol;
@@ -253,7 +259,8 @@ public final class SpringBootInputValidator {
 
    /**
    * A view is lowerable only if its source really is an entity and every projected field reads a
-   * field of that entity with the very same type.
+   * field of that entity with the very same type — unless the field is a relation, which reads a
+   * reference instead and is checked through the reference it holds.
    */
    private void validateView(NormalizedView view) {
       this.validateDeclarationKind(view.sourceEntity(), NormalizedEntity.class, view.span(), view.id(), view.sourceNodeId());
@@ -264,6 +271,11 @@ public final class SpringBootInputValidator {
          this.validateType(field.type(), field.span(), field.id(), field.sourceNodeId());
          if (!(source instanceof NormalizedEntity entity)) {
          continue;
+         }
+
+         if (field.relation().isPresent()) {
+            this.validateViewRelation(view, field, entity);
+            continue;
          }
 
          SirType sourceType = this.entityFieldType(entity, field.sourceField());
@@ -285,6 +297,99 @@ public final class SpringBootInputValidator {
          );
          }
       }
+   }
+
+   /**
+   * A relation projection must read a reference that exists on the side its direction says it does.
+   *
+   * <p>The reference of a collection lives on the related entity, the reference of a single related
+   * row on this one, so the side is checked rather than assumed: a reference on the wrong side would
+   * make the batch read look for rows by a column they do not have.
+   */
+   private void validateViewRelation(NormalizedView view, NormalizedViewField field, NormalizedEntity entity) {
+      NormalizedViewField.Relation relation = field.relation().orElseThrow();
+      NormalizedDeclaration target = this.declarationsById.get(relation.targetView());
+      Symbol reference = this.model.symbols().byId(field.sourceField()).orElse(null);
+      NormalizedDeclaration holder = target instanceof NormalizedView targetView ? this.declarationsById.get(targetView.sourceEntity()) : null;
+      if (!(target instanceof NormalizedView) || !(holder instanceof NormalizedEntity holderEntity)
+         || !(reference instanceof FieldSymbol fieldSymbol) || !(fieldSymbol.type() instanceof RefType ref)) {
+         this.error(
+            "SIR-LOWER-BINDING-001",
+            "a relation projection must read a reference between two entities: " + field.name(),
+            field.span(),
+            field.id(),
+            field.sourceNodeId()
+         );
+         return;
+      }
+
+      SymbolId referenceTarget = ref.entityId();
+      boolean collection = relation.cardinality() == NormalizedViewField.Cardinality.TO_MANY;
+      boolean holdsOnExpectedSide = collection
+         ? this.isFieldOf(field.sourceField(), holderEntity)
+         : this.isFieldOf(field.sourceField(), entity);
+      boolean pointsAtExpectedEntity = collection
+         ? entity.id().equals(referenceTarget)
+         : holderEntity.id().equals(referenceTarget);
+      if (!holdsOnExpectedSide || !pointsAtExpectedEntity) {
+         this.error(
+            "SIR-LOWER-BINDING-001",
+            "a relation projection does not hold its reference on the side its direction says: " + field.name(),
+            field.span(),
+            field.id(),
+            field.sourceNodeId()
+         );
+      }
+   }
+
+   /**
+    * A nested projection needs the page it belongs to: its batch reads start from the rows that page
+    * loaded. Without pagination the target would have to invent a different read shape, so the
+    * combination is refused here instead of being half-supported.
+    */
+   private void validateRelationReads(FindStep step, NormalizedCapability capability) {
+      if (step.page().isPresent() || this.associationCount(this.resultType(step)) == 0) {
+         return;
+      }
+
+      this.error(
+         "SIR-LOWER-FEATURE-001",
+         "a nested projection needs a paged find: " + capability.name(),
+         step.span(),
+         capability.id(),
+         step.sourceNodeId()
+      );
+   }
+
+   private SirType resultType(FindStep step) {
+      Symbol symbol = this.model.symbols().byId(step.resultVariable()).orElse(null);
+      return symbol instanceof VariableSymbol variable ? variable.type() : null;
+   }
+
+   /** The batch reads a result type needs, counted through the projection it is made of. */
+   private int associationCount(SirType type) {
+      if (type instanceof PageType page) {
+         type = page.element();
+      }
+
+      if (type instanceof ListType list) {
+         type = list.element();
+      }
+
+      if (!(type instanceof DeclaredType declared)
+         || declared.kind() != DeclaredKind.VIEW
+         || !(this.declarationsById.get(declared.symbolId()) instanceof NormalizedView view)) {
+         return 0;
+      }
+
+      int count = 0;
+      for (NormalizedViewField field : view.fields()) {
+         if (field.relation().isPresent()) {
+            count += 1 + this.associationCount(field.type());
+         }
+      }
+
+      return count;
    }
 
    private SirType entityFieldType(NormalizedEntity entity, SymbolId fieldSymbol) {
@@ -399,6 +504,7 @@ public final class SpringBootInputValidator {
             this.validateVariable(value.itemVariable(), capability);
          this.validateOrderKeys(value, capability);
          this.validatePageSpec(value, capability);
+         this.validateRelationReads(value, capability);
             break;
          case CreateStep value:
             this.validateDeclarationKind(value.entitySymbol(), NormalizedEntity.class, capability);
@@ -518,8 +624,111 @@ public final class SpringBootInputValidator {
             this.validateExpression(value.left(), owner, actorAccess);
             this.validateExpression(value.right(), owner, actorAccess);
             break;
+         case ExistsExpression value:
+            this.validateExistsPredicate(value, owner);
+            break;
          default:
       }
+   }
+
+   /**
+   * An existence predicate must translate into one correlated subquery.
+   *
+   * <p>The target can bind the queried row's columns, the related entity's columns, literals and
+   * enum members. A workflow variable, a function or a text match inside the condition has no
+   * faithful translation, so it is rejected here instead of being lowered into a query that means
+   * something else — or dropped without a word.
+   */
+   private void validateExistsPredicate(ExistsExpression exists, SymbolId owner) {
+      NormalizedDeclaration related = this.declarationsById.get(exists.entity());
+      Symbol connection = this.model.symbols().byId(exists.connectionField()).orElse(null);
+      RefType reference = connection instanceof FieldSymbol field && field.type() instanceof RefType ref ? ref : null;
+      NormalizedDeclaration root = reference == null ? null : this.declarationsById.get(reference.entityId());
+      if (!(related instanceof NormalizedEntity relatedEntity) || !(root instanceof NormalizedEntity rootEntity)) {
+         this.error(
+            "SIR-LOWER-FEATURE-001",
+            "existence predicate does not relate two entities: " + exists.entity(),
+            exists.span(),
+            owner,
+            exists.sourceNodeId()
+         );
+         return;
+      }
+
+      this.validateExistsCondition(exists.conditions(), relatedEntity, rootEntity, owner);
+   }
+
+   private void validateExistsCondition(
+      NormalizedExpression expression, NormalizedEntity related, NormalizedEntity root, SymbolId owner) {
+      switch (expression) {
+         case BinaryExpression value -> {
+            boolean comparison = switch (value.operator()) {
+               case EQ, NE, LT, LE, GT, GE -> true;
+               default -> false;
+            };
+            if (!comparison && value.operator() != AstBinaryOperator.AND && value.operator() != AstBinaryOperator.OR) {
+               this.unsupportedExistsCondition(value, owner);
+               return;
+            }
+
+            this.validateExistsCondition(value.left(), related, root, owner);
+            this.validateExistsCondition(value.right(), related, root, owner);
+         }
+         case UnaryExpression value -> {
+            if (value.operator() != AstUnaryOperator.NOT) {
+               this.unsupportedExistsCondition(value, owner);
+               return;
+            }
+
+            this.validateExistsCondition(value.operand(), related, root, owner);
+         }
+         case NameExpression value -> {
+            if (!this.isFieldOf(value.resolvedSymbol(), related) && !this.isFindItem(value.resolvedSymbol())) {
+               this.unsupportedExistsCondition(value, owner);
+            }
+         }
+         case MemberExpression value -> {
+            boolean onQueriedRow = value.receiver() instanceof NameExpression receiver && this.isFindItem(receiver.resolvedSymbol());
+            boolean onEnumType = value.receiver() instanceof NameExpression receiver
+               && this.model.symbols().byId(receiver.resolvedSymbol()).orElse(null) instanceof Symbol.TypeSymbol type
+               && type.kind() == SymbolKind.ENUM;
+            if (onQueriedRow && this.isFieldOf(value.resolvedMember(), root)) {
+               return;
+            }
+
+            if (!onEnumType) {
+               this.unsupportedExistsCondition(value, owner);
+            }
+         }
+         case StringLiteral ignored -> {
+         }
+         case BooleanLiteral ignored -> {
+         }
+         case IntegerLiteral ignored -> {
+         }
+         case DecimalLiteral ignored -> {
+         }
+         default -> this.unsupportedExistsCondition(expression, owner);
+      }
+   }
+
+   private boolean isFieldOf(SymbolId symbol, NormalizedEntity entity) {
+      return entity.fields().stream().anyMatch(field -> field.id().equals(symbol))
+         || entity.identity().id().equals(symbol);
+   }
+
+   private boolean isFindItem(SymbolId symbol) {
+      return this.model.findItemBindings().containsValue(symbol);
+   }
+
+   private void unsupportedExistsCondition(NormalizedExpression expression, SymbolId owner) {
+      this.error(
+         "SIR-LOWER-FEATURE-001",
+         "this target cannot express the existence condition: " + expression.getClass().getSimpleName(),
+         expression.span(),
+         owner,
+         expression.sourceNodeId()
+      );
    }
 
    private void validateType(SirType type, SourceSpan span, SymbolId owner, AstNodeId nodeId) {

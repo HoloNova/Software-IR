@@ -327,11 +327,56 @@ public final class SpringBootModelLowerer {
                 field.name(),
                 this.lowerType(field.type()),
                 field.sourceField(),
-                this.targetMemberName(field.sourceField(), field.name()))).toList();
+                this.targetMemberName(field.sourceField(), field.name()),
+                this.lowerViewRelation(value, field))).toList();
         return new SpringBootDeclaration.ViewDeclaration(
                 this.symbolId(value.id(), "view"),
                 this.origin(value.id(), value.sourceNodeId(), value.span()),
                 value.id(), value.name(), value.sourceEntity(), entityJavaName, fields);
+    }
+
+    /**
+     * Turns a nested projection into the batch read it needs.
+     *
+     * <p>The side that holds the reference decides which property the read keys on, and that is
+     * recorded here rather than derived again while rendering: a single related row is found through
+     * the reference on this entity, a collection through the reference the related rows hold. A
+     * collection is also ordered by the related identity, so the same page always answers with the
+     * same order.
+     */
+    private Optional<SpringBootDeclaration.ViewRelationPlan> lowerViewRelation(NormalizedView view, NormalizedViewField field) {
+        NormalizedViewField.Relation relation = field.relation().orElse(null);
+        if (relation == null) {
+            return Optional.empty();
+        }
+
+        NormalizedView targetView = this.views.get(relation.targetView());
+        SymbolId targetEntitySymbol = targetView == null ? null : targetView.sourceEntity();
+        NormalizedEntity targetEntity = targetEntitySymbol == null ? null : this.entities.get(targetEntitySymbol);
+        NormalizedEntity sourceEntity = this.entities.get(view.sourceEntity());
+        if (targetEntity == null || sourceEntity == null) {
+            throw new IllegalStateException("a nested projection must relate two lowered entities: " + field.name());
+        }
+
+        String foreignKeyProperty = this.targetMemberName(field.sourceField(), field.name());
+        String sourceIdentityProperty = this.identityPropertyName(sourceEntity);
+        String targetIdentityProperty = this.identityPropertyName(targetEntity);
+        boolean collection = relation.cardinality() == NormalizedViewField.Cardinality.TO_MANY;
+        return Optional.of(new SpringBootDeclaration.ViewRelationPlan(
+                this.nodeId(field.sourceNodeId().value(), "view-relation"),
+                this.origin(view.id(), field.sourceNodeId(), field.span()),
+                field.id(),
+                collection ? SpringBootDeclaration.RelationCardinality.TO_MANY : SpringBootDeclaration.RelationCardinality.TO_ONE,
+                relation.targetView(),
+                targetEntitySymbol,
+                collection ? sourceIdentityProperty : foreignKeyProperty,
+                collection ? foreignKeyProperty : targetIdentityProperty,
+                collection ? foreignKeyProperty : targetIdentityProperty,
+                collection ? Optional.of(targetIdentityProperty) : Optional.empty()));
+    }
+
+    private String identityPropertyName(NormalizedEntity entity) {
+        return this.targetMemberName(entity.identity().id(), entity.identity().name());
     }
 
     private String targetMemberName(SymbolId symbol, String fallback) {
@@ -373,7 +418,8 @@ public final class SpringBootModelLowerer {
                         this.targetPropertyName(field, true),
                         this.snake(field.name()),
                         this.scalar(field.type()),
-                        this.writePolicy.versionInitialValue())));
+                        this.writePolicy.versionInitialValue(),
+                        this.writePolicy.versionIncrement())));
     }
 
     private SpringBootDeclaration.InputDeclaration lowerInput(NormalizedInput value) {
@@ -615,8 +661,10 @@ public final class SpringBootModelLowerer {
                     id, origin, value.entitySymbol(), lowerExpression(value.idExpression(), owner, actorSymbol),
                     variable(value.resultVariable()), value.errorSymbol(), this.locksRow(value, owner));
             case NormalizedStep.FindStep value -> new SpringBootWorkflow.FindStep(
-                    id, origin, value.entitySymbol(), lowerExpression(value.predicate(), owner, actorSymbol),
+                    id, origin, value.entitySymbol(),
+                    lowerExpression(value.predicate(), owner, actorSymbol, this.findItemSymbol(value)),
                     this.lowerOrderKeys(value), this.lowerPageSpec(value), this.lowerStringMatches(value, owner),
+                    this.lowerStatementBudget(value),
                     variable(value.resultVariable()), variable(value.itemVariable()));
             case NormalizedStep.CreateStep value -> new SpringBootWorkflow.CreateStep(
                     id, origin, value.entitySymbol(), variable(value.resultVariable()),
@@ -881,6 +929,20 @@ public final class SpringBootModelLowerer {
     }
 
     private SpringExpression lowerExpression(NormalizedExpression expression, SymbolId owner, Optional<SymbolId> actorSymbol) {
+        return this.lowerExpression(expression, owner, actorSymbol, Optional.empty());
+    }
+
+    /**
+     * Lowers one normalized expression.
+     *
+     * <p>{@code itemSymbol} is the variable a {@code find} predicate ranges over, and it is only
+     * needed by an existence predicate: inside its correlated subquery that variable stands for the
+     * root row, so its references become the root table's columns rather than values. It is passed
+     * explicitly instead of being recognised by name so that a variable of the same type from
+     * somewhere else in the workflow cannot be mistaken for the row being queried.
+     */
+    private SpringExpression lowerExpression(
+            NormalizedExpression expression, SymbolId owner, Optional<SymbolId> actorSymbol, Optional<SymbolId> itemSymbol) {
         LoweredNodeId id = this.nodeId(expression.sourceNodeId().value(), "expression");
         LoweredOrigin origin = this.origin(owner, expression.sourceNodeId(), expression.span());
         LoweredJavaType type = this.lowerType(expression.type());
@@ -907,7 +969,7 @@ public final class SpringBootModelLowerer {
                             source.symbols().byId(actorSymbol.get()).orElseThrow().name());
                 }
                 yield new SpringExpression.MemberExpression(
-                        id, origin, type, lowerExpression(value.receiver(), owner, actorSymbol),
+                        id, origin, type, lowerExpression(value.receiver(), owner, actorSymbol, itemSymbol),
                         value.resolvedMember(),
                         targetMemberNames.getOrDefault(
                                 value.resolvedMember(),
@@ -915,15 +977,268 @@ public final class SpringBootModelLowerer {
             }
             case NormalizedExpression.UnaryExpression value -> new SpringExpression.UnaryExpression(
                     id, origin, type, SpringExpression.UnaryOperator.valueOf(value.operator().name()),
-                    lowerExpression(value.operand(), owner, actorSymbol));
+                    lowerExpression(value.operand(), owner, actorSymbol, itemSymbol));
             case NormalizedExpression.BinaryExpression value -> new SpringExpression.BinaryExpression(
-                    id, origin, type, lowerExpression(value.left(), owner, actorSymbol),
+                    id, origin, type, lowerExpression(value.left(), owner, actorSymbol, itemSymbol),
                     SpringExpression.BinaryOperator.valueOf(value.operator().name()),
-                    lowerExpression(value.right(), owner, actorSymbol));
+                    lowerExpression(value.right(), owner, actorSymbol, itemSymbol));
             case NormalizedExpression.PresentExpression value -> new SpringExpression.PayloadPresence(
                     id, origin, type, this.presencePropertyName(value));
+            case NormalizedExpression.ExistsExpression value -> this.lowerExistsPredicate(value, id, origin, type, itemSymbol);
         };
     }
+
+    private Optional<SymbolId> findItemSymbol(NormalizedStep.FindStep step) {
+        return Optional.ofNullable(this.source.findItemBindings().get(step.sourceNodeId()));
+    }
+
+    /**
+     * Lowers an existence predicate into the correlated subquery it stands for.
+     *
+     * <p>The referenced table and the field that points back at the queried root decide the join,
+     * and both come from the model rather than from a guess about naming. Values inside the
+     * condition become bound parameters instead of text, so a literal can never change the shape of
+     * the statement.
+     */
+    private SpringExpression lowerExistsPredicate(
+            NormalizedExpression.ExistsExpression value, LoweredNodeId id, LoweredOrigin origin,
+            LoweredJavaType type, Optional<SymbolId> itemSymbol) {
+        NormalizedEntity related = this.entities.get(value.entity());
+        Symbol connectionSymbol = this.source.symbols().byId(value.connectionField()).orElse(null);
+        SymbolId rootEntitySymbol = connectionSymbol instanceof Symbol.FieldSymbol field && field.type() instanceof RefType ref
+                ? ref.entityId()
+                : null;
+        NormalizedEntity root = rootEntitySymbol == null ? null : this.entities.get(rootEntitySymbol);
+        if (related == null || root == null) {
+            throw new IllegalStateException("an existence predicate must relate two lowered entities: " + value.entity());
+        }
+
+        String alias = this.snake(related.name()) + EXISTENCE_ALIAS_SUFFIX;
+        String relatedColumn = this.columns.getOrDefault(value.connectionField(), this.snake(connectionSymbol.name()));
+        NormalizedExpression conditions = this.withoutConnection(value.conditions(), value.connectionField(), itemSymbol);
+        ExistenceSql condition = conditions == null
+                ? new ExistenceSql("", List.of())
+                : this.existenceSql(conditions, related, root, alias, itemSymbol, List.of());
+        String rootTable = this.snake(root.name());
+        String subquery = "SELECT 1 FROM " + this.snake(related.name()) + " " + alias
+                + " WHERE " + alias + "." + relatedColumn + " = " + rootTable + "." + this.snake(root.identity().name())
+                + (condition.text().isEmpty() ? "" : " AND " + condition.text());
+        return new SpringExpression.ExistsPredicate(id, origin, type, subquery, condition.arguments());
+    }
+
+    /**
+     * The conditions without the comparison that already became the join.
+     *
+     * <p>The connection is the correlation itself, so repeating it inside the condition would ask
+     * the same question twice. Only the top-level conjunction is searched: anywhere else the
+     * connection would not mean "this row belongs to the queried row", which the semantic layer
+     * already refuses.
+     */
+    private NormalizedExpression withoutConnection(
+            NormalizedExpression expression, SymbolId connectionField, Optional<SymbolId> itemSymbol) {
+        if (this.isConnection(expression, connectionField, itemSymbol)) {
+            return null;
+        }
+
+        if (expression instanceof NormalizedExpression.BinaryExpression binary
+                && binary.operator() == io.kcg.sir.ast.AstBinaryOperator.AND) {
+            NormalizedExpression left = this.withoutConnection(binary.left(), connectionField, itemSymbol);
+            NormalizedExpression right = this.withoutConnection(binary.right(), connectionField, itemSymbol);
+            if (left == null) {
+                return right;
+            }
+
+            if (right == null) {
+                return left;
+            }
+
+            return binary;
+        }
+
+        return expression;
+    }
+
+    private boolean isConnection(
+            NormalizedExpression expression, SymbolId connectionField, Optional<SymbolId> itemSymbol) {
+        if (!(expression instanceof NormalizedExpression.BinaryExpression binary)
+                || binary.operator() != io.kcg.sir.ast.AstBinaryOperator.EQ) {
+            return false;
+        }
+
+        boolean forward = this.namesField(binary.left(), connectionField) && this.namesItem(binary.right(), itemSymbol);
+        boolean backward = this.namesField(binary.right(), connectionField) && this.namesItem(binary.left(), itemSymbol);
+        return forward || backward;
+    }
+
+    private boolean namesField(NormalizedExpression expression, SymbolId fieldSymbol) {
+        return expression instanceof NormalizedExpression.NameExpression name && name.resolvedSymbol().equals(fieldSymbol);
+    }
+
+    private boolean namesItem(NormalizedExpression expression, Optional<SymbolId> itemSymbol) {
+        return itemSymbol.isPresent()
+                && expression instanceof NormalizedExpression.NameExpression name
+                && name.resolvedSymbol().equals(itemSymbol.get());
+    }
+
+    /**
+     * The correlated condition text and the values it binds, in placeholder order.
+     *
+     * <p>The recognised shapes are the ones the target can translate without guessing: comparisons
+     * of related columns with the queried row's columns, literals or enum members, combined with
+     * {@code and}, {@code or} and {@code not}. Anything else is rejected before lowering, so this
+     * never silently drops a condition.
+     */
+    private ExistenceSql existenceSql(
+            NormalizedExpression expression, NormalizedEntity related, NormalizedEntity root, String alias,
+            Optional<SymbolId> itemSymbol, List<SpringExpression.ExistsArgument> arguments) {
+        return switch (expression) {
+            case NormalizedExpression.BinaryExpression binary when isComparison(binary.operator()) -> {
+                ExistenceSql left = this.existenceSql(binary.left(), related, root, alias, itemSymbol, arguments);
+                ExistenceSql right = this.existenceSql(binary.right(), related, root, alias, itemSymbol, left.arguments());
+                yield new ExistenceSql(left.text() + " " + comparisonOperator(binary.operator()) + " " + right.text(), right.arguments());
+            }
+            case NormalizedExpression.BinaryExpression binary when binary.operator() == io.kcg.sir.ast.AstBinaryOperator.AND
+                    || binary.operator() == io.kcg.sir.ast.AstBinaryOperator.OR -> {
+                ExistenceSql left = this.existenceSql(binary.left(), related, root, alias, itemSymbol, arguments);
+                ExistenceSql right = this.existenceSql(binary.right(), related, root, alias, itemSymbol, left.arguments());
+                String operator = binary.operator() == io.kcg.sir.ast.AstBinaryOperator.AND ? " AND " : " OR ";
+                yield new ExistenceSql("(" + left.text() + operator + right.text() + ")", right.arguments());
+            }
+            case NormalizedExpression.UnaryExpression unary when unary.operator() == io.kcg.sir.ast.AstUnaryOperator.NOT -> {
+                ExistenceSql operand = this.existenceSql(unary.operand(), related, root, alias, itemSymbol, arguments);
+                yield new ExistenceSql("NOT (" + operand.text() + ")", operand.arguments());
+            }
+            case NormalizedExpression.NameExpression name -> new ExistenceSql(
+                    this.columnReference(name.resolvedSymbol(), related, root, alias, itemSymbol), arguments);
+            case NormalizedExpression.MemberExpression member -> this.memberReference(member, related, root, alias, itemSymbol, arguments);
+            case NormalizedExpression.StringLiteral literal -> this.boundValue(new SpringExpression.ExistsArgument.Text(literal.value()), arguments);
+            case NormalizedExpression.BooleanLiteral literal -> this.boundValue(new SpringExpression.ExistsArgument.Flag(literal.value()), arguments);
+            case NormalizedExpression.IntegerLiteral literal -> this.boundValue(
+                    new SpringExpression.ExistsArgument.Integral(literal.value().longValueExact()), arguments);
+            case NormalizedExpression.DecimalLiteral literal -> this.boundValue(
+                    new SpringExpression.ExistsArgument.Decimal(literal.value()), arguments);
+            default -> throw new IllegalStateException(
+                    "unsupported existence-predicate condition reached lowering: " + expression.getClass().getSimpleName());
+        };
+    }
+
+    /** A related column, or a column of the queried row when the reference names the find item. */
+    private String columnReference(
+            SymbolId resolvedSymbol, NormalizedEntity related, NormalizedEntity root, String alias, Optional<SymbolId> itemSymbol) {
+        if (itemSymbol.isPresent() && resolvedSymbol.equals(itemSymbol.get())) {
+            return this.snake(root.name()) + "." + this.snake(root.identity().name());
+        }
+
+        boolean relatedField = related.fields().stream().anyMatch(field -> field.id().equals(resolvedSymbol));
+        Symbol symbol = this.source.symbols().byId(resolvedSymbol).orElse(null);
+        if (!relatedField || !(symbol instanceof Symbol.FieldSymbol field)) {
+            throw new IllegalStateException("unsupported existence-predicate reference: " + symbol);
+        }
+
+        return alias + "." + this.columns.getOrDefault(resolvedSymbol, this.snake(field.name()));
+    }
+
+    /** A column of the queried row, or the persisted text of an enum member. */
+    private ExistenceSql memberReference(
+            NormalizedExpression.MemberExpression member, NormalizedEntity related, NormalizedEntity root, String alias,
+            Optional<SymbolId> itemSymbol, List<SpringExpression.ExistsArgument> arguments) {
+        boolean onItem = itemSymbol.isPresent()
+                && member.receiver() instanceof NormalizedExpression.NameExpression receiver
+                && receiver.resolvedSymbol().equals(itemSymbol.get());
+        if (onItem) {
+            Symbol memberSymbol = this.source.symbols().byId(member.resolvedMember()).orElseThrow();
+            return new ExistenceSql(
+                    this.snake(root.name()) + "." + this.columns.getOrDefault(member.resolvedMember(), this.snake(memberSymbol.name())),
+                    arguments);
+        }
+
+        Symbol memberOwner = this.source.symbols().byId(member.resolvedMember()).orElse(null);
+        Symbol enumType = member.receiver() instanceof NormalizedExpression.NameExpression receiver
+                ? this.source.symbols().byId(receiver.resolvedSymbol()).orElse(null)
+                : null;
+        if (enumType instanceof Symbol.TypeSymbol type && type.kind() == io.kcg.sir.semantic.symbol.SymbolKind.ENUM
+                && memberOwner instanceof Symbol.EnumMemberSymbol) {
+            return this.boundValue(new SpringExpression.ExistsArgument.Text(memberOwner.name()), arguments);
+        }
+
+        throw new IllegalStateException("unsupported existence-predicate member reference: " + member);
+    }
+
+    private ExistenceSql boundValue(SpringExpression.ExistsArgument value, List<SpringExpression.ExistsArgument> arguments) {
+        ArrayList<SpringExpression.ExistsArgument> all = new ArrayList<SpringExpression.ExistsArgument>(arguments);
+        String placeholder = "{" + all.size() + "}";
+        all.add(value);
+        return new ExistenceSql(placeholder, List.copyOf(all));
+    }
+
+    private static boolean isComparison(io.kcg.sir.ast.AstBinaryOperator operator) {
+        return switch (operator) {
+            case EQ, NE, LT, LE, GT, GE -> true;
+            default -> false;
+        };
+    }
+
+    private static String comparisonOperator(io.kcg.sir.ast.AstBinaryOperator operator) {
+        return switch (operator) {
+            case EQ -> "=";
+            case NE -> "<>";
+            case LT -> "<";
+            case LE -> "<=";
+            case GT -> ">";
+            case GE -> ">=";
+            default -> throw new IllegalArgumentException("not a comparison operator: " + operator);
+        };
+    }
+
+    /** The set of reads one find promises, counted from the projection it answers with. */
+    private SpringBootWorkflow.StatementBudget lowerStatementBudget(NormalizedStep.FindStep step) {
+        int pageStatements = step.page().isPresent() ? 2 : 1;
+        SymbolId viewSymbol = this.responseViewSymbol(step);
+        return new SpringBootWorkflow.StatementBudget(pageStatements, viewSymbol == null ? 0 : this.associationReadCount(viewSymbol));
+    }
+
+    private SymbolId responseViewSymbol(NormalizedStep.FindStep step) {
+        Symbol symbol = this.source.symbols().byId(step.resultVariable()).orElse(null);
+        SirType type = symbol instanceof Symbol.VariableSymbol variable ? variable.type() : null;
+        if (type instanceof PageType page) {
+            type = page.element();
+        }
+
+        if (type instanceof ListType list) {
+            type = list.element();
+        }
+
+        return type instanceof DeclaredType declared && declared.kind() == DeclaredType.DeclaredKind.VIEW ? declared.symbolId() : null;
+    }
+
+    /** Every association below this view costs one batch read, at every declared projection level. */
+    private int associationReadCount(SymbolId viewSymbol) {
+        NormalizedView view = this.views.get(viewSymbol);
+        if (view == null) {
+            return 0;
+        }
+
+        int count = 0;
+        for (NormalizedViewField field : view.fields()) {
+            if (field.relation().isPresent()) {
+                count += 1 + this.associationReadCount(field.relation().get().targetView());
+            }
+        }
+
+        return count;
+    }
+
+    /** The suffix of the alias a correlated subquery gives the related table. */
+    private static final String EXISTENCE_ALIAS_SUFFIX = "_rel";
+
+    /** The condition text and the values it binds, in placeholder order. */
+    private record ExistenceSql(String text, List<SpringExpression.ExistsArgument> arguments) {
+        private ExistenceSql {
+            Objects.requireNonNull(text, "text");
+            arguments = List.copyOf(Objects.requireNonNull(arguments, "arguments"));
+        }
+    }
+
 
     private SpringBootWorkflow.Variable variable(SymbolId symbolId) {
         Symbol.VariableSymbol symbol = (Symbol.VariableSymbol)this.source.symbols().byId(symbolId).orElseThrow();

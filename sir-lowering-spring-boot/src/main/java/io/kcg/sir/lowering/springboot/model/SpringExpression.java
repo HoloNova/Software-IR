@@ -19,7 +19,8 @@ public sealed interface SpringExpression
    SpringExpression.MemberExpression,
    SpringExpression.UnaryExpression,
    SpringExpression.BinaryExpression,
-   SpringExpression.PayloadPresence {
+   SpringExpression.PayloadPresence,
+   SpringExpression.ExistsPredicate {
    LoweredNodeId id();
 
    LoweredOrigin origin();
@@ -169,6 +170,50 @@ public sealed interface SpringExpression
    record UnitLiteral(LoweredNodeId id, LoweredOrigin origin, LoweredJavaType type) implements SpringExpression {
       public UnitLiteral {
          SpringExpression.requireNode(id, origin, type);
+      }
+   }
+
+   /**
+   * The correlated {@code EXISTS} an existence predicate lowers to.
+   *
+   * <p>{@link #subquerySql()} is the subquery body with the target's value placeholders already in
+   * place and {@link #arguments()} the values for them in order. The correlated form — the related
+   * table, its alias, the join columns and the compared constants — is decided here, so the renderer
+   * substitutes placeholder syntax and passes the values through without choosing anything. Values
+   * stay typed because the renderer writes them as parameters, never into the text.
+   */
+   record ExistsPredicate(
+      LoweredNodeId id, LoweredOrigin origin, LoweredJavaType type, String subquerySql, List<SpringExpression.ExistsArgument> arguments
+   ) implements SpringExpression {
+      public ExistsPredicate {
+         SpringExpression.requireNode(id, origin, type);
+         SpringExpression.requireText(subquerySql, "subquerySql");
+         arguments = List.copyOf(Objects.requireNonNull(arguments, "arguments"));
+      }
+   }
+
+   /** One value a correlated subquery binds, in the target's own value kinds. */
+   sealed interface ExistsArgument
+      permits SpringExpression.ExistsArgument.Text,
+      SpringExpression.ExistsArgument.Integral,
+      SpringExpression.ExistsArgument.Decimal,
+      SpringExpression.ExistsArgument.Flag {
+      record Text(String value) implements SpringExpression.ExistsArgument {
+         public Text {
+            Objects.requireNonNull(value, "value");
+         }
+      }
+
+      record Integral(long value) implements SpringExpression.ExistsArgument {
+      }
+
+      record Decimal(BigDecimal value) implements SpringExpression.ExistsArgument {
+         public Decimal {
+            Objects.requireNonNull(value, "value");
+         }
+      }
+
+      record Flag(boolean value) implements SpringExpression.ExistsArgument {
       }
    }
 }

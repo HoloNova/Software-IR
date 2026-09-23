@@ -19,6 +19,7 @@ class GeneratorDeterminismMatrixTest {
     private static final String CAMPUS_MARKET = "valid/campus-market.sir";
     private static final String COURSE_CATALOG = "valid/course-catalog.sir";
     private static final String COURSE_ADMIN = "valid/course-admin.sir";
+    private static final String COURSE_ENROLLMENT = "valid/course-enrollment.sir";
 
     @TempDir
     Path tempDir;
@@ -97,6 +98,25 @@ class GeneratorDeterminismMatrixTest {
         assertEquals(0, turkish.exitCode(), turkish::diagnostic);
         assertEquals(english.stdout().trim(), turkish.stdout().trim(),
                 () -> "Write slice generator digest changed across cwd/Locale/default Charset:\n"
+                        + english.diagnostic() + "\n" + turkish.diagnostic());
+        assertTrue(english.stdout().trim().matches("[0-9a-f]{64}"), english::diagnostic);
+    }
+
+    @Test
+    void relationSliceKeepsItsDigestAcrossCwdLocaleAndCharset() throws Exception {
+        ProbeResult english = runProbe(
+                Files.createDirectory(tempDir.resolve("relation-english-cwd")),
+                "en", "US", "ISO-8859-1",
+                COURSE_ENROLLMENT);
+        ProbeResult turkish = runProbe(
+                Files.createDirectory(tempDir.resolve("relation-turkish-cwd")),
+                "tr", "TR", "UTF-8",
+                COURSE_ENROLLMENT);
+
+        assertEquals(0, english.exitCode(), english::diagnostic);
+        assertEquals(0, turkish.exitCode(), turkish::diagnostic);
+        assertEquals(english.stdout().trim(), turkish.stdout().trim(),
+                () -> "Relation slice generator digest changed across cwd/Locale/default Charset:\n"
                         + english.diagnostic() + "\n" + turkish.diagnostic());
         assertTrue(english.stdout().trim().matches("[0-9a-f]{64}"), english::diagnostic);
     }

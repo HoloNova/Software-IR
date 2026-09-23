@@ -31,9 +31,9 @@ class GeneratorWriteSliceContractTest {
 
         assertTrue(mapper.contains("@Select(\"SELECT * FROM course WHERE id = #{id} FOR UPDATE\")"), mapper);
         assertTrue(mapper.contains(
-                "@Update(\"UPDATE course SET name = #{candidate.name}, description = #{candidate.description}, "
-                        + "capacity = #{candidate.capacity}, version = version + 1 "
-                        + "WHERE id = #{candidate.id} AND version = #{expectedVersion}\")"), mapper);
+                "@Update(\"UPDATE course SET code = #{candidate.code}, name = #{candidate.name}, "
+                        + "description = #{candidate.description}, capacity = #{candidate.capacity}, "
+                        + "version = version + 1 WHERE id = #{candidate.id} AND version = #{expectedVersion}\")"), mapper);
         assertTrue(mapper.contains("int updateIfVersionMatches(@Param(\"candidate\") Course candidate, "
                 + "@Param(\"expectedVersion\") long expectedVersion);"), mapper);
     }
@@ -230,12 +230,18 @@ class GeneratorWriteSliceContractTest {
     }
 
     @Test
-    void theSetListFollowsTheChangeSetAndNeverTheRequestVersion() {
-        // Guard against a hand-tuned statement: the SET list follows the payload's change set exactly.
+    void theSetListIsTheEntitysChangeColumnsAndNeverTheRequestVersion() {
+        // Q15: the statement is rendered from the entity declaration, so its SET list is the
+        // entity's change columns (persistent columns except the version column). A column the
+        // payload does not bind is written back with the value the candidate row was loaded with,
+        // which is a no-op; what must never happen is taking the version from the request.
         String mapper = content(PERSISTENCE + "CourseMapper.java");
         assertEquals(1, occurrences(mapper, "UPDATE course SET"), mapper);
-        assertFalse(mapper.contains("code = #{candidate.code}"), "code is not a declared change: " + mapper);
+        assertTrue(mapper.contains("UPDATE course SET code = #{candidate.code}, name = #{candidate.name}, "
+                + "description = #{candidate.description}, capacity = #{candidate.capacity}, "
+                + "version = version + 1 WHERE id = #{candidate.id} AND version = #{expectedVersion}"), mapper);
         assertFalse(mapper.contains("version = #{candidate.version}"), "the request must not set the version: " + mapper);
+        assertFalse(mapper.contains("WHERE id = #{candidate.id}, "), "the identity is not a SET column: " + mapper);
     }
 
     private static String content(String relativePath) {

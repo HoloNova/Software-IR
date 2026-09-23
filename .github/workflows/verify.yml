@@ -1,0 +1,156 @@
+name: verify
+
+# The heavy verification this repository needs runs here, not on the development
+# machine: the local box has 2 vCPU and ~3 GB of memory, which is not enough for a
+# ten-module reactor plus a real MySQL and a generated Spring Boot application.
+#
+# What this workflow produces, in one job so the Maven repository stays coherent:
+#   1. an online priming pass (the frozen repository must exist before an offline run)
+#   2. the frozen full gate:        mvn -o clean verify
+#   3. the completion full gate:    mvn -o clean verify -Dmaven.test.failure.ignore=true
+#   4. the four business conformance ITs against a real MySQL 8.4 service container
+#
+# Artifacts: every conformance evidence directory and the surefire reports, so the
+# evidence can be tied to this commit SHA and this run URL.
+
+on:
+  push:
+  workflow_dispatch:
+
+concurrency:
+  group: verify-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  gates-and-business-it:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: kcg-ci-root
+        ports:
+          - 33306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -pkcg-ci-root"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=30
+
+    env:
+      # The conformance harness derives the schema-scoped runtime URL from this endpoint
+      # plus the validated schema name, so the control URL must not select a schema.
+      # These are throwaway CI-only credentials for a container that dies with the job.
+      KCG_CONF_CONTROL_JDBC_URL: jdbc:mysql://127.0.0.1:33306/
+      KCG_CONF_CONTROL_USERNAME: kcg_conf_control
+      KCG_CONF_CONTROL_PASSWORD: kcg-ci-control
+      KCG_CONF_RUNTIME_USERNAME: kcg_conf_runtime
+      KCG_CONF_RUNTIME_PASSWORD: kcg-ci-runtime
+      KCG_CONF_SCHEMA_NAME: kcg_conf_run
+      # Job-level env only allows the github/inputs/matrix/needs/secrets/strategy/vars
+      # contexts, so these live under the workspace rather than runner.temp.
+      KCG_CONF_WORK_PARENT: ${{ github.workspace }}/ci-work
+      KCG_CONF_EVIDENCE_PARENT: ${{ github.workspace }}/ci-evidence
+      MAVEN_REPO: ${{ github.workspace }}/.m2-ci
+      MAVEN_OPTS: -Xmx1g
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Cache the frozen Maven repository
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.MAVEN_REPO }}
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2-
+
+      - name: Provision the control and runtime credentials
+        run: |
+          set -euo pipefail
+          mysql -h 127.0.0.1 -P 33306 -uroot -pkcg-ci-root <<'SQL'
+          -- The run schema itself is NOT created here: the conformance harness owns the
+          -- schema lifecycle (CREATE ... DROP) and refuses a schema it did not create.
+          CREATE USER IF NOT EXISTS 'kcg_conf_control'@'%' IDENTIFIED BY 'kcg-ci-control';
+          GRANT ALL PRIVILEGES ON *.* TO 'kcg_conf_control'@'%' WITH GRANT OPTION;
+          CREATE USER IF NOT EXISTS 'kcg_conf_runtime'@'%' IDENTIFIED BY 'kcg-ci-runtime';
+          GRANT SELECT, INSERT, UPDATE, DELETE ON `kcg_conf_run`.* TO 'kcg_conf_runtime'@'%';
+          FLUSH PRIVILEGES;
+          SQL
+          mkdir -p "$KCG_CONF_WORK_PARENT" "$KCG_CONF_EVIDENCE_PARENT"
+          mysql -h 127.0.0.1 -P 33306 -uroot -pkcg-ci-root -N -B -e "SELECT VERSION(), @@server_uuid"
+
+      # The repository starts empty on a fresh runner: the offline gates cannot run until the
+      # reactor's plugins and dependencies are present, and the generated project's own
+      # dependencies (spring-boot-starter-parent, mybatis-plus, mysql-connector-j) are not in
+      # the reactor's closure at all. Hence one online pass with failures tolerated — the
+      # offline gates below are what must actually pass.
+      - name: Priming pass (online, failures tolerated)
+        run: |
+          set -euo pipefail
+          mvn -B clean verify -Dmaven.test.failure.ignore=true -Dmaven.repo.local="$MAVEN_REPO"
+
+      - name: Prime the generated project dependencies (one online IT)
+        run: |
+          set -euo pipefail
+          mvn -B -pl sir-toolchain-application -am \
+            -Dmaven.repo.local="$MAVEN_REPO" \
+            -Dtest=QuerySliceBusinessConformanceIT -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false \
+            -Dkcg.query-conformance.enabled=true -Dkcg.query-conformance.maven-offline=false \
+            -Dkcg.conformance.work-parent="$KCG_CONF_WORK_PARENT" \
+            -Dkcg.conformance.evidence-parent="$KCG_CONF_EVIDENCE_PARENT" \
+            -Dkcg.conformance.maven-executable="$(command -v mvn)" \
+            -Dkcg.conformance.maven-repo="$MAVEN_REPO" \
+            test
+
+      - name: Frozen full gate
+        run: |
+          set -euo pipefail
+          mvn -B -o clean verify -Dmaven.repo.local="$MAVEN_REPO"
+
+      - name: Completion full gate
+        run: |
+          set -euo pipefail
+          mvn -B -o clean verify -Dmaven.test.failure.ignore=true -Dmaven.repo.local="$MAVEN_REPO"
+
+      - name: Business conformance ITs
+        run: |
+          set -euo pipefail
+          mvn -B -o -pl sir-toolchain-application -am \
+            -Dmaven.repo.local="$MAVEN_REPO" \
+            -Dtest=QuerySliceBusinessConformanceIT,WriteSliceBusinessConformanceIT,RelationSliceBusinessConformanceIT,ChangeLoopBusinessConformanceIT \
+            -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false \
+            -Dkcg.query-conformance.enabled=true \
+            -Dkcg.write-conformance.enabled=true \
+            -Dkcg.relation-conformance.enabled=true \
+            -Dkcg.change-conformance.enabled=true \
+            -Dkcg.conformance.work-parent="$KCG_CONF_WORK_PARENT" \
+            -Dkcg.conformance.evidence-parent="$KCG_CONF_EVIDENCE_PARENT" \
+            -Dkcg.conformance.maven-executable="$(command -v mvn)" \
+            -Dkcg.conformance.maven-repo="$MAVEN_REPO" \
+            test
+
+      - name: Upload conformance evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: conformance-evidence
+          path: ${{ env.KCG_CONF_EVIDENCE_PARENT }}
+          # A dot-prefixed directory would be treated as hidden and skipped by default.
+          include-hidden-files: true
+          if-no-files-found: warn
+
+      - name: Upload surefire reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports
+          path: '**/target/surefire-reports/**'
+          if-no-files-found: warn

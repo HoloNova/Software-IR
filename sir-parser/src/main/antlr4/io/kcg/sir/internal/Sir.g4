@@ -259,11 +259,16 @@ primaryExpression
     | ACTOR
     | ITEM
     | NOW LPAREN RPAREN
+    | anyPredicate
     | groupedExpression
     ;
 
 groupedExpression
     : LPAREN expression RPAREN
+    ;
+
+anyPredicate
+    : ANY LPAREN entity=IDENT COMMA conditions=expression RPAREN
     ;
 
 decimalLiteral
@@ -325,6 +330,7 @@ BY              : 'by';
 AS              : 'as';
 FIND            : 'find';
 ITEM            : 'item';
+ANY             : 'any';
 CREATE          : 'create';
 UPDATE          : 'update';
 PERSIST         : 'persist';

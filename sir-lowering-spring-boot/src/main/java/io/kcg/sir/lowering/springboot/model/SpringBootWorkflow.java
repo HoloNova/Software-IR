@@ -63,6 +63,7 @@ public record SpringBootWorkflow(LoweredNodeId id, LoweredOrigin origin, List<Sp
       List<SpringBootWorkflow.OrderKey> orderKeys,
       java.util.Optional<SpringBootWorkflow.PageSpec> page,
       List<SpringExpression.StringMatch> stringMatches,
+      SpringBootWorkflow.StatementBudget statementBudget,
       SpringBootWorkflow.Variable result,
       SpringBootWorkflow.Variable itemVariable
    ) implements SpringBootWorkflow.Step {
@@ -73,8 +74,39 @@ public record SpringBootWorkflow(LoweredNodeId id, LoweredOrigin origin, List<Sp
          orderKeys = List.copyOf(Objects.requireNonNull(orderKeys, "orderKeys"));
          Objects.requireNonNull(page, "page");
          stringMatches = List.copyOf(Objects.requireNonNull(stringMatches, "stringMatches"));
+         Objects.requireNonNull(statementBudget, "statementBudget");
          Objects.requireNonNull(result, "result");
          Objects.requireNonNull(itemVariable, "itemVariable");
+      }
+   }
+
+   /**
+   * The number of SQL statements one find promises to issue.
+   *
+   * <p>{@link #pageStatements()} covers the reads the page itself needs — the count and the page
+   * query, or a single query when the result is not paged — and {@link #associationStatements()}
+   * one batch read per association the response projection nests. An empty page still costs the
+   * page reads and skips the association reads, which is what {@link #emptyPageStatements()}
+   * states. The numbers live in the IR because the promise is part of the target's contract, not an
+   * implementation detail a renderer may recompute.
+   */
+   public record StatementBudget(int pageStatements, int associationStatements) {
+      public StatementBudget {
+         if (pageStatements < 1) {
+            throw new IllegalArgumentException("pageStatements must be positive");
+         }
+
+         if (associationStatements < 0) {
+            throw new IllegalArgumentException("associationStatements must not be negative");
+         }
+      }
+
+      public int total() {
+         return this.pageStatements + this.associationStatements;
+      }
+
+      public int emptyPageStatements() {
+         return this.pageStatements;
       }
    }
 

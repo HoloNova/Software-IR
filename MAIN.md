@@ -1,6 +1,6 @@
 # KCG-Code 全局工程上下文
 
-本文件定义仓库级工作规则和不可破坏的架构边界。新对话、新 Agent 或上下文不确定时，修改代码前必须完整读取本文件；同一对话连续推进且已经读取过未变化的本文件时，不要求机械重读，但仍必须读取最新活动工作单和本轮新涉及的代码、测试与设计材料。
+本文件定义项目目标、仓库规则和架构边界；修改前按第 0 节加载上下文，不重复维护能力进度与测试计数。
 
 ## 0. 权威层级与冲突处理
 
@@ -15,25 +15,13 @@
 
 如果 Accepted ADR 与当前代码或可执行测试冲突，必须先停止普通功能开发并显式裁决，不得用旧报告静默覆盖代码，也不得把当前偶然行为自动升格为新架构。
 
-问题分两类，不使用同一把尺子：
+**目标不等于现状：**“应该做什么”看主设计，“已经能做什么”看代码、实测和状态文档；不能因设计或同名代码存在就记为完成，冲突按上述层级裁决。
 
-- **“应该实现什么、下一步做什么”**：以主设计和 G0–G7 阶段门为主入口。
-- **“现在已经实现什么”**：以当前源码、实际执行的测试、`PROJECT_STATUS.md` 和资格文档为准。
-
-两类文档冲突时按上面 1–6 的层级裁决，不得用任一方的表述覆盖另一方。目标契约尚未实现时只能记为“尚未实现”，不得因为设计已经写出、或某个模块已经存在同名代码而记为完成。
-
-阶段编号有两套，职责不同，不得混用：
-
-- **G0–G7**（`docs/roadmap/README.md`、`docs/design/07-validation-and-direction-roadmap.md`）负责产品方向、阶段进入条件与阶段完成门。
-- **Q 系列**（`docs/roadmap/completed/` 与本文件点名的工作单编号）是仓库中实际执行的工作单编号，执行授权只来自 `docs/roadmap/ACTIVE_WORK.md`。
-
-同一个 G 阶段可以包含多张 Q 工作单；Q 工作单不得跳过当前 G 阶段的完成门。G 阶段描述、设计文档正文和其中附带的 Agent Prompt 都不构成修改生产代码的授权，实际授权仍只来自 `docs/roadmap/ACTIVE_WORK.md`。
-
-上下文加载分为两种路径。
+**G 定方向，Q 定执行：**G0–G7 定义阶段依赖和完成门，一个 G 阶段可含多张 Q 工作单。只有 `docs/roadmap/ACTIVE_WORK.md` 定义当前工作单授权；设计、阶段 Prompt 均不授权开工，Q 工作单也不得跳过 G 阶段门。
 
 ### 冷启动：新对话、新 Agent 或上下文不确定
 
-不依赖旧聊天或任何 Agent 私人记忆，按以下最低顺序完整加载：
+不依赖旧聊天或私人记忆，修改前按顺序完整读取：
 
 1. `AGENTS.md`
 2. `MAIN.md`（项目主体说明）
@@ -46,17 +34,39 @@
 
 ### 连续续作：同一对话且上下文完整
 
-1. 每次开始新工作单或恢复执行时，都重新读取最新的 `docs/roadmap/ACTIVE_WORK.md`，并运行 `git status --short`。
-2. 已在本次连续对话中完整读取、此后又没有变化的 `AGENTS.md`、负责人手册、项目状态和资格文档不必重复读取。
-3. 用 `git status` / `git diff` 确认权威文档是否在期间发生变化；只重读变化的权威文档，以及本轮首次涉及或尚未加载的 ADR、代码和测试。
-4. 对话发生上下文压缩时，可以使用保留下来的会话摘要继续；只有摘要缺少本轮必要事实、结论可能已经过期或自己无法确认时，才补读相应文件。
-5. 无法确定上下文是否完整时，按冷启动路径处理。
+每次开始或恢复工作都重读 `ACTIVE_WORK.md` 并运行 `git status --short`；用 `git diff` 确认文档变化，只补读变化的权威文档和本轮新涉及的 ADR、代码、测试。已完整读取且未变化的材料不重复加载。
 
-`.memory/INDEX.md` 和 `.memory/CORE/PROJECT.md` 可以用于加速理解，但不是继续项目的必要条件。不要默认加载 `.memory/LOG`、`.memory/ARCHIVE` 或全部日期化设计文档。
+上下文压缩后可沿用完整摘要；缺失或可能过期时补读，无法判断则冷启动。`.memory/INDEX.md`、`.memory/CORE/PROJECT.md` 仅作辅助，不默认加载 LOG、ARCHIVE 或全部日期化设计。
 
 ## 1. 项目目标
 
 KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成和安全工程变更工具链。目标不是普通 CRUD DSL，也不是让模型绕过 IR 直接生成 Java。
+
+### 1.1 价值定位与开发判断
+
+研究目标：在受支持的后端业务内，验证“微调 SLM + SIR”能否接近 LLM 直接开发的业务成功率，并降低推理或人工修复成本；不预先宣称有效。SIR 复用工程实现，不消除业务复杂性，也不替代通用语言。
+
+**职责分工：**SIR 表达数据、关系、行为和可检查的约束；公开的语言／Profile 契约明确默认行为；Lowering 选择具体实现并写入 Lowered IR；Generator 只渲染。不得因“自动优化”改变权限、原子性、冲突或一致性语义。
+
+| 场景 | 值得保留的抽象 | 不应走的方向 |
+|---|---|---|
+| 局部修改 | PATCH 缺席保持、null 清空、有值替换；版本匹配后才写入 | 普通可空字段混淆三态；先查版本再无条件覆盖 |
+| 关联查询（设计例，非已实现声明） | “存在满足条件的关联记录”，由 Lowering 选择受支持的 SQL 实现 | 只写“性能高”就承诺优化；读全表后在 Java 中分页 |
+| 名额／库存（设计例） | 复用条件写入及明确的事务规则，并验证各自业务不变量 | 按 Course、Inventory 名称在编译器里硬编码；把单行 version 当成跨实体原子性 |
+
+新增能力先交代**场景、复用语义、组合限制、目标实现、正反例**。优先组合已有能力；逐题加关键字或表达比通用语言更绕时，应重审抽象。支持原语不等于支持任意组合；不支持就诊断，不静默降级、不用任意 Java／SQL 绕过检查，扩展按登记契约与工作单执行。
+
+模型做业务选择，工具维护机械身份与协议元数据（设计原则，非持久身份工具已实现声明）。确定性只保证同输入同输出，静态合法不保证符合需求；业务验收依据原始需求独立制定。性能按明确的数据规模、负载与指标实测，不由编译成功推导。
+
+### 1.2 基座选型与投入原则
+
+优先使用 **Java 21 核心 + Spring Boot 生成目标**：ANTLR、静态类型建模、JVM 诊断与目标生态匹配。仅在实测瓶颈或交付约束明确时评审迁移，不因语言更新或更底层而重写。
+
+外围建议：Python 做训练／数据／实验，TypeScript 做网页交互；不复制核心语义和生成规则。三层语言不必相同，此建议不授权新增服务、第二 Target 或重写。
+
+先验证收益，再扩大基础设施：已有切片可立项早期模型实验，无需等完整 Web／迁移平台，但不替代 G 阶段门。口径见[大创验证与使用价值](docs/design/07-validation-and-direction-roadmap.md#10-大创验证与使用价值)。
+
+### 1.3 当前链路
 
 当前主闭环：
 
@@ -132,7 +142,7 @@ ANTLR4 Grammar、严格 UTF-8、不可变 AST、SourceSpan、稳定 AstNodeId �
 
 ### `sir-project-graph`
 
-只读、不可变、确定性的 Project Symbol Graph；当前实现包含 canonical serialization/load/validation 代码，但直接模块测试仍需补齐。
+只读、不可变、确定性的 Project Symbol Graph，包含 canonical serialization/load/validation；直接模块测试资格见 `docs/qualification/CURRENT_QUALIFICATION.md`，不在本文件重复维护进度。
 
 ### `sir-change`
 
@@ -162,46 +172,34 @@ ANTLR4 Grammar、严格 UTF-8、不可变 AST、SourceSpan、稳定 AstNodeId �
    - Q1、Q2 这类大版本在全部子工作单完成且用户确认后，先确保本地快照完整，再把当前分支以普通 push 推送到已配置的 `origin`。
    - 用户说“确认”“继续”或同义表达，即授权完成当前验收、切换下一张工作单并执行本条对应的本地提交或大版本普通推送；不授权 force-push、rebase、历史改写或凭据留存。
    - 如果快照范围含有未验收、任务外或受保护内容，必须排除；如果普通提交/推送失败，只简要报告阻断证据。
-11. 完成前执行：
+11. 完成工作单要求的定向验证；全量验证按 `AGENTS.md`“测试资源约束”优先安排到 GitHub CI（公共仓库、托管 runner；仓库 workflow 建立前，确需全量时按该节的本机上限执行）。纯文档修改只做文档／差异检查；已有同源码、同验证范围的有效证据不因收尾或提交重复运行。本机收尾执行 `git diff --check` 与 `git status --short`。
+
+以下为全量验证的命令基准，不是每次收尾默认执行清单；在实际执行环境中附加经核验的内存／并发限制：
 
 ```powershell
-mvn "-Dmaven.repo.local=D:\maven-repo" -o clean verify          # Windows 工作机
-mvn -Dmaven.repo.local=/root/.m2/repository -o clean verify     # Linux 工作机
-git diff --check
-git status --short
+mvn "-Dmaven.repo.local=D:\maven-repo" -o clean verify          # Windows 参考路径
+mvn -Dmaven.repo.local=/root/.m2/repository -o clean verify     # Linux 参考路径
 ```
 
-离线仓库路径按机器选择，两条命令等价；全新机器必须先在线 priming 一次本地仓库（含生成工程依赖），之后才能在 `-o` 下运行，过程见 `docs/qualification/CURRENT_QUALIFICATION.md` 的 1.2。
+仓库路径按执行环境选择（CI 可使用自身缓存路径）。全新仓库先在线 priming，含生成工程依赖，再使用 `-o`；过程见 `docs/qualification/CURRENT_QUALIFICATION.md` 的 1.2。
 
 最新资格数据及缺口只记录在 `docs/qualification/CURRENT_QUALIFICATION.md`，不在本文件冻结测试数量。
 
 ## 6. 当前工作边界
 
-当前 G 阶段是 **G0：现有链路资格收口**（见 `docs/roadmap/README.md`）。`docs/roadmap/REMAINING_WORK.md` 的阶段 1–7 是 G0 内部的 Q 系列排队表；本轮唯一授权工作仍由 `docs/roadmap/ACTIVE_WORK.md` 定义。优先顺序是 Generator 测试、PSG 测试、Change fixtures、conformance harness、事务故障矩阵和 CLI 产品边界。
+当前阶段、资格和工作授权按第 0 节取值；`REMAINING_WORK.md` 的阶段 1–7 是 G0 历史排队表，不自动成为当前待办。
 
-在这些基础资格缺口收口、G0 完成门闭合前，不并行展开 Redis、第二 Target、Constraint VM、PSG `REFERENCES` 扩展、Snapshot V2、Change IR v0.7、GUI/daemon、多用户、Java 反向解析或新的增量编译系统。
-
-同理，主设计中 G1–G7 的目标能力（单文件课程业务切片、持久身份与受控多文件、数据库生命周期、完整源码包与 Docker 交付、完整课程业务、网页平台与可靠发布、独立换题试用）在各自上一个 G 阶段完成门闭合并写出对应的 Q 工作单之前，不得展开实现。设计中“某项实现可提前准备”的表述不构成提前开工的授权。
+G0 关闭不授权展开 Redis、第二 Target、Constraint VM、PSG `REFERENCES`、Snapshot V2、Change IR v0.7、GUI/daemon、多用户、Java 反向解析或新增量编译系统。G1–G7 后续能力也必须在前阶段门关闭并有 Q 工作单后实施；“可提前准备”不授权提前开工。
 
 ## 7. 文档入口
 
-- 文档总入口与导航：`docs/README.md`
-- 项目介绍：`README.md`
-- 项目负责人操作手册：`docs/PROJECT_OWNER_GUIDE.md`
-- 当前唯一工作单：`docs/roadmap/ACTIVE_WORK.md`
-- 当前状态：`docs/PROJECT_STATUS.md`
-- 当前架构：`docs/KCG-Code_系统架构与实现指南.md`
-- 当前资格：`docs/qualification/CURRENT_QUALIFICATION.md`
-- 测试覆盖清单：`docs/qualification/TEST_COVERAGE_INVENTORY.md`
-- 剩余路线图（G0 内部 Q 系列顺序）：`docs/roadmap/REMAINING_WORK.md`
-- 主设计入口（目标产品与新阶段方向）：`docs/design/README.md`
-- 现有实现与目标能力的当次校准：`docs/design/implementation-baseline.md`
-- 阶段控制与阶段 Prompt（G0–G7）：`docs/roadmap/README.md`
-- Resolve-once：`docs/architecture/ADR-001-resolve-once-and-bind-by-node-id.md`
-- Application ownership：`docs/architecture/ADR-003-toolchain-application-owns-project-application.md`
-- 本地 MVP 提议：`docs/architecture/ADR-019-local-software-ir-mvp-delivery-contract.md`
-- CURRENT 事务方向：`docs/architecture/ADR-020-current-baseline-transaction-direction.md`
+第 0 节已列必读入口；其他材料按需查阅：
 
-日期化 spec 记录当时设计背景；若其状态描述与当前入口冲突，以本文件的权威分工处理。
-
-`docs/README.md` 是全部文档的导航入口。`docs/design/` 是目标设计的唯一入口：需要判断“应该实现什么”“下一步做什么”“某能力是否属于目标范围”“阶段完成门是什么”时以它和 `docs/roadmap/README.md` 为准。需要判断“现在实际能做什么”时以代码、可执行测试、`docs/PROJECT_STATUS.md` 和资格文档为准。
+- 总导航：`docs/README.md`；项目介绍：`README.md`。
+- 架构说明：`docs/KCG-Code_系统架构与实现指南.md`。
+- 覆盖清单：`docs/qualification/TEST_COVERAGE_INVENTORY.md`。
+- G0 排队表：`docs/roadmap/REMAINING_WORK.md`；日期化实现校准：`docs/design/implementation-baseline.md`（不替代当前资格）。
+- Resolve-once：`docs/architecture/ADR-001-resolve-once-and-bind-by-node-id.md`。
+- Application ownership：`docs/architecture/ADR-003-toolchain-application-owns-project-application.md`。
+- 本地 MVP 提议：`docs/architecture/ADR-019-local-software-ir-mvp-delivery-contract.md`。
+- CURRENT 恢复方向：`docs/architecture/ADR-020-current-baseline-transaction-direction.md`。

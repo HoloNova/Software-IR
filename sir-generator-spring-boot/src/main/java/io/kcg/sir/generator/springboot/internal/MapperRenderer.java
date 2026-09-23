@@ -6,7 +6,8 @@ import io.kcg.sir.lowering.springboot.model.SpringArtifact;
 import io.kcg.sir.lowering.springboot.model.SpringArtifact.Role;
 import io.kcg.sir.lowering.springboot.model.SpringBootDeclaration;
 import io.kcg.sir.lowering.springboot.model.SpringBootDeclaration.EntityDeclaration;
-import io.kcg.sir.lowering.springboot.model.SpringBootWorkflow;
+import io.kcg.sir.lowering.springboot.model.SpringBootDeclaration.Property;
+import io.kcg.sir.lowering.springboot.model.SpringBootDeclaration.VersionSpec;
 import io.kcg.sir.semantic.symbol.SymbolId;
 import java.util.Optional;
 
@@ -21,11 +22,15 @@ final class MapperRenderer {
       String packageName = artifact.packageName();
       SpringArtifact entityArtifact = ctx.artifact(entityDecl.sourceSymbol(), Role.ENTITY_MODEL);
       String entityFqn = entityArtifact.packageName() + "." + entityArtifact.simpleName();
-      SpringBootWorkflow.ConditionalUpdate conditional = conditionalUpdate(ctx, entityDecl);
+      // Q15: the mapper is an entity-level artifact, so its content is decided by the entity
+      // declaration alone. Reading the concurrency token off the entity (rather than looking for a
+      // capability that performs a conditional update) is what keeps a remove-capability plan a pure
+      // deletion: an entity that declares a version column always carries its compare-and-set helpers.
+      Optional<VersionSpec> version = entityDecl.version();
       ImportSorter imports = new ImportSorter();
       imports.add("com.baomidou.mybatisplus.core.mapper.BaseMapper");
       imports.add("org.apache.ibatis.annotations.Mapper");
-      if (conditional != null) {
+      if (version.isPresent()) {
          imports.add("org.apache.ibatis.annotations.Param");
          imports.add("org.apache.ibatis.annotations.Select");
          imports.add("org.apache.ibatis.annotations.Update");
@@ -35,7 +40,7 @@ final class MapperRenderer {
          imports.add(entityFqn);
       }
 
-      String body = renderBody(artifact, entityArtifact, entityDecl, conditional);
+      String body = renderBody(artifact, entityArtifact, entityDecl, version.orElse(null));
       String content = GenerationContext.assembleSource(packageName, imports, body);
       String path = GenerationContext.javaPath(packageName, artifact.simpleName());
       LoweredNodeId artifactId = artifact.id();
@@ -43,62 +48,36 @@ final class MapperRenderer {
       return new GeneratedFile(path, content, artifactId, symbolId);
    }
 
-   /**
-   * The conditional update this entity takes part in, if any.
-   *
-   * <p>It is looked up from the lowered workflows rather than inferred from the entity's shape, because
-   * the statement's SET list and its version guard both come from that exact plan.
-   */
-   private static SpringBootWorkflow.ConditionalUpdate conditionalUpdate(GenerationContext ctx, EntityDeclaration entityDecl) {
-      for (SpringBootDeclaration declaration : ctx.model().declarations()) {
-         if (!(declaration instanceof SpringBootDeclaration.CapabilityDeclaration capability)) {
-            continue;
-         }
-
-         for (SpringBootWorkflow.Step step : capability.workflow().steps()) {
-            Optional<SpringBootWorkflow.ConditionalUpdate> conditional = switch (step) {
-               case SpringBootWorkflow.PersistStep persist -> persist.conditional();
-               case SpringBootWorkflow.UpdateStep update -> update.conditional();
-               default -> Optional.empty();
-            };
-            if (conditional.isPresent() && conditional.get().entitySymbol().equals(entityDecl.sourceSymbol())) {
-               return conditional.get();
-            }
-         }
-      }
-
-      return null;
-   }
-
    private static String renderBody(
       SpringArtifact mapperArtifact,
       SpringArtifact entityArtifact,
       EntityDeclaration entityDecl,
-      SpringBootWorkflow.ConditionalUpdate conditional
+      VersionSpec version
    ) {
       StringBuilder out = new StringBuilder();
       out.append("@Mapper\n");
       out.append("public interface ").append(mapperArtifact.simpleName()).append(" extends BaseMapper<").append(entityArtifact.simpleName()).append("> {\n");
-      if (conditional == null) {
+      if (version == null) {
          out.append("}\n");
          return out.toString();
       }
 
       String entityType = entityArtifact.simpleName();
+      SpringBootDeclaration.Identity identity = entityDecl.identity();
       out.append('\n');
       out.append("    /**\n");
       out.append("     * Reads the row under a lock so the version this transaction compare-and-sets is the\n");
       out.append("     * version it saw.\n");
       out.append("     */\n");
-      out.append("    @Select(\"SELECT * FROM ").append(conditional.tableName()).append(" WHERE ")
-         .append(conditional.identityColumnName()).append(" = #{id} FOR UPDATE\")\n");
+      out.append("    @Select(\"SELECT * FROM ").append(entityDecl.tableName()).append(" WHERE ")
+         .append(identity.columnName()).append(" = #{id} FOR UPDATE\")\n");
       out.append("    ").append(entityType).append(" selectByIdForUpdate(@Param(\"id\") ")
-         .append(TypeRenderer.renderBoxedType(entityDecl.identity().type())).append(" id);\n\n");
+         .append(TypeRenderer.renderBoxedType(identity.type())).append(" id);\n\n");
       out.append("    /**\n");
       out.append("     * Writes the merged candidate only while the row still carries the expected version,\n");
       out.append("     * and advances the version in the same statement.\n");
       out.append("     */\n");
-      out.append("    @Update(\"").append(renderConditionalUpdateSql(conditional)).append("\")\n");
+      out.append("    @Update(\"").append(renderConditionalUpdateSql(entityDecl, version)).append("\")\n");
       out.append("    int updateIfVersionMatches(@Param(\"candidate\") ").append(entityType)
          .append(" candidate, @Param(\"expectedVersion\") long expectedVersion);\n");
       out.append("}\n");
@@ -106,26 +85,35 @@ final class MapperRenderer {
    }
 
    /**
-   * The conditional update statement: every change column from the candidate, and a row match on the
-   * identity plus the expected version.
-   */
-   private static String renderConditionalUpdateSql(SpringBootWorkflow.ConditionalUpdate conditional) {
-      StringBuilder sql = new StringBuilder("UPDATE ").append(conditional.tableName()).append(" SET ");
+    * The conditional update statement: every change column of the entity, and a row match on the
+    * identity plus the expected version.
+    *
+    * <p>The SET list is the entity's change columns — its persistent columns other than the version
+    * column — not the columns one capability happens to bind. Only the entity-derived list is
+    * independent of which capabilities exist, and writing a column back with the value the candidate
+    * row was loaded with is a no-op, so the statement stays semantically equivalent.
+    */
+   private static String renderConditionalUpdateSql(EntityDeclaration entityDecl, VersionSpec version) {
+      StringBuilder sql = new StringBuilder("UPDATE ").append(entityDecl.tableName()).append(" SET ");
       boolean first = true;
-      for (SpringBootWorkflow.ColumnAssignment assignment : conditional.assignments()) {
+      for (Property property : entityDecl.fields()) {
+         if (property.columnName().isEmpty() || property.sourceSymbol().equals(version.fieldSymbol())) {
+            continue;
+         }
+
          if (!first) {
             sql.append(", ");
          }
 
          first = false;
-         sql.append(assignment.entityColumnName()).append(" = #{candidate.").append(assignment.entityPropertyName()).append('}');
+         sql.append(property.columnName().get()).append(" = #{candidate.").append(property.javaName()).append('}');
       }
 
-      sql.append(", ").append(conditional.versionColumnName()).append(" = ").append(conditional.versionColumnName())
-         .append(" + ").append(conditional.versionIncrement());
-      sql.append(" WHERE ").append(conditional.identityColumnName()).append(" = #{candidate.")
-         .append(conditional.identityPropertyName()).append('}');
-      sql.append(" AND ").append(conditional.versionColumnName()).append(" = #{expectedVersion}");
+      sql.append(", ").append(version.columnName()).append(" = ").append(version.columnName())
+         .append(" + ").append(version.versionIncrement());
+      sql.append(" WHERE ").append(entityDecl.identity().columnName()).append(" = #{candidate.")
+         .append(entityDecl.identity().javaName()).append('}');
+      sql.append(" AND ").append(version.columnName()).append(" = #{expectedVersion}");
       return sql.toString();
    }
 }

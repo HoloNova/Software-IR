@@ -1,6 +1,6 @@
 # KCG-Code 剩余工作路线图
 
-> 更新日期：2026-09-18（补主设计与 G0–G7 对应关系；G0 阶段 1–7 的 Q1–Q8 均已验收归档）
+> 更新日期：2026-09-23（G0 阶段 1–7 的 Q1–Q8 与 G1 的 Q9、Q10、Q11 均已验收归档；`ACTIVE_WORK.md` 当前为 **`IDLE` 占位**（无获授权工作单；Q13 已归档，G1 完成门满足）（Q13 变更闭环因 BLOCK-1 暂存为 `BLOCKED`）：全量 749/0/0/5，查询 40 项、写侧 61 项、关联 36 项业务断言 0 失败）
 > 读者：项目负责人和后续执行 Agent
 > 定位：本文件的阶段 1–7 是 **G0：现有链路资格收口**内部的 Q 系列执行顺序。产品方向、阶段进入条件与阶段完成门见 [`README.md`](README.md) 和 [`../design/README.md`](../design/README.md)；两者不替代本文件的执行顺序。
 
@@ -12,7 +12,7 @@
 
 本文件只负责长期顺序。当前真正允许执行的唯一小任务见 [`ACTIVE_WORK.md`](ACTIVE_WORK.md)；项目负责人如何派活和验收见 [`../PROJECT_OWNER_GUIDE.md`](../PROJECT_OWNER_GUIDE.md)。
 
-版本快照规则：由项目负责人决定何时提交或推送。G0 实现快照已提交为 `24eec6d`；本次 Q8 文档闭合只产生文档改动，是否提交由负责人在新会话前自行处理。无阻断或待裁决方向时，聊天中只请求确认继续，详细证据留在工作单和资格文档。
+版本快照规则：由项目负责人决定何时提交或推送。G0 实现快照已提交为 `24eec6d`；G1 的 Q9/Q10 实现快照已提交为 `92c505c`（消息为 `pause`）。无阻断或待裁决方向时，聊天中只请求确认继续，详细证据留在工作单和资格文档。
 
 ## G1 增量序列（G0 之后，不属于上面的阶段 1–7）
 
@@ -21,11 +21,21 @@ G1 的完成门是「BIZ-01..06 的基础业务与反例 + GEN-01/02，并在真
 | 工作单 | 范围 | 对应完成门 | 状态 |
 |---|---|---|---|
 | Q9 | Course 单实体 + 分页/投影/排序/字面量过滤查询端到端 | BIZ-05（查询与分页部分）、GEN-01/02 | **已完成并归档**：全量 554 → 620（差量 66），真实 MySQL + HTTP 场景 40 项断言 0 失败；见 [`completed/Q9-query-slice-course-pagination.md`](completed/Q9-query-slice-course-pagination.md) 与资格报告 1.9 |
-| Q10 | Course 写侧：Create、Get、PATCH 三态、version 冲突、结构化字段错误 | BIZ-01、BIZ-02、BIZ-03、BIZ-04 | **实现与验证完成，`AWAITING_ACCEPTANCE`**（见 [`ACTIVE_WORK.md`](ACTIVE_WORK.md) 交接记录）：全量 620 → **702/0/0/5**，真实 MySQL + HTTP 场景 61 项断言 0 失败（含并发竞态），Q9 场景同树回归 40 项 0 失败 |
-| Q11 | 关联过滤（EXISTS 语义）、根分页不重复、关联批量读取与 SQL 次数预算 | BIZ-06 | 未立项 |
+| Q10 | Course 写侧：Create、Get、PATCH 三态、version 冲突、结构化字段错误 | BIZ-01、BIZ-02、BIZ-03、BIZ-04 | **已完成、验收并归档**（2026-09-23）：全量 620 → **702/0/0/5**，真实 MySQL + HTTP 场景 61 项断言 0 失败（含并发竞态），Q9 场景同树回归 40 项 0 失败；见 [`completed/Q10-course-write-slice.md`](completed/Q10-course-write-slice.md) 与资格报告 1.10 |
+| Q11 | 关联过滤（存在性语义）、根分页不重复、关联批量读取与 SQL 次数预算 | BIZ-06 | **已完成、验收并归档**（2026-09-23）：全量 702 → **749/0/0/5**，真实 MySQL + HTTP 关联场景 **36 项断言 0 失败**（`total` 按根算、根不重复、ENG101 反例、根过滤≠投影过滤、每关联一条批量读取、语句数 4/4/2/0、一次请求一个只读事务），Q9/Q10 同树回归 40/40 与 61/61；见 [`completed/Q11-relation-filter-and-batch-reads.md`](completed/Q11-relation-filter-and-batch-reads.md) 与资格报告 1.11 |
+| Q15 | 实体级片段与能力集合解耦（`MapperRenderer` 的乐观锁辅助方法改为按实体声明发射） | G1 行"继续生成 SIR/修改 SIR"、Q13 的 BLOCK-2 解除 | **`DONE`**（2026-09-23 验收归档，见 [`completed/Q15-entity-artifact-decoupling.md`](completed/Q15-entity-artifact-decoupling.md)；3 项不变性探针 + Q13 删除轮与"增量 == 从零"实测通过）：原方案与 D0–D3 见 [`ACTIVE_WORK.md`](ACTIVE_WORK.md) |
+| Q14 | 变更层语义投影与 Q9–Q11 语言面对齐（`SemanticProjection` 补 `.present`/`any(...)`/`Page<...>` 与五处盲区） | G1 行"继续生成 SIR/修改 SIR"、Q13 的 BLOCK-1 解除 | **`DONE`**（2026-09-23 验收归档，见 [`completed/Q14-change-layer-projection-parity.md`](completed/Q14-change-layer-projection-parity.md)）；原方案与 D0–D4 见 [`ACTIVE_WORK.md`](ACTIVE_WORK.md) |
+| Q13 | G1 变更闭环：在课程切片上做 SIR 变更（加能力 / 改约束 / 删能力）并验证行为变化与"增量结果 == 从零生成结果" | BIZ-01..06 的变更后回归、GEN-01/02、G1 行"继续生成 SIR/修改 SIR" | **`DONE`**（2026-09-23 验收归档（CI run `35854153833`：两条闸门 BUILD SUCCESS、合计 775 / 0 / 0 / 5、四个业务场景 IT 全 `PASSED`）；两次阻断均已解除：BLOCK-1 由 Q14、**BLOCK-2 由 Q15**——删除版本化写能力会改动幸存文件 `CourseMapper.java` 而被 `SIR-CHANGE-IMPACT-202` 拒绝，已由 **Q15** 按 R1 解除；本单自身的 C5 已修正；变更闭环 IT 63 项检查 0 失败、`PASSED`；门 9/10 由 GitHub CI 跑完并通过）；P1 结论、实施期订正 C1–C6、BLOCK-1/2 全文见 [`Q13-g1-change-loop.md`](Q13-g1-change-loop.md) |
 | Q12 | 路由模板（`@PathVariable` 绑定）与资源式路由命名 | 无（设计 §10 未冻结路由形态） | 未立项（Q10 的 D2/D16 登记） |
 
 执行授权仍只来自 `ACTIVE_WORK.md`；上表只是顺序说明，不构成开工授权。
+
+## 已登记的独立项（不属于任何工作单的完成门）
+
+- 错误信封码名与设计 02（`REQUEST_INVALID`/`UNKNOWN_FIELD`）的逐字对齐——Q10 验收裁决（2026-09-23）为保留现状（信封级 `INVALID_REQUEST` + Bean Validation 字段码），后续独立处理。
+- `sir-lowering-spring-boot/src/main/java/io/kcg/sir/lowering/springboot/internal/SpringBootModelLowerer.java` 仍是 CFR 反编译文本，是否重写为手写源码（Q10 的 C8）。重写会把审阅边界扩大到整文件，需另立工作单。
+- 非分页 find 的关联读取（Q11 的 C5：spring-boot 目标当前要求带关联投影的 find 必须分页）；关联投影深度 3 层及以上；预算“按投影使用点计数”是否改为“按关系计划去重”的替代口径（Q11 的 C4）。
+- `in`/`isNull` 等过滤算子、when-present 可选过滤、按关联字段排序、关联集合自身分页（Q11 禁止范围，需真实需求）。
 
 ## 已完成的治理工作
 

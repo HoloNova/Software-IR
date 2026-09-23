@@ -31,3 +31,8 @@ Thumbs.db
 .agents/
 CompleteCommand.md
 KCG-Code_项目交付蓝图.txt
+
+# CI-only scratch directories (work roots for the conformance harness)
+ci-work/
+ci-evidence/
+.m2-ci/
