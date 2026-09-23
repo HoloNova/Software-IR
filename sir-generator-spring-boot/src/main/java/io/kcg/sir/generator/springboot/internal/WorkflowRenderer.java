@@ -4,12 +4,13 @@ import io.kcg.sir.lowering.api.LoweredNodeId;
 import io.kcg.sir.lowering.springboot.model.LoweredJavaType;
 import io.kcg.sir.lowering.springboot.model.PersistenceAction;
 import io.kcg.sir.lowering.springboot.model.SpringArtifact;
+import io.kcg.sir.lowering.springboot.model.SpringBootDeclaration;
 import io.kcg.sir.lowering.springboot.model.SpringBootWorkflow;
 import io.kcg.sir.lowering.springboot.model.SpringExpression;
 import io.kcg.sir.lowering.springboot.model.LoweredJavaType.Declared;
 import io.kcg.sir.lowering.springboot.model.LoweredJavaType.DeclaredKind;
 import io.kcg.sir.lowering.springboot.model.SpringArtifact.Role;
-import io.kcg.sir.lowering.springboot.model.SpringBootDeclaration;
+import io.kcg.sir.lowering.springboot.model.SpringBootDeclaration.ViewDeclaration;
 import io.kcg.sir.lowering.springboot.model.SpringBootDeclaration.CapabilityDeclaration;
 import io.kcg.sir.lowering.springboot.model.SpringBootDeclaration.EntityDeclaration;
 import io.kcg.sir.lowering.springboot.model.SpringBootDeclaration.ErrorDeclaration;
@@ -232,36 +233,130 @@ final class WorkflowRenderer {
       lines.add("            throw new " + errorJavaName(ctx, page.errorSymbol(), imports, currentPackage) + "();");
       lines.add("        }");
       lines.add("        long " + resultName + "Total = " + mapper.mapperFieldName() + ".selectCount(wrapper);");
-      lines.add("        var " + resultName + "Records = " + mapper.mapperFieldName() + ".selectList(wrapper.last(\"LIMIT \" + (" + pageName + " - 1) * " + sizeName + " + \", \" + " + sizeName + "));");
+      String recordsName = resultName + "Records";
+      lines.add("        var " + recordsName + " = " + mapper.mapperFieldName() + ".selectList(wrapper.last(\"LIMIT \" + (" + pageName + " - 1) * " + sizeName + " + \", \" + " + sizeName + "));");
+      ViewDeclaration view = responseView(ctx, step);
+      Map<String, WorkflowRenderer.RelationRead> reads = new LinkedHashMap<>();
+      readAssociations(ctx, view, recordsName, reads, imports, currentPackage, lines, mappers, new int[]{0}, "");
       lines.add("        var " + resultName + " = new PageResponse<>(" + resultName + "Total, " + pageName + ", " + sizeName + ", "
-         + resultName + "Records.stream().map(row -> "
-         + renderProjection(ctx, step, entity, imports, currentPackage) + ").toList());");
+         + recordsName + ".stream().map(row -> "
+         + renderProjectionRow(ctx, view, "row", reads, "", imports, currentPackage) + ").toList());");
    }
 
    /**
-   * Projects one entity row into the declared response view. The view declares which entity member
-   * feeds each field, so this never has to guess from names.
+   * One batch read per nested projection use site, plus the index that holds what it read.
+   *
+   * <p>Every read is taken from the rows already loaded — the page for the first level, the rows a
+   * parent read produced for the next — so the whole result costs one statement per association and
+   * never one per row. The plan states which property to collect keys from and which to compare
+   * against, so this only follows it; the statement budget in the IR is what the result is held to.
    */
-   private static String renderProjection(
-      GenerationContext ctx, FindStep step, EntityDeclaration entity, ImportSorter imports, String currentPackage
+   private static void readAssociations(
+      GenerationContext ctx,
+      ViewDeclaration view,
+      String rows,
+      Map<String, WorkflowRenderer.RelationRead> reads,
+      ImportSorter imports,
+      String currentPackage,
+      List<String> lines,
+      Map<SymbolId, WorkflowRenderer.MapperReference> mappers,
+      int[] counter,
+      String path
    ) {
-      SpringBootDeclaration.ViewDeclaration view = responseView(ctx, step);
+      EntityDeclaration owner = ctx.entity(view.sourceEntitySymbol());
+      for (SpringBootDeclaration.ViewField field : view.fields()) {
+         SpringBootDeclaration.ViewRelationPlan plan = field.relation().orElse(null);
+         if (plan == null) {
+            continue;
+         }
+
+         EntityDeclaration relatedEntity = ctx.entity(plan.targetEntitySymbol());
+         registerEntityImport(ctx, relatedEntity, imports, currentPackage);
+         WorkflowRenderer.MapperReference relatedMapper = ensureMapper(ctx, plan.targetEntitySymbol(), relatedEntity.javaName(), mappers);
+         imports.add("com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper");
+         boolean collection = plan.cardinality() == SpringBootDeclaration.RelationCardinality.TO_MANY;
+         String site = path.isEmpty() ? field.javaName() : path + "." + field.javaName();
+         String suffix = Integer.toString(counter[0]++);
+         String keys = "related" + suffix + "Keys";
+         String relatedRows = "related" + suffix;
+         String index = relatedRows + "Index";
+         lines.add("        var " + keys + " = " + rows + ".stream().map(" + owner.javaName() + "::"
+            + getterName(plan.sourceKeyPropertyName()) + ")" + (collection ? "" : ".filter(java.util.Objects::nonNull)")
+            + ".distinct().toList();");
+         lines.add("        var " + relatedRows + " = " + keys + ".isEmpty() ? java.util.List.<" + relatedEntity.javaName() + ">of() : "
+            + relatedMapper.mapperFieldName() + ".selectList(new LambdaQueryWrapper<" + relatedEntity.javaName() + ">().in("
+            + relatedEntity.javaName() + "::" + getterName(plan.targetLookupPropertyName()) + ", " + keys + ")"
+            + plan.orderPropertyName().map(name -> ".orderByAsc(" + relatedEntity.javaName() + "::" + getterName(name) + ")").orElse("")
+            + ");");
+         lines.add("        var " + index + " = " + relatedRows + ".stream().collect(" + (collection
+            ? "java.util.stream.Collectors.groupingBy(" + relatedEntity.javaName() + "::" + getterName(plan.indexKeyPropertyName()) + ")"
+            : "java.util.stream.Collectors.toMap(" + relatedEntity.javaName() + "::" + getterName(plan.indexKeyPropertyName())
+               + ", related -> related)") + ");");
+         ViewDeclaration targetView = ctx.declaration(plan.targetViewSymbol()) instanceof ViewDeclaration value ? value : null;
+         if (targetView == null) {
+            throw new IllegalStateException("a relation must target a declared view: " + plan.targetViewSymbol());
+         }
+
+         reads.put(site, new WorkflowRenderer.RelationRead(plan, index, "related" + suffix + "Row"));
+         readAssociations(ctx, targetView, relatedRows, reads, imports, currentPackage, lines, mappers, counter, site);
+      }
+   }
+
+   /**
+   * Projects one row into the declared response view, resolving every nested projection through the
+   * index the read for that use site produced.
+   */
+   private static String renderProjectionRow(
+      GenerationContext ctx,
+      ViewDeclaration view,
+      String row,
+      Map<String, WorkflowRenderer.RelationRead> reads,
+      String path,
+      ImportSorter imports,
+      String currentPackage
+   ) {
       registerViewImport(ctx, view, imports, currentPackage);
       StringBuilder out = new StringBuilder("new ").append(view.javaName()).append('(');
       for (int index = 0; index < view.fields().size(); index++) {
          SpringBootDeclaration.ViewField field = view.fields().get(index);
          if (index > 0) {
-         out.append(", ");
+            out.append(", ");
          }
 
-         String member = "row." + getterName(field.sourcePropertyName()) + "()";
-         // A nullable view field is an Optional, the entity property behind it is plain.
-         out.append(GenerationContext.isNullable(field.type())
-            ? "java.util.Optional.ofNullable(" + member + ")"
-            : member);
+         SpringBootDeclaration.ViewRelationPlan plan = field.relation().orElse(null);
+         if (plan == null) {
+            String member = row + "." + getterName(field.sourcePropertyName()) + "()";
+            out.append(GenerationContext.isNullable(field.type())
+               ? "java.util.Optional.ofNullable(" + member + ")"
+               : member);
+            continue;
+         }
+
+         String site = path.isEmpty() ? field.javaName() : path + "." + field.javaName();
+         WorkflowRenderer.RelationRead read = reads.get(site);
+         ViewDeclaration target = ctx.declaration(plan.targetViewSymbol()) instanceof ViewDeclaration value ? value : null;
+         if (read == null || target == null) {
+            throw new IllegalStateException("a nested projection has no read for its use site: " + site);
+         }
+
+         String nested = renderProjectionRow(ctx, target, read.lambdaName(), reads, site, imports, currentPackage);
+         String key = row + "." + getterName(plan.sourceKeyPropertyName()) + "()";
+         if (plan.cardinality() == SpringBootDeclaration.RelationCardinality.TO_MANY) {
+            out.append(read.indexVariable()).append(".getOrDefault(").append(key)
+               .append(", java.util.List.of()).stream().map(").append(read.lambdaName()).append(" -> ")
+               .append(nested).append(").toList()");
+         } else {
+            out.append("java.util.Optional.ofNullable(").append(read.indexVariable()).append(".get(").append(key)
+               .append(")).map(").append(read.lambdaName()).append(" -> ").append(nested).append(").orElse(null)");
+         }
       }
 
       return out.append(')').toString();
+   }
+
+   /** The index one nested projection reads its related rows from, and the name its row is bound to. */
+   private record RelationRead(
+      SpringBootDeclaration.ViewRelationPlan plan, String indexVariable, String lambdaName) {
    }
 
    private static SpringBootDeclaration.ViewDeclaration responseView(GenerationContext ctx, FindStep step) {
@@ -775,9 +870,33 @@ final class WorkflowRenderer {
             String nestedName = nextWrapperName(counter);
          String nested = renderPredicateNode(ctx, unary.operand(), itemVariable, entity, stringMatches, variableNames, imports, currentPackage, nestedName, counter);
             return wrapperName + ".not(" + nestedName + " -> " + nested + ")";
+         case SpringExpression.ExistsPredicate exists:
+            // The correlated subquery is decided before rendering: this only quotes its text and
+            // binds the values the plan declares, in the order it declares them.
+            return wrapperName + ".apply(" + StringEscape.javaString("EXISTS (" + exists.subquerySql() + ")")
+               + renderExistsArguments(exists) + ")";
          default:
             throw new IllegalStateException("Unsupported find predicate expression: " + predicate);
       }
+   }
+
+   private static String renderExistsArguments(SpringExpression.ExistsPredicate exists) {
+      StringBuilder out = new StringBuilder();
+      for (SpringExpression.ExistsArgument argument : exists.arguments()) {
+         out.append(", ").append(renderExistsArgument(argument));
+      }
+
+      return out.toString();
+   }
+
+   private static String renderExistsArgument(SpringExpression.ExistsArgument argument) {
+      return switch (argument) {
+         case SpringExpression.ExistsArgument.Text text -> StringEscape.javaString(text.value());
+         case SpringExpression.ExistsArgument.Integral integral -> integral.value() + "L";
+         case SpringExpression.ExistsArgument.Decimal decimal ->
+            "new java.math.BigDecimal(" + StringEscape.javaString(decimal.value().toPlainString()) + ")";
+         case SpringExpression.ExistsArgument.Flag flag -> Boolean.toString(flag.value());
+      };
    }
 
    /**

@@ -1,3 +1,8 @@
+# KCG-Code 测试覆盖与缺口清单
+
+> 更新日期：2026-09-23（§1 的模块测试数按 **GitHub CI** 完成形式复跑重测，见资格文档第 2 节；下方按工作单分组的覆盖记录中，Q9/Q10/Q11/Q13 均已验收归档，Q14/Q15 见 Q13 组内的前置修复单小节）
+> 用途：记录当前可执行测试、明确缺口和后续验收输入；不以历史测试数量作为完成目标
+
 ## Q9 单文件查询切片覆盖（2026-09-18 G1 首切片）
 
 | 组 | 已覆盖 | 未覆盖/边界 |
@@ -10,9 +15,9 @@
 | 响应形状 | 投影 DTO 只含声明字段；`PageResponse` 字段为 `total`/`page`/`size`/`records`；实体主键与未投影列不出现 | 不提供响应包装可配置项（字段名/无包装）；无 JSON 契约测试（只断言键存在与值） |
 | 只读性 | 场景前/后独立 JDBC 行指纹相同，读取路径不修改任何行 | 未测高并发下的读一致性 |
 | 真实业务验证 | MySQL 8.4.11 + HTTP：分页翻页、默认值、投影、字面 `%`/`_` 对照、越界页、4 种非法分页 400、空/缺关键字 400，共 40 项断言 0 失败 | 只在单一参考环境元组上执行；IT 为 opt-in，默认构建不跑；**产品 INITIALIZE/UPDATE 未实现**（DDL/seed 均为测试 fixture） |
-| 写侧与并发 | — | **本单不覆盖**：CRUD 业务验证、PATCH 三态、`version` 乐观锁/409、业务 DELETE、关联读取与 `EXISTS` 过滤 |
+| 写侧与并发 | — | **本单不覆盖**：CRUD 业务验证、PATCH 三态、`version` 乐观锁/409、业务 DELETE、关联读取与 `EXISTS` 过滤（后者由 Q11 接手，见下） |
 
-## Q10 Course 写侧切片覆盖（2026-09-21 G1 第二切片）
+## Q10 Course 写侧切片覆盖（2026-09-21 G1 第二切片；2026-09-23 验收归档）
 
 | 组 | 已覆盖 | 未覆盖/边界 |
 |---|---|---|
@@ -21,11 +26,37 @@
 | 条件持久化 | 仅 versioned UPDATE 允许 `persist <var> else <Err>;`；生成 `SELECT ... FOR UPDATE` + 显式 `@Update`（`SET` 仅含变更列、`WHERE id=? AND version=?`、`version=version+1`），影响行数 ≠ 1 抛声明错误；响应报告已提交版本 | 无重试/退避策略；无批量条件更新 |
 | 局部更新三态 | `input X patch of Course`：字段同名同类型、必须声明 identity、不得声明 version、不得带约束；变更集记录"请求是否携带该属性"；缺席=保持、显式 null=清空、有值=替换；空变更集 400 `EmptyChange` | 无 `when present` 语法的独立表达（用 `input.x.present` + `validate … else`）；无嵌套对象补丁、无批量补丁 |
 | 存在性表达式 | `<ref>.present` 仅对 patch 载荷字段合法、产出 Boolean、可用于 `validate … else` | 不覆盖数组/集合存在性、不覆盖 `absent` 的一等语法 |
-| 结构化错误信封 | 统一 `{code, message, fields:[{path, code, message}]}`；声明失败经基类携带码与状态；`@RestControllerAdvice` 统一处理声明失败、载荷校验失败与解码失败；未知属性由 `fail-on-unknown-properties` 拒绝并由 advice 拼出完整路径（`changes.code`） | 字段码词汇为 Bean Validation 约束码（`notBlank|email|length|min|max|NotNull`），与设计 02 的码名逐字一致性待裁决；无 i18n 消息、无 `errors` 版本化字段 |
+| 结构化错误信封 | 统一 `{code, message, fields:[{path, code, message}]}`；声明失败经基类携带码与状态；`@RestControllerAdvice` 统一处理声明失败、载荷校验失败与解码失败；未知属性由 `fail-on-unknown-properties` 拒绝并由 advice 拼出完整路径（`changes.code`） | 字段码词汇为 Bean Validation 约束码（`notBlank|email|length|min|max|NotNull`），与设计 02 的码名逐字对齐未做（2026-09-23 验收裁决为保留现状、登记为后续独立项）；无 i18n 消息、无 `errors` 版本化字段 |
 | 信封必填与三态边界 | `id` 与 `expectedVersion` 加 `@NotNull` + 控制器 `@Valid`；缺失成员 400 且 `fields[].path` 点名；未知信封属性 400 | 无跨字段校验（如 `expectedVersion` 与 `id` 的业务联动） |
 | 可空字段边界 | 实体可空字段映射为普通可空 Java 属性（MyBatis 无 `Optional` 参数类型处理器）；载荷与视图保留 `Optional`，边界处显式 `orElse(null)` / `Optional.ofNullable`；可空载荷字段的约束为容器元素约束（`Optional<@Size(...) String>`） | 无 MyBatis 自定义 TypeHandler 方案（当前不依赖任何自定义组件）；无损可空值的读写已覆盖，未做 NULL 与空串的区分断言 |
 | 真实业务验证 | MySQL 8.4.11 + HTTP：创建 201 与投影 + 数据库 version=0；读取 200 / 未知 404；局部变更仅动被点名列并 `version+1`；显式 null 清空、缺席保持；陈旧版本 409 且整行指纹不变；行 3 以存量版本 4 为准；空变更集/未知变更属性/缺成员/未知信封属性 400 且不写入；创建违反约束 400 且不落库；**并发同版本竞态恰好一成功一 409、版本只 +1**，共 **61 项断言 0 失败** | 只在单一参考环境元组执行；IT 为 opt-in；**产品 INITIALIZE/UPDATE 未实现**（schema/DDL/seed 均为测试 fixture）；Q9 场景在同树回归（40 项断言 0 失败） |
-| 其它写路径 | — | **本单不覆盖**：DELETE、路由模板与嵌套 `/courses/{id}`（登记 Q12）、`in`/`isNull` 等过滤算子、关联读取/`EXISTS`（Q11）、字段错误码与主设计逐条对齐 |
+| 其它写路径 | — | **本单不覆盖**：DELETE、路由模板与嵌套 `/courses/{id}`（登记 Q12）、`in`/`isNull` 等过滤算子、关联读取/`EXISTS`（由 Q11 接手，见上）、字段错误码与主设计逐条对齐 |
+
+## Q11 关联过滤与关联读取覆盖（2026-09-23 G1 第三切片；2026-09-23 验收归档）
+
+| 组 | 已覆盖 | 未覆盖/边界 |
+|---|---|---|
+| 存在性谓词 `any(<Entity>, <条件>)` 语法 | `any` 为保留字（实体/字段不再能叫 `any`）；第一个参数必须是实体名字引用（view/input/enum/未定义为实体分别报错）；条件必须含「关联实体上指向根实体的 `Ref` 字段 == 根 item」的连接比较；条件里裸名解析为**关联实体**的字段；整体类型 `Bool`；只能出现在 `find` 的 `where`（别的载荷/位置报 SIR-FLOW-005）；不允许 `any` 嵌套 `any`（SIR-FLOW-006） | 不支持 `exists` 关键字形态、不支持对一/对多之外的基数推断、不支持多个连接条件（同一实体两条 `Ref` 时报歧义，需作者写清） |
+| 关联投影（view 嵌套 view） | 对一（外键在本侧）必须写目标类型、对多必须写 `List<目标 view>`；方向判定按子实体上「恰好一个指向父实体的 `Ref`」，多个则报 SIR-SYMBOL-002/003；嵌套深度上限 2 层（根 view 记 0 层，SIR-VALID-005）；嵌套字段不得带约束；投影字段类型必须等于实体字段类型（关系字段除外） | 无第三层、无关联集合自身分页/排序语法、无 `via` 消歧语法（D5 明确本单不做）、无 `view from view` |
+| Lowering 决策面 | 相关子查询文本（`SELECT 1 FROM <关联表> <别名> WHERE <别名>.<外键列> = <根表>.<根身份列> AND <其余条件>`）+ 按序绑定取值写入 `SpringExpression.ExistsPredicate`；连接比较从条件里摘掉（不重复问同一问题）；字面量与枚举成员一律作为绑定参数（枚举以持久化文本）；批量读取计划写入 `ViewRelationPlan`（基数、目标 view/实体、取键属性、比较属性、索引属性、集合排序属性）；**语句预算**写入 `StatementBudget`（页读取数 + 关联读取数，空页为只有页读取） | 计数按「投影使用点」而非「关系计划」去重（同一 view 在多处投影则每处各读一次，口径已写入 IR 注释） |
+| 目标能力边界（Lowering 前拒绝） | 条件里出现工作流变量/`containsLiteral`/函数等不可译为相关子查询的形态 → `SIR-LOWER-FEATURE-001`（保留 span，不静默丢弃）；带关联投影的**非分页** find → `SIR-LOWER-FEATURE-001`（批量读取以页行集合为起点） | 非分页关联读取、`in`/`isNull`、when-present 可选过滤、按关联字段排序均未实现 |
+| IR 自洽校验 | 预算必须等于「页读取数 + 投影里实际嵌套的关联数」；关系计划必须投影它声明的那个 view；索引属性必须等于读取所用属性；对一不得带排序、对多必须带排序；相关子查询的占位符与取值必须一一对应且无缺口 | 校验只覆盖 Lowered IR 自洽性，不验证生成代码是否照做（由生成契约测试与真实场景接手） |
+| 生成契约 | 谓词渲染为 `.apply("EXISTS (<子查询>)", <按序取值>)`；每个关联一条批量读取（取键 → 空键短路 → `selectList(... in(...) ...)` → 建索引），对多按目标身份升序、对一按目标身份索引；嵌套投影递归渲染（对多 `getOrDefault(...).stream().map(...)`、对一 `Optional.ofNullable(index.get(...)).map(...).orElse(null)`）；读事务为 `@Transactional(readOnly = true)`；生成字节在 en-US/ISO-8859-1 与 tr-TR/UTF-8、不同工作目录下逐字节一致 | 变量名/lambda 名由生成器确定性命名；不生成跨请求缓存，不做关联集合的懒加载 |
+| 真实业务验证 | MySQL 8.4.11 + HTTP：`total=4` 且每个根只出现一次（join 式实现会得 total=5 且 CS101 重复）；ART101（只有 CANCELLED）/PHY101（无报名）不出现；**ENG101 不出现**（它的报名与「存在 ACTIVE 报名」由不同行满足，专门排除把一个谓词拆成两个判断的实现）；CS102 的嵌套集合仍含 CANCELLED 行（根过滤 ≠ 投影过滤）；ZOO101 的三十条关联行全部投影且语句数不变；**语句数** `page=1&size=10`→4、`page=2&size=2`→4、越界页→2、非法页→**0**（400 `InvalidPage`）；**一次请求 = 1 个只读事务**（`events_transactions_summary…` 增量，transactions=1/readOnly=1）；前后整行指纹不变。共 **36 项断言 0 失败** | 只在单一参考环境元组执行；IT 为 opt-in；计数依赖 control 账号读 `performance_schema`（运行时账号无此权限，实测 `ERROR 1142`），general log 仅作原始 SQL 证据；**产品 INITIALIZE/UPDATE 未实现**（DDL/seed 为测试 fixture） |
+| 其它 | — | **本单不覆盖**：关联写入与嵌套保存、DELETE/归档与级联、权限/401/403（G5）、报名并发与名额（BIZ-07..13）、深度 3 层及以上、路由模板（Q12）、产品 schema 生命周期（G3） |
+
+## Q13 变更闭环覆盖（2026-09-23 G1 第四切片；2026-09-23 验收归档）
+
+| 组 | 已覆盖 | 未覆盖/边界 |
+|---|---|---|
+| 变更计划族纯度 | 每一轮由 `ChangeAnalysis.Planned` 反读：新增轮只有 `FileAddition`、更新轮只有 `FileChange`、删除轮只有 `FileDeletion`（不信任轮次标签） | 未覆盖同一轮声明多个操作族（`ChangeSet` 只允许一个操作） |
+| 核心不变量 | **增量应用结果 == 同一候选从零生成结果**：逐相对路径 `sha256` 比较、文件集合相同 | 只对课程切片与四轮形态验证，未做随机化/属性测试 |
+| 支撑产物 | 删除最后一个写能力那一轮的删除集合不含错误信封/异常基类/advice/校验原语/`application.yml`，且之后仍在盘上（Q10 C7 的结构钉）+ 运行期证据（删完写能力后非法分页仍得 400 `InvalidPage`） | `Application.java` 的 actor 传输片段与 mapper 同族（Q15 独立项） |
+| 实体级片段与能力集合解耦（Q15） | 同一实体在有/无条件更新能力时 mapper **逐字节相同**；有版本列必带乐观锁辅助方法、无版本列必无（灵敏度反面探针） | 只覆盖 mapper；`Application.java` 的 actor 片段未处理 |
+| 变更层与语言面对齐（Q14） | 投影覆盖 `NormalizedExpression`/`SirType`/`NormalizedStep` 全部变体（语言面闸门按 `getPermittedSubclasses()` 遍历源码命名）；7 项灵敏度探针（改 `order by`/分页子句/`any` 条件/`.present` 目标/`versioned`/嵌套关联目标/`persist else` 都要让投影不同）；6 项行为探针（只改一个工作流事实 → UPDATE 计划，同源候选 → `NoChanges`） | 实体字段/视图字段级事实在变更词汇里没有对应操作，只能在投影层钉（C1 已记录） |
+| 幂等与拒绝 | 已落地新增再声明 → `SIR-CHANGE-TARGET-101`；未改动内容重新规划 → `NoChanges` 且盘面不变；目标拒绝的候选 → 计划失败且盘面逐字节不变；陈旧基线 → apply 失败且盘面不变 | 未覆盖"同一轮并发 apply"（Q6 已有文件事务三路径矩阵） |
+| 真实业务验证（四轮同一落盘工程根） | 每轮 plan → apply → **重新构建同一个工程根**（`mvn clean verify` 四次 exit 0）→ 重启 → HTTP 断言；R1 行为变化（`total` 3→4、ART101 出现）、R2（25 字符 400 点名 `name`、15 字符 201）、R3（两个写路由 404、检索仍服务、非法分页仍 400 `InvalidPage`）、R4（新路由服务四门课、旧路由仍可用、写路由未复活） | 未覆盖变更后的数据库迁移（G3）、未覆盖失败回滚的 HTTP 观察 |
+| 验证位置 | 重活由 GitHub CI 承担（本机 2 vCPU / 3 GB；`.github/workflows/verify.yml`：两条全量闸门 + 四个业务场景 IT），本机确需重活必须 `systemd-run --scope` 限内存与 CPU | 无自托管 runner；CI 与参考环境的 schema/账号口径已对齐，但仍属测试侧 fixture |
 
 ## Q7 CLI 产品边界覆盖（2026-09-18）
 
@@ -39,22 +70,17 @@
 | 生产边界 | 常量池闸门三条规则 0 违规 + 灵敏度探针 | `io/kcg/cli/mvp/**` 为显式例外（非命令路径，命令路径不可达它有断言） |
 | 发布物 | — | **thin JAR / 发行包 `NOT_RUN`**（属独立发布任务） |
 
-# KCG-Code 测试覆盖与缺口清单
-
-> 更新日期：2026-09-18（§1、§2、§3 的测试数来自 2026-09-18 Linux 完成形式离线 Reactor、Q1 定向闸门和 Q2 Project Graph 定向闸门，见资格文档 1.3、1.4）
-> 用途：记录当前可执行测试、明确缺口和后续验收输入；不以历史测试数量作为完成目标
-
 ## 1. 当前覆盖摘要
 
 | 模块 | 当前直接测试 | 覆盖判断 | 优先级 |
 |---|---:|---|---|
-| Parser | 55 | 核心语法、AST、诊断和确定性有直接覆盖；含 Q9 查询切片正反例（`view`/`Page<T>`/`order by`/`Page … else`/`containsLiteral`） | 维护 |
-| Semantic | 131 | Resolve/Type/Validate/Normalize 与 typed reference-site 有系统覆盖；Q9 新增投影绑定/类型、分页与排序约束和四类新 ReferenceRole | 维护 |
-| Lowering API + Spring | 52 | API、Profile、边界、确定性和 hardening 有直接覆盖；Q9 新增投影/排序/分页/字面量计划与 IR 校验 | 维护 |
-| Generator | 48 | canonical 输出、主要 Renderer、跨环境字节确定性和完整生成工程离线编译均有直接契约，并有生产 class 静态边界闸门；Q9 新增投影 DTO/分页响应/分页配置/分页查询渲染契约 | 维护 |
+| Parser | 69 | 核心语法、AST、诊断和确定性有直接覆盖；Q9 新增查询切片正反例（`view`/`Page<T>`/`order by`/`Page … else`/`containsLiteral`），Q10 新增写侧语法（`versioned`/`error … status`/`persist … else`/`patch of`/`.present`） | 维护 |
+| Semantic | 159 | Resolve/Type/Validate/Normalize 与 typed reference-site 有系统覆盖；Q9 新增投影绑定/类型、分页与排序约束和四类新 ReferenceRole，Q10 新增版本字段、状态码、条件持久化、patch 载荷与存在性表达式规则 | 维护 |
+| Lowering API + Spring | 73 | API、Profile、边界、确定性和 hardening 有直接覆盖；Q9 新增投影/排序/分页/字面量计划与 IR 校验，Q10 新增版本规格/patch 计划/条件更新/候选校验/错误契约 artifact 与 GEN-02 损坏模型 | 维护 |
+| Generator | 67 | canonical 输出、主要 Renderer、跨环境字节确定性和完整生成工程离线编译均有直接契约，并有生产 class 静态边界闸门；Q9 新增投影 DTO/分页响应/分页配置/分页查询渲染契约，Q10 新增错误信封/异常基类/advice/变更集/条件更新/候选校验/投影渲染契约 | 维护 |
 | Project Graph | 72 | 四类边、规则矩阵、canonical 序列化/加载/摘要往返、只读边界闸门与不可信字节版本/来源类型/不可编码标量守卫均有直接契约；`REFERENCES` 与增量能力不在范围 | 维护 |
 | Change | 22 | 有 API 与架构测试，操作族/closure/失败矩阵不足 | P1 |
-| Application | 210（0 fail）+ 5 skip | 核心路径覆盖 + conformance 包编译/运行；Q9 新增 opt-in 业务场景（真实 MySQL + HTTP，默认构建不跑） | P0 |
+| Application | 210（0 fail）+ 5 skip | 核心路径覆盖 + conformance 包编译/运行；Q9 与 Q10 各新增一个 opt-in 业务场景（真实 MySQL + HTTP，默认构建不跑） | P0 |
 | CLI | 30 | 5 项 hardening + 13 项 Change 工作流 + Q7 新增 12 项（产品边界 6、生产边界闸门 4、内部失败 2） | P1 |
 
 ## 2. Generator 缺口

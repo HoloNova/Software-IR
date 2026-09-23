@@ -427,6 +427,45 @@ final class BusinessSliceHarness {
         return ready;
     }
 
+    /** The materialized project root, so a change round can be applied to the live tree. */
+    Path projectRoot() {
+        return this.projectRoot;
+    }
+
+    /**
+     * A scratch directory owned by this run, next to the evidence root.
+     *
+     * <p>Lives under the evidence root (which is already owned and cleaned up by the harness) so a
+     * change round's baseline snapshots and candidate sources never leak into the repository.
+     */
+    Path workPath(String name) throws IOException {
+        return Files.createDirectories(this.evidenceRoot.resolve("change").resolve(name));
+    }
+
+    /**
+     * Stops the running application, rebuilds the changed project root, and starts the new jar.
+     *
+     * <p>This is what makes a change round a real delivery: the tree the change wrote is the tree
+     * that is built and served next, not a freshly generated copy of the candidate source.
+     */
+    boolean rebuildAndRestart(MysqlRuntimeJdbcUrl runtimeUrl) throws IOException, InterruptedException {
+        if (this.springProcess != null && this.process != null) {
+            try {
+                boolean stopped = this.springProcess.stop(SPRING_GRACE_MS);
+                this.check("the application from the previous round exited", stopped, "stopped=" + stopped);
+                this.settleLogs();
+                this.process = null;
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                this.check("the application from the previous round exited", false, describe(e));
+                return false;
+            }
+        }
+
+        Path jar = this.buildAndLocateJar(runtimeUrl);
+        return jar != null && this.startAndWaitUntilReady(jar);
+    }
+
     /** Opens the fixture's table through an independent JDBC connection. */
     MysqlObserver openObserver(MysqlRuntimeJdbcUrl runtimeUrl) throws SQLException {
         return MysqlObserver.open(runtimeUrl.rendered(),

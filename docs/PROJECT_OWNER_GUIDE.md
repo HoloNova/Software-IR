@@ -138,8 +138,7 @@ G1 开始前，先建立新的 `ACTIVE_WORK.md` 工作单并经负责人确认�
 - skip、被 POM 排除和未运行的内容不能算通过。
 - 不得删除或弱化测试来制造绿色结果。
 
-完成时必须实际运行工作单里的定向测试，以及：
-mvn "-Dmaven.repo.local=D:\maven-repo" -o clean verify
+完成工作单要求的定向验证；全量验证按 AGENTS.md“测试资源约束”优先使用 GitHub CI（公共仓库托管 runner；仓库尚未建立 workflow，建立前确需全量时在本机限内存／并发执行）。CI 证据必须覆盖待验收源码；不为触发 CI 自动提交／推送，不在本机重复已有有效全量结果。纯文档修改不跑构建。本机收尾：
 git diff --check
 git status --short
 
@@ -180,15 +179,14 @@ git status --short
 
 ### 4. 最后创建版本快照
 
-每张小版本工作单验收后形成一个普通本地 Git 提交。提交前至少确认：
+每张小版本工作单验收后，按下述授权与例外规则形成普通本地提交。先确认必需验证已有覆盖当前源码的有效证据；不因提交动作重复全量测试，执行位置与资源限制按 `AGENTS.md`，命令基准见 `MAIN.md`。本机检查：
 
 ```powershell
-mvn "-Dmaven.repo.local=D:\maven-repo" -o clean verify
 git diff --check
 git status --short
 ```
 
-如果全量构建受 Windows 沙箱权限影响，必须在允许访问工作区输出目录的环境中用同一命令复跑。只有权限外复跑成功，才能把第一次 `Access is denied` 归类为环境问题。
+若需验证 Windows 沙箱权限故障，应优先用适配的远程 Windows Runner，或在满足本机资源预算且可访问输出目录的环境中复跑同源码、同命令。只有复跑成功才将原 `Access is denied` 归为已确认环境问题；否则保留阻断，不自动在本机重复全量。
 
 提交信息用一句话说明结果，例如：
 

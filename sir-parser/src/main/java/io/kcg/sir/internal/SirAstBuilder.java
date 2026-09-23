@@ -531,6 +531,14 @@ final class SirAstBuilder {
         if (context.NOW() != null) {
             return new AstNowExpression(ids.id(path), source.span(context));
         }
+        if (context.anyPredicate() != null) {
+            SirParser.AnyPredicateContext predicate = context.anyPredicate();
+            return new AstAnyExpression(
+                    ids.id(path),
+                    source.span(context),
+                    nameRef(predicate.entity, path, "entity"),
+                    expression(predicate.conditions, path));
+        }
         if (context.groupedExpression() != null) {
             return new AstGroupedExpression(
                     ids.id(path),

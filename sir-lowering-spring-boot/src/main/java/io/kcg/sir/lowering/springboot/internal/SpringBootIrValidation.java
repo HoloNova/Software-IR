@@ -534,6 +534,11 @@ public final class SpringBootIrValidation {
          this.knownSymbols.add(field.sourceSymbol());
          this.knownSymbols.add(field.sourceFieldSymbol());
          this.validateType(field.type(), view);
+         if (field.relation().isPresent()) {
+            this.validateViewRelation(view, field, entity);
+            continue;
+         }
+
          if (entity == null) {
          continue;
          }
@@ -545,6 +550,79 @@ public final class SpringBootIrValidation {
          this.error(view, "view field type must equal its source entity field type: " + field.javaName());
          }
       }
+   }
+
+   /**
+   * A relation projection must name the two declarations it joins and the properties the batch read
+   * uses, and those properties must exist on the sides the plan says they do.
+   *
+   * <p>The type rule of a column projection deliberately does not apply here: a relation reads a
+   * reference, and the view it produces is a different type entirely.
+   */
+   private void validateViewRelation(
+      SpringBootDeclaration.ViewDeclaration view, SpringBootDeclaration.ViewField field, SpringBootDeclaration.EntityDeclaration entity) {
+      SpringBootDeclaration.ViewRelationPlan plan = field.relation().orElseThrow();
+      this.addNode(plan.id(), plan.origin(), "view relation plan");
+      LoweredJavaType element = field.type() instanceof LoweredJavaType.ListValue list ? list.elementType() : field.type();
+      boolean projectsThePlannedView = element instanceof LoweredJavaType.Declared declared
+         && declared.kind() == LoweredJavaType.DeclaredKind.VIEW
+         && declared.symbolId().equals(plan.targetViewSymbol());
+      if (!projectsThePlannedView) {
+         this.error(view, "a relation must project the view its plan reads: " + field.javaName() + " -> " + field.type());
+      }
+      SpringBootDeclaration.ViewDeclaration target = this.declarations.get(plan.targetViewSymbol()) instanceof SpringBootDeclaration.ViewDeclaration value
+         ? value
+         : null;
+      this.requireDeclaration(plan.targetViewSymbol(), SpringBootDeclaration.ViewDeclaration.class, view);
+      SpringBootDeclaration.EntityDeclaration targetEntity = this.declarations.get(plan.targetEntitySymbol()) instanceof SpringBootDeclaration.EntityDeclaration value
+         ? value
+         : null;
+      this.requireDeclaration(plan.targetEntitySymbol(), SpringBootDeclaration.EntityDeclaration.class, view);
+      if (target != null && target.sourceEntitySymbol() != plan.targetEntitySymbol()) {
+         this.error(view, "a relation must read the entity its target view projects: " + field.javaName());
+      }
+
+      if (entity == null || targetEntity == null) {
+         return;
+      }
+
+      if (plan.cardinality() == SpringBootDeclaration.RelationCardinality.TO_MANY) {
+         if (!this.hasProperty(targetEntity, plan.targetLookupPropertyName())) {
+            this.error(view, "a collection relation must key on a property of the related entity: " + plan.targetLookupPropertyName());
+         }
+
+         if (!this.hasProperty(entity, plan.sourceKeyPropertyName())) {
+            this.error(view, "a collection relation must collect its keys from the projecting entity: " + plan.sourceKeyPropertyName());
+         }
+
+         if (plan.orderPropertyName().isEmpty() || !this.hasProperty(targetEntity, plan.orderPropertyName().get())) {
+            this.error(view, "a collection relation must state the identity it is ordered by: " + field.javaName());
+         }
+      } else {
+         if (!this.hasProperty(targetEntity, plan.targetLookupPropertyName())) {
+            this.error(view, "a single-row relation must look the related row up by its own property: " + plan.targetLookupPropertyName());
+         }
+
+         if (!this.hasProperty(entity, plan.sourceKeyPropertyName())) {
+            this.error(view, "a single-row relation must read its reference from the projecting entity: " + plan.sourceKeyPropertyName());
+         }
+
+         if (plan.orderPropertyName().isPresent()) {
+            this.error(view, "a single-row relation is not ordered: " + field.javaName());
+         }
+      }
+
+      if (!plan.indexKeyPropertyName().equals(plan.targetLookupPropertyName())) {
+         this.error(view, "a relation is indexed by the property it was read with: " + field.javaName());
+      }
+   }
+
+   private boolean hasProperty(SpringBootDeclaration.EntityDeclaration entity, String javaName) {
+      if (entity.identity().javaName().equals(javaName)) {
+         return true;
+      }
+
+      return entity.fields().stream().anyMatch(property -> property.javaName().equals(javaName));
    }
 
    private LoweredJavaType entityFieldType(SpringBootDeclaration.EntityDeclaration entity, SymbolId fieldSymbol) {
@@ -950,10 +1028,56 @@ public final class SpringBootIrValidation {
 
       find.page().ifPresent(page -> this.validatePageSpec(owner, page));
       this.validateStringMatches(find, owner);
+      this.validateStatementBudget(find, owner);
 
       if (find.page().isPresent() && !(find.result().type() instanceof LoweredJavaType.PageValue)) {
          this.error(owner, "a paged find must produce a Page value: " + find.result().type());
       }
+   }
+
+   /**
+   * The declared read budget must match what the statement promises: the page reads, and one batch
+   * read for every association the response projection nests.
+   *
+   * <p>The budget is what the target is held to on a real database, so it is recomputed here from
+   * the projection rather than trusted; a projection that grows an association without the budget
+   * following it is a contradiction inside the IR.
+   */
+   private void validateStatementBudget(SpringBootWorkflow.FindStep find, SpringBootDeclaration.CapabilityDeclaration owner) {
+      int pageStatements = find.page().isPresent() ? 2 : 1;
+      int associations = this.associationReads(find.result().type());
+      SpringBootWorkflow.StatementBudget budget = find.statementBudget();
+      if (budget.pageStatements() != pageStatements) {
+         this.error(owner, "the page reads of a find must be " + pageStatements + " but the budget says " + budget.pageStatements());
+      }
+
+      if (budget.associationStatements() != associations) {
+         this.error(owner, "the response projection nests " + associations + " batch reads but the budget says "
+            + budget.associationStatements());
+      }
+   }
+
+   /** The batch reads the rows a find returns need, counted through the projection it answers with. */
+   private int associationReads(LoweredJavaType type) {
+      LoweredJavaType element = switch (type) {
+         case LoweredJavaType.PageValue value -> value.elementType();
+         case LoweredJavaType.ListValue value -> value.elementType();
+         default -> type;
+      };
+      if (!(element instanceof LoweredJavaType.Declared declared)
+         || declared.kind() != LoweredJavaType.DeclaredKind.VIEW
+         || !(this.declarations.get(declared.symbolId()) instanceof SpringBootDeclaration.ViewDeclaration view)) {
+         return 0;
+      }
+
+      int associations = 0;
+      for (SpringBootDeclaration.ViewField field : view.fields()) {
+         if (field.relation().isPresent()) {
+            associations += 1 + this.associationReads(field.type());
+         }
+      }
+
+      return associations;
    }
 
    private void validatePageSpec(SpringBootDeclaration.CapabilityDeclaration owner, SpringBootWorkflow.PageSpec page) {
@@ -1045,7 +1169,34 @@ public final class SpringBootIrValidation {
             this.validateExpression(value.left(), owner);
             this.validateExpression(value.right(), owner);
             break;
+         case SpringExpression.ExistsPredicate value:
+            this.validateExistsPredicate(value, owner);
+            break;
          default:
+      }
+   }
+
+   /**
+   * A correlated subquery must carry one value for every placeholder it uses, in order.
+   *
+   * <p>The renderer binds the values positionally, so a placeholder without a value (or a value
+   * nobody uses) would silently shift every parameter that follows it.
+   */
+   private void validateExistsPredicate(SpringExpression.ExistsPredicate exists, SpringBootDeclaration owner) {
+      int placeholders = 0;
+      while (exists.subquerySql().contains("{" + placeholders + "}")) {
+         placeholders++;
+      }
+
+      if (placeholders != exists.arguments().size()) {
+         this.error(owner, "a correlated subquery must bind exactly the values it declares: " + placeholders
+            + " placeholders for " + exists.arguments().size() + " values");
+      }
+
+      for (int index = 0; index < placeholders; index++) {
+         if (!exists.subquerySql().contains("{" + index + "}")) {
+            this.error(owner, "a correlated subquery must number its placeholders without gaps: " + index);
+         }
       }
    }
 

@@ -21,7 +21,8 @@ public sealed interface NormalizedExpression
    NormalizedExpression.MemberExpression,
    NormalizedExpression.UnaryExpression,
    NormalizedExpression.BinaryExpression,
-   NormalizedExpression.PresentExpression {
+   NormalizedExpression.PresentExpression,
+   NormalizedExpression.ExistsExpression {
    AstNodeId sourceNodeId();
 
    SourceSpan span();
@@ -141,6 +142,28 @@ public sealed interface NormalizedExpression
          Objects.requireNonNull(sourceNodeId, "sourceNodeId");
          Objects.requireNonNull(span, "span");
          Objects.requireNonNull(type, "type");
+      }
+   }
+
+   /**
+   * The {@code any(<Entity>, <conditions>)} existence test: whether one and the same related row
+   * satisfies the conditions.
+   *
+   * <p>{@link #entity()} is the referenced entity and {@link #connectionField()} the field of that
+   * entity which points back at the queried root. Recording the connection field here keeps the
+   * target from re-deriving which reference the predicate meant, and keeps the conditions one tree
+   * so that a target cannot split them into independent tests that mean something else.
+   */
+   record ExistsExpression(
+      AstNodeId sourceNodeId, SourceSpan span, SirType type, SymbolId entity, SymbolId connectionField, NormalizedExpression conditions
+   ) implements NormalizedExpression {
+      public ExistsExpression {
+         Objects.requireNonNull(sourceNodeId, "sourceNodeId");
+         Objects.requireNonNull(span, "span");
+         Objects.requireNonNull(type, "type");
+         Objects.requireNonNull(entity, "entity");
+         Objects.requireNonNull(connectionField, "connectionField");
+         Objects.requireNonNull(conditions, "conditions");
       }
    }
 }

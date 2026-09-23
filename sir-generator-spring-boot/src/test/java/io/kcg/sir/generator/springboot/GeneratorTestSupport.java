@@ -36,6 +36,39 @@ final class GeneratorTestSupport {
         return generateSuccess(lowerSuccess(resource));
     }
 
+    /**
+     * Generates from source text rather than a fixture file, so a test can vary one construct and
+     * compare the generated artifacts without duplicating a whole fixture.
+     */
+    static List<GeneratedFile> generateSuccessFromText(String sourceText) {
+        return generateSuccess(lowerText(sourceText));
+    }
+
+    static SpringBootLoweredModel lowerText(String sourceText) {
+        ParseResult parsed = new DefaultSirParser().parse(new SirSource(SourceId.of("inline.sir"), sourceText));
+        if (!parsed.isSuccess()) {
+            throw new AssertionError("parse failed: " + parsed.diagnostics());
+        }
+
+        SemanticAnalysis semantic = new SirSemanticAnalyzer().analyze(parsed.document().orElseThrow());
+        if (!semantic.isSuccess()) {
+            throw new AssertionError("semantic analysis failed: " + semantic.diagnostics());
+        }
+
+        LoweringAnalysis<SpringBootLoweredModel> lowered =
+                new SpringBootTargetLowering().lower(semantic.model().orElseThrow());
+        if (!lowered.isSuccess()) {
+            throw new AssertionError("lowering failed: " + lowered.diagnostics());
+        }
+
+        return lowered.model().orElseThrow();
+    }
+
+    /** The raw text of a test resource. */
+    static String resourceText(String path) {
+        return resource(path);
+    }
+
     static List<GeneratedFile> generateSuccess(SpringBootLoweredModel model) {
         GenerationResult result = new SpringBootGenerator().generate(model);
         if (result instanceof GenerationResult.Failure failure) {

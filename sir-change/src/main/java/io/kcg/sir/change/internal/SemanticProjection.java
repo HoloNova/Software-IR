@@ -36,10 +36,12 @@ import io.kcg.sir.semantic.model.NormalizedWorkflow;
 import io.kcg.sir.semantic.model.NormalizedExpression.BinaryExpression;
 import io.kcg.sir.semantic.model.NormalizedExpression.BooleanLiteral;
 import io.kcg.sir.semantic.model.NormalizedExpression.DecimalLiteral;
+import io.kcg.sir.semantic.model.NormalizedExpression.ExistsExpression;
 import io.kcg.sir.semantic.model.NormalizedExpression.IntegerLiteral;
 import io.kcg.sir.semantic.model.NormalizedExpression.MemberExpression;
 import io.kcg.sir.semantic.model.NormalizedExpression.NameExpression;
 import io.kcg.sir.semantic.model.NormalizedExpression.NowExpression;
+import io.kcg.sir.semantic.model.NormalizedExpression.PresentExpression;
 import io.kcg.sir.semantic.model.NormalizedExpression.StringLiteral;
 import io.kcg.sir.semantic.model.NormalizedExpression.UnaryExpression;
 import io.kcg.sir.semantic.model.NormalizedExpression.UnitLiteral;
@@ -56,6 +58,7 @@ import io.kcg.sir.semantic.symbol.SymbolKind;
 import io.kcg.sir.semantic.symbol.Symbol.TypeSymbol;
 import io.kcg.sir.semantic.type.DeclaredType;
 import io.kcg.sir.semantic.type.ListType;
+import io.kcg.sir.semantic.type.PageType;
 import io.kcg.sir.semantic.type.OptionalType;
 import io.kcg.sir.semantic.type.PrimitiveType;
 import io.kcg.sir.semantic.type.RefType;
@@ -83,7 +86,13 @@ final class SemanticProjection {
             en.id().value(), en.name(), en.persistent(), identityP(en.identity()), en.fields().stream().map(SemanticProjection::fieldP).toList()
          );
       } else if (decl instanceof NormalizedInput i) {
-         return new SemanticProjection.DeclarationProjection.InputP(i.id().value(), i.name(), i.fields().stream().map(SemanticProjection::fieldP).toList());
+         return new SemanticProjection.DeclarationProjection.InputP(
+            i.id().value(),
+            i.name(),
+            i.kind(),
+            i.patchSourceEntity().map(SymbolId::value),
+            i.fields().stream().map(SemanticProjection::fieldP).toList()
+         );
       } else if (decl instanceof NormalizedView v) {
          return new SemanticProjection.DeclarationProjection.ViewP(
             v.id().value(), v.name(), v.sourceEntity().value(), v.fields().stream().map(SemanticProjection::viewFieldP).toList()
@@ -234,7 +243,13 @@ final class SemanticProjection {
    }
 
    private static SemanticProjection.ViewFieldP viewFieldP(NormalizedViewField f) {
-      return new SemanticProjection.ViewFieldP(f.id().value(), f.name(), typeP(f.type()), f.sourceField().value());
+      return new SemanticProjection.ViewFieldP(
+         f.id().value(),
+         f.name(),
+         typeP(f.type()),
+         f.sourceField().value(),
+         f.relation().map(r -> new SemanticProjection.RelationP(r.cardinality().name(), r.targetView().value()))
+      );
    }
 
    private static SemanticProjection.FieldP fieldP(NormalizedField f) {
@@ -245,7 +260,9 @@ final class SemanticProjection {
          f.constraints()
             .stream()
             .map(c -> new SemanticProjection.ConstraintP(c.name(), c.arguments().stream().map(SemanticProjection::expressionP).toList()))
-            .toList()
+            .toList(),
+         f.versioned(),
+         f.patchSourceField().map(SymbolId::value)
       );
    }
 
@@ -259,7 +276,17 @@ final class SemanticProjection {
       } else if (step instanceof LoadStep l) {
          return new SemanticProjection.StepP.LoadP(l.entitySymbol().value(), l.resultVariable().value(), l.errorSymbol().value(), expressionP(l.idExpression()));
       } else if (step instanceof FindStep f) {
-         return new SemanticProjection.StepP.FindP(f.entitySymbol().value(), f.resultVariable().value(), f.itemVariable().value(), expressionP(f.predicate()));
+         return new SemanticProjection.StepP.FindP(
+            f.entitySymbol().value(),
+            f.resultVariable().value(),
+            f.itemVariable().value(),
+            expressionP(f.predicate()),
+            f.orderKeys()
+               .stream()
+               .map(key -> new SemanticProjection.StepP.OrderKeyP(key.fieldSymbol().value(), key.descending()))
+               .toList(),
+            f.page().map(page -> new SemanticProjection.StepP.PageSpecP(page.pageField().value(), page.sizeField().value(), page.errorSymbol().value()))
+         );
       } else if (step instanceof CreateStep c) {
          return new SemanticProjection.StepP.CreateP(
             c.entitySymbol().value(), c.resultVariable().value(), c.bindings().stream().map(SemanticProjection::bindingP).toList()
@@ -267,7 +294,7 @@ final class SemanticProjection {
       } else if (step instanceof UpdateStep u) {
          return new SemanticProjection.StepP.UpdateP(u.targetVariable().value(), u.bindings().stream().map(SemanticProjection::bindingP).toList());
       } else if (step instanceof PersistStep p) {
-         return new SemanticProjection.StepP.PersistP(p.targetVariable().value());
+         return new SemanticProjection.StepP.PersistP(p.targetVariable().value(), p.failure().map(SymbolId::value));
       } else if (step instanceof ReturnStep r) {
          return new SemanticProjection.StepP.ReturnP(expressionP(r.value()));
       } else {
@@ -300,6 +327,12 @@ final class SemanticProjection {
          return new SemanticProjection.ExpressionP.UnaryExpressionP(u.operator(), expressionP(u.operand()));
       } else if (expr instanceof BinaryExpression b) {
          return new SemanticProjection.ExpressionP.BinaryExpressionP(b.operator(), expressionP(b.left()), expressionP(b.right()));
+      } else if (expr instanceof PresentExpression p) {
+         return new SemanticProjection.ExpressionP.PresentExpressionP(p.field().value(), expressionP(p.target()));
+      } else if (expr instanceof ExistsExpression e) {
+         return new SemanticProjection.ExpressionP.ExistsExpressionP(
+            e.entity().value(), e.connectionField().value(), expressionP(e.conditions())
+         );
       } else {
          throw new IllegalStateException("unsupported NormalizedExpression variant: " + expr.getClass());
       }
@@ -320,6 +353,8 @@ final class SemanticProjection {
          return new SemanticProjection.TypeP.OptionalP(typeP(o.element()));
       } else if (type instanceof ListType l) {
          return new SemanticProjection.TypeP.ListP(typeP(l.element()));
+      } else if (type instanceof PageType p) {
+         return new SemanticProjection.TypeP.PageP(typeP(p.element()));
       } else {
          throw new IllegalStateException("unsupported SirType variant: " + type.getClass());
       }
@@ -460,10 +495,18 @@ final class SemanticProjection {
          }
       }
 
-      record InputP(String symbolId, String name, List<SemanticProjection.FieldP> fields) implements SemanticProjection.DeclarationProjection {
+      record InputP(
+         String symbolId,
+         String name,
+         NormalizedInput.Kind kind,
+         Optional<String> patchSourceEntity,
+         List<SemanticProjection.FieldP> fields
+      ) implements SemanticProjection.DeclarationProjection {
          public InputP {
             Objects.requireNonNull(symbolId, "symbolId");
             Objects.requireNonNull(name, "name");
+            Objects.requireNonNull(kind, "kind");
+            patchSourceEntity = Objects.requireNonNull(patchSourceEntity, "patchSourceEntity");
             fields = List.copyOf(Objects.requireNonNull(fields, "fields"));
          }
       }
@@ -490,7 +533,9 @@ final class SemanticProjection {
       SemanticProjection.ExpressionP.NameExpressionP,
       SemanticProjection.ExpressionP.MemberExpressionP,
       SemanticProjection.ExpressionP.UnaryExpressionP,
-      SemanticProjection.ExpressionP.BinaryExpressionP {
+      SemanticProjection.ExpressionP.BinaryExpressionP,
+      SemanticProjection.ExpressionP.PresentExpressionP,
+      SemanticProjection.ExpressionP.ExistsExpressionP {
       record BinaryExpressionP(AstBinaryOperator operator, SemanticProjection.ExpressionP left, SemanticProjection.ExpressionP right)
          implements SemanticProjection.ExpressionP {
          public BinaryExpressionP {
@@ -501,6 +546,24 @@ final class SemanticProjection {
       }
 
       record BooleanLiteralP(boolean value) implements SemanticProjection.ExpressionP {
+      }
+
+      /** Q10's {@code .present}: the checked expression and the field whose presence it answers. */
+      record PresentExpressionP(String field, SemanticProjection.ExpressionP target) implements SemanticProjection.ExpressionP {
+         public PresentExpressionP {
+            Objects.requireNonNull(field, "field");
+            Objects.requireNonNull(target, "target");
+         }
+      }
+
+      /** Q11's {@code any(Entity, ...)}: the entity, the connection field and the condition. */
+      record ExistsExpressionP(String entity, String connectionField, SemanticProjection.ExpressionP conditions)
+         implements SemanticProjection.ExpressionP {
+         public ExistsExpressionP {
+            Objects.requireNonNull(entity, "entity");
+            Objects.requireNonNull(connectionField, "connectionField");
+            Objects.requireNonNull(conditions, "conditions");
+         }
       }
 
       record DecimalLiteralP(BigDecimal value) implements SemanticProjection.ExpressionP {
@@ -559,22 +622,45 @@ final class SemanticProjection {
       }
    }
 
+   /** Q11: a projected view field may carry a nested relation (cardinality and target view). */
+   record RelationP(String cardinality, String targetView) {
+      public RelationP {
+         Objects.requireNonNull(cardinality, "cardinality");
+         Objects.requireNonNull(targetView, "targetView");
+      }
+   }
+
    /** A projected field never carries constraints: it names the entity field it reads instead. */
-   record ViewFieldP(String symbolId, String name, SemanticProjection.TypeP type, String sourceField) {
+   record ViewFieldP(
+      String symbolId,
+      String name,
+      SemanticProjection.TypeP type,
+      String sourceField,
+      Optional<SemanticProjection.RelationP> relation
+   ) {
       public ViewFieldP {
          Objects.requireNonNull(symbolId, "symbolId");
          Objects.requireNonNull(name, "name");
          Objects.requireNonNull(type, "type");
          Objects.requireNonNull(sourceField, "sourceField");
+         relation = Objects.requireNonNull(relation, "relation");
       }
    }
 
-   record FieldP(String symbolId, String name, SemanticProjection.TypeP type, List<SemanticProjection.ConstraintP> constraints) {
+   record FieldP(
+      String symbolId,
+      String name,
+      SemanticProjection.TypeP type,
+      List<SemanticProjection.ConstraintP> constraints,
+      boolean versioned,
+      Optional<String> patchSourceField
+   ) {
       public FieldP {
          Objects.requireNonNull(symbolId, "symbolId");
          Objects.requireNonNull(name, "name");
          Objects.requireNonNull(type, "type");
          constraints = List.copyOf(Objects.requireNonNull(constraints, "constraints"));
+         patchSourceField = Objects.requireNonNull(patchSourceField, "patchSourceField");
       }
    }
 
@@ -628,13 +714,37 @@ final class SemanticProjection {
          }
       }
 
-      record FindP(String entitySymbol, String resultVariable, String itemVariable, SemanticProjection.ExpressionP predicate)
-         implements SemanticProjection.StepP {
+      record FindP(
+         String entitySymbol,
+         String resultVariable,
+         String itemVariable,
+         SemanticProjection.ExpressionP predicate,
+         List<SemanticProjection.StepP.OrderKeyP> orderKeys,
+         Optional<SemanticProjection.StepP.PageSpecP> page
+      ) implements SemanticProjection.StepP {
          public FindP {
             Objects.requireNonNull(entitySymbol, "entitySymbol");
             Objects.requireNonNull(resultVariable, "resultVariable");
             Objects.requireNonNull(itemVariable, "itemVariable");
             Objects.requireNonNull(predicate, "predicate");
+            orderKeys = List.copyOf(Objects.requireNonNull(orderKeys, "orderKeys"));
+            page = Objects.requireNonNull(page, "page");
+         }
+      }
+
+      /** One declared {@code order by} key, in authored order. */
+      record OrderKeyP(String fieldSymbol, boolean descending) {
+         public OrderKeyP {
+            Objects.requireNonNull(fieldSymbol, "fieldSymbol");
+         }
+      }
+
+      /** The declared {@code Page ... else ...} clause of a find step. */
+      record PageSpecP(String pageField, String sizeField, String errorSymbol) {
+         public PageSpecP {
+            Objects.requireNonNull(pageField, "pageField");
+            Objects.requireNonNull(sizeField, "sizeField");
+            Objects.requireNonNull(errorSymbol, "errorSymbol");
          }
       }
 
@@ -648,9 +758,10 @@ final class SemanticProjection {
          }
       }
 
-      record PersistP(String targetVariable) implements SemanticProjection.StepP {
+      record PersistP(String targetVariable, Optional<String> failure) implements SemanticProjection.StepP {
          public PersistP {
             Objects.requireNonNull(targetVariable, "targetVariable");
+            failure = Objects.requireNonNull(failure, "failure");
          }
       }
 
@@ -700,7 +811,8 @@ final class SemanticProjection {
       SemanticProjection.TypeP.DeclaredP,
       SemanticProjection.TypeP.RefP,
       SemanticProjection.TypeP.OptionalP,
-      SemanticProjection.TypeP.ListP {
+      SemanticProjection.TypeP.ListP,
+      SemanticProjection.TypeP.PageP {
       record DeclaredP(String kind, String symbolId) implements SemanticProjection.TypeP {
          public DeclaredP {
             Objects.requireNonNull(kind, "kind");
@@ -716,6 +828,13 @@ final class SemanticProjection {
 
       record OptionalP(SemanticProjection.TypeP element) implements SemanticProjection.TypeP {
          public OptionalP {
+            Objects.requireNonNull(element, "element");
+         }
+      }
+
+      /** Q9's {@code Page<T>} output type. */
+      record PageP(SemanticProjection.TypeP element) implements SemanticProjection.TypeP {
+         public PageP {
             Objects.requireNonNull(element, "element");
          }
       }

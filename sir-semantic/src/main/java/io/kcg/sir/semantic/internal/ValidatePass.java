@@ -2,6 +2,7 @@ package io.kcg.sir.semantic.internal;
 
 import io.kcg.sir.api.Diagnostic;
 import io.kcg.sir.api.RelatedLocation;
+import io.kcg.sir.ast.AstAnyExpression;
 import io.kcg.sir.ast.AstBinding;
 import io.kcg.sir.ast.AstBinaryExpression;
 import io.kcg.sir.ast.AstBinaryOperator;
@@ -32,6 +33,7 @@ import io.kcg.sir.ast.AstRequiresClause;
 import io.kcg.sir.ast.AstReturnStep;
 import io.kcg.sir.ast.AstSoftware;
 import io.kcg.sir.ast.AstStep;
+import io.kcg.sir.ast.AstTypeRef;
 import io.kcg.sir.ast.AstUnaryExpression;
 import io.kcg.sir.ast.AstUnaryOperator;
 import io.kcg.sir.ast.AstUpdateStep;
@@ -43,6 +45,7 @@ import io.kcg.sir.semantic.context.ValidatedContext;
 import io.kcg.sir.semantic.symbol.Symbol;
 import io.kcg.sir.semantic.symbol.SymbolId;
 import io.kcg.sir.semantic.type.DeclaredType;
+import io.kcg.sir.semantic.type.ListType;
 import io.kcg.sir.semantic.type.OptionalType;
 import io.kcg.sir.semantic.type.PageType;
 import io.kcg.sir.semantic.type.PrimitiveType;
@@ -62,6 +65,9 @@ import java.util.Set;
 import java.util.Map.Entry;
 
 final class ValidatePass {
+   /** Levels of nested projection allowed below the root view; see {@link #validateProjectionDepth}. */
+   private static final int PROJECTION_DEPTH_LIMIT = 2;
+
    private final AstSoftware software;
    private final TypedContext typed;
    private final String softwareName;
@@ -175,6 +181,7 @@ final class ValidatePass {
                this.validatePatchPayload(inputDecl);
          } else if (decl instanceof AstViewDecl viewDecl) {
                this.validateViewFields(viewDecl);
+               this.validateProjectionDepth(viewDecl);
             }
          }
       }
@@ -211,6 +218,7 @@ final class ValidatePass {
       this.validateReturnPlacement(capDecl);
       this.validatePageUsage(capDecl, isQuery);
       this.validateWriteWorkflow(capDecl, failsSet);
+      this.validateExistencePlacement(capDecl);
       int returnCount = 0;
       boolean returnSeen = false;
 
@@ -710,6 +718,144 @@ final class ValidatePass {
          default -> {
          }
       }
+   }
+
+   /**
+   * The existence predicate's placement rules: it belongs to a {@code find} predicate and it does
+   * not contain another one.
+   *
+   * <p>Where a predicate may appear is a flow question, not a typing one: the same expression type
+   * is legal in a {@code find} and meaningless in a {@code validate} or a binding, so the rule is
+   * stated once per workflow instead of being repeated in every step's own validation.
+   */
+   private void validateExistencePlacement(AstCapabilityDecl capDecl) {
+      for (AstStep step : capDecl.workflow().steps()) {
+         if (step instanceof AstFindStep find) {
+            this.validateExistenceUsage(find.predicate(), ExistenceUsage.ALLOWED);
+            find.page().ifPresent(page -> {
+               this.validateExistenceUsage(page.page(), ExistenceUsage.REJECTED);
+               this.validateExistenceUsage(page.size(), ExistenceUsage.REJECTED);
+            });
+         } else if (step instanceof AstValidateStep validateStep) {
+            this.validateExistenceUsage(validateStep.condition(), ExistenceUsage.REJECTED);
+         } else if (step instanceof AstLoadStep loadStep) {
+            this.validateExistenceUsage(loadStep.idExpression(), ExistenceUsage.REJECTED);
+         } else if (step instanceof AstCreateStep createStep) {
+            createStep.bindings().forEach(binding -> this.validateExistenceUsage(binding.value(), ExistenceUsage.REJECTED));
+         } else if (step instanceof AstUpdateStep updateStep) {
+            updateStep.bindings().forEach(binding -> this.validateExistenceUsage(binding.value(), ExistenceUsage.REJECTED));
+         } else if (step instanceof AstReturnStep returnStep) {
+            this.validateExistenceUsage(returnStep.value(), ExistenceUsage.REJECTED);
+         }
+      }
+   }
+
+   private void validateExistenceUsage(AstExpression expression, ExistenceUsage usage) {
+      if (expression == null) {
+         return;
+      }
+
+      switch (expression) {
+         case AstAnyExpression any -> {
+            if (usage == ExistenceUsage.REJECTED) {
+               this.diagnostics.add(DiagnosticBuilder.error(
+                  "SIR-FLOW-005", "any 只能出现在 find 的 where 谓词中", any.span()));
+            } else if (usage == ExistenceUsage.NESTED) {
+               this.diagnostics.add(DiagnosticBuilder.error(
+                  "SIR-FLOW-006", "any 的条件内不能再出现 any: " + any.entity().text(), any.span()));
+            }
+
+            this.validateExistenceUsage(any.conditions(), ExistenceUsage.NESTED);
+         }
+         case AstGroupedExpression grouped -> this.validateExistenceUsage(grouped.inner(), usage);
+         case AstUnaryExpression unary -> this.validateExistenceUsage(unary.operand(), usage);
+         case AstBinaryExpression binary -> {
+            this.validateExistenceUsage(binary.left(), usage);
+            this.validateExistenceUsage(binary.right(), usage);
+         }
+         case AstMemberExpression member -> this.validateExistenceUsage(member.receiver(), usage);
+         default -> {
+         }
+      }
+   }
+
+   /** Where an existence predicate was found while walking one workflow's expressions. */
+   private enum ExistenceUsage {
+      /** Inside a {@code find} predicate: the predicate's normal home. */
+      ALLOWED,
+      /** Inside the conditions of another existence predicate. */
+      NESTED,
+      /** Anywhere else in the workflow. */
+      REJECTED
+   }
+
+   /**
+   * Rejects a projection whose relation chain nests deeper than the allowed levels.
+   *
+   * <p>The limit is what keeps a response from walking the whole model. A chain that reaches one
+   * level too far is rejected where it is declared; the target never trims it silently at run time,
+   * and a cycle between views is rejected for the same reason.
+   */
+   private void validateProjectionDepth(AstViewDecl viewDecl) {
+      for (AstViewField field : viewDecl.fields()) {
+         SymbolId targetView = this.projectedViewOf(field.type());
+         if (targetView == null) {
+            continue;
+         }
+
+         if (1 + this.relationChainDepth(targetView, new LinkedHashSet<>()) > PROJECTION_DEPTH_LIMIT) {
+            this.diagnostics.add(DiagnosticBuilder.error(
+               "SIR-VALID-005",
+               "投影嵌套深度最多 " + PROJECTION_DEPTH_LIMIT + " 层: " + viewDecl.name().text() + "." + field.name().text(),
+               field.name().span()));
+         }
+      }
+   }
+
+   private int relationChainDepth(SymbolId viewSymbol, Set<SymbolId> visiting) {
+      if (!visiting.add(viewSymbol)) {
+         return PROJECTION_DEPTH_LIMIT + 1;
+      }
+
+      int depth = 0;
+      for (SymbolId target : this.projectedViewsOf(viewSymbol)) {
+         depth = Math.max(depth, 1 + this.relationChainDepth(target, visiting));
+         if (depth > PROJECTION_DEPTH_LIMIT) {
+            break;
+         }
+      }
+
+      visiting.remove(viewSymbol);
+      return depth;
+   }
+
+   private List<SymbolId> projectedViewsOf(SymbolId viewSymbol) {
+      AstViewDecl declaration = this.viewDecls.get(viewSymbol);
+      if (declaration == null) {
+         return List.of();
+      }
+
+      List<SymbolId> targets = new ArrayList<>();
+      for (AstViewField field : declaration.fields()) {
+         SymbolId target = this.projectedViewOf(field.type());
+         if (target != null) {
+            targets.add(target);
+         }
+      }
+
+      return targets;
+   }
+
+   /** The view a projected field nests, or {@code null} for a column projection. */
+   private SymbolId projectedViewOf(AstTypeRef typeRef) {
+      SirType type = this.typed.typeRefTypes().get(typeRef.id());
+      if (type instanceof ListType list) {
+         type = list.element();
+      }
+
+      return type instanceof DeclaredType declared && declared.kind() == DeclaredType.DeclaredKind.VIEW
+         ? declared.symbolId()
+         : null;
    }
 
    private void validateReturnPlacement(AstCapabilityDecl capDecl) {

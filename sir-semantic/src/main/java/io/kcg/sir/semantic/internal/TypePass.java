@@ -1,6 +1,7 @@
 package io.kcg.sir.semantic.internal;
 
 import io.kcg.sir.api.Diagnostic;
+import io.kcg.sir.ast.AstAnyExpression;
 import io.kcg.sir.ast.AstBinaryExpression;
 import io.kcg.sir.ast.AstBinding;
 import io.kcg.sir.ast.AstBooleanLiteral;
@@ -41,6 +42,7 @@ import io.kcg.sir.semantic.symbol.Symbol;
 import io.kcg.sir.semantic.symbol.SymbolId;
 import io.kcg.sir.semantic.symbol.SymbolKind;
 import io.kcg.sir.semantic.type.DeclaredType;
+import io.kcg.sir.semantic.type.ListType;
 import io.kcg.sir.semantic.type.OptionalType;
 import io.kcg.sir.semantic.type.PageType;
 import io.kcg.sir.semantic.type.PrimitiveType;
@@ -155,22 +157,105 @@ final class TypePass {
      * would let the response contract drift away from the column it claims to project.
      */
    private void typeViewFields(AstViewDecl view) {
-       for (AstViewField field : view.fields()) {
-          SirType declaredType = this.resolved.typeRefTypes().get(field.type().id());
-          SymbolId boundFieldId = this.resolved.referenceSiteBindings().targetFor(field.name().id()).orElse(null);
-          Symbol boundField = boundFieldId == null ? null : this.resolved.symbols().byId(boundFieldId).orElse(null);
-          if (declaredType == null || !(boundField instanceof Symbol.FieldSymbol fieldSymbol)) {
-             continue;
-          }
+      for (AstViewField field : view.fields()) {
+         SirType declaredType = this.resolved.typeRefTypes().get(field.type().id());
+         SymbolId boundFieldId = this.resolved.referenceSiteBindings().targetFor(field.name().id()).orElse(null);
+         Symbol boundField = boundFieldId == null ? null : this.resolved.symbols().byId(boundFieldId).orElse(null);
+         if (declaredType == null || !(boundField instanceof Symbol.FieldSymbol fieldSymbol)) {
+            continue;
+         }
 
-          if (fieldSymbol.type() == null || !declaredType.equals(fieldSymbol.type())) {
-             this.diagnostics.add(DiagnosticBuilder.error(
-            "SIR-TYPE-001",
-            "投影字段类型与实体字段不一致: " + view.name().text() + "." + field.name().text() + " 声明为 " + declaredType
-                   + " 但实体字段为 " + fieldSymbol.type(),
-            field.type().span()));
-          }
-       }
+         DeclaredType nestedView = this.nestedViewType(declaredType);
+         if (nestedView != null) {
+            SymbolId relationTarget = fieldSymbol.type() instanceof RefType ref ? ref.entityId() : null;
+            SymbolId expected = declaredType instanceof ListType
+               ? this.viewSourceEntities.get(this.resolved.declarationBindings().get(view.id()))
+               : this.viewSourceEntities.get(nestedView.symbolId());
+            if (relationTarget == null || !relationTarget.equals(expected)) {
+               this.diagnostics.add(DiagnosticBuilder.error(
+                  "SIR-TYPE-001",
+                  "关联投影的关系字段必须指向投影的来源实体: " + view.name().text() + "." + field.name().text(),
+                  field.span()));
+            }
+
+            continue;
+         }
+
+         if (fieldSymbol.type() == null || !declaredType.equals(fieldSymbol.type())) {
+            this.diagnostics.add(DiagnosticBuilder.error(
+               "SIR-TYPE-001",
+               "投影字段类型与实体字段不一致: " + view.name().text() + "." + field.name().text() + " 声明为 " + declaredType
+                  + " 但实体字段为 " + fieldSymbol.type(),
+               field.type().span()));
+         }
+      }
+   }
+
+   /**
+   * The view a projected field nests, or {@code null} for a column projection.
+   *
+   * <p>A relation projection is not the entity's own value, so the equality rule that keeps a
+   * projected column honest does not apply to it; what must hold instead is that the reference it
+   * reads points at the entity the nested view projects.
+   */
+   private DeclaredType nestedViewType(SirType declaredType) {
+      SirType candidate = declaredType instanceof ListType list ? list.element() : declaredType;
+      if (candidate instanceof DeclaredType declared && declared.kind() == DeclaredType.DeclaredKind.VIEW) {
+         return declared;
+      }
+
+      return null;
+   }
+
+   /**
+   * The existence predicate's rules: the conditions must be a Boolean expression, and they must
+   * connect the related entity back to the queried root.
+   *
+   * <p>The connection is not an optimisation detail. Without it the predicate would ask about the
+   * whole table instead of the current row, and the answer would still type-check, so the missing
+   * connection is rejected here rather than lowered into a query that silently means something
+   * else.
+   */
+   private SirType typeAnyExpression(AstAnyExpression expr, SymbolId scopeId, Set<String> visibleVars) {
+      SirType conditionType = this.typeExpression(expr.conditions(), scopeId, visibleVars);
+      if (conditionType != null && !TypeRules.isBoolean(conditionType)) {
+         this.diagnostics.add(DiagnosticBuilder.error("SIR-TYPE-001", "any 的条件必须是 Boolean", expr.conditions().span()));
+      }
+
+      SymbolId sourceEntity = this.resolved.referenceSiteBindings().targetFor(expr.entity().id()).orElse(null);
+      if (sourceEntity != null) {
+         SymbolId connectionField = ExistenceConnection.fieldOf(
+            expr.conditions(), this.resolved.referenceSiteBindings(), this.resolved.findItemBindings());
+         if (connectionField == null || !this.referencesItemEntity(connectionField, expr)) {
+            this.diagnostics.add(DiagnosticBuilder.error(
+               "SIR-TYPE-004", "any 的条件必须包含与根实体的连接比较: <Ref 字段> == item", expr.span()));
+         }
+      }
+
+      return PrimitiveType.BOOLEAN;
+   }
+
+   /**
+   * Whether the connection field really reads the entity the {@code find} item stands for.
+   *
+   * <p>The comparison must relate the two entities the predicate joins; a reference field that
+   * happens to be compared with the item but points somewhere else would produce a subquery that
+   * joins on the wrong key.
+   */
+   private boolean referencesItemEntity(SymbolId connectionField, AstAnyExpression expr) {
+      Symbol field = this.resolved.symbols().byId(connectionField).orElse(null);
+      if (!(field instanceof Symbol.FieldSymbol fieldSymbol) || !(fieldSymbol.type() instanceof RefType fieldRef)) {
+         return false;
+      }
+
+      return this.resolved.findItemBindings().values().stream()
+         .map(this.resolved.symbols()::byId)
+         .flatMap(java.util.Optional::stream)
+         .filter(Symbol.VariableSymbol.class::isInstance)
+         .map(Symbol.VariableSymbol.class::cast)
+         .filter(variable -> variable.type() instanceof RefType)
+         .map(variable -> ((RefType) variable.type()).entityId())
+         .anyMatch(fieldRef.entityId()::equals);
    }
 
    /**
@@ -403,10 +488,11 @@ final class TypePass {
          case AstNameExpression e -> this.typeNameExpression(e, scopeId, visibleVars);
          case AstMemberExpression e -> this.typeMemberExpression(e, scopeId, visibleVars);
          case AstGroupedExpression e -> this.typeExpression(e.inner(), scopeId, visibleVars);
-         case AstPresentExpression e -> {
-            this.typeExpression(e.target(), scopeId, visibleVars);
-            yield PrimitiveType.BOOLEAN;
-         }
+          case AstPresentExpression e -> {
+             this.typeExpression(e.target(), scopeId, visibleVars);
+             yield PrimitiveType.BOOLEAN;
+          }
+          case AstAnyExpression e -> this.typeAnyExpression(e, scopeId, visibleVars);
          case AstUnaryExpression e -> this.typeUnaryExpression(e, scopeId, visibleVars);
          case AstBinaryExpression e -> this.typeBinaryExpression(e, scopeId, visibleVars);
          default -> throw new IllegalStateException("unexpected expression: " + expr);
@@ -422,14 +508,21 @@ final class TypePass {
       Optional<SymbolId> symbolIdOpt = this.resolved.referenceSiteBindings().targetFor(expr.name().id());
       if (symbolIdOpt.isEmpty()) {
          return null;
-      } else {
-         Symbol found = this.resolved.symbols().byId(symbolIdOpt.get()).orElse(null);
-         if (found instanceof Symbol.VariableSymbol vs) {
-            return vs.type();
-         } else {
-            return found instanceof Symbol.TypeSymbol ts && ts.kind() == SymbolKind.ENUM ? this.declaredTypesBySymbolId.get(ts.id()) : null;
-         }
       }
+
+      Symbol found = this.resolved.symbols().byId(symbolIdOpt.get()).orElse(null);
+      if (found instanceof Symbol.VariableSymbol vs) {
+         return vs.type();
+      }
+
+      if (found instanceof Symbol.TypeSymbol ts && ts.kind() == SymbolKind.ENUM) {
+         return this.declaredTypesBySymbolId.get(ts.id());
+      }
+
+      // A bare name can also be a field of the entity an existence predicate refers to; that is the
+      // one place in the language where a field is named as an expression rather than reached
+      // through a receiver.
+      return found instanceof Symbol.FieldSymbol field ? field.type() : null;
    }
 
    private SirType typeMemberExpression(AstMemberExpression expr, SymbolId scopeId, Set<String> visibleVars) {

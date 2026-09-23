@@ -58,6 +58,7 @@ class TypedReferenceSiteContractTest {
             entity Account persistent {
               identity id: Int64 generated auto;
               field state: Status;
+              field owner: Ref<User>;
               field version: Int64 versioned;
             }
             input LookupInput {
@@ -71,6 +72,10 @@ class TypedReferenceSiteContractTest {
             view AccountSummary from Account {
               field id: Int64;
               field state: Status;
+            }
+            view UserAccounts from User {
+              field id: Int64;
+              field accounts: List<AccountSummary>;
             }
             input SearchInput {
               field keyword: String;
@@ -125,7 +130,7 @@ class TypedReferenceSiteContractTest {
               expose query;
               workflow {
                 find User
-                  where item.state == Status.ACTIVE
+                  where any(Account, owner == item and state == Status.ACTIVE)
                   order by id descending
                   Page input.page, input.size else InvalidPage
                   as users;
@@ -677,6 +682,10 @@ class TypedReferenceSiteContractTest {
             case io.kcg.sir.ast.AstPresentExpression p -> {
                 sink.put(p.id(), "present");
                 collectExpressionRefs(p.target(), sink);
+            }
+            case io.kcg.sir.ast.AstAnyExpression a -> {
+                sink.put(a.entity().id(), a.entity().text());
+                collectExpressionRefs(a.conditions(), sink);
             }
             default -> { }
         }

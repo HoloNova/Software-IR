@@ -261,7 +261,7 @@ class LoweredIrHardeningTest {
             assertThrows(NullPointerException.class, () -> new SpringBootWorkflow.FindStep(
                     valid.id(), valid.origin(), valid.entitySymbol(), valid.predicate(),
                     valid.orderKeys(), valid.page(), valid.stringMatches(),
-                    valid.result(), null));
+                    valid.statementBudget(), valid.result(), null));
         }
 
         @Test
