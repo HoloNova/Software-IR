@@ -115,7 +115,7 @@ final class SirAstBuilder {
         AstName name = name(context.IDENT());
         String path = ids.named(parent, "entity", name.text());
         AstIdentity identity = identity(context.identityDecl(), path);
-        List<AstField> fields = context.fieldDecl().stream().map(value -> field(value, path)).toList();
+        List<AstField> fields = context.entityMemberDecl().stream().map(value -> entityField(value, path)).toList();
         return new AstEntityDecl(ids.id(path), source.span(context), name, identity, fields);
     }
 
@@ -179,6 +179,32 @@ final class SirAstBuilder {
         return new AstField(
                 ids.id(path), source.span(context), name, type(context.typeRef(), path), constraints,
                 context.VERSIONED() != null);
+    }
+
+    /**
+     * An entity member, the only field that may carry a persistent declaration id. The declared id,
+     * when present, replaces the name in the node path so that renaming the field leaves the node
+     * (and everything below it) identical.
+     */
+    private AstField entityField(SirParser.EntityMemberDeclContext context, String parent) {
+        AstName name = name(context.IDENT());
+        Optional<String> declaredId = declaredId(context.idAnnotation());
+        String path = declaredId.isPresent()
+                ? ids.named(parent, "declared-entity-field", declaredId.get())
+                : ids.named(parent, "field", name.text());
+        List<AstConstraint> constraints = context.constraintList() == null
+                ? List.of()
+                : context.constraintList().constraintCall().stream()
+                        .map(value -> constraint(value, path))
+                        .toList();
+        return new AstField(
+                ids.id(path), source.span(context), name, type(context.typeRef(), path), constraints,
+                context.VERSIONED() != null, declaredId);
+    }
+
+    private Optional<String> declaredId(SirParser.IdAnnotationContext context) {
+        return Optional.ofNullable(context)
+                .map(value -> SirStringDecoder.decode(value.STRING().getText()));
     }
 
     private AstConstraint constraint(SirParser.ConstraintCallContext context, String parent) {
@@ -246,7 +272,10 @@ final class SirAstBuilder {
 
     private AstCapabilityDecl capabilityDeclaration(SirParser.CapabilityDeclContext context, String parent) {
         AstName name = name(context.IDENT());
-        String path = ids.named(parent, "capability", name.text());
+        Optional<String> declaredId = declaredId(context.idAnnotation());
+        String path = declaredId.isPresent()
+                ? ids.named(parent, "declared-capability", declaredId.get())
+                : ids.named(parent, "capability", name.text());
         Optional<AstActorClause> actor = Optional.ofNullable(context.actorClause())
                 .map(value -> new AstActorClause(
                         ids.id(ids.fixed(path, "actor")),
@@ -292,7 +321,8 @@ final class SirAstBuilder {
                 failures,
                 requirements,
                 exposure,
-                workflow(context.workflowDecl(), path));
+                workflow(context.workflowDecl(), path),
+                declaredId);
     }
 
     private AstRequirementKind requirement(SirParser.RequirementContext context) {

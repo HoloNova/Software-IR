@@ -70,10 +70,15 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.Map.Entry;
 
 final class ResolvePass {
+   /** The frozen shape of an explicit declaration id. */
+   private static final Pattern DECLARED_ID_PATTERN = Pattern.compile("[A-Za-z0-9][A-Za-z0-9._-]{0,63}");
+
    private final AstSoftware software;
    private final String softwareName;
    private final SymbolId projectScopeId;
@@ -82,6 +87,8 @@ final class ResolvePass {
    private final Map<SymbolId, SymbolId> scopeParents = new LinkedHashMap<>();
    private final Map<String, Symbol> projectNames = new LinkedHashMap<>();
    private final Map<SymbolId, Symbol> symbolsById = new LinkedHashMap<>();
+   /** Explicit declaration id -> the span that first declared it, for duplicate detection. */
+   private final Map<String, SourceSpan> declaredIds = new LinkedHashMap<>();
    private final Set<AstNodeId> registeredDeclIds = new LinkedHashSet<>();
    private final Map<AstNodeId, SymbolId> referenceBindings = new LinkedHashMap<>();
    private final Map<AstNodeId, SirType> typeRefTypes = new LinkedHashMap<>();
@@ -164,8 +171,49 @@ final class ResolvePass {
       }
    }
 
+   /**
+    * Validates and claims one explicit declaration id.
+    *
+    * <p>A malformed id cannot be an identity and yields the name-derived fallback; a repeated id is
+    * reported against both declarations and is still claimed, so the collision stays visible instead
+    * of silently turning one of the two declarations into a name-derived one.
+    */
+   private Optional<String> acceptDeclaredId(Optional<String> candidate, SourceSpan span) {
+      if (candidate.isEmpty()) {
+         return Optional.empty();
+      }
+
+      String id = candidate.get();
+      if (!DECLARED_ID_PATTERN.matcher(id).matches()) {
+         this.diagnostics.add(DiagnosticBuilder.error(
+            "SIR-IDENTITY-001", "@id 取值只允许 [A-Za-z0-9][A-Za-z0-9._-]{0,63}: " + id, span));
+         return Optional.empty();
+      }
+
+      SourceSpan first = this.declaredIds.putIfAbsent(id, span);
+      if (first != null) {
+         this.diagnostics.add(DiagnosticBuilder.errorWithRelated(
+            "SIR-IDENTITY-002", "重复的声明 ID: " + id, span, new RelatedLocation("首次声明在此处", first)));
+      }
+
+      return candidate;
+   }
+
+   /** The identity of one entity member: its declared id when it has one, its name otherwise. */
+   private SymbolId entityFieldSymbolId(String entityName, String fieldName, AstField field) {
+      Optional<String> declaredId = this.acceptDeclaredId(field.declaredId(), field.span());
+      return declaredId.isEmpty()
+         ? SymbolIdFactory.entityField(this.softwareName, entityName, fieldName)
+         : SymbolIdFactory.declaredEntityField(this.softwareName, declaredId.get());
+   }
+
    private void registerDeclaration(AstDeclaration decl, String name, SymbolKind kind) {
-      SymbolId id = SymbolIdFactory.declaration(this.softwareName, this.kindString(kind), name);
+      Optional<String> declaredId = decl instanceof AstCapabilityDecl capability
+         ? this.acceptDeclaredId(capability.declaredId(), decl.span())
+         : Optional.empty();
+      SymbolId id = declaredId.isEmpty()
+         ? SymbolIdFactory.declaration(this.softwareName, this.kindString(kind), name)
+         : SymbolIdFactory.declaredDeclaration(this.softwareName, this.kindString(kind), declaredId.get());
       SourceSpan span = decl.span();
       Symbol symbol;
       switch (decl) {
@@ -199,7 +247,8 @@ final class ResolvePass {
          case AstCapabilityDecl e:
             symbol = new Symbol.TypeSymbol(id, name, span, SymbolKind.CAPABILITY, e);
             this.declarationKinds.put(name, SymbolKind.CAPABILITY);
-            SymbolId capScopeId = SymbolIdFactory.declaration(this.softwareName, "capability", name);
+            // A declared identity is its own scope: the capability's variables and step scopes hang off it.
+            SymbolId capScopeId = id;
             this.capabilityScopeIds.put(name, capScopeId);
             this.scopeSymbols.put(capScopeId, new ArrayList<>());
             this.scopeParents.put(capScopeId, this.projectScopeId);
@@ -324,7 +373,7 @@ final class ResolvePass {
                this.entityFieldTypes.get(entityName).put(fieldName, fieldType);
             }
 
-            SymbolId fieldSymId = SymbolIdFactory.entityField(this.softwareName, entityName, fieldName);
+            SymbolId fieldSymId = this.entityFieldSymbolId(entityName, fieldName, field);
             this.entityFieldSymbols.get(entityName).put(fieldName, fieldSymId);
             Symbol.FieldSymbol fieldSym = new Symbol.FieldSymbol(fieldSymId, fieldName, field.span(), fieldType, entityScopeId);
             this.addSymbol(fieldSym, entityScopeId);
@@ -561,7 +610,7 @@ final class ResolvePass {
             this.diagnostics.add(DiagnosticBuilder.error("SIR-TYPE-001", "actor 必须是 Ref<Entity>", actorClause.type().span()));
          }
 
-         SymbolId varId = SymbolIdFactory.variable(this.softwareName, capName, "actor");
+         SymbolId varId = SymbolIdFactory.capabilityVariable(capScopeId, "actor");
          Symbol.VariableSymbol varSym = new Symbol.VariableSymbol(varId, "actor", actorClause.span(), actorType, null);
          this.addSymbol(varSym, capScopeId);
          this.bind(actorClause.id(), varId);
@@ -574,7 +623,7 @@ final class ResolvePass {
             this.diagnostics.add(DiagnosticBuilder.error("SIR-TYPE-001", "capability input 必须是 Input 类型", inputClause.type().span()));
          }
 
-         SymbolId varId = SymbolIdFactory.variable(this.softwareName, capName, "input");
+         SymbolId varId = SymbolIdFactory.capabilityVariable(capScopeId, "input");
          Symbol.VariableSymbol varSym = new Symbol.VariableSymbol(varId, "input", inputClause.span(), inputType, null);
          this.addSymbol(varSym, capScopeId);
          this.bind(inputClause.id(), varId);
@@ -655,15 +704,15 @@ final class ResolvePass {
                this.resolveExpression(s.idExpression(), capName, capScopeId, visibleVars, null, null);
                this.resolveEntityRef(s.entity(), ReferenceRole.LOAD_ENTITY);
                this.resolveErrorRef(s.error(), capName, ReferenceRole.LOAD_ERROR);
-               this.registerStepResultVar(s.result(), s.id(), capName, capScopeId, visibleVars, this.buildRefType(s.entity().text()));
+               this.registerStepResultVar(s.result(), s.id(), capScopeId, visibleVars, this.buildRefType(s.entity().text()));
                break;
             case AstFindStep s:
                this.resolveEntityRef(s.entity(), ReferenceRole.FIND_ENTITY);
-               SymbolId stepScopeId = SymbolIdFactory.stepScope(this.softwareName, capName, s.id().value());
+               SymbolId stepScopeId = SymbolIdFactory.capabilityStepScope(capScopeId, s.id().value());
                this.scopeSymbols.put(stepScopeId, new ArrayList<>());
                this.scopeParents.put(stepScopeId, capScopeId);
                SirType itemType = this.buildRefType(s.entity().text());
-               SymbolId itemId = SymbolIdFactory.stepVariable(this.softwareName, capName, s.id().value(), "item");
+               SymbolId itemId = SymbolIdFactory.capabilityStepVariable(capScopeId, s.id().value(), "item");
                Symbol.VariableSymbol itemSym = new Symbol.VariableSymbol(itemId, "item", s.span(), itemType, null);
                this.addSymbol(itemSym, stepScopeId);
                this.findItemBindings.put(s.id(), itemId);
@@ -673,7 +722,7 @@ final class ResolvePass {
             s.order().ifPresent(order -> this.resolveOrder(order, s.entity().text()));
             s.page().ifPresent(page -> this.resolvePage(page, capName, capScopeId, visibleVars));
             SirType resultType = s.page().isPresent() ? outputType : itemType == null ? null : new ListType(itemType);
-               this.registerStepResultVar(s.result(), s.id(), capName, capScopeId, visibleVars, resultType);
+               this.registerStepResultVar(s.result(), s.id(), capScopeId, visibleVars, resultType);
                break;
             case AstCreateStep s:
                this.resolveEntityRef(s.entity(), ReferenceRole.CREATE_ENTITY);
@@ -683,7 +732,7 @@ final class ResolvePass {
                   this.resolveBindingField(binding, s.entity().text());
                }
 
-               this.registerStepResultVar(s.result(), s.id(), capName, capScopeId, visibleVars, this.buildRefType(s.entity().text()));
+               this.registerStepResultVar(s.result(), s.id(), capScopeId, visibleVars, this.buildRefType(s.entity().text()));
                break;
             case AstUpdateStep s:
                this.resolveVarTarget(s.target(), capName, capScopeId, visibleVars, ReferenceRole.UPDATE_TARGET);
@@ -747,13 +796,13 @@ final class ResolvePass {
       return this.entityDecls.containsKey(entityName) ? new RefType(entityName, SymbolIdFactory.declaration(this.softwareName, "entity", entityName)) : null;
    }
 
-   private void registerStepResultVar(AstName result, AstNodeId stepNodeId, String capName, SymbolId capScopeId, Set<String> visibleVars, SirType varType) {
+   private void registerStepResultVar(AstName result, AstNodeId stepNodeId, SymbolId capScopeId, Set<String> visibleVars, SirType varType) {
       String varName = result.text();
       if (visibleVars.contains(varName)) {
          this.diagnostics.add(DiagnosticBuilder.error("SIR-SYMBOL-001", "重复局部变量: " + varName, result.span()));
       } else {
          visibleVars.add(varName);
-         SymbolId varId = SymbolIdFactory.stepVariable(this.softwareName, capName, stepNodeId.value(), varName);
+         SymbolId varId = SymbolIdFactory.capabilityStepVariable(capScopeId, stepNodeId.value(), varName);
          Symbol.VariableSymbol varSym = new Symbol.VariableSymbol(varId, varName, result.span(), varType, null);
          this.addSymbol(varSym, capScopeId);
          this.bind(stepNodeId, varId);

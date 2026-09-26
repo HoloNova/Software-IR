@@ -1,5 +1,6 @@
 package io.kcg.sir.semantic.internal;
 
+import io.kcg.sir.semantic.symbol.DeclarationIdentity;
 import io.kcg.sir.semantic.symbol.SymbolId;
 import java.nio.charset.StandardCharsets;
 
@@ -40,6 +41,20 @@ final class SymbolIdFactory {
       return new SymbolId("sir://" + encode(softwareName) + "/" + encode(kind) + "/" + encode(name));
    }
 
+   /**
+    * The identity of a declaration that carries an explicit {@code @id}: name-independent, and in a
+    * namespace no name-derived identity can reach ({@link DeclarationIdentity}).
+    */
+   static SymbolId declaredDeclaration(String softwareName, String kind, String declarationId) {
+      return new SymbolId(
+         "sir://" + encode(softwareName) + "/" + DeclarationIdentity.NAMESPACE + "/" + encode(kind) + "/" + encode(declarationId)
+      );
+   }
+
+   static SymbolId declaredEntityField(String softwareName, String declarationId) {
+      return declaredDeclaration(softwareName, DeclarationIdentity.ENTITY_FIELD_KIND, declarationId);
+   }
+
    static SymbolId entityIdentity(String softwareName, String entityName) {
       return new SymbolId("sir://" + encode(softwareName) + "/entity/" + encode(entityName) + "/identity");
    }
@@ -61,14 +76,32 @@ final class SymbolIdFactory {
    }
 
    static SymbolId variable(String softwareName, String capabilityName, String varName) {
-      return new SymbolId("sir://" + encode(softwareName) + "/capability/" + encode(capabilityName) + "/var/" + encode(varName));
+      return capabilityVariable(declaration(softwareName, DeclarationIdentity.CAPABILITY_KIND, capabilityName), varName);
    }
 
    static SymbolId stepScope(String softwareName, String capabilityName, String stepNodeId) {
-      return new SymbolId("sir://" + encode(softwareName) + "/capability/" + encode(capabilityName) + "/step/" + encode(stepNodeId));
+      return capabilityStepScope(declaration(softwareName, DeclarationIdentity.CAPABILITY_KIND, capabilityName), stepNodeId);
    }
 
    static SymbolId stepVariable(String softwareName, String capabilityName, String stepNodeId, String varName) {
-      return new SymbolId("sir://" + encode(softwareName) + "/capability/" + encode(capabilityName) + "/step/" + encode(stepNodeId) + "/var/" + encode(varName));
+      return capabilityStepVariable(
+         declaration(softwareName, DeclarationIdentity.CAPABILITY_KIND, capabilityName), stepNodeId, varName
+      );
+   }
+
+   /**
+    * A symbol scoped to one capability. Deriving it from the capability's own identity — instead of
+    * from its name — is what keeps a renamed capability's variables and step scopes identical.
+    */
+   static SymbolId capabilityVariable(SymbolId capabilityScope, String varName) {
+      return new SymbolId(capabilityScope.value() + "/var/" + encode(varName));
+   }
+
+   static SymbolId capabilityStepScope(SymbolId capabilityScope, String stepNodeId) {
+      return new SymbolId(capabilityScope.value() + "/step/" + encode(stepNodeId));
+   }
+
+   static SymbolId capabilityStepVariable(SymbolId capabilityScope, String stepNodeId, String varName) {
+      return new SymbolId(capabilityScope.value() + "/step/" + encode(stepNodeId) + "/var/" + encode(varName));
    }
 }

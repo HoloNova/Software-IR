@@ -1,30 +1,23 @@
-# 当前工作单
+# 当前工作单：IDLE（无获授权工作单）
 
-- 状态：**`IDLE`**（2026-09-23 起：Q13 已验收归档，此时**没有任何获授权的工作单**）
-- 上一张单：`Q13`（G1 变更闭环）→ `docs/roadmap/completed/Q13-g1-change-loop.md`
+- 状态：**`IDLE`**（2026-09-26；Q16 已完成验收并归档于 [`completed/Q16-persistent-identity-and-read-only-rename-plan.md`](completed/Q16-persistent-identity-and-read-only-rename-plan.md)）。
+- 当前没有新的 Q 系列实施授权。候选项只是供负责人审定方向，**不构成开工授权**；未经新工作单批准，不修改生产代码、测试、POM 或生成物。
+- 最新已验收源码：`b2f5436a0c98cba69467d211b19053237ba5edf6`；GitHub CI [run `36234304027`](https://github.com/HoloNova/Software-IR/actions/runs/36234304027)：两条全量闸门均 837 / 0 / 0 / 5，四个业务 IT 全 `PASSED`（40/61/36/63），证据 artifact 为 `surefire-reports` 与 `conformance-evidence`。归档记录本身为纯文档，不改变该源码。
 
-## 授权边界（重要）
+## 下一张工作单候选（须单独审定）
 
-- 当前**无授权的实施工作**。未经负责人明确立项与批准，不得改动生产代码、测试、POM、生成物、CI 配置或参考环境。
-- 下方"候选工作"只是下一张单的**可选项**，**不构成授权**：立项需要负责人选择方向，随后按流程把该方向写成本文件的工作单（含范围、完成门、允许/禁止范围、测试先行顺序），状态先置 `SPEC_REVIEW`，经负责人确认后再置 `IN_PROGRESS`。
-- 重活由 GitHub CI 承担，本机只跑受影响的定向测试且必须 `systemd-run --scope` 限内存与 CPU（权威规则见 `AGENTS.md`「测试资源约束」）。
+1. **Q17：单声明改名的原子文件事务**。从 Q16 已验证的只读 `RenamePlan` 出发，先实测并冻结混合路径更新/撤销/建立的 Journal 与故障恢复方案，再验证受管旧文件清理、未受管文件保护、CURRENT 方向和“应用盘面 == 候选从零生成”；V4 日志只是候选，不预设采用。Q16 没有改名 apply。
+2. **能力与 Input 同时改名**。原课程例子全局替换会同时改 Input 声明，Q16 以 `SIR-RENAME-PATH-004` 拒绝漏报的 Input DTO；后续需独立决定 Input 持久身份及多声明计划，不能以 Q17 的事务自动补足。
+3. **G2 其余门禁**。多文件源清单、import/binding、模块实例、nodeKey、跨文件移动和旧身份兼容的完整证据；G2 尚未完成。
+4. **Q12 路由模板**与 **BIZ-07 起的报名业务**：均未立项，不占用 G2 当前授权。
 
-## 状态说明
+## 已登记的独立项
 
-- 仓库 `main` 上最后一次提交：见 `git log -1`；Q13/Q14/Q15 与 CI workflow 已在其中，G1 完成门由 GitHub CI run `35854153833` 钉住（775 / 0 / 0 / 5，四个业务场景 IT 全 `PASSED`）。
-- 资格结论与数字口径见 `docs/qualification/CURRENT_QUALIFICATION.md`（§0 进展指针、§1.12 Q13、§1.13 CI）。
+- 错误信封码名与主设计逐字对齐（Q10 裁决保留现状）。
+- `SpringBootModelLowerer.java` 的 CFR 反编译文本是否重写（独立清理）。
+- 非分页 find 的关联读取、关联深度 3 层及以上、预算由“按投影使用点”改为关系计划去重的替代口径。
+- `in` / `isNull`、when-present 可选过滤、按关联字段排序、关联集合自身分页。
+- 变更影响模型是否允许操作改动幸存文件（例如 `Application.java` 的 actor 传输片段）；与 Q16 单声明改名事务分开裁决。
+- 实体字段改名后的物理列名继承与 G3 数据库迁移，不因 `@id` 相同而自动执行 DDL。
 
-## 候选工作（未立项，均需批准）
-
-1. **G2 第一张单（多实体/多文件与身份格式兼容）**：G1 关闭后路线图的下一阶段入口是 G2（门禁 LANG-01..05：身份格式兼容、多文件源清单、import/binding、稳定物理映射）。开工前必须先实测今天 `SourceId`/`nodeKey`/快照把身份持久到什么程度、多文件源清单有无雏形，再写工作单；预期要拆 2–3 张单。
-2. **Q12 路由模板**（G1 时期登记的候选）：嵌套 `/courses/{id}` 等路径形态；设计尚未冻结路由形态，需先定形态再立项。
-3. **报名业务（BIZ-07 起）**：并发与名额、状态机、按学生查询等；依赖 G2 的多实体能力时需重新评估顺序。
-
-## 已登记的独立项（从各单范围外转来，需独立立项）
-
-1. **错误信封码名对齐**：当前实现 `INVALID_REQUEST` + Bean Validation 字段码，主设计 02 写 `REQUEST_INVALID`/`UNKNOWN_FIELD`（语义一致、字面不一致）。
-2. **`SpringBootModelLowerer.java` 的来源清理**：该文件是 CFR 反编译文本基础上继续修改的产物（保留 `this.` 前缀与冗余泛型），需要决定是否整体重写。
-3. **非分页 find 的关联投影**：带关联投影的 find 目前必须在 Lowering 前分页，否则以 `SIR-LOWER-FEATURE-001` 拒绝；需要独立方案（批量读取以页行集合为起点）。
-4. **关联投影深度 3 层及以上**与**预算去重口径**（当前按"投影使用点"计数，同一 view 两处投影各读一次）。
-5. **过滤算子扩展**：`in`/`isNull`、when-present 可选过滤、按关联字段排序。
-6. **变更影响模型是否允许操作改动幸存文件**（原 Q15 的 R2 方案）：用于覆盖 `Application.java` 的 actor 传输片段——该片段目前按能力集合发射，与 Q15 修掉的 mapper 同族；若不做 R2，删除能力仍需接受这类"幸存文件变化"的拒绝或逐个改造成实体级片段。
+执行时先按 [`README.md`](README.md) 的阶段门与 [`REMAINING_WORK.md`](REMAINING_WORK.md) 的候选核对事实，再建立 `SPEC_REVIEW` 工作单；候选不替代授权。
