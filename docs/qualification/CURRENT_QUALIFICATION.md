@@ -25,7 +25,7 @@
 
 **全量计数 775 / 0 / 0 / 5**（Q11 后为 749；+26 全部来自 Q14/Q15/Q13 的新增测试），由 GitHub CI 一次跑完（见 1.13）。G1 的 Q9、Q10、Q11、Q13 至此全部验收归档（Q12 未立项）。本节的 G0 记录不因此改写。
 
-**G2 第一张工作单 Q16（单文件持久身份与只读改名计划）已实施并置 `AWAITING_ACCEPTANCE`**：新增能力/实体字段 `@id`、独立只读 `RenamePlan`/`RenamePlanner`，无 apply 入口；全工程受管文件差异没有被单声明计划完整覆盖时精确拒绝（原课程例子的 Input DTO 就属于此类）。本机定向：parser **84** / semantic **184** / lowering-spring-boot **86** / change **69**，应用真实管道 **9** 例和旧源回归 **12** 例均 0 失败，见 1.14；**两条全量闸门与四个业务场景 IT 尚未对 Q16 改动在 CI 上执行**，本报告的全量计数仍为此前 G1 的 **775 / 0 / 0 / 5**。G2 阶段门未满足：多声明改名、原子文件应用、旧文件清理与数据库列继承仍属后续范围。
+**G2 第一张工作单 Q16（单文件持久身份与只读改名计划）已完成验收归档**（[`completed/Q16-persistent-identity-and-read-only-rename-plan.md`](../roadmap/completed/Q16-persistent-identity-and-read-only-rename-plan.md)）：能力/实体字段 `@id`、独立只读 `RenamePlan`/`RenamePlanner`，无 apply 入口；全工程受管文件差异未被单声明计划覆盖时精确拒绝（原课程例子的 Input DTO 属此类）。提交 `b2f5436a0c98cba69467d211b19053237ba5edf6` 的 CI [run `36234304027`](https://github.com/HoloNova/Software-IR/actions/runs/36234304027) 两条全量闸门均 **837 / 0 / 0 / 5**、四个业务 IT 全 `PASSED`，详见 1.14；G1 历史基线仍为 775，不与 Q16 当前计数混写。**G2 阶段门未满足**：多声明改名、原子文件应用、旧文件清理与数据库列继承仍属后续范围；`ACTIVE_WORK.md` 已回到 IDLE。
 
 **登记表（NOT_RUN / 未覆盖 / 平台条件）**：
 
@@ -418,38 +418,42 @@ skip 11 → 5 的逐条解释：`PathSecurityReviewTest` 5 项 Windows junction 
 | 差量归因（相对 749） | +26：`sir-change` +11（Q14 投影测试）、`sir-generator-spring-boot` +3（Q15 不变性探针）、`sir-toolchain-application` +12（Q13 契约与投影行为测试） |
 | 首跑（`35853320345`）的两次修正 | ① workflow 文件错误（`runner.temp` 不允许出现在 job 级 `env`，已用 `actionlint` 复核后改为 `github.workspace/ci-work|ci-evidence`）；② Q11 IT 的语句计数口径（见 1.11 的 C8）；③ 证据 artifact 因目录名以点开头被 upload-artifact 跳过，已改名并加 `include-hidden-files: true` |
 
-### 1.14 2026-09-26 本机 Q16 G2 第一切片：持久身份与只读改名计划
+### 1.14 2026-09-26 Q16 G2 第一切片：持久身份与只读改名计划（本机定向 + GitHub CI）
 
 本单只覆盖**单文件、单声明**的改名身份及只读规划。源中 `@id` 保留能力/实体字段的 SymbolId；旧名称派生身份与显式身份在不同命名空间，不能无映射地把旧身份解释成新身份。计划分别绑定基线/候选源字节摘要与图摘要，文件更新/撤销/建立三集合必须恰好等于**全工程受管文件差异**；`plan`/`verify` 均对未覆盖路径报 `SIR-RENAME-PATH-004`。不触碰盘面、CURRENT、三种文件 Journal，不放宽现有六类 `ChangeOperation` 的单族不变量。
 
 **原例的限制有真实证据**：直接读取 `valid/course-admin-enrollment.sir`，只给 `SearchCourseEnrollments` 增一处 `@id` 后做字面全局替换；两次真实 ToolchainApplication 管道生成的工程里，Controller、Service、Input DTO 三个文件均换路径（共六条受管路径差异），能力闭包只有前两个。`RenamePlanVerticalTest` 断言计划以两条 `PATH-004` 精确点名旧/新 Input DTO 并拒绝；这不是三文件改名已完成。另一个只改能力名、输入声明不改的真实 SIR 用例可得到只读计划，其文件集合、SHA 与两侧实际生成文件吻合，重复规划摘要相同；更改源注释但保持图不变的反例被 `SIR-RENAME-STALE-004/005` 拒绝。
 
-本机离线定向验证：`mvn -B -o -Dmaven.repo.local=/root/.m2/repository -pl sir-change,sir-lowering-spring-boot -am test` **BUILD SUCCESS**，parser 84 / semantic 184 / lowering-api 4 / lowering-spring-boot 86 / project-graph 72 / change 69，合计 499、失败 0；应用层 `RenamePlanVerticalTest` **9/0**，`ToolchainDeterminismTest,ToolchainHappyPathTest` **12/0**。原例纵向测试为单模块定向测试，未起 MySQL/生成应用构建；旧源当前树重复生成一致，**没有做旧 commit 与本次的逐字节交叉比对**。
+本机离线定向验证：`mvn -B -o -Dmaven.repo.local=/root/.m2/repository -pl sir-change,sir-lowering-spring-boot -am test` **BUILD SUCCESS**，parser 84 / semantic 184 / lowering-api 4 / lowering-spring-boot 86 / project-graph 72 / change 69，合计 499、失败 0；应用层 `RenamePlanVerticalTest` **9/0**，`ToolchainDeterminismTest,ToolchainHappyPathTest` **12/0**。原例纵向测试为单模块定向测试，未起 MySQL/生成应用构建。
 
-**NOT_RUN（Q16 树）**：CI 的两条全量闸门与 Q9/Q10/Q11/Q13 四个业务 IT；没有获准提交/推送，不用 G1 run 的 775 冒充本单结果。后续单还需解决单声明混合文件事务与恢复、多声明（能力+Input）组合改名及实体字段物理列继承；G2 多文件等 LANG 门仍未闭合。
+**同树 CI 验收**：受测 SHA `b2f5436a0c98cba69467d211b19053237ba5edf6`，run [`36234304027`](https://github.com/HoloNova/Software-IR/actions/runs/36234304027)。冻结与完成两种全量闸门均 **BUILD SUCCESS，837 run / 0 fail / 0 error / 5 skip**（仅 Windows junction 5 项）；逐模块 parser 84、semantic 184、lowering-api 4、lowering-spring-boot 86、generator 77、project-graph 72、change 69、application 231、cli 30。Q9 40/0、Q10 61/0、Q11 36/0、Q13 63/0 均 `verdict=PASSED`，报告中 `schemaName=kcg_conf_run`、`advisoryLock=held`、`schemaSource=TEST_FIXTURE_DDL`、`generatedProjectBuild=PASSED`；报告产物为 `conformance-evidence`，单元报告产物为 `surefire-reports`。在线预热的 Q9 报告单列，不重复计算为第五业务场景；`surefire-reports` 上传于四个 opt-in IT 之后，其 XML 合计 **841**（application 235，比全量门的 application 231 多四个 IT 测试），**不得将该合计冒充任一全量闸门的 837**。
+
+**旧源跨提交比对**：G1 最终源码 `6fad608` 的 [run `35855544574`](https://github.com/HoloNova/Software-IR/actions/runs/35855544574) 与 Q16 run 的 Q9/Q10/Q11/Q13 报告的源 SHA、生成工程组合 SHA 对应相同；Q13 六份基线图的规范字节 SHA-256 多重集相同。此为四个冻结 fixture 的直接跨树证据，**不外推到未枚举旧源**。相对 G1 的 775 增加 62：parser +5、semantic +8、lowering +4、change +36、application +9，skip 未增加。
+
+**仍未完成（不属于 Q16 裁决 A）**：单声明混合文件事务与恢复、能力+Input 组合改名、字段物理列继承/G3 迁移、G2 多文件与剩余 LANG 门禁。本单完成不代表改名可安全应用。
 
 ## 2. 模块测试统计
 
-以下为 **2026-09-23 GitHub CI Q13 后完成形式复跑** 的记录（run `35854153833`；本机 Q11 后的 749 计数已被本次取代；裸 `mvn -o clean verify` 与 `-Dmaven.test.failure.ignore=true` 两种形式同样的每模块计数），命令与模块明细见 1.3、1.4、1.9、1.10、1.12、1.13；2026-08-11 Windows 运行见本节末尾对比。
+以下为 **2026-09-26 GitHub CI Q16 后完成形式** 的当前记录（run `36234304027`，受测 SHA `b2f5436a0c98cba69467d211b19053237ba5edf6`；冻结与完成两种形式各有相同的模块计数），原 G1 的 775 为 2026-09-23 历史基线，不能冒充本次结果；命令与证据见 1.13–1.14。2026-08-11 Windows 运行见本节末尾对比。
 
-**口径订正**：本节此前记录的各模块单元数字取自不同批次的部分运行（例如 Q9 之前 `sir-toolchain-application` 尚未完整跑完），与 Q9/Q10 的完成形式复跑不一致；本次以 CI 完成形式复跑的实测 Surefire 结果取值。**上一次记录的合计为 749（本机 Q11 后），本次为 775**——差量 +26 全部来自 Q14/Q15/Q13 的新增测试：`sir-change` 22→33（Q14 投影测试 11 项）、`sir-generator-spring-boot` 74→77（Q15 不变性探针 3 项）、`sir-toolchain-application` 210→222（Q13 契约 6 项 + 投影行为 6 项）。
+**计数口径**：以下九模块逐项取自 Q16 CI 两条全量闸门的模块汇总；相对 G1 完成形式 **775 → 837（+62）**，新增全在 Q16：parser +5、semantic +8、lowering-spring-boot +4、change +36、application +9。此前历史表混用了不同批次模块数字，已按本次同树 CI 重填。
 
-统计以 Surefire XML 为准；JUnit `@Nested` 容器和类级 assumption 的展示差异不改变实际 testcase 统计。
+模块汇总取自 CI 两条 Maven 闸门日志；上传的 `surefire-reports` XML 在四个 opt-in IT 之后含 application 额外四个测试，故 artifact 总计 841 而不是下表闸门的 837。JUnit `@Nested` 容器和类级 assumption 的展示差异不改变实际 testcase 统计。
 
 | 模块 | run | fail | error | skip | 当前解释 |
 |---|---:|---:|---:|---:|---|
-| `sir-parser` | 69 | 0 | 0 | 0 | Parser 基础契约；Q9 新增 12 项（`view`/`Page<T>`/`order by`/`Page … else`/`containsLiteral` 的正反例与边界）、Q10 新增 14 项（`WriteGrammarTest`：`versioned`、`error … status`、`persist … else`、`patch of`、`.present`） |
-| `sir-semantic` | 159 | 0 | 0 | 0 | 含 typed reference-site 契约；Q9 新增 28 项（投影绑定与类型、分页/排序/字面量约束与四类新 ReferenceRole）、Q10 新增 21 项（`WriteSliceSemanticsTest`：版本字段、状态码、条件持久化、patch 载荷与存在性表达式） |
+| `sir-parser` | 84 | 0 | 0 | 0 | 含 Q16 `DeclaredIdentityGrammarTest` 5 项（`@id` 正反语法） |
+| `sir-semantic` | 184 | 0 | 0 | 0 | 含 typed reference-site 契约与 Q16 `DeclaredIdentitySemanticsTest` 8 项 |
 | `sir-lowering-api` | 4 | 0 | 0 | 0 | API 契约 |
-| `sir-lowering-spring-boot` | 69 | 0 | 0 | 0 | 含 19 项 `@Nested` hardening 测试；Q9 新增 16 项（投影/排序/分页/字面量计划、IR 校验与策略一致性、冲突模型拒绝）、Q10 新增 21 项（`WriteSliceLoweringTest`：版本规格、patch 计划、条件更新、候选校验、错误契约 artifact 与 GEN-02 三类损坏模型） |
+| `sir-lowering-spring-boot` | 86 | 0 | 0 | 0 | 含 Q16 `DeclaredIdentityPhysicalNameTest` 4 项；目标生产代码未改 |
 | `sir-generator-spring-boot` | 77 | 0 | 0 | 0 | canonical 输出、主要 Renderer、跨环境字节确定性和完整生成工程离线编译，另加 Q1 生产边界闸门（生产 census、禁止引用 0 违规、公开入口反射）；Q9 新增 10 项、Q10 新增 21 项、Q11 新增 6 项（`GeneratorRelationSliceContractTest`：EXISTS 渲染与绑定值、每关联一条批量读取、对一按身份读取、嵌套投影无 N+1、只读事务注解、嵌套 view 各成响应类型）并把关联切片加入确定性矩阵 |
 | `sir-project-graph` | 72 | 0 | 0 | 0 | Q2 建立的直接模块契约：四类边、规则矩阵、canonical 序列化/加载/摘要往返、只读边界闸门（生产 census 69 个 class、0 违规）与不可信字节版本/来源类型/不可编码标量守卫 |
-| `sir-change` | 22 | 0 | 0 | 0 | API/架构/fixture 支撑测试，覆盖不足 |
-| `sir-toolchain-application` | 210 | 0 | 0 | 5 | conformance 包已恢复编译与运行（含 13 项此前被隐藏的模块内测试）；5 项软链接失败已在 Q3 修复（剩 5 skip 全为 Windows junction）；见 1.6 |
+| `sir-change` | 69 | 0 | 0 | 0 | 含 Q14 投影测试 11 项与 Q16 只读改名计划/源陈旧/全工程覆盖/契约测试 36 项 |
+| `sir-toolchain-application` | 231 | 0 | 0 | 5 | 含 Q16 真实管道纵向测试 9 项；5 skip 仍全是 Windows junction，未新增排除 |
 | `kcg-cli` | 30 | 0 | 0 | 0 | 含 Q7 新增 12 项（产品边界 6、生产边界闸门 4、内部失败 2）；另有 5 项 hardening + 13 项 Change 工作流（Q3 前整类被类级 assumption 跳过）；见 1.8 |
-| **合计** | **775** | **0** | **0** | **5** | 2026-09-23 GitHub CI 完成形式复跑（run `35854153833`）；冻结与完成两种形式均为 BUILD SUCCESS；无失败、无错误（相对 749 的差量 +26 全部来自 Q14/Q15/Q13）|
+| **合计** | **837** | **0** | **0** | **5** | 2026-09-26 GitHub CI run `36234304027`（SHA `b2f5436`）；冻结与完成形式均 BUILD SUCCESS；`surefire-reports` artifact 已核对 |
 
-对比 2026-08-11 Windows 运行：合计 373 / 0 / 0 / 10；该平台未真实执行软链接用例，因此那次 `0 failed` 不能证明软链接拒绝路径可用。当前计数为 775（CI 完成形式复跑）：Q1–Q3 阶段记录为 465，Q4+Q5 增加 13 项，Q6 增加 64 项，Q7 增加 12 项，Q9 增加 66 项（记录合计 620），Q10 增加 82 项（重测口径），Q11 增加 47 项（parser +10、semantic +17、lowering +13、generator +7），Q13/Q14/Q15 合计增加 26 项（change +11、generator +3、application +12）；5 项 skip 仍为 Windows junction。各阶段证据见 1.3–1.13。
+对比 2026-08-11 Windows 运行：373 / 0 / 0 / 10，那次 `0 failed` 不能证明软链接拒绝路径可用。2026-09-23 G1 CI 完成形式为 775 / 0 / 0 / 5；本次 Q16 CI 完成形式为 **837 / 0 / 0 / 5**，差量 +62 均有上述逐模块归因；5 skip 仍仅为 Windows junction。历史阶段证据见 1.3–1.13，Q16 见 1.14。
 
 ## 3. 跳过与排除
 

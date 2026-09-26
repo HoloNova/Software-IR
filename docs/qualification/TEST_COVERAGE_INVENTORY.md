@@ -1,6 +1,6 @@
 # KCG-Code 测试覆盖与缺口清单
 
-> 更新日期：2026-09-26（§1 的模块测试数仍按 **2026-09-23 GitHub CI** 完成形式复跑；Q16 定向证据另列，不冒充全量复跑。Q9/Q10/Q11/Q13 均已验收归档，Q14/Q15 见 Q13 组内前置修复单小节）
+> 更新日期：2026-09-26（§1 模块计数按 **Q16 GitHub CI run `36234304027`** 同树完成形式复跑；Q9/Q10/Q11/Q13 及 Q16 已验收归档，Q14/Q15 见 Q13 组内前置修复单小节）
 > 用途：记录当前可执行测试、明确缺口和后续验收输入；不以历史测试数量作为完成目标
 
 ## Q9 单文件查询切片覆盖（2026-09-18 G1 首切片）
@@ -58,15 +58,15 @@
 | 真实业务验证（四轮同一落盘工程根） | 每轮 plan → apply → **重新构建同一个工程根**（`mvn clean verify` 四次 exit 0）→ 重启 → HTTP 断言；R1 行为变化（`total` 3→4、ART101 出现）、R2（25 字符 400 点名 `name`、15 字符 201）、R3（两个写路由 404、检索仍服务、非法分页仍 400 `InvalidPage`）、R4（新路由服务四门课、旧路由仍可用、写路由未复活） | 未覆盖变更后的数据库迁移（G3）、未覆盖失败回滚的 HTTP 观察 |
 | 验证位置 | 重活由 GitHub CI 承担（本机 2 vCPU / 3 GB；`.github/workflows/verify.yml`：两条全量闸门 + 四个业务场景 IT），本机确需重活必须 `systemd-run --scope` 限内存与 CPU | 无自托管 runner；CI 与参考环境的 schema/账号口径已对齐，但仍属测试侧 fixture |
 
-## Q16 持久身份与只读改名计划覆盖（2026-09-26 G2 第一切片；待验收）
+## Q16 持久身份与只读改名计划覆盖（2026-09-26 G2 第一切片；验收归档）
 
 | 组 | 已覆盖 | 未覆盖/边界 |
 |---|---|---|
-| `@id` 语法与语义 | 能力/实体字段显式 ID、字符集/长度/全局唯一性诊断、AST/符号/binding 与能力作用域跨名字变化稳定；旧声明仍按名称派生且与新命名空间互异；input/view 字段注解在语法层拒绝 | 无 input 声明持久身份、多文件移动与 import；旧 commit 与本树完整输出逐字节交叉比对未执行 |
+| `@id` 语法与语义 | 能力/实体字段显式 ID、字符集/长度/全局唯一性诊断、AST/符号/binding 与能力作用域跨名字变化稳定；旧声明仍按名称派生且与新命名空间互异；input/view 字段注解在语法层拒绝 | 无 input 声明持久身份、多文件移动与 import；旧树与当前树的四种冻结业务 fixture 已跨 CI 比对输出摘要与 Q13 六份基线图字节，未穷尽任意旧源 |
 | 只读改名计划 | `RenamePlannerTest`、`RenamePlanContractTest`、`RenameSourceStalenessTest`：计划独立于六类 `ChangeOperation`；双侧源字节及图摘要绑定；改注释而图不变仍报 STALE；身份不明、物理列名无法继承、路径冲突等明确拒绝 | 不写工程/CURRENT/Journal；盘面未受管文件占用、符号链接与 B0 文件字节检查留给 apply 单 |
 | 工程级覆盖不变量 | `RenamePlanCoverageTest` 6 例：全工程受管文件变化必须恰由三集合覆盖（路径/类别/长度/摘要），`plan` 与 `verify` 同口径；遗漏或伪造路径报 `SIR-RENAME-PATH-004` | 一个计划只解释一个声明；其它声明改动只拒绝，不合并成多个 subject |
 | 真实管道 | `RenamePlanVerticalTest` 9 例：真实单文件 SIR 经 Parser/Semantic/Lowering/Generator/Graph 后可规划能力**单声明**改名，文件集及摘要与盘面对应、计划前后盘面不变；用原课程 fixture 全局替换验证 Input DTO 被漏时精确拒绝（两条 PATH-004，旧/新 DTO 路径），另一能力同步改名也拒绝 | 原课程三文件改名**未支持**：Input 身份+多声明计划另立范围；生成工程的构建/运行与混合事务的原子应用、恢复及“应用盘面等于从零生成”都不在 Q16 |
-| 验证位置 | 本机定向：parser 84 / semantic 184 / lowering-api 4 / lowering-spring-boot 86 / project-graph 72 / change 69（合计 499、0 失败）；应用纵向 9/0 与旧源回归 12/0 | Q16 改动尚无 CI 两条全量闸门和四个业务 IT 证据；已有 775/0/0/5 是 G1 旧树，不计本单 |
+| 验证位置 | 本机定向：parser 84 / semantic 184 / lowering-api 4 / lowering-spring-boot 86 / project-graph 72 / change 69（合计 499、0 失败）；应用纵向 9/0 与旧源回归 12/0。提交 `b2f5436` 的 [CI `36234304027`](https://github.com/HoloNova/Software-IR/actions/runs/36234304027)：双闸门各 **837/0/0/5**，Q9/Q10/Q11/Q13 分别 40/61/36/63，全 `PASSED`；artifact `surefire-reports` + `conformance-evidence` | 只读计划无 apply；Q17 混合文件事务、组合改名、字段物理列与 G2 多文件仍未覆盖 |
 
 ## Q7 CLI 产品边界覆盖（2026-09-18）
 
@@ -84,13 +84,13 @@
 
 | 模块 | 当前直接测试 | 覆盖判断 | 优先级 |
 |---|---:|---|---|
-| Parser | 69 | 核心语法、AST、诊断和确定性有直接覆盖；Q9 新增查询切片正反例（`view`/`Page<T>`/`order by`/`Page … else`/`containsLiteral`），Q10 新增写侧语法（`versioned`/`error … status`/`persist … else`/`patch of`/`.present`） | 维护 |
-| Semantic | 159 | Resolve/Type/Validate/Normalize 与 typed reference-site 有系统覆盖；Q9 新增投影绑定/类型、分页与排序约束和四类新 ReferenceRole，Q10 新增版本字段、状态码、条件持久化、patch 载荷与存在性表达式规则 | 维护 |
-| Lowering API + Spring | 73 | API、Profile、边界、确定性和 hardening 有直接覆盖；Q9 新增投影/排序/分页/字面量计划与 IR 校验，Q10 新增版本规格/patch 计划/条件更新/候选校验/错误契约 artifact 与 GEN-02 损坏模型 | 维护 |
-| Generator | 67 | canonical 输出、主要 Renderer、跨环境字节确定性和完整生成工程离线编译均有直接契约，并有生产 class 静态边界闸门；Q9 新增投影 DTO/分页响应/分页配置/分页查询渲染契约，Q10 新增错误信封/异常基类/advice/变更集/条件更新/候选校验/投影渲染契约 | 维护 |
+| Parser | 84 | 既有查询/写侧语法与 Q16 `@id` 正反语法（5 项） | 维护 |
+| Semantic | 184 | Resolve/Type/Validate/Normalize、typed reference-site 与 Q16 稳定身份/binding（8 项） | 维护 |
+| Lowering API + Spring | 90 | API 4 + Spring 86；Q16 物理名与列名契约 4 项，生产 Lowering 未改 | 维护 |
+| Generator | 77 | canonical 输出、主要 Renderer、跨环境字节确定性、完整生成工程离线编译与生产 class 静态边界闸门；Q16 未改生产 Generator | 维护 |
 | Project Graph | 72 | 四类边、规则矩阵、canonical 序列化/加载/摘要往返、只读边界闸门与不可信字节版本/来源类型/不可编码标量守卫均有直接契约；`REFERENCES` 与增量能力不在范围 | 维护 |
-| Change | 22 | 有 API 与架构测试，操作族/closure/失败矩阵不足 | P1 |
-| Application | 210（0 fail）+ 5 skip | 核心路径覆盖 + conformance 包编译/运行；Q9 与 Q10 各新增一个 opt-in 业务场景（真实 MySQL + HTTP，默认构建不跑） | P0 |
+| Change | 69 | 六类既有计划/投影与 Q16 只读改名计划、源陈旧性、全工程文件覆盖、身份拒绝；混合事务 apply 未实现 | P1 |
+| Application | 231（0 fail）+ 5 skip | 含 Q16 真实 SIR → 生成工程/图 → 只读计划 9 项；四个 opt-in 业务场景在同树 CI 全 `PASSED`；5 skip 均为 Windows junction | P0 |
 | CLI | 30 | 5 项 hardening + 13 项 Change 工作流 + Q7 新增 12 项（产品边界 6、生产边界闸门 4、内部失败 2） | P1 |
 
 ## 2. Generator 缺口
