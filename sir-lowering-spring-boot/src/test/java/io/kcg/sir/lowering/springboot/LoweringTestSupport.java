@@ -44,6 +44,27 @@ final class LoweringTestSupport {
         return result.model().orElseThrow();
     }
 
+    /** The lowered model of a source text, so a test can lower a stated variant of a legal program. */
+    static SpringBootLoweredModel lowerSourceSuccess(String sourceText) {
+        ParseResult parsed = new DefaultSirParser().parse(new SirSource(SourceId.of("tests"), sourceText));
+        if (!parsed.isSuccess()) {
+            throw new AssertionError("parse failed: " + parsed.diagnostics());
+        }
+
+        SemanticAnalysis semantic = new SirSemanticAnalyzer().analyze(parsed.document().orElseThrow());
+        if (!semantic.isSuccess()) {
+            throw new AssertionError("semantic analysis failed: " + semantic.diagnostics());
+        }
+
+        LoweringAnalysis<SpringBootLoweredModel> result =
+                new SpringBootTargetLowering().lower(semantic.model().orElseThrow());
+        if (!result.isSuccess()) {
+            throw new AssertionError("lowering failed: " + result.diagnostics());
+        }
+
+        return result.model().orElseThrow();
+    }
+
     /** The resource's source text, so a test can state a variant of a legal program. */
     static String source(String resource) {
         return resource(resource);

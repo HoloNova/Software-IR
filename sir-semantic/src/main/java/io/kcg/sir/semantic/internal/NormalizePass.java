@@ -171,7 +171,7 @@ final class NormalizePass {
       for (AstField f : decl.fields()) {
          String fieldName = f.name().text();
          if (seen.add(fieldName) && !fieldName.equals(decl.identity().name().text())) {
-            NormalizedField field = this.normalizeField(f, decl.name().text(), "entity");
+            NormalizedField field = this.normalizeField(f);
             if (field != null) {
                if (f.versioned()) {
                   field = field.withVersioned(true);
@@ -211,7 +211,7 @@ final class NormalizePass {
       for (AstField f : decl.fields()) {
          String fieldName = f.name().text();
          if (seen.add(fieldName)) {
-            NormalizedField field = this.normalizeField(f, decl.name().text(), "input");
+            NormalizedField field = this.normalizeField(f);
             if (field != null) {
                if (patch) {
                   field = field.withPatchSourceField(this.patchSourceFieldOrUnknown(decl.name().text(), fieldName));
@@ -274,16 +274,14 @@ final class NormalizePass {
       return new NormalizedError(id, decl.name().text(), decl.span(), decl.id(), httpStatus);
    }
 
-   private NormalizedField normalizeField(AstField field, String ownerName, String ownerKind) {
+   private NormalizedField normalizeField(AstField field) {
       String fieldName = field.name().text();
       SirType type = this.validated.typeRefTypes().get(field.type().id());
       if (type == null) {
          return null;
       }
 
-      SymbolId fieldId = ownerKind.equals("entity")
-         ? SymbolIdFactory.entityField(this.softwareName, ownerName, fieldName)
-         : SymbolIdFactory.inputField(this.softwareName, ownerName, fieldName);
+      SymbolId fieldId = this.memberIdentity(field);
       List<NormalizedConstraint> constraints = new ArrayList<>();
       Set<String> seenConstraints = new LinkedHashSet<>();
 
@@ -296,6 +294,22 @@ final class NormalizePass {
 
       Optional<AstNodeId> directNamedTypeReferenceSiteId = this.directNamedTypeSiteId(field);
       return new NormalizedField(fieldId, fieldName, field.span(), field.id(), type, List.copyOf(constraints), directNamedTypeReferenceSiteId);
+   }
+
+   /**
+    * The identity the resolver assigned to a member.
+    *
+    * <p>Members never derive their own identity here: the resolver is the single place that knows
+    * whether a member carries an explicit {@code @id}, so reading its binding is what keeps a
+    * declared member's identity stable when its name changes.
+    */
+   private SymbolId memberIdentity(AstField field) {
+      SymbolId bound = this.validated.referenceBindings().get(field.id());
+      if (bound == null) {
+         throw new IllegalStateException("member has no resolved identity: " + field.id().value());
+      }
+
+      return bound;
    }
 
    private Optional<AstNodeId> directNamedTypeSiteId(AstField field) {
@@ -340,7 +354,7 @@ final class NormalizePass {
       }
 
       requires.sort((a, b) -> Integer.compare(a.ordinal(), b.ordinal()));
-      NormalizedWorkflow workflow = this.normalizeWorkflow(decl.workflow(), decl.name().text());
+      NormalizedWorkflow workflow = this.normalizeWorkflow(decl.workflow(), id);
       return new NormalizedCapability(
          id,
          decl.name().text(),
@@ -356,21 +370,21 @@ final class NormalizePass {
       );
    }
 
-   private NormalizedWorkflow normalizeWorkflow(AstWorkflow workflow, String capName) {
+   private NormalizedWorkflow normalizeWorkflow(AstWorkflow workflow, SymbolId capabilityScope) {
       List<NormalizedStep> steps = new ArrayList<>();
 
       for (AstStep step : workflow.steps()) {
-         NormalizedStep normalized = this.normalizeStep(step, capName);
+         NormalizedStep normalized = this.normalizeStep(step, capabilityScope);
          if (normalized != null) {
             steps.add(normalized);
          }
       }
 
-      SymbolId workflowId = SymbolIdFactory.declaration(this.softwareName, "capability", capName);
-      return new NormalizedWorkflow(workflowId, workflow.span(), workflow.id(), List.copyOf(steps));
+      // The workflow shares the capability's own identity, so renaming the capability leaves it alone.
+      return new NormalizedWorkflow(capabilityScope, workflow.span(), workflow.id(), List.copyOf(steps));
    }
 
-   private NormalizedStep normalizeStep(AstStep step, String capName) {
+   private NormalizedStep normalizeStep(AstStep step, SymbolId capabilityScope) {
       return switch (step) {
          case AstValidateStep s -> {
             SymbolId errorSym = this.siteTargetOrUnknown(s.error().id());
@@ -406,12 +420,12 @@ final class NormalizePass {
          case AstCreateStep s -> {
             SymbolId entitySym = this.siteTargetOrUnknown(s.entity().id());
             SymbolId resultVar = this.definitionBindingOrUnknown(s.id());
-            List<NormalizedBinding> bindings = this.normalizeBindings(s.bindings(), capName);
+            List<NormalizedBinding> bindings = this.normalizeBindings(s.bindings());
             yield new NormalizedStep.CreateStep(s.id(), s.span(), entitySym, resultVar, bindings);
          }
          case AstUpdateStep s -> {
             SymbolId targetVar = this.siteTargetOrUnknown(s.target().id());
-            List<NormalizedBinding> bindings = this.normalizeBindings(s.bindings(), capName);
+            List<NormalizedBinding> bindings = this.normalizeBindings(s.bindings());
             yield new NormalizedStep.UpdateStep(s.id(), s.span(), targetVar, bindings);
          }
          case AstPersistStep s -> {
@@ -449,7 +463,7 @@ final class NormalizePass {
       return ungrouped instanceof AstMemberExpression member ? member.member().id() : ungrouped.id();
    }
 
-   private List<NormalizedBinding> normalizeBindings(List<AstBinding> bindings, String capName) {
+   private List<NormalizedBinding> normalizeBindings(List<AstBinding> bindings) {
       List<NormalizedBinding> result = new ArrayList<>();
       Set<SymbolId> seen = new LinkedHashSet<>();
 

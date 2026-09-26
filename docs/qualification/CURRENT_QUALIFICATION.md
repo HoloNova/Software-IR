@@ -25,6 +25,8 @@
 
 **全量计数 775 / 0 / 0 / 5**（Q11 后为 749；+26 全部来自 Q14/Q15/Q13 的新增测试），由 GitHub CI 一次跑完（见 1.13）。G1 的 Q9、Q10、Q11、Q13 至此全部验收归档（Q12 未立项）。本节的 G0 记录不因此改写。
 
+**G2 第一张工作单 Q16（单文件持久身份与只读改名计划）已实施并置 `AWAITING_ACCEPTANCE`**：新增能力/实体字段 `@id`、独立只读 `RenamePlan`/`RenamePlanner`，无 apply 入口；全工程受管文件差异没有被单声明计划完整覆盖时精确拒绝（原课程例子的 Input DTO 就属于此类）。本机定向：parser **84** / semantic **184** / lowering-spring-boot **86** / change **69**，应用真实管道 **9** 例和旧源回归 **12** 例均 0 失败，见 1.14；**两条全量闸门与四个业务场景 IT 尚未对 Q16 改动在 CI 上执行**，本报告的全量计数仍为此前 G1 的 **775 / 0 / 0 / 5**。G2 阶段门未满足：多声明改名、原子文件应用、旧文件清理与数据库列继承仍属后续范围。
+
 **登记表（NOT_RUN / 未覆盖 / 平台条件）**：
 
 | 项 | 状态 | 原因与影响 |
@@ -415,6 +417,16 @@ skip 11 → 5 的逐条解释：`PathSecurityReviewTest` 5 项 Windows junction 
 | 业务场景 IT | Q9 40/0、Q10 61/0、Q11 36/0、Q13 63/0，全部 `verdict=PASSED` |
 | 差量归因（相对 749） | +26：`sir-change` +11（Q14 投影测试）、`sir-generator-spring-boot` +3（Q15 不变性探针）、`sir-toolchain-application` +12（Q13 契约与投影行为测试） |
 | 首跑（`35853320345`）的两次修正 | ① workflow 文件错误（`runner.temp` 不允许出现在 job 级 `env`，已用 `actionlint` 复核后改为 `github.workspace/ci-work|ci-evidence`）；② Q11 IT 的语句计数口径（见 1.11 的 C8）；③ 证据 artifact 因目录名以点开头被 upload-artifact 跳过，已改名并加 `include-hidden-files: true` |
+
+### 1.14 2026-09-26 本机 Q16 G2 第一切片：持久身份与只读改名计划
+
+本单只覆盖**单文件、单声明**的改名身份及只读规划。源中 `@id` 保留能力/实体字段的 SymbolId；旧名称派生身份与显式身份在不同命名空间，不能无映射地把旧身份解释成新身份。计划分别绑定基线/候选源字节摘要与图摘要，文件更新/撤销/建立三集合必须恰好等于**全工程受管文件差异**；`plan`/`verify` 均对未覆盖路径报 `SIR-RENAME-PATH-004`。不触碰盘面、CURRENT、三种文件 Journal，不放宽现有六类 `ChangeOperation` 的单族不变量。
+
+**原例的限制有真实证据**：直接读取 `valid/course-admin-enrollment.sir`，只给 `SearchCourseEnrollments` 增一处 `@id` 后做字面全局替换；两次真实 ToolchainApplication 管道生成的工程里，Controller、Service、Input DTO 三个文件均换路径（共六条受管路径差异），能力闭包只有前两个。`RenamePlanVerticalTest` 断言计划以两条 `PATH-004` 精确点名旧/新 Input DTO 并拒绝；这不是三文件改名已完成。另一个只改能力名、输入声明不改的真实 SIR 用例可得到只读计划，其文件集合、SHA 与两侧实际生成文件吻合，重复规划摘要相同；更改源注释但保持图不变的反例被 `SIR-RENAME-STALE-004/005` 拒绝。
+
+本机离线定向验证：`mvn -B -o -Dmaven.repo.local=/root/.m2/repository -pl sir-change,sir-lowering-spring-boot -am test` **BUILD SUCCESS**，parser 84 / semantic 184 / lowering-api 4 / lowering-spring-boot 86 / project-graph 72 / change 69，合计 499、失败 0；应用层 `RenamePlanVerticalTest` **9/0**，`ToolchainDeterminismTest,ToolchainHappyPathTest` **12/0**。原例纵向测试为单模块定向测试，未起 MySQL/生成应用构建；旧源当前树重复生成一致，**没有做旧 commit 与本次的逐字节交叉比对**。
+
+**NOT_RUN（Q16 树）**：CI 的两条全量闸门与 Q9/Q10/Q11/Q13 四个业务 IT；没有获准提交/推送，不用 G1 run 的 775 冒充本单结果。后续单还需解决单声明混合文件事务与恢复、多声明（能力+Input）组合改名及实体字段物理列继承；G2 多文件等 LANG 门仍未闭合。
 
 ## 2. 模块测试统计
 

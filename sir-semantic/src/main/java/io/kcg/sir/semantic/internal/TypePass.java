@@ -344,7 +344,9 @@ final class TypePass {
    }
 
    private void typeCapabilityWorkflow(AstCapabilityDecl capDecl) {
-      SymbolId capScopeId = SymbolIdFactory.declaration(this.softwareName, "capability", capDecl.name().text());
+      // The resolver already decided this capability's identity; typing only re-derives the scopes it
+      // typed expressions under, so a declared id must be read from the binding and not from the name.
+      SymbolId capScopeId = this.resolved.declarationBindings().get(capDecl.id());
       Set<String> visibleVars = new LinkedHashSet<>();
       if (capDecl.actor().isPresent()) {
          visibleVars.add("actor");
@@ -377,7 +379,7 @@ final class TypePass {
                visibleVars.add(s.result().text());
                break;
             case AstFindStep s:
-               SymbolId stepScopeId = SymbolIdFactory.stepScope(this.softwareName, capDecl.name().text(), s.id().value());
+               SymbolId stepScopeId = SymbolIdFactory.capabilityStepScope(capScopeId, s.id().value());
                Set<String> predVars = new LinkedHashSet<>(visibleVars);
                predVars.add("item");
                SirType predType = this.typeExpression(s.predicate(), stepScopeId, predVars);

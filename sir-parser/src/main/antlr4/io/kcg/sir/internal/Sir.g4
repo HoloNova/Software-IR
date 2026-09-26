@@ -56,7 +56,7 @@ enumDecl
 entityDecl
     : ENTITY IDENT PERSISTENT LBRACE
         identityDecl
-        fieldDecl*
+        entityMemberDecl*
       RBRACE
     ;
 
@@ -81,6 +81,17 @@ fieldDecl
     : FIELD IDENT COLON typeRef constraintList? VERSIONED? SEMI
     ;
 
+// An entity member is the only field the language lets carry a persistent declaration id.
+// input/view fields deliberately keep the plain fieldDecl rule: a stray @id there is a parse
+// error rather than a silently ignored annotation.
+entityMemberDecl
+    : FIELD IDENT COLON typeRef constraintList? VERSIONED? idAnnotation? SEMI
+    ;
+
+idAnnotation
+    : ID_ANNOTATION LPAREN STRING RPAREN
+    ;
+
 constraintList
     : WHERE constraintCall (COMMA constraintCall)*
     ;
@@ -95,7 +106,7 @@ errorDecl
     ;
 
 capabilityDecl
-    : CAPABILITY IDENT LBRACE
+    : CAPABILITY IDENT idAnnotation? LBRACE
         actorClause?
         inputClause?
         outputClause
@@ -353,6 +364,9 @@ LE              : '<=';
 GT              : '>';
 LT              : '<';
 MINUS           : '-';
+// The persistent declaration-id annotation. '@' appears nowhere else in the language, so this
+// token cannot collide with IDENT.
+ID_ANNOTATION   : '@id';
 COLON           : ':';
 SEMI            : ';';
 COMMA           : ',';
