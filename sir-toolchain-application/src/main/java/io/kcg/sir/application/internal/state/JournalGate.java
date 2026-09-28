@@ -188,7 +188,14 @@ public final class JournalGate {
          return null;
       }
 
-      if (startsWith(header, DeleteTransactionJournal.MAGIC)) {
+       if (startsWith(header, MixedTransactionJournal.MAGIC)) {
+          MixedTransactionJournal.ParseResult parse = MixedTransactionJournal.parse(journalFile);
+          if (parse instanceof MixedTransactionJournal.ParseFailure f) {
+             errors.add(diag(f.code(), "transaction " + txName + " (V4 MIXED): " + f.message()));
+             return null;
+          }
+          return new JournalGate.ActiveJournal.V4Mixed(((MixedTransactionJournal.ParseOk)parse).snapshot());
+       } else if (startsWith(header, DeleteTransactionJournal.MAGIC)) {
          DeleteTransactionJournal.ParseResult parse = DeleteTransactionJournal.parse(journalFile);
          if (parse instanceof DeleteTransactionJournal.ParseFailure f) {
             errors.add(diag(f.code(), "transaction " + txName + " (V3 DELETE): " + f.message()));
@@ -291,7 +298,7 @@ public final class JournalGate {
       return new ChangeExecutionDiagnostic(code, ChangeExecutionStage.RECOVERY, ExecutionSeverity.ERROR, message, Optional.empty());
    }
 
-   public sealed interface ActiveJournal permits JournalGate.ActiveJournal.V1Update, JournalGate.ActiveJournal.V2Create, JournalGate.ActiveJournal.V3Delete {
+    public sealed interface ActiveJournal permits JournalGate.ActiveJournal.V1Update, JournalGate.ActiveJournal.V2Create, JournalGate.ActiveJournal.V3Delete, JournalGate.ActiveJournal.V4Mixed {
       String transactionId();
 
       String b0BaselineId();
@@ -376,7 +383,17 @@ public final class JournalGate {
          }
       }
 
-      record V3Delete(DeleteTransactionJournal.Snapshot snapshot) implements JournalGate.ActiveJournal {
+       record V4Mixed(MixedTransactionJournal.Snapshot snapshot) implements JournalGate.ActiveJournal {
+          public V4Mixed { Objects.requireNonNull(snapshot, "snapshot"); }
+          @Override public String transactionId() { return snapshot.transactionId(); }
+          @Override public String b0BaselineId() { return snapshot.b0BaselineId(); }
+          @Override public String b1BaselineId() { return snapshot.b1BaselineId(); }
+          @Override public Path journalPath() { return snapshot.journalPath(); }
+          @Override public JournalGate.JournalFamily family() { return JournalGate.JournalFamily.V4_MIXED; }
+          @Override public String overallStateName() { return snapshot.overallState().name(); }
+       }
+
+       record V3Delete(DeleteTransactionJournal.Snapshot snapshot) implements JournalGate.ActiveJournal {
          public V3Delete {
             Objects.requireNonNull(snapshot, "snapshot");
          }
@@ -427,6 +444,7 @@ public final class JournalGate {
    public enum JournalFamily {
       V1_UPDATE,
       V2_CREATE,
-      V3_DELETE;
+       V3_DELETE,
+       V4_MIXED;
    }
 }

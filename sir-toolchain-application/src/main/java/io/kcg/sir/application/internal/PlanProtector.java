@@ -6,6 +6,9 @@ import io.kcg.sir.application.api.ExecutionStage;
 import io.kcg.sir.change.api.FileAddition;
 import io.kcg.sir.change.api.FileChange;
 import io.kcg.sir.change.api.FileDeletion;
+import io.kcg.sir.change.api.RenameFileEstablishment;
+import io.kcg.sir.change.api.RenameFileUpdate;
+import io.kcg.sir.change.api.RenameFileWithdrawal;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
@@ -251,6 +254,212 @@ public final class PlanProtector {
                               );
                            }
                         }
+                     }
+                  }
+               }
+            }
+         } catch (IOException e) {
+            errors.add(
+               diag(
+                  "SIR-APP-CHANGE-PROTECT-110", "I/O failure during protection check for " + rel + ": " + e.getClass().getSimpleName() + ": " + e.getMessage()
+               )
+            );
+         } catch (SecurityException e) {
+            errors.add(
+               diag(
+                  "SIR-APP-CHANGE-PROTECT-110",
+                  "security violation during protection check for " + rel + ": " + e.getClass().getSimpleName() + ": " + e.getMessage()
+               )
+            );
+         }
+      }
+
+      return List.copyOf(errors);
+   }
+
+   /**
+    * Plan-entry form of {@link #protect}: every update a rename plan names must still be the base
+    * revision's bytes on disk, because the rename transaction replaces it in place.
+    */
+   public static List<ExecutionDiagnostic> protectUpdates(Path outputRoot, List<RenameFileUpdate> updates) {
+      List<PlanEntry> entries = new ArrayList<>(updates.size());
+
+      for (RenameFileUpdate update : updates) {
+         entries.add(new PlanEntry(update.relativePath(), update.baseByteCount(), update.baseSha256Hex()));
+      }
+
+      return protectPresentEntries(outputRoot, entries, "planned update", "SIR-APP-CHANGE-PROTECT-105");
+   }
+
+   /**
+    * Plan-entry form of {@link #protectDeletions}: every withdrawal a rename plan names must still be
+    * the base revision's bytes on disk, because the rename transaction retires it.
+    */
+   public static List<ExecutionDiagnostic> protectWithdrawals(Path outputRoot, List<RenameFileWithdrawal> withdrawals) {
+      List<PlanEntry> entries = new ArrayList<>(withdrawals.size());
+
+      for (RenameFileWithdrawal withdrawal : withdrawals) {
+         entries.add(new PlanEntry(withdrawal.relativePath(), withdrawal.byteCount(), withdrawal.sha256Hex()));
+      }
+
+      return protectPresentEntries(outputRoot, entries, "planned withdrawal", "SIR-APP-CHANGE-PROTECT-105");
+   }
+
+   /**
+    * Plan-entry form of {@link #protectAdditions}: every establishment a rename plan names must still
+    * be free on disk, so that an untracked file is never overwritten by the rename transaction.
+    */
+   public static List<ExecutionDiagnostic> protectEstablishments(Path outputRoot, List<RenameFileEstablishment> establishments) {
+      List<String> relativePaths = new ArrayList<>(establishments.size());
+
+      for (RenameFileEstablishment establishment : establishments) {
+         relativePaths.add(establishment.relativePath());
+      }
+
+      return protectAbsentEntries(outputRoot, relativePaths, "planned establishment");
+   }
+
+   /** One plan entry reduced to the base-side pair the on-disk check compares against. */
+   private record PlanEntry(String relativePath, long byteCount, String sha256Hex) {
+   }
+
+   private static List<ExecutionDiagnostic> protectPresentEntries(Path outputRoot, List<PlanEntry> entries, String label, String escapeCode) {
+      List<ExecutionDiagnostic> errors = new ArrayList<>();
+      Optional<Path> normalizedRootOpt = validateOutputRoot(outputRoot, errors);
+      if (normalizedRootOpt.isEmpty()) {
+         return errors;
+      }
+
+      Path rawRoot = outputRoot.toAbsolutePath();
+      Path normalizedRoot = normalizedRootOpt.get();
+
+      for (PlanEntry entry : entries) {
+         String rel = entry.relativePath();
+         Path rawTarget = rawRoot.resolve(rel);
+
+         try {
+            String rawChainError = checkTargetParentChainSymlinks(rawTarget, normalizedRoot);
+            if (rawChainError != null) {
+               errors.add(diag("SIR-APP-CHANGE-PROTECT-106", label + " path " + rel + ": " + rawChainError));
+            } else {
+               Path target = rawTarget.normalize();
+               if (!target.startsWith(normalizedRoot)) {
+                  errors.add(diag(escapeCode, label + " relative path escapes output root after normalization: " + rel));
+               } else {
+                  String normChainError = checkTargetParentChainSymlinks(target, normalizedRoot);
+                  if (normChainError != null) {
+                     errors.add(diag("SIR-APP-CHANGE-PROTECT-106", label + " path " + rel + ": " + normChainError));
+                  } else {
+                     BasicFileAttributes targetAttrs;
+                     try {
+                        targetAttrs = Files.readAttributes(target, BasicFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
+                     } catch (NoSuchFileException e) {
+                        errors.add(diag("SIR-APP-CHANGE-PROTECT-107", label + " target does not exist (must already be generated): " + rel));
+                        continue;
+                     }
+
+                     if (targetAttrs.isSymbolicLink()) {
+                        errors.add(diag("SIR-APP-CHANGE-PROTECT-106", label + " target must not be a symbolic link: " + rel));
+                     } else if (targetAttrs.isDirectory()) {
+                        errors.add(diag("SIR-APP-CHANGE-PROTECT-107", label + " target must be a regular file, not a directory: " + rel));
+                     } else if (!targetAttrs.isRegularFile()) {
+                        errors.add(diag("SIR-APP-CHANGE-PROTECT-107", label + " target must be a regular file: " + rel));
+                     } else {
+                        byte[] currentBytes = Files.readAllBytes(target);
+                        if (currentBytes.length != entry.byteCount()) {
+                           errors.add(
+                              diag(
+                                 "SIR-APP-CHANGE-PROTECT-108",
+                                 label
+                                    + " on-disk byte count differs from base: path="
+                                    + rel
+                                    + " expected="
+                                    + entry.byteCount()
+                                    + " actual="
+                                    + currentBytes.length
+                              )
+                           );
+                        } else {
+                           String actualSha256 = Sha256.hexDigest(currentBytes);
+                           if (!actualSha256.equals(entry.sha256Hex())) {
+                              errors.add(
+                                 diag(
+                                    "SIR-APP-CHANGE-PROTECT-109",
+                                    label
+                                       + " on-disk SHA-256 differs from base: path="
+                                       + rel
+                                       + " expected="
+                                       + entry.sha256Hex()
+                                       + " actual="
+                                       + actualSha256
+                                 )
+                              );
+                           }
+                        }
+                     }
+                  }
+               }
+            }
+         } catch (IOException e) {
+            errors.add(
+               diag(
+                  "SIR-APP-CHANGE-PROTECT-110", "I/O failure during protection check for " + rel + ": " + e.getClass().getSimpleName() + ": " + e.getMessage()
+               )
+            );
+         } catch (SecurityException e) {
+            errors.add(
+               diag(
+                  "SIR-APP-CHANGE-PROTECT-110",
+                  "security violation during protection check for " + rel + ": " + e.getClass().getSimpleName() + ": " + e.getMessage()
+               )
+            );
+         }
+      }
+
+      return List.copyOf(errors);
+   }
+
+   private static List<ExecutionDiagnostic> protectAbsentEntries(Path outputRoot, List<String> relativePaths, String label) {
+      List<ExecutionDiagnostic> errors = new ArrayList<>();
+      Optional<Path> normalizedRootOpt = validateOutputRoot(outputRoot, errors);
+      if (normalizedRootOpt.isEmpty()) {
+         return errors;
+      }
+
+      Path rawRoot = outputRoot.toAbsolutePath();
+      Path normalizedRoot = normalizedRootOpt.get();
+
+      for (String rel : relativePaths) {
+         Path rawTarget = rawRoot.resolve(rel);
+
+         try {
+            String rawChainError = checkTargetParentChainSymlinks(rawTarget, normalizedRoot);
+            if (rawChainError != null) {
+               errors.add(diag("SIR-APP-CHANGE-PROTECT-106", label + " path " + rel + ": " + rawChainError));
+            } else {
+               Path target = rawTarget.normalize();
+               if (!target.startsWith(normalizedRoot)) {
+                  errors.add(diag("SIR-APP-CHANGE-PROTECT-112", label + " relative path escapes output root after normalization: " + rel));
+               } else {
+                  String normChainError = checkTargetParentChainSymlinks(target, normalizedRoot);
+                  if (normChainError != null) {
+                     errors.add(diag("SIR-APP-CHANGE-PROTECT-106", label + " path " + rel + ": " + normChainError));
+                  } else {
+                     BasicFileAttributes targetAttrs;
+                     try {
+                        targetAttrs = Files.readAttributes(target, BasicFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
+                     } catch (NoSuchFileException e) {
+                        continue;
+                     }
+
+                     if (targetAttrs.isSymbolicLink()) {
+                        errors.add(diag("SIR-APP-CHANGE-PROTECT-106", label + " target must not be a symbolic link: " + rel));
+                     } else if (targetAttrs.isDirectory()) {
+                        errors.add(diag("SIR-APP-CHANGE-PROTECT-111", label + " target already exists as a directory: " + rel));
+                     } else if (targetAttrs.isRegularFile()) {
+                        errors.add(diag("SIR-APP-CHANGE-PROTECT-111", label + " target already exists as a regular file: " + rel));
+                     } else {
+                        errors.add(diag("SIR-APP-CHANGE-PROTECT-111", label + " target already exists as a special file: " + rel));
                      }
                   }
                }
