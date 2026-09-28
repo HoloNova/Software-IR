@@ -82,7 +82,9 @@ public final class ChangeRecoveryEngine {
    }
 
    private ChangeRecoveryResult recoverTransaction(JournalGate.ActiveJournal active, Optional<String> currentId, List<ChangeExecutionDiagnostic> diagnostics) {
-      if (active instanceof JournalGate.ActiveJournal.V2Create v2) {
+        if (active instanceof JournalGate.ActiveJournal.V4Mixed v4) {
+           return new MixedTransactionRecoveryEngine(this.store, this.outputRoot).execute(v4.snapshot(), currentId);
+       } else if (active instanceof JournalGate.ActiveJournal.V2Create v2) {
          ChangeCreateRecoveryEngine createEngine = new ChangeCreateRecoveryEngine(this.store, this.outputRoot, this.handle);
          return createEngine.execute(v2.snapshot(), currentId);
       } else if (active instanceof JournalGate.ActiveJournal.V3Delete v3) {

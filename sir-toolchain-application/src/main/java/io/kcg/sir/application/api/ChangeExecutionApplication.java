@@ -25,6 +25,8 @@ import io.kcg.sir.application.internal.state.DeleteFilePayload;
 import io.kcg.sir.application.internal.state.DeleteManifestDeltaVerifier;
 import io.kcg.sir.application.internal.state.DeletePlanBindingVerifier;
 import io.kcg.sir.application.internal.state.JournalGate;
+import io.kcg.sir.application.internal.state.MixedTransactionCore;
+import io.kcg.sir.application.internal.state.RenamePlanBindingVerifier;
 import io.kcg.sir.application.internal.state.StateRootLock;
 import io.kcg.sir.application.internal.state.StateRootPathGuard;
 import io.kcg.sir.change.api.AddCapability;
@@ -42,6 +44,13 @@ import io.kcg.sir.change.api.FileAddition;
 import io.kcg.sir.change.api.FileChange;
 import io.kcg.sir.change.api.FileDeletion;
 import io.kcg.sir.change.api.RemoveCapability;
+import io.kcg.sir.change.api.RenameAnalysis;
+import io.kcg.sir.change.api.RenamePlan;
+import io.kcg.sir.change.api.RenamePlanRequest;
+import io.kcg.sir.change.api.RenamePlanner;
+import io.kcg.sir.change.api.RenamePlanningInput;
+import io.kcg.sir.change.api.RenameRevisionSnapshot;
+import io.kcg.sir.change.api.RenameSourceSnapshot;
 import io.kcg.sir.change.api.ChangeAnalysis.NoChanges;
 import io.kcg.sir.change.api.ChangeAnalysis.Planned;
 import io.kcg.sir.generator.springboot.api.GeneratedFile;
@@ -84,6 +93,7 @@ public final class ChangeExecutionApplication {
    Runnable afterGeneratedRegistrationReadHook = null;
    Runnable afterApplyDigestMatchHook = null;
    private final ChangePlanner planner;
+   private final RenamePlanner renamePlanner = new RenamePlanner();
    private final Function<ChangePlanningInput, ChangeAnalysis> planningStep;
    private final ChangeExecutionApplication.PlanProtection planProtection;
    private final Function<SpringBootLoweredModel, GenerationResult> generationStep;
@@ -611,6 +621,139 @@ public final class ChangeExecutionApplication {
             ChangeExecutionStage.RECOMPILE, ctx.receipt, diagnostics, "SIR-APP-CHANGE-BASELINE-005", "re-serialized bytes do not match Bundle snapshot"
          );
       }
+   }
+
+   public RenameApplyResult applyRename(RenameApplyRequest request) {
+      Objects.requireNonNull(request, "request");
+      List<ChangeExecutionDiagnostic> diagnostics = new ArrayList<>();
+      ChangeExecutionApplication.OperationContext ctx = this.acquireRenameContext(request, diagnostics);
+      if (ctx == null) {
+         if (diagnostics.stream().anyMatch(d -> d.code().startsWith("SIR-APP-CHANGE-RECOVERY-")))
+            return new RenameApplyResult.RecoveryRequired(RecoveryHandle.any(), Optional.empty(), List.copyOf(diagnostics));
+         return renameFailure(ChangeExecutionStage.BASELINE, Optional.empty(), diagnostics);
+      }
+      try {
+         return doApplyRename(request, ctx, diagnostics);
+      } finally {
+         if (ctx.lock != null) ctx.lock.close();
+      }
+   }
+
+   private RenameApplyResult doApplyRename(RenameApplyRequest request, OperationContext ctx, List<ChangeExecutionDiagnostic> diagnostics) {
+      List<ExecutionDiagnostic> readDiags = new ArrayList<>();
+      Optional<byte[]> raw = InputFileGuard.readSirFile(request.candidateSirFile(), readDiags);
+      if (raw.isEmpty()) {
+         diagnostics.addAll(mapExecutionDiags(readDiags, ChangeExecutionStage.READ));
+         return renameFailure(ChangeExecutionStage.READ, Optional.of(ctx.receipt), diagnostics);
+      }
+      byte[] sourceBytes = raw.get();
+      String sourceDigest = Sha256.hexDigest(sourceBytes);
+      if (request.expectedCandidateSirSha256Hex().isPresent() && !request.expectedCandidateSirSha256Hex().get().equals(sourceDigest))
+         return renameFailure(ChangeExecutionStage.READ, Optional.of(ctx.receipt), diagnostics,
+            "SIR-APP-CHANGE-BIND-009", "candidate SIR digest mismatch: expected=" + request.expectedCandidateSirSha256Hex().get() + " actual=" + sourceDigest);
+      String candidateText;
+      String baseText;
+      try {
+         candidateText = SourceReader.decodeStrictUtf8(sourceBytes);
+         baseText = SourceReader.decodeStrictUtf8(ctx.bundle.sourceBytes());
+      } catch (SourceReader.InvalidUtf8Exception e) {
+         return renameFailure(ChangeExecutionStage.READ, Optional.of(ctx.receipt), diagnostics,
+            "SIR-APP-CHANGE-BASELINE-001", "candidate or baseline SIR is not valid UTF-8");
+      }
+      List<ExecutionDiagnostic> baseErrors = new ArrayList<>();
+      Optional<SirCompilation.CompilationSnapshot> baseCompiled = SirCompilation.compile(baseText, ctx.sourceId, generationStep, baseErrors);
+      if (baseCompiled.isEmpty()) {
+         diagnostics.addAll(mapExecutionDiags(baseErrors, ChangeExecutionStage.RECOMPILE));
+         return renameFailure(ChangeExecutionStage.RECOMPILE, Optional.of(ctx.receipt), diagnostics);
+      }
+      SirCompilation.CompilationSnapshot base = baseCompiled.get();
+      ProjectGraph baseGraph = buildGraph(base, ctx.sourceId, diagnostics);
+      if (baseGraph == null || !baseGraph.canonicalDigest().equals(ctx.bundle.descriptor().graphCanonicalDigest()))
+         return renameFailure(ChangeExecutionStage.RECOMPILE, Optional.of(ctx.receipt), diagnostics,
+            "SIR-APP-CHANGE-BASELINE-005", "rebuilt base graph does not match CURRENT Bundle");
+      if (Arrays.equals(sourceBytes, ctx.bundle.sourceBytes()))
+         return new RenameApplyResult.NoChanges(ctx.receipt, io.kcg.sir.change.api.RenameNoChangeReason.NAME_UNCHANGED, filterNonErrors(diagnostics));
+      List<ExecutionDiagnostic> candidateErrors = new ArrayList<>();
+      Optional<SirCompilation.CompilationSnapshot> candidateCompiled = SirCompilation.compile(candidateText, ctx.sourceId, generationStep, candidateErrors);
+      if (candidateCompiled.isEmpty()) {
+         diagnostics.addAll(mapExecutionDiags(candidateErrors, ChangeExecutionStage.RECOMPILE));
+         return renameFailure(ChangeExecutionStage.RECOMPILE, Optional.of(ctx.receipt), diagnostics);
+      }
+      SirCompilation.CompilationSnapshot candidate = candidateCompiled.get();
+      ProjectGraph candidateGraph = buildGraph(candidate, ctx.sourceId, diagnostics);
+      if (candidateGraph == null) return renameFailure(ChangeExecutionStage.RECOMPILE, Optional.of(ctx.receipt), diagnostics);
+      io.kcg.sir.change.api.ChangeBaseRevision basedOn = ctx.bundle.descriptor().toBaseRevision();
+      RenameAnalysis analysis = renamePlanner.plan(new RenamePlanningInput(
+         base.semanticModel(), candidate.semanticModel(),
+         new RenameRevisionSnapshot(baseGraph, new RenameSourceSnapshot(ctx.sourceId, ctx.bundle.sourceBytes().length, Sha256.hexDigest(ctx.bundle.sourceBytes()))),
+         new RenameRevisionSnapshot(candidateGraph, new RenameSourceSnapshot(ctx.sourceId, sourceBytes.length, sourceDigest)),
+         new RenamePlanRequest(basedOn, request.declarationSymbol())
+      ));
+      diagnostics.addAll(mapRenameDiags(analysis.diagnostics()));
+      if (analysis instanceof RenameAnalysis.NoRename noRename)
+         return new RenameApplyResult.NoChanges(ctx.receipt, noRename.reason(), filterNonErrors(diagnostics));
+      if (!(analysis instanceof RenameAnalysis.Planned planned)) return renameFailure(ChangeExecutionStage.PLAN, Optional.of(ctx.receipt), diagnostics);
+      RenamePlan plan = planned.plan();
+      byte[] candidateSnapshotBytes = BaselineBuilder.serializeGraph(candidateGraph);
+      if (candidateSnapshotBytes == null) return renameFailure(ChangeExecutionStage.RECOMPILE, Optional.of(ctx.receipt), diagnostics,
+         "SIR-APP-CHANGE-BASELINE-001", "failed to serialize candidate graph");
+      BaselineBundle b1;
+      try { b1 = BaselineBuilder.build(candidate, candidateGraph, sourceBytes, candidateSnapshotBytes, ctx.sourceId, ctx.normalizedOutputRoot); }
+      catch (IllegalArgumentException e) { return renameFailure(ChangeExecutionStage.BASELINE, Optional.of(ctx.receipt), diagnostics,
+         "SIR-APP-CHANGE-BASELINE-001", "B1 Bundle construction failed: " + e.getMessage()); }
+      RenamePlanBindingVerifier.Result binding = RenamePlanBindingVerifier.verify(ctx.bundle.descriptor().manifest(), b1.descriptor().manifest(), plan);
+      if (binding instanceof RenamePlanBindingVerifier.Result.Failure failure)
+         return renameFailure(ChangeExecutionStage.PROTECT, Optional.of(ctx.receipt), withFallback(diagnostics, failure.error()));
+      List<String> appliedFiles = ((RenamePlanBindingVerifier.Result.Success) binding).touchedPaths();
+      List<ExecutionDiagnostic> protectErrors = new ArrayList<>();
+      protectErrors.addAll(PlanProtector.protectUpdates(ctx.normalizedOutputRoot, plan.updates()));
+      protectErrors.addAll(PlanProtector.protectWithdrawals(ctx.normalizedOutputRoot, plan.withdrawals()));
+      protectErrors.addAll(PlanProtector.protectEstablishments(ctx.normalizedOutputRoot, plan.establishments()));
+      if (!protectErrors.isEmpty()) {
+         diagnostics.addAll(mapExecutionDiags(protectErrors, ChangeExecutionStage.PROTECT));
+         return renameFailure(ChangeExecutionStage.PROTECT, Optional.of(ctx.receipt), diagnostics);
+      }
+      Map<String, byte[]> candidateBytes = new LinkedHashMap<>();
+      for (GeneratedFile file : candidate.generatedFiles()) candidateBytes.put(file.relativePath(), file.content().getBytes(StandardCharsets.UTF_8));
+      MixedTransactionCore.Result result = new MixedTransactionCore(new BaselineBundleStore(ctx.normalizedStateRoot),
+         ctx.normalizedOutputRoot, ctx.bundle, b1, plan.planDigest(), plan.subject().declarationSymbol().value(), candidateBytes).execute();
+      if (!result.published()) return new RenameApplyResult.RecoveryRequired(RecoveryHandle.of(result.transactionId()), Optional.of(ctx.receipt),
+         List.of(new ChangeExecutionDiagnostic("SIR-APP-CHANGE-RECOVERY-001", ChangeExecutionStage.RECOVERY, ExecutionSeverity.ERROR,
+            "mixed rename transaction requires recovery: " + result.error(), Optional.empty())));
+      return new RenameApplyResult.Applied(ctx.receipt, toReceipt(b1), appliedFiles, true, filterNonErrors(diagnostics));
+   }
+
+   private OperationContext acquireRenameContext(RenameApplyRequest request, List<ChangeExecutionDiagnostic> diagnostics) {
+      StateRootPathGuard.Result paths = StateRootPathGuard.validate(request.stateRoot(), request.outputRoot(), true);
+      if (!paths.isSuccess()) { diagnostics.addAll(paths.errors()); return null; }
+      Path state = paths.normalizedStateRoot(), output = paths.normalizedOutputRoot();
+      StateRootLock.HeldLock lock = this.acquireLock(state, diagnostics);
+      if (lock == null) return null;
+      StateRootPathGuard.Result revalidated = StateRootPathGuard.validate(state, output, true);
+      if (!revalidated.isSuccess()) { diagnostics.addAll(revalidated.errors()); lock.close(); return null; }
+      BaselineBundleStore store = new BaselineBundleStore(state);
+      BaselineBundleStore.CurrentReadResult currentRead = store.readCurrent();
+      Optional<String> currentId;
+      if (currentRead instanceof BaselineBundleStore.CurrentReadResult.Present p) currentId = Optional.of(p.baselineId());
+      else if (currentRead instanceof BaselineBundleStore.CurrentReadResult.Absent) currentId = Optional.empty();
+      else {
+         BaselineBundleStore.CurrentReadResult.Failure failure = (BaselineBundleStore.CurrentReadResult.Failure) currentRead;
+         diagnostics.add(diag(failure.code(), "failed to read CURRENT: " + failure.message())); lock.close(); return null;
+      }
+      JournalGate.InspectionResult gate = new JournalGate(state).inspect(currentId);
+      if (!gate.isOpen()) { diagnostics.addAll(gate.errors()); lock.close(); return null; }
+      if (currentId.isEmpty()) { diagnostics.add(diag("SIR-APP-CHANGE-BASELINE-002", "no CURRENT baseline: register first")); lock.close(); return null; }
+      if (!currentId.get().equals(request.expectedBaselineId())) {
+         diagnostics.add(diag("SIR-APP-CHANGE-BASELINE-002", "expectedBaselineId mismatch: expected=" + request.expectedBaselineId() + " current=" + currentId.get()));
+         lock.close(); return null;
+      }
+      BaselineBundleStore.LoadResult loaded = store.loadBundle(currentId.get());
+      if (loaded instanceof BaselineBundleStore.LoadResult.Failure failure) { diagnostics.add(diag(failure.code(), failure.message())); lock.close(); return null; }
+      BaselineBundle bundle = ((BaselineBundleStore.LoadResult.Success) loaded).bundle();
+      if (!bundle.descriptor().boundOutputRoot().equals(output)) {
+         diagnostics.add(diag("SIR-APP-CHANGE-BASELINE-007", "outputRoot does not match CURRENT Bundle binding")); lock.close(); return null;
+      }
+      return new OperationContext(lock, state, output, bundle, toReceipt(bundle), bundle.descriptor().sourceId());
    }
 
    public ChangePlanningContextResult inspectChangePlanningContext(ChangePlanningContextRequest request) {
@@ -1674,6 +1817,15 @@ public final class ChangeExecutionApplication {
       return out;
    }
 
+   private static List<ChangeExecutionDiagnostic> mapRenameDiags(List<io.kcg.sir.change.api.RenameDiagnostic> diags) {
+      List<ChangeExecutionDiagnostic> out = new ArrayList<>(diags.size());
+      for (io.kcg.sir.change.api.RenameDiagnostic diagnostic : diags) {
+         ExecutionSeverity severity = diagnostic.isError() ? ExecutionSeverity.ERROR : ExecutionSeverity.valueOf(diagnostic.severity().name());
+         out.add(new ChangeExecutionDiagnostic(diagnostic.code(), ChangeExecutionStage.PLAN, severity, diagnostic.message(), diagnostic.relativePath()));
+      }
+      return out;
+   }
+
    private static List<ChangeExecutionDiagnostic> mapPlannerDiags(List<ChangeDiagnostic> diags) {
       List<ChangeExecutionDiagnostic> out = new ArrayList<>(diags.size());
 
@@ -1759,6 +1911,22 @@ public final class ChangeExecutionApplication {
       List<ChangeExecutionDiagnostic> out = new ArrayList<>(diagnostics);
       out.add(new ChangeExecutionDiagnostic(code, stage, ExecutionSeverity.ERROR, message, Optional.empty()));
       return new ChangeBaselinePlanningResult.Failure(stage, Optional.of(receipt), List.copyOf(out));
+   }
+
+   private static RenameApplyResult.Failure renameFailure(ChangeExecutionStage stage, Optional<ChangeBaselineReceipt> receipt,
+      List<ChangeExecutionDiagnostic> diagnostics) {
+      List<ChangeExecutionDiagnostic> result = new ArrayList<>(diagnostics);
+      if (result.stream().noneMatch(ChangeExecutionDiagnostic::isError))
+         result.add(new ChangeExecutionDiagnostic("SIR-APP-CHANGE-BASELINE-001", stage, ExecutionSeverity.ERROR,
+            "rename stage " + stage + " failed without an explicit error diagnostic", Optional.empty()));
+      return new RenameApplyResult.Failure(stage, receipt, List.copyOf(result));
+   }
+
+   private static RenameApplyResult.Failure renameFailure(ChangeExecutionStage stage, Optional<ChangeBaselineReceipt> receipt,
+      List<ChangeExecutionDiagnostic> diagnostics, String code, String message) {
+      List<ChangeExecutionDiagnostic> result = new ArrayList<>(diagnostics);
+      result.add(new ChangeExecutionDiagnostic(code, stage, ExecutionSeverity.ERROR, message, Optional.empty()));
+      return new RenameApplyResult.Failure(stage, receipt, List.copyOf(result));
    }
 
    private static ChangeApplyResult applyFailure(List<ChangeExecutionDiagnostic> diagnostics) {

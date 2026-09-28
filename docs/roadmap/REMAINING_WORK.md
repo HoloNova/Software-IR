@@ -1,6 +1,6 @@
 # KCG-Code 剩余工作路线图
 
-> 更新：G0/G1 已验收归档（G1 基线 CI 775/0/0/5）；G2 Q16 已验收归档，提交 `b2f5436` 的 GitHub CI 双闸门各 **837/0/0/5**、四个业务 IT **40/61/36/63** 全 `PASSED`。`ACTIVE_WORK.md` 当前 **IDLE**；原课程全局替换连带 Input 声明改名会被 `PATH-004` 明确拒绝，混合事务与组合改名均须另立单。
+> 更新：G0/G1 已验收归档（G1 基线 CI 775/0/0/5）；G2 Q16 已验收归档，提交 `b2f5436` 的 GitHub CI 双闸门各 **837/0/0/5**、四个业务 IT **40/61/36/63** 全 `PASSED`。`ACTIVE_WORK.md` 当前承载 **Q17（单声明改名的原子文件事务）**，状态 **`IN_PROGRESS`**（负责人已批准；先决探针 P1–P7 未回填前不改生产代码）；原课程全局替换连带 Input 声明改名会被 `PATH-004` 明确拒绝，组合改名须另立单。
 > 读者：项目负责人和后续执行 Agent
 > 定位：本文件的阶段 1–7 是 **G0：现有链路资格收口**内部的 Q 系列执行顺序。产品方向、阶段进入条件与阶段完成门见 [`README.md`](README.md) 和 [`../design/README.md`](../design/README.md)；两者不替代本文件的执行顺序。
 
@@ -10,7 +10,7 @@
 
 不要一次把全部任务交给一个 Agent。每个阶段都应独立实现、测试、复核和提交。
 
-本文件只负责长期顺序。当前真正允许执行的唯一小任务见 [`ACTIVE_WORK.md`](ACTIVE_WORK.md)；项目负责人如何派活和验收见 [`../PROJECT_OWNER_GUIDE.md`](../PROJECT_OWNER_GUIDE.md)。
+本文件只负责长期顺序。当前的工作单及其状态见 [`ACTIVE_WORK.md`](ACTIVE_WORK.md)（无获授权工作单时为 `IDLE` 占位）；项目负责人如何派活和验收见 [`../PROJECT_OWNER_GUIDE.md`](../PROJECT_OWNER_GUIDE.md)。
 
 版本快照规则：由项目负责人决定何时提交或推送。G0 实现快照已提交为 `24eec6d`；G1 的 Q9/Q10 实现快照已提交为 `92c505c`（消息为 `pause`）。无阻断或待裁决方向时，聊天中只请求确认继续，详细证据留在工作单和资格文档。
 
@@ -35,7 +35,7 @@ G1 的完成门是「BIZ-01..06 的基础业务与反例 + GEN-01/02，并在真
 | 工作单 | 范围 | 状态 |
 | --- | --- | --- |
 | Q16 | 单文件持久身份、旧身份不明时拒绝改名、独立只读**单声明**改名计划；全工程受管文件差异未覆盖时拒绝；不执行文件应用或数据库迁移 | **`DONE`**（2026-09-26 验收归档；CI [run `36234304027`](https://github.com/HoloNova/Software-IR/actions/runs/36234304027) 双闸门各 837/0/0/5，四个 IT 全 `PASSED`），见 [`completed/Q16-persistent-identity-and-read-only-rename-plan.md`](completed/Q16-persistent-identity-and-read-only-rename-plan.md) |
-| Q17 候选（无开工授权） | **单声明**混合路径变更的一次原子事务、CURRENT/Journal 恢复、旧受管文件清理、应用盘面与候选从零生成逐字节一致；日志 V4 只是待核方案 | 待单独工作单审定后立项；Q16 的只读计划不抵扣本门 |
+| Q17（[`ACTIVE_WORK.md`](ACTIVE_WORK.md)，**`IN_PROGRESS`**） | **单声明**混合路径变更的一次原子事务、CURRENT/Journal 恢复、旧受管文件清理、应用盘面与候选从零生成逐字节一致；日志 V4 只是待核候选方案，不预设采用 | 方案已获负责人批准；**先核查 P1–P7，再实施事务**；Q16 的只读计划不抵扣本门 |
 | 后续独立项（未立项） | 能力与关联 Input 声明**一同改名**：需冻结 Input 身份与多 subject 计划；原课程全局替换当前只会被 `PATH-004` 拒绝，不由 Q17 的文件事务自动解决 | 尚未授权；不能把 Q16 的单声明计划当作三文件改名可应用 |
 | 后续单 | 多文件源清单、import/binding、模块实例、nodeKey 与剩余 LANG 门禁 | 尚未立项；Q16/Q17 不抵扣 G2 整阶段完成门 |
 

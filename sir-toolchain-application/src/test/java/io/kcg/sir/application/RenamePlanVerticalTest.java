@@ -350,16 +350,28 @@ class RenamePlanVerticalTest {
                         List.of()));
         assertTrue(mixed.getMessage().contains("must not mix"), mixed.getMessage());
 
-        // A rename plan is not accepted by any input of the apply path, so it cannot be applied by
-        // mistake: the apply request binds a ChangeSet and a candidate SIR, never a RenamePlan.
+        // Rename has one explicit entry; ordinary apply remains structurally unable to consume it.
         assertFalse(ChangePlan.class.isAssignableFrom(RenamePlan.class));
+        assertFalse(io.kcg.sir.change.api.ChangeOperation.class.isAssignableFrom(RenamePlan.class));
+        assertEquals(1, Arrays.stream(ChangeExecutionApplication.class.getMethods())
+                .filter(method -> method.getName().equals("applyRename")).count());
+        Method renameEntry = Arrays.stream(ChangeExecutionApplication.class.getMethods())
+                .filter(method -> method.getName().equals("applyRename")).findFirst().orElseThrow();
+        assertEquals(List.of(io.kcg.sir.application.api.RenameApplyRequest.class), List.of(renameEntry.getParameterTypes()));
+        assertFalse(Arrays.stream(io.kcg.sir.application.api.RenameApplyRequest.class.getRecordComponents())
+                .anyMatch(component -> component.getType() == RenamePlan.class), "request selects a declaration; it does not accept a prebuilt plan");
         assertFalse(Arrays.stream(ChangeApplyRequest.class.getRecordComponents())
                 .anyMatch(component -> component.getType() == RenamePlan.class));
-        for (Method method : ChangeExecutionApplication.class.getMethods()) {
-            assertFalse(
-                    Arrays.stream(method.getParameterTypes()).anyMatch(RenamePlan.class::equals),
-                    "no apply entry point may accept a rename plan: " + method);
-        }
+        assertFalse(Arrays.stream(io.kcg.sir.application.api.RenameApplyRequest.class.getRecordComponents())
+                .anyMatch(component -> component.getType() == RenamePlan.class));
+        assertFalse(Arrays.stream(ChangeExecutionApplication.class.getMethods())
+                .filter(method -> !method.getName().equals("applyRename"))
+                .anyMatch(method -> Arrays.stream(method.getParameterTypes()).anyMatch(RenamePlan.class::equals)),
+                "non-rename entry points cannot receive a rename plan directly");
+        Method ordinaryApply = Arrays.stream(ChangeExecutionApplication.class.getMethods())
+                .filter(method -> method.getName().equals("apply")).findFirst().orElseThrow();
+        assertEquals(ChangeApplyRequest.class, ordinaryApply.getParameterTypes()[0]);
+        assertFalse(Arrays.stream(ordinaryApply.getParameterTypes()).anyMatch(RenamePlan.class::equals));
     }
 
     @Test
