@@ -197,6 +197,8 @@ public final class RenamePlannerCore {
       RenamePlan plan, RenameRevisionSnapshot base, RenameRevisionSnapshot candidate
    ) {
       List<RenameDiagnostic> diagnostics = new ArrayList<>();
+      checkSupportedVersions(plan.basedOn(), base.graph(), candidate.graph(), diagnostics);
+      if (hasError(diagnostics)) return sortAndCopy(diagnostics);
       SymbolId declarationSymbol = plan.subject().declarationSymbol();
       checkSnapshotIdentity(base, declarationSymbol, "基线", diagnostics);
       checkSnapshotIdentity(candidate, declarationSymbol, "候选", diagnostics);
@@ -281,18 +283,10 @@ public final class RenamePlannerCore {
       ChangeBaseRevision basedOn = input.request().basedOn();
       ProjectGraph baseGraph = input.base().graph();
       ProjectGraph candidateGraph = input.candidate().graph();
+      checkSupportedVersions(basedOn, baseGraph, candidateGraph, diagnostics);
       if (basedOn.graphVersion() != baseGraph.version() || basedOn.graphVersion() != candidateGraph.version()) {
          diagnostics.add(RenameDiagnostic.error(
             "SIR-RENAME-REQUEST-001", RenameDiagnosticStage.REQUEST, null, "请求基线的图版本与输入图不一致"
-         ));
-      }
-
-      if (basedOn.snapshotFormatVersion() != ProjectGraphCanonicalFormatVersion.V1) {
-         diagnostics.add(RenameDiagnostic.error(
-            "SIR-RENAME-REQUEST-002",
-            RenameDiagnosticStage.REQUEST,
-            null,
-            "请求基线的规范快照格式不是 V1: " + basedOn.snapshotFormatVersion().name()
          ));
       }
 
@@ -318,6 +312,21 @@ public final class RenamePlannerCore {
             null,
             "请求基线的源摘要与输入基线源不一致：源字节已变（即使图未变），请求基线已陈旧"
          ));
+      }
+   }
+
+   /** Both read-only entry points reject graphs/formats their single-source contract cannot describe. */
+   private static void checkSupportedVersions(ChangeBaseRevision basedOn, ProjectGraph baseGraph,
+      ProjectGraph candidateGraph, List<RenameDiagnostic> diagnostics) {
+      if (basedOn.graphVersion() != io.kcg.sir.projectgraph.api.GraphVersion.V0_1
+         || baseGraph.version() != io.kcg.sir.projectgraph.api.GraphVersion.V0_1
+         || candidateGraph.version() != io.kcg.sir.projectgraph.api.GraphVersion.V0_1) {
+         diagnostics.add(RenameDiagnostic.error("SIR-RENAME-REQUEST-001", RenameDiagnosticStage.REQUEST, null,
+            "single-source rename planner supports only Graph V0_1"));
+      }
+      if (basedOn.snapshotFormatVersion() != ProjectGraphCanonicalFormatVersion.V1) {
+         diagnostics.add(RenameDiagnostic.error("SIR-RENAME-REQUEST-002", RenameDiagnosticStage.REQUEST, null,
+            "请求基线的规范快照格式不是 V1: " + basedOn.snapshotFormatVersion().name()));
       }
    }
 

@@ -106,6 +106,13 @@ public final class SpringBootProjectGraphInputFactory {
       return new ProjectGraphInput(GraphVersion.V0_1, sourceId, loweredModel.displayName(), semanticDeclarations, loweredDeclarations, artifacts, files, edges);
    }
 
+   public ProjectGraphInput build(NormalizedSemanticModel semanticModel, SpringBootLoweredModel loweredModel,
+      List<GeneratedFile> generatedFiles, io.kcg.sir.source.SourceSnapshot sources) {
+      var single = build(semanticModel, loweredModel, generatedFiles, sources.entry());
+      return new ProjectGraphInput(GraphVersion.V0_2, sources.entry(), single.projectDisplayName(),
+         single.semanticDeclarations(), single.loweredDeclarations(), single.artifacts(), single.files(), single.edges(), Optional.of(sources.manifest()));
+   }
+
    private static SymbolKind symbolKindOf(NormalizedDeclaration decl) {
       if (decl instanceof NormalizedEnum) {
          return SymbolKind.ENUM;

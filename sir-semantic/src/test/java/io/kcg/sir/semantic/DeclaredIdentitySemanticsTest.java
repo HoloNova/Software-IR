@@ -144,6 +144,27 @@ class DeclaredIdentitySemanticsTest {
     }
 
     @Test
+    void sameKindIdentityCollisionsReturnDiagnosticsRatherThanCrashingTheSymbolTable() {
+        for (String declarations : List.of("""
+                capability A @id("shared") { output Unit; requires readonly; expose query; workflow { return unit; } }
+                capability B @id("shared") { output Unit; requires readonly; expose query; workflow { return unit; } }
+                """, """
+                entity Course persistent {
+                  identity id: Int64 generated auto;
+                  field code: String @id("shared");
+                  field label: String @id("shared");
+                }
+                """)) {
+            var result = TestSources.analyze(TestSources.sir(declarations));
+            assertEquals(List.of("SIR-IDENTITY-002"), TestSources.errorCodes(result));
+            assertTrue(result.model().isEmpty());
+            var error = result.diagnostics().stream().filter(Diagnostic::isError).findFirst().orElseThrow();
+            assertEquals(1, error.related().size());
+            assertNotEquals(error.primarySpan(), error.related().getFirst().span());
+        }
+    }
+
+    @Test
     void duplicateDeclaredIdsAreRejectedWithSpanAndCode() {
         SemanticAnalysis duplicates = TestSources.analyze(TestSources.sir("""
                 entity Course persistent {

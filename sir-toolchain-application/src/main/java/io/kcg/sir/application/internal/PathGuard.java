@@ -89,7 +89,8 @@ public final class PathGuard {
       return errors;
    }
 
-   private static String validateRelativePath(String path) {
+   /** Shared portable lexical path policy for generated targets and explicit project sources. */
+   public static String validateRelativePath(String path) {
       if (path.startsWith("/")) {
          return "path must not be absolute";
       }

@@ -32,6 +32,45 @@ final class SirAstBuilder {
         return new AstDocument(ids.id(path), source.span(context), version, software(context.softwareDecl(), path));
     }
 
+    AstSourceUnit.Root buildProject(SirParser.ProjectDocumentContext context) {
+        String parent = ids.rootPath();
+        AstName softwareName = name(context.IDENT());
+        String path = ids.named(parent, "software", softwareName.text());
+        AstSoftware software = new AstSoftware(ids.id(path), source.span(context), softwareName,
+                metadata(context.metadataBlock(), path), target(context.targetBlock(), path),
+                context.declarationsBlock().declaration().stream().map(d -> declaration(d, path)).toList());
+        AstDocument document = new AstDocument(ids.id(parent), source.span(context), version(context.versionLiteral()), software);
+        List<AstSourcePath> sources = context.sourcesBlock().sourceEntry().stream().map(e ->
+                sourcePath(e.STRING(), ids.indexed(path, "source"))).toList();
+        return new AstSourceUnit.Root(document, sources, imports(context.importsBlock(), path));
+    }
+
+    AstSourceUnit.Fragment buildFragment(SirParser.SourceFragmentContext context) {
+        String path = ids.rootPath();
+        return new AstSourceUnit.Fragment(ids.id(path), source.span(context), version(context.versionLiteral()),
+                imports(context.importsBlock(), path),
+                context.declarationsBlock().declaration().stream().map(d -> declaration(d, path)).toList());
+    }
+
+    private SirVersion version(SirParser.VersionLiteralContext context) {
+        TerminalNode node = context.DOTTED_NUMBER();
+        String[] parts = node.getText().split("\\.");
+        return new SirVersion(new BigInteger(parts[0]), new BigInteger(parts[1]), source.span(node.getSymbol()));
+    }
+
+    private AstSourcePath sourcePath(TerminalNode token, String path) {
+        return new AstSourcePath(ids.id(path), source.span(token.getSymbol()), SirStringDecoder.decode(token.getText()));
+    }
+
+    private List<AstImport> imports(SirParser.ImportsBlockContext context, String parent) {
+        return context.importEntry().stream().map(e -> {
+            String path = ids.indexed(parent, "import");
+            AstNameRef declaration = new AstNameRef(ids.id(ids.fixed(path, "declaration")),
+                    source.span(e.declarationName), e.declarationName.getText());
+            return new AstImport(ids.id(path), source.span(e), declaration, sourcePath(e.STRING(), ids.fixed(path, "from")));
+        }).toList();
+    }
+
     private AstSoftware software(SirParser.SoftwareDeclContext context, String parent) {
         AstName name = name(context.IDENT());
         String path = ids.named(parent, "software", name.text());

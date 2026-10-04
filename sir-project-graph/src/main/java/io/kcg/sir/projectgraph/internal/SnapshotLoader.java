@@ -29,10 +29,11 @@ public final class SnapshotLoader {
    }
 
    public static SnapshotLoader.LoadedGraph load(RawSnapshotDocument raw, List<ProjectGraphDiagnostic> diagnostics) {
+      GraphVersion version = GraphVersion.valueOf(raw.graph.fields.get("graphVersion"));
       List<ProjectGraphNode> nodes = new ArrayList<>();
 
       for (RawSnapshotDocument.RawRecord rawNode : raw.nodes) {
-         ProjectGraphNode node = constructNode(rawNode, diagnostics);
+         ProjectGraphNode node = constructNode(rawNode, diagnostics, version);
          if (node == null) {
             return null;
          }
@@ -52,12 +53,12 @@ public final class SnapshotLoader {
       }
 
       ProjectGraphValidator validator = new ProjectGraphValidator();
-      List<ProjectGraphDiagnostic> validateDiags = validator.validate(GraphVersion.V0_1, nodes, edges);
+      List<ProjectGraphDiagnostic> validateDiags = validator.validate(version, nodes, edges);
       diagnostics.addAll(validateDiags);
       if (validateDiags.stream().anyMatch(ProjectGraphDiagnostic::isError)) {
          return null;
       } else {
-         String recomputedDigest = GraphCanonicalForm.digest(GraphVersion.V0_1, nodes, edges);
+         String recomputedDigest = GraphCanonicalForm.digest(version, nodes, edges);
          String documentDigest = raw.graph.fields.get("canonicalDigest");
          if (!recomputedDigest.equals(documentDigest)) {
             diagnostics.add(
@@ -68,12 +69,12 @@ public final class SnapshotLoader {
             );
             return null;
          } else {
-            return new SnapshotLoader.LoadedGraph(GraphVersion.V0_1, nodes, edges, recomputedDigest);
+            return new SnapshotLoader.LoadedGraph(version, nodes, edges, recomputedDigest);
          }
       }
    }
 
-   private static ProjectGraphNode constructNode(RawSnapshotDocument.RawRecord raw, List<ProjectGraphDiagnostic> diagnostics) {
+   private static ProjectGraphNode constructNode(RawSnapshotDocument.RawRecord raw, List<ProjectGraphDiagnostic> diagnostics, GraphVersion version) {
       if (!isAsciiSorted(raw.fields.keySet())) {
          diagnostics.add(formatError(raw, "SIR-GRAPH-FORMAT-018", "fields are not in ASCII name ascending order"));
          return null;
@@ -87,7 +88,7 @@ public final class SnapshotLoader {
 
       try {
          return switch (nodeKind) {
-            case "Project" -> constructProjectNode(raw, diagnostics);
+            case "Project" -> constructProjectNode(raw, diagnostics, version);
             case "SemanticDeclaration" -> constructSemanticNode(raw, diagnostics);
             case "LoweredDeclaration" -> constructLoweredNode(raw, diagnostics);
             case "Artifact" -> constructArtifactNode(raw, diagnostics);
@@ -106,8 +107,10 @@ public final class SnapshotLoader {
       }
    }
 
-   private static ProjectGraphNode.Project constructProjectNode(RawSnapshotDocument.RawRecord raw, List<ProjectGraphDiagnostic> diagnostics) {
-      validateFieldSet(raw, diagnostics, Set.of("displayName", "id.kind", "id.value", "nodeKind", "provenance.kind", "provenance.sourceId"));
+   private static ProjectGraphNode.Project constructProjectNode(RawSnapshotDocument.RawRecord raw, List<ProjectGraphDiagnostic> diagnostics, GraphVersion version) {
+      Set<String> fields = new java.util.HashSet<>(Set.of("displayName", "id.kind", "id.value", "nodeKind", "provenance.kind", "provenance.sourceId"));
+      if (version == GraphVersion.V0_2) fields.addAll(Set.of("sources.base64", "sources.sha256Hex"));
+      validateFieldSet(raw, diagnostics, fields);
       if (diagnostics.stream().anyMatch(ProjectGraphDiagnostic::isError)) {
          return null;
       }
@@ -126,7 +129,18 @@ public final class SnapshotLoader {
             return null;
          }
 
-         GraphProvenance.ProjectProvenance prov = new GraphProvenance.ProjectProvenance(sourceId);
+         Optional<io.kcg.sir.source.SourceSetManifest> sourceSet = Optional.empty();
+         if (version == GraphVersion.V0_2) {
+            try {
+               var manifest = io.kcg.sir.source.SourceSetManifest.decode(java.util.Base64.getDecoder().decode(raw.fields.get("sources.base64")));
+               if (!manifest.sha256Hex().equals(raw.fields.get("sources.sha256Hex"))) throw new IllegalArgumentException("source manifest digest mismatch");
+               sourceSet = Optional.of(manifest);
+            } catch (RuntimeException e) {
+               diagnostics.add(formatError(raw, "SIR-GRAPH-SOURCES-005", "invalid source manifest: " + e.getMessage()));
+               return null;
+            }
+         }
+         GraphProvenance.ProjectProvenance prov = new GraphProvenance.ProjectProvenance(sourceId, sourceSet);
          return new ProjectGraphNode.Project(GraphNodeId.ProjectNodeId.INSTANCE, prov, displayName);
       } else {
          diagnostics.add(formatError(raw, "SIR-GRAPH-FORMAT-012", "displayName must not be blank"));

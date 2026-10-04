@@ -128,7 +128,9 @@ final class ResolvePass {
       this.scopeSymbols.put(this.projectScopeId, new ArrayList<>());
       this.registerPrimitives();
       this.registerDeclarations();
+      if (this.hasIdentityCollision()) return this.identityFailureContext();
       this.resolveMembersAndTypes();
+      if (this.hasIdentityCollision()) return this.identityFailureContext();
       this.resolvePatchPayloadBindings();
       this.resolveCapabilities();
       SymbolTable table = this.buildSymbolTable();
@@ -143,6 +145,16 @@ final class ResolvePass {
          this.declarationBindings,
          List.copyOf(this.diagnostics)
       );
+   }
+
+   private boolean hasIdentityCollision() {
+      return this.diagnostics.stream().anyMatch(d -> d.code().value().equals("SIR-IDENTITY-002"));
+   }
+
+   /** A rejected identity must never be installed in a supposedly unique SymbolTable. */
+   private ResolvedContext identityFailureContext() {
+      return new ResolvedContext(this.softwareName, SymbolTable.of(List.of(), Map.of(), Map.of()),
+         Map.of(), Map.of(), Map.of(), Map.of(), ReferenceSiteBindings.of(List.of()), Map.of(), List.copyOf(this.diagnostics));
    }
 
    private void registerPrimitives() {

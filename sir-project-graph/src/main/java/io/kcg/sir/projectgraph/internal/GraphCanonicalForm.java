@@ -87,6 +87,10 @@ public final class GraphCanonicalForm {
       form.field(provenance.sourceId().value());
       switch (provenance) {
          case GraphProvenance.ProjectProvenance p:
+            p.sourceSet().ifPresent(s -> {
+               form.field(java.util.Base64.getEncoder().encodeToString(s.canonicalBytes()));
+               form.field(s.sha256Hex());
+            });
             break;
          case GraphProvenance.SemanticProvenance p:
             form.field(p.sourceNodeId().value());

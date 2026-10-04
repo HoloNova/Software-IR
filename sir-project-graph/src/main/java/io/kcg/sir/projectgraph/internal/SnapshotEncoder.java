@@ -29,9 +29,10 @@ public final class SnapshotEncoder {
    public static SnapshotEncoder.EncodeResult encode(
       ProjectGraph graph, ProjectGraphCanonicalFormatVersion formatVersion, List<ProjectGraphDiagnostic> diagnostics
    ) {
-      if (formatVersion != ProjectGraphCanonicalFormatVersion.V1) {
+      if ((graph.version() == io.kcg.sir.projectgraph.api.GraphVersion.V0_1 && formatVersion != ProjectGraphCanonicalFormatVersion.V1)
+         || (graph.version() == io.kcg.sir.projectgraph.api.GraphVersion.V0_2 && formatVersion != ProjectGraphCanonicalFormatVersion.V2)) {
          diagnostics.add(
-            ProjectGraphDiagnostic.error("SIR-GRAPH-COMPAT-001", "unsupported canonical format version: " + formatVersion + " (only V1 is supported)")
+            ProjectGraphDiagnostic.error("SIR-GRAPH-COMPAT-001", "canonical format " + formatVersion + " does not match graph " + graph.version())
          );
          return null;
       }
@@ -67,7 +68,7 @@ public final class SnapshotEncoder {
       }
 
       String payloadSha256Hex = Sha256Helper.hexDigest(payload);
-      byte[] header = encodeHeader(payload.length, payloadSha256Hex);
+      byte[] header = encodeHeader(payload.length, payloadSha256Hex, formatVersion);
       ByteArrayOutputStream out = new ByteArrayOutputStream();
       out.write(SnapshotFormat.MAGIC, 0, SnapshotFormat.MAGIC.length);
       out.write(header, 0, header.length);
@@ -117,9 +118,9 @@ public final class SnapshotEncoder {
       return diagnostics.stream().anyMatch(ProjectGraphDiagnostic::isError) ? null : out.toByteArray();
    }
 
-   private static byte[] encodeHeader(int payloadByteCount, String payloadSha256Hex) {
+   private static byte[] encodeHeader(int payloadByteCount, String payloadSha256Hex, ProjectGraphCanonicalFormatVersion formatVersion) {
       Map<String, String> headerFields = new TreeMap<>();
-      headerFields.put("formatVersion", "1");
+      headerFields.put("formatVersion", formatVersion.name().substring(1));
       headerFields.put("payloadByteCount", Integer.toString(payloadByteCount));
       headerFields.put("payloadSha256Hex", payloadSha256Hex);
       ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -139,6 +140,10 @@ public final class SnapshotEncoder {
             f.put("nodeKind", "Project");
             f.put("provenance.kind", "ProjectProvenance");
             f.put("provenance.sourceId", p.provenance().sourceId().value());
+            p.provenance().sourceSet().ifPresent(s -> {
+               f.put("sources.base64", java.util.Base64.getEncoder().encodeToString(s.canonicalBytes()));
+               f.put("sources.sha256Hex", s.sha256Hex());
+            });
             break;
          case ProjectGraphNode.SemanticDeclaration s:
             f.put("displayName", s.displayName());

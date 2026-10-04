@@ -22,7 +22,10 @@ final class HeaderCompatibilityCheck {
             return false;
         }
 
-        SirParser.TargetBlockContext target = document.softwareDecl().targetBlock();
+        return validateTarget(document.softwareDecl().targetBlock(), source, diagnostics);
+    }
+
+    boolean validateTarget(SirParser.TargetBlockContext target, SourceText source, DiagnosticCollector diagnostics) {
         List<TerminalNode> names = target.IDENT();
         BigInteger javaVersion = new BigInteger(target.INT().getText());
         for (int index = 0; index < SUPPORTED_TARGET.size(); index++) {

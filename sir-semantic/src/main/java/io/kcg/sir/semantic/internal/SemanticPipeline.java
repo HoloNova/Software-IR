@@ -15,6 +15,9 @@ public final class SemanticPipeline {
 
    public SemanticAnalysis run() {
       ResolvedContext resolved = new ResolvePass(this.software).run();
+      if (resolved.diagnostics().stream().anyMatch(d -> d.code().value().equals("SIR-IDENTITY-002"))) {
+         return new SemanticAnalysis.Failure(resolved.diagnostics());
+      }
       TypedContext typed = new TypePass(this.software, resolved).run();
       ValidatedContext validated = new ValidatePass(this.software, typed).run();
       return new NormalizePass(this.software, validated).run();
