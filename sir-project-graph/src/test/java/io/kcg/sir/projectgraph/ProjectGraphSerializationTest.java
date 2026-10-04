@@ -163,7 +163,7 @@ class ProjectGraphSerializationTest {
     @Test
     void rejectsUnsupportedFormatVersion() {
         byte[] document = documentBytes(validGraph());
-        byte[] patched = patchHeaderField(document, "formatVersion", "2");
+        byte[] patched = patchHeaderField(document, "formatVersion", "3");
 
         assertRejected(patched, "SIR-GRAPH-COMPAT-001");
     }
@@ -231,27 +231,22 @@ class ProjectGraphSerializationTest {
      * reached from untrusted bytes, and it is covered here.
      */
     @Test
-    void rejectsDocumentThatDeclaresAnotherGraphVersion() {
+    void rejectsV2GraphFalselyLabeledAsV1Format() {
         byte[] document = documentBytes(validGraph());
         byte[] patched = withConsistentIntegrity(patchRecordField(document, "graphVersion", "V0_2"));
 
         assertRejected(patched, "SIR-GRAPH-COMPAT-002");
     }
 
-    /**
-     * The coverage inventory states that {@code SIR-GRAPH-VERSION-002} and the serializer's
-     * {@code SIR-GRAPH-COMPAT-001} are unreachable because both version enums have exactly one
-     * constant. This test keeps that stated reason honest: if a second constant is ever added, this
-     * fails and the new value needs real tests instead of the documented gap.
-     */
+    /** Pin supported versions and drive the newly reachable incompatible-format branch. */
     @Test
-    void versionCodesThatCannotBeReachedTodayAreDocumented() {
-        assertEquals(List.of("V0_1"), Arrays.stream(GraphVersion.values()).map(Enum::name).toList(),
-                "a second GraphVersion only makes VERSION-002 reachable once a non-V0_1 version can be "
-                        + "passed to ProjectGraphValidator.validate");
-        assertEquals(List.of("V1"),
-                Arrays.stream(ProjectGraphCanonicalFormatVersion.values()).map(Enum::name).toList(),
-                "a second format version makes the serializer COMPAT-001 path reachable");
+    void supportedVersionInventoryAndLegacyFormatRejectionRemainExplicit() {
+        assertEquals(List.of("V0_1", "V0_2"), Arrays.stream(GraphVersion.values()).map(Enum::name).toList());
+        assertEquals(List.of("V1", "V2"), Arrays.stream(ProjectGraphCanonicalFormatVersion.values()).map(Enum::name).toList());
+        var mismatch = assertInstanceOf(ProjectGraphSerialization.Failure.class,
+                new ProjectGraphSerializer().serialize(validGraph(), ProjectGraphCanonicalFormatVersion.V2));
+        assertEquals(List.of("SIR-GRAPH-COMPAT-001"), mismatch.diagnostics().stream().map(ProjectGraphDiagnostic::code).toList());
+        // MultiSourceGraphFormatTest covers the V2 positive, inverse pair, and unknown string versions.
     }
 
     @Test

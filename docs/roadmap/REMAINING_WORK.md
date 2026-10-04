@@ -1,6 +1,6 @@
 # KCG-Code 剩余工作路线图
 
-> 更新：G0/G1 已验收归档（G1 基线 CI 775/0/0/5）；G2 Q16 已验收归档，提交 `b2f5436` 的 GitHub CI 双闸门各 **837/0/0/5**、四个业务 IT **40/61/36/63** 全 `PASSED`。`ACTIVE_WORK.md` 当前承载 **Q17（单声明改名的原子文件事务）**，状态 **`IN_PROGRESS`**（负责人已批准；先决探针 P1–P7 未回填前不改生产代码）；原课程全局替换连带 Input 声明改名会被 `PATH-004` 明确拒绝，组合改名须另立单。
+> 更新：2026-10-04。G0/G1 与 G2 的 Q16/Q17 已验收归档；Q17 提交 `ab2ce09` 的 [CI run `36404651840`](https://github.com/HoloNova/Software-IR/actions/runs/36404651840) 双闸门各 **893/0/0/5**，四个业务 IT **40/61/36/63** 全 `PASSED`。`ACTIVE_WORK.md` 当前承载 **Q18（多文件编译输入与完整源快照）**，状态 **`AWAITING_CI`**：D0–D9-B 范围内多源首次生成与拒绝矩阵已完成，定向去重 346/0/0/0；四源课程生成 35 文件与单源逐字节一致。双门/四 IT 本批 NOT_RUN，待明确授权提交推送后同 SHA CI。多源 Bundle/变更基线仍另单，未获提交/推送授权。单能力改名可原子应用与恢复；原课程全局替换连带 Input 仍被 `PATH-004` 拒绝，组合改名须另立单，G2 未关闭。
 > 读者：项目负责人和后续执行 Agent
 > 定位：本文件的阶段 1–7 是 **G0：现有链路资格收口**内部的 Q 系列执行顺序。产品方向、阶段进入条件与阶段完成门见 [`README.md`](README.md) 和 [`../design/README.md`](../design/README.md)；两者不替代本文件的执行顺序。
 
@@ -25,7 +25,7 @@ G1 的完成门是「BIZ-01..06 的基础业务与反例 + GEN-01/02，并在真
 | Q11 | 关联过滤（存在性语义）、根分页不重复、关联批量读取与 SQL 次数预算 | BIZ-06 | **已完成、验收并归档**（2026-09-23）：全量 702 → **749/0/0/5**，真实 MySQL + HTTP 关联场景 **36 项断言 0 失败**（`total` 按根算、根不重复、ENG101 反例、根过滤≠投影过滤、每关联一条批量读取、语句数 4/4/2/0、一次请求一个只读事务），Q9/Q10 同树回归 40/40 与 61/61；见 [`completed/Q11-relation-filter-and-batch-reads.md`](completed/Q11-relation-filter-and-batch-reads.md) 与资格报告 1.11 |
 | Q15 | 实体级片段与能力集合解耦（`MapperRenderer` 的乐观锁辅助方法改为按实体声明发射） | G1 行"继续生成 SIR/修改 SIR"、Q13 的 BLOCK-2 解除 | **`DONE`**（2026-09-23 验收归档，见 [`completed/Q15-entity-artifact-decoupling.md`](completed/Q15-entity-artifact-decoupling.md)；3 项不变性探针 + Q13 删除轮与"增量 == 从零"实测通过）：原方案与 D0–D3 见 [`ACTIVE_WORK.md`](ACTIVE_WORK.md) |
 | Q14 | 变更层语义投影与 Q9–Q11 语言面对齐（`SemanticProjection` 补 `.present`/`any(...)`/`Page<...>` 与五处盲区） | G1 行"继续生成 SIR/修改 SIR"、Q13 的 BLOCK-1 解除 | **`DONE`**（2026-09-23 验收归档，见 [`completed/Q14-change-layer-projection-parity.md`](completed/Q14-change-layer-projection-parity.md)）；原方案与 D0–D4 见 [`ACTIVE_WORK.md`](ACTIVE_WORK.md) |
-| Q13 | G1 变更闭环：在课程切片上做 SIR 变更（加能力 / 改约束 / 删能力）并验证行为变化与"增量结果 == 从零生成结果" | BIZ-01..06 的变更后回归、GEN-01/02、G1 行"继续生成 SIR/修改 SIR" | **`DONE`**（2026-09-23 验收归档（CI run `35854153833`：两条闸门 BUILD SUCCESS、合计 775 / 0 / 0 / 5、四个业务场景 IT 全 `PASSED`）；两次阻断均已解除：BLOCK-1 由 Q14、**BLOCK-2 由 Q15**——删除版本化写能力会改动幸存文件 `CourseMapper.java` 而被 `SIR-CHANGE-IMPACT-202` 拒绝，已由 **Q15** 按 R1 解除；本单自身的 C5 已修正；变更闭环 IT 63 项检查 0 失败、`PASSED`；门 9/10 由 GitHub CI 跑完并通过）；P1 结论、实施期订正 C1–C6、BLOCK-1/2 全文见 [`Q13-g1-change-loop.md`](Q13-g1-change-loop.md) |
+| Q13 | G1 变更闭环：在课程切片上做 SIR 变更（加能力 / 改约束 / 删能力）并验证行为变化与"增量结果 == 从零生成结果" | BIZ-01..06 的变更后回归、GEN-01/02、G1 行"继续生成 SIR/修改 SIR" | **`DONE`**（2026-09-23 验收归档（CI run `35854153833`：两条闸门 BUILD SUCCESS、合计 775 / 0 / 0 / 5、四个业务场景 IT 全 `PASSED`）；两次阻断均已解除：BLOCK-1 由 Q14、**BLOCK-2 由 Q15**——删除版本化写能力会改动幸存文件 `CourseMapper.java` 而被 `SIR-CHANGE-IMPACT-202` 拒绝，已由 **Q15** 按 R1 解除；本单自身的 C5 已修正；变更闭环 IT 63 项检查 0 失败、`PASSED`；门 9/10 由 GitHub CI 跑完并通过）；P1 结论、实施期订正 C1–C6、BLOCK-1/2 全文见 [`completed/Q13-g1-change-loop.md`](completed/Q13-g1-change-loop.md) |
 | Q12 | 路由模板（`@PathVariable` 绑定）与资源式路由命名 | 无（设计 §10 未冻结路由形态） | 未立项（Q10 的 D2/D16 登记） |
 
 执行授权仍只来自 `ACTIVE_WORK.md`；上表只是顺序说明，不构成开工授权。
@@ -35,9 +35,10 @@ G1 的完成门是「BIZ-01..06 的基础业务与反例 + GEN-01/02，并在真
 | 工作单 | 范围 | 状态 |
 | --- | --- | --- |
 | Q16 | 单文件持久身份、旧身份不明时拒绝改名、独立只读**单声明**改名计划；全工程受管文件差异未覆盖时拒绝；不执行文件应用或数据库迁移 | **`DONE`**（2026-09-26 验收归档；CI [run `36234304027`](https://github.com/HoloNova/Software-IR/actions/runs/36234304027) 双闸门各 837/0/0/5，四个 IT 全 `PASSED`），见 [`completed/Q16-persistent-identity-and-read-only-rename-plan.md`](completed/Q16-persistent-identity-and-read-only-rename-plan.md) |
-| Q17（[`ACTIVE_WORK.md`](ACTIVE_WORK.md)，**`IN_PROGRESS`**） | **单声明**混合路径变更的一次原子事务、CURRENT/Journal 恢复、旧受管文件清理、应用盘面与候选从零生成逐字节一致；日志 V4 只是待核候选方案，不预设采用 | 方案已获负责人批准；**先核查 P1–P7，再实施事务**；Q16 的只读计划不抵扣本门 |
+| Q17 | **单能力声明**改名的原子文件应用，独立 V4 日志、CURRENT 定向恢复与清理；应用盘面与候选从零生成逐字节一致；真实两集合、合成三集合证据分列 | **`DONE`**（2026-10-03 确认验收，2026-10-04 归档）；CI `36404651840` 绑定 `ab2ce09`，双闸门各 893/0/0/5、四个 IT 全通过；见 [`completed/Q17-single-declaration-rename-transaction.md`](completed/Q17-single-declaration-rename-transaction.md) |
 | 后续独立项（未立项） | 能力与关联 Input 声明**一同改名**：需冻结 Input 身份与多 subject 计划；原课程全局替换当前只会被 `PATH-004` 拒绝，不由 Q17 的文件事务自动解决 | 尚未授权；不能把 Q16 的单声明计划当作三文件改名可应用 |
-| 后续单 | 多文件源清单、import/binding、模块实例、nodeKey 与剩余 LANG 门禁 | 尚未立项；Q16/Q17 不抵扣 G2 整阶段完成门 |
+| Q18（[`ACTIVE_WORK.md`](ACTIVE_WORK.md)） | 多文件显式源清单、最小跨文件导入、逐文件解析、完整 SourceSnapshot 与版本化多源 Graph；同一 software 的首次生成 | **`AWAITING_CI`**：主会话完成实施与定向 346/0/0/0，旧四业务输出/六份 V1 快照固定摘要一致；同 SHA CI 双门/四 IT NOT_RUN，不交付多源 Bundle/register/apply 或完整模块实例 |
+| 后续单 | 多文件权威 Bundle/变更基线、模块实例、nodeKey、完整旧身份映射与剩余 LANG 门 | 未授权；Q18 不抵扣 G2 整阶段完成门 |
 
 ## 已登记的独立项（不属于任何工作单的完成门）
 
@@ -45,6 +46,8 @@ G1 的完成门是「BIZ-01..06 的基础业务与反例 + GEN-01/02，并在真
 - `sir-lowering-spring-boot/src/main/java/io/kcg/sir/lowering/springboot/internal/SpringBootModelLowerer.java` 仍是 CFR 反编译文本，是否重写为手写源码（Q10 的 C8）。重写会把审阅边界扩大到整文件，需另立工作单。
 - 非分页 find 的关联读取（Q11 的 C5：spring-boot 目标当前要求带关联投影的 find 必须分页）；关联投影深度 3 层及以上；预算“按投影使用点计数”是否改为“按关系计划去重”的替代口径（Q11 的 C4）。
 - `in`/`isNull` 等过滤算子、when-present 可选过滤、按关联字段排序、关联集合自身分页（Q11 禁止范围，需真实需求）。
+- 变更影响模型是否允许操作改动幸存文件（如 `Application.java` 的 actor 传输片段）；Q17 未放宽 Q16 的单 subject 覆盖规则。
+- 实体字段改名后的物理列名继承与 G3 数据库迁移；Q17 不改数据库。
 
 ## 已完成的治理工作
 

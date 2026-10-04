@@ -1,6 +1,6 @@
 # KCG-Code 测试覆盖与缺口清单
 
-> 更新日期：2026-09-26（§1 模块计数按 **Q16 GitHub CI run `36234304027`** 同树完成形式复跑；Q9/Q10/Q11/Q13 及 Q16 已验收归档，Q14/Q15 见 Q13 组内前置修复单小节）
+> 更新日期：2026-10-04（§1 按 **Q17 GitHub CI run `36404651840`** 双闸门日志：893/0/0/5；上传 XML 897 含另跑的四个业务 IT。Q18 当前 AWAITING_CI，工作区定向去重 346/0/0/0 另列下表；本批双门/四 IT NOT_RUN，不混入已验收全量统计。Q9/Q10/Q11/Q13、Q16/Q17 已验收归档，Q14/Q15 见 Q13 组内前置修复单）
 > 用途：记录当前可执行测试、明确缺口和后续验收输入；不以历史测试数量作为完成目标
 
 ## Q9 单文件查询切片覆盖（2026-09-18 G1 首切片）
@@ -68,6 +68,40 @@
 | 真实管道 | `RenamePlanVerticalTest` 9 例：真实单文件 SIR 经 Parser/Semantic/Lowering/Generator/Graph 后可规划能力**单声明**改名，文件集及摘要与盘面对应、计划前后盘面不变；用原课程 fixture 全局替换验证 Input DTO 被漏时精确拒绝（两条 PATH-004，旧/新 DTO 路径），另一能力同步改名也拒绝 | 原课程三文件改名**未支持**：Input 身份+多声明计划另立范围；生成工程的构建/运行与混合事务的原子应用、恢复及“应用盘面等于从零生成”都不在 Q16 |
 | 验证位置 | 本机定向：parser 84 / semantic 184 / lowering-api 4 / lowering-spring-boot 86 / project-graph 72 / change 69（合计 499、0 失败）；应用纵向 9/0 与旧源回归 12/0。提交 `b2f5436` 的 [CI `36234304027`](https://github.com/HoloNova/Software-IR/actions/runs/36234304027)：双闸门各 **837/0/0/5**，Q9/Q10/Q11/Q13 分别 40/61/36/63，全 `PASSED`；artifact `surefire-reports` + `conformance-evidence` | 只读计划无 apply；Q17 混合文件事务、组合改名、字段物理列与 G2 多文件仍未覆盖 |
 
+## Q17 单能力改名的原子文件应用覆盖（2026-09-28 CI；2026-10-03 验收）
+
+| 组 | 已覆盖 | 未覆盖/边界 |
+|---|---|---|
+| 开工实测 | `Q17PreflightProbeTest` 7：真实两集合计划、硬链接/原子替换与恢复前提；当前能力闭包无法产生合法同路径 UPDATE | UPDATE 腿为合成图/Bundle 证据，不能冒称真实生成链路 |
+| 清单绑定 | `RenamePlanBindingVerifierTest` 15：计划三集合恰等于 B0/B1 清单差异；身份/owner/字节数/摘要与未变路径校验；漏报/多报/类别错/空 owner 拒绝 | 不放宽单 subject 范围，不接收用户候选目录 |
+| 路径保护 | `RenamePlanEntryProtectionTest` 11：旧字节保护、候选字节不被误当基线、外部占位/目录/符号链接与缺失拒绝，盘面不变 | 事务另有排他建立及更新前 B0 复验；不宣称任意并发编辑资格 |
+| V4 格式与门禁 | `MixedTransactionJournalTest` 9：头/路径编码严格往返、非法状态历史拒绝、终态残留仍阻塞写入、旧三族分派回归 | 不改 V1/V2/V3 格式/恢复含义 |
+| 三集合事务与恢复 | `MixedTransactionCoreTest` 10：先备份再更新/撤销/排他建立，文件完成才发布 CURRENT；B0 反向恢复/B1 校验清理，两向幂等 | 合成三集合，跨卷受同 FileStore 前置约束 |
+| 故障矩阵 | 9 崩溃像 + 4 注入钩子，长度/到达性钉桩；3 树 × 未知/已改写 × B0/B1 的 12 例拒删，外部字节保留 | B0 拒删可合法追加 journal 进度，不要求日志字节不变 |
+| 真实端到端 | `RenameApplyEndToEndTest` 4：唯一 applyRename 自行规划，单能力改名整棵输出逐路径/摘要等于候选从零生成；旧路径消失/CURRENT=B1/门禁重开/重复 NoChanges；越界改名、占位、错误基线、阻塞日志四类拒绝且盘面不变。Q16 纵向 9 项换为明确正反 API 合同，不增计数 | 能力+Input 同时改名仍 PATH-004；字段运行时改名/数据库列继承、CLI、多文件未完成 |
+| 验证位置 | 提交 `ab2ce09` 的 [CI `36404651840`](https://github.com/HoloNova/Software-IR/actions/runs/36404651840)：双闸门各 **893/0/0/5**，Q9/Q10/Q11/Q13 **40/61/36/63** 项全 PASSED；两类 artifact 已核对；Q17 新增 56 全在 application | G2 未关闭；Q18 已完成多源首次生成与定向验证，当前 AWAITING_CI，本批双门/四 IT NOT_RUN，未最终验收 |
+
+归档与裁决记录：[`Q17-single-declaration-rename-transaction.md`](../roadmap/completed/Q17-single-declaration-rename-transaction.md)。数字按闸门日志与 opt-in XML 分开登记，纠正会话中 878 与新增量误报，不改历史 Q16/G1 证据。
+
+## Q18 多文件首次生成覆盖（2026-10-04；AWAITING_CI）
+
+| 组 | 实测覆盖 | 未覆盖/边界 |
+|---|---|---|
+| 0.2 入口/源快照 | ProjectSourceGrammarTest 7：独立根/片段、旧结构词 IDENT/版本拒绝、原始字节防御复制与 manifest framing/规范解码 | 原 parse 仍 0.1；不升级所有声明身份或模块锁 |
+| 开工探针 | MultiFilePrerequisiteProbeTest 6：真实 AST 分片、类别排序等价、名字排序反例、移动身份及旧图异源拒绝 | 历史探针用 document 包装，不冒充最终 0.2 产品入口 |
+| 真实首次生成 | MultiSourceGenerationTest 4：四源课程生成 35 文件逐路径/字节等于单源；清单/宿主变化、快照灵敏度、未列文件无影响、能力移动真实来源 | 清单文本重排会改根原字节与快照证据，只保证生成字节不变；局部变量 ID/nodeKey 不稳定，不支持多源 apply |
+| 引用与诊断 | MultiSourceVisibilityTest 4：21 类跨文件 role 各有缺导入反例；错源/未列/缺声明/重复/冲突/自导入/环；重名/@id 两侧文件和公开 related INFO | 21 为循环 case，不额外加到 JUnit 计数；无别名/传递导入/完整 private/export |
+| 类型/约束 | MultiSourceTypeValidationTest 3：Date/Int64 比较、关系基数/歧义、关联深度明确拒绝，仍由原阶段决定 | 不增加目标业务语义或按名称二次绑定 |
+| 读取安全 | MultiSourceReadBoundaryTest 7：9 类非法路径、重复/大小写/硬链接、真实 NOFOLLOW 根/祖先/目录/文件链接、缺失/占位/UTF-8、数量/字节上限、BOM/CRLF 原字节及临界接受、源输出重叠；ProjectSourceReadChangeTest 1：size/mtime/inode 变化注入拒绝 | 128 文件、1 MiB/文件、8 MiB 合计；快照不承诺目录原子时点或任意并发改写 |
+| V2 格式 | MultiSourceGraphFormatTest 5：多源往返/确定性/单源字节、新旧格式配对、manifest/owner/span/摘要/字段/未知版本及重算外层完整性反例 | 不保存源正文；不做新 REFERENCES/增量图；V1 旧来源规则保持 |
+| 旧消费者 | MultiSourceCompatibilityTest 3：真实 V2 + 匹配版本、伪称 V1，Change plan、Rename plan/verify 与单源 Bundle 明确拒绝 | 准入守卫不改计划/影响/事务；CLI 和多源 Bundle 接线未交付 |
+| 公开首次生成失败 | ProjectGenerationFailureTest 1：实际入口注入 Generation/Graph 故障无输出；其他类钉已有输出根、源错误/重叠、Parse/Semantic 失败且输出/状态无变化 | 复用既有 FileTransaction，不为多源增加替换/变更入口 |
+| 旧源码 golden | LegacySourceEvidenceCompatibilityTest 1：Q17 CI 固定四业务输入/输出摘要（15/22/22/35 文件）和 Q13 六份 V1 snapshot SHA/往返字节一致 | 不以新实现重生成期望；字节一致不代替当前 CI/真实 MySQL 运行 |
+| Resolve 冲突 | DeclaredIdentitySemanticsTest 新增 1：重复 ID 正常 Failure 而非 SymbolTable 异常；跨源同例见 visibility | 合法旧行为不变，typed/Resolve-once 旧契约定向 25 项回归 |
+| 回归与状态 | 去重指定类 parser 91/semantic 34/graph 77/change 36/application 108，共 **346/0/0/0**；旧 Rename apply、V4 恢复与图只读门通过；新增方法 43 | **本批双门/四业务 IT NOT_RUN**，待同 SHA CI；不更新下方 Q17 已验收全量总数 |
+
+实施证据/订正见 [`ACTIVE_WORK.md`](../roadmap/ACTIVE_WORK.md) §10 与资格报告 §1.16；合同见 Accepted [ADR-021](../architecture/ADR-021-multi-source-compilation-and-graph-compatibility.md)。多源权威基线、moduleInstance/nodeKey、全身份兼容、组合改名与 G3 仍是缺口，本单不关闭 G2。
+
 ## Q7 CLI 产品边界覆盖（2026-09-18）
 
 | 组 | 已覆盖 | 未覆盖/边界 |
@@ -80,7 +114,7 @@
 | 生产边界 | 常量池闸门三条规则 0 违规 + 灵敏度探针 | `io/kcg/cli/mvp/**` 为显式例外（非命令路径，命令路径不可达它有断言） |
 | 发布物 | — | **thin JAR / 发行包 `NOT_RUN`**（属独立发布任务） |
 
-## 1. 当前覆盖摘要
+## 1. 最近已验收全量覆盖摘要（Q17；Q18 定向另列）
 
 | 模块 | 当前直接测试 | 覆盖判断 | 优先级 |
 |---|---:|---|---|
@@ -89,8 +123,8 @@
 | Lowering API + Spring | 90 | API 4 + Spring 86；Q16 物理名与列名契约 4 项，生产 Lowering 未改 | 维护 |
 | Generator | 77 | canonical 输出、主要 Renderer、跨环境字节确定性、完整生成工程离线编译与生产 class 静态边界闸门；Q16 未改生产 Generator | 维护 |
 | Project Graph | 72 | 四类边、规则矩阵、canonical 序列化/加载/摘要往返、只读边界闸门与不可信字节版本/来源类型/不可编码标量守卫均有直接契约；`REFERENCES` 与增量能力不在范围 | 维护 |
-| Change | 69 | 六类既有计划/投影与 Q16 只读改名计划、源陈旧性、全工程文件覆盖、身份拒绝；混合事务 apply 未实现 | P1 |
-| Application | 231（0 fail）+ 5 skip | 含 Q16 真实 SIR → 生成工程/图 → 只读计划 9 项；四个 opt-in 业务场景在同树 CI 全 `PASSED`；5 skip 均为 Windows junction | P0 |
+| Change | 69 | 六类既有计划/投影与 Q16 只读改名计划、源陈旧性、全工程文件覆盖、身份拒绝；Q17 未改此模块，事务位于 application | 维护 |
+| Application | 287 run / 0 fail / 0 error / 5 skip | Q16 231 + Q17 56；原子改名/恢复矩阵/真实端到端；四个 opt-in 场景同树另跑 PASSED（artifact XML application 291）；5 skip 均为 Windows junction | 维护 |
 | CLI | 30 | 5 项 hardening + 13 项 Change 工作流 + Q7 新增 12 项（产品边界 6、生产边界闸门 4、内部失败 2） | P1 |
 
 ## 2. Generator 缺口

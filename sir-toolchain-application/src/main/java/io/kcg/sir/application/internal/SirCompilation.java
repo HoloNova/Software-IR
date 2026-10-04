@@ -44,7 +44,14 @@ public final class SirCompilation {
          if (!semantic.isSuccess()) {
             return Optional.empty();
          } else {
-            NormalizedSemanticModel normalizedModel = semantic.model().orElseThrow();
+            return lowerAndGenerate(semantic.model().orElseThrow(), generationStep, accumulatedDiagnostics);
+         }
+      }
+   }
+
+   /** Both input forms share the existing target pipeline, not a parallel generator. */
+   public static Optional<CompilationSnapshot> lowerAndGenerate(NormalizedSemanticModel normalizedModel,
+      Function<SpringBootLoweredModel, GenerationResult> generationStep, List<ExecutionDiagnostic> accumulatedDiagnostics) {
             LoweringAnalysis<SpringBootLoweredModel> lowering = new SpringBootTargetLowering().lower(normalizedModel);
             accumulatedDiagnostics.addAll(DiagnosticMapper.fromLowering(lowering.diagnostics(), ExecutionStage.LOWERING));
             if (!lowering.isSuccess()) {
@@ -68,8 +75,6 @@ public final class SirCompilation {
                   return Optional.of(new SirCompilation.CompilationSnapshot(normalizedModel, loweredModel, files, snapshotDiags));
                }
             }
-         }
-      }
    }
 
    public record CompilationSnapshot(

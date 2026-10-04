@@ -4,6 +4,32 @@ document
     : SIR versionLiteral softwareDecl EOF
     ;
 
+// Separate 0.2 entry rules; contextual IDENT predicates preserve every legacy identifier.
+projectDocument
+    : SIR versionLiteral SOFTWARE IDENT LBRACE metadataBlock targetBlock
+      sourcesBlock importsBlock declarationsBlock RBRACE EOF
+    ;
+
+sourceFragment
+    : SIR versionLiteral importsBlock declarationsBlock EOF
+    ;
+
+sourcesBlock
+    : {_input.LT(1).getText().equals("sources")}? IDENT LBRACE sourceEntry* RBRACE
+    ;
+
+sourceEntry
+    : {_input.LT(1).getText().equals("source")}? IDENT STRING SEMI
+    ;
+
+importsBlock
+    : {_input.LT(1).getText().equals("imports")}? IDENT LBRACE importEntry* RBRACE
+    ;
+
+importEntry
+    : {_input.LT(1).getText().equals("import")}? IDENT declarationName=IDENT FROM STRING SEMI
+    ;
+
 versionLiteral
     : DOTTED_NUMBER
     ;

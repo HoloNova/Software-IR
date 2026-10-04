@@ -1,0 +1,14 @@
+sir 0.2
+imports {
+  import Course from "modules/course.sir";
+  import Student from "modules/student.sir";
+}
+declarations {
+  enum EnrollmentStatus { ACTIVE, CANCELLED }
+  entity Enrollment persistent {
+    identity id: Int64 generated auto;
+    field course: Ref<Course>;
+    field student: Ref<Student>;
+    field status: EnrollmentStatus;
+  }
+}

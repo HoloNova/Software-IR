@@ -20,6 +20,11 @@ public final class ProjectGraphValidator {
    public List<ProjectGraphDiagnostic> validateInput(ProjectGraphInput input) {
       Objects.requireNonNull(input, "input");
       List<ProjectGraphDiagnostic> diagnostics = new ArrayList<>();
+      if ((input.version() == GraphVersion.V0_2) != input.sourceSet().isPresent()
+         || input.sourceSet().filter(s -> !s.entry().equals(input.sourceId())).isPresent()) {
+         diagnostics.add(ProjectGraphDiagnostic.error("SIR-GRAPH-SOURCES-001",
+            "V0_2 requires a source manifest bound to its entry; V0_1 forbids it"));
+      }
 
       for (ProjectGraphInput.FileInput fi : input.files()) {
          String violation = GraphNodeId.PathCheck.validate(fi.relativePath());
@@ -40,7 +45,7 @@ public final class ProjectGraphValidator {
          return diagnostics;
       }
 
-      if (version != GraphVersion.V0_1) {
+      if (version != GraphVersion.V0_1 && version != GraphVersion.V0_2) {
          diagnostics.add(ProjectGraphDiagnostic.error("SIR-GRAPH-VERSION-002", "unsupported graph version: " + version));
       }
 
@@ -93,7 +98,14 @@ public final class ProjectGraphValidator {
       validateProjectRoot(nodes, diagnostics);
       validateSemanticKinds(nodes, diagnostics);
       validateTraceEdges(nodes, uniqueEdges, diagnostics);
-      validateProvenanceConsistency(nodes, diagnostics);
+      if (version == GraphVersion.V0_2) validateMultiSourceProvenance(nodes, nodeById, diagnostics);
+      else {
+         if (nodes.stream().filter(n -> n instanceof ProjectGraphNode.Project).map(n -> (ProjectGraphNode.Project) n)
+            .anyMatch(p -> p.provenance().sourceSet().isPresent())) {
+            diagnostics.add(ProjectGraphDiagnostic.error("SIR-GRAPH-SOURCES-001", "V0_1 forbids a source manifest"));
+         }
+         validateProvenanceConsistency(nodes, diagnostics);
+      }
       validateArtifactFieldConsistency(nodes, diagnostics);
       validateLoweredOwnership(nodes, nodeById, uniqueEdges, diagnostics);
       validateArtifactOwnershipAndRole(nodeById, uniqueEdges, diagnostics);
@@ -302,6 +314,54 @@ public final class ProjectGraphValidator {
                   }
                }
             }
+         }
+      }
+   }
+
+   private static void validateMultiSourceProvenance(List<ProjectGraphNode> nodes,
+      Map<GraphNodeId, ProjectGraphNode> byId, List<ProjectGraphDiagnostic> diagnostics) {
+      var root = nodes.stream().filter(n -> n instanceof ProjectGraphNode.Project)
+         .map(n -> (ProjectGraphNode.Project) n).findFirst();
+      if (root.isEmpty()) return; // root cardinality has its own diagnostic
+      var manifest = root.get().provenance().sourceSet();
+      if (manifest.isEmpty() || !manifest.get().entry().equals(root.get().provenance().sourceId())) {
+         diagnostics.add(ProjectGraphDiagnostic.error("SIR-GRAPH-SOURCES-001", "V0_2 root must contain its entry-bound source manifest"));
+         return;
+      }
+      for (ProjectGraphNode node : nodes) {
+         GraphProvenance p = node.provenance();
+         if (!manifest.get().contains(p.sourceId())) {
+            diagnostics.add(ProjectGraphDiagnostic.error("SIR-GRAPH-SOURCES-002", "provenance outside source manifest: " + p.sourceId(), node.id(), null));
+         }
+         SourceSpan span = switch (p) {
+            case GraphProvenance.SemanticProvenance s -> s.span();
+            case GraphProvenance.LoweredProvenance l -> l.origin().span();
+            case GraphProvenance.ArtifactProvenance a -> a.origin().span();
+            default -> null;
+         };
+         boolean projectArtifact = node instanceof ProjectGraphNode.Artifact a && a.role() instanceof ArtifactRole.ProjectRole && a.ownerSymbol().isEmpty();
+         if (projectArtifact) {
+            var a = (ProjectGraphNode.Artifact) node;
+            var origin = a.provenance().origin();
+            // Lowering's explicit synthetic project origin is not a declaration location.
+            if (!p.sourceId().equals(manifest.get().entry()) || origin.ownerSymbol().isPresent()
+               || !origin.sourceNodeId().value().equals("project") || !span.source().equals(SourceId.of("project"))
+               || !span.start().equals(new io.kcg.sir.source.SourcePosition(0, 1, 1))
+               || !span.end().equals(new io.kcg.sir.source.SourcePosition(0, 1, 1))) {
+               diagnostics.add(ProjectGraphDiagnostic.error("SIR-GRAPH-SOURCES-003", "invalid synthetic project artifact origin", node.id(), null));
+            }
+         } else if (span != null) {
+            long bytes = manifest.get().files().stream().filter(f -> f.sourceId().equals(p.sourceId())).findFirst().map(f -> f.byteCount()).orElse(-1L);
+            if (!span.source().equals(p.sourceId()) || span.end().codePointOffset() > bytes) {
+               diagnostics.add(ProjectGraphDiagnostic.error("SIR-GRAPH-SOURCES-003", "origin/span must belong to its recorded source bytes", node.id(), null));
+            }
+         }
+         ProjectGraphNode owner = null;
+         if (node instanceof ProjectGraphNode.LoweredDeclaration l) owner = byId.get(new GraphNodeId.Semantic(l.sourceSymbol()));
+         if (node instanceof ProjectGraphNode.Artifact a && a.ownerSymbol().isPresent()) owner = byId.get(new GraphNodeId.Semantic(a.ownerSymbol().get()));
+         if (node instanceof ProjectGraphNode.ProjectFile f) owner = byId.get(new GraphNodeId.Lowered(f.provenance().artifactId()));
+         if (owner != null && !owner.provenance().sourceId().equals(p.sourceId())) {
+            diagnostics.add(ProjectGraphDiagnostic.error("SIR-GRAPH-SOURCES-004", "provenance differs from owning declaration/artifact", node.id(), null));
          }
       }
    }

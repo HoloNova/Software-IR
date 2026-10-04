@@ -42,7 +42,7 @@ public final class ProjectGraphLoader {
       }
 
       List<ProjectGraphDiagnostic> reserializeDiags = new ArrayList<>();
-      SnapshotEncoder.EncodeResult reserialized = SnapshotEncoder.encode(graph, ProjectGraphCanonicalFormatVersion.V1, reserializeDiags);
+      SnapshotEncoder.EncodeResult reserialized = SnapshotEncoder.encode(graph, graph.version() == GraphVersion.V0_1 ? ProjectGraphCanonicalFormatVersion.V1 : ProjectGraphCanonicalFormatVersion.V2, reserializeDiags);
       if (reserialized == null) {
          String firstReason = reserializeDiags.isEmpty()
             ? "encoder returned null without diagnostics"

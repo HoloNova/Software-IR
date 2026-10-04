@@ -191,6 +191,15 @@ public final class PlannerCore {
       }
 
       ChangeBaseRevision basedOn = changeSet.basedOn();
+      // Matching versions are not an admission policy: this planner owns only single-source V1.
+      if (basedOn.graphVersion() != io.kcg.sir.projectgraph.api.GraphVersion.V0_1
+         || input.baseGraph().version() != io.kcg.sir.projectgraph.api.GraphVersion.V0_1
+         || input.candidateGraph().version() != io.kcg.sir.projectgraph.api.GraphVersion.V0_1
+         || basedOn.snapshotFormatVersion() != io.kcg.sir.projectgraph.api.ProjectGraphCanonicalFormatVersion.V1) {
+         diagnostics.add(ChangeDiagnostic.error("SIR-CHANGE-COMPAT-001", ChangeDiagnosticStage.COMPAT, 0,
+            "single-source change planner supports only Graph V0_1 / Snapshot V1"));
+         return fail(diagnostics);
+      }
       if (input.baseGraph().version() != basedOn.graphVersion()) {
          diagnostics.add(
             ChangeDiagnostic.error(

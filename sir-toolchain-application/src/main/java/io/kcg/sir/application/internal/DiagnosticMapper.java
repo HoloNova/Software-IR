@@ -30,6 +30,21 @@ public final class DiagnosticMapper {
       return out;
    }
 
+   /** New project entry preserves cross-file related sites as adjacent INFO notes; legacy mapping is unchanged. */
+   public static List<ExecutionDiagnostic> fromProjectSource(List<Diagnostic> diagnostics, ExecutionStage stage) {
+      List<ExecutionDiagnostic> out = new ArrayList<>();
+      for (Diagnostic d : diagnostics) {
+         out.addAll(fromParser(List.of(d), stage));
+         for (var related : d.related()) {
+            var primary = d.primarySpan();
+            String association = "related to " + primary.source().value() + ":" + primary.start().line() + ":" + primary.start().column() + ": ";
+            out.add(new ExecutionDiagnostic(d.code().value(), stage, ExecutionSeverity.INFO,
+               association + related.message(), Optional.of(related.span()), Optional.empty(), Optional.empty()));
+         }
+      }
+      return out;
+   }
+
    public static List<ExecutionDiagnostic> fromLowering(List<LoweringDiagnostic> diagnostics, ExecutionStage stage) {
       List<ExecutionDiagnostic> out = new ArrayList<>(diagnostics.size());
 

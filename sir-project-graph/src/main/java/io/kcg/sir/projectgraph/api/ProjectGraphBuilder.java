@@ -18,25 +18,28 @@ public final class ProjectGraphBuilder {
       List<ProjectGraphNode> nodes = new ArrayList<>();
       List<ProjectGraphEdge> edges = new ArrayList<>();
       GraphNodeId.ProjectNodeId projectId = GraphNodeId.ProjectNodeId.INSTANCE;
-      GraphProvenance.ProjectProvenance projectProv = new GraphProvenance.ProjectProvenance(input.sourceId());
+      GraphProvenance.ProjectProvenance projectProv = new GraphProvenance.ProjectProvenance(input.sourceId(), input.sourceSet());
       nodes.add(new ProjectGraphNode.Project(projectId, projectProv, input.projectDisplayName()));
 
       for (ProjectGraphInput.SemanticDeclarationInput sdi : input.semanticDeclarations()) {
          GraphNodeId.Semantic sid = new GraphNodeId.Semantic(sdi.symbolId());
-         GraphProvenance.SemanticProvenance prov = new GraphProvenance.SemanticProvenance(input.sourceId(), sdi.sourceNodeId(), sdi.span());
+         GraphProvenance.SemanticProvenance prov = new GraphProvenance.SemanticProvenance(
+            input.version() == GraphVersion.V0_2 ? sdi.span().source() : input.sourceId(), sdi.sourceNodeId(), sdi.span());
          nodes.add(new ProjectGraphNode.SemanticDeclaration(sid, prov, sdi.kind(), sdi.displayName()));
       }
 
       for (ProjectGraphInput.LoweredDeclarationInput ldi : input.loweredDeclarations()) {
          GraphNodeId.Lowered lid = new GraphNodeId.Lowered(ldi.nodeId());
-         GraphProvenance.LoweredProvenance prov = new GraphProvenance.LoweredProvenance(input.sourceId(), ldi.origin());
+         GraphProvenance.LoweredProvenance prov = new GraphProvenance.LoweredProvenance(
+            input.version() == GraphVersion.V0_2 ? ldi.origin().span().source() : input.sourceId(), ldi.origin());
          nodes.add(new ProjectGraphNode.LoweredDeclaration(lid, prov, ldi.sourceSymbol(), ldi.displayName()));
       }
 
       for (ProjectGraphInput.ArtifactInput ai : input.artifacts()) {
          GraphNodeId.Lowered aid = new GraphNodeId.Lowered(ai.artifactId());
          GraphProvenance.ArtifactProvenance prov = new GraphProvenance.ArtifactProvenance(
-            input.sourceId(), ai.origin(), ai.ownerSymbol(), ai.role(), ai.qualifiedName()
+            input.version() == GraphVersion.V0_2 && ai.ownerSymbol().isPresent() ? ai.origin().span().source() : input.sourceId(),
+            ai.origin(), ai.ownerSymbol(), ai.role(), ai.qualifiedName()
          );
          nodes.add(new ProjectGraphNode.Artifact(aid, prov, ai.role(), ai.qualifiedName()));
       }
@@ -44,7 +47,8 @@ public final class ProjectGraphBuilder {
       for (ProjectGraphInput.FileInput fi : input.files()) {
          GraphNodeId.File fid = new GraphNodeId.File(fi.relativePath());
          GraphProvenance.FileProvenance prov = new GraphProvenance.FileProvenance(
-            input.sourceId(), fi.artifactId(), fi.ownerSymbol(), fi.byteCount(), fi.sha256Hex()
+            input.version() == GraphVersion.V0_2 ? sourceForArtifact(input, fi) : input.sourceId(),
+            fi.artifactId(), fi.ownerSymbol(), fi.byteCount(), fi.sha256Hex()
          );
          nodes.add(new ProjectGraphNode.ProjectFile(fid, prov));
       }
@@ -63,5 +67,10 @@ public final class ProjectGraphBuilder {
       String digest = GraphCanonicalForm.digest(input.version(), nodes, edges);
       ProjectGraph graph = new ProjectGraph(input.version(), nodes, edges, digest);
       return new ProjectGraphAnalysis.Success(graph, diagnostics);
+   }
+
+   private static io.kcg.sir.source.SourceId sourceForArtifact(ProjectGraphInput input, ProjectGraphInput.FileInput file) {
+      return input.artifacts().stream().filter(a -> a.artifactId().equals(file.artifactId())).findFirst()
+         .map(a -> a.ownerSymbol().isPresent() ? a.origin().span().source() : input.sourceId()).orElse(input.sourceId());
    }
 }

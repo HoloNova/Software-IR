@@ -106,7 +106,10 @@ class ProjectGraphReadOnlyBoundaryTest {
             "io/kcg/sir/semantic/symbol/SymbolKind",
             "io/kcg/sir/source/SourceId",
             "io/kcg/sir/source/SourcePosition",
-            "io/kcg/sir/source/SourceSpan");
+            "io/kcg/sir/source/SourceSpan",
+            // Q18: immutable source evidence + in-memory canonical framing, never a reader/parser.
+            "io/kcg/sir/source/SourceSetManifest",
+            "io/kcg/sir/source/SourceSetManifest$Entry");
 
     private static final String PRODUCTION_PACKAGE_PREFIX = OWN_MODULE_PREFIX;
     private static final List<String> REQUIRED_CLASSES = List.of(
