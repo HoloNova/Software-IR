@@ -1,6 +1,6 @@
 # KCG-Code 测试覆盖与缺口清单
 
-> 更新日期：2026-10-04（§1 按 **Q17 GitHub CI run `36404651840`** 双闸门日志：893/0/0/5；上传 XML 897 含另跑的四个业务 IT。Q18 当前 AWAITING_CI，工作区定向去重 346/0/0/0 另列下表；本批双门/四 IT NOT_RUN，不混入已验收全量统计。Q9/Q10/Q11/Q13、Q16/Q17 已验收归档，Q14/Q15 见 Q13 组内前置修复单）
+> 更新日期：2026-10-05（Q18 已确认验收归档；§1 仍据其同 SHA CI run 37212618580 / 638eaa7：双门 936/0/0/5，XML 940 含四 IT，四报告 40/61/36/63 全通过。Q18 定向 346、新增 43，相对 Q17 893；当前 Q19 AWAITING_CI，实现/本机定向去重199/0/0/0（新增33）及15点故障矩阵已通过，CI双门/四IT NOT_RUN，§1仍是受测Q18而非预报Q19全量。Q9/Q10/Q11/Q13、Q16/Q17/Q18 已归档，Q14/Q15 见 Q13 前置修复单）
 > 用途：记录当前可执行测试、明确缺口和后续验收输入；不以历史测试数量作为完成目标
 
 ## Q9 单文件查询切片覆盖（2026-09-18 G1 首切片）
@@ -79,11 +79,11 @@
 | 三集合事务与恢复 | `MixedTransactionCoreTest` 10：先备份再更新/撤销/排他建立，文件完成才发布 CURRENT；B0 反向恢复/B1 校验清理，两向幂等 | 合成三集合，跨卷受同 FileStore 前置约束 |
 | 故障矩阵 | 9 崩溃像 + 4 注入钩子，长度/到达性钉桩；3 树 × 未知/已改写 × B0/B1 的 12 例拒删，外部字节保留 | B0 拒删可合法追加 journal 进度，不要求日志字节不变 |
 | 真实端到端 | `RenameApplyEndToEndTest` 4：唯一 applyRename 自行规划，单能力改名整棵输出逐路径/摘要等于候选从零生成；旧路径消失/CURRENT=B1/门禁重开/重复 NoChanges；越界改名、占位、错误基线、阻塞日志四类拒绝且盘面不变。Q16 纵向 9 项换为明确正反 API 合同，不增计数 | 能力+Input 同时改名仍 PATH-004；字段运行时改名/数据库列继承、CLI、多文件未完成 |
-| 验证位置 | 提交 `ab2ce09` 的 [CI `36404651840`](https://github.com/HoloNova/Software-IR/actions/runs/36404651840)：双闸门各 **893/0/0/5**，Q9/Q10/Q11/Q13 **40/61/36/63** 项全 PASSED；两类 artifact 已核对；Q17 新增 56 全在 application | G2 未关闭；Q18 已完成多源首次生成与定向验证，当前 AWAITING_CI，本批双门/四 IT NOT_RUN，未最终验收 |
+| 验证位置 | 提交 `ab2ce09` 的 [CI `36404651840`](https://github.com/HoloNova/Software-IR/actions/runs/36404651840)：双闸门各 **893/0/0/5**，Q9/Q10/Q11/Q13 **40/61/36/63** 项全 PASSED；两类 artifact 已核对；Q17 新增 56 全在 application | G2 未关闭；Q18 多源首次生成的 638eaa7 同 SHA CI 双门 936/0/0/5、四 IT 全 PASSED，2026-10-05 已验收归档，见下节；不改变此处 Q17 历史计数 |
 
 归档与裁决记录：[`Q17-single-declaration-rename-transaction.md`](../roadmap/completed/Q17-single-declaration-rename-transaction.md)。数字按闸门日志与 opt-in XML 分开登记，纠正会话中 878 与新增量误报，不改历史 Q16/G1 证据。
 
-## Q18 多文件首次生成覆盖（2026-10-04；AWAITING_CI）
+## Q18 多文件首次生成覆盖（2026-10-04 CI；2026-10-05 DONE）
 
 | 组 | 实测覆盖 | 未覆盖/边界 |
 |---|---|---|
@@ -98,9 +98,21 @@
 | 公开首次生成失败 | ProjectGenerationFailureTest 1：实际入口注入 Generation/Graph 故障无输出；其他类钉已有输出根、源错误/重叠、Parse/Semantic 失败且输出/状态无变化 | 复用既有 FileTransaction，不为多源增加替换/变更入口 |
 | 旧源码 golden | LegacySourceEvidenceCompatibilityTest 1：Q17 CI 固定四业务输入/输出摘要（15/22/22/35 文件）和 Q13 六份 V1 snapshot SHA/往返字节一致 | 不以新实现重生成期望；字节一致不代替当前 CI/真实 MySQL 运行 |
 | Resolve 冲突 | DeclaredIdentitySemanticsTest 新增 1：重复 ID 正常 Failure 而非 SymbolTable 异常；跨源同例见 visibility | 合法旧行为不变，typed/Resolve-once 旧契约定向 25 项回归 |
-| 回归与状态 | 去重指定类 parser 91/semantic 34/graph 77/change 36/application 108，共 **346/0/0/0**；旧 Rename apply、V4 恢复与图只读门通过；新增方法 43 | **本批双门/四业务 IT NOT_RUN**，待同 SHA CI；不更新下方 Q17 已验收全量总数 |
+| 回归与状态 | 去重指定类 parser 91/semantic 34/graph 77/change 36/application 108，共 **346/0/0/0**；旧 Rename apply、V4 恢复与图只读门通过；新增方法 43 | **本批同 SHA CI 已通过**：双门 936/0/0/5、四 IT 40/61/36/63；已确认验收归档，G2 未关闭 |
 
-实施证据/订正见 [`ACTIVE_WORK.md`](../roadmap/ACTIVE_WORK.md) §10 与资格报告 §1.16；合同见 Accepted [ADR-021](../architecture/ADR-021-multi-source-compilation-and-graph-compatibility.md)。多源权威基线、moduleInstance/nodeKey、全身份兼容、组合改名与 G3 仍是缺口，本单不关闭 G2。
+实施证据/订正/验收见 [Q18 归档](../roadmap/completed/Q18-multi-source-compilation-and-source-snapshot.md) §10–11 与资格报告 §1.16；合同见 Accepted [ADR-021](../architecture/ADR-021-multi-source-compilation-and-graph-compatibility.md)。多源权威基线、moduleInstance/nodeKey、全身份兼容、组合改名与 G3 仍是缺口，本单不关闭 G2。[Q19 工作单](../roadmap/ACTIVE_WORK.md) 已完成多源基线保存/独立重开及本机指定类验证，当前 AWAITING_CI，见下表；多源变更/改名应用及完整G2门仍不抵扣。
+
+## Q19 多源基线保存/独立重开覆盖（2026-10-05，本机通过，CI NOT_RUN）
+
+| 类/证据 | 已覆盖 | 未覆盖/边界 |
+|---|---|---|
+| ProjectBaselinePrerequisiteTest 6 | 四源快照无原源目录重放、实际大小、闭包、已有锁/排他硬链接发布原语 | 探针不单独代替公开API |
+| ProjectBaselineContractTest 12 | 真课程35文件注册/新实例重开、逐原字节/图/盘面一致、幂等、注释身份灵敏、输出绑定/篡改、脏状态与外部文件保护、闭包错误/V1、新旧codec/Store与旧context/plan/apply/applyRename/recover交叉拒绝、15点发布矩阵及缺席/已发布双向收尾 | 半写/未知证据保留并拒绝，不自动补写；不同CURRENT不更换；非多源Change应用 |
+| ProjectBaselineCodecTest 9 | V2 descriptor/domain及规范容器往返/BOM/CRLF/空原字节、防御复制、计数/排序/长度/版本/UTF/尾随/预算、外层SHA重算不掩盖内层源证据、全ID重算后的target/manifest伪造由重编译拒绝 | 不依赖宿主根不变ID，outputRoot参与身份 |
+| ProjectBaselineReadBoundaryTest 6 | 锚定NOFOLLOW读、祖先/叶链接/遍历/目录代文件、size/mtime/inode替换、字节/目录枚举限额、根物理身份更换、根重叠/状态不存在/快照超限及非法UTF零发布 | 支持检测点的拒绝，不宣称任意非合作并发目录快照原子性 |
+| 指定类回归 | Application27类最新报告去重199/0/0/0；新增四类33；旧注册/Change/Rename/V4/三旧事务故障/golden通过 | 双全量门/四业务IT NOT_RUN；未提交，不以Q18 CI代替本批 |
+
+格式/诊断及资源运行证据见工作单§9、[Proposed ADR-022](../architecture/ADR-022-multi-source-baseline-storage-and-reopen.md)、资格报告§1.17。日志`/tmp/q19-directed-regression.log`、`/tmp/q19-final-directed.log`、`/tmp/q19-cross-version.log`与Application XML；以最新同类替换去重，不把重跑相加。不改旧Bundle/V4、sir-change或其他生产模块，G2未关闭。
 
 ## Q7 CLI 产品边界覆盖（2026-09-18）
 
@@ -114,17 +126,17 @@
 | 生产边界 | 常量池闸门三条规则 0 违规 + 灵敏度探针 | `io/kcg/cli/mvp/**` 为显式例外（非命令路径，命令路径不可达它有断言） |
 | 发布物 | — | **thin JAR / 发行包 `NOT_RUN`**（属独立发布任务） |
 
-## 1. 最近已验收全量覆盖摘要（Q17；Q18 定向另列）
+## 1. 最近已验收全量覆盖摘要（Q18 CI）
 
 | 模块 | 当前直接测试 | 覆盖判断 | 优先级 |
 |---|---:|---|---|
-| Parser | 84 | 既有查询/写侧语法与 Q16 `@id` 正反语法（5 项） | 维护 |
-| Semantic | 184 | Resolve/Type/Validate/Normalize、typed reference-site 与 Q16 稳定身份/binding（8 项） | 维护 |
+| Parser | 91 | 旧 84 + Q18 根/片段/快照 7，旧 0.1 保持 | 维护 |
+| Semantic | 185 | 旧 184 + 身份冲突 Failure 1；跨源可见性/类型见 Application，typed/Resolve-once 保持 | 维护 |
 | Lowering API + Spring | 90 | API 4 + Spring 86；Q16 物理名与列名契约 4 项，生产 Lowering 未改 | 维护 |
 | Generator | 77 | canonical 输出、主要 Renderer、跨环境字节确定性、完整生成工程离线编译与生产 class 静态边界闸门；Q16 未改生产 Generator | 维护 |
-| Project Graph | 72 | 四类边、规则矩阵、canonical 序列化/加载/摘要往返、只读边界闸门与不可信字节版本/来源类型/不可编码标量守卫均有直接契约；`REFERENCES` 与增量能力不在范围 | 维护 |
+| Project Graph | 77 | 旧 72 + 多源格式 5；V1 goldens、V2 manifest/来源/规范往返/损坏拒绝及只读门；`REFERENCES` 与增量能力不在范围 | 维护 |
 | Change | 69 | 六类既有计划/投影与 Q16 只读改名计划、源陈旧性、全工程文件覆盖、身份拒绝；Q17 未改此模块，事务位于 application | 维护 |
-| Application | 287 run / 0 fail / 0 error / 5 skip | Q16 231 + Q17 56；原子改名/恢复矩阵/真实端到端；四个 opt-in 场景同树另跑 PASSED（artifact XML application 291）；5 skip 均为 Windows junction | 维护 |
+| Application | 317 run / 0 fail / 0 error / 5 skip | Q17 287 + Q18 30；首次生成/导入/读取/失败/兼容；四 opt-in 场景同 SHA PASSED（artifact XML application 321）；5 skip 均 Windows junction | 维护 |
 | CLI | 30 | 5 项 hardening + 13 项 Change 工作流 + Q7 新增 12 项（产品边界 6、生产边界闸门 4、内部失败 2） | P1 |
 
 ## 2. Generator 缺口

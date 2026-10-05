@@ -1,6 +1,6 @@
 # KCG-Code 剩余工作路线图
 
-> 更新：2026-10-04。G0/G1 与 G2 的 Q16/Q17 已验收归档；Q17 提交 `ab2ce09` 的 [CI run `36404651840`](https://github.com/HoloNova/Software-IR/actions/runs/36404651840) 双闸门各 **893/0/0/5**，四个业务 IT **40/61/36/63** 全 `PASSED`。`ACTIVE_WORK.md` 当前承载 **Q18（多文件编译输入与完整源快照）**，状态 **`AWAITING_CI`**：D0–D9-B 范围内多源首次生成与拒绝矩阵已完成，定向去重 346/0/0/0；四源课程生成 35 文件与单源逐字节一致。双门/四 IT 本批 NOT_RUN，待明确授权提交推送后同 SHA CI。多源 Bundle/变更基线仍另单，未获提交/推送授权。单能力改名可原子应用与恢复；原课程全局替换连带 Input 仍被 `PATH-004` 拒绝，组合改名须另立单，G2 未关闭。
+> 更新：2026-10-05。G0/G1 与 G2 的 Q16/Q17/Q18 已验收归档；Q17 提交 `ab2ce09` 的 [CI run `36404651840`](https://github.com/HoloNova/Software-IR/actions/runs/36404651840) 双闸门各 **893/0/0/5**，四个业务 IT **40/61/36/63** 全 `PASSED`。Q18 已验收，638eaa7 的 [CI run 37212618580](https://github.com/HoloNova/Software-IR/actions/runs/37212618580) 双门 **936/0/0/5**、四 IT **40/61/36/63** 全 PASSED，Q17 → Q18 +43；XML 940 含四 IT。`ACTIVE_WORK.md` 当前为 **Q19 AWAITING_CI**：P1–P5/ADR-022已冻结，保存/重开实现及定向去重199/0/0/0（新增33）、15点故障矩阵通过；双门/四IT NOT_RUN，待提交/推送授权；保存完整多源基线/独立重开核验，不接通 Change/Rename/apply，不自动提交/推送。单能力改名可原子应用与恢复；原课程全局替换连带 Input 仍被 `PATH-004` 拒绝，组合改名须另立单，G2 未关闭。
 > 读者：项目负责人和后续执行 Agent
 > 定位：本文件的阶段 1–7 是 **G0：现有链路资格收口**内部的 Q 系列执行顺序。产品方向、阶段进入条件与阶段完成门见 [`README.md`](README.md) 和 [`../design/README.md`](../design/README.md)；两者不替代本文件的执行顺序。
 
@@ -37,8 +37,9 @@ G1 的完成门是「BIZ-01..06 的基础业务与反例 + GEN-01/02，并在真
 | Q16 | 单文件持久身份、旧身份不明时拒绝改名、独立只读**单声明**改名计划；全工程受管文件差异未覆盖时拒绝；不执行文件应用或数据库迁移 | **`DONE`**（2026-09-26 验收归档；CI [run `36234304027`](https://github.com/HoloNova/Software-IR/actions/runs/36234304027) 双闸门各 837/0/0/5，四个 IT 全 `PASSED`），见 [`completed/Q16-persistent-identity-and-read-only-rename-plan.md`](completed/Q16-persistent-identity-and-read-only-rename-plan.md) |
 | Q17 | **单能力声明**改名的原子文件应用，独立 V4 日志、CURRENT 定向恢复与清理；应用盘面与候选从零生成逐字节一致；真实两集合、合成三集合证据分列 | **`DONE`**（2026-10-03 确认验收，2026-10-04 归档）；CI `36404651840` 绑定 `ab2ce09`，双闸门各 893/0/0/5、四个 IT 全通过；见 [`completed/Q17-single-declaration-rename-transaction.md`](completed/Q17-single-declaration-rename-transaction.md) |
 | 后续独立项（未立项） | 能力与关联 Input 声明**一同改名**：需冻结 Input 身份与多 subject 计划；原课程全局替换当前只会被 `PATH-004` 拒绝，不由 Q17 的文件事务自动解决 | 尚未授权；不能把 Q16 的单声明计划当作三文件改名可应用 |
-| Q18（[`ACTIVE_WORK.md`](ACTIVE_WORK.md)） | 多文件显式源清单、最小跨文件导入、逐文件解析、完整 SourceSnapshot 与版本化多源 Graph；同一 software 的首次生成 | **`AWAITING_CI`**：主会话完成实施与定向 346/0/0/0，旧四业务输出/六份 V1 快照固定摘要一致；同 SHA CI 双门/四 IT NOT_RUN，不交付多源 Bundle/register/apply 或完整模块实例 |
-| 后续单 | 多文件权威 Bundle/变更基线、模块实例、nodeKey、完整旧身份映射与剩余 LANG 门 | 未授权；Q18 不抵扣 G2 整阶段完成门 |
+| Q18 | 多文件源清单/最小导入、逐文件解析、完整快照与 V2 Graph；同一 software 首次生成 | **DONE**（2026-10-05）；[归档](completed/Q18-multi-source-compilation-and-source-snapshot.md)，638eaa7 同 SHA CI 双门 936/0/0/5、四 IT 全通过；不交付多源基线/apply |
+| Q19（[工作单](ACTIVE_WORK.md)） | 多源基线初次注册、完整字节保存、独立重开核验及保存中断收尾；不重写生成工程 | **AWAITING_CI**，P1–P5/ADR-022已落实，本机去重199/0/0/0；同SHA CI待提交/推送后验证；不把集合 SHA 填入单源 revision，不接 Change/Rename/apply |
+| 后续单 | 多源 Change/Rename 版本化 revision/计划/执行、模块实例、nodeKey、完整身份映射与剩余 LANG 门 | 未授权；Q19 推荐范围不关闭 G2，不默认扩到多源变更事务 |
 
 ## 已登记的独立项（不属于任何工作单的完成门）
 
