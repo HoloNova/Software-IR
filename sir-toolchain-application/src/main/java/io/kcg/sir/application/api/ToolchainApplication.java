@@ -127,10 +127,7 @@ public final class ToolchainApplication {
       }
       var loaded = io.kcg.sir.application.internal.ProjectSourceReader.read(request, diagnostics);
       if (loaded.isEmpty()) return projectFailure(lastErrorStage(diagnostics), FailureDisposition.NO_CHANGES, diagnostics);
-      var semantic = new io.kcg.sir.semantic.api.SirSemanticAnalyzer().analyzeProject(loaded.get().semanticInput());
-      diagnostics.addAll(io.kcg.sir.application.internal.DiagnosticMapper.fromProjectSource(semantic.diagnostics(), ExecutionStage.SEMANTIC));
-      if (!semantic.isSuccess()) return projectFailure(ExecutionStage.SEMANTIC, FailureDisposition.NO_CHANGES, diagnostics);
-      var compilation = SirCompilation.lowerAndGenerate(semantic.model().orElseThrow(), generationStep, diagnostics);
+      var compilation = io.kcg.sir.application.internal.ProjectCompilation.compile(loaded.get(), generationStep, diagnostics);
       if (compilation.isEmpty()) return projectFailure(lastErrorStage(diagnostics), FailureDisposition.NO_CHANGES, diagnostics);
       var snapshot = compilation.get();
       var files = snapshot.generatedFiles();

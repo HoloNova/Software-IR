@@ -1,6 +1,6 @@
 # ADR-021：多文件首次编译、精确源快照与 Graph 版本兼容
 
-- Status: Accepted（负责人确认 Q18 D0–D9；D9 采用 B。架构方向已批准，不等于本批 CI 或工作单已验收）
+- Status: Accepted（负责人确认 Q18 D0–D9；D9 采用 B。Q18 已于 2026-10-05 确认验收归档；不授权 Q19 实施）
 - Date: 2026-10-04
 - Scope: 同 software 的多文件首次编译/生成；不含多源 Bundle/register/apply、数据库迁移或模块市场
 - 工作单与运行证据：[`../roadmap/ACTIVE_WORK.md`](../roadmap/ACTIVE_WORK.md) §4、§10
@@ -98,6 +98,6 @@ Loader 验证外层 payload 与内层 manifest 摘要/规范编码，再执行�
 
 本机去重后的指定类测试 **346/0/0/0**，详见工作单 §10；其中 Parser 91、Semantic 34、Graph 77、Change 36、Application 108。真实课程四源生成 35 文件，与单文件逐路径/字节一致；缺导入、重复身份、环、类型/关系错误和读取边界均拒绝且不落盘。旧四业务输出摘要及 Q13 六份 V1 快照 SHA 对照 Q17 CI run 36404651840 的固定值一致，golden 未重新生成。
 
-**Q18 双全量门与四业务 IT：NOT_RUN，待负责人授权提交/推送后由 CI 验证同 SHA。** 旧 CI 不代表当前工作区已全量通过。
+**Q18 同 SHA CI 已通过，2026-10-05 确认验收归档。** 已授权提交推送 `638eaa7f41ff66a1e2eaef57a8ac9679d75d70fd`，[run 37212618580](https://github.com/HoloNova/Software-IR/actions/runs/37212618580) 双全量门各 **936/0/0/5**、四业务 IT **40/61/36/63** 全 PASSED；surefire-reports/conformance-evidence 已下载核对。相对 Q17 +43，上传 XML 940 含四 IT，不冒充门计数；验收与 C1–C6 裁决见 [Q18 归档](../roadmap/completed/Q18-multi-source-compilation-and-source-snapshot.md) §11；本轮仅文档，不修改受测源码或另行提交，不关闭 G2。Q19 多源基线保存/重开仅 SPEC_REVIEW，不用此 ADR 自动授权新格式。
 
 本单不关闭 G2；多源权威 Bundle/Change 基线、moduleInstance/nodeKey、完整旧身份映射、组合改名、数据库物理列继承和 CLI 接线另单。当前只有首次生成公开能力；不能把不可变内存源快照称为已发布 CURRENT 或模块版本锁。

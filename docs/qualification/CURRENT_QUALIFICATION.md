@@ -25,7 +25,7 @@
 
 **全量计数 775 / 0 / 0 / 5**（Q11 后为 749；+26 全部来自 Q14/Q15/Q13 的新增测试），由 GitHub CI 一次跑完（见 1.13）。G1 的 Q9、Q10、Q11、Q13 至此全部验收归档（Q12 未立项）。本节的 G0 记录不因此改写。
 
-**G2 的 Q16/Q17 两张工作单已验收归档**：Q16 交付能力/实体字段 `@id` 与独立只读 `RenamePlan`/`RenamePlanner`（历史 CI **837/0/0/5**，见 1.14）；Q17 交付唯一 `applyRename` 入口、单能力改名的原子文件应用、旧受管文件清理与 CURRENT 定向恢复（见 1.15）。最新受测提交 `ab2ce09` 的 [CI run `36404651840`](https://github.com/HoloNova/Software-IR/actions/runs/36404651840) 双闸门各 **893/0/0/5**，四个业务 IT 全 `PASSED`；上传 XML 897 含另跑的四个 IT。**G2 阶段门仍未满足**。Q17 收口后 Q18 获准 D0–D9-B 并完成多源首次生成/最小导入，实现与本机定向去重 **346/0/0/0**，当前 **AWAITING_CI**（见 §1.16）。Q18 的双全量门与四业务 IT 均 NOT_RUN，Q17 旧 CI 不能替代当前工作区证据。多源权威 Bundle/变更基线、nodeKey/模块实例、完整旧身份兼容、组合改名及数据库列继承未完成；未提交/推送，不记 G2 DONE。
+**G2 的 Q16/Q17/Q18 三张工作单已验收归档**：Q16 交付能力/实体字段 `@id` 与独立只读 `RenamePlan`/`RenamePlanner`（历史 CI **837/0/0/5**，见 1.14）；Q17 交付唯一 `applyRename` 入口、单能力改名的原子文件应用、旧受管文件清理与 CURRENT 定向恢复（见 1.15）。Q17 受测提交 `ab2ce09` 的 [CI run `36404651840`](https://github.com/HoloNova/Software-IR/actions/runs/36404651840) 双闸门各 **893/0/0/5**，四业务 IT 全 PASSED；上传 XML 897 含四 IT。**G2 阶段门仍未满足**。Q18 已按 D0–D9-B 完成多源首次生成/最小导入及定向 **346/0/0/0**，已授权提交推送 `638eaa7`；最新同 SHA 的 [CI run 37212618580](https://github.com/HoloNova/Software-IR/actions/runs/37212618580) 双门各 **936/0/0/5**、四 IT **40/61/36/63** 全 PASSED，两类 artifact 已核对（XML 940 含四 IT），Q18 于 2026-10-05 确认验收并归档，见 §1.16。[当前工作单 Q19](../roadmap/ACTIVE_WORK.md) 为 **AWAITING_CI**，P1–P5/ADR-022已冻结，多源基线保存/独立重开已实现；本机指定类去重199/0/0/0（新增33）和15点故障矩阵通过，双门/四IT NOT_RUN，待本批提交/推送授权，见§1.17。多源变更、nodeKey/模块实例、完整身份兼容、组合改名及数据库列继承未完成；不记 G2 DONE，本批实现及文档未提交/推送，不沿用Q18 CI冒称Q19已验收。
 
 **登记表（NOT_RUN / 未覆盖 / 平台条件）**：
 
@@ -453,9 +453,9 @@ skip 11 → 5 的逐条解释：`PathSecurityReviewTest` 5 项 Windows junction 
 
 **未完成**：能力+Input 组合改名、多文件/跨文件移动、nodeKey/import/binding、G2 其余身份兼容门、字段物理列继承/数据库迁移与 CLI 接线。未宣称产品数据库 INITIALIZE/UPDATE 或完整产品资格。
 
-### 1.16 Q18 G2 第三切片：多文件首次生成与源快照（2026-10-04；AWAITING_CI）
+### 1.16 Q18 G2 第三切片：多文件首次生成与源快照（2026-10-04 CI；2026-10-05 DONE）
 
-**授权与范围**：负责人批准 D0–D8 与 D9-B（两个旧 planner 的 V0_1/V1 准入守卫），由主会话直接实施。工作单 [`ACTIVE_WORK.md`](../roadmap/ACTIVE_WORK.md) §10；Accepted [ADR-021](../architecture/ADR-021-multi-source-compilation-and-graph-compatibility.md) 冻结接口、编码、限额和兼容矩阵。HEAD 仍为 `ab2ce09`，本批为未提交工作区；不得把该 HEAD 的旧 CI 当作本批同源码验证。
+**授权与范围**：负责人批准 D0–D8 与 D9-B（两个旧 planner 的 V0_1/V1 准入守卫），由主会话直接实施。归档工作单 [Q18](../roadmap/completed/Q18-multi-source-compilation-and-source-snapshot.md) §10–11；Accepted [ADR-021](../architecture/ADR-021-multi-source-compilation-and-graph-compatibility.md) 冻结接口、编码、限额和兼容矩阵。受测提交 `638eaa7f41ff66a1e2eaef57a8ac9679d75d70fd` 已授权推送，同 SHA 的 [CI run 37212618580](https://github.com/HoloNova/Software-IR/actions/runs/37212618580) 全绿；两类 artifact 已下载核对。2026-10-05 负责人明确确认验收，C1–C6 订正接受，整单归档；本轮仅文档，未另作提交。
 
 | 证据 | 实测结果与边界 |
 |---|---|
@@ -473,32 +473,46 @@ skip 11 → 5 的逐条解释：`PathSecurityReviewTest` 5 项 Windows junction 
 
 环境 nproc=2、末次可用内存 2057 MB；单任务 systemd scope MemoryMax=1500M/CPUQuota=125%，Maven/fork Xmx384m，无并发/无 -T。只执行指定类，无生成工程 Maven/应用或 MySQL IT。最终日志 `/tmp/q18-parser-regression.log`、`/tmp/q18-final-directed.log`（Graph 边界旧失败不计通过）、`/tmp/q18-final-remaining.log`；源码、测试及运行订正详见工作单 §10。
 
-**NOT_RUN**：本批 commit SHA/run URL/artifacts、双全量门和 Q9/Q10/Q11/Q13 四个真实业务 IT 均未获得，需明确授权提交/推送后由 GitHub CI 一次验证同 SHA。旧字节对照不代替本批运行回归。
+**同 SHA CI**：冻结/完成两门各 **936 run / 0 fail / 0 error / 5 skip，10 模块 BUILD SUCCESS**；Q9/Q10/Q11/Q13 真实 MySQL/HTTP IT 分别 **40/61/36/63** 项全通过。四报告均 verdict=PASSED、schemaName=kcg_conf_run、持有 advisory lock、generatedProjectBuild=PASSED (exit 0)。输入/生成摘要与 Q17 goldens 相同，LegacySourceEvidenceCompatibilityTest 亦通过。仍为 TEST_FIXTURE_DDL，不抵扣产品 INITIALIZE/UPDATE。
 
-**未交付**：多源 Bundle/register/apply/恢复协议、完整 moduleInstance/export/private、nodeKey/全声明身份迁移、组合改名、数据库物理列/G3 与 CLI 接线。当前为 AWAITING_CI，不宣称已最终验收或 G2 关闭。
+**证据**：run conclusion=success、所有步骤与上传成功；`surefire-reports`/`conformance-evidence` 下载于 `/tmp/q18-ci-638eaa7/artifacts/`，原始门日志及 SHA/run 元数据位于该目录上级。闸门为 936，上传 XML 为 **940/0/0/5**（含四个另跑 IT），不混计；在线预热多一份 Q9 报告不计第五场景。相对上一张已验收 Q17 的 **893 → 936（+43）**，parser +7、semantic +1、graph +5、application +30；skip 仅既有 Windows junction。
+
+**未交付**：多源 Bundle/register/apply/恢复协议、完整 moduleInstance/export/private、nodeKey/全声明身份迁移、组合改名、数据库物理列/G3 与 CLI 接线。Q18 当前 DONE，仅验收上述首次生成范围，不宣称 G2 关闭。Q19 保存/重开核验及初次发布合同已实现并完成本机指定类验证，状态AWAITING_CI（§1.17）；不抵扣多源 Change/Rename 应用。
+
+### 1.17 Q19 多源基线保存/独立重开——本机通过，等待同SHA CI（2026-10-05）
+
+[工作单](../roadmap/ACTIVE_WORK.md) §9 / [ADR-022](../architecture/ADR-022-multi-source-baseline-storage-and-reopen.md)。主会话实施，生产仅Application模块：快照共享编排、新项目基线API、独立V2 descriptor/domain与受限源容器、锚定安全读取及初次发布。旧Bundle/Revision/ChangeExecution/V4、其他生产模块未改。
+
+真实四源课程35文件从快照注册，移开原源目录后由新实例读取全部原字节/来源、重编译出同图/清单并核验盘面；inspect和AlreadyRegistered前后完整盘面不变。BOM/CRLF/注释保留；注释改动改变源集合/基线ID、不能借注册更换CURRENT。保存15点故障矩阵钉住到达数；完整证据显式重试收尾，半写/未知成员保留拒绝，CURRENT已发布不回滚，外部同字节不同inode指针不删除，发布边界外部CURRENT不覆盖。旧context/plan/apply/applyRename/recover实调拒绝新格式且零盘面变化，新inspect明确拒绝V1。
+
+P3实测payload4816/Graph108687字节，新descriptor约10.8 KiB（绑定临时路径长度会差几字节）；限额及code/阶段见工作单/ADR。资源、路径、framing、复算外层SHA/descriptor仍不能掩盖内层来源/target/manifest错误等反例通过。
+
+**定向去重199/0/0/0**（27指定类），新增4类**33/0/0/0**：Prerequisite6、Contract12、Codec9、ReadBoundary6。先回归194，随后仅修改严格编码/限额/反例涉及的类；以最新同类报告替换去重，不把重跑相加。证据`/tmp/q19-directed-regression.log`、`/tmp/q19-final-directed.log`、`/tmp/q19-cross-version.log`及Application target/surefire-reports；四业务输出/六份V1图仍匹配Q17 CI固定golden。
+
+本机2核/3.8 GiB、开工可用1.9 GiB，单构建scope 1500M/125%、Maven及fork各384m，无-T/业务IT。当前HEAD638eaa7，本批未提交；**CI双闸门/四IT NOT_RUN**。状态AWAITING_CI，提交后必须绑定源码SHA/run/artifact，不沿用Q18全绿；§2仍保留受测Q18的936而非预报Q19全量。多源变更/改名应用、模块实例/nodeKey、完整身份兼容及G3未交付，G2未关闭。
 
 ## 2. 模块测试统计
 
-以下为 **2026-09-28 GitHub CI Q17 后完成形式** 的最近已验收全量记录（Q18 工作区定向另见 §1.16；run `36404651840`，受测 SHA `ab2ce09decce7b3f157ea1a52f1cc54bff5e4d7b`；冻结与完成形式各有相同模块计数），G1 的 775 与 Q16 的 837 是历史基线；命令与证据见 1.13–1.15。
+以下为 **Q18 GitHub CI run 37212618580** 的实际全量记录（受测 SHA `638eaa7f41ff66a1e2eaef57a8ac9679d75d70fd`；冻结与完成形式模块计数相同）。Q18 已于 2026-10-05 验收归档；Q17 已验收基线 893、Q16 837、G1 775 保留为历史证据，见 1.13–1.16。
 
-**计数口径**：九模块逐项取自同树双闸门 Maven 日志；**837 → 893（+56）**，全部来自 application 的六个 Q17 新类；其余模块未增减。G1 → Q16 的 +62 另见 1.14，累计 +118 不能全算作 Q17 新增。
+**计数口径**：九模块逐项取自同树双闸门原始日志；**893 → 936（+43）**，本单增量为 parser +7、semantic +1、graph +5、application +30。Q16/Q17 的 +62/+56 不算作本单新增。
 
-上传的 `surefire-reports` XML 在四个 opt-in IT 之后含 application 额外四个测试，故 artifact 总计 897 而非下表的闸门 893。JUnit `@Nested` 容器和类级 assumption 的展示差异不改变实际 testcase 统计。
+上传 `surefire-reports` XML 在四个 opt-in IT 后含 application 额外四个测试，故 artifact 总计 **940** 而非下表闸门 **936**。JUnit `@Nested` 容器和类级 assumption 不改变实际 testcase 统计。
 
 | 模块 | run | fail | error | skip | 当前解释 |
 |---|---:|---:|---:|---:|---|
-| `sir-parser` | 84 | 0 | 0 | 0 | 含 Q16 `DeclaredIdentityGrammarTest` 5 项（`@id` 正反语法） |
-| `sir-semantic` | 184 | 0 | 0 | 0 | 含 typed reference-site 契约与 Q16 `DeclaredIdentitySemanticsTest` 8 项 |
+| `sir-parser` | 91 | 0 | 0 | 0 | 旧 84 + Q18 `ProjectSourceGrammarTest` 7；旧 0.1 与独立 0.2 根/片段及源快照 |
+| `sir-semantic` | 185 | 0 | 0 | 0 | 旧 184 + 重复 ID 正常失败反例 1；保留 typed reference-site/Resolve-once |
 | `sir-lowering-api` | 4 | 0 | 0 | 0 | API 契约 |
 | `sir-lowering-spring-boot` | 86 | 0 | 0 | 0 | 含 Q16 `DeclaredIdentityPhysicalNameTest` 4 项；目标生产代码未改 |
 | `sir-generator-spring-boot` | 77 | 0 | 0 | 0 | canonical 输出、主要 Renderer、跨环境字节确定性和完整生成工程离线编译，另加 Q1 生产边界闸门（生产 census、禁止引用 0 违规、公开入口反射）；Q9 新增 10 项、Q10 新增 21 项、Q11 新增 6 项（`GeneratorRelationSliceContractTest`：EXISTS 渲染与绑定值、每关联一条批量读取、对一按身份读取、嵌套投影无 N+1、只读事务注解、嵌套 view 各成响应类型）并把关联切片加入确定性矩阵 |
-| `sir-project-graph` | 72 | 0 | 0 | 0 | Q2 建立的直接模块契约：四类边、规则矩阵、canonical 序列化/加载/摘要往返、只读边界闸门（生产 census 69 个 class、0 违规）与不可信字节版本/来源类型/不可编码标量守卫 |
+| `sir-project-graph` | 77 | 0 | 0 | 0 | 旧 72 + Q18 多源格式 5；旧 V1 golden 保留，V2/源 manifest/span/owner/损坏拒绝与只读边界 |
 | `sir-change` | 69 | 0 | 0 | 0 | 含 Q14 投影测试 11 项与 Q16 只读改名计划/源陈旧/全工程覆盖/契约测试 36 项 |
-| `sir-toolchain-application` | 287 | 0 | 0 | 5 | Q16 231 + Q17 56（探针/绑定/保护/日志/恢复矩阵/端到端）；5 skip 全为 Windows junction，未新增排除 |
+| `sir-toolchain-application` | 317 | 0 | 0 | 5 | Q17 287 + Q18 30（探针、首次生成、可见性/类型/读取/资源/旧消费者/故障/golden）；5 skip 仅 Windows junction，无新增排除 |
 | `kcg-cli` | 30 | 0 | 0 | 0 | 含 Q7 新增 12 项（产品边界 6、生产边界闸门 4、内部失败 2）；另有 5 项 hardening + 13 项 Change 工作流（Q3 前整类被类级 assumption 跳过）；见 1.8 |
-| **合计** | **893** | **0** | **0** | **5** | 2026-09-28 GitHub CI run `36404651840`（SHA `ab2ce09`）；冻结与完成形式均 BUILD SUCCESS；两类 artifact 已核对 |
+| **合计** | **936** | **0** | **0** | **5** | GitHub CI run `37212618580`（SHA `638eaa7`）；冻结与完成形式均 BUILD SUCCESS；两类 artifact 已核对，Q18 已确认验收 |
 
-对比 2026-08-11 Windows 运行：373 / 0 / 0 / 10，那次 `0 failed` 不能证明软链接拒绝路径可用。2026-09-23 G1 CI 完成形式为 775 / 0 / 0 / 5；Q16 CI 完成形式为 **837/0/0/5**（+62，见 1.14），本次 Q17 为 **893/0/0/5**（再 +56，见 1.15）；5 skip 仍仅为 Windows junction。历史证据不混写为当前树结论。
+对比 2026-08-11 Windows 运行：373 / 0 / 0 / 10，那次 `0 failed` 不能证明软链接拒绝路径可用。2026-09-23 G1 CI 完成形式为 775 / 0 / 0 / 5；Q16 CI 完成形式为 **837/0/0/5**（+62，见 1.14），Q17 为 **893/0/0/5**（再 +56，见 1.15）；本次 Q18 为 **936/0/0/5**（再 +43，见 1.16）；5 skip 仍仅为 Windows junction。历史证据不混写为当前树结论。
 
 ## 3. 跳过与排除
 
