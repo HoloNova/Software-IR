@@ -1,6 +1,6 @@
 # KCG-Code 当前项目状态
 
-> 更新：2026-10-05。**G0/G1 完成；G2 的 Q16/Q17/Q18 已验收归档，G2 未关闭。** [当前工作单 Q19](roadmap/ACTIVE_WORK.md) 为 **AWAITING_CI**：P1–P5/ADR-022已冻结，完整四源保存、新实例无原源目录重开核验已实现；定向去重199/0/0/0（新增33）、15点保存故障矩阵通过，双门/四IT NOT_RUN；不接 Change/Rename/apply，未提交/推送。Q18 归档见 [工作单](roadmap/completed/Q18-multi-source-compilation-and-source-snapshot.md)：638eaa7 的 [CI run 37212618580](https://github.com/HoloNova/Software-IR/actions/runs/37212618580) 双门各 **936/0/0/5**、四 IT **40/61/36/63** 全通过，产物已核对。Q17 893 → Q18 936（+43），上传 XML 940 含四 IT；定向 346、四源课程 35 文件与单源逐字节相同，旧输出/六份 V1 快照 goldens 不变。单能力改名的 Q17 应用/恢复仍仅单源，连带 Input 改名仍 PATH-004；多源基线、nodeKey/模块实例及完整身份兼容尚未实现。历史 G1=775、Q16=837、Q17=893；证据与未交付边界见资格报告 §1.16。
+> 更新：2026-10-05。**G0/G1 完成；G2 的 Q16/Q17/Q18/Q19 已验收归档，G2 未关闭。** [当前活动单](roadmap/ACTIVE_WORK.md) 为 **Q20 / IN_PROGRESS**：负责人确认D0–D8，从保存的多源基线取得项目context/凭据并只读规划单能力工作流UPDATE；P1–P5及本机实现完成，定向去重186/0/0/0（新增26），本批CI NOT_RUN、等待Git授权；未改旧准入/保存格式/事务，见资格§1.18。[Q19已确认验收归档](roadmap/completed/Q19-multi-source-baseline-storage-and-reopen.md)：四源保存/独立重开、定向199及15点故障矩阵通过；受测f3d9ef7的[CI run37256515347](https://github.com/HoloNova/Software-IR/actions/runs/37256515347)双门各969/0/0/5（Q18+33）、四IT40/61/36/63全通过，XML973含四IT、artifact核对；不接Change/Rename/apply，验收/回填文档未提交。Q18 归档见 [工作单](roadmap/completed/Q18-multi-source-compilation-and-source-snapshot.md)：638eaa7 的 [CI run 37212618580](https://github.com/HoloNova/Software-IR/actions/runs/37212618580) 双门各 **936/0/0/5**、四 IT **40/61/36/63** 全通过，产物已核对。Q17 893 → Q18 936（+43），上传 XML 940 含四 IT；定向 346、四源课程 35 文件与单源逐字节相同，旧输出/六份 V1 快照 goldens 不变。单能力改名的 Q17 应用/恢复仍仅单源，连带 Input 改名仍 PATH-004；多源基线保存/重开已由Q19交付；多源变更计划/应用、nodeKey/模块实例及完整身份兼容尚未实现。历史 G1=775、Q16=837、Q17=893；证据与未交付边界见资格报告 §1.16–1.17；Q20实施中，尚无完整资格/CI。
 > 状态：正常开发中的 v0.1 工程；G0 资格已完成，完整产品资格尚未完成
 
 ## 1. 项目定位
@@ -38,7 +38,10 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 - Application-owned Bundle、CURRENT、UPDATE/CREATE/DELETE transaction 和显式恢复 API。
 - Q16 能力/实体字段 `@id` 与独立单声明只读改名计划；Q17 唯一 `applyRename(RenameApplyRequest)` 入口、V4 混合文件事务、CURRENT=B0/B1 定向恢复与受管文件保护。真实单能力改名已验证，组合改名、多源增量变更/跨文件移动应用、字段数据库迁移和 CLI 接线未完成。
 - CLI 的只读 context inspection 与 plan。
-- **Q18 新增，2026-10-05 已验收归档**：0.2 显式源清单/导入、逐文件解析与一次 Resolve、完整 SourceSnapshot、V0_2/V2 Graph，以及 `executeProject` 到新输出根的首次生成。仅同一 software 的分片；最多 128 文件、1 MiB/文件、8 MiB 合计。旧 0.1/V1 与 Change/Rename 单源边界保留；多源 Bundle/register/apply、nodeKey/模块实例未交付。实测与限额合同见资格报告 §1.16 和 ADR-021。
+- **Q18 新增，2026-10-05 已验收归档**：0.2 显式源清单/导入、逐文件解析与一次 Resolve、完整 SourceSnapshot、V0_2/V2 Graph，以及 `executeProject` 到新输出根的首次生成。仅同一 software 的分片；最多 128 文件、1 MiB/文件、8 MiB 合计。旧 0.1/V1 与 Change/Rename 单源边界保留；Q18本单不交付多源基线/apply、nodeKey/模块实例。实测与限额合同见资格报告 §1.16 和 ADR-021。
+- **Q19新增，2026-10-05已验收归档**：独立`ProjectBaselineApplication.register/inspect`保存完整源原字节、V2图及受管清单；原sourceRoot不可用时可独立重开核验，无单源revision或多源Change/Rename/apply。四成员Bundle/指针身份及15点发布矩阵合同见资格报告§1.17、Accepted ADR-022。
+
+- **Q20本机实现，尚待CI/验收**：独立`ProjectChangePlanningApplication.context/plan/verify`读回Q19保存字节与候选快照，完整重编译后返回单能力工作流只读UPDATE计划；独立revision/目标目录/摘要域，共享旧工作流决策，成功/拒绝/NoChanges均零写盘。去重186全过、新26；不交付实际应用/其他操作/改名，见资格§1.18、Proposed ADR-023。
 
 ### 尚未作为当前产品能力发布
 
@@ -49,26 +52,26 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 
 ## 4. 当前资格状态
 
-最近一次实际执行的离线 Reactor 记录（GitHub CI run `37212618580`，受测 SHA `638eaa7`，完成形式；Q18 已确认验收）：
+最近一次实际执行的离线 Reactor 记录（GitHub CI run `37256515347`，受测 SHA `f3d9ef7`，完成形式；Q19 已确认验收；Q20本批CI尚NOT_RUN）：
 
 ```bash
 mvn -B -Dmaven.repo.local=/root/.m2/repository -o clean verify -Dmaven.test.failure.ignore=true
 ```
 
-十个 Reactor 模块全部完成，**冻结形式与完成形式均 BUILD SUCCESS，各 936 run / 0 fail / 0 error / 5 skip**。Q17 893 → Q18 936（+43）：parser +7、semantic +1、graph +5、application +30；5 skip 仅既有 Windows junction。上传 XML 合计 940，含另跑四业务 IT，不当作闸门计数。精确模块数字与边界见 `docs/qualification/CURRENT_QUALIFICATION.md` §1.16、§2。
+十个 Reactor 模块全部完成，**冻结形式与完成形式均 BUILD SUCCESS，各 969 run / 0 fail / 0 error / 5 skip**。Q18 936 → Q19 969（+33，全部Application），5 skip仅既有Windows junction。上传XML合计973含另跑四IT，不当作闸门计数；四IT40/61/36/63及两类artifact已核对。精确数字与边界见`docs/qualification/CURRENT_QUALIFICATION.md` §1.17、§2；不证明本批Q20通过。
 
-**Q18 本机定向结果**：parser 91、semantic 34、graph 77、change 36、application 108，去重 **346/0/0/0**（非全量 Reactor）；重活仅 CI 执行，四业务报告 40/61/36/63 全 PASSED、生成工程构建 exit 0。以下 G0/G1/Q16/Q17 的历史证据不混为本批新增。
+**Q19本机定向结果**：Application27类去重199/0/0/0（含新增33及15点故障矩阵；非全量Reactor）。Q18历史指定类346/0/0/0仍独立记录。重活仅CI执行，四业务报告40/61/36/63全PASSED、生成工程构建exit 0；历史数字不混为本单新增，Q20本机定向186/0/0/0（新26）；本批CI双门/四IT均NOT_RUN，不混入969已验收口径。
 
 当前结论：
 
-- 默认离线 Reactor：Linux CI run 37212618580 双门均 BUILD SUCCESS，十模块完成、合计 **936/0/0/5**（Q18 后；5 skip 仅 Windows junction）。Windows 2026-08-11 那次 `0 failed` 不能证明软链接拒绝路径可用（当次用例未真实执行），该证据现由 Linux 提供。
+- 默认离线 Reactor：Linux CI run 37256515347 双门均 BUILD SUCCESS，十模块完成、各 **969/0/0/5**（Q19后；Q20本批CI尚NOT_RUN；5 skip仅Windows junction）。Windows 2026-08-11 那次 `0 failed` 不能证明软链接拒绝路径可用（当次用例未真实执行），该证据现由 Linux 提供。
 - G1 首切片（Q9，2026-09-18）：单文件 `Course` 分页查询在真实 MySQL 8.4.11 + HTTP 上 40 项业务断言全通过（含字面 `%`/`_` 的灵敏度对照、越界页、4 种非法分页 400、行指纹不变）；生成工程离线编译通过。schema 为测试 fixture（`schemaSource=TEST_FIXTURE_DDL`），**产品 INITIALIZE/UPDATE 仍未实现**；该 IT 为 opt-in，默认构建不跑。
 - G1 第二切片（Q10，2026-09-21 验证 / 2026-09-23 验收并归档）：Course 写侧在真实 MySQL 8.4.11 + HTTP 上 61 项业务断言全通过（创建 201 与声明投影、PATCH 三态、陈旧版本 409、并发同版本恰好一成功一 409 且版本只 +1、结构化字段错误 400 且不写入、每次失败后整行指纹比对）；schema 仍为测试 fixture（`schemaSource=TEST_FIXTURE_DDL`），该 IT 为 opt-in，默认构建不跑。
 - G1 第三切片（Q11，2026-09-23 验证并验收归档，见资格报告 1.11）：关联过滤（存在性语义）与关联读取（批量、预算）在真实 MySQL 8.4.11 + HTTP 上 36 项业务断言全通过——`total` 按根实体算且每个根只出现一次、只被两条不同报名分别满足条件的课程不入选、根过滤不等于投影过滤、每个关联一条批量读取（三十条关联行语句数不变）、一次请求恰为一个只读事务、越界页 2 条读取、非法页 400 且 0 读取；语句计数取自 `performance_schema` 摘要增量、原始 SQL 取自 general log（均经 control 账号）。schema 仍为测试 fixture，该 IT 为 opt-in，默认构建不跑；Q9/Q10 场景在同树回归（40/40、61/61）。
 - Generator 生产边界闸门（Q1，2026-09-18）：生产 census 37 个 class 禁止引用 0 违规、公开入口只为 `generate(SpringBootLoweredModel)`；未修改生产代码。
 - 软链接拒绝路径（Q3，2026-09-18）：5 项失败已定性并修复——4 项为诊断消息拼写（`link in raw chain` → `symlink or reparse point in raw chain`），1 项为 `PathGuard` 叶子链诊断遮蔽（现只检查严格祖先链，叶子符号链接恢复报 `CONFLICT-001/002`）。新增 FAIL_IF_EXISTS 侧守卫测试，保证“不再检查叶子”不被错实现为“删掉叶子拒绝”。
 - Change fixtures（Q3，2026-09-18）：新增 13 个 fixture，`ChangePlanningApplicationTest` 6 项与 `KcgCliWorkflowTest` 13 项从 skip 变为真实执行并通过。
-- Project Graph 直接模块测试：已从 0 项补齐到 72 项全绿（Q2，2026-09-18，已验收归档）：四类边、规则矩阵、canonical 往返、只读边界闸门与不可信字节守卫；Q2 阶段全量完成形式为 451/5/0/11，后续 G0 收口为 554/0/0/5；最新 Q18 全量见本节开头。
+- Project Graph 直接模块测试：已从 0 项补齐到 72 项全绿（Q2，2026-09-18，已验收归档）：四类边、规则矩阵、canonical 往返、只读边界闸门与不可信字节守卫；Q2 阶段全量完成形式为 451/5/0/11，后续 G0 收口为 554/0/0/5；最新Q19全量见本节开头。
 - 外部 MySQL conformance：**QUALIFIED**（MySQL 8.4.11 参考环境，五场景全通过、两次可复现；G0 完成门见 `CURRENT_QUALIFICATION.md` 第 0 节）。
 - 完整本地 MVP：`NOT_RUN`。
 - 生产、安全认证、性能、HA 和全平台资格：未声明。
@@ -95,7 +98,7 @@ mvn -B -Dmaven.repo.local=/root/.m2/repository -o clean verify -Dmaven.test.fail
 
 ## 6. 当前优先工作
 
-当前 G 阶段是 **G2：持久身份与受控模块**（阶段定义见 `docs/roadmap/README.md`）；G2 尚未通过完成门。**G0 完成门已闭合**（见 `docs/qualification/CURRENT_QUALIFICATION.md` 第 0 节），Q1–Q8 已完成并归档；**G1 的课程业务切片均已完成、验收并归档**——Q9（Course 单实体分页查询端到端：全量 554 → 620，真实 MySQL/HTTP 场景 40 项断言 0 失败，2026-09-21 验收）、Q10（Course 写侧：Create + Get + PATCH 三态 + version 冲突 + 结构化字段错误：全量 620 → 702/0/0/5，写侧场景 61 项断言 0 失败，2026-09-23 验收）与 Q11（关联过滤与关联读取：全量 702 → **749/0/0/5**，关联场景 36 项断言 0 失败，Q9/Q10 同树回归 40/40 与 61/61，2026-09-23 验收）。`docs/roadmap/ACTIVE_WORK.md` **当时是 Q13（G1 变更闭环）的工作单**，状态 **`DONE`**（2026-09-23 验收归档；CI run `35854153833`：两条全量闸门 BUILD SUCCESS、合计 775 / 0 / 0 / 5、四个业务场景 IT 全 `PASSED`）——Q13 已归档，当前工作单见 [`roadmap/ACTIVE_WORK.md`](roadmap/ACTIVE_WORK.md)（Q19 `AWAITING_CI`，多源保存/重开及199项定向通过，待同SHA CI；Q18 已归档）。它曾被两个缺陷阻断、又分别由两张独立小单解除：**Q14** 补齐变更层语义投影（`.present`/`any(...)`/`Page<...>` + 五处盲区 + 语言面闸门）、**Q15** 让实体级片段（`CourseMapper` 的乐观锁辅助方法）只依赖实体声明。现在 Q13 的链 R1→R2→R3a→R3b→R4 全部 apply 成功、"增量应用结果 == 从零生成结果"逐字节成立；真实环境变更闭环 IT 也通过（63 项检查 0 失败）：同一份数据下放宽过滤后 ART101 出现（total 3→4）、收紧后的名字长度在 HTTP 上 400 且点名 `name`、删掉两个写能力后写路由 404 而非法分页仍得 400 `InvalidPage`、新增能力的新路由与旧路由同时可用。**Q14（变更层语义投影对齐）已完成、验收并归档**（2026-09-23 实施完成；全量闸门按批量口径留到提交前一次运行）：Q13 的开工实测发现 `sir-change` 的 `SemanticProjection` 不处理 Q10 的 `.present`、Q11 的 `any(...)` 与 Q9 的 `Page<...>`，含这些语法的源无法做变更计划（抛 `IllegalStateException`），另有五处静默盲区，因此 **Q13（G1 变更闭环）暂停**（当时状态 `BLOCKED`，现已归档于 [`roadmap/completed/Q13-g1-change-loop.md`](roadmap/completed/Q13-g1-change-loop.md)），先补这张对齐单，完成后回到 Q13 继续。Q14 已完成并验收：`SemanticProjection` 补上 `.present`/`any(...)`/`Page<...>` 与五处盲区，11 项投影测试（含语言面闸门与灵敏度探针）与 6 项行为测试全绿；Q13 的 R1/R2 两轮随之可以计划并 apply，但**删除版本化写能力**仍被 **BLOCK-2** 挡住（删能力会改动幸存文件 `CourseMapper.java` 的乐观锁辅助方法，`SIR-CHANGE-IMPACT-202` 拒绝）；该阻断随后由 Q15 解除，不是当前待裁决项。Q12（路由模板）未立项，独立项见 `docs/roadmap/REMAINING_WORK.md`。
+当前 G 阶段是 **G2：持久身份与受控模块**（阶段定义见 `docs/roadmap/README.md`）；G2 尚未通过完成门。**G0 完成门已闭合**（见 `docs/qualification/CURRENT_QUALIFICATION.md` 第 0 节），Q1–Q8 已完成并归档；**G1 的课程业务切片均已完成、验收并归档**——Q9（Course 单实体分页查询端到端：全量 554 → 620，真实 MySQL/HTTP 场景 40 项断言 0 失败，2026-09-21 验收）、Q10（Course 写侧：Create + Get + PATCH 三态 + version 冲突 + 结构化字段错误：全量 620 → 702/0/0/5，写侧场景 61 项断言 0 失败，2026-09-23 验收）与 Q11（关联过滤与关联读取：全量 702 → **749/0/0/5**，关联场景 36 项断言 0 失败，Q9/Q10 同树回归 40/40 与 61/61，2026-09-23 验收）。`docs/roadmap/ACTIVE_WORK.md` **当时是 Q13（G1 变更闭环）的工作单**，状态 **`DONE`**（2026-09-23 验收归档；CI run `35854153833`：两条全量闸门 BUILD SUCCESS、合计 775 / 0 / 0 / 5、四个业务场景 IT 全 `PASSED`）——Q13 已归档，当前工作单见 [`roadmap/ACTIVE_WORK.md`](roadmap/ACTIVE_WORK.md)（当前Q20 IN_PROGRESS，多源context/项目revision与单工作流只读计划本机完成186/0/0/0，新26，CI NOT_RUN、等待Git授权；Q19已归档：本机199及f3d9ef7同SHA双门969/0/0/5、四IT通过，不抵扣Q20验证）。它曾被两个缺陷阻断、又分别由两张独立小单解除：**Q14** 补齐变更层语义投影（`.present`/`any(...)`/`Page<...>` + 五处盲区 + 语言面闸门）、**Q15** 让实体级片段（`CourseMapper` 的乐观锁辅助方法）只依赖实体声明。现在 Q13 的链 R1→R2→R3a→R3b→R4 全部 apply 成功、"增量应用结果 == 从零生成结果"逐字节成立；真实环境变更闭环 IT 也通过（63 项检查 0 失败）：同一份数据下放宽过滤后 ART101 出现（total 3→4）、收紧后的名字长度在 HTTP 上 400 且点名 `name`、删掉两个写能力后写路由 404 而非法分页仍得 400 `InvalidPage`、新增能力的新路由与旧路由同时可用。**Q14（变更层语义投影对齐）已完成、验收并归档**（2026-09-23 实施完成；全量闸门按批量口径留到提交前一次运行）：Q13 的开工实测发现 `sir-change` 的 `SemanticProjection` 不处理 Q10 的 `.present`、Q11 的 `any(...)` 与 Q9 的 `Page<...>`，含这些语法的源无法做变更计划（抛 `IllegalStateException`），另有五处静默盲区，因此 **Q13（G1 变更闭环）暂停**（当时状态 `BLOCKED`，现已归档于 [`roadmap/completed/Q13-g1-change-loop.md`](roadmap/completed/Q13-g1-change-loop.md)），先补这张对齐单，完成后回到 Q13 继续。Q14 已完成并验收：`SemanticProjection` 补上 `.present`/`any(...)`/`Page<...>` 与五处盲区，11 项投影测试（含语言面闸门与灵敏度探针）与 6 项行为测试全绿；Q13 的 R1/R2 两轮随之可以计划并 apply，但**删除版本化写能力**仍被 **BLOCK-2** 挡住（删能力会改动幸存文件 `CourseMapper.java` 的乐观锁辅助方法，`SIR-CHANGE-IMPACT-202` 拒绝）；该阻断随后由 Q15 解除，不是当前待裁决项。Q12（路由模板）未立项，独立项见 `docs/roadmap/REMAINING_WORK.md`。
 
 **阶段 1–6 的六张工作单全部完成并归档**（`docs/roadmap/completed/`）：Q1 Generator 生产边界、Q2 Project Graph 直接契约（0→72）、Q3 Change fixtures 与软链接收口、Q4+Q5 conformance 恢复与真实 MySQL 矩阵（QUALIFIED）、Q6 三路径故障矩阵（64 项，零生产改动）、Q7 CLI 只读边界（12 项）。以下为逐条历史记录：
 

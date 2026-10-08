@@ -1,7 +1,7 @@
 # ADR-022 多源基线保存、初次发布与独立重开
 
-- Status: Proposed / implementation contract frozen（2026-10-05）；Q19 D0–D7 已获范围授权，格式依据先决探针冻结；实现及本机定向199/0/0/0（新增33）已通过，同SHA CI NOT_RUN，负责人最终验收未完成。
-- Authority: [Q19 工作单](../roadmap/ACTIVE_WORK.md)。不改变 [ADR-021](ADR-021-multi-source-compilation-and-graph-compatibility.md)、旧 V1 Bundle、ChangeBaseRevision 或 V4 工程事务。
+- Status: **Accepted**（2026-10-05，Q19确认验收）。D0–D7及P1–P5冻结合同、实现/本机定向199（新增33）和受测f3d9ef7同SHA [CI run37256515347](https://github.com/HoloNova/Software-IR/actions/runs/37256515347)双门969/0/0/5、四IT40/61/36/63已通过，artifact核对；验收/裁决见Q19归档§10，不授权下一单。
+- Authority: [Q19归档](../roadmap/completed/Q19-multi-source-baseline-storage-and-reopen.md)。不改变 [ADR-021](ADR-021-multi-source-compilation-and-graph-compatibility.md)、旧 V1 Bundle、ChangeBaseRevision 或 V4 工程事务。
 
 ## 1. 已有证据
 
@@ -58,4 +58,4 @@ inspect要求state/LOCK已存在，仅tryAcquireExisting，绝不创建锁或状
 
 ## 7. 验收
 
-真实四源新实例重开；容器/descriptor严格正反/边界；注释灵敏度；重算外层摘要仍拒绝语义/图/清单不一致；源/输出链接与替换、限额、版本交叉、幂等、全部发布钩子+部分文件崩溃像、不同CURRENT及未知文件保护。旧字节/注册/规划/应用/恢复定向回归，完整门由同SHA CI承担。实测四源重开、15点发布矩阵（列表长度/到达数钉住）、缺席/已发布双向重试和外部同字节指针保护均通过，见工作单§9；旧context/plan/apply/applyRename/recover全部实调拒绝新格式且盘面不变。本机指定类证据不替代同SHA CI，不记本ADR为验收完成。
+真实四源新实例重开；容器/descriptor严格正反/边界；注释灵敏度；重算外层摘要仍拒绝语义/图/清单不一致；源/输出链接与替换、限额、版本交叉、幂等、全部发布钩子+部分文件崩溃像、不同CURRENT及未知文件保护。旧字节/注册/规划/应用/恢复定向回归，完整门由同SHA CI承担。实测四源重开、15点发布矩阵（列表长度/到达数钉住）、缺席/已发布双向重试和外部同字节指针保护均通过，见Q19归档§9；旧context/plan/apply/applyRename/recover全部实调拒绝新格式且盘面不变。本机指定类证据不替代同SHA CI；后续同SHA双门/四IT已通过，负责人已确认验收，ADR转Accepted。完整证据、资源/编码/初次发布的边界及裁决保留于Q19归档§9–10，G2未关闭。
