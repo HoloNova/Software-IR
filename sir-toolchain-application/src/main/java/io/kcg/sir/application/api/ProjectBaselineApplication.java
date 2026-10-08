@@ -59,17 +59,9 @@ public final class ProjectBaselineApplication {
             var locked=new StateRootLock(request.stateRoot()).tryAcquireExisting();
             if (!(locked instanceof StateRootLock.HeldLock held)) return lockFailure((StateRootLock.LockFailure)locked);
             try (held;var state=new SecureFileAccess(request.stateRoot())) {
-                var store=new ProjectBaselineStore(state);var current=store.current();
-                if (!current.equals(Optional.of(request.expectedBaselineId()))) throw problem("REQUEST-001","CURRENT does not match explicit expected baseline");
-                store.guardState(request.expectedBaselineId(),false);
-                var saved=store.load(request.expectedBaselineId());store.verifyPointerIdentity(saved.baselineId(),false);
-                if (!saved.descriptor().outputRoot().equals(request.outputRoot())) throw problem("REQUEST-001","baseline bound to another outputRoot");
-                var replay=compile(saved.sources(),request.outputRoot(),diagnostics);
-                if (replay==null) return failed(diagnostics,FailureDisposition.NO_CHANGES);
-                require(Arrays.equals(saved.descriptorBytes(),replay.descriptorBytes()) && Arrays.equals(saved.graphBytes(),replay.graphBytes()),"saved graph/target/manifest disagrees with source-byte recompilation");
-                verifyOutput(replay);
-                require(store.current().equals(current),"CURRENT changed during inspection");store.guardState(saved.baselineId(),false);store.verifyPointerIdentity(saved.baselineId(),false);state.assertRootUnchanged();
-                return success(ProjectBaselineResult.Outcome.VERIFIED,saved,diagnostics);
+                var verified=ProjectBaselineVerification.read(state,request.expectedBaselineId(),request.outputRoot(),diagnostics);
+                if (verified==null) return failed(diagnostics,FailureDisposition.NO_CHANGES);
+                return success(ProjectBaselineResult.Outcome.VERIFIED,verified.bundle(),diagnostics);
             }
         } catch (Problem e) {
             diagnostics.add(ExecutionDiagnostic.error(e.code,ExecutionStage.READ,e.getMessage()));return failed(diagnostics,FailureDisposition.NO_CHANGES);
@@ -80,22 +72,11 @@ public final class ProjectBaselineApplication {
     }
 
     private static Bundle compile(SourceSnapshot sources,Path output,List<ExecutionDiagnostic> diagnostics) throws IOException {
-        var compiled=ProjectCompilation.compile(sources,new SpringBootGenerator()::generate,diagnostics);
-        if (compiled.isEmpty()) return null;
-        var c=compiled.get();var graph=new ProjectGraphBuilder().build(new SpringBootProjectGraphInputFactory().build(c.semanticModel(),c.loweredModel(),c.generatedFiles(),sources));
-        for (var d : graph.diagnostics()) diagnostics.add(new ExecutionDiagnostic(d.code(),ExecutionStage.GRAPH,
-            d.isError()?ExecutionSeverity.ERROR:ExecutionSeverity.valueOf(d.severity().name()),d.message(),Optional.empty(),Optional.empty(),Optional.empty()));
-        if (!(graph instanceof ProjectGraphAnalysis.Success ok)) return null;
-        return ProjectBaselineCodec.build(sources,c,ok.graph(),output);
+        var compiled=ProjectBaselineVerification.compile(sources,output,diagnostics);
+        return compiled==null ? null : compiled.bundle();
     }
     private static void verifyOutput(Bundle bundle) throws IOException {
-        try (var output=new SecureFileAccess(bundle.descriptor().outputRoot())) {
-            for (var entry : bundle.descriptor().manifest()) {
-                byte[] bytes=output.read(entry.relativePath(),(int)entry.byteCount());
-                if (bytes.length!=entry.byteCount() || !Sha256.hexDigest(bytes).equals(entry.sha256Hex())) throw problem("OUTPUT-001","tracked file differs from candidate: "+entry.relativePath());
-            }
-            output.assertRootUnchanged();
-        }
+        ProjectBaselineVerification.verifyOutput(bundle);
     }
     private static void validateRequestPaths(Path state,Path output,boolean existing,List<ExecutionDiagnostic> diagnostics) throws IOException {
         if (!state.isAbsolute() || !state.equals(state.normalize()) || !output.isAbsolute() || !output.equals(output.normalize())) throw problem("REQUEST-001","state/output roots must be absolute normalized");

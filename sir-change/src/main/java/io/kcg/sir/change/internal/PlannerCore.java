@@ -267,7 +267,16 @@ public final class PlannerCore {
    private static ChangeAnalysis planModifyCapabilityWorkflow(
       ChangePlanningInput input, ChangeSet changeSet, ModifyCapabilityWorkflow modifyOp, List<ChangeDiagnostic> diagnostics
    ) {
-      ChangeTarget target = modifyOp.target();
+      WorkflowDecision decision = compareWorkflow(new WorkflowInput(input.baseSemanticModel(), input.candidateSemanticModel(),
+         input.baseGraph(), input.candidateGraph()), modifyOp.target(), diagnostics);
+      if (decision instanceof WorkflowDecision.Failure f) return new ChangeAnalysis.Failure(f.diagnostics());
+      if (decision instanceof WorkflowDecision.NoChanges n) return new ChangeAnalysis.NoChanges(n.reason(), n.diagnostics());
+      WorkflowDecision.Planned p = (WorkflowDecision.Planned) decision;
+      return new ChangeAnalysis.Planned(new ChangePlan(changeSet, p.artifacts(), p.files()), p.diagnostics());
+   }
+
+   /** Revision admission stays in each API. This is the sole workflow comparison/impact algorithm. */
+   static WorkflowDecision compareWorkflow(WorkflowInput input, ChangeTarget target, List<ChangeDiagnostic> diagnostics) {
       NormalizedDeclaration baseDeclForTarget = findDeclarationById(input.baseSemanticModel(), target.declarationSymbol());
       if (baseDeclForTarget == null) {
          diagnostics.add(
@@ -278,7 +287,7 @@ public final class PlannerCore {
                "target.declarationSymbol not found in base semantic model: " + target.declarationSymbol().value()
             )
          );
-         return fail(diagnostics);
+         return new WorkflowDecision.Failure(fail(diagnostics).diagnostics());
       } else if (!(baseDeclForTarget instanceof NormalizedCapability baseCapability)) {
          diagnostics.add(
             ChangeDiagnostic.error(
@@ -292,7 +301,7 @@ public final class PlannerCore {
                   + ")"
             )
          );
-         return fail(diagnostics);
+         return new WorkflowDecision.Failure(fail(diagnostics).diagnostics());
       } else {
          NormalizedCapability baseCapabilityRef = baseCapability;
          if (!baseCapabilityRef.sourceNodeId().equals(target.declarationNodeId())) {
@@ -309,7 +318,7 @@ public final class PlannerCore {
                      + target.declarationSymbol().value()
                )
             );
-            return fail(diagnostics);
+            return new WorkflowDecision.Failure(fail(diagnostics).diagnostics());
          } else if (!baseCapabilityRef.workflow().sourceNodeId().equals(target.targetNodeId())) {
             diagnostics.add(
                ChangeDiagnostic.error(
@@ -324,7 +333,7 @@ public final class PlannerCore {
                      + target.declarationSymbol().value()
                )
             );
-            return fail(diagnostics);
+            return new WorkflowDecision.Failure(fail(diagnostics).diagnostics());
          } else if (!(findDeclarationById(input.candidateSemanticModel(), target.declarationSymbol()) instanceof NormalizedCapability candidateCapability)) {
             diagnostics.add(
                ChangeDiagnostic.error(
@@ -334,7 +343,7 @@ public final class PlannerCore {
                   "candidate Capability with same SymbolId not found (or wrong kind): " + target.declarationSymbol().value()
                )
             );
-            return fail(diagnostics);
+            return new WorkflowDecision.Failure(fail(diagnostics).diagnostics());
          } else {
             if (!input.baseSemanticModel().softwareName().equals(input.candidateSemanticModel().softwareName())) {
                diagnostics.add(
@@ -345,18 +354,18 @@ public final class PlannerCore {
                      "softwareName changed from '" + input.baseSemanticModel().softwareName() + "' to '" + input.candidateSemanticModel().softwareName() + "'"
                   )
                );
-               return fail(diagnostics);
+               return new WorkflowDecision.Failure(fail(diagnostics).diagnostics());
             }
 
             if (!SemanticProjection.ofMetadata(input.baseSemanticModel().metadata())
                .equals(SemanticProjection.ofMetadata(input.candidateSemanticModel().metadata()))) {
                diagnostics.add(ChangeDiagnostic.error("SIR-CHANGE-SCOPE-001", ChangeDiagnosticStage.SCOPE, 0, "metadata changed"));
-               return fail(diagnostics);
+               return new WorkflowDecision.Failure(fail(diagnostics).diagnostics());
             }
 
             if (!SemanticProjection.ofTarget(input.baseSemanticModel().target()).equals(SemanticProjection.ofTarget(input.candidateSemanticModel().target()))) {
                diagnostics.add(ChangeDiagnostic.error("SIR-CHANGE-SCOPE-001", ChangeDiagnosticStage.SCOPE, 0, "target changed"));
-               return fail(diagnostics);
+               return new WorkflowDecision.Failure(fail(diagnostics).diagnostics());
             }
 
             Map<SymbolId, NormalizedDeclaration> baseDecls = indexDeclarations(input.baseSemanticModel());
@@ -370,7 +379,7 @@ public final class PlannerCore {
                      "declaration count changed: base=" + baseDecls.size() + ", candidate=" + candidateDecls.size()
                   )
                );
-               return fail(diagnostics);
+               return new WorkflowDecision.Failure(fail(diagnostics).diagnostics());
             }
 
             for (SymbolId sid : baseDecls.keySet()) {
@@ -378,7 +387,7 @@ public final class PlannerCore {
                   diagnostics.add(
                      ChangeDiagnostic.error("SIR-CHANGE-SCOPE-001", ChangeDiagnosticStage.SCOPE, 0, "declaration removed in candidate: " + sid.value())
                   );
-                  return fail(diagnostics);
+                  return new WorkflowDecision.Failure(fail(diagnostics).diagnostics());
                }
             }
 
@@ -387,7 +396,7 @@ public final class PlannerCore {
                   diagnostics.add(
                      ChangeDiagnostic.error("SIR-CHANGE-SCOPE-001", ChangeDiagnosticStage.SCOPE, 0, "declaration added in candidate: " + sid.value())
                   );
-                  return fail(diagnostics);
+                  return new WorkflowDecision.Failure(fail(diagnostics).diagnostics());
                }
             }
 
@@ -395,7 +404,7 @@ public final class PlannerCore {
             List<SymbolId> candidateOrder = new ArrayList<>(candidateDecls.keySet());
             if (!baseOrder.equals(candidateOrder)) {
                diagnostics.add(ChangeDiagnostic.error("SIR-CHANGE-SCOPE-001", ChangeDiagnosticStage.SCOPE, 0, "declaration order changed"));
-               return fail(diagnostics);
+               return new WorkflowDecision.Failure(fail(diagnostics).diagnostics());
             }
 
             for (SymbolId sid : baseOrder) {
@@ -413,7 +422,7 @@ public final class PlannerCore {
                            "declaration kind changed for " + sid.value() + ": base=" + baseKind + ", candidate=" + candidateKind
                         )
                      );
-                     return fail(diagnostics);
+                     return new WorkflowDecision.Failure(fail(diagnostics).diagnostics());
                   }
 
                   SemanticProjection.DeclarationProjection baseProj = SemanticProjection.ofFullDeclaration(baseDecl);
@@ -424,7 +433,7 @@ public final class PlannerCore {
                            "SIR-CHANGE-SCOPE-001", ChangeDiagnosticStage.SCOPE, 0, "non-target declaration semantically changed: " + sid.value()
                         )
                      );
-                     return fail(diagnostics);
+                     return new WorkflowDecision.Failure(fail(diagnostics).diagnostics());
                   }
                }
             }
@@ -437,14 +446,14 @@ public final class PlannerCore {
                      "SIR-CHANGE-SCOPE-002", ChangeDiagnosticStage.SCOPE, 0, "target Capability public contract changed: " + target.declarationSymbol().value()
                   )
                );
-               return fail(diagnostics);
+               return new WorkflowDecision.Failure(fail(diagnostics).diagnostics());
             } else {
                ClosureComputer.ClosureResult baseClosureResult = ClosureComputer.compute(input.baseGraph(), target.declarationSymbol());
                if (baseClosureResult instanceof ClosureComputer.ClosureResult.MissingTrace baseMissing) {
                   diagnostics.add(
                      ChangeDiagnostic.error("SIR-CHANGE-IMPACT-001", ChangeDiagnosticStage.IMPACT, 0, "base closure trace incomplete: " + baseMissing.detail())
                   );
-                  return fail(diagnostics);
+                  return new WorkflowDecision.Failure(fail(diagnostics).diagnostics());
                } else {
                   ClosureComputer.Closure baseClosure = ((ClosureComputer.ClosureResult.Success)baseClosureResult).closure();
                   ClosureComputer.ClosureResult candidateClosureResult = ClosureComputer.compute(input.candidateGraph(), target.declarationSymbol());
@@ -454,7 +463,7 @@ public final class PlannerCore {
                            "SIR-CHANGE-IMPACT-001", ChangeDiagnosticStage.IMPACT, 0, "candidate closure trace incomplete: " + candidateMissing.detail()
                         )
                      );
-                     return fail(diagnostics);
+                     return new WorkflowDecision.Failure(fail(diagnostics).diagnostics());
                   } else {
                      ClosureComputer.Closure candidateClosure = ((ClosureComputer.ClosureResult.Success)candidateClosureResult).closure();
                      if (baseClosure.artifacts().isEmpty()) {
@@ -466,7 +475,7 @@ public final class PlannerCore {
                               "base Capability has no SERVICE/CONTROLLER artifacts in closure: " + target.declarationSymbol().value()
                            )
                         );
-                        return fail(diagnostics);
+                        return new WorkflowDecision.Failure(fail(diagnostics).diagnostics());
                      }
 
                      Map<LoweredNodeId, Artifact> baseArtifacts = new LinkedHashMap<>();
@@ -495,7 +504,7 @@ public final class PlannerCore {
                                  + target.declarationSymbol().value()
                            )
                         );
-                        return fail(diagnostics);
+                        return new WorkflowDecision.Failure(fail(diagnostics).diagnostics());
                      }
 
                      for (LoweredNodeId aid : baseArtifacts.keySet()) {
@@ -506,7 +515,7 @@ public final class PlannerCore {
                                  "SIR-CHANGE-IMPACT-003", ChangeDiagnosticStage.IMPACT, 0, "closure artifact removed in candidate: " + aid.value()
                               )
                            );
-                           return fail(diagnostics);
+                           return new WorkflowDecision.Failure(fail(diagnostics).diagnostics());
                         }
 
                         Artifact baseArtifact = baseArtifacts.get(aid);
@@ -524,7 +533,7 @@ public final class PlannerCore {
                                     + candidateArtifact.role()
                               )
                            );
-                           return fail(diagnostics);
+                           return new WorkflowDecision.Failure(fail(diagnostics).diagnostics());
                         }
 
                         if (!baseArtifact.ownerSymbol().equals(candidateArtifact.ownerSymbol())) {
@@ -533,7 +542,7 @@ public final class PlannerCore {
                                  "SIR-CHANGE-IMPACT-002", ChangeDiagnosticStage.IMPACT, 0, "closure artifact ownerSymbol changed for " + aid.value()
                               )
                            );
-                           return fail(diagnostics);
+                           return new WorkflowDecision.Failure(fail(diagnostics).diagnostics());
                         }
 
                         if (!baseArtifact.qualifiedName().equals(candidateArtifact.qualifiedName())) {
@@ -550,7 +559,7 @@ public final class PlannerCore {
                                     + candidateArtifact.qualifiedName()
                               )
                            );
-                           return fail(diagnostics);
+                           return new WorkflowDecision.Failure(fail(diagnostics).diagnostics());
                         }
                      }
 
@@ -561,7 +570,7 @@ public final class PlannerCore {
                                  "SIR-CHANGE-IMPACT-003", ChangeDiagnosticStage.IMPACT, 0, "closure artifact added in candidate: " + aid.value()
                               )
                            );
-                           return fail(diagnostics);
+                           return new WorkflowDecision.Failure(fail(diagnostics).diagnostics());
                         }
                      }
 
@@ -586,7 +595,7 @@ public final class PlannerCore {
                               "closure file count changed: base=" + baseFiles.size() + ", candidate=" + candidateFiles.size()
                            )
                         );
-                        return fail(diagnostics);
+                        return new WorkflowDecision.Failure(fail(diagnostics).diagnostics());
                      }
 
                      for (String path : baseFiles.keySet()) {
@@ -595,7 +604,7 @@ public final class PlannerCore {
                            diagnostics.add(
                               ChangeDiagnostic.error("SIR-CHANGE-IMPACT-003", ChangeDiagnosticStage.IMPACT, 0, "closure file removed in candidate: " + path)
                            );
-                           return fail(diagnostics);
+                           return new WorkflowDecision.Failure(fail(diagnostics).diagnostics());
                         }
 
                         ProjectFile baseFile = baseFiles.get(path);
@@ -603,14 +612,14 @@ public final class PlannerCore {
                            diagnostics.add(
                               ChangeDiagnostic.error("SIR-CHANGE-IMPACT-003", ChangeDiagnosticStage.IMPACT, 0, "closure file artifactId changed for " + path)
                            );
-                           return fail(diagnostics);
+                           return new WorkflowDecision.Failure(fail(diagnostics).diagnostics());
                         }
 
                         if (!baseFile.provenance().ownerSymbol().equals(candidateFile.provenance().ownerSymbol())) {
                            diagnostics.add(
                               ChangeDiagnostic.error("SIR-CHANGE-IMPACT-003", ChangeDiagnosticStage.IMPACT, 0, "closure file ownerSymbol changed for " + path)
                            );
-                           return fail(diagnostics);
+                           return new WorkflowDecision.Failure(fail(diagnostics).diagnostics());
                         }
                      }
 
@@ -619,7 +628,7 @@ public final class PlannerCore {
                            diagnostics.add(
                               ChangeDiagnostic.error("SIR-CHANGE-IMPACT-003", ChangeDiagnosticStage.IMPACT, 0, "closure file added in candidate: " + path)
                            );
-                           return fail(diagnostics);
+                           return new WorkflowDecision.Failure(fail(diagnostics).diagnostics());
                         }
                      }
 
@@ -634,7 +643,7 @@ public final class PlannerCore {
                               "total file count changed: base=" + allBaseFiles.size() + ", candidate=" + allCandidateFiles.size()
                            )
                         );
-                        return fail(diagnostics);
+                        return new WorkflowDecision.Failure(fail(diagnostics).diagnostics());
                      }
 
                      for (String path : allBaseFiles.keySet()) {
@@ -646,7 +655,7 @@ public final class PlannerCore {
                                  "SIR-CHANGE-IMPACT-003", ChangeDiagnosticStage.IMPACT, 0, "file removed in candidate (outside closure): " + path
                               )
                            );
-                           return fail(diagnostics);
+                           return new WorkflowDecision.Failure(fail(diagnostics).diagnostics());
                         }
 
                         if (!baseFiles.containsKey(path)) {
@@ -666,7 +675,7 @@ public final class PlannerCore {
                                        + ")"
                                  )
                               );
-                              return fail(diagnostics);
+                              return new WorkflowDecision.Failure(fail(diagnostics).diagnostics());
                            }
 
                            if (!baseFile.provenance().artifactId().equals(candidateFile.provenance().artifactId())) {
@@ -675,7 +684,7 @@ public final class PlannerCore {
                                     "SIR-CHANGE-IMPACT-003", ChangeDiagnosticStage.IMPACT, 0, "out-of-closure file artifactId changed: " + path
                                  )
                               );
-                              return fail(diagnostics);
+                              return new WorkflowDecision.Failure(fail(diagnostics).diagnostics());
                            }
                         }
                      }
@@ -687,7 +696,7 @@ public final class PlannerCore {
                                  "SIR-CHANGE-IMPACT-003", ChangeDiagnosticStage.IMPACT, 0, "file added in candidate (outside closure): " + path
                               )
                            );
-                           return fail(diagnostics);
+                           return new WorkflowDecision.Failure(fail(diagnostics).diagnostics());
                         }
                      }
 
@@ -718,7 +727,7 @@ public final class PlannerCore {
                      fileChanges.sort(Comparator.comparing(FileChange::relativePath));
                      if (workflowSemanticallyIdentical) {
                         if (fileChanges.isEmpty()) {
-                           return new ChangeAnalysis.NoChanges(NoChangeReason.SEMANTICALLY_IDENTICAL, sortAndCopy(diagnostics));
+                           return new WorkflowDecision.NoChanges(NoChangeReason.SEMANTICALLY_IDENTICAL, sortAndCopy(diagnostics));
                         }
 
                         diagnostics.add(
@@ -729,10 +738,10 @@ public final class PlannerCore {
                               "workflow semantically identical but closure file bytes differ; this indicates a non-deterministic pipeline"
                            )
                         );
-                        return fail(diagnostics);
+                        return new WorkflowDecision.Failure(fail(diagnostics).diagnostics());
                      } else {
                         if (fileChanges.isEmpty()) {
-                           return new ChangeAnalysis.NoChanges(NoChangeReason.OUTPUT_EQUIVALENT, sortAndCopy(diagnostics));
+                           return new WorkflowDecision.NoChanges(NoChangeReason.OUTPUT_EQUIVALENT, sortAndCopy(diagnostics));
                         }
 
                         List<ArtifactChange> artifactChanges = new ArrayList<>();
@@ -755,8 +764,7 @@ public final class PlannerCore {
                            }
                         }
 
-                        ChangePlan plan = new ChangePlan(changeSet, List.copyOf(artifactChanges), List.copyOf(fileChanges));
-                        return new ChangeAnalysis.Planned(plan, sortAndCopy(diagnostics));
+                        return new WorkflowDecision.Planned(List.copyOf(artifactChanges), List.copyOf(fileChanges), sortAndCopy(diagnostics));
                      }
                   }
                }

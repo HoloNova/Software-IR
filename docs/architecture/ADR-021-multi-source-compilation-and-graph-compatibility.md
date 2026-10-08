@@ -3,7 +3,7 @@
 - Status: Accepted（负责人确认 Q18 D0–D9；D9 采用 B。Q18 已于 2026-10-05 确认验收归档；不授权 Q19 实施）
 - Date: 2026-10-04
 - Scope: 同 software 的多文件首次编译/生成；不含多源 Bundle/register/apply、数据库迁移或模块市场
-- 工作单与运行证据：[`../roadmap/ACTIVE_WORK.md`](../roadmap/ACTIVE_WORK.md) §4、§10
+- 工作单与运行证据：[Q18归档](../roadmap/completed/Q18-multi-source-compilation-and-source-snapshot.md) §4、§10
 - 关联：ADR-001 的一次 Resolve、ADR-003 的 Application I/O 边界、ADR-020 的 CURRENT 方向均不变。
 
 ## 1. 为什么需要新入口与新格式
