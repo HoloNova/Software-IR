@@ -150,11 +150,11 @@ ANTLR4 Grammar、严格 UTF-8、不可变 AST、SourceSpan、稳定 AstNodeId �
 
 ### `sir-toolchain-application`
 
-统一编排编译、生成、Graph、文件事务、Bundle、CURRENT、Change context/plan、UPDATE/CREATE/DELETE Apply 和显式恢复。它是工程状态唯一写入权威。
+统一编排编译、生成、Graph、文件事务、Bundle、CURRENT、Change context/plan、UPDATE/CREATE/DELETE Apply 和显式恢复。它是工程状态唯一写入权威。独立 `SirValidationApplication` 提供单文件纯内存静态校验及有界JSONL批流，不接工程状态；静态通过仅进入候选池，不证明生成工程可运行或满足业务需求。
 
 ### `kcg-cli`
 
-当前公开命令边界是只读 `context` 和 `plan`。`generate`、`register`、`apply`、`recover` 属于 ADR-019 提议的完整本地生命周期，尚未作为当前 CLI 命令发布。
+当前公开命令边界是只读 `check`、`context` 和 `plan`。`check` 从stdin接收单文件SIR0.1的JSONL，按请求阶段校验并输出canonical结果；文件由shell重定向，不在CLI中打开。使用与资格边界见 [SIR批量校验](docs/SIR_BATCH_CHECK.md)。`generate`、`register`、`apply`、`recover` 属于 ADR-019 提议的完整本地生命周期，尚未作为当前 CLI 命令发布。
 
 ## 5. 修改与验收协议
 

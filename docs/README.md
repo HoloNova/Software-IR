@@ -23,6 +23,8 @@
 - [`PROJECT_STATUS.md`](PROJECT_STATUS.md)：当前能力边界。
 - [`qualification/CURRENT_QUALIFICATION.md`](qualification/CURRENT_QUALIFICATION.md)：当前实际运行证据和资格状态。
 - [`qualification/TEST_COVERAGE_INVENTORY.md`](qualification/TEST_COVERAGE_INVENTORY.md)：测试覆盖与资格缺口。
+- [`SIR_BATCH_CHECK.md`](SIR_BATCH_CHECK.md)：只读JSONL静态校验操作/输入输出与退出码；资格仍看当前报告。
+- [`qualification/SLM_GENERATED_PROJECT_EVALUATION_PLAN.md`](qualification/SLM_GENERATED_PROJECT_EVALUATION_PLAN.md)：独立真实工程评测总设计；已授权两样本限定试跑见[报告](qualification/Q23_REAL_EVALUATION_PILOT.md)，其余平台待审，不把静态通过当业务正确。
 
 ### 当前执行路线
 

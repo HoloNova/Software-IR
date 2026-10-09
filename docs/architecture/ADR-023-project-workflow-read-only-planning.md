@@ -29,9 +29,9 @@ P1真实四源及初始五源片段版本从保存原字节重编译。放宽报
 
 Application新增拒绝码前缀`SIR-APP-PROJECT-CHANGE-`；ProjectChangeStage仅READ/PARSE/SEMANTIC/LOWERING/GENERATION/PREFLIGHT/GRAPH/PLAN。ProjectChangeDiagnostic逐字段保留ExecutionDiagnostic真实span/related INFO映射，并以planningStage保留纯诊断的TARGET/SCOPE/IMPACT等子阶段，不改旧诊断。纯入口新增`SIR-PROJECT-CHANGE-COMPAT-001`、`SOURCE-001`、`MODEL-001`、`VERIFY-001`，分别负责版本/清单与revision/模型图关联/重新规划不相等；共用工作流SIR-CHANGE-TARGET/SCOPE/IMPACT诊断保持原码与阶段。
 
-### Q21共享读取与显式执行增量（2026-10-08，待CI/验收）
+### Q21共享读取与显式执行增量（2026-10-09，已验收）
 
-本只读context/plan/verify仍无文件应用/隐式清理，算法/摘要域/旧准入不变；锁内规划编排抽出LockedProjectPlanning供新显式ProjectChangeExecutionApplication复用，不能公开verify后释放锁再写。Q19保存字节读取可验证有界历史/COMPLETED凭据，active/未知仍拒绝。旧消费者不接受项目计划，新执行合同正向实际测试与旧类型负向同步。事务/日志/预算/物理pins/终态证明另见[Proposed ADR-024](ADR-024-project-workflow-update-publication-and-recovery.md)，本机162/新54通过，CI/验收待取得，不把Q20历史995视为Q21完成。
+本只读context/plan/verify仍无文件应用/隐式清理，算法/摘要域/旧准入不变；锁内规划编排抽出LockedProjectPlanning供新显式ProjectChangeExecutionApplication复用，不能公开verify后释放锁再写。Q19保存字节读取可验证有界历史/COMPLETED凭据，active/未知仍拒绝。旧消费者不接受项目计划，新执行合同正向实际测试与旧类型负向同步。事务/日志/预算/物理pins/终态证明另见[Accepted ADR-024](ADR-024-project-workflow-update-publication-and-recovery.md)，本机162/新54通过，f8a2f92同SHA run37865688743双门1049/0/0/5与五IT通过，Q21已验收归档；Q20历史995仍为独立证据。
 
 ## 4. 验证与剩余边界
 

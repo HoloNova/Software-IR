@@ -68,6 +68,8 @@ public final class SpringApplicationProcess {
         }
         List<String> command = new ArrayList<>();
         command.add(javaExecutable.toString());
+        // Optional harness-only caps leave the existing launch unchanged when not configured.
+        command.addAll(ConformanceJvmLimits.arguments("application"));
         command.add("-Dserver.port=" + serverPort);
         command.add("-Dserver.address=127.0.0.1");
         command.add("-jar");
