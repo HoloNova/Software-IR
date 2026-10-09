@@ -30,6 +30,7 @@ public final class SecureFileAccess implements AutoCloseable {
             if (rootKey==null) throw problem("READ-001","root has no file identity");
         } catch (IOException|RuntimeException e) { closeHandles(handles);throw e; }
     }
+    public Path root() { return root; }
     private record Parent(SecureDirectoryStream<Path> stream,Path name,List<SecureDirectoryStream<Path>> opened) implements AutoCloseable {
         @Override public void close() throws IOException { closeHandles(opened); }
     }
@@ -45,7 +46,7 @@ public final class SecureFileAccess implements AutoCloseable {
         try (var p=parent(relative)) {
             try { p.stream().getFileAttributeView(p.name(),BasicFileAttributeView.class,LinkOption.NOFOLLOW_LINKS).readAttributes();return true; }
             catch (NoSuchFileException e) { return false; }
-        }
+        } catch(NoSuchFileException e) { return false; }
     }
     public Object identity(String relative) throws IOException {
         try (var p=parent(relative)) { return attrs(p).fileKey(); }
@@ -72,7 +73,10 @@ public final class SecureFileAccess implements AutoCloseable {
             return out.toByteArray();
         }
     }
-    public Set<String> list(String relative) throws IOException {
+    public Set<String> list(String relative) throws IOException { return list(relative,8); }
+    /** Explicit per-call budget; the original eight-entry default remains unchanged. */
+    public Set<String> list(String relative,int maximum) throws IOException {
+        budget(maximum>=1 && maximum<=8192,"directory enumeration budget outside bounds");
         var opened=new ArrayList<SecureDirectoryStream<Path>>();var current=directory;
         try {
             if (!relative.isEmpty()) {
@@ -81,7 +85,7 @@ public final class SecureFileAccess implements AutoCloseable {
             } else { current=current.newDirectoryStream(Path.of("."),LinkOption.NOFOLLOW_LINKS);opened.add(current); }
             var names=new HashSet<String>();
             for (var path : current) {
-                budget(names.size()<8,"project storage directory has too many entries");
+                budget(names.size()<maximum,"project storage directory has too many entries");
                 names.add(path.getFileName().toString());
             }
             return Set.copyOf(names);
@@ -129,6 +133,68 @@ public final class SecureFileAccess implements AutoCloseable {
             p.stream().deleteFile(p.name());
         }
         assertRootUnchanged();
+    }
+    /** Stable identity for a directory, including the root; never follows links. */
+    public Object directoryIdentity(String relative) throws IOException {
+        assertRootUnchanged();if(relative.isEmpty())return rootKey;
+        try(var p=parent(relative)) {
+            var a=p.stream().getFileAttributeView(p.name(),BasicFileAttributeView.class,LinkOption.NOFOLLOW_LINKS).readAttributes();
+            require(a.isDirectory() && a.fileKey()!=null,"expected identifiable directory: "+relative);return a.fileKey();
+        }
+    }
+    private void assertParentBinding(String relative,Parent p) throws IOException {
+        assertRootUnchanged();var actual=Files.readAttributes(root.resolve(relative).getParent(),BasicFileAttributes.class,LinkOption.NOFOLLOW_LINKS);
+        require(actual.isDirectory() && Objects.equals(actual.fileKey(),p.stream().getFileAttributeView(BasicFileAttributeView.class).readAttributes().fileKey()),"directory parent identity changed");
+    }
+    /** Only fixed, physically anchored journal slots may be overwritten; never CREATE or fallback. */
+    public void overwriteOwned(String relative,Object key,byte[] bytes,Consumer<String> checkpoint) throws IOException {
+        try(var p=parent(relative)) {
+            assertParentBinding(relative,p);require(Objects.equals(key,attrs(p).fileKey()),"owned slot replaced: "+relative);
+            try(var channel=p.stream().newByteChannel(p.name(),Set.of(StandardOpenOption.WRITE,StandardOpenOption.TRUNCATE_EXISTING,StandardOpenOption.SYNC,LinkOption.NOFOLLOW_LINKS))) {
+                int offset=0;while(offset<bytes.length) {
+                    int size=Math.min(512,bytes.length-offset);var b=ByteBuffer.wrap(bytes,offset,size);while(b.hasRemaining())channel.write(b);offset+=size;checkpoint.accept("partial-owned:"+relative);
+                }
+            }
+            assertParentBinding(relative,p);require(Objects.equals(key,attrs(p).fileKey()),"owned slot identity changed during write");
+        }
+    }
+    /** Same-volume hard-link creation with anchored parents and post-link physical verification. */
+    public void linkOwned(String source,Object sourceKey,SecureFileAccess to,String target) throws IOException {
+        try(var p=parent(source);var q=to.parent(target)) {
+            assertParentBinding(source,p);to.assertParentBinding(target,q);require(Objects.equals(sourceKey,attrs(p).fileKey()),"link source replaced");
+            require(Files.getFileStore(root.resolve(source)).equals(Files.getFileStore(to.root.resolve(target).getParent())),"cross-FileStore hard link refused");
+            Files.createLink(to.root.resolve(target),root.resolve(source));
+            assertParentBinding(source,p);to.assertParentBinding(target,q);require(Objects.equals(sourceKey,to.identity(target)),"hard link physical identity mismatch");
+        }
+    }
+    /** SecureDirectoryStream.move has atomic-move semantics; an existing destination is explicitly bound. */
+    public void moveOwned(String source,Object sourceKey,SecureFileAccess to,String target,Object targetKey,Consumer<String> checkpoint) throws IOException {
+        checkpoint.accept("before-move:"+source+"->"+target);
+        try(var p=parent(source);var q=to.parent(target)) {
+            assertParentBinding(source,p);to.assertParentBinding(target,q);require(Objects.equals(sourceKey,attrs(p).fileKey()),"move source replaced");
+            if(targetKey==null)require(!to.exists(target),"unexpected move target");else require(Objects.equals(targetKey,to.identity(target)),"move destination replaced");
+            require(Files.getFileStore(root.resolve(source)).equals(Files.getFileStore(to.root.resolve(target).getParent())),"cross-FileStore atomic move refused");
+            p.stream().move(p.name(),q.stream(),q.name());
+            assertParentBinding(source,p);to.assertParentBinding(target,q);require(Objects.equals(sourceKey,to.identity(target)),"moved file identity mismatch");
+        }
+        checkpoint.accept("moved:"+source+"->"+target);
+    }
+    /** Atomically relocate a physically verified completed receipt directory, without copying or replacement. */
+    public void moveOwnedDirectory(String source,Object sourceKey,String target,Consumer<String> checkpoint) throws IOException {
+        checkpoint.accept("before-directory-move:"+source+"->"+target);
+        try(var p=parent(source);var q=parent(target)) {
+            assertParentBinding(source,p);assertParentBinding(target,q);require(Objects.equals(sourceKey,directoryIdentity(source)),"receipt directory replaced");
+            require(!exists(target),"receipt directory target already exists");
+            require(Files.getFileStore(root.resolve(source)).equals(Files.getFileStore(root.resolve(target).getParent())),"cross-FileStore directory relocation refused");
+            p.stream().move(p.name(),q.stream(),q.name());assertParentBinding(target,q);require(Objects.equals(sourceKey,directoryIdentity(target)),"receipt directory identity changed during relocation");
+        }
+        checkpoint.accept("directory-moved:"+source+"->"+target);
+    }
+    public void deleteOwned(String relative,Object key) throws IOException {
+        try(var p=parent(relative)) {assertParentBinding(relative,p);require(Objects.equals(key,attrs(p).fileKey()),"cleanup file replaced: "+relative);p.stream().deleteFile(p.name());assertParentBinding(relative,p);}
+    }
+    public void deleteOwnedDirectory(String relative,Object key) throws IOException {
+        try(var p=parent(relative)) {assertParentBinding(relative,p);require(Objects.equals(key,directoryIdentity(relative)),"cleanup directory replaced: "+relative);p.stream().deleteDirectory(p.name());assertParentBinding(relative,p);}
     }
     public void assertRootUnchanged() throws IOException {
         for (var path=root;path!=null;path=path.getParent()) {

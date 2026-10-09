@@ -311,11 +311,23 @@ final class BusinessSliceHarness {
                 .append(" body=").append(response.body()).append('\n');
     }
 
-    /**
-     * Compiles the slice and materializes the generated project.
-     *
-     * @return the generated files, or an empty list when compilation failed
-     */
+    /** Records a multi-source project already delivered by ToolchainApplication; never rewrites it. */
+    void recordMaterializedProject(io.kcg.sir.source.SourceSnapshot sources, List<GeneratedFile> files) throws IOException {
+        this.sirDigest = sources.sha256Hex();
+        this.generatedFileCount = files.size();
+        this.generatedDigest = digestOfGeneratedFiles(files);
+        boolean matches = !files.isEmpty();
+        for (GeneratedFile file : files) {
+            Path path = this.projectRoot.resolve(file.relativePath());
+            matches &= Files.isRegularFile(path) && java.util.Arrays.equals(
+                    Files.readAllBytes(path), file.content().getBytes(StandardCharsets.UTF_8));
+        }
+        this.check("the multi-source generated tree matches every compiled byte", matches,
+                "sources=" + sources.manifest().files().size() + " files=" + files.size());
+        this.reportLine("sirInput=MULTI_SOURCE_SET sourceSetSha256=" + sources.sha256Hex());
+    }
+
+    /** Compiles the single-file slice and materializes it; returns no files on compilation failure. */
     List<GeneratedFile> compileAndMaterialize() throws IOException {
         List<ExecutionDiagnostic> diagnostics = new ArrayList<>();
         Optional<SirCompilation.CompilationSnapshot> compiled = SirCompilation.compile(

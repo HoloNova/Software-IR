@@ -1,6 +1,6 @@
 # KCG-Code 测试覆盖与缺口清单
 
-> 更新日期：2026-10-05（Q19已确认验收归档，当前ACTIVE_WORK为Q20 / IN_PROGRESS，D0–D8/P1–P5及本机实现已完成、定向去重186/0/0/0（新26），本批CI NOT_RUN、等待Git授权；下述是最近已验收Q19：已授权提交/推送f3d9ef7，§1据同SHA CI run37256515347，双门969/0/0/5、XML973含四IT、四报告40/61/36/63全通过；定向199、新增33、15点故障矩阵通过，产物核对完毕。Q18已验收936，相对它+33全部为Application；验收/回填文档未提交；Q20已确认实施，完整资格/CI尚未取得，旧证据不抵扣新门。Q9/Q10/Q11/Q13、Q16/Q17/Q18/Q19已归档，Q14/Q15见Q13前置修复单）
+> 更新日期：2026-10-08。Q20已验收归档，受测e404208同SHA CI run37764055905双门995/0/0/5、四IT40/61/36/63通过，两类artifact已核对；XML999含四IT。相对Q19增26，全在Application；本机186。当前ACTIVE_WORK为Q21 / AWAITING_CI：D0–D8实现/去重162项/新54通过，真实根/片段连续更新、150应用/85恢复中断点通过；Proposed ADR-024。双门/四旧IT/新增多源IT均NOT_RUN，新IT仅编译。G2未关闭；本轮按Q21范围实施，未提交/推送。Q9/Q10/Q11/Q13、Q16–Q20已归档，Q14/Q15见Q13前置修复单。
 > 用途：记录当前可执行测试、明确缺口和后续验收输入；不以历史测试数量作为完成目标
 
 ## Q9 单文件查询切片覆盖（2026-09-18 G1 首切片）
@@ -100,7 +100,7 @@
 | Resolve 冲突 | DeclaredIdentitySemanticsTest 新增 1：重复 ID 正常 Failure 而非 SymbolTable 异常；跨源同例见 visibility | 合法旧行为不变，typed/Resolve-once 旧契约定向 25 项回归 |
 | 回归与状态 | 去重指定类 parser 91/semantic 34/graph 77/change 36/application 108，共 **346/0/0/0**；旧 Rename apply、V4 恢复与图只读门通过；新增方法 43 | **本批同 SHA CI 已通过**：双门 936/0/0/5、四 IT 40/61/36/63；已确认验收归档，G2 未关闭 |
 
-实施证据/订正/验收见 [Q18 归档](../roadmap/completed/Q18-multi-source-compilation-and-source-snapshot.md) §10–11 与资格报告 §1.16；合同见 Accepted [ADR-021](../architecture/ADR-021-multi-source-compilation-and-graph-compatibility.md)。多源权威基线、moduleInstance/nodeKey、全身份兼容、组合改名与 G3 仍是缺口，本单不关闭 G2。[Q19归档](../roadmap/completed/Q19-multi-source-baseline-storage-and-reopen.md)已确认验收，多源保存/独立重开及本机指定类、同SHA CI均通过，当前活动单Q20 IN_PROGRESS（新覆盖待核验），见下表；多源变更/改名应用及完整G2门仍不抵扣。
+实施证据/订正/验收见 [Q18 归档](../roadmap/completed/Q18-multi-source-compilation-and-source-snapshot.md) §10–11 与资格报告 §1.16；合同见 Accepted [ADR-021](../architecture/ADR-021-multi-source-compilation-and-graph-compatibility.md)。多源权威基线、moduleInstance/nodeKey、全身份兼容、组合改名与 G3 仍是缺口，本单不关闭 G2。[Q19归档](../roadmap/completed/Q19-multi-source-baseline-storage-and-reopen.md)已确认验收，多源保存/独立重开及本机指定类、同SHA CI均通过，Q20也已按同SHA CI验收归档，当前Q21 AWAITING_CI（本机162项/新54通过，双门/五IT均NOT_RUN），Q19/Q20覆盖见下表；多源变更/改名应用及完整G2门仍不抵扣。
 
 ## Q19 多源基线保存/独立重开覆盖（2026-10-05，已验收归档）
 
@@ -114,16 +114,36 @@
 
 格式/诊断及资源运行证据与裁决见[Q19归档](../roadmap/completed/Q19-multi-source-baseline-storage-and-reopen.md)§9–10、[Accepted ADR-022](../architecture/ADR-022-multi-source-baseline-storage-and-reopen.md)、资格报告§1.17。日志`/tmp/q19-directed-regression.log`、`/tmp/q19-final-directed.log`、`/tmp/q19-cross-version.log`与Application XML；以最新同类替换去重，不把重跑相加。同SHA [CI run37256515347](https://github.com/HoloNova/Software-IR/actions/runs/37256515347)的原始日志/元数据/两类artifact位于`/tmp/q19-ci-f3d9ef7/`；四新增类6/12/9/6全通过。969闸门和973 XML（另四IT）分开计，在线预热第二份Q9报告不作第五场景。旧四业务输入/输出摘要不变；固定六V1图golden类在双门通过。不改旧Bundle/V4、sir-change或其他生产模块，G2未关闭。
 
-## Q20 多源context与单工作流只读规划覆盖（本机完成，CI NOT_RUN）
+## Q20 多源context与单工作流只读规划覆盖（2026-10-08，已验收归档）
 
 | 证据 | 已覆盖 | 不宣称的范围 |
 |---|---|---|
 | ProjectChangePrerequisiteTest 2 | 真四源/初始五源片段B0保存重放、移开原源目录；两修改仅Service，片段注释证据灵敏 | 非跨版本移动应用 |
 | ProjectChangePlanningApplicationTest 14 | 两真实B0公开context/plan/verify、完整差异/盘面零写、新实例/Locale/成员顺序、精确与注释NoChanges；旧context/目标/伪造context/plan（含SHA重算）拒绝；Parse/Resolve双位置/Type/Validate片段诊断；DTO/合同/非目标/增删源、脏state/LOCK缺席/损坏/链接/超限、4个末次外部变动拒绝 | 无apply，不更新CURRENT或保存注释源；只检测点一致读，不承诺任意并发原子快照；14=先13+后新方法1，不是重跑合计 |
 | ProjectChangePlannerContractTest 10 | 新旧真实file/artifact计划对齐及NoChanges；重复/字段/集合不可变、版本/源清单/Graph摘要/模型关联/目标篡改/复核完整重算；合成图闭包外/CREATE/DELETE拒绝；编码非法UTF/字段超限、来源不变/顺序变化拒绝 | OUTPUT_EQUIVALENT用合成文件证据；纯关联不独自证明模型正文来自源字节，Application完整编译证明 |
-| 定向旧范围160 | Change投影/架构/旧API/Rename69，Application Q19四类33与15点矩阵、旧Change21/Rename4、恢复/V4 28、多源拒绝3、golden1、架构1 | 未全量；四MySQL IT及全部CI测试待本批SHA，不用旧run验收 |
+| 定向旧范围160 | Change投影/架构/旧API/Rename69，Application Q19四类33与15点矩阵、旧Change21/Rename4、恢复/V4 28、多源拒绝3、golden1、架构1 | 本机非全量；同SHA e404208 CI双门/四MySQL IT已核对，不用旧run验收 |
 
-合计24类去重**186/0/0/0**（Change69/Application117），新增三类26。固定旧四业务及六V1图golden未改、旧版本准入/保存格式/事务未改。原语诊断/共享算法/散列域及测试日志见[工作单](../roadmap/ACTIVE_WORK.md)§8、[Proposed ADR-023](../architecture/ADR-023-project-workflow-read-only-planning.md)、资格§1.18。双全量门/四IT及本批SHA/run/artifact均**NOT_RUN**；不更新下表已验收全量，也不由此关闭G2。
+合计24类去重**186/0/0/0**（Change69/Application117），新增三类26。固定旧四业务及六V1图golden未改、旧版本准入/保存格式/事务未改。原语诊断/共享算法/散列域及测试日志见[Q20归档](../roadmap/completed/Q20-multi-source-workflow-read-only-plan.md)§8–10、[Accepted ADR-023](../architecture/ADR-023-project-workflow-read-only-planning.md)、资格§1.18。同SHA [CI run37764055905](https://github.com/HoloNova/Software-IR/actions/runs/37764055905)双門各**995/0/0/5**、四IT**40/61/36/63**全通过；三新增类2/10/14全部通过，新增26。XML999含另四IT、Application380；旧四业务摘要与Q19相同。artifact/日志在`/tmp/q20-ci-e404208/`；已验收，不关闭G2。Q21 SPEC_REVIEW全部门NOT_RUN。
+
+## Q21 多源UPDATE、发布历史与显式恢复覆盖（2026-10-08，AWAITING_CI）
+
+| 类/组 | 本机已验证 | 未验收/限制 |
+|---|---|---|
+| ProjectUpdatePrerequisiteTest（5） | 连续候选重编译、回返原ID、已有CURRENT安全move/目录替换/硬链接原语 | 有界单workflow UPDATE，不扩语言/旧事务 |
+| ProjectPublicationHistoryTest（8） | 实际B0→B1→B2及回返B0、只读重开/context、8 Bundle/32关系预算、陌生目录/自洽无完成凭据关系拒绝 | CURRENT唯一head，无自动GC/无限历史 |
+| ProjectUpdateBindingTest（5） | 规范framing、两側完整摘要/delta/父目录/物理key、合法分隔词路径；损坏/超限/重复/越域拒绝 | 独立binding V1，不改旧Bundle |
+| ProjectUpdateTrailTest（5） | 明确总体/逐文件状态图、终态追加/跳跃/发布后回滚/缺完成文件拒绝 | 模拟状态/记录，不证明断电持久性 |
+| ProjectUpdateFileAccessTest（5） | NOFOLLOW、目录句柄/祖先和叶重验、硬链接/替换身份保护 | 本机Linux；跨卷/无安全句柄只能拒绝 |
+| ProjectJournalSlotsTest（6） | A/B物理锚/selector、非选槽半写不毁上一记录、pending只能显式恢复、selected损坏保留拒绝 | 不隐式退到旧槽，不自动恢复 |
+| ProjectUpdateTransactionTest（4） | 真实根/片段更新逐字节等于候选从零生成，连续/回返、公开前内部双向恢复 | 真生成单Service；其他更新数靠合成矩阵 |
+| ProjectChangeExecutionApplicationTest（8） | 实际apply/recover、全部候选原源字节保存/原目录不可用重开、旧请求/新NoChanges、伪造/错域零写、32发布后预算拒绝、旧recover拒新族不删材料 | 业务MySQL/HTTP在CI；无CLI新写入口 |
+| ProjectChangeRecoveryProtectionTest（4） | 所有归属前置、同字节外部输出/备份/指针/槽替换、未知成员/错handle/缺Bundle或CURRENT/第三值拒绝保留 | pins/候选源/终态证明保留计预算，不暗删历史 |
+| ProjectUpdateFaultMatrixTest（4） | 两UPDATE合成矩阵150应用点/64标签（64缺证据保留拒绝、56回滚、30提交清理）；85再次恢复中断点（57/28）全部新实例恢复/幂等；长度/命中/traceSHA冻结 | 不冒称真实生成器两文件或真实断电 |
+| ProjectWorkflowBusinessConformanceIT | 已编译，CI启用flag/报告两侧receipt/源图清单/完整artifact/整表指纹；复用schema/互斥/构建启动与redaction | **本机NOT_RUN**；CI验证同工程3→4/ART101→3及数据库不变，fixture DDL非迁移 |
+
+最终本机**25类去重162/0/0/0，新10类54**；Q19四类33、Q20三类26及旧定向49保持，四旧业务fixture生成/V1图golden不变；无新skip/exclude。日志/最终XML索引`/tmp/q21-directed-summary.json`，命令与订正见[工作单§8](../roadmap/ACTIVE_WORK.md)、资格§1.19与[Proposed ADR-024](../architecture/ADR-024-project-workflow-update-publication-and-recovery.md)。本机2核、2271 MiB available，串行systemd 2G/150%及Maven/fork/Metaspace限额，未启动MySQL/生成工程build/应用；无遗留java/mvn。
+
+双全量闸门/四旧IT/新增第五多源IT **NOT_RUN**，须待验收源码同SHA CI+run URL+两类artifact，不沿用Q20 995。Q21未验收、不Accepted/归档，G2未关闭；CREATE/DELETE/改名/源移动/非目标变更、nodeKey/模块实例、身份映射、数据库演进及CLI写生命周期仍缺口。只读旧Q20合同已同步新正/旧负，未用包装假绿。
 
 ## Q7 CLI 产品边界覆盖（2026-09-18）
 
@@ -137,7 +157,7 @@
 | 生产边界 | 常量池闸门三条规则 0 违规 + 灵敏度探针 | `io/kcg/cli/mvp/**` 为显式例外（非命令路径，命令路径不可达它有断言） |
 | 发布物 | — | **thin JAR / 发行包 `NOT_RUN`**（属独立发布任务） |
 
-## 1. 最近已验收同SHA CI全量覆盖摘要（Q19）
+## 1. 最近已验收同SHA CI全量覆盖摘要（Q20，e404208/run37764055905）
 
 | 模块 | 当前直接测试 | 覆盖判断 | 优先级 |
 |---|---:|---|---|
@@ -146,8 +166,8 @@
 | Lowering API + Spring | 90 | API 4 + Spring 86；Q16 物理名与列名契约 4 项，生产 Lowering 未改 | 维护 |
 | Generator | 77 | canonical 输出、主要 Renderer、跨环境字节确定性、完整生成工程离线编译与生产 class 静态边界闸门；Q16 未改生产 Generator | 维护 |
 | Project Graph | 77 | 旧 72 + 多源格式 5；V1 goldens、V2 manifest/来源/规范往返/损坏拒绝及只读门；`REFERENCES` 与增量能力不在范围 | 维护 |
-| Change | 69 | 六类既有计划/投影与 Q16 只读改名计划、源陈旧性、全工程文件覆盖、身份拒绝；Q17 未改此模块，事务位于 application | 维护 |
-| Application | 350 run / 0 fail / 0 error / 5 skip | Q18 317 + Q19 33；快照重放/保存重开/15点故障/版本拒绝/编码安全读取限额；四opt-in场景同SHA PASSED（artifact XML application354）；5 skip均Windows junction | 维护 |
+| Change | 69 | 六类既有计划/投影与 Q16 只读改名计划、源陈旧性、全工程文件覆盖、身份拒绝；Q20共享工作流纯核心，新合同测试计入Application；文件事务仍位于Application | 维护 |
+| Application | 376 run / 0 fail / 0 error / 5 skip | Q19 350 + Q20 26；多源只读context/工作流计划/完整复核/格式/关联/篡改/片段诊断；保存/恢复/golden回归通过；四opt-in场景PASSED（artifact XML application380）；5 skip均Windows junction | 维护 |
 | CLI | 30 | 5 项 hardening + 13 项 Change 工作流 + Q7 新增 12 项（产品边界 6、生产边界闸门 4、内部失败 2） | P1 |
 
 ## 2. Generator 缺口

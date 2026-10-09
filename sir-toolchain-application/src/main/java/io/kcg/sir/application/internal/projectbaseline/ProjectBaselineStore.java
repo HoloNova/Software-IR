@@ -18,9 +18,16 @@ public final class ProjectBaselineStore {
     public void guardState(String id,boolean allowPending) throws IOException {
         hex(id);
         var root=files.list("");
-        if (!Set.of("LOCK","baselines","CURRENT","CURRENT.new").containsAll(root)) throw problem("STATE-001","state contains transactions or unknown objects; retained without cleanup");
+        if (!Set.of("LOCK","baselines","CURRENT","CURRENT.new",ProjectPublicationHistory.DIRECTORY,"project-transactions").containsAll(root)) throw problem("STATE-001","state contains transactions or unknown objects; retained without cleanup");
         if (!allowPending && root.contains("CURRENT.new")) throw problem("STATE-001","pending CURRENT.new requires explicit registration retry; inspection never cleans it");
-        if (root.contains("baselines")) {
+        if (root.contains(ProjectPublicationHistory.DIRECTORY)) {
+            require(current().equals(Optional.of(id)),"history validation requires the actual CURRENT");
+            if(root.contains("project-transactions"))require(files.list("project-transactions",1).isEmpty(),"active project transaction requires explicit recovery");
+            var history=ProjectPublicationHistory.validate(files,id);
+            if(root.contains("project-transactions"))require(history.transactionsKeys().contains(files.directoryIdentity("project-transactions").toString()),"empty transaction root has no terminal ownership proof");
+        } else if (root.contains("project-transactions")) {
+            throw problem("STATE-001","project transaction root lacks recognized history/terminal evidence");
+        } else if (root.contains("baselines")) {
             var ids=files.list("baselines");
             if (!ids.isEmpty() && !ids.equals(Set.of(id))) throw problem("STATE-001","state contains a different/unknown candidate; retained without cleanup");
         }

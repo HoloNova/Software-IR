@@ -1,6 +1,6 @@
 # KCG-Code 剩余工作路线图
 
-> 更新：2026-10-05。G0/G1 与 G2 的 Q16/Q17/Q18/Q19 已验收归档；Q17 提交 `ab2ce09` 的 [CI run `36404651840`](https://github.com/HoloNova/Software-IR/actions/runs/36404651840) 双闸门各 **893/0/0/5**，四个业务 IT **40/61/36/63** 全 `PASSED`。Q18 已验收，638eaa7 的 [CI run 37212618580](https://github.com/HoloNova/Software-IR/actions/runs/37212618580) 双门 **936/0/0/5**、四 IT **40/61/36/63** 全 PASSED，Q17 → Q18 +43；XML 940 含四 IT。`ACTIVE_WORK.md` 当前为 **Q20 / IN_PROGRESS**：负责人确认D0–D8，多源context/项目凭据与单能力工作流只读UPDATE计划实施中；[Q19](completed/Q19-multi-source-baseline-storage-and-reopen.md)已确认验收：P1–P5/Accepted ADR-022、定向199及15点矩阵通过；受测f3d9ef7的[CI run37256515347](https://github.com/HoloNova/Software-IR/actions/runs/37256515347)双门969/0/0/5（Q18+33）、四IT40/61/36/63全通过，XML973含四IT、两类artifact核对；验收/回填文档未提交；保存完整多源基线/独立重开核验，不接通 Change/Rename/apply，不自动提交/推送。单能力改名可原子应用与恢复；原课程全局替换连带 Input 仍被 `PATH-004` 拒绝，组合改名须另立单，G2 未关闭。
+> 更新：2026-10-08。G0/G1及G2的Q16–Q20已验收归档，G2未关闭。[Q20](completed/Q20-multi-source-workflow-read-only-plan.md)受测e404208，同SHA [CI run37764055905](https://github.com/HoloNova/Software-IR/actions/runs/37764055905)双门995/0/0/5、四IT40/61/36/63通过，两类artifact核对；XML999含四IT，Q19 969→995增26。`ACTIVE_WORK.md`为 **Q21 / AWAITING_CI**：D0–D8实现/本机定向162项/新54通过，真实连续更新与150应用/85恢复中断点通过；Proposed ADR-024，双门/四旧IT/新增多源IT均NOT_RUN。Q20只读计划不是应用资格；其他操作/改名/跨文件移动与nodeKey等另单。旧单能力改名仍可原子应用/恢复，连带Input全局替换仍PATH-004；本轮按Q21范围实施，不提交推送，不跑本机业务IT/全量门。
 > 读者：项目负责人和后续执行 Agent
 > 定位：本文件的阶段 1–7 是 **G0：现有链路资格收口**内部的 Q 系列执行顺序。产品方向、阶段进入条件与阶段完成门见 [`README.md`](README.md) 和 [`../design/README.md`](../design/README.md)；两者不替代本文件的执行顺序。
 
@@ -39,8 +39,9 @@ G1 的完成门是「BIZ-01..06 的基础业务与反例 + GEN-01/02，并在真
 | 后续独立项（未立项） | 能力与关联 Input 声明**一同改名**：需冻结 Input 身份与多 subject 计划；原课程全局替换当前只会被 `PATH-004` 拒绝，不由 Q17 的文件事务自动解决 | 尚未授权；不能把 Q16 的单声明计划当作三文件改名可应用 |
 | Q18 | 多文件源清单/最小导入、逐文件解析、完整快照与 V2 Graph；同一 software 首次生成 | **DONE**（2026-10-05）；[归档](completed/Q18-multi-source-compilation-and-source-snapshot.md)，638eaa7 同 SHA CI 双门 936/0/0/5、四 IT 全通过；不交付多源基线/apply |
 | Q19（[归档](completed/Q19-multi-source-baseline-storage-and-reopen.md)） | 多源基线初次注册、完整字节保存、独立重开核验及保存中断收尾；不重写生成工程 | **DONE**（2026-10-05验收归档）；P1–P5/Accepted ADR-022、本机199及f3d9ef7同SHA CI双门969/0/0/5、四IT均通过；不把集合SHA填入单源revision，不接Change/Rename/apply |
-| Q20（[活动工作单](ACTIVE_WORK.md)） | 从Q19保存基线编译候选，取得项目revision/context/工作流目标目录；单能力工作流只读UPDATE计划；复用纯比较/闭包决策，旧入口仍拒绝V2 | **IN_PROGRESS（本机完成、待Git/CI授权）**：D0–D8/P1–P5及实现通过去重186/0/0/0、新26；本批CI双门/四IT均NOT_RUN、未验收。证据见活动单§8/资格§1.18；不改旧准入/保存格式、不接落盘/其他操作/改名，不把集合SHA塞入旧revision |
-| 后续单 | 多源变更/改名执行、其他操作、跨文件移动、模块实例、nodeKey、完整身份映射与剩余 LANG 门 | 未授权；Q20设计不关闭G2，不提前冻结事务形态 |
+| Q20（[归档](completed/Q20-multi-source-workflow-read-only-plan.md)） | Q19多源context/项目revision及单能力工作流只读UPDATE计划；共享纯比较/闭包，旧入口拒绝V2 | **DONE**（2026-10-08）：D0–D8/P1–P5、本机186/新26，同SHA e404208 CI双门995/0/0/5、四IT全过，XML999含四IT；Accepted ADR-023，不交付应用/其他操作/改名 |
+| Q21（[活动单](ACTIVE_WORK.md)） | 多源单工作流UPDATE文件应用、完整B1保存/发布、受限历史状态及显式恢复；连续更新/独立重开、CI新多源业务IT | **AWAITING_CI**：D0–D8实现/定向162项/新54通过，真实根/片段连续更新、150应用/85恢复点通过；Proposed ADR-024。双门/五IT NOT_RUN，新IT只编译；不把旧事务改成多源、不动Git |
+| 后续单 | 多源变更/改名执行、其他操作、跨文件移动、模块实例、nodeKey、完整身份映射与剩余 LANG 门 | 未授权；Q21本机实现不关闭G2，实际UPDATE资格仍待同SHA CI/验收；其他操作/源移动/改名另审单 |
 
 ## 已登记的独立项（不属于任何工作单的完成门）
 

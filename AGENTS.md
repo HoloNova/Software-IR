@@ -56,7 +56,7 @@ Run tests appropriate to the change and complete required checks. Once those pas
 **本机（开发机）资源很小**：`nproc` = 2、内存约 3 GB。一次全量 Reactor 构建，或一个业务场景 IT（它自己还要起 MySQL、构建生成工程、启动 Spring Boot 应用），就足以把机器压到不可用。因此：
 
 - **本机默认只跑受影响的定向测试**（单模块、`-Dtest=...`）。不要在本机跑全量闸门、业务场景 IT，也不要"顺手再跑一遍"。
-- **重活由 GitHub CI 承担**：仓库的 `.github/workflows/verify.yml` 负责两条全量闸门与四个业务场景 IT。同一批未提交改动**只做一次**验证——**那一次在 CI 上**（提交/推送之后），本机不重复跑（负责人 2026-09-23 澄清：此前"集中到提交点一次执行"指 CI，不是再在本机跑一遍）。
+- **重活由 GitHub CI 承担**：仓库的 `.github/workflows/verify.yml` 负责两条全量闸门与四个旧业务场景 IT、Q21新增的多源工作流更新 IT（新门证据以同SHA CI为准）。同一批未提交改动**只做一次**验证——**那一次在 CI 上**（提交/推送之后），本机不重复跑（负责人 2026-09-23 澄清：此前"集中到提交点一次执行"指 CI，不是再在本机跑一遍）。
 - **不为触发 CI 而自动提交或推送**。CI 证据必须覆盖待验收源码：报告须给出 commit SHA + run URL + 报告产物（证据与 surefire 报告作为 artifact 上传）。
 - CI 或参考环境不可得时，对应门记 `NOT_RUN`，不得以本机跑一遍冒称。
 - 纯文档修改不跑构建，只做文档与差异检查（`git diff --check`、`git status --short`）。
