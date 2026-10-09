@@ -1,9 +1,9 @@
 # ADR-023：多源基线消费与单能力工作流只读规划
 
-- Status: Proposed（Q20 D0–D8已获范围确认；先决/实施证据齐全后再审定，不以本文代替完成门）
+- Status: **Accepted**（2026-10-08，负责人提交/CI后要求继续下一阶段；Q20按D0–D8及同SHA证据验收归档）
 - Date: 2026-10-05
 - Scope: 项目版context与单能力工作流UPDATE只读计划；不含apply、其他五操作、Rename或源移动
-- 工作单：[Q20](../roadmap/ACTIVE_WORK.md)；前置：Accepted [ADR-021](ADR-021-multi-source-compilation-and-graph-compatibility.md)/[ADR-022](ADR-022-multi-source-baseline-storage-and-reopen.md)
+- 工作单：[Q20归档](../roadmap/completed/Q20-multi-source-workflow-read-only-plan.md) §8–10；前置：Accepted [ADR-021](ADR-021-multi-source-compilation-and-graph-compatibility.md)/[ADR-022](ADR-022-multi-source-baseline-storage-and-reopen.md)
 
 ## 1. 已验证的起点
 
@@ -29,6 +29,10 @@ P1真实四源及初始五源片段版本从保存原字节重编译。放宽报
 
 Application新增拒绝码前缀`SIR-APP-PROJECT-CHANGE-`；ProjectChangeStage仅READ/PARSE/SEMANTIC/LOWERING/GENERATION/PREFLIGHT/GRAPH/PLAN。ProjectChangeDiagnostic逐字段保留ExecutionDiagnostic真实span/related INFO映射，并以planningStage保留纯诊断的TARGET/SCOPE/IMPACT等子阶段，不改旧诊断。纯入口新增`SIR-PROJECT-CHANGE-COMPAT-001`、`SOURCE-001`、`MODEL-001`、`VERIFY-001`，分别负责版本/清单与revision/模型图关联/重新规划不相等；共用工作流SIR-CHANGE-TARGET/SCOPE/IMPACT诊断保持原码与阶段。
 
+### Q21共享读取与显式执行增量（2026-10-08，待CI/验收）
+
+本只读context/plan/verify仍无文件应用/隐式清理，算法/摘要域/旧准入不变；锁内规划编排抽出LockedProjectPlanning供新显式ProjectChangeExecutionApplication复用，不能公开verify后释放锁再写。Q19保存字节读取可验证有界历史/COMPLETED凭据，active/未知仍拒绝。旧消费者不接受项目计划，新执行合同正向实际测试与旧类型负向同步。事务/日志/预算/物理pins/终态证明另见[Proposed ADR-024](ADR-024-project-workflow-update-publication-and-recovery.md)，本机162/新54通过，CI/验收待取得，不把Q20历史995视为Q21完成。
+
 ## 4. 验证与剩余边界
 
-本机完成：去重24类186/0/0/0，新三类26（Prerequisite2/PlannerContract10/Application14）；日志索引`/tmp/q20-directed-summary.json`，细证据见活动单§8/资格§1.18。两真实根/初始片段B0只改Service，新旧真实文件/产物计划直接对齐；context/plan/verify、末次四类变化、编码/源集合/合同/超限/链接/计划伪造与三结果正反通过；Type/Validate片段诊断保原码/位置。OUTPUT_EQUIVALENT合成纯分支与真实文件改变分列，纯关联不替代Application原字节重编译。Q19旧保存/15点矩阵/版本拒绝、旧Change/Rename/恢复与固定golden保持。仍Proposed，待本批同SHA CI/负责人验收，不把前置969计为本单；Git未授权，双CI门/四IT均NOT_RUN。G2的nodeKey、完整身份兼容、多源应用/改名、数据库生命周期仍未交付。
+本机完成：去重24类186/0/0/0，新三类26（Prerequisite2/PlannerContract10/Application14）；日志索引`/tmp/q20-directed-summary.json`，细证据见Q20归档§8–10/资格§1.18。两真实根/初始片段B0只改Service，新旧真实文件/产物计划直接对齐；context/plan/verify、末次四类变化、编码/源集合/合同/超限/链接/计划伪造与三结果正反通过；Type/Validate片段诊断保原码/位置。OUTPUT_EQUIVALENT合成纯分支与真实文件改变分列，纯关联不替代Application原字节重编译。Q19旧保存/15点矩阵/版本拒绝、旧Change/Rename/恢复与固定golden保持。负责人完成受测提交e404208，[run37764055905](https://github.com/HoloNova/Software-IR/actions/runs/37764055905)同SHA双门995/0/0/5、四IT40/61/36/63全通过，两类artifact核对；XML999含四IT，969→995增26。按原范围验收后转Accepted，不把历史969计为本单结果。验收不授权多源文件应用；其状态/发布/恢复合同须另单审定，不修改本只读算法/摘要域与旧准入。G2的nodeKey、完整身份兼容、多源应用/改名、数据库生命周期仍未交付。

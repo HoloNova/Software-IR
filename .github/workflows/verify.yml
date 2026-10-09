@@ -8,7 +8,7 @@ name: verify
 #   1. an online priming pass (the frozen repository must exist before an offline run)
 #   2. the frozen full gate:        mvn -o clean verify
 #   3. the completion full gate:    mvn -o clean verify -Dmaven.test.failure.ignore=true
-#   4. the four business conformance ITs against a real MySQL 8.4 service container
+#   4. four legacy business ITs plus the Q21 multi-source workflow IT against real MySQL 8.4
 #
 # Artifacts: every conformance evidence directory and the surefire reports, so the
 # evidence can be tied to this commit SHA and this run URL.
@@ -125,12 +125,13 @@ jobs:
           set -euo pipefail
           mvn -B -o -pl sir-toolchain-application -am \
             -Dmaven.repo.local="$MAVEN_REPO" \
-            -Dtest=QuerySliceBusinessConformanceIT,WriteSliceBusinessConformanceIT,RelationSliceBusinessConformanceIT,ChangeLoopBusinessConformanceIT \
+            -Dtest=QuerySliceBusinessConformanceIT,WriteSliceBusinessConformanceIT,RelationSliceBusinessConformanceIT,ChangeLoopBusinessConformanceIT,ProjectWorkflowBusinessConformanceIT \
             -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false \
             -Dkcg.query-conformance.enabled=true \
             -Dkcg.write-conformance.enabled=true \
             -Dkcg.relation-conformance.enabled=true \
             -Dkcg.change-conformance.enabled=true \
+            -Dkcg.project-change-conformance.enabled=true \
             -Dkcg.conformance.work-parent="$KCG_CONF_WORK_PARENT" \
             -Dkcg.conformance.evidence-parent="$KCG_CONF_EVIDENCE_PARENT" \
             -Dkcg.conformance.maven-executable="$(command -v mvn)" \

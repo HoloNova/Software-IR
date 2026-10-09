@@ -142,9 +142,11 @@ class ProjectChangePlanningApplicationTest {
         var shifted=new ArrayList<>(c.targets());shifted.set(0,new ProjectWorkflowTarget(t.target(),t.displayName(),t.workflowSpan(),t.workflowSpan()));
         assertNotEquals(c.contextId(),new ProjectChangeContext(1,c.stateRoot(),c.baseline(),c.basedOn(),c.candidate(),shifted).contextId());
     }
-    @Test void onlyContextPlanAndVerifyArePublicAndNoLegacyApplyWrapperCanCarryAProjectPlan() {
+    @Test void planningRemainsReadOnlyExplicitProjectExecutionExistsAndLegacyApplyCannotCarryItsPlan() {
         var names=Arrays.stream(ProjectChangePlanningApplication.class.getDeclaredMethods()).filter(m->java.lang.reflect.Modifier.isPublic(m.getModifiers())).map(java.lang.reflect.Method::getName).collect(java.util.stream.Collectors.toSet());
         assertEquals(Set.of("context","plan","verify"),names);
+        var execute=Arrays.stream(ProjectChangeExecutionApplication.class.getDeclaredMethods()).filter(m->java.lang.reflect.Modifier.isPublic(m.getModifiers())).map(java.lang.reflect.Method::getName).collect(java.util.stream.Collectors.toSet());assertEquals(Set.of("apply","recover"),execute);
+        assertEquals(List.of(ProjectChangePlanningRequest.class,ProjectChangePlanningResult.class,String.class),Arrays.stream(ProjectChangeApplyRequest.class.getRecordComponents()).map(java.lang.reflect.RecordComponent::getType).toList());
         for(Class<?> root:List.of(ChangeExecutionApplication.class,ProjectBaselineApplication.class))for(var m:root.getDeclaredMethods()) {
             if(!java.lang.reflect.Modifier.isPublic(m.getModifiers()))continue;
             for(var argument:m.getParameterTypes()) {

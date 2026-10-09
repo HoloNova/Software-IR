@@ -56,6 +56,10 @@ inspect要求state/LOCK已存在，仅tryAcquireExisting，绝不创建锁或状
 
 新基线诊断前缀 `SIR-APP-PROJECT-BASELINE-`：REQUEST-001（请求/绑定）、VERSION-001（错误/未知版本）、FORMAT-001（编码/结构/内部证据不一致）、LIMIT-001（限额）、READ-001（安全读取失败）、STATE-001（阻塞/中断/未知对象）、OUTPUT-001（盘面）、PUBLISH-001（保存发布）。复用路径/锁诊断并保留编译阶段的源位置/related INFO；失败不静默转成成功或旧凭据。拒绝过程中可留下LOCK/已写候选证据，不声称state零写；inspect与工程/已有CURRENT/Bundle禁止隐式修改。
 
+### Q21有界历史读取增量（2026-10-08，待CI/验收）
+
+Q19原注册/初次发布/四成员字节与ID域不变。Q21仅给inspect及Q20读入口增加可验证的有界历史：origin、不可变关系与终态receipts，CURRENT仍唯一head；每条关系需匹配COMPLETED binding及两侧实际Bundle，未知/active/残留保留拒绝，不清理。pins防同字节外部替换，保留恢复证明计预算，不自动GC。新UPDATE/指针替换/显式恢复归独立[Proposed ADR-024](ADR-024-project-workflow-update-publication-and-recovery.md)，不是旧recover/JournalGate扩展。register不因历史而放宽为通用更新；新入口本机162项/新54通过，双门/五IT仍NOT_RUN，不抵扣Q19之外完整资格。
+
 ## 7. 验收
 
 真实四源新实例重开；容器/descriptor严格正反/边界；注释灵敏度；重算外层摘要仍拒绝语义/图/清单不一致；源/输出链接与替换、限额、版本交叉、幂等、全部发布钩子+部分文件崩溃像、不同CURRENT及未知文件保护。旧字节/注册/规划/应用/恢复定向回归，完整门由同SHA CI承担。实测四源重开、15点发布矩阵（列表长度/到达数钉住）、缺席/已发布双向重试和外部同字节指针保护均通过，见Q19归档§9；旧context/plan/apply/applyRename/recover全部实调拒绝新格式且盘面不变。本机指定类证据不替代同SHA CI；后续同SHA双门/四IT已通过，负责人已确认验收，ADR转Accepted。完整证据、资源/编码/初次发布的边界及裁决保留于Q19归档§9–10，G2未关闭。
