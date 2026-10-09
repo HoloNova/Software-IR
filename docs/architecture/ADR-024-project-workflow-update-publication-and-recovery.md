@@ -1,7 +1,7 @@
 # ADR-024：多源工作流 UPDATE、受限发布历史与显式恢复
 
-- Status: **Proposed**（2026-10-08，Q21已授权实施，本机合同/矩阵通过，CI与验收待取得）
-- Authority: [Q21](../roadmap/ACTIVE_WORK.md) D0–D8；前置 Accepted [ADR-022](ADR-022-multi-source-baseline-storage-and-reopen.md)、[ADR-023](ADR-023-project-workflow-read-only-planning.md)。不改其Bundle字节、ID域、纯规划规则或旧V1–V4合同。
+- Status: **Accepted**（2026-10-09，负责人提交并要求规划下一阶段；主会话核对同SHA CI/两类artifact后按D0–D8验收归档）
+- Authority: [Q21归档](../roadmap/completed/Q21-multi-source-workflow-update-and-recovery.md) D0–D8及§9–10；前置 Accepted [ADR-022](ADR-022-multi-source-baseline-storage-and-reopen.md)、[ADR-023](ADR-023-project-workflow-read-only-planning.md)。不改其Bundle字节、ID域、纯规划规则或旧V1–V4合同。
 
 ## 1. 场景与共享边界
 
@@ -59,4 +59,4 @@ recover重新从B0保存源与保留candidate.sources编译完整两侧、重建
 
 冻结两UPDATE矩阵：150应用检查点/64种标签，64缺完整绑定准备态保留拒绝、56回滚、30已提交清理；恢复中再次中断85点（回滚57、提交清理28）全部新实例恢复及幂等。列表/数量/标签命中/双向轨迹SHA均硬断言；合成Compiler仅包内测试可注入，生产默认从原源字节完整编译。真实生成链与合成矩阵分列，不冒称真实断电实验。
 
-CI保留四旧业务IT，新增ProjectWorkflowBusinessConformanceIT与`kcg.project-change-conformance.enabled`：复用同schema/DDL/种子/互斥锁/构建启动/报告redaction，真实多源B0三课程→原工程apply/B1四课程且ART101出现，再从保存B1第二次更新恢复三课程；全部course/student/enrollment行指纹不变。原源目录不可用；明确TEST_FIXTURE_DDL不抵扣初始化/迁移。新IT已编译，**本机未运行**。双全量门/五业务IT的commit SHA+run+两类artifact **NOT_RUN**；本机结果不替代CI/验收，ADR暂不Accepted，G2未关闭。
+CI保留四旧业务IT，新增ProjectWorkflowBusinessConformanceIT与`kcg.project-change-conformance.enabled`：复用同schema/DDL/种子/互斥锁/构建启动/报告redaction，真实多源B0三课程→原工程apply/B1四课程且ART101出现，再从保存B1第二次更新恢复三课程；全部course/student/enrollment行指纹不变。原源目录不可用；明确TEST_FIXTURE_DDL不抵扣初始化/迁移。新IT已编译，**本机未运行**。本机阶段CI/验收未取得；随后受测 `f8a2f92bee936359e819d24c9768e188c9275ca5` 的[CI run37865688743](https://github.com/HoloNova/Software-IR/actions/runs/37865688743)双门各1049/0/0/5、五IT40/61/36/63/36全部PASSED，两类artifact核对；XML1054含后续五IT，995→1049增54恰为10新增类，5 skip仅Windows junction。Q21按原范围验收归档，ADR转Accepted；证据见归档§9–10。G2未关闭，跨文件移动等后续单仍须另审。

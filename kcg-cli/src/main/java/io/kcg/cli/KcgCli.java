@@ -24,7 +24,7 @@ public final class KcgCli {
    public static final String VERSION = "kcg 0.1.0 (KCG-CLI-CHANGE-PLANNING-V1)";
    static volatile RuntimeException crashInjection = null;
    static volatile Runnable afterContextHook = null;
-   private static final String TOP_HELP = "Usage: kcg <command> [options]\nRead-only Change Planning CLI V1.\n\nCommands:\n  context   Inspect the authoritative planning context and target catalog.\n  plan      Re-derive the context and invoke Change SIR planning for one target.\n\nGlobal options:\n  --help, -h     Show this help (or command help with `kcg <command> --help`).\n  --version, -V  Show the CLI version.";
+   private static final String TOP_HELP = "Usage: kcg <command> [options]\nRead-only SIR validation and Change Planning CLI.\n\nCommands:\n  check     Validate single-file SIR samples from UTF-8 JSONL stdin.\n  context   Inspect the authoritative planning context and target catalog.\n  plan      Re-derive the context and invoke Change SIR planning for one target.\n\nGlobal options:\n  --help, -h     Show this help (or command help with `kcg <command> --help`).\n  --version, -V  Show the CLI version.";
    private static final String CONTEXT_HELP = "Usage: kcg context --state-root <absolute-path> --output-root <absolute-path> --candidate-sir <absolute-path>\nInspects the locked CURRENT Bundle, recompiles base and candidate, and emits the\nauthoritative contextId plus the deterministic typed target catalog.\n\nAll options are required and must occur exactly once. Paths must be absolute.";
    private static final String PLAN_HELP = "Usage: kcg plan --state-root <absolute-path> --output-root <absolute-path>\n               --candidate-sir <absolute-path> --expected-context-id <64-lower-hex>\n               --target-key <64-lower-hex>\n               --change-ir-version <V0_1|V0_2|V0_3|V0_4|V0_5|V0_6>\n               --operation <token>\nRe-derives the context, binds the candidate digest, and invokes Change SIR planning\nfor the selected target.\n\nOperation tokens:\n  modify-capability-workflow, add-capability, remove-capability,\n  modify-input-field-constraints, modify-unreferenced-input-field-type,\n  modify-actorless-readonly-capability-exposure\n\nAll options are required and must occur exactly once. Paths must be absolute.";
 
@@ -71,8 +71,26 @@ public final class KcgCli {
          }
          case CliCommandLine.ParsedContext pc -> runContext(pc.arguments());
          case CliCommandLine.ParsedPlan pp -> runPlan(pp.arguments());
+         case CliCommandLine.ParsedCheck pc -> runCheck();
          default -> throw new MatchException(null, null);
       };
+   }
+
+   private static int runCheck() {
+      try {
+         var summary = new io.kcg.sir.application.api.SirValidationApplication().checkBatch(
+            new io.kcg.sir.application.api.SirValidationBatchRequest(System.in, result -> {
+               CheckResultRenderer.render(System.out, result);
+               if (System.out.checkError()) throw new java.io.IOException("output unavailable");
+            }));
+         return summary.internalFailure() ? 70 : 0;
+      } catch (java.io.IOException e) {
+         System.err.println("KCG-CHECK-IO-001: JSONL transport could not complete");
+         return 3;
+      } catch (RuntimeException | StackOverflowError e) {
+         System.err.println("KCG-CHECK-INTERNAL-001: batch checking could not complete");
+         return 70;
+      }
    }
 
    private static int runContext(ContextArguments args) {
@@ -156,10 +174,11 @@ public final class KcgCli {
 
    private static void printHelp(CliCommandLine.Help h) {
       String text = switch (h.command()) {
-         case null -> "Usage: kcg <command> [options]\nRead-only Change Planning CLI V1.\n\nCommands:\n  context   Inspect the authoritative planning context and target catalog.\n  plan      Re-derive the context and invoke Change SIR planning for one target.\n\nGlobal options:\n  --help, -h     Show this help (or command help with `kcg <command> --help`).\n  --version, -V  Show the CLI version.";
+         case null -> TOP_HELP;
+         case "check" -> "Usage: kcg check < samples.jsonl\nReads UTF-8 JSONL from stdin and writes one canonical JSON result per input line.\nStatic checking only; does not build, start or certify business behavior.\nEach object requires id and sir, with optional stopAfter: PARSE, SEMANTIC, LOWERING, GENERATION.\nDefault GENERATION. Limits: 1 MiB SIR, 8 MiB JSON line, 10000 accepted lines.\nOrdinary rejected samples do not make the process fail. No options; no files or state written.";
          case "context" -> "Usage: kcg context --state-root <absolute-path> --output-root <absolute-path> --candidate-sir <absolute-path>\nInspects the locked CURRENT Bundle, recompiles base and candidate, and emits the\nauthoritative contextId plus the deterministic typed target catalog.\n\nAll options are required and must occur exactly once. Paths must be absolute.";
          case "plan" -> "Usage: kcg plan --state-root <absolute-path> --output-root <absolute-path>\n               --candidate-sir <absolute-path> --expected-context-id <64-lower-hex>\n               --target-key <64-lower-hex>\n               --change-ir-version <V0_1|V0_2|V0_3|V0_4|V0_5|V0_6>\n               --operation <token>\nRe-derives the context, binds the candidate digest, and invokes Change SIR planning\nfor the selected target.\n\nOperation tokens:\n  modify-capability-workflow, add-capability, remove-capability,\n  modify-input-field-constraints, modify-unreferenced-input-field-type,\n  modify-actorless-readonly-capability-exposure\n\nAll options are required and must occur exactly once. Paths must be absolute.";
-         default -> "Usage: kcg <command> [options]\nRead-only Change Planning CLI V1.\n\nCommands:\n  context   Inspect the authoritative planning context and target catalog.\n  plan      Re-derive the context and invoke Change SIR planning for one target.\n\nGlobal options:\n  --help, -h     Show this help (or command help with `kcg <command> --help`).\n  --version, -V  Show the CLI version.";
+         default -> TOP_HELP;
       };
       byte[] b = text.getBytes(StandardCharsets.UTF_8);
       System.out.write(b, 0, b.length);

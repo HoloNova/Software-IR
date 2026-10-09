@@ -33,48 +33,24 @@ public final class SirCompilation {
       Objects.requireNonNull(sourceId, "sourceId");
       Objects.requireNonNull(generationStep, "generationStep");
       Objects.requireNonNull(accumulatedDiagnostics, "accumulatedDiagnostics");
-      SirParser parser = SirParser.create();
-      ParseResult parseResult = parser.parse(new SirSource(sourceId, sourceText));
-      accumulatedDiagnostics.addAll(DiagnosticMapper.fromParser(parseResult.diagnostics(), ExecutionStage.PARSE));
-      if (!parseResult.isSuccess()) {
-         return Optional.empty();
-      } else {
-         SemanticAnalysis semantic = new SirSemanticAnalyzer().analyze(parseResult.document().orElseThrow());
-         accumulatedDiagnostics.addAll(DiagnosticMapper.fromParser(semantic.diagnostics(), ExecutionStage.SEMANTIC));
-         if (!semantic.isSuccess()) {
-            return Optional.empty();
-         } else {
-            return lowerAndGenerate(semantic.model().orElseThrow(), generationStep, accumulatedDiagnostics);
-         }
-      }
+      return legacySnapshot(CompilationStages.compile(sourceText, sourceId,
+         io.kcg.sir.application.api.ValidationStopAfter.GENERATION, generationStep, accumulatedDiagnostics, stage -> {}),
+         accumulatedDiagnostics);
    }
 
    /** Both input forms share the existing target pipeline, not a parallel generator. */
    public static Optional<CompilationSnapshot> lowerAndGenerate(NormalizedSemanticModel normalizedModel,
       Function<SpringBootLoweredModel, GenerationResult> generationStep, List<ExecutionDiagnostic> accumulatedDiagnostics) {
-            LoweringAnalysis<SpringBootLoweredModel> lowering = new SpringBootTargetLowering().lower(normalizedModel);
-            accumulatedDiagnostics.addAll(DiagnosticMapper.fromLowering(lowering.diagnostics(), ExecutionStage.LOWERING));
-            if (!lowering.isSuccess()) {
-               return Optional.empty();
-            } else {
-               SpringBootLoweredModel loweredModel = lowering.model().orElseThrow();
-               GenerationResult generation = generationStep.apply(loweredModel);
-               if (generation instanceof Failure genFailure) {
-                  accumulatedDiagnostics.addAll(DiagnosticMapper.fromGeneration(genFailure.diagnostics(), ExecutionStage.GENERATION));
-                  return Optional.empty();
-               } else {
-                  List<GeneratedFile> files = ((Success)generation).files();
-                  List<ExecutionDiagnostic> snapshotDiags = new ArrayList<>();
+      return legacySnapshot(CompilationStages.lowerAndGenerate(normalizedModel,
+         io.kcg.sir.application.api.ValidationStopAfter.GENERATION, generationStep, accumulatedDiagnostics,
+         stage -> {}, new ArrayList<>()), accumulatedDiagnostics);
+   }
 
-                  for (ExecutionDiagnostic d : accumulatedDiagnostics) {
-                     if (!d.isError()) {
-                        snapshotDiags.add(d);
-                     }
-                  }
-
-                  return Optional.of(new SirCompilation.CompilationSnapshot(normalizedModel, loweredModel, files, snapshotDiags));
-               }
-            }
+   private static Optional<CompilationSnapshot> legacySnapshot(CompilationStages.Snapshot result,
+      List<ExecutionDiagnostic> diagnostics) {
+      if (!result.success()) return Optional.empty();
+      return Optional.of(new CompilationSnapshot(result.semanticModel(), result.loweredModel(), result.files(),
+         diagnostics.stream().filter(d -> !d.isError()).toList()));
    }
 
    public record CompilationSnapshot(

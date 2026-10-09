@@ -93,42 +93,19 @@ public final class SirCompiler {
         Objects.requireNonNull(accumulatedDiagnostics, "accumulatedDiagnostics");
 
         // --- PARSE ---
-        SirParser parser = SirParser.create();
-        ParseResult parseResult = parser.parse(new SirSource(sourceId, sourceText));
-        accumulatedDiagnostics.addAll(DiagnosticMapper.fromParser(
-                parseResult.diagnostics(), ExecutionStage.PARSE));
-        if (!parseResult.isSuccess()) {
-            return Optional.empty();
-        }
-
+        // Share the stage runner with the other in-memory entry; retain GRAPH and the legacy projection below.
+        // The delegate runs all four stages; the preserved stage labels below identify their returned snapshots.
+        var snapshot = SirCompilation.compile(sourceText, sourceId,
+                new SpringBootGenerator()::generate, accumulatedDiagnostics);
+        if (snapshot.isEmpty()) return Optional.empty();
         // --- SEMANTIC ---
-        SemanticAnalysis semantic = new SirSemanticAnalyzer().analyze(
-                parseResult.document().orElseThrow());
-        accumulatedDiagnostics.addAll(DiagnosticMapper.fromParser(
-                semantic.diagnostics(), ExecutionStage.SEMANTIC));
-        if (!semantic.isSuccess()) {
-            return Optional.empty();
-        }
-        NormalizedSemanticModel normalizedModel = semantic.model().orElseThrow();
+        NormalizedSemanticModel normalizedModel = snapshot.orElseThrow().semanticModel();
 
         // --- LOWERING ---
-        LoweringAnalysis<SpringBootLoweredModel> lowering =
-                new SpringBootTargetLowering().lower(normalizedModel);
-        accumulatedDiagnostics.addAll(DiagnosticMapper.fromLowering(
-                lowering.diagnostics(), ExecutionStage.LOWERING));
-        if (!lowering.isSuccess()) {
-            return Optional.empty();
-        }
-        SpringBootLoweredModel loweredModel = lowering.model().orElseThrow();
+        SpringBootLoweredModel loweredModel = snapshot.orElseThrow().loweredModel();
 
         // --- GENERATION ---
-        GenerationResult generation = new SpringBootGenerator().generate(loweredModel);
-        if (generation instanceof GenerationResult.Failure genFailure) {
-            accumulatedDiagnostics.addAll(DiagnosticMapper.fromGeneration(
-                    genFailure.diagnostics(), ExecutionStage.GENERATION));
-            return Optional.empty();
-        }
-        List<GeneratedFile> files = ((GenerationResult.Success) generation).files();
+        List<GeneratedFile> files = snapshot.orElseThrow().generatedFiles();
 
         // --- GRAPH build ---
         ProjectGraphInput graphInput = new SpringBootProjectGraphInputFactory().build(

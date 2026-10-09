@@ -24,6 +24,8 @@ public final class CliCommandLine {
             case "--version", "-V", "version" -> new CliCommandLine.Version();
             case "context" -> parseContext(args);
             case "plan" -> parsePlan(args);
+            case "check" -> args.length == 1 ? new ParsedCheck() : args.length == 2 && isHelp(args[1])
+                ? new Help("check") : new UsageError("KCG-CLI-USAGE-002", "check accepts no options; read JSONL from stdin");
             default -> new CliCommandLine.UsageError("KCG-CLI-USAGE-001", "unknown command: " + first);
          });
       } else {
@@ -203,9 +205,13 @@ public final class CliCommandLine {
    public sealed interface ParseResult
       permits CliCommandLine.ParsedContext,
       CliCommandLine.ParsedPlan,
+      CliCommandLine.ParsedCheck,
       CliCommandLine.Help,
       CliCommandLine.Version,
       CliCommandLine.UsageError {
+   }
+
+   public record ParsedCheck() implements CliCommandLine.ParseResult {
    }
 
    public record ParsedContext(ContextArguments arguments) implements CliCommandLine.ParseResult {
