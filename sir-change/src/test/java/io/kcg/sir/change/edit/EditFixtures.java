@@ -11,7 +11,11 @@ final class EditFixtures {
 
     /** A small course catalog: patch update with a version field, a paged query with a relation filter. */
     static String courseCatalog() {
-        try (InputStream stream = EditFixtures.class.getResourceAsStream("/edit/course-catalog.sir")) {
+        return read("/edit/course-catalog.sir");
+    }
+
+    static String read(String resource) {
+        try (InputStream stream = EditFixtures.class.getResourceAsStream(resource)) {
             return new String(stream.readAllBytes(), StandardCharsets.UTF_8);
         } catch (IOException e) {
             throw new IllegalStateException(e);

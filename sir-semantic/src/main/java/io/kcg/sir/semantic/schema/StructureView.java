@@ -187,7 +187,9 @@ public final class StructureView {
 
    private static Object read(RecordComponent component, Object record) {
       try {
-         return component.getAccessor().invoke(record);
+         java.lang.reflect.Method accessor = component.getAccessor();
+         accessor.setAccessible(true); // read only; the schema may describe records that are not public
+         return accessor.invoke(record);
       } catch (IllegalAccessException | InvocationTargetException e) {
          throw new IllegalStateException("cannot read " + record.getClass().getName() + "." + component.getName(), e);
       }

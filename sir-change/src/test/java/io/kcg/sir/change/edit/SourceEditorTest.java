@@ -78,6 +78,41 @@ class SourceEditorTest {
         assertTrue(result.delta().changes().stream().anyMatch(c -> c.kind() == SemanticDelta.Kind.UPDATE && c.path().contains("UpdateCourse")), result.delta().toString());
     }
 
+    /**
+     * The same three kinds of command, on a different business. Nothing was added to the editor for
+     * goods and prices: an input, a query that uses it and a changed workflow condition are the same
+     * structures as for courses, only the names and one decimal literal differ.
+     */
+    @Test
+    void theSameKindOfBatchWorksOnAnotherBusinessWithoutAnyNewCommand() {
+        String base = EditFixtures.read("/edit/campus-market.sir");
+        CommandBatch goods = new CommandBatch(
+            CommandBatch.PROTOCOL,
+            "CampusMarketMinimal",
+            SourceEditor.sha256(base),
+            List.of(
+                new Command.Add(DECLARATIONS, child(input("SearchGoodsByTitleInput", field("title", primitive("STRING"), constraint("notBlank"))))),
+                new Command.Add(DECLARATIONS, child(queryCapability(
+                    "SearchGoodsByTitle",
+                    "SearchGoodsByTitleInput",
+                    listOfRef("Goods"),
+                    find("Goods", binary(member(name("item"), "title"), "EQ", member(name("input"), "title")), "found"),
+                    returnStep(name("found"))
+                ))),
+                new Command.Update(
+                    Selector.root().named("declarations", "PublishGoods").slot("workflow").at("steps", 0).slot("condition"),
+                    child(binary(member(name("input"), "price"), "GE", node("DecimalLiteral", "value", FACT, text("0.05"))))
+                )
+            )
+        );
+
+        String text = edited(EDITOR.edit(base, goods)).source();
+
+        assertTrue(text.contains("capability SearchGoodsByTitle {"), text);
+        assertTrue(text.contains("validate input.price >= 0.05 else InvalidGoodsPrice;"), text);
+        assertTrue(text.contains("where item.title == input.title"), text);
+    }
+
     @Test
     void everythingTheBatchDidNotTouchStaysByteForByte() {
         String base = source();
