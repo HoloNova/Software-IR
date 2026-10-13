@@ -9,6 +9,9 @@ name: verify
 #   2. the frozen full gate:        mvn -o clean verify
 #   3. the completion full gate:    mvn -o clean verify -Dmaven.test.failure.ignore=true
 #   4. four legacy business ITs plus the Q21 multi-source workflow IT against real MySQL 8.4
+#   5. the R5 independent verification IT: real Maven build, real application, real MySQL, separate
+#      static/build/start/business results for a correct sample, a static-valid wrong sample, a candidate
+#      that does not compile and an unreachable database
 #
 # Artifacts: every conformance evidence directory and the surefire reports, so the
 # evidence can be tied to this commit SHA and this run URL.
@@ -132,6 +135,20 @@ jobs:
             -Dkcg.relation-conformance.enabled=true \
             -Dkcg.change-conformance.enabled=true \
             -Dkcg.project-change-conformance.enabled=true \
+            -Dkcg.conformance.work-parent="$KCG_CONF_WORK_PARENT" \
+            -Dkcg.conformance.evidence-parent="$KCG_CONF_EVIDENCE_PARENT" \
+            -Dkcg.conformance.maven-executable="$(command -v mvn)" \
+            -Dkcg.conformance.maven-repo="$MAVEN_REPO" \
+            test
+
+      - name: Independent verification IT
+        run: |
+          set -euo pipefail
+          mvn -B -o -pl sir-toolchain-application -am \
+            -Dmaven.repo.local="$MAVEN_REPO" \
+            -Dtest=IndependentVerificationIT \
+            -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false \
+            -Dkcg.verification.enabled=true \
             -Dkcg.conformance.work-parent="$KCG_CONF_WORK_PARENT" \
             -Dkcg.conformance.evidence-parent="$KCG_CONF_EVIDENCE_PARENT" \
             -Dkcg.conformance.maven-executable="$(command -v mvn)" \
