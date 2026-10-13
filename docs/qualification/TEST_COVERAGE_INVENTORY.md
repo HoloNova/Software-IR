@@ -1,7 +1,11 @@
 # KCG-Code 测试覆盖与缺口清单
 
-> 更新日期：2026-10-09。Q21验收归档，受测f8a2f92同SHA CI run37865688743双门1049/0/0/5、五IT40/61/36/63/36全部PASSED，两类artifact核对；XML1054含五IT。相对Q20增54，全Application；本机162，Accepted ADR-024。当前ACTIVE_WORK为Q23 / AWAITING_CI，SLM单文件批量校验本机完成：定向122/0/0/0、新28，1000样本12.54s/RSS约164MiB；新CI双门/五IT未运行，静态ok只进候选池；Q22纯移动主动搁置BLOCKED。随后按授权完成两样本限定真实试跑：两者BUILD/START通过，正解BUSINESS通过/漏状态反例失败；新限额测试2+opt-in IT1独立记录，非SLM集合资格。G2未关闭；未全量/五既有IT/提交推送。Q16–Q21已归档。
+> 更新日期：2026-10-13。Q21验收归档，受测f8a2f92同SHA CI run37865688743双门1049/0/0/5、五IT40/61/36/63/36全部PASSED，两类artifact核对；XML1054含五IT。相对Q20增54，全Application；本机162，Accepted ADR-024。当前ACTIVE_WORK为Q23 / BLOCKED（主动暂停，暂停前AWAITING_CI），SLM单文件批量校验本机完成：定向122/0/0/0、新28，1000样本12.54s/RSS约164MiB；新CI双门/五IT未运行，静态ok只进候选池；Q22纯移动主动搁置BLOCKED。随后按授权完成两样本限定真实试跑：两者BUILD/START通过，正解BUSINESS通过/漏状态反例失败；新限额测试2+opt-in IT1独立记录，非SLM集合资格。G2未关闭；未全量/五既有IT/提交推送。Q16–Q21已归档。
 > 用途：记录当前可执行测试、明确缺口和后续验收输入；不以历史测试数量作为完成目标
+
+## 2026-10-13 分层方向与新门
+
+[设计08](../design/08-layered-command-architecture.md)及[ADR-026](../architecture/ADR-026-layered-semantic-command-architecture.md)已写入架构方向；统一schema/全字段、三种指令/扩展免适配、源往返、混合和source-only发布、独立构建验证均为新门，当前NOT_RUN。Q23源码已提交dac0463，本轮只更新文档、不运行或核验新CI；旧计数不变，下面当时未提交状态保留为历史。[迁移路线](../roadmap/LAYERED_ARCHITECTURE_MIGRATION.md)代码实施未授权。
 
 ## Q9 单文件查询切片覆盖（2026-09-18 G1 首切片）
 
@@ -100,7 +104,7 @@
 | Resolve 冲突 | DeclaredIdentitySemanticsTest 新增 1：重复 ID 正常 Failure 而非 SymbolTable 异常；跨源同例见 visibility | 合法旧行为不变，typed/Resolve-once 旧契约定向 25 项回归 |
 | 回归与状态 | 去重指定类 parser 91/semantic 34/graph 77/change 36/application 108，共 **346/0/0/0**；旧 Rename apply、V4 恢复与图只读门通过；新增方法 43 | **本批同 SHA CI 已通过**：双门 936/0/0/5、四 IT 40/61/36/63；已确认验收归档，G2 未关闭 |
 
-实施证据/订正/验收见 [Q18 归档](../roadmap/completed/Q18-multi-source-compilation-and-source-snapshot.md) §10–11 与资格报告 §1.16；合同见 Accepted [ADR-021](../architecture/ADR-021-multi-source-compilation-and-graph-compatibility.md)。多源权威基线、moduleInstance/nodeKey、全身份兼容、组合改名与 G3 仍是缺口，本单不关闭 G2。[Q19归档](../roadmap/completed/Q19-multi-source-baseline-storage-and-reopen.md)已确认验收，多源保存/独立重开及本机指定类、同SHA CI均通过，Q20也已按同SHA CI验收归档，Q21也已同SHA双门1049/五IT验收归档，当前Q23 AWAITING_CI/Q22主动搁置，Q23新CI门NOT_RUN，Q19/Q20覆盖见下表；多源变更/改名应用及完整G2门仍不抵扣。
+实施证据/订正/验收见 [Q18 归档](../roadmap/completed/Q18-multi-source-compilation-and-source-snapshot.md) §10–11 与资格报告 §1.16；合同见 Accepted [ADR-021](../architecture/ADR-021-multi-source-compilation-and-graph-compatibility.md)。多源权威基线、moduleInstance/nodeKey、全身份兼容、组合改名与 G3 仍是缺口，本单不关闭 G2。[Q19归档](../roadmap/completed/Q19-multi-source-baseline-storage-and-reopen.md)已确认验收，多源保存/独立重开及本机指定类、同SHA CI均通过，Q20也已按同SHA CI验收归档，Q21也已同SHA双门1049/五IT验收归档，当前Q23/Q22均主动暂停，Q23暂停前AWAITING_CI，Q23新CI门NOT_RUN，Q19/Q20覆盖见下表；多源变更/改名应用及完整G2门仍不抵扣。
 
 ## Q19 多源基线保存/独立重开覆盖（2026-10-05，已验收归档）
 
@@ -149,7 +153,7 @@
 
 仅源码核查/设计：Q18已有真实编译移动的稳定capability与业务引用目标/输出字节证据，但局部变量ID改变；Q20/Q21成员/位置守卫及非空UPDATE合同拒绝真正移动应用。推荐一个带@id主体正文不变、完整结构/绑定及manifest/字节核验→独立源发布/显式恢复→新位置重开→Q21继续更新。所有P1–P5/C1–C10 **NOT_RUN**、无实施授权；计划不计覆盖通过，不抵扣LANG-04/nodeKey、完整G2/数据库门。负责人临时优先Q23，原方案保留不自动恢复；详细反例/回归/CI移动场景见[Q22搁置单](../roadmap/Q22-single-capability-source-move.md)、资格§1.20。
 
-## Q23 SIR单文件批量校验（2026-10-09，AWAITING_CI）
+## Q23 SIR单文件批量校验（2026-10-09本机证据；2026-10-13主动暂停）
 
 共享CompilationStages、独立SirValidationApplication及CLI check；旧助手/公开App/旧诊断合同不改，四stop真实停止、无Graph/状态/I/O/新依赖、无核心语义或产物改变。只读无状态/串行批流、两hash；静态通过仅候选池，不等于运行或业务合格。
 

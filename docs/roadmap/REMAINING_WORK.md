@@ -1,8 +1,14 @@
 # KCG-Code 剩余工作路线图
 
-> 更新：2026-10-09。G0/G1及G2的Q16–Q21已验收归档，G2未关闭。[Q21](completed/Q21-multi-source-workflow-update-and-recovery.md)受测f8a2f92，同SHA [CI run37865688743](https://github.com/HoloNova/Software-IR/actions/runs/37865688743)双门1049/0/0/5、五IT40/61/36/63/36全部PASSED，两类artifact核对；XML1054含五IT，Q20 995→1049增54。`ACTIVE_WORK.md`为 **Q23 / AWAITING_CI**：SLM单文件0.1批量校验本机完成，单JVM串行JSONL/四stop/无损诊断/两哈希；定向122/0/0/0、新28，1000样本12.54s/RSS约164MiB。同SHA新CI双门/五IT NOT_RUN，静态ok只进候选池，后续限定真实课程试跑已完成：两者BUILD/START通过、正例BUSINESS通过/漏状态反例失败，限额测试2+IT1独立记录（非SLM集合资格）；Q22纯移动主动搁置，保留独立单、不自动恢复。其他操作/改名、nodeKey/模块实例/完整身份兼容等另审；旧单能力改名仍可应用/恢复，连带Input全局替换仍PATH-004。本轮指定类/规模测量，未全量/五既有IT/提交推送。
+> 更新：2026-10-13。G0/G1及G2的Q16–Q21已验收归档，G2未关闭。[Q21](completed/Q21-multi-source-workflow-update-and-recovery.md)受测f8a2f92，同SHA [CI run37865688743](https://github.com/HoloNova/Software-IR/actions/runs/37865688743)双门1049/0/0/5、五IT40/61/36/63/36全部PASSED，两类artifact核对；XML1054含五IT，Q20 995→1049增54。`ACTIVE_WORK.md`为 **Q23 / BLOCKED（主动暂停，暂停前AWAITING_CI）**：SLM单文件0.1批量校验本机完成，单JVM串行JSONL/四stop/无损诊断/两哈希；定向122/0/0/0、新28，1000样本12.54s/RSS约164MiB。同SHA新CI双门/五IT NOT_RUN，静态ok只进候选池，后续限定真实课程试跑已完成：两者BUILD/START通过、正例BUSINESS通过/漏状态反例失败，限额测试2+IT1独立记录（非SLM集合资格）；Q22纯移动主动搁置，保留独立单、不自动恢复。其他操作/改名、nodeKey/模块实例/完整身份兼容等另审；旧单能力改名仍可应用/恢复，连带Input全局替换仍PATH-004。本轮指定类/规模测量，未全量/五既有IT/提交推送。
 > 读者：项目负责人和后续执行 Agent
 > 定位：本文件的阶段 1–7 是 **G0：现有链路资格收口**内部的 Q 系列执行顺序。产品方向、阶段进入条件与阶段完成门见 [`README.md`](README.md) 和 [`../design/README.md`](../design/README.md)；两者不替代本文件的执行顺序。
+
+## 2026-10-13 优先顺序调整
+
+负责人确认[分层与指令式修改方案](../design/08-layered-command-architecture.md)并授权本轮文档提交/推送；Q22/Q23后续执行暂停，Q23源码已提交`dac0463`。先按[迁移路线](LAYERED_ARCHITECTURE_MIGRATION.md)规划统一语义结构、指令源往返、完整工程计划和应用、独立构建验证。R1–R5代码均未获授权，旧Q24组合原型不直接沿用。
+
+下面G1/G2和阶段1–7是已完成/剩余能力与历史顺序，不覆盖当前暂停决定，也不自动扩多源操作或进入G3。未完成工作的普通语言说明与重构落点见迁移路线§4。
 
 ## 先说结论
 
@@ -42,7 +48,7 @@ G1 的完成门是「BIZ-01..06 的基础业务与反例 + GEN-01/02，并在真
 | Q20（[归档](completed/Q20-multi-source-workflow-read-only-plan.md)） | Q19多源context/项目revision及单能力工作流只读UPDATE计划；共享纯比较/闭包，旧入口拒绝V2 | **DONE**（2026-10-08）：D0–D8/P1–P5、本机186/新26，同SHA e404208 CI双门995/0/0/5、四IT全过，XML999含四IT；Accepted ADR-023，不交付应用/其他操作/改名 |
 | Q21（[归档](completed/Q21-multi-source-workflow-update-and-recovery.md)） | 多源单工作流UPDATE/完整B1保存发布/受限历史/显式恢复，连续更新与独立重开 | **DONE**（2026-10-09）：f8a2f92同SHA双门1049/0/0/5、五IT40/61/36/63/36通过，XML1054；新54、Accepted ADR-024；模拟150+85矩阵与真实业务分列 |
 | Q22（[搁置单](Q22-single-capability-source-move.md)） | 单带@id能力跨文件纯移动，业务/Java不变、完整源基线发布/恢复，新位置继续Q21 UPDATE | **BLOCKED（负责人主动搁置）**：原SPEC_REVIEW从未实施，方案/P1–P5/D0–D8/C1–C10保留、全部NOT_RUN；恢复再确认 |
-| Q23（[当前工作单](ACTIVE_WORK.md)） | **临时实验支援，非G2下一切片**：单文件0.1批量只读校验/单JVM/四stopAfter/JSONL/无损诊断/两哈希 | **AWAITING_CI**：D0–D9实现，本机122/新28、1000样本测量；共享步骤/独立App/CLI check，不改核心语义/旧合同/状态。新CI未运行，静态通过不作业务标签，限定两样本真实试跑已授权完成，通用平台仍待审 |
+| Q23（[当前工作单](ACTIVE_WORK.md)） | **临时实验支援，非G2下一切片**：单文件0.1批量只读校验/单JVM/四stopAfter/JSONL/无损诊断/两哈希 | **BLOCKED（2026-10-13主动暂停；暂停前AWAITING_CI）**：D0–D9实现，本机122/新28、1000样本测量；共享步骤/独立App/CLI check，不改核心语义/旧合同/状态。新CI未运行，静态通过不作业务标签，限定两样本真实试跑已授权完成，通用平台仍待审 |
 | 后续单 | 多源变更/改名执行、其他操作、跨文件移动、模块实例、nodeKey、完整身份映射与剩余 LANG 门 | 未授权；Q21实际UPDATE已验收但不关闭G2，Q22纯移动主动搁置/Q23实验支援本机交付不抵扣G2；nodeKey、身份兼容/物理映射、模块实例及其他操作/改名仍另查另审 |
 
 ## 已登记的独立项（不属于任何工作单的完成门）

@@ -35,6 +35,9 @@
 
 ### 当前目标设计
 
+- **优先阅读** [`design/08-layered-command-architecture.md`](design/08-layered-command-architecture.md)：首次生成、统一语义、指令式增删改、独立构建验证的详细分层方案；尚未实施。
+- [`architecture/ADR-026-layered-semantic-command-architecture.md`](architecture/ADR-026-layered-semantic-command-architecture.md)：已确认的架构方向，不授权代码开工。
+- [`roadmap/LAYERED_ARCHITECTURE_MIGRATION.md`](roadmap/LAYERED_ARCHITECTURE_MIGRATION.md)：R1–R5迁移顺序、暂停工作与验收门。
 - [`design/`](design/)：后续主要使用的目标设计、共享契约、实现基线和验证路线。
 - [`design/implementation-baseline.md`](design/implementation-baseline.md)：判断“当前已经实现什么”的首选对照入口。
 

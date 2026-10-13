@@ -6,6 +6,12 @@
 
 **实现边界：**当前已有单源编译身份、Lowered 模型、GeneratedFile 和本地文件 Bundle/CURRENT；本表的持久 declarationId、多文件 SourceSnapshot、Migration/Release/Deployment 对象为目标扩展。当前 SymbolId 含名称，不能套用下面的目标构成；差异与证据见[实现对照](implementation-baseline.md)。目标阶段统一为 G0–G7，见 07。
 
+### 2026-10-13 核心架构补充
+
+统一软件结构、SoftwareDraft/SoftwareSnapshot、CommandBatch与SemanticDelta由[设计08](08-layered-command-architecture.md)定义，方向见[ADR-026](../architecture/ADR-026-layered-semantic-command-architecture.md)。草稿不携带可沿用的旧binding；保存源仍是可重开的版本材料。语义摘要、源字节摘要、生成清单摘要及运行验证证据分别表达不同事实。
+
+指令仅Add/Delete/Update，不把业务类别和准入限制编码成新操作；新计划可表达完整混合文件变化和source-only发布，但旧格式未改变。本文的目标project/module/declaration身份仍非当前全部已交付；新架构沿用实际可证明身份，升级和兼容另审。
+
 ## 1. 身份与版本
 
 | 名称 | 含义与生成时点 | 是否随显示名称变化 |
