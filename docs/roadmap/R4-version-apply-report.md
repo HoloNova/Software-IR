@@ -68,7 +68,7 @@
 - 旧式更新与新式更新在同一个状态目录里先后使用（两种顺序都试了）。
 - 6 个防护用例：中途被外部替换的文件、被占用的新建路径、被篡改的绑定、不对应的句柄、未完成事务期间再开一个、重复使用已结束的事务 ID，恢复都拒绝，且状态与输出目录保持原样。
 - 完整链路：指令改源 → 保存为下一版本并更新工程 → 重开已保存版本 → 同一批里一次更新一次删除 → 再保存；已保存的文本与编辑出的文本逐字节相同。
-- 业务集成测试（Query、Write、Relation、ChangeLoop、ProjectWorkflow）仍为 `NOT_RUN`：当前环境没有 Docker 和 MySQL。
+- 业务集成测试（Query、Write、Relation、ChangeLoop、ProjectWorkflow）在 Claude 会话环境为 `NOT_RUN`（没有 Docker 和 MySQL）。**同 SHA 的 GitHub CI 补上了它们**：提交 `26e95f1` 的 [verify 运行 #42](https://github.com/HoloNova/Software-IR/actions/runs/38396035575) 结论 success，冻结闸门、完成闸门、真实 MySQL 8.4.11 上的五个业务集成测试三步都成功，并上传了证据产物（conformance-evidence 103 个文件、surefire-reports 326 个文件）。负责人 2026-10-13 确认该运行通过，并授权进入 R5。注意：这五个测试覆盖的是旧固定样例，没有覆盖 R3/R4 的新入口。
 
 ## 4. 与计划不一致或需要你知道的地方
 
