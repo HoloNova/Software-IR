@@ -43,6 +43,13 @@ public final class DraftValidator {
       return problems;
    }
 
+   /** Problems with {@code value} as <em>one element</em> of the (possibly collection) slot {@code spec}. */
+   public List<String> validateElement(SlotSpec spec, StructValue value) {
+      List<String> problems = new ArrayList<>();
+      this.one(spec, value, spec.key(), problems);
+      return problems;
+   }
+
    private void node(StructNode node, Class<?> expected, String where, List<String> problems) {
       Optional<NodeType> found = this.schema.byKind(node.kind());
       if (found.isEmpty()) {
