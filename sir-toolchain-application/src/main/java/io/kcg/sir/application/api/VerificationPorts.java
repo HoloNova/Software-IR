@@ -88,8 +88,19 @@ public final class VerificationPorts {
     public interface Running {
         URI baseUrl();
 
-        /** Stops the application and proves the process is gone. */
-        CleanupProof stop();
+        /**
+         * Stops the application, proves the process is gone, and returns its finished logs. The application's logs
+         * come from here and nowhere else, because they keep growing until it stops: a reference taken earlier
+         * would describe a file that is no longer the evidence.
+         */
+        Stopped stop();
+    }
+
+    public record Stopped(CleanupProof cleanup, java.util.List<LogRef> logs) {
+        public Stopped {
+            Objects.requireNonNull(cleanup, "cleanup");
+            logs = java.util.List.copyOf(Objects.requireNonNull(logs, "logs"));
+        }
     }
 
     /**

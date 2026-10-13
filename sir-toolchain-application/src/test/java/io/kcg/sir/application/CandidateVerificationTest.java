@@ -115,6 +115,7 @@ class CandidateVerificationTest {
         StageOutcome result = StageOutcome.passed("ready");
         CleanupProof stopProof = CleanupProof.proved("process exited");
         boolean stopThrows;
+        List<io.kcg.sir.application.api.LogRef> stopLogs = List.of();
         Map<String, String> seenEnvironment;
 
         @Override public StartOutcome start(Path artifact, Map<String, String> environment, Path evidenceRoot, ResourceLimits limits) {
@@ -122,10 +123,10 @@ class CandidateVerificationTest {
             seenEnvironment = environment;
             VerificationPorts.Running running = new VerificationPorts.Running() {
                 @Override public URI baseUrl() { return URI.create("http://127.0.0.1:1"); }
-                @Override public CleanupProof stop() {
+                @Override public VerificationPorts.Stopped stop() {
                     events.add("stop");
                     if (stopThrows) throw new IllegalStateException("boom");
-                    return stopProof;
+                    return new VerificationPorts.Stopped(stopProof, stopLogs);
                 }
             };
             return new StartOutcome(result, Optional.of(running));
@@ -246,6 +247,18 @@ class CandidateVerificationTest {
         assertEquals("FAKE_REQUIREMENT_V1", report.environment().get("oracle.revision"));
         assertTrue(report.cleanup().proved());
         assertEquals(List.of("process exited", "directory removed"), report.cleanup().checks());
+    }
+
+    @Test void theApplicationLogsComeFromTheStopAndBelongToTheStartLevel() throws Exception {
+        Fixture f = project();
+        var host = new FakeHost();
+        var log = new io.kcg.sir.application.api.LogRef(io.kcg.sir.application.api.LogRef.Kind.APPLICATION, "logs/application.log", 12, "a".repeat(64));
+        host.stopLogs = List.of(log);
+        var report = full(new FakeSandbox(), new FakeBuilder(), host, new FakeOracle()).verify(request(f, VerificationStage.BUSINESS));
+
+        assertEquals(List.of(log), report.stage(VerificationStage.START).outcome().logs());
+        assertTrue(report.canonicalText().contains("log=START|APPLICATION|logs/application.log|12|"));
+        assertEquals(List.of(), report.stage(VerificationStage.BUSINESS).outcome().logs(), "business diagnostics are kept apart from the application log");
     }
 
     @Test void aRejectingOracleFailsOnlyTheBusinessLevel() throws Exception {

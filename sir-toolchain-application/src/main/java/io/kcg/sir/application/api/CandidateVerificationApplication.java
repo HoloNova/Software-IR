@@ -309,7 +309,9 @@ public final class CandidateVerificationApplication {
         private void releaseEverything() {
             if (running != null) {
                 try {
-                    cleanup.add(running.stop());
+                    VerificationPorts.Stopped stopped = running.stop();
+                    cleanup.add(stopped.cleanup());
+                    attachApplicationLogs(stopped.logs());
                 } catch (RuntimeException e) {
                     cleanup.add(CleanupProof.notProved("application: stopping it threw " + e.getClass().getSimpleName()));
                 }
@@ -322,6 +324,20 @@ public final class CandidateVerificationApplication {
                     cleanup.add(CleanupProof.notProved("sandbox: releasing it threw " + e.getClass().getSimpleName()));
                 }
             }
+        }
+
+        /** The finished application logs belong to the start level, whether it passed or failed. */
+        private void attachApplicationLogs(List<LogRef> logs) {
+            StageResult start = results[VerificationStage.START.ordinal()];
+            if (start == null || logs.isEmpty()) {
+                return;
+            }
+
+            StageOutcome o = start.outcome();
+            List<LogRef> all = new ArrayList<>(o.logs());
+            all.addAll(logs);
+            results[VerificationStage.START.ordinal()] = new StageResult(VerificationStage.START,
+                    new StageOutcome(o.status(), o.code(), o.message(), o.diagnostics(), all), start.elapsedMillis());
         }
 
         /** Writes exactly the generated files into the empty owned directory and proves nothing else is there. */
