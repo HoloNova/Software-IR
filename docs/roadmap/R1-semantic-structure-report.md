@@ -16,7 +16,7 @@
 
 ## 2. 证据（本地，当次输出）
 
-本机（4 核 / 16 GB，无 systemd，无 Docker/MySQL）按项目冻结形式执行：先联网预热本地仓库（含两个生成工程的依赖），再 `env -u JAVA_TOOL_OPTIONS mvn -B -o -Dmaven.repo.local=$HOME/.m2/repository clean verify`；用 `nice` + `taskset -c 0,1,2` + `-Xmx1g` 限制资源，单构建、无并行。
+Claude 会话环境（4 核 / 16 GB，无 systemd，无 Docker/MySQL；规则见 [Claude 执行规则](CLAUDE_EXECUTION_POLICY.md)）按项目冻结形式执行：先联网预热本地仓库（含两个生成工程的依赖），再 `env -u JAVA_TOOL_OPTIONS mvn -B -o -Dmaven.repo.local=$HOME/.m2/repository clean verify`；用 `nice` + `taskset -c 0,1,2` + `-Xmx1g` 限制资源，单构建、无并行。
 
 | 模块 | run / fail / error / skip |
 | --- | --- |
@@ -31,7 +31,7 @@
 | cli | 34 / 0 / 0 / 0 |
 | **合计** | **1113 / 0 / 0 / 5**，BUILD SUCCESS |
 
-- 5 个跳过来自 `toolchain-application` 中默认关闭的项；本机没有 Docker/MySQL，**5 个业务集成测试（Query/Write/Relation/ChangeLoop/ProjectWorkflow）本次 NOT_RUN**。
+- 5 个跳过来自 `toolchain-application` 中默认关闭的项；Claude 会话环境没有 Docker/MySQL，**5 个业务集成测试（Query/Write/Relation/ChangeLoop/ProjectWorkflow）本次 NOT_RUN**。
 - 排障记录：第一次不带冻结仓库参数、且沙箱注入 `JAVA_TOOL_OPTIONS` 时，generator 4 项、cli 1 项失败；原因是测试要求 `-Dmaven.repo.local`、生成工程依赖未预热，以及子 JVM 输出被该环境变量污染。按上述冻结形式重跑后全部通过，与本次改动无关。
 
 新增测试要点：
@@ -45,7 +45,7 @@
 
 1. **登记表 3 个记录而不是 2 个**：`AstTarget` 里的值包在泛型 `AstTargetValue<T>` 中，也要登记。
 2. **`declarations` 标为 `@Keyed`**（按身份匹配，换顺序不算变化）；其余所有集合保持有序。`fails` 的顺序语言本身强制按名称升序，所以不需要额外处理。
-3. **本机没有 systemd**，`AGENTS.md` 的 `systemd-run` 命令无法使用。本轮改用 `nice` + `taskset -c 0,1` + `-Xmx1g`，单次单模块、无并行。
+3. **Claude 会话环境没有 systemd**，`AGENTS.md` 的 `systemd-run` 命令无法使用。本轮改用 `nice` + `taskset -c 0,1` + `-Xmx1g`，单次单模块、无并行。
 4. **改了一个现有测试的一个词**：`SemanticProjectionParityTest.template()` 从 `private` 改为包内可见，让新对照测试复用同一份样例。
 
 ## 4. 请你复核的分类（我认为有歧义的字段）
