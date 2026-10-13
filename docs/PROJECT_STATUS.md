@@ -5,7 +5,7 @@
 
 ### 2026-10-13 当前授权与目标变化
 
-负责人确认[分层与指令式修改方案](design/08-layered-command-architecture.md)，方向见[ADR-026](architecture/ADR-026-layered-semantic-command-architecture.md)。本轮只更新文档并明确允许提交/推送；Q22/Q23后续执行暂停，[R1–R5](roadmap/LAYERED_ARCHITECTURE_MIGRATION.md)中 R1（类型化软件结构）、R2（增删改指令与 SIR 往返）与 R3（统一编译与只读更新预览）与 R4（版本应用与恢复）已获授权并在 Claude 会话环境验证（[R1 报告](roadmap/R1-semantic-structure-report.md)、[R2 报告](roadmap/R2-command-editing-report.md)、[R3 报告](roadmap/R3-compilation-preview-report.md)、[R4 报告](roadmap/R4-version-apply-report.md)，业务 IT 为 NOT_RUN），R5 尚未授权。统一SoftwareSchema、固定增删改、SIR writer/往返、混合/source-only应用和通用runner是目标，不是已实现能力。历史资格不变。
+负责人确认[分层与指令式修改方案](design/08-layered-command-architecture.md)，方向见[ADR-026](architecture/ADR-026-layered-semantic-command-architecture.md)。本轮只更新文档并明确允许提交/推送；Q22/Q23后续执行暂停，[R1–R5](roadmap/LAYERED_ARCHITECTURE_MIGRATION.md)中 R1（类型化软件结构）、R2（增删改指令与 SIR 往返）与 R3（统一编译与只读更新预览）与 R4（版本应用与恢复）已获授权并在 Claude 会话环境验证（[R1 报告](roadmap/R1-semantic-structure-report.md)、[R2 报告](roadmap/R2-command-editing-report.md)、[R3 报告](roadmap/R3-compilation-preview-report.md)、[R4 报告](roadmap/R4-version-apply-report.md)，业务 IT 为 NOT_RUN），R5（独立构建与真实验收接入）也已实施并验证（[计划](roadmap/R5-independent-verification-plan.md)、[R5 报告](roadmap/R5-independent-verification-report.md)；同 SHA CI 含真实 MySQL 8.4.11 上的独立验证 IT），R1–R5 路线全部完成。统一SoftwareSchema、固定增删改、SIR writer/往返、混合/source-only应用和通用runner是目标，不是已实现能力。历史资格不变。
 
 ## 1. 项目定位
 

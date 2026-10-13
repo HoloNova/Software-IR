@@ -3,7 +3,7 @@
 - 日期：2026-10-13。
 - 状态：**方案已写入工程文档，所有代码阶段待授权**。
 - 依据：[设计08](../design/08-layered-command-architecture.md)、[ADR-026](../architecture/ADR-026-layered-semantic-command-architecture.md)。
-- 本路线不是新的 ACTIVE_WORK，不给 R1～R5 预分配 Q 编号，不启动旧 Q24 原型或恢复 Q22。负责人最初只授权文档提交/推送；2026-10-13 起另行授权 R1、R2、R3、R4 代码实施（记录见第 6 节），R5 未授权。
+- 本路线不是新的 ACTIVE_WORK，不给 R1～R5 预分配 Q 编号，不启动旧 Q24 原型或恢复 Q22。负责人最初只授权文档提交/推送；2026-10-13 起另行授权 R1、R2、R3、R4 代码实施（记录见第 6 节）；2026-10-13 负责人确认 R4 的 CI 通过后授权 R5（[计划](R5-independent-verification-plan.md)）。
 
 ## 1. 为什么按这个顺序
 
@@ -22,7 +22,7 @@ Change 的耦合根因是它没有可直接消费的统一软件结构合同。�
 | **R4：版本应用与恢复** | 保存新 SIR、更新工程、重开并继续修改；失败有确定处理 | 新协议/旧历史兼容；混合及源-only；CURRENT 前后/恢复中断；归属、预算、连续更新；结果等于候选从零生成 | 自动放宽旧日志；数据库事务或生产热部署 |
 | **R5：独立构建与真实验收接入** | 明确选择静态生成或实际构建运行，分别获得证据 | 依赖/构建隔离；STATIC/BUILD/START/BUSINESS分开；独立需求 oracle；证据匹配候选、资源与清理 | 搭建完整模型平台/Web/Docker产品；用成功启动替代业务验证 |
 
-R0 文档完成；R1、R2、R3、R4 已实施并在 Claude 会话环境验证（见第 6 节）；R5 的新实现和验证全部 **NOT_RUN**。不预估未经探针证明的工期。每阶段获批后由执行者完成其内部步骤，不要求负责人逐行决定实现；阶段结束汇总报告，不自动滚入下一阶段。
+R0 文档完成；R1、R2、R3、R4 已实施并在 Claude 会话环境验证（见第 6 节）；R5 也已实施并验证（见第 6 节）。不预估未经探针证明的工期。每阶段获批后由执行者完成其内部步骤，不要求负责人逐行决定实现；阶段结束汇总报告，不自动滚入下一阶段。
 
 ## 3. 每阶段的首个事实检查
 
@@ -81,4 +81,4 @@ target/Profile 的支持和物理映射信息明确由目标层提供；当前�
 
 本轮检查：20份变动/新增Markdown文件的249个本地链接目标及代码围栏检查通过，变更范围均为文档，`git diff --check`通过；没有因此运行代码测试。提交SHA和推送结果以完成汇报及Git为准，本文不将自己的提交SHA嵌入提交内容形成循环。已有未跟踪的旧评估草案不作为本轮新实现证据，也不因本次Git授权自动收录。
 
-2026-10-13（后续）：负责人确认 R1 分类并授权 R2。R1 与 R2 已实施，证据与偏离见 [R1 报告](R1-semantic-structure-report.md)、[R2 报告](R2-command-editing-report.md)；冻结形式完整闸门 1159 run / 0 fail / 0 error / 5 skip，5 个业务 IT 因无 Docker/MySQL 为 NOT_RUN。2026-10-13（再后续）：负责人授权 R3。R3 已实施，证据与偏离见 [R3 报告](R3-compilation-preview-report.md)：统一编译服务，加只读更新预览（源差异、软件差异、完整混合文件差异、磁盘冲突检查）；完整闸门 1174 run / 0 fail / 0 error / 5 skip，业务 IT 仍为 NOT_RUN。预览不落盘，不能交给旧 apply。2026-10-13（继续）：负责人回复“继续”，R4 开始并完成。证据与偏离见 [R4 报告](R4-version-apply-report.md)（计划见 [R4 计划](R4-version-apply-plan.md)）：新的版本事务（建／改／删文件与目录、只改源）、规划／应用／恢复入口、工程源码的指令编辑；完整闸门 1228 run / 0 fail / 0 error / 5 skip，业务 IT 仍为 NOT_RUN。版本数量上限（8 个）的处理方式待负责人决定。R5 未授权，不自动滚入。
+2026-10-13（后续）：负责人确认 R1 分类并授权 R2。R1 与 R2 已实施，证据与偏离见 [R1 报告](R1-semantic-structure-report.md)、[R2 报告](R2-command-editing-report.md)；冻结形式完整闸门 1159 run / 0 fail / 0 error / 5 skip，5 个业务 IT 因无 Docker/MySQL 为 NOT_RUN。2026-10-13（再后续）：负责人授权 R3。R3 已实施，证据与偏离见 [R3 报告](R3-compilation-preview-report.md)：统一编译服务，加只读更新预览（源差异、软件差异、完整混合文件差异、磁盘冲突检查）；完整闸门 1174 run / 0 fail / 0 error / 5 skip，业务 IT 仍为 NOT_RUN。预览不落盘，不能交给旧 apply。2026-10-13（继续）：负责人回复“继续”，R4 开始并完成。证据与偏离见 [R4 报告](R4-version-apply-report.md)（计划见 [R4 计划](R4-version-apply-plan.md)）：新的版本事务（建／改／删文件与目录、只改源）、规划／应用／恢复入口、工程源码的指令编辑；完整闸门 1228 run / 0 fail / 0 error / 5 skip，业务 IT 仍为 NOT_RUN。版本数量上限（8 个）的处理方式待负责人决定。2026-10-13（R5）：负责人确认 R4 的 CI（[运行 #42](https://github.com/HoloNova/Software-IR/actions/runs/38396035575)）通过并授权 R5。R5 已实施，证据与偏离见 [R5 报告](R5-independent-verification-report.md)（计划见 [R5 计划](R5-independent-verification-plan.md)）：STATIC／BUILD／START／BUSINESS 四档分开的候选验证（端口＋真实 Maven 与 Spring 进程适配器，带超时、脱敏日志、清理证明）和“验证后再更新”的门；完整闸门 1268 run / 0 fail / 0 error / 5 skip；同 SHA CI（[运行 #43](https://github.com/HoloNova/Software-IR/actions/runs/38402133843)，MySQL 8.4.11）上新的独立验证 IT 3/3 通过。R1–R5 全部完成；下一步方向待负责人指定，不自动滚入。
