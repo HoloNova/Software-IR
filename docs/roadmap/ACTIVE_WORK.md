@@ -1,7 +1,7 @@
 # 当前工作单：Q23 SLM数据闭环支援——SIR单文件批量校验入口
 
 - 状态：**BLOCKED（负责人主动暂停，2026-10-13）**。暂停前为AWAITING_CI：静态入口本机122/0/0/0、新28；限定真实两样本正确BUSINESS PASSED、错误BUSINESS FAILED（预期），限额测试2/IT1通过。源码已提交为`dac0463`，不是仍未提交；本轮未核验新CI，不更新资格计数。保留实施/评测记录，不验收归档，不恢复Q22。
-- 当前授权：负责人要求先详细规划分层与指令式增删改，**仅更新工程文档，明确允许本轮提交并推送**；正式方案见[设计08](../design/08-layered-command-architecture.md)、[ADR-026](../architecture/ADR-026-layered-semantic-command-architecture.md)和[迁移路线](LAYERED_ARCHITECTURE_MIGRATION.md)。本次文档授权不恢复Q23，也不授权旧Q24原型或通用验证平台。2026-10-13 起负责人另行授权 R1、R2、R3 代码实施（报告：[R1](R1-semantic-structure-report.md)、[R2](R2-command-editing-report.md)、[R3](R3-compilation-preview-report.md)），R4–R5 仍未授权。
+- 当前授权：负责人要求先详细规划分层与指令式增删改，**仅更新工程文档，明确允许本轮提交并推送**；正式方案见[设计08](../design/08-layered-command-architecture.md)、[ADR-026](../architecture/ADR-026-layered-semantic-command-architecture.md)和[迁移路线](LAYERED_ARCHITECTURE_MIGRATION.md)。本次文档授权不恢复Q23，也不授权旧Q24原型或通用验证平台。2026-10-13 起负责人另行授权 R1、R2、R3、R4 代码实施（报告：[R1](R1-semantic-structure-report.md)、[R2](R2-command-editing-report.md)、[R3](R3-compilation-preview-report.md)、[R4](R4-version-apply-report.md)），R5 仍未授权。
 - 切换：[Q22纯移动工作单](Q22-single-capability-source-move.md)按负责人指令BLOCKED（主动搁置，非技术失败），保留方案、不放completed；不得在本单恢复。G2仍未关闭，本单是已有编译链的实验入口支援，不宣称G阶段前进或进入G3。
 - 执行依据：[MAIN](../../MAIN.md)§0/§1.1–1.2/§2.8/12/14、[AGENTS](../../AGENTS.md)测试资源约束、Accepted [ADR-003](../architecture/ADR-003-toolchain-application-owns-project-application.md)与CLI边界测试。
 - 现有资格：[Q21归档](completed/Q21-multi-source-workflow-update-and-recovery.md)，f8a2f92同SHA run37865688743双门1049/0/0/5、五业务IT全部PASSED；**不抵扣本单**。

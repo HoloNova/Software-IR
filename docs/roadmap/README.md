@@ -8,7 +8,7 @@
 
 ## 当前状态
 
-**2026-10-13：优先核心架构重规划。** 已确认[统一软件语义与指令式增删改](../design/08-layered-command-architecture.md)、[ADR-026](../architecture/ADR-026-layered-semantic-command-architecture.md)；[R1–R5迁移](LAYERED_ARCHITECTURE_MIGRATION.md)中 R1、R2、R3 已授权并实施（见[R1](R1-semantic-structure-report.md)、[R2](R2-command-editing-report.md)、[R3](R3-compilation-preview-report.md)报告），R4–R5 待授权。本轮只更新文档并获明确提交/推送许可，Q22/Q23后续功能/验收执行暂停，旧组合原型不直接启动。下列既有资格不因设计改写而变化。
+**2026-10-13：优先核心架构重规划。** 已确认[统一软件语义与指令式增删改](../design/08-layered-command-architecture.md)、[ADR-026](../architecture/ADR-026-layered-semantic-command-architecture.md)；[R1–R5迁移](LAYERED_ARCHITECTURE_MIGRATION.md)中 R1、R2、R3、R4 已授权并实施（见[R1](R1-semantic-structure-report.md)、[R2](R2-command-editing-report.md)、[R3](R3-compilation-preview-report.md)、[R4](R4-version-apply-report.md)报告），R5 待授权。本轮只更新文档并获明确提交/推送许可，Q22/Q23后续功能/验收执行暂停，旧组合原型不直接启动。下列既有资格不因设计改写而变化。
 
 - 当前设计阶段：**G2：持久身份与受控模块（Q16/Q17/Q18/Q19/Q20/Q21 六切片已验收归档；G1 已完成，G2 尚未关闭）**。
 - 当前仓库工作单：[`ACTIVE_WORK.md`](ACTIVE_WORK.md)为 **Q23 / BLOCKED（2026-10-13主动暂停，暂停前AWAITING_CI）**，SLM单文件0.1批量校验本机完成：单JVM串行JSONL/四stop/原诊断/两哈希/只读；定向122/0/0/0、新28，1000样本12.54s/RSS约164MiB。同SHA新双门/五IT NOT_RUN，静态ok只进候选池；按后续授权完成[限定真实试跑](../qualification/Q23_REAL_EVALUATION_PILOT.md)，两样本BUILD/START通过，正例业务通过、漏状态反例业务失败，限额测试2+IT1独立记录/非SLM集合资格。[Q22](Q22-single-capability-source-move.md)主动搁置BLOCKED，保留方案，不自动恢复。[Q21](completed/Q21-multi-source-workflow-update-and-recovery.md)已验收归档，Accepted ADR-024；受测f8a2f92，[CI run37865688743](https://github.com/HoloNova/Software-IR/actions/runs/37865688743)双门1049/0/0/5、五IT40/61/36/63/36全部PASSED，两类artifact核对，XML1054含五IT；995→1049增54，本机162。Q16–Q20历史独立见资格§1.13–1.18；旧applyRename仍单源单能力，连带Input改名仍PATH-004，组合改名未立项。以上Q23原轮指定类/规模和限定真实试跑记录不等于CI资格；源码随后已提交dac0463，本轮仅文档规划，不运行构建或核验新CI。
