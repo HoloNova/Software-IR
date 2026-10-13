@@ -2,6 +2,7 @@ package io.kcg.sir.semantic.model;
 
 import io.kcg.sir.semantic.schema.Fact;
 import io.kcg.sir.semantic.schema.Identity;
+import io.kcg.sir.semantic.schema.Keyed;
 import io.kcg.sir.semantic.schema.Reference;
 import io.kcg.sir.semantic.schema.Source;
 import io.kcg.sir.ast.AstExposureKind;
@@ -22,8 +23,8 @@ public record NormalizedCapability(
    @Reference(viaVariableType = true) Optional<SymbolId> actorSymbol,
    @Reference(viaVariableType = true) Optional<SymbolId> inputSymbol,
    @Fact SirType outputType,
-   @Reference List<SymbolId> fails,
-   @Fact List<AstRequirementKind> requires,
+   @Reference @Keyed List<SymbolId> fails,
+   @Fact @Keyed List<AstRequirementKind> requires,
    @Fact AstExposureKind exposure,
    @Fact NormalizedWorkflow workflow
 ) implements NormalizedDeclaration {

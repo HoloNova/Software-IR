@@ -137,6 +137,10 @@ public final class StructureView {
    }
 
    private static String identityOf(StructValue element) {
+      if (element instanceof StructValue.Text text) {
+         return text.value();
+      }
+
       if (element instanceof StructValue.Child child) {
          for (StructNode.Slot slot : child.node().slots()) {
             if (slot.kind() == SlotKind.IDENTITY && slot.value() instanceof StructValue.Text text) {

@@ -177,8 +177,8 @@ public final class SoftwareSchema {
 
             boolean keyed = component.isAnnotationPresent(Keyed.class);
             Shape shape = shape(component.getGenericType());
-            if (keyed && (shape.cardinality != Cardinality.MANY || !isNode(shape.valueType))) {
-               this.problems.add(where + " is @Keyed but is not a collection of nodes");
+            if (keyed && (shape.cardinality != Cardinality.MANY || !(isNode(shape.valueType) || isScalar(shape.valueType)))) {
+               this.problems.add(where + " is @Keyed but is not a collection of nodes or plain values");
             }
 
             boolean viaType = component.isAnnotationPresent(Reference.class) && component.getAnnotation(Reference.class).viaVariableType();
@@ -255,6 +255,10 @@ public final class SoftwareSchema {
             for (SlotSpec slot : node.slots()) {
                if (!slot.keyed()) {
                   continue;
+               }
+
+               if (isScalar(slot.valueType())) {
+                  continue; // a set of plain values is matched by the value itself
                }
 
                for (Class<?> element : this.concreteTypes(slot.valueType())) {

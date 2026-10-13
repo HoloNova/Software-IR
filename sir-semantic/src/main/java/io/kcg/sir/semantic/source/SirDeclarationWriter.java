@@ -42,6 +42,8 @@ public final class SirDeclarationWriter {
       "BOOLEAN", "Boolean", "INT32", "Int32", "INT64", "Int64", "DECIMAL", "Decimal", "STRING", "String", "UUID", "Uuid", "DATE", "Date", "DATE_TIME", "DateTime", "UNIT", "Unit"
    );
 
+   private static final List<String> REQUIREMENT_ORDER = List.of("AUTHENTICATED", "ATOMIC", "READONLY");
+
    private final String base;
 
    /** @param baseIndent the indentation the declaration's first line already has in the file */
@@ -123,12 +125,16 @@ public final class SirDeclarationWriter {
       optionalText(node, "actorSymbol").ifPresent(t -> out.line(1, "actor Ref<" + t + ">;"));
       optionalText(node, "inputSymbol").ifPresent(t -> out.line(1, "input " + t + ";"));
       out.line(1, "output " + type(child(node, "outputType")) + ";");
-      for (String error : texts(node, "fails")) {
+      // The draft holds these as sets. The language wants errors by ascending name and the
+      // requirements in their declared order, so that is how they are spelled.
+      for (String error : texts(node, "fails").stream().sorted().toList()) {
          out.line(1, "fails " + error + ";");
       }
 
-      for (String requirement : texts(node, "requires")) {
-         out.line(1, "requires " + requirement.toLowerCase(java.util.Locale.ROOT) + ";");
+      for (String requirement : REQUIREMENT_ORDER) {
+         if (texts(node, "requires").contains(requirement)) {
+            out.line(1, "requires " + requirement.toLowerCase(java.util.Locale.ROOT) + ";");
+         }
       }
 
       out.line(1, "expose " + text(node, "exposure").toLowerCase(java.util.Locale.ROOT) + ";");

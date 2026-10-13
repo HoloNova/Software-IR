@@ -121,6 +121,10 @@ public final class DraftEdit {
          case MANY -> {
             List<StructValue> elements = new ArrayList<>(((StructValue.Seq)current).elements());
             this.requireNewName(elements, value, command.container());
+            if (spec.keyed() && value instanceof StructValue.Text && elements.contains(value)) {
+               throw new CommandRejected(command.container() + " already contains " + ((StructValue.Text)value).value());
+            }
+
             int at = spec.keyed() || command.position().isEmpty() ? elements.size() : command.position().getAsInt();
             if (at < 0 || at > elements.size()) {
                throw new CommandRejected(command.container() + ": position " + at + " is outside 0.." + elements.size());
