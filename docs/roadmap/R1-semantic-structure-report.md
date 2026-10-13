@@ -67,3 +67,20 @@ Claude 会话环境（4 核 / 16 GB，无 systemd，无 Docker/MySQL；规则见
 - 没有改 `sir-change` 的任何生产代码，没有删 `SemanticProjection`（D5：R2 前不删）。
 - 没有指令、草稿、写回 SIR；这些属于 R2，需要你另行授权。
 - `NormalizedSemanticModel` 的 6 个组件是派生分析（符号表、绑定表、表达式类型、诊断），schema 不描述它们的内部。
+
+## 6. R2 探针后的修正
+
+R2 要把结构写回 SIR，这时才发现 R1 有一批字段只是"按名字解析出来的结果"，源码里并不单独写。把它们当作引用，编辑时会出现"名字改了、解析结果没跟着改"的矛盾，所以改归**派生**（可由已有的名字重新算出，不会因此漏掉变化，因为名字本身仍是事实）：
+
+| 字段 | 由什么决定 |
+| --- | --- |
+| 表达式 `NameExpression.resolvedSymbol`、`MemberExpression.resolvedMember` | 表达式里写的名字 |
+| `PresentExpression.field` | 它的目标成员 |
+| `ExistsExpression.connectionField` | `any(...)` 里的条件推断 |
+| `RefType.entityId`、`DeclaredType.symbolId`、`DeclaredType.kind` | 类型里写的名字 |
+| `NormalizedBinding.fieldSymbol` | 绑定里写的字段名 `fieldName` |
+| `FindStep.itemVariable` | 隐式变量 `item` |
+| `NormalizedViewField.sourceField`、`relation` | 视图字段的名字和类型 |
+| `NormalizedEntity.versionField`、`NormalizedField.patchSourceField` | `versioned` 标记、补丁字段名 |
+
+仍算"引用"的是源码里确实写出来的名字：能力的 `input`/`actor`/`fails`、步骤的实体、结果变量、`else` 错误、`order by` 字段、分页字段、`patch of`、`from`、`any(Entity, ...)`。

@@ -1,8 +1,8 @@
 package io.kcg.sir.semantic.model;
 
+import io.kcg.sir.semantic.schema.Derived;
 import io.kcg.sir.semantic.schema.Fact;
 import io.kcg.sir.semantic.schema.Identity;
-import io.kcg.sir.semantic.schema.Reference;
 import io.kcg.sir.semantic.schema.Source;
 import io.kcg.sir.ast.AstNodeId;
 import io.kcg.sir.semantic.symbol.SymbolId;
@@ -21,7 +21,7 @@ public record NormalizedField(
    @Fact List<NormalizedConstraint> constraints,
    @Source Optional<AstNodeId> directNamedTypeReferenceSiteId,
    @Fact boolean versioned,
-   @Reference Optional<SymbolId> patchSourceField
+   @Derived Optional<SymbolId> patchSourceField
 ) {
    public NormalizedField {
       Objects.requireNonNull(id, "id");

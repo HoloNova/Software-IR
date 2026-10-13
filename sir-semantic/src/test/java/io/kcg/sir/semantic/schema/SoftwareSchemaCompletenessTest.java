@@ -55,7 +55,7 @@ class SoftwareSchemaCompletenessTest {
             for (File file : directory.listFiles((dir, name) -> name.endsWith(".class"))) {
                 String className = pkg.replace('/', '.') + "." + file.getName().replace(".class", "");
                 Class<?> type = Class.forName(className);
-                if (type.isRecord() && !schema.nodes().containsKey(type)) {
+                if (type.isRecord() && !schema.nodes().containsKey(type) && !isPayloadOfDerivedSlot(schema, type)) {
                     orphans.add(className);
                 }
             }
@@ -100,6 +100,13 @@ class SoftwareSchemaCompletenessTest {
         SoftwareSchema.SchemaViolation violation = assertThrows(SoftwareSchema.SchemaViolation.class, () -> SoftwareSchema.of(KeyedWithoutIdentity.class));
 
         assertTrue(violation.problems().get(0).contains("has no @Identity slot"), violation.getMessage());
+    }
+
+    /** A record used only inside analysis output (a derived slot) is deliberately not described. */
+    private static boolean isPayloadOfDerivedSlot(SoftwareSchema schema, Class<?> type) {
+        return schema.nodes().values().stream()
+            .flatMap(node -> node.slots().stream())
+            .anyMatch(slot -> slot.kind() == SlotKind.DERIVED && slot.valueType() == type);
     }
 
     private static File directoryOf(URL location) throws URISyntaxException {

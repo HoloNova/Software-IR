@@ -1,5 +1,6 @@
 package io.kcg.sir.semantic.model;
 
+import io.kcg.sir.semantic.schema.Derived;
 import io.kcg.sir.semantic.schema.Fact;
 import io.kcg.sir.semantic.schema.Reference;
 import io.kcg.sir.semantic.schema.Source;
@@ -65,7 +66,7 @@ public sealed interface NormalizedStep
       @Fact List<OrderKey> orderKeys,
       @Fact Optional<PageSpec> page,
       @Reference SymbolId resultVariable,
-      @Reference SymbolId itemVariable
+      @Derived SymbolId itemVariable
    ) implements NormalizedStep {
       public FindStep {
          Objects.requireNonNull(sourceNodeId, "sourceNodeId");

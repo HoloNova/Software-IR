@@ -72,7 +72,7 @@ public sealed interface NormalizedExpression
       }
    }
 
-   record MemberExpression(@Source AstNodeId sourceNodeId, @Source SourceSpan span, @Derived SirType type, @Fact NormalizedExpression receiver, @Fact String member, @Reference SymbolId resolvedMember)
+   record MemberExpression(@Source AstNodeId sourceNodeId, @Source SourceSpan span, @Derived SirType type, @Fact NormalizedExpression receiver, @Fact String member, @Derived SymbolId resolvedMember)
       implements NormalizedExpression {
       public MemberExpression {
          Objects.requireNonNull(sourceNodeId, "sourceNodeId");
@@ -84,7 +84,7 @@ public sealed interface NormalizedExpression
       }
    }
 
-   record NameExpression(@Source AstNodeId sourceNodeId, @Source SourceSpan span, @Derived SirType type, @Fact String name, @Reference SymbolId resolvedSymbol) implements NormalizedExpression {
+   record NameExpression(@Source AstNodeId sourceNodeId, @Source SourceSpan span, @Derived SirType type, @Fact String name, @Derived SymbolId resolvedSymbol) implements NormalizedExpression {
       public NameExpression {
          Objects.requireNonNull(sourceNodeId, "sourceNodeId");
          Objects.requireNonNull(span, "span");
@@ -110,7 +110,7 @@ public sealed interface NormalizedExpression
    * is the patch payload field whose presence is being asked about.
    */
    record PresentExpression(
-      @Source AstNodeId sourceNodeId, @Source SourceSpan span, @Derived SirType type, @Fact NormalizedExpression target, @Reference SymbolId field
+      @Source AstNodeId sourceNodeId, @Source SourceSpan span, @Derived SirType type, @Fact NormalizedExpression target, @Derived SymbolId field
    ) implements NormalizedExpression {
       public PresentExpression {
          Objects.requireNonNull(sourceNodeId, "sourceNodeId");
@@ -159,7 +159,7 @@ public sealed interface NormalizedExpression
    * so that a target cannot split them into independent tests that mean something else.
    */
    record ExistsExpression(
-      @Source AstNodeId sourceNodeId, @Source SourceSpan span, @Derived SirType type, @Reference SymbolId entity, @Reference SymbolId connectionField, @Fact NormalizedExpression conditions
+      @Source AstNodeId sourceNodeId, @Source SourceSpan span, @Derived SirType type, @Reference SymbolId entity, @Derived SymbolId connectionField, @Fact NormalizedExpression conditions
    ) implements NormalizedExpression {
       public ExistsExpression {
          Objects.requireNonNull(sourceNodeId, "sourceNodeId");

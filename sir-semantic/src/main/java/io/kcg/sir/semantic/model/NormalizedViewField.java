@@ -1,5 +1,6 @@
 package io.kcg.sir.semantic.model;
 
+import io.kcg.sir.semantic.schema.Derived;
 import io.kcg.sir.semantic.schema.Fact;
 import io.kcg.sir.semantic.schema.Identity;
 import io.kcg.sir.semantic.schema.Reference;
@@ -33,8 +34,8 @@ public record NormalizedViewField(
    @Source SourceSpan span,
    @Source AstNodeId sourceNodeId,
    @Fact SirType type,
-   @Reference SymbolId sourceField,
-   @Fact Optional<Relation> relation,
+   @Derived SymbolId sourceField,
+   @Derived Optional<Relation> relation,
    @Source Optional<AstNodeId> directNamedTypeReferenceSiteId
 ) {
    public NormalizedViewField {
