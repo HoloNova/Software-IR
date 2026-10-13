@@ -1,6 +1,6 @@
 # R5 计划：独立构建与真实验收接入
 
-- 日期：2026-10-13。状态：**计划已写，实施中**。授权：负责人 2026-10-13 确认 `26e95f1` 的 CI 通过（[verify 运行 #42](https://github.com/HoloNova/Software-IR/actions/runs/38396035575)），并说"确认进入 R5 阶段"。
+- 日期：2026-10-13。状态：**已完成，见 [R5 报告](R5-independent-verification-report.md)**。授权：负责人 2026-10-13 确认 `26e95f1` 的 CI 通过（[verify 运行 #42](https://github.com/HoloNova/Software-IR/actions/runs/38396035575)），并说"确认进入 R5 阶段"。
 - 前置：[R4 报告](R4-version-apply-report.md)、[迁移路线 R5 一节](LAYERED_ARCHITECTURE_MIGRATION.md)、[设计 08 第 8 节](../design/08-layered-command-architecture.md)、[Q23 试跑报告](../qualification/Q23_REAL_EVALUATION_PILOT.md)。
 - 目标（一句话）：对一份**具体的候选工程**，让调用方明确选择"只静态生成"还是"真实构建／启动／业务验证"，每一档各得一份独立、绑定到该候选的证据；并让"验证通过后再更新"成为一道可检查的门。
 
@@ -61,4 +61,4 @@
 | E1 验证合同与编排 | 已完成并提交（17 个测试，假端口；候选身份与已保存基线的身份逐位相同，构建看到的文件等于从零生成的目录） |
 | E2 进程适配器 | 已完成并提交（15 个测试，真实子进程：shell 脚本代替 Maven、真实 jar 里的小 HTTP 服务代替生成应用；超时终止整棵进程树、日志有界且脱敏、空环境、停止有证明） |
 | E3 验证后更新门 | 已完成并提交（7 个测试：验证过的候选发布后等于从零生成；档位不够、候选不符、清理未证明、无候选、过期计划都被拒绝且状态目录与工程逐字节不变） |
-| E4 真实验收 | 代码已提交；本机用 apt 的 MySQL 8.0.46 预演 3/3 通过（正确样本四档通过且生成摘要等于 Q23 记录；漏状态样本只死在 BUSINESS；Java 编译失败死在 BUILD；数据库不可达为 NOT_RUN）；权威证据待同 SHA CI（MySQL 8.4.11） |
+| E4 真实验收 | 代码已提交；本机用 apt 的 MySQL 8.0.46 预演 3/3 通过（正确样本四档通过且生成摘要等于 Q23 记录；漏状态样本只死在 BUSINESS；Java 编译失败死在 BUILD；数据库不可达为 NOT_RUN）；同 SHA CI（MySQL 8.4.11）3/3 通过，运行 #43 |
