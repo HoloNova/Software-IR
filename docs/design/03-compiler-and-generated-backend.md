@@ -2,6 +2,14 @@
 
 日期：2026-09-08。状态：推荐设计草案。输入语义见[02](02-sir-language-and-modules.md)，数据库操作见[04](04-database-evolution.md)，交付格式见[05](05-source-package-and-docker-deployment.md)。
 
+### 2026-10-13：核心分层的新方向
+
+[设计08](08-layered-command-architecture.md)和[ADR-026](../architecture/ADR-026-layered-semantic-command-architecture.md)细化本章核心职责：Source→正式语义→Lowering→Generator；指令增删改先编辑草稿、生成新源，再复用此链。统一语义结构归Semantic，完整FileDelta/版本应用归Application，Change不再同时维护语言投影和生成文件闭包。
+
+目标依赖清单/pom仍由纯规划与Generator产生；实际下载、Maven、启动、数据库/HTTP验收由独立runner执行，STATIC/BUILD/START/BUSINESS分别举证。Q23静态check不扩为运行阶段。
+
+现有单源CompilationStages及多源ProjectCompilation是共享起点，不假设已存在统一编辑模型、SIR writer、通用混合应用或增量编译。迁移先收敛模型和入口，再审新执行协议；旧API/格式/拒绝不随本章文档更新改变。
+
 ## 1. 推荐架构
 
 **实现边界：**当前已具备单 SirSource -> AST -> Resolve/Type/Validate/Normalize -> SpringBootLoweredModel -> GeneratedFile -> 本地 Application 的编排；图构建使用编译结果。下面的 SourceSnapshot、多文件解析、旧 schema 输入、迁移规划、隔离构建与源码包发布是目标扩展。G0 验证既有链，G1/G2 扩展语义与身份，G3 增加迁移，G4 增加交付，G6 接入平台。[实现依据](implementation-baseline.md)

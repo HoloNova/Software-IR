@@ -1,11 +1,13 @@
 package io.kcg.sir.semantic.model;
 
+import io.kcg.sir.semantic.schema.Fact;
+import io.kcg.sir.semantic.schema.Source;
 import io.kcg.sir.ast.AstNodeId;
 import io.kcg.sir.source.SourceSpan;
 import java.util.List;
 import java.util.Objects;
 
-public record NormalizedConstraint(AstNodeId sourceNodeId, SourceSpan span, String name, List<NormalizedExpression> arguments) {
+public record NormalizedConstraint(@Source AstNodeId sourceNodeId, @Source SourceSpan span, @Fact String name, @Fact List<NormalizedExpression> arguments) {
    public NormalizedConstraint {
       Objects.requireNonNull(sourceNodeId, "sourceNodeId");
       Objects.requireNonNull(span, "span");

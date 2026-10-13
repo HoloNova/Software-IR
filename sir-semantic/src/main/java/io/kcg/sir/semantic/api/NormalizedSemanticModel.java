@@ -1,5 +1,8 @@
 package io.kcg.sir.semantic.api;
 
+import io.kcg.sir.semantic.schema.Derived;
+import io.kcg.sir.semantic.schema.Fact;
+import io.kcg.sir.semantic.schema.Keyed;
 import io.kcg.sir.api.Diagnostic;
 import io.kcg.sir.ast.AstMetadata;
 import io.kcg.sir.ast.AstNodeId;
@@ -15,16 +18,16 @@ import java.util.Map;
 import java.util.Objects;
 
 public record NormalizedSemanticModel(
-   String softwareName,
-   AstMetadata metadata,
-   AstTarget target,
-   SymbolTable symbols,
-   Map<AstNodeId, SymbolId> referenceBindings,
-   Map<AstNodeId, SymbolId> findItemBindings,
-   Map<AstNodeId, SirType> expressionTypes,
-   List<NormalizedDeclaration> declarations,
-   List<Diagnostic> diagnostics,
-   ReferenceSiteBindings referenceSiteBindings
+   @Fact String softwareName,
+   @Fact AstMetadata metadata,
+   @Fact AstTarget target,
+   @Derived SymbolTable symbols,
+   @Derived Map<AstNodeId, SymbolId> referenceBindings,
+   @Derived Map<AstNodeId, SymbolId> findItemBindings,
+   @Derived Map<AstNodeId, SirType> expressionTypes,
+   @Fact @Keyed List<NormalizedDeclaration> declarations,
+   @Derived List<Diagnostic> diagnostics,
+   @Derived ReferenceSiteBindings referenceSiteBindings
 ) {
    public NormalizedSemanticModel {
       Objects.requireNonNull(softwareName, "softwareName");

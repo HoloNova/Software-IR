@@ -1,5 +1,6 @@
 package io.kcg.sir.semantic.type;
 
+import io.kcg.sir.semantic.schema.Fact;
 import java.util.Objects;
 
 /**
@@ -8,7 +9,7 @@ import java.util.Objects;
  * <p>It mirrors {@link ListType} as a type constructor; which output positions
  * may use it is a validation rule, not a constructor rule.
  */
-public record PageType(SirType element) implements SirType {
+public record PageType(@Fact SirType element) implements SirType {
    public PageType {
       Objects.requireNonNull(element, "element");
    }

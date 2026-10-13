@@ -1,6 +1,7 @@
 # 当前工作单：Q23 SLM数据闭环支援——SIR单文件批量校验入口
 
-- 状态：**AWAITING_CI**（2026-10-09，限定真实评测试跑完成）。Q23静态入口本机122/0/0/0、新28；随后按负责人明确指令完成§11正/错误两样本实际构建启动与独立业务断言，正确样本BUSINESS PASSED、错误样本BUSINESS FAILED（预期拒错），新增限额测试2/IT1全部通过。仍待同SHA CI；不扩通用SLM平台/生产部署/Git/Q22恢复，原静态门不混算运行/业务结果。
+- 状态：**BLOCKED（负责人主动暂停，2026-10-13）**。暂停前为AWAITING_CI：静态入口本机122/0/0/0、新28；限定真实两样本正确BUSINESS PASSED、错误BUSINESS FAILED（预期），限额测试2/IT1通过。源码已提交为`dac0463`，不是仍未提交；本轮未核验新CI，不更新资格计数。保留实施/评测记录，不验收归档，不恢复Q22。
+- 当前授权：负责人要求先详细规划分层与指令式增删改，**仅更新工程文档，明确允许本轮提交并推送**；正式方案见[设计08](../design/08-layered-command-architecture.md)、[ADR-026](../architecture/ADR-026-layered-semantic-command-architecture.md)和[迁移路线](LAYERED_ARCHITECTURE_MIGRATION.md)。本次文档授权不恢复Q23，也不授权旧Q24原型或通用验证平台。2026-10-13 起负责人另行授权 R1、R2 代码实施（报告：[R1](R1-semantic-structure-report.md)、[R2](R2-command-editing-report.md)），R3–R5 仍未授权。
 - 切换：[Q22纯移动工作单](Q22-single-capability-source-move.md)按负责人指令BLOCKED（主动搁置，非技术失败），保留方案、不放completed；不得在本单恢复。G2仍未关闭，本单是已有编译链的实验入口支援，不宣称G阶段前进或进入G3。
 - 执行依据：[MAIN](../../MAIN.md)§0/§1.1–1.2/§2.8/12/14、[AGENTS](../../AGENTS.md)测试资源约束、Accepted [ADR-003](../architecture/ADR-003-toolchain-application-owns-project-application.md)与CLI边界测试。
 - 现有资格：[Q21归档](completed/Q21-multi-source-workflow-update-and-recovery.md)，f8a2f92同SHA run37865688743双门1049/0/0/5、五业务IT全部PASSED；**不抵扣本单**。
@@ -210,3 +211,13 @@ JUnit SlmGeneratedProjectEvaluationIT1/0/0/0（涵盖2样本）；ConformanceJvm
 受测base f8a2f92 + dirty源码manifest SHA 980cfa09233901fe3ae1ca89b5642db2bc0840f1873fd2b6ac64a5dc74c1c643，756文件运行后逐SHA复核未变。证据目录/root/kcg-conformance/evidence/slm-{correct-1a11ec8b559-961,missing-status-1a11ec93939-4165}/与q23-real-evaluation-source（完整受测源树/manifest、错误工程源、XML及脱敏日志）。这是本机绑定工作区证据，不冒称同commit CI。
 
 两应用退出、两schema不存在、advisory lock释放均报告证明；错误工程先归档后清work。本轮新容器/卷/镜像均回收，最终进程表无java/mvn/mysqld，18080/33306无监听；已有env.sh/卷未改。静态规模不重跑，五旧IT/全量/手册/真正SLM集合与通用评测故障矩阵仍NOT_RUN。无commit/push、Q22继续BLOCKED；状态回AWAITING_CI。
+
+## 12. 2026-10-13：负责人暂停旧计划，改为分层架构文档规划
+
+负责人重新介入并确认：首次SIR→理解软件→生成源码；后续指令式增加/删除/更新软件；依赖下载、构建、启动与业务验证独立。明确要求先详细制定架构、更新工程文档，允许本轮提交/推送及方案优化，不授权实施。
+
+本单改为BLOCKED，暂停前AWAITING_CI保留为历史。Q22继续BLOCKED；未实施的旧Q24草案不切入ACTIVE_WORK。当前Git起点`dac0463`已包含Q23源码，§9–11“未提交/推送”仅描述当时执行过程，不再代表当前Git状态。
+
+文档规划结果：类型化统一SoftwareSchema、编辑草稿/验证快照分离、固定Add/Delete/Update、结构化SIR往返、完整文件差异与源共同发布、独立构建/业务验证；R1–R5按[迁移路线](LAYERED_ARCHITECTURE_MIGRATION.md)待后续工作单授权。旧生成/Change/Bundle/日志/恢复合同不变。
+
+本轮只改文档并做链接/差异检查；未改生产/测试/CI配置，未运行构建/业务IT，未推进Q23验收。提交推送结果在完成汇报与Git中记录，不将未来实施视为获准。

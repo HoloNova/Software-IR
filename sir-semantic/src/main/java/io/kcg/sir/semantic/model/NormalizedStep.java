@@ -1,5 +1,9 @@
 package io.kcg.sir.semantic.model;
 
+import io.kcg.sir.semantic.schema.Derived;
+import io.kcg.sir.semantic.schema.Fact;
+import io.kcg.sir.semantic.schema.Reference;
+import io.kcg.sir.semantic.schema.Source;
 import io.kcg.sir.ast.AstNodeId;
 import io.kcg.sir.semantic.symbol.SymbolId;
 import io.kcg.sir.source.SourceSpan;
@@ -20,7 +24,7 @@ public sealed interface NormalizedStep
    SourceSpan span();
 
    /** One key of a {@code find} step's declared {@code order by} clause, in authored order. */
-   record OrderKey(AstNodeId sourceNodeId, SourceSpan span, SymbolId fieldSymbol, boolean descending) {
+   record OrderKey(@Source AstNodeId sourceNodeId, @Source SourceSpan span, @Reference SymbolId fieldSymbol, @Fact boolean descending) {
       public OrderKey {
          Objects.requireNonNull(sourceNodeId, "sourceNodeId");
          Objects.requireNonNull(span, "span");
@@ -33,7 +37,7 @@ public sealed interface NormalizedStep
    *
    * <p>Defaults and legal bounds are Lowering decisions, so they are absent here on purpose.
    */
-   record PageSpec(AstNodeId sourceNodeId, SourceSpan span, SymbolId pageField, SymbolId sizeField, SymbolId errorSymbol) {
+   record PageSpec(@Source AstNodeId sourceNodeId, @Source SourceSpan span, @Reference SymbolId pageField, @Reference SymbolId sizeField, @Reference SymbolId errorSymbol) {
       public PageSpec {
          Objects.requireNonNull(sourceNodeId, "sourceNodeId");
          Objects.requireNonNull(span, "span");
@@ -43,7 +47,7 @@ public sealed interface NormalizedStep
       }
    }
 
-   record CreateStep(AstNodeId sourceNodeId, SourceSpan span, SymbolId entitySymbol, SymbolId resultVariable, List<NormalizedBinding> bindings)
+   record CreateStep(@Source AstNodeId sourceNodeId, @Source SourceSpan span, @Reference SymbolId entitySymbol, @Reference SymbolId resultVariable, @Fact List<NormalizedBinding> bindings)
       implements NormalizedStep {
       public CreateStep {
          Objects.requireNonNull(sourceNodeId, "sourceNodeId");
@@ -55,14 +59,14 @@ public sealed interface NormalizedStep
    }
 
    record FindStep(
-      AstNodeId sourceNodeId,
-      SourceSpan span,
-      SymbolId entitySymbol,
-      NormalizedExpression predicate,
-      List<OrderKey> orderKeys,
-      Optional<PageSpec> page,
-      SymbolId resultVariable,
-      SymbolId itemVariable
+      @Source AstNodeId sourceNodeId,
+      @Source SourceSpan span,
+      @Reference SymbolId entitySymbol,
+      @Fact NormalizedExpression predicate,
+      @Fact List<OrderKey> orderKeys,
+      @Fact Optional<PageSpec> page,
+      @Reference SymbolId resultVariable,
+      @Derived SymbolId itemVariable
    ) implements NormalizedStep {
       public FindStep {
          Objects.requireNonNull(sourceNodeId, "sourceNodeId");
@@ -77,7 +81,7 @@ public sealed interface NormalizedStep
    }
 
    record LoadStep(
-      AstNodeId sourceNodeId, SourceSpan span, SymbolId entitySymbol, NormalizedExpression idExpression, SymbolId resultVariable, SymbolId errorSymbol
+      @Source AstNodeId sourceNodeId, @Source SourceSpan span, @Reference SymbolId entitySymbol, @Fact NormalizedExpression idExpression, @Reference SymbolId resultVariable, @Reference SymbolId errorSymbol
    ) implements NormalizedStep {
       public LoadStep {
          Objects.requireNonNull(sourceNodeId, "sourceNodeId");
@@ -89,7 +93,7 @@ public sealed interface NormalizedStep
       }
    }
 
-   record PersistStep(AstNodeId sourceNodeId, SourceSpan span, SymbolId targetVariable, Optional<SymbolId> failure) implements NormalizedStep {
+   record PersistStep(@Source AstNodeId sourceNodeId, @Source SourceSpan span, @Reference SymbolId targetVariable, @Reference Optional<SymbolId> failure) implements NormalizedStep {
       public PersistStep {
          Objects.requireNonNull(sourceNodeId, "sourceNodeId");
          Objects.requireNonNull(span, "span");
@@ -102,7 +106,7 @@ public sealed interface NormalizedStep
       }
    }
 
-   record ReturnStep(AstNodeId sourceNodeId, SourceSpan span, NormalizedExpression value) implements NormalizedStep {
+   record ReturnStep(@Source AstNodeId sourceNodeId, @Source SourceSpan span, @Fact NormalizedExpression value) implements NormalizedStep {
       public ReturnStep {
          Objects.requireNonNull(sourceNodeId, "sourceNodeId");
          Objects.requireNonNull(span, "span");
@@ -110,7 +114,7 @@ public sealed interface NormalizedStep
       }
    }
 
-   record UpdateStep(AstNodeId sourceNodeId, SourceSpan span, SymbolId targetVariable, List<NormalizedBinding> bindings) implements NormalizedStep {
+   record UpdateStep(@Source AstNodeId sourceNodeId, @Source SourceSpan span, @Reference SymbolId targetVariable, @Fact List<NormalizedBinding> bindings) implements NormalizedStep {
       public UpdateStep {
          Objects.requireNonNull(sourceNodeId, "sourceNodeId");
          Objects.requireNonNull(span, "span");
@@ -119,7 +123,7 @@ public sealed interface NormalizedStep
       }
    }
 
-   record ValidateStep(AstNodeId sourceNodeId, SourceSpan span, NormalizedExpression condition, SymbolId errorSymbol) implements NormalizedStep {
+   record ValidateStep(@Source AstNodeId sourceNodeId, @Source SourceSpan span, @Fact NormalizedExpression condition, @Reference SymbolId errorSymbol) implements NormalizedStep {
       public ValidateStep {
          Objects.requireNonNull(sourceNodeId, "sourceNodeId");
          Objects.requireNonNull(span, "span");

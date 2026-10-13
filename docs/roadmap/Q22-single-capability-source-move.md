@@ -6,6 +6,10 @@
 - 本轮：主会话仅文档/只读核查，不跑构建、不提交/推送、不自动派代理。Q21归档及本单设计文档暂不提交。
 - 依据：[MAIN](../../MAIN.md)、[设计02 §1–2](../design/02-sir-language-and-modules.md)、[设计07 LANG-01/04及G2门](../design/07-validation-and-direction-roadmap.md)、Accepted [ADR-021](../architecture/ADR-021-multi-source-compilation-and-graph-compatibility.md)、[ADR-022](../architecture/ADR-022-multi-source-baseline-storage-and-reopen.md)、[ADR-023](../architecture/ADR-023-project-workflow-read-only-planning.md)、[ADR-024](../architecture/ADR-024-project-workflow-update-publication-and-recovery.md)。
 
+### 2026-10-13 方向补记
+
+继续BLOCKED，不恢复实施。[新分层方案](../design/08-layered-command-architecture.md)将来源位置与业务事实分开，固定Add/Delete/Update，并以共同版本发布承载source-only变化。下面专用SourceMove/发布族方案保留为当时设计，不自动成为新架构实施依据；恢复前按[迁移路线](LAYERED_ARCHITECTURE_MIGRATION.md)重审。负责人本轮只授权架构文档及提交/推送。
+
 ## 1. 用户场景与交付目标
 
 课程工程已经保存四份SIR源，报名查询能力SearchCourseEnrollments带 `@id("search-course-enrollments")`，当前在project.sir。用户复制保存快照，把**这一个完整能力声明**剪切到modules/search.sir，保留声明名称、@id、合同和工作流，只补必要的sources/imports；提交候选快照。

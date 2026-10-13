@@ -1,5 +1,9 @@
 package io.kcg.sir.semantic.model;
 
+import io.kcg.sir.semantic.schema.Derived;
+import io.kcg.sir.semantic.schema.Fact;
+import io.kcg.sir.semantic.schema.Identity;
+import io.kcg.sir.semantic.schema.Source;
 import io.kcg.sir.ast.AstNodeId;
 import io.kcg.sir.semantic.symbol.SymbolId;
 import io.kcg.sir.semantic.type.SirType;
@@ -9,15 +13,15 @@ import java.util.Objects;
 import java.util.Optional;
 
 public record NormalizedField(
-   SymbolId id,
-   String name,
-   SourceSpan span,
-   AstNodeId sourceNodeId,
-   SirType type,
-   List<NormalizedConstraint> constraints,
-   Optional<AstNodeId> directNamedTypeReferenceSiteId,
-   boolean versioned,
-   Optional<SymbolId> patchSourceField
+   @Identity SymbolId id,
+   @Fact String name,
+   @Source SourceSpan span,
+   @Source AstNodeId sourceNodeId,
+   @Fact SirType type,
+   @Fact List<NormalizedConstraint> constraints,
+   @Source Optional<AstNodeId> directNamedTypeReferenceSiteId,
+   @Fact boolean versioned,
+   @Derived Optional<SymbolId> patchSourceField
 ) {
    public NormalizedField {
       Objects.requireNonNull(id, "id");

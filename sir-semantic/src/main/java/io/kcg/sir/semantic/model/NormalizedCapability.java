@@ -1,5 +1,10 @@
 package io.kcg.sir.semantic.model;
 
+import io.kcg.sir.semantic.schema.Fact;
+import io.kcg.sir.semantic.schema.Identity;
+import io.kcg.sir.semantic.schema.Keyed;
+import io.kcg.sir.semantic.schema.Reference;
+import io.kcg.sir.semantic.schema.Source;
 import io.kcg.sir.ast.AstExposureKind;
 import io.kcg.sir.ast.AstNodeId;
 import io.kcg.sir.ast.AstRequirementKind;
@@ -11,17 +16,17 @@ import java.util.Objects;
 import java.util.Optional;
 
 public record NormalizedCapability(
-   SymbolId id,
-   String name,
-   SourceSpan span,
-   AstNodeId sourceNodeId,
-   Optional<SymbolId> actorSymbol,
-   Optional<SymbolId> inputSymbol,
-   SirType outputType,
-   List<SymbolId> fails,
-   List<AstRequirementKind> requires,
-   AstExposureKind exposure,
-   NormalizedWorkflow workflow
+   @Identity SymbolId id,
+   @Fact String name,
+   @Source SourceSpan span,
+   @Source AstNodeId sourceNodeId,
+   @Reference(viaVariableType = true) Optional<SymbolId> actorSymbol,
+   @Reference(viaVariableType = true) Optional<SymbolId> inputSymbol,
+   @Fact SirType outputType,
+   @Reference @Keyed List<SymbolId> fails,
+   @Fact @Keyed List<AstRequirementKind> requires,
+   @Fact AstExposureKind exposure,
+   @Fact NormalizedWorkflow workflow
 ) implements NormalizedDeclaration {
    public NormalizedCapability {
       Objects.requireNonNull(id, "id");

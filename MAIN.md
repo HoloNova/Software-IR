@@ -94,6 +94,14 @@ CURRENT Bundle + output + candidate SIR
   -> explicit transaction recovery when required
 ```
 
+### 1.4 已确认的分层与指令修改方向（2026-10-13）
+
+负责人确认：首次由SIR理解软件并生成源码；后续用增加／删除／更新指令编辑软件；拉依赖、构建、启动和业务验证是独立执行环节。正式方案见[设计08](docs/design/08-layered-command-architecture.md)、Accepted方向决策[ADR-026](docs/architecture/ADR-026-layered-semantic-command-architecture.md)及[迁移路线](docs/roadmap/LAYERED_ARCHITECTURE_MIGRATION.md)。
+
+Semantic拥有唯一的类型化软件结构定义；Change只处理固定三种机械操作与结构差异，不为新增功能补专用操作/投影/策略。草稿与已验证模型分开，修改不得沿用旧binding；新SIR写出后复用正式分析和生成。业务合法性归Semantic、目标支持与物理实现归Lowering、文件差异与版本发布归Application。保持强类型模型，不改成无类型JSON树或用户规则语言。
+
+这是目标架构，不是当前能力。旧API/格式/NoChanges/日志/恢复保持各自原合同；新混合及source-only应用须独立设计验证。Q22、Q23后续功能/验收执行暂停；文档方案已确认；其后 R1（类型化软件结构）与 R2（增删改指令与 SIR 往返）经负责人授权已实施并验证（见 `docs/roadmap/R1-semantic-structure-report.md`、`docs/roadmap/R2-command-editing-report.md`），R3–R5 未授权。当前实现仍以上述1.3及资格证据为准。
+
 ## 2. 不可破坏的架构规则
 
 1. `sir-parser` 只负责词法、语法、AST、SourceSpan、稳定 AstNodeId 和解析诊断，不包含 Target 或业务框架语义。
@@ -168,10 +176,9 @@ ANTLR4 Grammar、严格 UTF-8、不可变 AST、SourceSpan、稳定 AstNodeId �
 8. 测试数量必须来自当次 Surefire XML/命令输出。历史数字、跳过项、POM 排除项和外部资格不得混写成“全部通过”。
 9. 详细实现证据写入当前工作单和资格文档；如果没有失败、阻断或需要项目负责人裁决的方向，面向用户的阶段报告保持简短，只请求确认是否继续。
 10. 版本快照按以下规则执行：
-   - Q1A、Q1B1、Q1B2 这类小版本在完成门闭合且用户确认后，把已验收、非受保护的当前项目状态形成一次普通本地 Git commit，不推送。
-   - Q1、Q2 这类大版本在全部子工作单完成且用户确认后，先确保本地快照完整，再把当前分支以普通 push 推送到已配置的 `origin`。
-   - 用户说“确认”“继续”或同义表达，即授权完成当前验收、切换下一张工作单并执行本条对应的本地提交或大版本普通推送；不授权 force-push、rebase、历史改写或凭据留存。
-   - 如果快照范围含有未验收、任务外或受保护内容，必须排除；如果普通提交/推送失败，只简要报告阻断证据。
+   - 本地提交、推送和历史操作必须由负责人当时明确授权；工作单验收、归档或“继续”不自动授予Git操作，也不自动启动下一阶段。
+   - 提交范围只包含本轮已审阅、获授权内容；既有任务外/未跟踪材料保留，不用全量add混入。
+   - 不自动force-push、rebase、reset、checkout、restore、clean或stash；提交/推送失败时报告实际阻断，不改写历史解决。
 11. 完成工作单要求的定向验证；全量验证按 `AGENTS.md`“测试资源约束”优先安排到 GitHub CI（公共仓库、托管 runner；仓库 workflow 建立前，确需全量时按该节的本机上限执行）。纯文档修改只做文档／差异检查；已有同源码、同验证范围的有效证据不因收尾或提交重复运行。本机收尾执行 `git diff --check` 与 `git status --short`。
 
 以下为全量验证的命令基准，不是每次收尾默认执行清单；在实际执行环境中附加经核验的内存／并发限制：
@@ -203,3 +210,4 @@ G0 关闭不授权展开 Redis、第二 Target、Constraint VM、PSG `REFERENCES
 - Application ownership：`docs/architecture/ADR-003-toolchain-application-owns-project-application.md`。
 - 本地 MVP 提议：`docs/architecture/ADR-019-local-software-ir-mvp-delivery-contract.md`。
 - CURRENT 恢复方向：`docs/architecture/ADR-020-current-baseline-transaction-direction.md`。
+- 分层与指令修改：`docs/design/08-layered-command-architecture.md`、`docs/architecture/ADR-026-layered-semantic-command-architecture.md`。

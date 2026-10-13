@@ -1,5 +1,7 @@
 # KCG-Code 当前资格报告
 
+> 2026-10-13状态补记：Q23源码已提交`dac0463`，负责人暂停其后续推进，当前为BLOCKED（暂停前AWAITING_CI）；Q22继续BLOCKED。本轮只完成[分层架构文档](../design/08-layered-command-architecture.md)，明确允许文档提交/推送，未改源码、运行构建或核验新CI。历史测试/运行数字不变；R1–R5及所有新架构门NOT_RUN，文档接受不等于代码资格通过。下文“未提交”和各轮当时状态保留为历史。
+
 ## 0. G0 完成门（2026-09-18 关闭，本报告的权威结论）
 
 **G0（现有链路资格收口）的完成门由本节判定；本报告其余各节是该门的证据与历史记录。**
@@ -25,7 +27,7 @@
 
 **全量计数 775 / 0 / 0 / 5**（Q11 后为 749；+26 全部来自 Q14/Q15/Q13 的新增测试），由 GitHub CI 一次跑完（见 1.13）。G1 的 Q9、Q10、Q11、Q13 至此全部验收归档（Q12 未立项）。本节的 G0 记录不因此改写。
 
-**G2 的 Q16/Q17/Q18/Q19/Q20/Q21 六张工作单已验收归档**：Q16 交付能力/实体字段 `@id` 与独立只读 `RenamePlan`/`RenamePlanner`（历史 CI **837/0/0/5**，见 1.14）；Q17 交付唯一 `applyRename` 入口、单能力改名的原子文件应用、旧受管文件清理与 CURRENT 定向恢复（见 1.15）。Q17 受测提交 `ab2ce09` 的 [CI run `36404651840`](https://github.com/HoloNova/Software-IR/actions/runs/36404651840) 双闸门各 **893/0/0/5**，四业务 IT 全 PASSED；上传 XML 897 含四 IT。**G2 阶段门仍未满足**。Q18 已按 D0–D9-B 完成多源首次生成/最小导入及定向 **346/0/0/0**，已授权提交推送 `638eaa7`；最新同 SHA 的 [CI run 37212618580](https://github.com/HoloNova/Software-IR/actions/runs/37212618580) 双门各 **936/0/0/5**、四 IT **40/61/36/63** 全 PASSED，两类 artifact 已核对（XML 940 含四 IT），Q18 于 2026-10-05 确认验收并归档，见 §1.16。Q19/Q20历史验收与各自同SHA证据见§1.17–1.18。[Q21归档](../roadmap/completed/Q21-multi-source-workflow-update-and-recovery.md)按D0–D8验收：f8a2f92同SHA [CI run37865688743](https://github.com/HoloNova/Software-IR/actions/runs/37865688743)双门1049/0/0/5，五IT40/61/36/63/36全部PASSED，两类artifact核对，XML1054含五IT；本机162/新54及150应用/85恢复点，Accepted ADR-024，见§1.19。[当前活动单](../roadmap/ACTIVE_WORK.md)为 **Q23 / AWAITING_CI**：SLM单文件0.1批量只读校验本机完成，定向122/0/0/0、新28；1000课程样本12.54s、RSS约164MiB。新同SHA双门/五IT未运行，见§1.21；静态通过仅进候选池，不证明业务可运行。Q22纯移动主动搁置BLOCKED，保留[独立单](../roadmap/Q22-single-capability-source-move.md)，见§1.20。多源其他操作/源移动/改名、nodeKey/模块实例、完整身份兼容、物理映射/组合改名及数据库演进未完成；G2未关闭。随后按负责人要求完成限定真实课程正/错误两样本评测（§1.21），不把本机dirty树证据当CI；未全量/五既有IT/提交/推送。
+**G2 的 Q16/Q17/Q18/Q19/Q20/Q21 六张工作单已验收归档**：Q16 交付能力/实体字段 `@id` 与独立只读 `RenamePlan`/`RenamePlanner`（历史 CI **837/0/0/5**，见 1.14）；Q17 交付唯一 `applyRename` 入口、单能力改名的原子文件应用、旧受管文件清理与 CURRENT 定向恢复（见 1.15）。Q17 受测提交 `ab2ce09` 的 [CI run `36404651840`](https://github.com/HoloNova/Software-IR/actions/runs/36404651840) 双闸门各 **893/0/0/5**，四业务 IT 全 PASSED；上传 XML 897 含四 IT。**G2 阶段门仍未满足**。Q18 已按 D0–D9-B 完成多源首次生成/最小导入及定向 **346/0/0/0**，已授权提交推送 `638eaa7`；最新同 SHA 的 [CI run 37212618580](https://github.com/HoloNova/Software-IR/actions/runs/37212618580) 双门各 **936/0/0/5**、四 IT **40/61/36/63** 全 PASSED，两类 artifact 已核对（XML 940 含四 IT），Q18 于 2026-10-05 确认验收并归档，见 §1.16。Q19/Q20历史验收与各自同SHA证据见§1.17–1.18。[Q21归档](../roadmap/completed/Q21-multi-source-workflow-update-and-recovery.md)按D0–D8验收：f8a2f92同SHA [CI run37865688743](https://github.com/HoloNova/Software-IR/actions/runs/37865688743)双门1049/0/0/5，五IT40/61/36/63/36全部PASSED，两类artifact核对，XML1054含五IT；本机162/新54及150应用/85恢复点，Accepted ADR-024，见§1.19。[当前活动单](../roadmap/ACTIVE_WORK.md)为 **Q23 / BLOCKED（2026-10-13主动暂停，暂停前AWAITING_CI）**：SLM单文件0.1批量只读校验本机完成，定向122/0/0/0、新28；1000课程样本12.54s、RSS约164MiB。新同SHA双门/五IT未运行，见§1.21；静态通过仅进候选池，不证明业务可运行。Q22纯移动主动搁置BLOCKED，保留[独立单](../roadmap/Q22-single-capability-source-move.md)，见§1.20。多源其他操作/源移动/改名、nodeKey/模块实例、完整身份兼容、物理映射/组合改名及数据库演进未完成；G2未关闭。随后按负责人要求完成限定真实课程正/错误两样本评测（§1.21），不把本机dirty树证据当CI；未全量/五既有IT/提交/推送。
 
 **登记表（NOT_RUN / 未覆盖 / 平台条件）**：
 

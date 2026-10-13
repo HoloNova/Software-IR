@@ -1,5 +1,9 @@
 package io.kcg.sir.semantic.model;
 
+import io.kcg.sir.semantic.schema.Fact;
+import io.kcg.sir.semantic.schema.Identity;
+import io.kcg.sir.semantic.schema.Reference;
+import io.kcg.sir.semantic.schema.Source;
 import io.kcg.sir.ast.AstNodeId;
 import io.kcg.sir.semantic.symbol.SymbolId;
 import io.kcg.sir.source.SourceSpan;
@@ -15,13 +19,13 @@ import java.util.Optional;
  * so a later phase never has to match a change payload by name again.
  */
 public record NormalizedInput(
-   SymbolId id,
-   String name,
-   SourceSpan span,
-   AstNodeId sourceNodeId,
-   Kind kind,
-   Optional<SymbolId> patchSourceEntity,
-   List<NormalizedField> fields
+   @Identity SymbolId id,
+   @Fact String name,
+   @Source SourceSpan span,
+   @Source AstNodeId sourceNodeId,
+   @Fact Kind kind,
+   @Reference Optional<SymbolId> patchSourceEntity,
+   @Fact List<NormalizedField> fields
 ) implements NormalizedDeclaration {
    public NormalizedInput {
       Objects.requireNonNull(id, "id");

@@ -6,6 +6,12 @@
 
 G1 先在单文件链中增加课程业务切片；G2 再完成本章多文件模块与持久身份。保留现有 capability/workflow 到目标 operation/query 的语义映射，正式语法可经版本化演进确定，不要求仅为换术语重写编译器。
 
+### 2026-10-13：语义定义与指令修改的归属
+
+本章拥有软件含义，[设计08](08-layered-command-architecture.md)拥有统一结构和编辑合同。语义新增在Semantic定义类型、属性、子内容、引用和合法性；有新语法才扩Parser，有新实现才扩Target。Change消费同一结构接口，不再手写声明/表达式投影或逐功能策略。
+
+指令固定Add/Delete/Update，作用于SoftwareDraft，之后结构化写回候选SIR并正式分析；不得直接修改Normalized模型并沿用旧binding。源位置与业务身份分开，纯移动不自动改变业务；源保存仍需版本发布。完整nodeKey/模块实例/旧身份映射未实现，不因方案已写而宣称支持。详见[ADR-026](../architecture/ADR-026-layered-semantic-command-architecture.md)。
+
 ## 1. 应用源的组织
 
 ```text

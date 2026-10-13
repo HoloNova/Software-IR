@@ -18,7 +18,13 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 - Toolchain Application、Bundle、事务与显式恢复
 - 只读 `check` / `context` / `plan` CLI（check本机交付、Q23 CI待验）
 
-已验收源码可离线完成默认 Reactor 构建（10 个 Reactor 模块），并已在**登记过的参考环境**上得到外部 MySQL conformance 的 `QUALIFIED` 结论。最新同SHA CI为Q21；本批Q23静态校验已有定向/规模证据，但新CI尚未运行，不能引用旧结果验收它。但仍有明确的未覆盖项（Windows 平台证据、thin JAR/发行包、完整 CLI 本地生命周期），因此不宣称生产就绪。精确结论与缺口登记见 [CURRENT_QUALIFICATION.md](docs/qualification/CURRENT_QUALIFICATION.md) 第 0 节。
+已验收源码可离线完成默认 Reactor 构建（10 个 Reactor 模块），并已在**登记过的参考环境**上得到外部 MySQL conformance 的 `QUALIFIED` 结论。最新同SHA CI为Q21；Q23提交dac0463已有本机定向/规模证据，记录中的新CI资格尚待核验，当前推进暂停，不能引用旧结果验收它。但仍有明确的未覆盖项（Windows 平台证据、thin JAR/发行包、完整 CLI 本地生命周期），因此不宣称生产就绪。精确结论与缺口登记见 [CURRENT_QUALIFICATION.md](docs/qualification/CURRENT_QUALIFICATION.md) 第 0 节。
+
+## 已确认的新架构方向（2026-10-13）
+
+首次从SIR理解软件、生成项目源码；后续用固定增加／删除／更新指令编辑软件，共享同一套语义检查和生成。依赖下载、构建、启动和业务验证独立，不放进Parser或静态check。详细方案见[分层架构](docs/design/08-layered-command-architecture.md)和[迁移路线](docs/roadmap/LAYERED_ARCHITECTURE_MIGRATION.md)。
+
+这是已确认方向、尚未实现。Q22/Q23后续执行暂停；本轮只更新工程文档并获提交/推送许可，不启动代码重构。旧能力与资格保留。
 
 ## 从这里开始
 
