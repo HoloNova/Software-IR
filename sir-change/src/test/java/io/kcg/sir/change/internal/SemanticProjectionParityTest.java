@@ -191,7 +191,7 @@ class SemanticProjectionParityTest {
     // ------------------------------------------------------------------
 
     /** The default source; every test varies exactly one line of it. */
-    private static String template() {
+    static String template() {
         return """
                 sir 0.1
 

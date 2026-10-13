@@ -1,5 +1,9 @@
 package io.kcg.sir.semantic.model;
 
+import io.kcg.sir.semantic.schema.Fact;
+import io.kcg.sir.semantic.schema.Identity;
+import io.kcg.sir.semantic.schema.Reference;
+import io.kcg.sir.semantic.schema.Source;
 import io.kcg.sir.ast.AstNodeId;
 import io.kcg.sir.semantic.symbol.SymbolId;
 import io.kcg.sir.source.SourceSpan;
@@ -15,12 +19,12 @@ import java.util.Objects;
  * to re-derive a projection from names.
  */
 public record NormalizedView(
-   SymbolId id,
-   String name,
-   SourceSpan span,
-   AstNodeId sourceNodeId,
-   SymbolId sourceEntity,
-   List<NormalizedViewField> fields
+   @Identity SymbolId id,
+   @Fact String name,
+   @Source SourceSpan span,
+   @Source AstNodeId sourceNodeId,
+   @Reference SymbolId sourceEntity,
+   @Fact List<NormalizedViewField> fields
 ) implements NormalizedDeclaration {
    public NormalizedView {
       Objects.requireNonNull(id, "id");

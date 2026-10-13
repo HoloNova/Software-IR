@@ -1,5 +1,9 @@
 package io.kcg.sir.semantic.model;
 
+import io.kcg.sir.semantic.schema.Fact;
+import io.kcg.sir.semantic.schema.Identity;
+import io.kcg.sir.semantic.schema.Reference;
+import io.kcg.sir.semantic.schema.Source;
 import io.kcg.sir.ast.AstNodeId;
 import io.kcg.sir.semantic.symbol.SymbolId;
 import io.kcg.sir.source.SourceSpan;
@@ -8,7 +12,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 public record NormalizedEntity(
-   SymbolId id, String name, SourceSpan span, AstNodeId sourceNodeId, boolean persistent, NormalizedIdentity identity, List<NormalizedField> fields, Optional<SymbolId> versionField
+   @Identity SymbolId id, @Fact String name, @Source SourceSpan span, @Source AstNodeId sourceNodeId, @Fact boolean persistent, @Fact NormalizedIdentity identity, @Fact List<NormalizedField> fields, @Reference Optional<SymbolId> versionField
 ) implements NormalizedDeclaration {
    public NormalizedEntity {
       Objects.requireNonNull(id, "id");

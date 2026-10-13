@@ -1,5 +1,9 @@
 package io.kcg.sir.semantic.model;
 
+import io.kcg.sir.semantic.schema.Fact;
+import io.kcg.sir.semantic.schema.Identity;
+import io.kcg.sir.semantic.schema.Reference;
+import io.kcg.sir.semantic.schema.Source;
 import io.kcg.sir.ast.AstNodeId;
 import io.kcg.sir.semantic.symbol.SymbolId;
 import io.kcg.sir.semantic.type.SirType;
@@ -24,14 +28,14 @@ import java.util.Optional;
  * reading the recorded reference, never by searching the model for one.
  */
 public record NormalizedViewField(
-   SymbolId id,
-   String name,
-   SourceSpan span,
-   AstNodeId sourceNodeId,
-   SirType type,
-   SymbolId sourceField,
-   Optional<Relation> relation,
-   Optional<AstNodeId> directNamedTypeReferenceSiteId
+   @Identity SymbolId id,
+   @Fact String name,
+   @Source SourceSpan span,
+   @Source AstNodeId sourceNodeId,
+   @Fact SirType type,
+   @Reference SymbolId sourceField,
+   @Fact Optional<Relation> relation,
+   @Source Optional<AstNodeId> directNamedTypeReferenceSiteId
 ) {
    public NormalizedViewField {
       Objects.requireNonNull(id, "id");
@@ -59,7 +63,7 @@ public record NormalizedViewField(
    * itself stays in {@link NormalizedViewField#sourceField()}, so a target asks the field for the
    * join column and the relation for the projection to render.
    */
-   public record Relation(Cardinality cardinality, SymbolId targetView) {
+   public record Relation(@Fact Cardinality cardinality, @Reference SymbolId targetView) {
       public Relation {
          Objects.requireNonNull(cardinality, "cardinality");
          Objects.requireNonNull(targetView, "targetView");

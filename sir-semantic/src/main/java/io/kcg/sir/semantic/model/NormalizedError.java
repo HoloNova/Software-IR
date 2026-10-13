@@ -1,5 +1,8 @@
 package io.kcg.sir.semantic.model;
 
+import io.kcg.sir.semantic.schema.Fact;
+import io.kcg.sir.semantic.schema.Identity;
+import io.kcg.sir.semantic.schema.Source;
 import io.kcg.sir.ast.AstNodeId;
 import io.kcg.sir.semantic.symbol.SymbolId;
 import io.kcg.sir.source.SourceSpan;
@@ -12,7 +15,7 @@ import java.util.Objects;
  * the default {@link #DEFAULT_HTTP_STATUS}, and the target profile is not allowed
  * to invent a different one later.
  */
-public record NormalizedError(SymbolId id, String name, SourceSpan span, AstNodeId sourceNodeId, int httpStatus) implements NormalizedDeclaration {
+public record NormalizedError(@Identity SymbolId id, @Fact String name, @Source SourceSpan span, @Source AstNodeId sourceNodeId, @Fact int httpStatus) implements NormalizedDeclaration {
    public static final int DEFAULT_HTTP_STATUS = 400;
 
    public NormalizedError {

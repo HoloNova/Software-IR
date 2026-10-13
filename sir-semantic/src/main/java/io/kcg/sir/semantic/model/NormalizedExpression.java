@@ -1,5 +1,9 @@
 package io.kcg.sir.semantic.model;
 
+import io.kcg.sir.semantic.schema.Derived;
+import io.kcg.sir.semantic.schema.Fact;
+import io.kcg.sir.semantic.schema.Reference;
+import io.kcg.sir.semantic.schema.Source;
 import io.kcg.sir.ast.AstBinaryOperator;
 import io.kcg.sir.ast.AstNodeId;
 import io.kcg.sir.ast.AstUnaryOperator;
@@ -30,7 +34,7 @@ public sealed interface NormalizedExpression
    SirType type();
 
    record BinaryExpression(
-      AstNodeId sourceNodeId, SourceSpan span, SirType type, NormalizedExpression left, AstBinaryOperator operator, NormalizedExpression right
+      @Source AstNodeId sourceNodeId, @Source SourceSpan span, @Derived SirType type, @Fact NormalizedExpression left, @Fact AstBinaryOperator operator, @Fact NormalizedExpression right
    ) implements NormalizedExpression {
       public BinaryExpression {
          Objects.requireNonNull(sourceNodeId, "sourceNodeId");
@@ -42,7 +46,7 @@ public sealed interface NormalizedExpression
       }
    }
 
-   record BooleanLiteral(AstNodeId sourceNodeId, SourceSpan span, SirType type, boolean value) implements NormalizedExpression {
+   record BooleanLiteral(@Source AstNodeId sourceNodeId, @Source SourceSpan span, @Derived SirType type, @Fact boolean value) implements NormalizedExpression {
       public BooleanLiteral {
          Objects.requireNonNull(sourceNodeId, "sourceNodeId");
          Objects.requireNonNull(span, "span");
@@ -50,7 +54,7 @@ public sealed interface NormalizedExpression
       }
    }
 
-   record DecimalLiteral(AstNodeId sourceNodeId, SourceSpan span, SirType type, BigDecimal value) implements NormalizedExpression {
+   record DecimalLiteral(@Source AstNodeId sourceNodeId, @Source SourceSpan span, @Derived SirType type, @Fact BigDecimal value) implements NormalizedExpression {
       public DecimalLiteral {
          Objects.requireNonNull(sourceNodeId, "sourceNodeId");
          Objects.requireNonNull(span, "span");
@@ -59,7 +63,7 @@ public sealed interface NormalizedExpression
       }
    }
 
-   record IntegerLiteral(AstNodeId sourceNodeId, SourceSpan span, SirType type, BigInteger value) implements NormalizedExpression {
+   record IntegerLiteral(@Source AstNodeId sourceNodeId, @Source SourceSpan span, @Derived SirType type, @Fact BigInteger value) implements NormalizedExpression {
       public IntegerLiteral {
          Objects.requireNonNull(sourceNodeId, "sourceNodeId");
          Objects.requireNonNull(span, "span");
@@ -68,7 +72,7 @@ public sealed interface NormalizedExpression
       }
    }
 
-   record MemberExpression(AstNodeId sourceNodeId, SourceSpan span, SirType type, NormalizedExpression receiver, String member, SymbolId resolvedMember)
+   record MemberExpression(@Source AstNodeId sourceNodeId, @Source SourceSpan span, @Derived SirType type, @Fact NormalizedExpression receiver, @Fact String member, @Reference SymbolId resolvedMember)
       implements NormalizedExpression {
       public MemberExpression {
          Objects.requireNonNull(sourceNodeId, "sourceNodeId");
@@ -80,7 +84,7 @@ public sealed interface NormalizedExpression
       }
    }
 
-   record NameExpression(AstNodeId sourceNodeId, SourceSpan span, SirType type, String name, SymbolId resolvedSymbol) implements NormalizedExpression {
+   record NameExpression(@Source AstNodeId sourceNodeId, @Source SourceSpan span, @Derived SirType type, @Fact String name, @Reference SymbolId resolvedSymbol) implements NormalizedExpression {
       public NameExpression {
          Objects.requireNonNull(sourceNodeId, "sourceNodeId");
          Objects.requireNonNull(span, "span");
@@ -90,7 +94,7 @@ public sealed interface NormalizedExpression
       }
    }
 
-   record NowExpression(AstNodeId sourceNodeId, SourceSpan span, SirType type) implements NormalizedExpression {
+   record NowExpression(@Source AstNodeId sourceNodeId, @Source SourceSpan span, @Derived SirType type) implements NormalizedExpression {
       public NowExpression {
          Objects.requireNonNull(sourceNodeId, "sourceNodeId");
          Objects.requireNonNull(span, "span");
@@ -106,7 +110,7 @@ public sealed interface NormalizedExpression
    * is the patch payload field whose presence is being asked about.
    */
    record PresentExpression(
-      AstNodeId sourceNodeId, SourceSpan span, SirType type, NormalizedExpression target, SymbolId field
+      @Source AstNodeId sourceNodeId, @Source SourceSpan span, @Derived SirType type, @Fact NormalizedExpression target, @Reference SymbolId field
    ) implements NormalizedExpression {
       public PresentExpression {
          Objects.requireNonNull(sourceNodeId, "sourceNodeId");
@@ -117,7 +121,7 @@ public sealed interface NormalizedExpression
       }
    }
 
-   record StringLiteral(AstNodeId sourceNodeId, SourceSpan span, SirType type, String value) implements NormalizedExpression {
+   record StringLiteral(@Source AstNodeId sourceNodeId, @Source SourceSpan span, @Derived SirType type, @Fact String value) implements NormalizedExpression {
       public StringLiteral {
          Objects.requireNonNull(sourceNodeId, "sourceNodeId");
          Objects.requireNonNull(span, "span");
@@ -126,7 +130,7 @@ public sealed interface NormalizedExpression
       }
    }
 
-   record UnaryExpression(AstNodeId sourceNodeId, SourceSpan span, SirType type, AstUnaryOperator operator, NormalizedExpression operand)
+   record UnaryExpression(@Source AstNodeId sourceNodeId, @Source SourceSpan span, @Derived SirType type, @Fact AstUnaryOperator operator, @Fact NormalizedExpression operand)
       implements NormalizedExpression {
       public UnaryExpression {
          Objects.requireNonNull(sourceNodeId, "sourceNodeId");
@@ -137,7 +141,7 @@ public sealed interface NormalizedExpression
       }
    }
 
-   record UnitLiteral(AstNodeId sourceNodeId, SourceSpan span, SirType type) implements NormalizedExpression {
+   record UnitLiteral(@Source AstNodeId sourceNodeId, @Source SourceSpan span, @Derived SirType type) implements NormalizedExpression {
       public UnitLiteral {
          Objects.requireNonNull(sourceNodeId, "sourceNodeId");
          Objects.requireNonNull(span, "span");
@@ -155,7 +159,7 @@ public sealed interface NormalizedExpression
    * so that a target cannot split them into independent tests that mean something else.
    */
    record ExistsExpression(
-      AstNodeId sourceNodeId, SourceSpan span, SirType type, SymbolId entity, SymbolId connectionField, NormalizedExpression conditions
+      @Source AstNodeId sourceNodeId, @Source SourceSpan span, @Derived SirType type, @Reference SymbolId entity, @Reference SymbolId connectionField, @Fact NormalizedExpression conditions
    ) implements NormalizedExpression {
       public ExistsExpression {
          Objects.requireNonNull(sourceNodeId, "sourceNodeId");
