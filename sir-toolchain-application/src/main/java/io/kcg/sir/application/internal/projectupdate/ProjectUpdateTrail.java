@@ -8,7 +8,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 /** A complete bounded transition trail, replayed on every decode. Never trusts a final status alone. */
-public record ProjectUpdateTrail(String bindingDigest,int fileCount,List<String> events) {
+public record ProjectUpdateTrail(String bindingDigest,int fileCount,List<String> events) implements JournalSlots.SlotTrail {
     public static final int MAX_FILES=32,MAX_EVENTS=256;
     public static final String MAGIC="KCG-PROJECT-UPDATE-JOURNAL-V1\n";
     public enum Phase { PREPARED,UPDATING,FILES_DONE,COMMITTING,PUBLISHED,CLEANING,COMPLETED,ROLLING_BACK,ROLLED_BACK }
@@ -21,6 +21,7 @@ public record ProjectUpdateTrail(String bindingDigest,int fileCount,List<String>
     }
     public static ProjectUpdateTrail start(String digest,int count) {return new ProjectUpdateTrail(digest,count,List.of("P:PREPARED"));}
     public State state() {return replay(fileCount,events);}
+    @Override public boolean terminal() {Phase phase=state().phase();return phase==Phase.COMPLETED || phase==Phase.ROLLED_BACK;}
     public ProjectUpdateTrail phase(Phase phase) {var list=new ArrayList<>(events);list.add("P:"+phase);return new ProjectUpdateTrail(bindingDigest,fileCount,list);}
     public ProjectUpdateTrail file(int index,FileState state) {var list=new ArrayList<>(events);list.add("F:"+index+":"+state);return new ProjectUpdateTrail(bindingDigest,fileCount,list);}
     private static State replay(int count,List<String> events) {
@@ -59,7 +60,7 @@ public record ProjectUpdateTrail(String bindingDigest,int fileCount,List<String>
         }
         return new State(phase,files);
     }
-    public byte[] bytes() {var fields=new ArrayList<String>();fields.add(bindingDigest);fields.add(Integer.toString(fileCount));fields.addAll(events);return ProjectPublicationHistory.encode(MAGIC,fields);}
+    @Override public byte[] bytes() {var fields=new ArrayList<String>();fields.add(bindingDigest);fields.add(Integer.toString(fileCount));fields.addAll(events);return ProjectPublicationHistory.encode(MAGIC,fields);}
     public static ProjectUpdateTrail decode(byte[] bytes) throws IOException {
         try {
             int offset=MAGIC.getBytes(StandardCharsets.US_ASCII).length;require(bytes.length>=offset+4,"missing journal frame count");int count=ByteBuffer.wrap(bytes).getInt(offset);
