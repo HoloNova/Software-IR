@@ -25,7 +25,7 @@ public final class MultiSourceTestSupport {
         }
         return source;
     }
-    static ProjectToolchainResult.Success generate(Path source, Path output) {
+    public static ProjectToolchainResult.Success generate(Path source, Path output) {
         var result = new ToolchainApplication().executeProject(new ProjectToolchainRequest(source, ENTRY, output));
         return assertInstanceOf(ProjectToolchainResult.Success.class, result, result.diagnostics().toString());
     }
@@ -62,7 +62,7 @@ public final class MultiSourceTestSupport {
         }
         return result;
     }
-    static Map<String, String> files(Path root) throws Exception {
+    public static Map<String, String> files(Path root) throws Exception {
         var tree = tree(root); tree.keySet().removeIf(k -> k.endsWith("/")); return tree;
     }
     static String resource(String file) throws Exception {

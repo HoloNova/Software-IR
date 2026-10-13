@@ -38,6 +38,8 @@ public record VersionBinding(String transactionId, Path stateRoot, Path outputRo
         String directoryKey, String slotAKey, String slotBKey, ProjectPublicationHistory.Edge publication, String planDigest, List<Op> ops, List<Owned> owned) {
     public static final String MAGIC = "KCG-PROJECT-VERSION-BINDING-V1\n";
     public static final int MAX_OWNED = 640;
+    /** The largest binding record that can be read back. */
+    public static final int MAX_BYTES = VersionFrames.MAX_RECORD_BYTES;
 
     public enum OpKind { MKDIR, CREATE, UPDATE, DELETE, RMDIR }
 

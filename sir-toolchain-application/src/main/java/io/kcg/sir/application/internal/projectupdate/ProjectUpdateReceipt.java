@@ -13,6 +13,18 @@ public final class ProjectUpdateReceipt {
     public static final int MAX_RECEIPTS=32;
     private ProjectUpdateReceipt() {}
     public record Verified(ProjectUpdateBinding binding,ProjectUpdateTrail trail,long byteCount) {}
+    /** What history validation needs from a terminal receipt, whichever transaction family wrote it. */
+    public record Summary(ProjectPublicationHistory.Edge publication,boolean completed,String transactionsKey,long byteCount) {}
+    public static Summary summary(SecureFileAccess files,String transactionId) throws IOException {
+        hex(transactionId);byte[] head=files.read(DIRECTORY+"/"+transactionId+"/binding",io.kcg.sir.application.internal.version.VersionBinding.MAX_BYTES);
+        String magic=io.kcg.sir.application.internal.version.VersionBinding.MAGIC;
+        if(head.length>=magic.length() && new String(head,0,magic.length(),java.nio.charset.StandardCharsets.US_ASCII).equals(magic)) {
+            var v=io.kcg.sir.application.internal.version.VersionReceipt.read(files,transactionId);
+            return new Summary(v.binding().publication(),v.trail().state().phase()==io.kcg.sir.application.internal.version.VersionTrail.Phase.COMPLETED,v.binding().transactionsKey(),v.byteCount());
+        }
+        var v=read(files,transactionId);
+        return new Summary(v.binding().publication(),v.trail().state().phase()==ProjectUpdateTrail.Phase.COMPLETED,v.binding().transactionsKey(),v.byteCount());
+    }
     public static Verified read(SecureFileAccess files,String transactionId) throws IOException {
         hex(transactionId);String dir=DIRECTORY+"/"+transactionId;
         require(files.list(dir,12).equals(MEMBERS),"terminal receipt has missing/unknown members");

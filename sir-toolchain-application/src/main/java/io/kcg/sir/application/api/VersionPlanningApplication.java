@@ -1,6 +1,7 @@
 package io.kcg.sir.application.api;
 
 import io.kcg.sir.application.internal.projectbaseline.ProjectBaselineCodec.Bundle;
+import io.kcg.sir.application.internal.version.VersionPlans;
 import io.kcg.sir.application.internal.projectbaseline.ProjectBaselineCodec.Problem;
 import io.kcg.sir.application.internal.projectbaseline.ProjectBaselineVerification;
 import io.kcg.sir.application.internal.projectbaseline.SecureFileAccess;
@@ -92,7 +93,7 @@ public final class VersionPlanningApplication {
         Bundle b = base.bundle();
         Bundle c = candidate.bundle();
         if (b.baselineId().equals(c.baselineId())) {
-            return new VersionPlanningResult.NoChanges(receipt(b), diagnostics);
+            return new VersionPlanningResult.NoChanges(VersionPlans.receipt(b), diagnostics);
         }
 
         FileDelta delta = FileDelta.compare(base.compilation().generatedFiles(), candidate.compilation().generatedFiles(), path -> observe(output, path));
@@ -110,26 +111,11 @@ public final class VersionPlanningApplication {
             return new VersionPlanningResult.Failure(ExecutionStage.PREFLIGHT, diagnostics);
         }
 
-        List<VersionPlan.FileOp> operations = new ArrayList<>();
-        Map<String, GeneratedFile> before = byPath(base.compilation().generatedFiles());
-        Map<String, GeneratedFile> after = byPath(candidate.compilation().generatedFiles());
-        for (FileDelta.Entry entry : delta.entries()) {
-            if (entry.action() == FileDelta.Action.UNCHANGED) {
-                continue;
-            }
-
-            GeneratedFile was = before.get(entry.path());
-            GeneratedFile now = after.get(entry.path());
-            operations.add(new VersionPlan.FileOp(entry.path(), VersionPlan.Action.valueOf(entry.action().name()), entry.owner(),
-                was == null ? 0 : bytes(was), entry.beforeSha256(), now == null ? 0 : bytes(now), entry.afterSha256()));
+        VersionPlan plan = VersionPlans.compare(request.stateRoot(), base, candidate, delta);
+        if (plan.files().size() > VersionPlan.MAX_FILE_OPS) {
+            return fail(diagnostics, "LIMIT-001", ExecutionStage.PREFLIGHT, plan.files().size() + " file operations exceed the limit of " + VersionPlan.MAX_FILE_OPS);
         }
 
-        if (operations.size() > VersionPlan.MAX_FILE_OPS) {
-            return fail(diagnostics, "LIMIT-001", ExecutionStage.PREFLIGHT, operations.size() + " file operations exceed the limit of " + VersionPlan.MAX_FILE_OPS);
-        }
-
-        SourceDelta sources = SourceDelta.between(b.sources().manifest(), c.sources().manifest());
-        VersionPlan plan = new VersionPlan(request.stateRoot(), receipt(b), receipt(c), sources, operations, (int)delta.count(FileDelta.Action.UNCHANGED));
         ProjectBaselineVerification.revalidate(state, b);
         return new VersionPlanningResult.Planned(plan, diagnostics.stream().filter(d -> !d.isError()).toList());
     }
@@ -161,21 +147,6 @@ public final class VersionPlanningApplication {
         } catch (IOException | RuntimeException e) {
             return new FileDelta.Observation.Unreadable(String.valueOf(e.getMessage()));
         }
-    }
-
-    private static long bytes(GeneratedFile file) {
-        return file.content().getBytes(StandardCharsets.UTF_8).length;
-    }
-
-    private static Map<String, GeneratedFile> byPath(List<GeneratedFile> files) {
-        Map<String, GeneratedFile> map = new TreeMap<>();
-        files.forEach(f -> map.put(f.relativePath(), f));
-        return map;
-    }
-
-    private static ProjectBaselineReceipt receipt(Bundle bundle) {
-        var d = bundle.descriptor();
-        return new ProjectBaselineReceipt(bundle.baselineId(), d.outputRoot(), d.entry(), d.sourceSetSha(), d.graphDigest(), d.manifestDigest());
     }
 
     private static ExecutionStage lastErrorStage(List<ExecutionDiagnostic> diagnostics) {
