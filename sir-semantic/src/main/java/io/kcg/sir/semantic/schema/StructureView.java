@@ -1,5 +1,7 @@
 package io.kcg.sir.semantic.schema;
 
+import io.kcg.sir.semantic.api.NormalizedSemanticModel;
+import io.kcg.sir.semantic.symbol.Symbol;
 import io.kcg.sir.semantic.symbol.SymbolId;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.RecordComponent;
@@ -11,6 +13,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.BiFunction;
 
 /**
  * A read-only, generic reading of a normalized model through {@link SoftwareSchema}.
@@ -29,20 +32,22 @@ public final class StructureView {
 
    private final SoftwareSchema schema;
    private final Set<SlotKind> include;
+   private final BiFunction<SlotSpec, SymbolId, String> referenceText;
 
-   private StructureView(SoftwareSchema schema, Set<SlotKind> include) {
+   private StructureView(SoftwareSchema schema, Set<SlotKind> include, BiFunction<SlotSpec, SymbolId, String> referenceText) {
       this.schema = schema;
       this.include = include;
+      this.referenceText = referenceText;
    }
 
    /** Facts, identities and references of a normalized model. */
    public static StructNode facts(Object model) {
-      return new StructureView(SoftwareSchema.normalizedModel(), FACTS).node(model);
+      return new StructureView(SoftwareSchema.normalizedModel(), FACTS, (spec, id) -> id.value()).node(model);
    }
 
    /** The same view plus the source slots, for comparing where things are written. */
    public static StructNode withSource(Object model) {
-      return new StructureView(SoftwareSchema.normalizedModel(), WITH_SOURCE).node(model);
+      return new StructureView(SoftwareSchema.normalizedModel(), WITH_SOURCE, (spec, id) -> id.value()).node(model);
    }
 
    /** A view of any model rooted in a schema built by {@link SoftwareSchema#of}; used by schema tests. */
@@ -50,7 +55,39 @@ public final class StructureView {
       Set<SlotKind> kinds = EnumSet.of(SlotKind.IDENTITY);
       kinds.addAll(include);
       kinds.remove(SlotKind.DERIVED);
-      return new StructureView(schema, kinds).node(model);
+      return new StructureView(schema, kinds, (spec, id) -> id.value()).node(model);
+   }
+
+   /**
+    * The same facts, identities and references, but with every reference written as the
+    * <em>name</em> the author wrote instead of the resolved identity.
+    *
+    * <p>This is the form a structural edit works on: a new node cannot know an identity before
+    * Resolve has run, and a name is what the source text will contain when it is written back.
+    */
+   static StructNode authored(NormalizedSemanticModel model) {
+      BiFunction<SlotSpec, SymbolId, String> nameOf = (spec, id) -> {
+         Symbol symbol = model.symbols()
+            .byId(id)
+            .orElseThrow(() -> new IllegalStateException("a reference points at " + id.value() + ", which the symbol table does not know"));
+         return spec.viaVariableType() ? writtenTypeName(symbol) : symbol.name();
+      };
+      return new StructureView(SoftwareSchema.normalizedModel(), FACTS, nameOf).node(model);
+   }
+
+   /** The type name the author wrote for a parameter variable such as {@code input} or {@code actor}. */
+   private static String writtenTypeName(Symbol symbol) {
+      if (symbol instanceof Symbol.VariableSymbol variable) {
+         if (variable.type() instanceof io.kcg.sir.semantic.type.DeclaredType declared) {
+            return declared.name();
+         }
+
+         if (variable.type() instanceof io.kcg.sir.semantic.type.RefType ref) {
+            return ref.entityName();
+         }
+      }
+
+      throw new IllegalStateException("the parameter " + symbol.name() + " has no written type name");
    }
 
    private StructNode node(Object value) {
@@ -119,6 +156,10 @@ public final class StructureView {
       Class<?> type = value instanceof Enum<?> e ? e.getDeclaringClass() : value.getClass();
       if (this.schema.nodes().containsKey(type)) {
          return new StructValue.Child(this.node(value));
+      }
+
+      if (spec.kind() == SlotKind.REFERENCE && value instanceof SymbolId id) {
+         return new StructValue.Text(this.referenceText.apply(spec, id));
       }
 
       return new StructValue.Text(scalar(value));

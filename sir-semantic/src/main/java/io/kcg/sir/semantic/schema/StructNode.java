@@ -28,6 +28,50 @@ public record StructNode(String kind, List<Slot> slots) {
       return this.slots.stream().filter(s -> s.key().equals(key)).findFirst().orElseThrow(() -> new IllegalArgumentException(this.kind + " has no slot " + key));
    }
 
+   public java.util.Optional<Slot> find(String key) {
+      return this.slots.stream().filter(s -> s.key().equals(key)).findFirst();
+   }
+
+   /** A copy of this node whose slot {@code key} holds {@code value}; the slot must exist. */
+   public StructNode withSlot(String key, StructValue value) {
+      List<Slot> changed = new java.util.ArrayList<>();
+      boolean found = false;
+      for (Slot slot : this.slots) {
+         if (slot.key().equals(key)) {
+            changed.add(new Slot(slot.key(), slot.kind(), value));
+            found = true;
+         } else {
+            changed.add(slot);
+         }
+      }
+
+      if (!found) {
+         throw new IllegalArgumentException(this.kind + " has no slot " + key);
+      }
+
+      return new StructNode(this.kind, changed);
+   }
+
+   /** A deep copy without the slots of the given roles; used to compare shape without identity or position. */
+   public StructNode without(java.util.Set<SlotKind> roles) {
+      List<Slot> kept = new java.util.ArrayList<>();
+      for (Slot slot : this.slots) {
+         if (!roles.contains(slot.kind())) {
+            kept.add(new Slot(slot.key(), slot.kind(), withoutRoles(slot.value(), roles)));
+         }
+      }
+
+      return new StructNode(this.kind, kept);
+   }
+
+   private static StructValue withoutRoles(StructValue value, java.util.Set<SlotKind> roles) {
+      return switch (value) {
+         case StructValue.Child child -> new StructValue.Child(child.node().without(roles));
+         case StructValue.Seq seq -> new StructValue.Seq(seq.elements().stream().map(e -> withoutRoles(e, roles)).toList());
+         default -> value;
+      };
+   }
+
    /** An indented, deterministic text form for reports and test failure messages. */
    public String render() {
       StringBuilder out = new StringBuilder();

@@ -17,4 +17,9 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.RECORD_COMPONENT)
 public @interface Reference {
+   /**
+    * The symbol is a parameter variable ({@code input}, {@code actor}) and what the author wrote is
+    * the <em>type</em> of that variable, not the variable's own name.
+    */
+   boolean viaVariableType() default false;
 }

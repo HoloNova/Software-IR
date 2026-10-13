@@ -91,6 +91,11 @@ public final class SoftwareSchema {
       return this.unions;
    }
 
+   /** The node kind with this simple name, if the schema has one. */
+   public java.util.Optional<NodeType> byKind(String kind) {
+      return this.nodes.values().stream().filter(n -> n.kind().equals(kind)).findFirst();
+   }
+
    public NodeType node(Class<?> type) {
       NodeType found = this.nodes.get(type);
       if (found == null) {
@@ -149,7 +154,7 @@ public final class SoftwareSchema {
          // then it must still be a node so that the union stays closed.
          String kind = type.getSimpleName();
          this.claimKind(kind, type);
-         this.nodes.put(type, new NodeType(type, kind, List.of(new SlotSpec("constant", SlotKind.FACT, false, Cardinality.ONE, type))));
+         this.nodes.put(type, new NodeType(type, kind, List.of(new SlotSpec("constant", SlotKind.FACT, false, Cardinality.ONE, String.class))));
       }
 
       private void claimKind(String kind, Class<?> type) {
@@ -176,7 +181,8 @@ public final class SoftwareSchema {
                this.problems.add(where + " is @Keyed but is not a collection of nodes");
             }
 
-            slots.add(new SlotSpec(component.getName(), slotKind, keyed, shape.cardinality, shape.valueType));
+            boolean viaType = component.isAnnotationPresent(Reference.class) && component.getAnnotation(Reference.class).viaVariableType();
+            slots.add(new SlotSpec(component.getName(), slotKind, keyed, shape.cardinality, shape.valueType, viaType));
             if (slotKind == SlotKind.DERIVED || slotKind == SlotKind.SOURCE) {
                continue;
             }
@@ -316,6 +322,10 @@ public final class SoftwareSchema {
    }
 
    static boolean isNode(Class<?> type) {
+      if (SCALARS.contains(type)) {
+         return false;
+      }
+
       return type.isRecord() || (type.isSealed() && type.isInterface()) || (type.isEnum() && isUnionVariant(type));
    }
 
