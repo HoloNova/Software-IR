@@ -71,12 +71,12 @@ public final class ProjectPublicationHistory {
         require(edges.stream().allMatch(e->reached.contains(e.b0()) && reached.contains(e.b1())),"disconnected publication record");
         var transactionKeys=new HashSet<String>();var completedEdges=new HashSet<String>();int receiptCount=0;
         if(history.contains("receipts"))for(String transaction:files.list(ProjectUpdateReceipt.DIRECTORY,ProjectUpdateReceipt.MAX_RECEIPTS)) {
-            var receipt=ProjectUpdateReceipt.read(files,transaction);var binding=receipt.binding();var p=binding.publication();total+=receipt.byteCount();receiptCount++;
+            var receipt=ProjectUpdateReceipt.summary(files,transaction);var p=receipt.publication();total+=receipt.byteCount();receiptCount++;
             budget(total<=MAX_HISTORY_BYTES,"cumulative history/receipt byte budget exceeded");
             require(p.origin().equals(origin) && p.outputRoot().equals(root) && ids.contains(p.b0()),"receipt is not rooted in published history");
             var base=descriptors.get(p.b0());require(base.sourceSetSha().equals(p.baseSource()) && base.graphDigest().equals(p.baseGraph()) && base.manifestDigest().equals(p.baseManifest()),"receipt baseline evidence mismatch");
-            if(receipt.trail().state().phase()==ProjectUpdateTrail.Phase.COMPLETED) {require(edgeIds.contains(p.id()) && ids.contains(p.b1()),"completed receipt lacks publication relation");completedEdges.add(p.id());}
-            transactionKeys.add(binding.transactionsKey());
+            if(receipt.completed()) {require(edgeIds.contains(p.id()) && ids.contains(p.b1()),"completed receipt lacks publication relation");completedEdges.add(p.id());}
+            transactionKeys.add(receipt.transactionsKey());
         }
         require(completedEdges.equals(edgeIds),"publication relation lacks a completed transaction receipt");
         return new View(origin,ids,edgeIds,total,transactionKeys,receiptCount);

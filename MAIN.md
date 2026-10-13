@@ -100,7 +100,7 @@ CURRENT Bundle + output + candidate SIR
 
 Semantic拥有唯一的类型化软件结构定义；Change只处理固定三种机械操作与结构差异，不为新增功能补专用操作/投影/策略。草稿与已验证模型分开，修改不得沿用旧binding；新SIR写出后复用正式分析和生成。业务合法性归Semantic、目标支持与物理实现归Lowering、文件差异与版本发布归Application。保持强类型模型，不改成无类型JSON树或用户规则语言。
 
-这是目标架构，不是当前能力。旧API/格式/NoChanges/日志/恢复保持各自原合同；新混合及source-only应用须独立设计验证。Q22、Q23后续功能/验收执行暂停；文档方案已确认；其后 R1（类型化软件结构）、R2（增删改指令与 SIR 往返）与 R3（统一编译与只读更新预览）经负责人授权已实施并验证（见 `docs/roadmap/R1-semantic-structure-report.md`、`docs/roadmap/R2-command-editing-report.md`、`docs/roadmap/R3-compilation-preview-report.md`），R3 只读、不落盘；R4、R5 未授权。当前实现仍以上述1.3及资格证据为准。
+这是目标架构，不是当前能力。旧API/格式/NoChanges/日志/恢复保持各自原合同；新混合及source-only应用须独立设计验证。Q22、Q23后续功能/验收执行暂停；文档方案已确认；其后 R1（类型化软件结构）、R2（增删改指令与 SIR 往返）、R3（统一编译与只读更新预览）与 R4（版本应用与恢复）经负责人授权已实施并验证（见 `docs/roadmap/R1-semantic-structure-report.md`、`docs/roadmap/R2-command-editing-report.md`、`docs/roadmap/R3-compilation-preview-report.md`、`docs/roadmap/R4-version-apply-report.md`），R5 未授权。当前实现仍以上述1.3及资格证据为准。
 
 ## 2. 不可破坏的架构规则
 
