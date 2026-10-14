@@ -35,6 +35,7 @@ import io.kcg.sir.semantic.model.NormalizedView;
 import io.kcg.sir.semantic.symbol.SymbolId;
 import io.kcg.sir.semantic.symbol.SymbolKind;
 import io.kcg.sir.source.SourceId;
+import io.kcg.sir.source.SourceSnapshot;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -43,9 +44,10 @@ import java.util.Objects;
 import java.util.Optional;
 
 public final class SpringBootProjectGraphInputFactory {
-   public ProjectGraphInput build(
-      NormalizedSemanticModel semanticModel, SpringBootLoweredModel loweredModel, List<GeneratedFile> generatedFiles, SourceId sourceId
+   public ProjectGraphInput build(NormalizedSemanticModel semanticModel, SpringBootLoweredModel loweredModel,
+      List<GeneratedFile> generatedFiles, SourceSnapshot sources
    ) {
+      SourceId sourceId = Objects.requireNonNull(sources, "sources").entry();
       Objects.requireNonNull(semanticModel, "semanticModel");
       Objects.requireNonNull(loweredModel, "loweredModel");
       Objects.requireNonNull(generatedFiles, "generatedFiles");
@@ -103,14 +105,8 @@ public final class SpringBootProjectGraphInputFactory {
          edges.add(new EdgeBinding(GraphEdgeKind.GENERATES_FILE, new Lowered(gf.artifactId()), new File(gf.relativePath())));
       }
 
-      return new ProjectGraphInput(GraphVersion.V0_1, sourceId, loweredModel.displayName(), semanticDeclarations, loweredDeclarations, artifacts, files, edges);
-   }
-
-   public ProjectGraphInput build(NormalizedSemanticModel semanticModel, SpringBootLoweredModel loweredModel,
-      List<GeneratedFile> generatedFiles, io.kcg.sir.source.SourceSnapshot sources) {
-      var single = build(semanticModel, loweredModel, generatedFiles, sources.entry());
-      return new ProjectGraphInput(GraphVersion.V0_2, sources.entry(), single.projectDisplayName(),
-         single.semanticDeclarations(), single.loweredDeclarations(), single.artifacts(), single.files(), single.edges(), Optional.of(sources.manifest()));
+      return new ProjectGraphInput(GraphVersion.V0_2, sourceId, loweredModel.displayName(), semanticDeclarations, loweredDeclarations, artifacts, files, edges,
+         Optional.of(sources.manifest()));
    }
 
    private static SymbolKind symbolKindOf(NormalizedDeclaration decl) {

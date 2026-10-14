@@ -79,7 +79,7 @@ public record VerificationReport(String id, VerificationStage requested, Optiona
         lines.add("id=" + escape(id));
         lines.add("requested=" + requested);
         lines.add(binding.map(b -> "binding=" + b.sourceSetSha256() + "|" + b.manifestDigest() + "|" + b.generatedDigest() + "|" + b.fileCount()
-                + "|" + escape(b.targetId()) + "|" + escape(b.loweredIrVersion()) + "|" + b.inputKind()).orElse("binding=NONE"));
+                + "|" + escape(b.targetId()) + "|" + escape(b.loweredIrVersion())).orElse("binding=NONE"));
         for (StageResult result : stages) {
             StageOutcome o = result.outcome();
             lines.add("stage=" + result.stage() + "|" + o.status() + "|" + o.code() + "|" + escape(o.message()));

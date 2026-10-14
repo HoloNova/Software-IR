@@ -110,9 +110,9 @@ class MultiSourceReadBoundaryTest {
 
     @Test void sourceOutputOverlapAndRelativeRequestsAreRefusedWithoutMutatingExistingState() throws Exception {
         Path source = fixture(temp); var before = tree(temp);
-        for (var request : List.of(new ProjectToolchainRequest(source, ENTRY, source.resolve("generated")),
-                new ProjectToolchainRequest(source, ENTRY, temp), new ProjectToolchainRequest(Path.of("relative"), ENTRY, temp.resolve("output")))) {
-            var result = assertInstanceOf(ProjectToolchainResult.Failure.class, new ToolchainApplication().executeProject(request));
+        for (var request : List.of(new ToolchainRequest(source, ENTRY, source.resolve("generated")),
+                new ToolchainRequest(source, ENTRY, temp), new ToolchainRequest(Path.of("relative"), ENTRY, temp.resolve("output")))) {
+            var result = assertInstanceOf(ToolchainResult.Failure.class, new ToolchainApplication().execute(request));
             assertEquals(ExecutionStage.READ, result.failedStage()); assertEquals(FailureDisposition.NO_CHANGES, result.disposition()); assertEquals(before, tree(temp));
         }
     }
@@ -121,7 +121,7 @@ class MultiSourceReadBoundaryTest {
     private static void refuse(Path directory, Path source, String expected) throws Exception {
         Path state = directory.resolve("state"); Files.createDirectories(state); Files.writeString(state.resolve("CURRENT"), "untouched authoritative sentinel");
         var before = tree(directory);
-        var result = assertInstanceOf(ProjectToolchainResult.Failure.class, new ToolchainApplication().executeProject(new ProjectToolchainRequest(source, ENTRY, directory.resolve("output"))));
+        var result = assertInstanceOf(ToolchainResult.Failure.class, new ToolchainApplication().execute(new ToolchainRequest(source, ENTRY, directory.resolve("output"))));
         assertEquals(ExecutionStage.READ, result.failedStage()); assertEquals(FailureDisposition.NO_CHANGES, result.disposition());
         assertEquals(List.of(expected), result.diagnostics().stream().filter(ExecutionDiagnostic::isError).map(ExecutionDiagnostic::code).toList());
         assertEquals(ENTRY, result.diagnostics().getFirst().sourceSpan().orElseThrow().source());

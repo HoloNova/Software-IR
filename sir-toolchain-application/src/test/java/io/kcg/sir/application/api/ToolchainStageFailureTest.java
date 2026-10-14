@@ -22,6 +22,22 @@ class ToolchainStageFailureTest {
     Path temporaryDirectory;
 
     @Test
+    void parseFailureIsStructuredKeepsTheOriginalCodesAndCreatesNoOutput() throws Exception {
+        Path source = Files.createDirectories(temporaryDirectory.resolve("sources-parse"));
+        Files.writeString(source.resolve("project.sir"), "sir 0.2\nsoftware Broken {\n");
+        Path outputRoot = temporaryDirectory.resolve("parse-output").toAbsolutePath();
+
+        ToolchainResult.Failure failure = assertInstanceOf(ToolchainResult.Failure.class, new ToolchainApplication().execute(
+                new ToolchainRequest(source.toAbsolutePath(), SourceId.of("project.sir"), outputRoot)));
+
+        assertEquals(ExecutionStage.PARSE, failure.failedStage());
+        assertEquals(FailureDisposition.NO_CHANGES, failure.disposition());
+        assertTrue(failure.diagnostics().stream().anyMatch(d -> d.code().startsWith("SIR-")), failure.diagnostics().toString());
+        assertTrue(failure.diagnostics().stream().allMatch(d -> d.stage() == ExecutionStage.PARSE), failure.diagnostics().toString());
+        assertFalse(Files.exists(outputRoot));
+    }
+
+    @Test
     void semanticFailureIsStructuredAndCreatesNoOutput() throws Exception {
         assertStageFailure(new ToolchainApplication(),
                 "/invalid/semantic-unresolved-name.sir", ExecutionStage.SEMANTIC);
@@ -47,17 +63,16 @@ class ToolchainStageFailureTest {
     private ToolchainResult.Failure assertStageFailure(
             ToolchainApplication application, String resource, ExecutionStage expectedStage)
             throws Exception {
-        Path source = temporaryDirectory.resolve(resource.substring(resource.lastIndexOf('/') + 1));
+        Path source = Files.createDirectories(temporaryDirectory.resolve("sources-" + expectedStage.name()));
         try (InputStream input = ToolchainStageFailureTest.class.getResourceAsStream(resource)) {
             if (input == null) {
                 throw new IllegalStateException("missing test resource: " + resource);
             }
-            Files.copy(input, source, StandardCopyOption.REPLACE_EXISTING);
+            Files.copy(input, source.resolve("project.sir"), StandardCopyOption.REPLACE_EXISTING);
         }
         Path outputRoot = temporaryDirectory.resolve(expectedStage.name()).toAbsolutePath();
         ToolchainResult result = application.execute(new ToolchainRequest(
-                source.toAbsolutePath(), SourceId.of(resource.substring(1)), outputRoot,
-                ConflictPolicy.FAIL_IF_EXISTS));
+                source.toAbsolutePath(), SourceId.of("project.sir"), outputRoot));
 
         ToolchainResult.Failure failure =
                 assertInstanceOf(ToolchainResult.Failure.class, result);

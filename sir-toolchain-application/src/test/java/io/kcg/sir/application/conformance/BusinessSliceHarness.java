@@ -1,7 +1,7 @@
 package io.kcg.sir.application.conformance;
 
 import io.kcg.sir.application.api.ExecutionDiagnostic;
-import io.kcg.sir.application.internal.SirCompilation;
+import io.kcg.sir.application.internal.ProjectCompilation;
 import io.kcg.sir.generator.springboot.api.GeneratedFile;
 import io.kcg.sir.generator.springboot.api.SpringBootGenerator;
 import io.kcg.sir.source.SourceId;
@@ -311,7 +311,7 @@ final class BusinessSliceHarness {
                 .append(" body=").append(response.body()).append('\n');
     }
 
-    /** Records a multi-source project already delivered by ToolchainApplication; never rewrites it. */
+    /** Records a project already delivered by ToolchainApplication; never rewrites it. */
     void recordMaterializedProject(io.kcg.sir.source.SourceSnapshot sources, List<GeneratedFile> files) throws IOException {
         this.sirDigest = sources.sha256Hex();
         this.generatedFileCount = files.size();
@@ -322,17 +322,18 @@ final class BusinessSliceHarness {
             matches &= Files.isRegularFile(path) && java.util.Arrays.equals(
                     Files.readAllBytes(path), file.content().getBytes(StandardCharsets.UTF_8));
         }
-        this.check("the multi-source generated tree matches every compiled byte", matches,
+        this.check("the generated tree matches every compiled byte", matches,
                 "sources=" + sources.manifest().files().size() + " files=" + files.size());
-        this.reportLine("sirInput=MULTI_SOURCE_SET sourceSetSha256=" + sources.sha256Hex());
+        this.reportLine("sirInput=SOURCE_SET sourceSetSha256=" + sources.sha256Hex());
     }
 
-    /** Compiles the single-file slice and materializes it; returns no files on compilation failure. */
+    /** Compiles the slice (a software written in one source file) and materializes it; returns no files on compilation failure. */
     List<GeneratedFile> compileAndMaterialize() throws IOException {
         List<ExecutionDiagnostic> diagnostics = new ArrayList<>();
-        Optional<SirCompilation.CompilationSnapshot> compiled = SirCompilation.compile(
-                ConformanceFixtures.readResource(this.fixture.sirResource()),
-                SourceId.of(this.fixture.sirResource().substring(this.fixture.sirResource().lastIndexOf('/') + 1)),
+        SourceId entry = SourceId.of(this.fixture.sirResource().substring(this.fixture.sirResource().lastIndexOf('/') + 1));
+        Optional<ProjectCompilation.Compiled> compiled = ProjectCompilation.compile(
+                new io.kcg.sir.source.SourceSnapshot(entry, java.util.Map.of(entry,
+                        ConformanceFixtures.readResource(this.fixture.sirResource()).getBytes(StandardCharsets.UTF_8))),
                 new SpringBootGenerator()::generate, diagnostics);
         this.check("the SIR slice compiles with no diagnostics",
                 compiled.isPresent() && diagnostics.isEmpty(), "diagnostics=" + diagnostics);

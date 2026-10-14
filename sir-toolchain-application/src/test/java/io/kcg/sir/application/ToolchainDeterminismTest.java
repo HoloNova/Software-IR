@@ -175,17 +175,6 @@ class ToolchainDeterminismTest {
     }
 
     @Test
-    void manifestConflictPolicyMatchesRequest() throws Exception {
-        Path source = ApplicationTestSupport.writeCampusMarketSource(temporaryDirectory);
-        Path out = temporaryDirectory.resolve("out").toAbsolutePath();
-        ToolchainResult.Success success = ApplicationTestSupport.runCampusMarket(
-                source, out, io.kcg.sir.application.api.ConflictPolicy.FAIL_IF_EXISTS);
-        assertEquals(io.kcg.sir.application.api.ConflictPolicy.FAIL_IF_EXISTS,
-                success.manifest().conflictPolicy(),
-                "manifest conflictPolicy must match request");
-    }
-
-    @Test
     void manifestOutputRootMatchesRequest() throws Exception {
         Path source = ApplicationTestSupport.writeCampusMarketSource(temporaryDirectory);
         Path out = temporaryDirectory.resolve("expected-root").toAbsolutePath();

@@ -3,8 +3,8 @@ package io.kcg.cli;
 import static org.junit.jupiter.api.Assertions.*;
 
 import io.kcg.cli.CliTestFixtures.ProcResult;
-import io.kcg.sir.application.api.ProjectToolchainRequest;
-import io.kcg.sir.application.api.ProjectToolchainResult;
+import io.kcg.sir.application.api.ToolchainRequest;
+import io.kcg.sir.application.api.ToolchainResult;
 import io.kcg.sir.application.api.ToolchainApplication;
 import io.kcg.sir.source.SourceId;
 import java.io.IOException;
@@ -48,7 +48,7 @@ class KcgVersionCommandsTest {
             write(this.candidate.resolve(file), file.equals("project.sir") ? text.replace(CODE_32, CODE_40) : text);
         }
 
-        assertInstanceOf(ProjectToolchainResult.Success.class, new ToolchainApplication().executeProject(new ProjectToolchainRequest(this.sources, ENTRY, this.output)));
+        assertInstanceOf(ToolchainResult.Success.class, new ToolchainApplication().execute(new ToolchainRequest(this.sources, ENTRY, this.output)));
     }
 
     private static String resource(String file) throws IOException {
@@ -96,7 +96,7 @@ class KcgVersionCommandsTest {
 
     private Path freshGeneration() throws IOException {
         Path expected = this.temp.resolve("expected-output");
-        assertInstanceOf(ProjectToolchainResult.Success.class, new ToolchainApplication().executeProject(new ProjectToolchainRequest(this.candidate, ENTRY, expected)));
+        assertInstanceOf(ToolchainResult.Success.class, new ToolchainApplication().execute(new ToolchainRequest(this.candidate, ENTRY, expected)));
         return expected;
     }
 

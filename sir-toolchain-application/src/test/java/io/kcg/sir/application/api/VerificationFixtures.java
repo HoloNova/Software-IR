@@ -64,6 +64,6 @@ final class VerificationFixtures {
             }
         };
         return new CandidateVerificationApplication(sandbox, builder, host, oracle, ResourceLimits.defaults())
-                .verify(new VerificationRequest("candidate", CompilationInput.project(candidate), through));
+                .verify(new VerificationRequest("candidate", candidate, through));
     }
 }

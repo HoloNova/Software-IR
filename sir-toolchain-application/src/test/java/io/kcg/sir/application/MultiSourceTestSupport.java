@@ -25,9 +25,14 @@ public final class MultiSourceTestSupport {
         }
         return source;
     }
-    public static ProjectToolchainResult.Success generate(Path source, Path output) {
-        var result = new ToolchainApplication().executeProject(new ProjectToolchainRequest(source, ENTRY, output));
-        return assertInstanceOf(ProjectToolchainResult.Success.class, result, result.diagnostics().toString());
+    /** A software written in one source file, as the exact bytes the compiler is given. */
+    public static SourceSnapshot oneFile(String name, String text) {
+        SourceId id = SourceId.of(name);
+        return new SourceSnapshot(id, Map.of(id, text.getBytes(StandardCharsets.UTF_8)));
+    }
+    public static ToolchainResult.Success generate(Path source, Path output) {
+        var result = new ToolchainApplication().execute(new ToolchainRequest(source, ENTRY, output));
+        return assertInstanceOf(ToolchainResult.Success.class, result, result.diagnostics().toString());
     }
     static ProjectSemanticInput parse(SourceSnapshot snapshot) throws Exception {
         var parser = SirParser.create();

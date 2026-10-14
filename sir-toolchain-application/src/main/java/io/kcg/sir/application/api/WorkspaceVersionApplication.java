@@ -187,7 +187,7 @@ public final class WorkspaceVersionApplication {
     /** Reads the candidate directory; null (with the reason in {@code diagnostics}) if it cannot be used. */
     private static WorkspaceVersionRequest resolve(WorkspaceDirectoryRequest request, List<ExecutionDiagnostic> diagnostics) {
         try {
-            var loaded = ProjectSourceReader.read(new ProjectToolchainRequest(request.candidateRoot(), request.entry(), request.outputRoot()), diagnostics);
+            var loaded = ProjectSourceReader.read(new ToolchainRequest(request.candidateRoot(), request.entry(), request.outputRoot()), diagnostics);
             if (loaded.isEmpty()) {
                 return null;
             }

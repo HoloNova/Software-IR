@@ -62,7 +62,7 @@ class MultiSourceTypeValidationTest {
 
     private ExecutionDiagnostic rejected(Path source, String code) throws Exception {
         var before = tree(temp);
-        var result = assertInstanceOf(ProjectToolchainResult.Failure.class, new ToolchainApplication().executeProject(new ProjectToolchainRequest(source, ENTRY, temp.resolve("output"))));
+        var result = assertInstanceOf(ToolchainResult.Failure.class, new ToolchainApplication().execute(new ToolchainRequest(source, ENTRY, temp.resolve("output"))));
         assertEquals(ExecutionStage.SEMANTIC, result.failedStage()); assertEquals(FailureDisposition.NO_CHANGES, result.disposition());
         assertEquals(List.of(code), result.diagnostics().stream().filter(ExecutionDiagnostic::isError).map(ExecutionDiagnostic::code).toList());
         assertEquals(ENTRY, result.diagnostics().getFirst().sourceSpan().orElseThrow().source());

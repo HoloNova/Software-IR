@@ -57,11 +57,7 @@ class ToolchainGraphStageFailureTest {
         Path source = copyCampusMarketSource();
         Path outputRoot = temporaryDirectory.resolve("graph-failure-out").toAbsolutePath();
 
-        ToolchainResult result = application.execute(new ToolchainRequest(
-                source.toAbsolutePath(),
-                SourceId.of("campus-market.sir"),
-                outputRoot,
-                ConflictPolicy.FAIL_IF_EXISTS));
+        ToolchainResult result = application.execute(new ToolchainRequest(source.toAbsolutePath(), SourceId.of("project.sir"), outputRoot));
 
         ToolchainResult.Failure failure = assertInstanceOf(ToolchainResult.Failure.class, result);
         assertEquals(ExecutionStage.GRAPH, failure.failedStage(),
@@ -105,11 +101,7 @@ class ToolchainGraphStageFailureTest {
         Path source = copyCampusMarketSource();
         Path outputRoot = temporaryDirectory.resolve("graph-diag-out").toAbsolutePath();
 
-        ToolchainResult result = application.execute(new ToolchainRequest(
-                source.toAbsolutePath(),
-                SourceId.of("campus-market.sir"),
-                outputRoot,
-                ConflictPolicy.FAIL_IF_EXISTS));
+        ToolchainResult result = application.execute(new ToolchainRequest(source.toAbsolutePath(), SourceId.of("project.sir"), outputRoot));
 
         ToolchainResult.Failure failure = assertInstanceOf(ToolchainResult.Failure.class, result);
         assertEquals(ExecutionStage.GRAPH, failure.failedStage());
@@ -156,11 +148,7 @@ class ToolchainGraphStageFailureTest {
         Path source = copyCampusMarketSource();
         Path outputRoot = temporaryDirectory.resolve("graph-success-out").toAbsolutePath();
 
-        ToolchainResult result = application.execute(new ToolchainRequest(
-                source.toAbsolutePath(),
-                SourceId.of("campus-market.sir"),
-                outputRoot,
-                ConflictPolicy.FAIL_IF_EXISTS));
+        ToolchainResult result = application.execute(new ToolchainRequest(source.toAbsolutePath(), SourceId.of("project.sir"), outputRoot));
 
         ToolchainResult.Success success = assertInstanceOf(ToolchainResult.Success.class, result,
                 "Graph Success must propagate to ToolchainResult.Success: " + result);
@@ -187,13 +175,13 @@ class ToolchainGraphStageFailureTest {
     }
 
     private Path copyCampusMarketSource() throws Exception {
-        Path source = temporaryDirectory.resolve("campus-market.sir");
+        Path source = Files.createDirectories(temporaryDirectory.resolve("campus-market-sources"));
         try (InputStream input = ToolchainGraphStageFailureTest.class.getResourceAsStream(
                 "/valid/campus-market.sir")) {
             if (input == null) {
                 throw new IllegalStateException("missing test resource: /valid/campus-market.sir");
             }
-            Files.copy(input, source, StandardCopyOption.REPLACE_EXISTING);
+            Files.copy(input, source.resolve("project.sir"), StandardCopyOption.REPLACE_EXISTING);
         }
         return source;
     }

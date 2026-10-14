@@ -14,11 +14,6 @@ import io.kcg.sir.application.api.FailureDisposition;
 import io.kcg.sir.application.api.ToolchainApplication;
 import io.kcg.sir.application.api.ToolchainRequest;
 import io.kcg.sir.application.api.ToolchainResult;
-import io.kcg.sir.projectgraph.api.GraphVersion;
-import io.kcg.sir.projectgraph.api.ProjectGraph;
-import io.kcg.sir.projectgraph.api.ProjectGraphAnalysis;
-import io.kcg.sir.projectgraph.api.ProjectGraphBuilder;
-import io.kcg.sir.projectgraph.api.ProjectGraphInput;
 import io.kcg.sir.source.SourceId;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -65,15 +60,14 @@ class ToolchainManifestImmutabilityTest {
 
     @Test
     void failureDiagnosticsAreUnmodifiable() throws Exception {
-        Path source = temporaryDirectory.resolve("invalid.sir");
-        Files.writeString(source, "not valid SIR", StandardCharsets.UTF_8);
+        Path source = Files.createDirectories(temporaryDirectory.resolve("invalid-sources"));
+        Files.writeString(source.resolve("project.sir"), "not valid SIR", StandardCharsets.UTF_8);
         Path outputRoot = temporaryDirectory.resolve("out").toAbsolutePath();
 
         ToolchainResult result = new ToolchainApplication().execute(new ToolchainRequest(
                 source.toAbsolutePath(),
-                SourceId.of("invalid.sir"),
-                outputRoot,
-                io.kcg.sir.application.api.ConflictPolicy.FAIL_IF_EXISTS));
+                SourceId.of("project.sir"),
+                outputRoot));
         ToolchainResult.Failure failure = assertInstanceOf(ToolchainResult.Failure.class, result);
         List<ExecutionDiagnostic> diagnostics = failure.diagnostics();
         assertThrows(UnsupportedOperationException.class, () -> diagnostics.add(null),
@@ -108,41 +102,6 @@ class ToolchainManifestImmutabilityTest {
     }
 
     @Test
-    void successBuiltFromMutableDiagnosticsIsUnmodifiable() throws Exception {
-        // Build a Success with a mutable input list and verify the stored
-        // diagnostics are an unmodifiable copy.
-        java.util.ArrayList<ExecutionDiagnostic> input = new java.util.ArrayList<>();
-        input.add(ExecutionDiagnostic.warning("SIR-APP-TEST-001",
-                ExecutionStage.READ, "test warning"));
-        ExecutionManifest manifest = new ExecutionManifest(
-                temporaryDirectory.resolve("out").toAbsolutePath(),
-                io.kcg.sir.application.api.ConflictPolicy.FAIL_IF_EXISTS,
-                java.util.List.of());
-        ToolchainResult.Success success = new ToolchainResult.Success(manifest, emptyGraph(), input);
-        input.clear();
-        assertEquals(1, success.diagnostics().size(),
-                "Success must hold a defensive copy of the input diagnostics");
-        assertThrows(UnsupportedOperationException.class,
-                () -> success.diagnostics().clear());
-    }
-
-    // Build a minimal empty graph through the public API so this immutability test
-    // does not depend on a full compilation pipeline.
-    private static ProjectGraph emptyGraph() {
-        ProjectGraphAnalysis analysis = new ProjectGraphBuilder().build(
-                new ProjectGraphInput(
-                        GraphVersion.V0_1,
-                        io.kcg.sir.source.SourceId.of("manifest-test.sir"),
-                        "manifest-test",
-                        java.util.List.of(), java.util.List.of(),
-                        java.util.List.of(), java.util.List.of(), java.util.List.of()));
-        if (analysis instanceof ProjectGraphAnalysis.Success success) {
-            return success.graph();
-        }
-        throw new IllegalStateException("empty graph build must succeed");
-    }
-
-    @Test
     void failureBuiltFromMutableDiagnosticsIsUnmodifiable() {
         java.util.ArrayList<ExecutionDiagnostic> input = new java.util.ArrayList<>();
         input.add(ExecutionDiagnostic.error("SIR-APP-TEST-001",
@@ -154,18 +113,6 @@ class ToolchainManifestImmutabilityTest {
                 "Failure must hold a defensive copy of the input diagnostics");
         assertThrows(UnsupportedOperationException.class,
                 () -> failure.diagnostics().clear());
-    }
-
-    @Test
-    void successRejectsErrorDiagnostics() {
-        ExecutionManifest manifest = new ExecutionManifest(
-                temporaryDirectory.resolve("out").toAbsolutePath(),
-                io.kcg.sir.application.api.ConflictPolicy.FAIL_IF_EXISTS,
-                java.util.List.of());
-        assertThrows(IllegalArgumentException.class, () ->
-                new ToolchainResult.Success(manifest, emptyGraph(), java.util.List.of(
-                        ExecutionDiagnostic.error("SIR-APP-TEST-001",
-                                ExecutionStage.READ, "must not be allowed"))));
     }
 
     @Test

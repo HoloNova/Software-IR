@@ -2,7 +2,7 @@ package io.kcg.sir.application.internal.bundle;
 
 import io.kcg.sir.application.api.ChangeExecutionBaselineFormatVersion;
 import io.kcg.sir.application.internal.Sha256;
-import io.kcg.sir.application.internal.SirCompilation;
+import io.kcg.sir.application.internal.ProjectCompilation;
 import io.kcg.sir.generator.springboot.api.GeneratedFile;
 import io.kcg.sir.projectgraph.api.ProjectGraph;
 import io.kcg.sir.projectgraph.api.ProjectGraphCanonicalFormatVersion;
@@ -23,7 +23,7 @@ public final class BaselineBuilder {
    }
 
    public static BaselineBundle build(
-      SirCompilation.CompilationSnapshot snapshot, ProjectGraph graph, byte[] sourceBytes, byte[] snapshotBytes, SourceId sourceId, Path outputRoot
+      ProjectCompilation.Compiled snapshot, ProjectGraph graph, byte[] sourceBytes, byte[] snapshotBytes, SourceId sourceId, Path outputRoot
    ) {
       Objects.requireNonNull(snapshot, "snapshot");
       Objects.requireNonNull(graph, "graph");

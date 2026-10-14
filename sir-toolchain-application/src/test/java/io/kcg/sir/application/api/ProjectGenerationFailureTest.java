@@ -14,7 +14,7 @@ class ProjectGenerationFailureTest {
         Path source = fixture(temp); var original = tree(temp);
         var broken = new ToolchainApplication(m -> new io.kcg.sir.generator.springboot.api.SpringBootGenerator().generate(m),
                 i -> new ProjectGraphAnalysis.Failure(List.of(ProjectGraphDiagnostic.error("TEST-GRAPH-001", "injected before any write"))));
-        var rejected = assertInstanceOf(ProjectToolchainResult.Failure.class, broken.executeProject(new ProjectToolchainRequest(source, ENTRY, temp.resolve("new-output"))));
+        var rejected = assertInstanceOf(ToolchainResult.Failure.class, broken.execute(new ToolchainRequest(source, ENTRY, temp.resolve("new-output"))));
         assertEquals(ExecutionStage.GRAPH, rejected.failedStage());
         assertEquals(FailureDisposition.NO_CHANGES, rejected.disposition()); assertEquals(original, tree(temp));
     }

@@ -4,7 +4,7 @@ import io.kcg.sir.application.api.ExecutionDiagnostic;
 import io.kcg.sir.application.api.ExecutionStage;
 import io.kcg.sir.application.api.FileDelta;
 import io.kcg.sir.application.api.ProjectBaselineReceipt;
-import io.kcg.sir.application.api.ProjectToolchainRequest;
+import io.kcg.sir.application.api.ToolchainRequest;
 import io.kcg.sir.application.api.SourceDelta;
 import io.kcg.sir.application.api.WorkspacePlan;
 import io.kcg.sir.application.api.WorkspaceVersionRequest;
@@ -70,7 +70,7 @@ public final class WorkspacePlanning {
     }
 
     public static Outcome plan(WorkspaceVersionRequest request, SecureFileAccess output, List<ExecutionDiagnostic> diagnostics) throws IOException {
-        var loaded = ProjectSourceReader.read(new ProjectToolchainRequest(request.sourceRoot(), request.candidate().entry(), request.outputRoot()), diagnostics);
+        var loaded = ProjectSourceReader.read(new ToolchainRequest(request.sourceRoot(), request.candidate().entry(), request.outputRoot()), diagnostics);
         if (loaded.isEmpty()) {
             return new Rejected(WorkspacePlanning.lastErrorStage(diagnostics), diagnostics);
         }

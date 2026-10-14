@@ -121,7 +121,7 @@ public final class ProjectBaselineCodec {
             require(Arrays.equals(bytes,encodeDescriptor(result)),"noncanonical descriptor");return result;
         } catch (BufferUnderflowException|IllegalArgumentException e) { throw problem("FORMAT-001","invalid project descriptor: "+e.getMessage()); }
     }
-    public static Bundle build(SourceSnapshot sources,SirCompilation.CompilationSnapshot compilation,ProjectGraph graph,Path outputRoot) throws IOException {
+    public static Bundle build(SourceSnapshot sources,ProjectCompilation.Compiled compilation,ProjectGraph graph,Path outputRoot) throws IOException {
         var serialized=new ProjectGraphSerializer().serialize(graph,ProjectGraphCanonicalFormatVersion.V2);
         if (!(serialized instanceof ProjectGraphSerialization.Success ok)) throw problem("FORMAT-001","cannot serialize V2 graph");
         var payload=encodeSources(sources);var graphBytes=ok.document().bytes();budget(graphBytes.length<=MAX_GRAPH,"graph budget exceeded");

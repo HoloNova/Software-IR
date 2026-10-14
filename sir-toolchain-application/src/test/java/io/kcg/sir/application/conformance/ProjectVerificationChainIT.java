@@ -3,9 +3,8 @@ package io.kcg.sir.application.conformance;
 import static org.junit.jupiter.api.Assertions.*;
 
 import io.kcg.sir.application.api.CandidateVerificationApplication;
-import io.kcg.sir.application.api.CompilationInput;
-import io.kcg.sir.application.api.ProjectToolchainRequest;
-import io.kcg.sir.application.api.ProjectToolchainResult;
+import io.kcg.sir.application.api.ToolchainRequest;
+import io.kcg.sir.application.api.ToolchainResult;
 import io.kcg.sir.application.api.ResourceLimits;
 import io.kcg.sir.application.api.StageStatus;
 import io.kcg.sir.application.api.ToolchainApplication;
@@ -112,7 +111,7 @@ class ProjectVerificationChainIT {
         }
 
         Path output = work.resolve("output");
-        var generated = assertInstanceOf(ProjectToolchainResult.Success.class, new ToolchainApplication().executeProject(new ProjectToolchainRequest(sources, ENTRY, output)));
+        var generated = assertInstanceOf(ToolchainResult.Success.class, new ToolchainApplication().execute(new ToolchainRequest(sources, ENTRY, output)));
         SourceSnapshot v0 = generated.sources();
 
         var sandbox = new MysqlVerificationSandbox(env, DDL, SEED, "chain");
@@ -152,7 +151,7 @@ class ProjectVerificationChainIT {
         assertEquals(good.binding().orElseThrow().manifestDigest(), applied.candidate().manifestDigest(), "the published version is the verified one");
         assertTrue(applied.beforeCommit().isPresent() && applied.afterCommit().isPresent(), "both versions are saved in Git");
         assertEquals("2", git(repository, "rev-list", "--count", "HEAD").strip());
-        var onDisk = ProjectSourceReader.read(new io.kcg.sir.application.api.ProjectToolchainRequest(liveSources, ENTRY, liveOutput), new ArrayList<ExecutionDiagnostic>()).orElseThrow();
+        var onDisk = ProjectSourceReader.read(new io.kcg.sir.application.api.ToolchainRequest(liveSources, ENTRY, liveOutput), new ArrayList<ExecutionDiagnostic>()).orElseThrow();
         assertEquals(candidate.manifest(), onDisk.snapshot().manifest(), "the sources on disk are the edited ones, and the project matches them");
         String publishedCommit = git(repository, "rev-parse", "HEAD").strip();
 
@@ -191,7 +190,7 @@ class ProjectVerificationChainIT {
     }
 
     private VerificationReport verify(CandidateVerificationApplication app, String id, SourceSnapshot candidate) {
-        var report = app.verify(new VerificationRequest(id, CompilationInput.project(candidate), VerificationStage.BUSINESS));
+        var report = app.verify(new VerificationRequest(id, candidate, VerificationStage.BUSINESS));
         reportText.append(report.canonicalText()).append("reportSha256=").append(report.sha256Hex()).append("\n\n");
         System.out.println(report.canonicalText());
         assertTrue(report.cleanup().proved(), "cleanup must be proved: " + report.cleanup().checks());

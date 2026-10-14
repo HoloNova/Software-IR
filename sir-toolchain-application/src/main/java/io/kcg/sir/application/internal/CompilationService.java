@@ -22,28 +22,19 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
- * The one entry that turns SIR source bytes into a compilation result, for a single file and for a
- * multi-file project alike.
+ * The one entry that turns SIR source bytes into a compilation result.
  *
- * <p>It exists so the two source forms stop owning two copies of the pipeline. Both forms now go
- * through {@link CompilationStages#lowerAndGenerate} after their own parsing, and both return the
- * same {@link CompilationStages.Snapshot}: every stage's original diagnostics are kept, and the
- * caller may stop after any stage. The older entry points ({@code SirCompilation},
- * {@code ProjectCompilation}) only wrap this class, so their published behaviour does not change.
+ * <p>The sources are a snapshot whose entry is the root document and whose other members are fragments;
+ * a software written in a single file is a snapshot with one member. Every stage's original diagnostics
+ * are kept, and the caller may stop after any stage. {@code ProjectCompilation} wraps this class for the
+ * callers that want the finished models and files.
  *
  * <p>Pure and in-memory: it never reads a directory and never writes a file.
  */
 public final class CompilationService {
     private CompilationService() {}
 
-    /** A single legacy source file: parsed with the legacy entry, which still accepts the older version rules. */
-    public static CompilationStages.Snapshot single(String text, io.kcg.sir.source.SourceId id, ValidationStopAfter stop,
-            Function<SpringBootLoweredModel, GenerationResult> generation, List<ExecutionDiagnostic> legacy,
-            Consumer<ValidationStopAfter> entered, List<ValidationDiagnostic> raw) {
-        return CompilationStages.compile(text, id, stop, generation, legacy, entered, raw);
-    }
-
-    /** An explicit multi-file project; the snapshot's entry is the root and every other member a fragment. */
+    /** The snapshot's entry is the root and every other member a fragment. */
     public static CompilationStages.Snapshot project(SourceSnapshot snapshot, ValidationStopAfter stop,
             Function<SpringBootLoweredModel, GenerationResult> generation, List<ExecutionDiagnostic> legacy,
             Consumer<ValidationStopAfter> entered, List<ValidationDiagnostic> raw) {

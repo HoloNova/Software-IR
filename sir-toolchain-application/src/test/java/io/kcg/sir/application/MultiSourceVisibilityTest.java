@@ -41,8 +41,8 @@ class MultiSourceVisibilityTest {
             assertTrue(original.contains(literal), "actual import line for " + example.getKey());
             Files.writeString(file, original.replace(literal, " ".repeat(literal.length())));
             var baseline = tree(temp);
-            var result = assertInstanceOf(ProjectToolchainResult.Failure.class, new ToolchainApplication().executeProject(
-                    new ProjectToolchainRequest(source, ENTRY, temp.resolve("negative-" + example.getKey()))));
+            var result = assertInstanceOf(ToolchainResult.Failure.class, new ToolchainApplication().execute(
+                    new ToolchainRequest(source, ENTRY, temp.resolve("negative-" + example.getKey()))));
             assertEquals(ExecutionStage.SEMANTIC, result.failedStage());
             var actual = result.diagnostics().stream().filter(ExecutionDiagnostic::isError).toList();
             var missingSites = model.referenceSiteBindings().all().stream().filter(b -> b.site().span().source().equals(using))
@@ -102,7 +102,7 @@ class MultiSourceVisibilityTest {
                 } }
                 """;
         Files.writeString(source.resolve("project.sir"), root);
-        assertInstanceOf(ProjectToolchainResult.Success.class, new ToolchainApplication().executeProject(new ProjectToolchainRequest(source, ENTRY, temp.resolve("mutual"))));
+        assertInstanceOf(ToolchainResult.Success.class, new ToolchainApplication().execute(new ToolchainRequest(source, ENTRY, temp.resolve("mutual"))));
     }
 
     @Test void crossFileDuplicateNamesAndIdsKeepBothDeclarationLocations() throws Exception {
@@ -128,7 +128,7 @@ class MultiSourceVisibilityTest {
         before = tree(temp); assertPublicPair(refusal(source, temp.resolve("duplicate-id"))); assertEquals(before, tree(temp));
     }
 
-    private static void assertPublicPair(ProjectToolchainResult.Failure failure) {
+    private static void assertPublicPair(ToolchainResult.Failure failure) {
         assertEquals(1, failure.diagnostics().stream().filter(ExecutionDiagnostic::isError).count(), failure.diagnostics().toString());
         assertEquals(1, failure.diagnostics().stream().filter(d -> d.severity() == ExecutionSeverity.INFO).count());
         assertEquals(Set.of(ENTRY, SourceId.of("modules/student.sir")), failure.diagnostics().stream().map(d -> d.sourceSpan().orElseThrow().source()).collect(Collectors.toSet()));
@@ -140,8 +140,8 @@ class MultiSourceVisibilityTest {
         for (String file : FILES) inputs.put(SourceId.of(file), Files.readAllBytes(root.resolve(file)));
         return parse(new SourceSnapshot(ENTRY, inputs));
     }
-    private static ProjectToolchainResult.Failure refusal(Path source, Path output) {
-        var result = assertInstanceOf(ProjectToolchainResult.Failure.class, new ToolchainApplication().executeProject(new ProjectToolchainRequest(source, ENTRY, output)));
+    private static ToolchainResult.Failure refusal(Path source, Path output) {
+        var result = assertInstanceOf(ToolchainResult.Failure.class, new ToolchainApplication().execute(new ToolchainRequest(source, ENTRY, output)));
         assertEquals(ExecutionStage.SEMANTIC, result.failedStage()); assertEquals(FailureDisposition.NO_CHANGES, result.disposition()); return result;
     }
     private static io.kcg.sir.semantic.model.NormalizedDeclaration owner(NormalizedSemanticModel model,
