@@ -1,10 +1,12 @@
 # 共享契约：身份、版本、产物与执行状态
 
+> 目标设计，不代表已实现。文中凡涉及 Bundle、CURRENT、状态目录、事务日志与恢复、`context`/`plan` 命令、单文件 0.1 入口的描述，都是 2026-10-14 之前的方案：工程版本现在由磁盘上的 SIR 加 Git 承担（见 [ADR-027](../architecture/ADR-027-git-as-version-history.md)），语言只有 `sir 0.2` 一种文档形式。现有能力以 [项目状态](../PROJECT_STATUS.md) 为准。
+
 日期：2026-09-08。状态：推荐设计草案。返回[文档入口](README.md)。
 
 本文件定义各详细设计共同使用的概念。以下类型与字段是推荐接口，不是当前仓库 API。命名固定到足以编写下一步接口设计；没有把任意名称相似性当成语义身份。
 
-**实现边界：**当前已有单源编译身份、Lowered 模型、GeneratedFile 和本地文件 Bundle/CURRENT；本表的持久 declarationId、多文件 SourceSnapshot、Migration/Release/Deployment 对象为目标扩展。当前 SymbolId 含名称，不能套用下面的目标构成；差异与证据见[实现对照](implementation-baseline.md)。目标阶段统一为 G0–G7，见 07。
+**实现边界：**当前已有单源编译身份、Lowered 模型、GeneratedFile 和本地文件 Bundle/CURRENT；本表的持久 declarationId、多文件 SourceSnapshot、Migration/Release/Deployment 对象为目标扩展。当前 SymbolId 含名称，不能套用下面的目标构成；差异与证据见[实现对照](../history/design/implementation-baseline.md)。目标阶段统一为 G0–G7，见 07。
 
 ### 2026-10-13 核心架构补充
 

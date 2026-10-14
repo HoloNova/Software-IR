@@ -1,18 +1,12 @@
 # 课程后端产品：主设计文档集
 
-基础文档日期：2026-09-08；架构方向更新：2026-10-13。00–07为目标产品设计，08为本轮详细分层方案，方向裁决见Accepted [ADR-026](../architecture/ADR-026-layered-semantic-command-architecture.md)；文档不代表目标功能完成或代码开工授权。
+00–07 是目标产品设计（网页生成和修改 SIR、下载完整源码、本地 Docker 部署、更新保留数据），基础日期 2026-09-08；08 是核心工具链的分层与指令式修改方案，方向由 Accepted [ADR-026](../architecture/ADR-026-layered-semantic-command-architecture.md) 确定，其核心部分（统一软件结构、固定增删改指令、统一编译、独立验证）已经实现。**这些文档描述“应该做成什么”，不证明任何能力已经实现。** 现状看 [项目状态](../PROJECT_STATUS.md)；工程版本的保存与回退已由 [ADR-027](../architecture/ADR-027-git-as-version-history.md) 改为“磁盘上的 SIR + Git”，文中旧的 Bundle/CURRENT/状态目录方案不再适用。
 
-**优先读[08：分层与指令式修改](08-layered-command-architecture.md)。** 用户流程是SIR生成软件源码，后续用固定增删改指令编辑，真实构建/运行另行验证。[迁移路线](../roadmap/LAYERED_ARCHITECTURE_MIGRATION.md)先统一语义、再源编辑和工程应用；Q22/Q23执行暂停，旧组合原型不直接启动。
-
-本组文档是当前目标产品设计、验收场景和新阶段方向的入口（`AGENTS.md` 权威层级中的“后续功能方向主入口”与 G0–G7 阶段门）；实现事实仍以代码、可执行测试、`docs/PROJECT_STATUS.md` 和 `docs/qualification/CURRENT_QUALIFICATION.md` 为准。
-
-基础来源：[基础框架设计](2026-09-08-coursework-framework.md)。本组文档细化本轮已确认的产品形态：**用户在网页生成和修改 SIR，下载完整源码，本地只需 Docker/Compose 即可部署；更新保留已有数据。**
+基础来源：[课程框架总览](../history/design/2026-09-08-coursework-framework.md)（历史背景）。
 
 ## 1. 阅读与设计顺序
 
-先读[08](08-layered-command-architecture.md)理解新方向，再看[当前状态](../PROJECT_STATUS.md)、[资格](../qualification/CURRENT_QUALIFICATION.md)及历史[实现对照](implementation-baseline.md)，之后按需要阅读共享契约和七份专题。当前已支持单源/多源生成与受限变更，但通用指令编辑尚未实现。本组规范性要求面向目标；日期化实现对照不能替代当前状态。
-
-00–08是文档编号，G0–G7是产品阶段，Q系列是执行工作单，不混用。G0/G1已完成、G2未关闭；当前优先进行核心架构文档重规划，不因此启动G3或Web。R1–R5是待授权迁移顺序，不是已授权工作单。
+先读 [08](08-layered-command-architecture.md) 了解核心分层，再看 [项目状态](../PROJECT_STATUS.md)，之后按需要读共享契约和七份专题。G0–G7 是产品阶段（定义见 [07](07-validation-and-direction-roadmap.md)），与 08 里的 R1–R5、ADR-027 里的 G1–G4 是三套不同的编号，不混用。
 
 | 步骤 | 文档 | 本步解决的问题 | 交给下一步的结果 |
 | --- | --- | --- | --- |
@@ -49,7 +43,3 @@
 每一步只需要回答三件事：这个边界是否符合产品目标；其默认行为是否可以接受；其完成门能否证明它有用。出现不同意见时修改对应契约，不直接跳到修改模板或增加旁路代码。
 
 优先评审 01 的用户交付、04 的保留数据承诺和 05 的 Docker 部署。这三项决定产品是否成立。02/03 决定如何稳定实现；06 支撑平台交付；07 决定何时值得扩大投入。
-
-## 5. 本轮文档验证范围
-
-文档完成后检查文件链接、示例格式、术语和跨文档约束。源码与命令结果见[校准记录第 5 节](implementation-baseline.md#5-当次执行证据与限制)。测试编译阻断、增量测试证据与未执行的数据库/Docker/Web 验收分别记录；文档评审不作为产品验收通过。

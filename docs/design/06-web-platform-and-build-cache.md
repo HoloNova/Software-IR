@@ -1,10 +1,12 @@
 # 第六步：网页平台、生成任务、发布与缓存
 
+> 目标设计，不代表已实现。文中凡涉及 Bundle、CURRENT、状态目录、事务日志与恢复、`context`/`plan` 命令、单文件 0.1 入口的描述，都是 2026-10-14 之前的方案：工程版本现在由磁盘上的 SIR 加 Git 承担（见 [ADR-027](../architecture/ADR-027-git-as-version-history.md)），语言只有 `sir 0.2` 一种文档形式。现有能力以 [项目状态](../PROJECT_STATUS.md) 为准。
+
 日期：2026-09-08。状态：推荐设计草案。消费[产品契约](01-product-and-delivery.md)、[编译接口](03-compiler-and-generated-backend.md)与[交付格式](05-source-package-and-docker-deployment.md)。
 
 本设计支持网页生成并下载源码，不建设用户业务托管平台。平台拥有自己的账号和项目权限；生成后端的 Account、数据和本地环境完全独立。
 
-**实现边界：**本章 Web API、草稿/任务数据库、Worker 租约、发布协调器、Release 下载和平台缓存均是目标设计，尚未在当前生产链实现。本地 Application/Bundle/CURRENT 可作为内部文件应用基础，不能等同于已存在的平台服务。G6 在 G4 源码包与 G5 课程业务验证后实现 WEB/JOB/PUB 及所启用缓存的 CACHE 场景；跨项目语义缓存与模块市场保留为后续规划。[实现依据](implementation-baseline.md)
+**实现边界：**本章 Web API、草稿/任务数据库、Worker 租约、发布协调器、Release 下载和平台缓存均是目标设计，尚未在当前生产链实现。本地 Application/Bundle/CURRENT 可作为内部文件应用基础，不能等同于已存在的平台服务。G6 在 G4 源码包与 G5 课程业务验证后实现 WEB/JOB/PUB 及所启用缓存的 CACHE 场景；跨项目语义缓存与模块市场保留为后续规划。[实现依据](../history/design/implementation-baseline.md)
 
 ## 1. 最小平台结构
 

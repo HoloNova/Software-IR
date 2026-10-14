@@ -4,7 +4,7 @@
 
 `kcg check`把UTF-8 JSONL从stdin逐行校验、逐行向stdout输出canonical JSON。一次启动一个JVM，串行处理，不读写工程、状态/锁/Bundle，不生成磁盘工程，不构建或启动应用。
 
-**ok=true仅表示请求的静态阶段通过，样本只能据此进入候选池。** GENERATION不等于生成Java能编译、应用能启动或符合原始业务需求。独立真实评测见[总设计](qualification/SLM_GENERATED_PROJECT_EVALUATION_PLAN.md)；已授权的两样本限定试跑见[实际报告](qualification/Q23_REAL_EVALUATION_PILOT.md)，不代表新SLM样本或通用运行平台已验收。
+**ok=true仅表示请求的静态阶段通过，样本只能据此进入候选池。** GENERATION不等于生成Java能编译、应用能启动或符合原始业务需求。独立真实评测见[总设计](qualification/SLM_GENERATED_PROJECT_EVALUATION_PLAN.md)；已授权的两样本限定试跑见[实际报告](history/qualification/Q23_REAL_EVALUATION_PILOT.md)，不代表新SLM样本或通用运行平台已验收。
 
 ## 当前源码构建后的直接调用
 
@@ -55,6 +55,6 @@ java -XX:-UsePerfData -Xmx256m -XX:MaxMetaspaceSize=128m \
 
 ## 证据与边界
 
-资格以[当前工作单](roadmap/ACTIVE_WORK.md)、[资格报告](qualification/CURRENT_QUALIFICATION.md)为准。当前验证涉及现有20个合法fixture（`sir 0.2`单文档）、既有非法阶段、逐文件旧生成一致、混批与预算、独立JVM/Locale确定性、目录指纹、原CLI回归及1000条规模。规模时间/RSS只反映该fixture/机器，不推导任意业务吞吐。
+资格以[验证说明](qualification/README.md)为准；早期的资格记录见[历史报告](history/qualification/CURRENT_QUALIFICATION.md)。当前验证涉及现有20个合法fixture（`sir 0.2`单文档）、既有非法阶段、逐文件旧生成一致、混批与预算、独立JVM/Locale确定性、目录指纹、原CLI回归及1000条规模。规模时间/RSS只反映该fixture/机器，不推导任意业务吞吐。
 
 无新第三方依赖，无HTTP/daemon/数据库评测，无生产FixHint增强。STEP0_EXPERIMENT_HANDBOOK.md未取得，不能声称已完成手册对接；接口ok/stage/diagnostics[].code与四stage保持需求约定。

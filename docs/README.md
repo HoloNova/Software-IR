@@ -1,65 +1,31 @@
 # KCG-Code 文档导航
 
-这是项目文档的总入口。后续功能方向以主设计文档为主，历史文档保留用于追溯，不作为当前实现或当前工作授权的依据。
+## 先读这些
 
-## 开始工作时优先阅读
+1. [`../AGENTS.md`](../AGENTS.md)：工程规则与测试资源约束。
+2. [`../MAIN.md`](../MAIN.md)：项目主体说明、权威层级、不可破坏的架构规则。
+3. [`PROJECT_STATUS.md`](PROJECT_STATUS.md)：现在能做什么、验证到什么程度、已知限制。
+4. [`qualification/README.md`](qualification/README.md)：怎么验证、证据口径、当前证据。
 
-1. [`../AGENTS.md`](../AGENTS.md)：项目规则、权威层级和不可破坏的架构边界。
-2. [`roadmap/README.md`](roadmap/README.md)：面向项目负责人的阶段控制和 Agent Prompt。
-3. [`design/README.md`](design/README.md)：主设计正文。
-4. [`roadmap/ACTIVE_WORK.md`](roadmap/ACTIVE_WORK.md)：当前唯一允许执行的工作单。
-5. [`design/implementation-baseline.md`](design/implementation-baseline.md)：当前源码与目标设计的实现对照。
+## 现行文档
 
-## 当前有效文档
+| 文档 | 回答什么问题 |
+| --- | --- |
+| [`KCG-Code_系统架构与实现指南.md`](KCG-Code_%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E4%B8%8E%E5%AE%9E%E7%8E%B0%E6%8C%87%E5%8D%97.md) | 不看代码也能理解：每一层为什么存在、版本怎么保存 |
+| [`PROJECT_OWNER_GUIDE.md`](PROJECT_OWNER_GUIDE.md) | 负责人怎么交办任务、验收、授权 Git 操作 |
+| [`SIR_BATCH_CHECK.md`](SIR_BATCH_CHECK.md) | `kcg check` 的 JSONL 协议、预算与退出码 |
+| [`CLAUDE_EXECUTION_POLICY.md`](CLAUDE_EXECUTION_POLICY.md) | 执行者是 Claude 时的提交、测试与资源约定 |
+| [`architecture/`](architecture/) | Accepted ADR：Resolve-once（001）、Application 所有权（003）、项目文档与源快照（021）、批量校验（025）、分层与指令修改（026）、Git 版本历史（027） |
+| [`design/`](design/README.md) | 目标产品设计（课程后端、数据库演进、Docker 交付、Web 平台）；不证明已实现 |
+| [`qualification/`](qualification/) | 验证说明、SLM 评测总设计 |
 
-### 架构和治理
+## 历史材料
 
-- [`architecture/`](architecture/)：已接受的 ADR。涉及架构边界时优先看这里。
-- [`PROJECT_OWNER_GUIDE.md`](PROJECT_OWNER_GUIDE.md)：项目负责人交接、派工和验收规则。
-- [`KCG-Code_系统架构与实现指南.md`](KCG-Code_系统架构与实现指南.md)：当前 v0.1 工程的架构说明。
+[`history/`](history/README.md) 保存已完成或退役的工作单、迁移计划与报告、旧 ADR、日期化 spec、旧资格报告和早期上下文。内容原样保留并标了状态，用于追溯“为什么当时这样做”，不描述当前实现。
 
-### 当前状态和资格
+## 使用规则
 
-- [`PROJECT_STATUS.md`](PROJECT_STATUS.md)：当前能力边界。
-- [`qualification/CURRENT_QUALIFICATION.md`](qualification/CURRENT_QUALIFICATION.md)：当前实际运行证据和资格状态。
-- [`qualification/TEST_COVERAGE_INVENTORY.md`](qualification/TEST_COVERAGE_INVENTORY.md)：测试覆盖与资格缺口。
-- [`SIR_BATCH_CHECK.md`](SIR_BATCH_CHECK.md)：只读JSONL静态校验操作/输入输出与退出码；资格仍看当前报告。
-- [`qualification/SLM_GENERATED_PROJECT_EVALUATION_PLAN.md`](qualification/SLM_GENERATED_PROJECT_EVALUATION_PLAN.md)：独立真实工程评测总设计；已授权两样本限定试跑见[报告](qualification/Q23_REAL_EVALUATION_PILOT.md)，其余平台待审，不把静态通过当业务正确。
-
-### 当前执行路线
-
-- [`roadmap/ACTIVE_WORK.md`](roadmap/ACTIVE_WORK.md)：当前唯一执行入口。
-- [`roadmap/REMAINING_WORK.md`](roadmap/REMAINING_WORK.md)：长期路线和后续工作顺序。
-- [`roadmap/README.md`](roadmap/README.md)：G0–G7 阶段控制和 Agent Prompt。
-- [`roadmap/completed/`](roadmap/completed/)：已完成 Q 工作单的验收记录。
-
-### 当前目标设计
-
-- **优先阅读** [`design/08-layered-command-architecture.md`](design/08-layered-command-architecture.md)：首次生成、统一语义、指令式增删改、独立构建验证的详细分层方案；尚未实施。
-- [`architecture/ADR-026-layered-semantic-command-architecture.md`](architecture/ADR-026-layered-semantic-command-architecture.md)：已确认的架构方向，不授权代码开工。
-- [`roadmap/LAYERED_ARCHITECTURE_MIGRATION.md`](roadmap/LAYERED_ARCHITECTURE_MIGRATION.md)：R1–R5迁移顺序、暂停工作与验收门。
-- [`design/`](design/)：后续主要使用的目标设计、共享契约、实现基线和验证路线。
-- [`design/implementation-baseline.md`](design/implementation-baseline.md)：判断“当前已经实现什么”的首选对照入口。
-
-## 历史和背景材料
-
-以下内容继续保留，但不再作为后续功能开发的主入口：
-
-- [`design/2026-09-08-coursework-framework.md`](design/2026-09-08-coursework-framework.md)：主设计形成前的课程框架总览，保留用于背景追溯。
-- [`superpowers/specs/`](superpowers/specs/)：之前各阶段执行前形成的设计、验证和实现记录，用于追溯当时的决策与证据。
-- [`roadmap/completed/`](roadmap/completed/)：已经完成的 Q 系列工作单，用于追溯具体实现和验收过程。
-
-这些文件不应被删除或随意改写。若历史内容与当前代码、Accepted ADR 或主设计不一致，以当前权威层级为准：用户当前指令、Accepted ADR、当前源码与测试、当前状态/资格文档、主设计，最后才是历史材料。
-
-## 文档使用规则
-
-- “应该实现什么”：看 `design/`。
-- “现在允许做什么”：看 `roadmap/ACTIVE_WORK.md`。
-- “现在已经实现什么”：看当前源码、实际测试和 `implementation-baseline.md`。
-- “为什么过去这样做”：看 ADR、`roadmap/completed/` 和 `superpowers/specs/`。
-- G0–G7 是主设计的产品/实现阶段；Q1、Q1A 等是仓库工作单，不能混用。
-- 历史文档中的“当前”“下一步”和测试数字，只代表文档形成时的状态。
-
-## 为什么保留历史路径
-
-部分已完成工作单、ADR 和资格记录引用了旧 spec 的原路径。当前采用“导航归类而不搬动历史文件”的整理方式，避免破坏历史链接；后续新工作直接从本页和主设计入口开始。
+- “应该做成什么”：看 `design/`。
+- “现在已经能做什么”：看代码与可执行测试，以及 `PROJECT_STATUS.md`。
+- “为什么这样决定”：看 `architecture/`；更早的决定看 `history/`。
+- 有冲突时按 `MAIN.md` 第 0 节的权威层级裁决；历史文档中的“当前”“下一步”和测试数字只代表写作当时。

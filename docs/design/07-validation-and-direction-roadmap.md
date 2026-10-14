@@ -1,12 +1,14 @@
 # 第七步：验证主线、分阶段推进与方向决策
 
+> 目标设计，不代表已实现。文中凡涉及 Bundle、CURRENT、状态目录、事务日志与恢复、`context`/`plan` 命令、单文件 0.1 入口的描述，都是 2026-10-14 之前的方案：工程版本现在由磁盘上的 SIR 加 Git 承担（见 [ADR-027](../architecture/ADR-027-git-as-version-history.md)），语言只有 `sir 0.2` 一种文档形式。现有能力以 [项目状态](../PROJECT_STATUS.md) 为准。
+
 日期：2026-09-08。状态：推荐设计草案。汇总 [01](01-product-and-delivery.md)、[02](02-sir-language-and-modules.md)、[03](03-compiler-and-generated-backend.md)、[04](04-database-evolution.md)、[05](05-source-package-and-docker-deployment.md)、[06](06-web-platform-and-build-cache.md)。
 
-本文定义验收目标，不记录当前通过状态；现状见 [PROJECT_STATUS](../PROJECT_STATUS.md)，证据见 [CURRENT_QUALIFICATION](../qualification/CURRENT_QUALIFICATION.md)。G0–G7 是阶段，00–07 是文档顺序，执行授权仍来自 Q 系列活动工作单。
+本文定义验收目标，不记录当前通过状态；现状见 [PROJECT_STATUS](../PROJECT_STATUS.md)，证据见[验证说明](../qualification/README.md)。G0–G7 是阶段，00–07 是文档顺序，执行授权来自负责人的明确指令。
 
 ### 2026-10-13 当前核心优先方向
 
-G0/G1已关闭、G2未关闭，Q22/Q23后续执行暂停。负责人本轮授权[设计08](08-layered-command-architecture.md)的详细分层方案与文档提交/推送；[R1–R5迁移路线](../roadmap/LAYERED_ARCHITECTURE_MIGRATION.md)先统一语义、指令源往返，再接工程应用和独立验证，代码阶段均待授权。
+分层方案（[设计08](08-layered-command-architecture.md)）的 [R1–R5 迁移](../history/roadmap/LAYERED_ARCHITECTURE_MIGRATION.md)已全部实施，版本保存改为磁盘上的 SIR + Git（[ADR-027](../architecture/ADR-027-git-as-version-history.md)）。G0/G1 已关闭；G2 之后的阶段（持久身份与模块、数据库生命周期、Docker 交付、完整业务、Web 平台、第二题验证）尚未开始，也不因“可提前准备”而开工。
 
 本路线不取消下列G0–G7产品门，也不自动排入旧组合原型/移动单。新架构门与历史业务资格分别记录；字段编辑合法不等于数据库可迁移，文件发布不等于应用已部署。
 

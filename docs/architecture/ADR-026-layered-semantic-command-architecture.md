@@ -2,9 +2,11 @@
 
 ## 状态
 
+> 2026-10-14 更新：R1–R5 已全部实施。其中版本事务部分（第 9 条所说的 CURRENT、Bundle、日志）已被 [ADR-027](ADR-027-git-as-version-history.md) 取代；其余方向（统一语义结构、固定三种指令、源往返、独立验证）仍然有效。下文第 9 条与对 ADR-020 的引用按此理解。
+
 **Accepted for architecture direction，2026-10-13。**
 
-负责人确认首次生成／指令修改工作流和分层方向，授权详细方案、工程文档更新、提交与推送，并允许优化方案。该接受记录只冻结方向与职责，**不授权生产代码实施，不宣称新接口或新事务已实现**。详细合同与迁移门见[设计08](../design/08-layered-command-architecture.md)及[迁移路线](../roadmap/LAYERED_ARCHITECTURE_MIGRATION.md)。
+负责人确认首次生成／指令修改工作流和分层方向，授权详细方案、工程文档更新、提交与推送，并允许优化方案。该接受记录只冻结方向与职责，**不授权生产代码实施，不宣称新接口或新事务已实现**。详细合同与迁移门见[设计08](../design/08-layered-command-architecture.md)及[迁移路线](../history/roadmap/LAYERED_ARCHITECTURE_MIGRATION.md)。
 
 源码起点 `dac046309686b8bbb910624bbed04717e7481b2f`。当前活动单 Q23 的功能/验收推进暂停；Q22继续暂停；旧组合原型草案不直接成为下一张实施单。
 

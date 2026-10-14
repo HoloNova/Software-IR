@@ -1,5 +1,7 @@
 # 第三步：编译流水线、Lowered IR 与生成后端
 
+> 目标设计，不代表已实现。文中凡涉及 Bundle、CURRENT、状态目录、事务日志与恢复、`context`/`plan` 命令、单文件 0.1 入口的描述，都是 2026-10-14 之前的方案：工程版本现在由磁盘上的 SIR 加 Git 承担（见 [ADR-027](../architecture/ADR-027-git-as-version-history.md)），语言只有 `sir 0.2` 一种文档形式。现有能力以 [项目状态](../PROJECT_STATUS.md) 为准。
+
 日期：2026-09-08。状态：推荐设计草案。输入语义见[02](02-sir-language-and-modules.md)，数据库操作见[04](04-database-evolution.md)，交付格式见[05](05-source-package-and-docker-deployment.md)。
 
 ### 2026-10-13：核心分层的新方向
@@ -12,7 +14,7 @@
 
 ## 1. 推荐架构
 
-**实现边界：**当前已具备单 SirSource -> AST -> Resolve/Type/Validate/Normalize -> SpringBootLoweredModel -> GeneratedFile -> 本地 Application 的编排；图构建使用编译结果。下面的 SourceSnapshot、多文件解析、旧 schema 输入、迁移规划、隔离构建与源码包发布是目标扩展。G0 验证既有链，G1/G2 扩展语义与身份，G3 增加迁移，G4 增加交付，G6 接入平台。[实现依据](implementation-baseline.md)
+**实现边界：**当前已具备单 SirSource -> AST -> Resolve/Type/Validate/Normalize -> SpringBootLoweredModel -> GeneratedFile -> 本地 Application 的编排；图构建使用编译结果。下面的 SourceSnapshot、多文件解析、旧 schema 输入、迁移规划、隔离构建与源码包发布是目标扩展。G0 验证既有链，G1/G2 扩展语义与身份，G3 增加迁移，G4 增加交付，G6 接入平台。[实现依据](../history/design/implementation-baseline.md)
 
 使用同进程内的分阶段编译和不可变快照，不将每个 Pass 做成网络服务。平台通过后台任务调用编译器，业务代码在独立构建环境中验证。这样可以分别证明输入语义、目标决策和生成产物，避免把判断逻辑藏在模板里。
 

@@ -1,12 +1,13 @@
 # ADR-025：批量静态SIR校验与原始阶段诊断
 
 - 状态：Proposed（负责人已确认Q23实施方向；最终Accepted待同SHA CI与验收）
+- 2026-10-14 更新：样本改为 `sir 0.2` 单个文档（根文档、无片段）；`sir 0.1` 已删除，0.1 头由 `SIR-VERSION-001` 拒绝。其余合同不变。
 - 日期：2026-10-09
-- 工作单：[Q23](../roadmap/ACTIVE_WORK.md)
+- 工作单：[Q23](../history/roadmap/ACTIVE_WORK.md)（已退役）
 
 ## 背景与原因
 
-SLM数据闭环需要一次JVM内校验很多SIR0.1样本，坏行不终止整批、反馈诊断可无损回喂。SirCompiler原固定至Graph，Toolchain实际用SirCompilation固定至生成；旧ExecutionDiagnostic/Mapper已丢related/fixes及部分Lowering身份，不能从旧输出反推。旧CLI只有context/plan，文件和状态归Application，不为check放宽门禁。
+SLM数据闭环需要一次JVM内校验很多SIR样本，坏行不终止整批、反馈诊断可无损回喂。SirCompiler原固定至Graph，Toolchain实际用SirCompilation固定至生成；旧ExecutionDiagnostic/Mapper已丢related/fixes及部分Lowering身份，不能从旧输出反推。旧CLI只有context/plan，文件和状态归Application，不为check放宽门禁。
 
 ## 决策
 
@@ -18,7 +19,7 @@ JSONL framing、strict解码、资源/输入守卫及编译编排在Application�
 
 固定逻辑sample.sir，不含路径/时间/随机/Locale。新Renderer复用JsonStringEncoder、仅在本输出对孤立surrogate无损JSON转义，不改旧encoder输出。两个哈希分别表达输入原字节与排序生成路径/内容；长度framing/版本域冻结在[操作协议](../SIR_BATCH_CHECK.md)，不混用基线散列。
 
-静态ok=true只进候选池，不能声明Java构建/启动/业务正确。真实工程评测独立按原始需求断言、参考MySQL/HTTP/环境元组及证据，[总设计](../qualification/SLM_GENERATED_PROJECT_EVALUATION_PLAN.md)与后续明确授权的[限定真实试跑](../qualification/Q23_REAL_EVALUATION_PILOT.md)独立于静态入口，测试环境允许落盘/DB，check仍无写入/运行阶段；不发布生产部署/通用评测服务。FixHint生产增强等STEP0失败归类另审。
+静态ok=true只进候选池，不能声明Java构建/启动/业务正确。真实工程评测独立按原始需求断言、参考MySQL/HTTP/环境元组及证据，[总设计](../qualification/SLM_GENERATED_PROJECT_EVALUATION_PLAN.md)与后续明确授权的[限定真实试跑](../history/qualification/Q23_REAL_EVALUATION_PILOT.md)独立于静态入口，测试环境允许落盘/DB，check仍无写入/运行阶段；不发布生产部署/通用评测服务。FixHint生产增强等STEP0失败归类另审。
 
 ## 替代方案与代价
 
