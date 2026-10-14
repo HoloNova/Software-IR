@@ -22,9 +22,11 @@ import org.junit.jupiter.api.io.TempDir;
  * written down:
  *
  * <ol>
- *   <li><b>Only two commands are published.</b> {@code generate}, {@code register}, {@code apply}
+ *   <li><b>Only the published commands exist.</b> {@code generate}, {@code register}, {@code apply}
  *       and {@code recover} must be refused as usage errors, must leave both the state root and the
- *       output root byte-for-byte unchanged, and must not appear in the help text.</li>
+ *       output root byte-for-byte unchanged, and must not appear in the help text. The version
+ *       change is published under its own names, {@code version-plan} and {@code version-apply}
+ *       (ADR-027); a bare {@code apply} stays unknown.</li>
  *   <li><b>Every command surface has a defined exit code.</b> Help and version succeed; missing,
  *       relative or unknown arguments are usage errors.</li>
  *   <li><b>Output is canonical JSON.</b> The same input produces byte-identical stdout, and errors
@@ -35,7 +37,7 @@ import org.junit.jupiter.api.io.TempDir;
  */
 class CliProductBoundaryTest {
 
-    /** The commands ADR-019 proposes but which are not published today. */
+    /** The commands ADR-019 proposes but which are not published today (the version change is {@code version-apply}). */
     private static final List<String> UNPUBLISHED_COMMANDS =
             List.of("generate", "register", "apply", "recover");
 

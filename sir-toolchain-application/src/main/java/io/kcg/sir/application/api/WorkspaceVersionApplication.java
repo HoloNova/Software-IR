@@ -1,7 +1,9 @@
 package io.kcg.sir.application.api;
 
+import io.kcg.sir.application.internal.ProjectSourceReader;
 import io.kcg.sir.application.internal.projectbaseline.ProjectBaselineCodec.Problem;
 import io.kcg.sir.application.internal.projectbaseline.SecureFileAccess;
+import io.kcg.sir.application.internal.version.VersionPlanning;
 import io.kcg.sir.application.internal.workspace.WorkspacePlanning;
 import io.kcg.sir.application.internal.workspace.WorkspaceWriter;
 import java.io.IOException;
@@ -142,6 +144,59 @@ public final class WorkspaceVersionApplication {
                 "the change stopped half way and nothing was repaired: " + e.getMessage() + ". Run the same apply again to finish it"
                     + beforeCommit.map(c -> ", or return to the previous version saved in Git as commit " + c).orElse("")));
             return new WorkspaceApplyResult.RerunRequired(beforeCommit, diagnostics);
+        }
+    }
+
+    /** Plans a change whose candidate is a directory of SIR sources. */
+    public WorkspacePlanningResult plan(WorkspaceDirectoryRequest request) {
+        Objects.requireNonNull(request, "request");
+        List<ExecutionDiagnostic> diagnostics = new ArrayList<>();
+        WorkspaceVersionRequest resolved = resolve(request, diagnostics);
+        if (resolved == null) {
+            return new WorkspacePlanningResult.Failure(VersionPlanning.lastErrorStage(diagnostics), diagnostics);
+        }
+
+        return this.plan(resolved);
+    }
+
+    /**
+     * Applies a change whose candidate is a directory of SIR sources, but only if the plan it produces now is
+     * the one with {@code expectedPlanId} ({@link WorkspacePlan#sha256Hex()}), which is what the caller saw
+     * when it planned. Nothing the caller names is trusted beyond that: the plan is rebuilt from the disk.
+     */
+    public WorkspaceApplyResult apply(WorkspaceDirectoryRequest request, String expectedPlanId) {
+        Objects.requireNonNull(request, "request");
+        List<ExecutionDiagnostic> diagnostics = new ArrayList<>();
+        if (expectedPlanId == null || !expectedPlanId.matches("[0-9a-f]{64}")) {
+            return failure(diagnostics, "REQUEST-001", "the expected plan id must be 64 lower-case hex characters");
+        }
+
+        WorkspaceVersionRequest resolved = resolve(request, diagnostics);
+        if (resolved == null) {
+            return new WorkspaceApplyResult.Failure(VersionPlanning.lastErrorStage(diagnostics), diagnostics);
+        }
+
+        return switch (this.plan(resolved)) {
+            case WorkspacePlanningResult.Failure failed -> new WorkspaceApplyResult.Failure(failed.failedStage(), failed.diagnostics());
+            case WorkspacePlanningResult.NoChanges none -> this.apply(resolved, none);
+            case WorkspacePlanningResult.Planned planned -> planned.plan().sha256Hex().equals(expectedPlanId)
+                ? this.apply(resolved, planned)
+                : failure(diagnostics, "VERIFY-001", "the plan now is " + planned.plan().sha256Hex() + ", not the expected " + expectedPlanId + "; plan again");
+        };
+    }
+
+    /** Reads the candidate directory; null (with the reason in {@code diagnostics}) if it cannot be used. */
+    private static WorkspaceVersionRequest resolve(WorkspaceDirectoryRequest request, List<ExecutionDiagnostic> diagnostics) {
+        try {
+            var loaded = ProjectSourceReader.read(new ProjectToolchainRequest(request.candidateRoot(), request.entry(), request.outputRoot()), diagnostics);
+            if (loaded.isEmpty()) {
+                return null;
+            }
+
+            return new WorkspaceVersionRequest(request.repositoryRoot(), request.sourceRoot(), request.outputRoot(), loaded.get().snapshot());
+        } catch (IllegalArgumentException e) {
+            diagnostics.add(ExecutionDiagnostic.error("SIR-APP-WORKSPACE-REQUEST-001", ExecutionStage.PREFLIGHT, e.getMessage()));
+            return null;
         }
     }
 
