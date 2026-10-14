@@ -14,7 +14,6 @@ import io.kcg.sir.application.api.VerificationRequest;
 import io.kcg.sir.application.api.VerificationStage;
 import io.kcg.sir.application.execution.MavenProjectBuilder;
 import io.kcg.sir.application.execution.SpringBootApplicationHost;
-import io.kcg.sir.source.SourceId;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -67,7 +66,7 @@ class IndependentVerificationIT {
     }
 
     private VerificationReport verify(CandidateVerificationApplication app, String id, String resource, VerificationStage through) throws IOException {
-        var report = app.verify(new VerificationRequest(id, io.kcg.sir.application.MultiSourceTestSupport.oneFile(id + ".sir", ConformanceFixtures.readResource(resource)), through));
+        var report = app.verify(new VerificationRequest(id, io.kcg.sir.application.ProjectTestSupport.oneFile(id + ".sir", ConformanceFixtures.readResource(resource)), through));
         reportText.append(report.canonicalText()).append("reportSha256=").append(report.sha256Hex()).append("\n\n");
         System.out.println(report.canonicalText());
         return report;

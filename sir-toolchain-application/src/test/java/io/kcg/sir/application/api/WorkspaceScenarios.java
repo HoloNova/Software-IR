@@ -2,7 +2,7 @@ package io.kcg.sir.application.api;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import io.kcg.sir.application.MultiSourceTestSupport;
+import io.kcg.sir.application.ProjectTestSupport;
 import io.kcg.sir.application.internal.ProjectSourceReader;
 import io.kcg.sir.source.SourceId;
 import io.kcg.sir.source.SourceSnapshot;
@@ -79,19 +79,19 @@ final class WorkspaceScenarios {
         }
 
         Map<String, String> outputTree() throws Exception {
-            return MultiSourceTestSupport.tree(this.output);
+            return ProjectTestSupport.tree(this.output);
         }
 
         Map<String, String> sourceFiles() throws Exception {
-            return MultiSourceTestSupport.files(this.sources);
+            return ProjectTestSupport.files(this.sources);
         }
     }
 
     static Template template(Path directory, Kind kind) throws Exception {
         Path repo = Files.createDirectories(directory.resolve("repo"));
-        Path sources = MultiSourceTestSupport.fixture(repo);
+        Path sources = ProjectTestSupport.fixture(repo);
         Path output = repo.resolve("generated");
-        MultiSourceTestSupport.generate(sources, output);
+        ProjectTestSupport.generate(sources, output);
         SourceSnapshot base = read(sources, output);
         SourceSnapshot candidate = candidate(base, kind);
 
@@ -103,18 +103,18 @@ final class WorkspaceScenarios {
         }
 
         Path expectedOutput = directory.resolve("expected-output");
-        MultiSourceTestSupport.generate(expectedSources, expectedOutput);
-        return new Template(directory, base, candidate, MultiSourceTestSupport.tree(output), MultiSourceTestSupport.tree(expectedOutput));
+        ProjectTestSupport.generate(expectedSources, expectedOutput);
+        return new Template(directory, base, candidate, ProjectTestSupport.tree(output), ProjectTestSupport.tree(expectedOutput));
     }
 
     static SourceSnapshot read(Path sources, Path output) {
         var diagnostics = new ArrayList<ExecutionDiagnostic>();
-        var loaded = ProjectSourceReader.read(new ToolchainRequest(sources, MultiSourceTestSupport.ENTRY, output), diagnostics);
+        var loaded = ProjectSourceReader.read(new ToolchainRequest(sources, ProjectTestSupport.ENTRY, output), diagnostics);
         assertTrue(loaded.isPresent(), diagnostics.toString());
         return loaded.get().snapshot();
     }
 
-    /** The files of a snapshot as hex by path, comparable with {@link MultiSourceTestSupport#files}. */
+    /** The files of a snapshot as hex by path, comparable with {@link ProjectTestSupport#files}. */
     static Map<String, String> files(SourceSnapshot snapshot) {
         Map<String, String> map = new LinkedHashMap<>();
         for (var file : snapshot.manifest().files()) {

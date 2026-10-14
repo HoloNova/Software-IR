@@ -112,13 +112,13 @@ public final class CandidateVerificationApplication {
 
         void staticLevel() {
             long started = System.nanoTime();
-            var legacy = new ArrayList<ExecutionDiagnostic>();
+            var executionDiagnostics = new ArrayList<ExecutionDiagnostic>();
             var raw = new ArrayList<ValidationDiagnostic>();
             var entered = new ValidationStopAfter[]{ValidationStopAfter.PARSE};
             CompilationStages.Snapshot snapshot;
             try {
                 java.util.function.Function<SpringBootLoweredModel, GenerationResult> generation = model -> new SpringBootGenerator().generate(model);
-                snapshot = CompilationService.project(request.sources(), ValidationStopAfter.GENERATION, generation, legacy,
+                snapshot = CompilationService.project(request.sources(), ValidationStopAfter.GENERATION, generation, executionDiagnostics,
                         stage -> entered[0] = stage, raw);
             } catch (RuntimeException | StackOverflowError e) {
                 record(VerificationStage.STATIC, StageOutcome.failed("STATIC_INTERNAL",

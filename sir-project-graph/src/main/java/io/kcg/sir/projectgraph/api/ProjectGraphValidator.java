@@ -333,12 +333,12 @@ public final class ProjectGraphValidator {
       List<ProjectGraphNode> nodes, Map<GraphNodeId, ProjectGraphNode> nodeById, List<ProjectGraphEdge> edges, List<ProjectGraphDiagnostic> diagnostics
    ) {
       Map<GraphNodeId, GraphNodeId> lowersToSource = new LinkedHashMap<>();
-      Set<GraphNodeId> multiSourceLowered = new HashSet<>();
+      Set<GraphNodeId> loweredWithSeveralSources = new HashSet<>();
 
       for (ProjectGraphEdge edge : edges) {
          if (edge.kind() == GraphEdgeKind.LOWERS_TO) {
             GraphNodeId previous = lowersToSource.put(edge.target(), edge.source());
-            if (previous != null && multiSourceLowered.add(edge.target())) {
+            if (previous != null && loweredWithSeveralSources.add(edge.target())) {
                diagnostics.add(
                   ProjectGraphDiagnostic.error(
                      "SIR-GRAPH-EDGE-005", "multiple LOWERS_TO edges target the same LoweredDeclaration: " + edge.target().canonicalKey(), null, edge.id()
@@ -349,7 +349,7 @@ public final class ProjectGraphValidator {
       }
 
       for (ProjectGraphNode node : nodes) {
-         if (node instanceof ProjectGraphNode.LoweredDeclaration lowered && !multiSourceLowered.contains(lowered.id())) {
+         if (node instanceof ProjectGraphNode.LoweredDeclaration lowered && !loweredWithSeveralSources.contains(lowered.id())) {
             GraphNodeId semanticId = lowersToSource.get(lowered.id());
             if (semanticId != null && semanticId instanceof GraphNodeId.Semantic sem) {
                if (!sem.symbolId().equals(lowered.sourceSymbol())) {

@@ -7,8 +7,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import io.kcg.sir.api.SirParser;
-import io.kcg.sir.api.SirSource;
 import io.kcg.sir.application.api.AppliedFile;
 import io.kcg.sir.application.api.ExecutionManifest;
 import io.kcg.sir.application.api.ToolchainResult;
@@ -32,8 +30,6 @@ import io.kcg.sir.projectgraph.api.ProjectGraphInput;
 import io.kcg.sir.projectgraph.api.ProjectGraphNode;
 import io.kcg.sir.projectgraph.api.ProjectGraphEdge;
 import io.kcg.sir.semantic.api.NormalizedSemanticModel;
-import io.kcg.sir.semantic.api.SemanticAnalysis;
-import io.kcg.sir.semantic.api.SirSemanticAnalyzer;
 import io.kcg.sir.semantic.symbol.SymbolId;
 import io.kcg.sir.source.SourceId;
 import java.nio.file.Path;
@@ -341,8 +337,8 @@ class ToolchainProjectGraphIntegrationTest {
 
     @Test
     void projectArtifactOriginsArePreservedVerbatimFromLowering() throws Exception {
-        var sources = MultiSourceTestSupport.oneFile("campus-market.sir", ApplicationTestSupport.resource("valid/campus-market.sir"));
-        NormalizedSemanticModel normalized = MultiSourceTestSupport.model(sources);
+        var sources = ProjectTestSupport.oneFile("campus-market.sir", ApplicationTestSupport.resource("valid/campus-market.sir"));
+        NormalizedSemanticModel normalized = ProjectTestSupport.model(sources);
         LoweringAnalysis<SpringBootLoweredModel> lowering =
                 new SpringBootTargetLowering().lower(normalized);
         SpringBootLoweredModel lowered = lowering.model().orElseThrow();

@@ -3,7 +3,7 @@ package io.kcg.sir.application.api;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
-import io.kcg.sir.application.MultiSourceTestSupport;
+import io.kcg.sir.application.ProjectTestSupport;
 import io.kcg.sir.application.api.WorkspaceScenarios.Kind;
 import io.kcg.sir.application.api.WorkspaceScenarios.Template;
 import io.kcg.sir.application.api.WorkspaceScenarios.Workspace;
@@ -15,7 +15,6 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.EnumMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -166,9 +165,9 @@ class WorkspaceVersionApplicationTest {
         assertInstanceOf(WorkspaceApplyResult.Applied.class, applyPlanned(new WorkspaceVersionApplication(new FakeVersionControl()), ws));
 
         assertEquals("mine", Files.readString(kept));
-        Map<String, String> expected = new TreeMap<>(MultiSourceTestSupport.files(ws.template().directory().resolve("expected-output")));
+        Map<String, String> expected = new TreeMap<>(ProjectTestSupport.files(ws.template().directory().resolve("expected-output")));
         expected.put(ws.output().relativize(kept).toString().replace('\\', '/'), hex("mine"));
-        assertEquals(expected, MultiSourceTestSupport.files(ws.output()));
+        assertEquals(expected, ProjectTestSupport.files(ws.output()));
     }
 
     // ------------------------------------------------------------------------------ what is refused
@@ -387,7 +386,7 @@ class WorkspaceVersionApplicationTest {
 
     /** At a stop, every file is exactly the old or the new bytes (or still waiting in staging): never a mixture. */
     private void assertNothingHalfWritten(Workspace ws, Template template, String where) throws Exception {
-        Map<String, String> output = MultiSourceTestSupport.files(ws.output());
+        Map<String, String> output = ProjectTestSupport.files(ws.output());
         for (var entry : output.entrySet()) {
             if (entry.getKey().startsWith(".kcg-staging/")) {
                 continue;

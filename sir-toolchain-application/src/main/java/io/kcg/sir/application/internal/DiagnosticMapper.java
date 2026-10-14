@@ -30,7 +30,7 @@ public final class DiagnosticMapper {
       return out;
    }
 
-   /** New project entry preserves cross-file related sites as adjacent INFO notes; legacy mapping is unchanged. */
+   /** Preserves cross-file related sites as adjacent INFO notes. */
    public static List<ExecutionDiagnostic> fromProjectSource(List<Diagnostic> diagnostics, ExecutionStage stage) {
       List<ExecutionDiagnostic> out = new ArrayList<>();
       for (Diagnostic d : diagnostics) {

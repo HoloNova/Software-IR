@@ -21,7 +21,6 @@ import io.kcg.sir.application.api.VerificationStage;
 import io.kcg.sir.application.api.ToolchainResult;
 import io.kcg.sir.application.internal.projectbaseline.ProjectBaselineVerification;
 import io.kcg.sir.application.internal.workspace.WorkspacePlanning;
-import io.kcg.sir.source.SourceId;
 import io.kcg.sir.source.SourceSnapshot;
 import java.io.IOException;
 import java.net.URI;
@@ -94,7 +93,7 @@ class CandidateVerificationTest {
             events.add("build");
             if (throwing) throw new IllegalStateException("password=s3cret");
             try {
-                seen = MultiSourceTestSupport.files(projectRoot);
+                seen = ProjectTestSupport.files(projectRoot);
                 Path artifact = projectRoot.resolve("target/app.jar");
                 if (writeArtifact) {
                     Files.createDirectories(artifact.getParent());
@@ -151,14 +150,14 @@ class CandidateVerificationTest {
 
     /** The multi-file fixture, its from-scratch generation, and the identity the version machinery gives it. */
     private Fixture project() throws Exception {
-        Path source = MultiSourceTestSupport.fixture(temp.resolve("src"));
+        Path source = ProjectTestSupport.fixture(temp.resolve("src"));
         Path output = temp.resolve("oracle-output");
-        ToolchainResult.Success generated = MultiSourceTestSupport.generate(source, output);
+        ToolchainResult.Success generated = ProjectTestSupport.generate(source, output);
         var diagnostics = new java.util.ArrayList<ExecutionDiagnostic>();
         var compiled = ProjectBaselineVerification.compile(generated.sources(), output, diagnostics);
         assertNotNull(compiled, diagnostics.toString());
         var identity = WorkspacePlanning.receipt(compiled.bundle());
-        return new Fixture(generated.sources(), MultiSourceTestSupport.files(output),
+        return new Fixture(generated.sources(), ProjectTestSupport.files(output),
                 identity.sourceSetSha256Hex(), identity.manifestDigest());
     }
 
@@ -199,7 +198,7 @@ class CandidateVerificationTest {
         var checked = new SirValidationApplication().check(new SirValidationRequest("campus", sir));
         assertTrue(checked.ok());
         var report = CandidateVerificationApplication.staticOnly().verify(new VerificationRequest("campus",
-                MultiSourceTestSupport.oneFile("campus-market.sir", sir), VerificationStage.STATIC));
+                ProjectTestSupport.oneFile("campus-market.sir", sir), VerificationStage.STATIC));
 
         assertTrue(report.passedThrough(VerificationStage.STATIC));
         assertEquals(checked.digest(), report.binding().orElseThrow().generatedDigest());
@@ -210,7 +209,7 @@ class CandidateVerificationTest {
         String sir = ApplicationTestSupport.resource("invalid/semantic-unresolved-name.sir");
         var sandbox = new FakeSandbox();
         var report = full(sandbox, new FakeBuilder(), new FakeHost(), new FakeOracle()).verify(new VerificationRequest("bad",
-                MultiSourceTestSupport.oneFile("bad.sir", sir), VerificationStage.BUSINESS));
+                ProjectTestSupport.oneFile("bad.sir", sir), VerificationStage.BUSINESS));
 
         assertStages(report, StageStatus.FAILED, StageStatus.NOT_RUN, StageStatus.NOT_RUN, StageStatus.NOT_RUN);
         StageOutcome failed = report.stage(VerificationStage.STATIC).outcome();
@@ -429,7 +428,7 @@ class CandidateVerificationTest {
         assertThrows(IllegalArgumentException.class, () -> new ResourceLimits(Duration.ZERO, Duration.ofSeconds(5), Duration.ofSeconds(5), 256, 256, 128, 1 << 20));
         assertThrows(IllegalArgumentException.class, () -> new ResourceLimits(Duration.ofSeconds(5), Duration.ofSeconds(5), Duration.ofDays(1), 256, 256, 128, 1 << 20));
         assertThrows(IllegalArgumentException.class, () -> new ResourceLimits(Duration.ofSeconds(5), Duration.ofSeconds(5), Duration.ofSeconds(5), 10, 256, 128, 1 << 20));
-        assertThrows(IllegalArgumentException.class, () -> new VerificationRequest(" ", MultiSourceTestSupport.oneFile("a.sir", "x"), VerificationStage.STATIC));
+        assertThrows(IllegalArgumentException.class, () -> new VerificationRequest(" ", ProjectTestSupport.oneFile("a.sir", "x"), VerificationStage.STATIC));
         assertDoesNotThrow(ResourceLimits::defaults);
     }
 }

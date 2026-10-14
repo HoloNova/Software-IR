@@ -29,7 +29,7 @@ final class ApplicationRenderer {
       Optional<ActorIdentityTransportPlan> planOpt = app.actorIdentityTransportPlan();
       String body;
       if (planOpt.isEmpty()) {
-         body = renderLegacyBody(app);
+         body = renderPlainBody(app);
       } else {
          ActorIdentityTransportPlan plan = planOpt.get();
          addActorTransportImports(imports, app, plan);
@@ -40,7 +40,7 @@ final class ApplicationRenderer {
       return new GeneratedFile(app.path(), content, app.id(), Optional.empty());
    }
 
-   private static String renderLegacyBody(ApplicationMain app) {
+   private static String renderPlainBody(ApplicationMain app) {
       StringBuilder out = new StringBuilder();
       out.append("@SpringBootApplication\n");
       out.append("@MapperScan(").append(StringEscape.javaString(app.mapperScanPackage())).append(")\n");

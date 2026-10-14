@@ -1,6 +1,5 @@
 package io.kcg.sir.projectgraph.internal;
 
-import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Locale;
@@ -46,9 +45,5 @@ final class Sha256Helper {
       }
 
       return sb.toString().toLowerCase(Locale.ROOT);
-   }
-
-   static String hexDigestUtf8(String text) {
-      return hexDigest(text.getBytes(StandardCharsets.UTF_8));
    }
 }

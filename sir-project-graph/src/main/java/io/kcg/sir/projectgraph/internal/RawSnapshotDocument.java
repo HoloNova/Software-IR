@@ -4,7 +4,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 
 public final class RawSnapshotDocument {
    public final RawSnapshotDocument.RawHeader header;
@@ -29,12 +28,6 @@ public final class RawSnapshotDocument {
 
    static Map<String, String> newFieldMap() {
       return new LinkedHashMap<>();
-   }
-
-   static Optional<String> getOptional(Map<String, String> fields, String prefix) {
-      String present = fields.get(prefix + ".present");
-      String value = fields.get(prefix + ".value");
-      return "1".equals(present) ? Optional.of(value != null ? value : "") : Optional.empty();
    }
 
    public static final class RawGraph {

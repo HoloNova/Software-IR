@@ -169,20 +169,6 @@ public final class SpringBootModelLowerer {
     }
 
     /**
-     * Whether any capability writes through a request payload.
-     *
-     * <p>That is where candidate validation, field errors, and declared failure statuses become part of
-     * the generated contract, so the supporting artifacts are emitted exactly then.
-     */
-    private boolean hasWritableCapability(List<SpringBootDeclaration> declarations) {
-        return declarations.stream()
-                .filter(SpringBootDeclaration.CapabilityDeclaration.class::isInstance)
-                .map(SpringBootDeclaration.CapabilityDeclaration.class::cast)
-                .anyMatch(capability -> capability.kind() == SpringBootDeclaration.CapabilityKind.COMMAND
-                        && capability.input().isPresent());
-    }
-
-    /**
      * The error envelope, the exception base, the advice, and the constraint primitives.
      *
      * <p>The advice maps every failure the write slice can produce onto those artifacts: a declared

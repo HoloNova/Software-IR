@@ -123,16 +123,6 @@ final class GenerationContext {
       }
    }
 
-   void addFile(GeneratedFile file) {
-      Objects.requireNonNull(file, "file");
-      this.files.add(file);
-   }
-
-   void addDiagnostic(GenerationDiagnostic diagnostic) {
-      Objects.requireNonNull(diagnostic, "diagnostic");
-      this.diagnostics.add(diagnostic);
-   }
-
    void fail(String code, String message, LoweredNodeId nodeId) {
       this.diagnostics.add(GenerationDiagnostic.of(code, message, nodeId));
    }

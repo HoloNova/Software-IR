@@ -2,7 +2,7 @@ package io.kcg.sir.application.api;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import io.kcg.sir.application.MultiSourceTestSupport;
+import io.kcg.sir.application.ProjectTestSupport;
 import io.kcg.sir.application.api.WorkspaceScenarios.Kind;
 import io.kcg.sir.application.api.WorkspaceScenarios.Template;
 import io.kcg.sir.application.api.WorkspaceScenarios.Workspace;
@@ -44,7 +44,7 @@ class WorkspaceDirectoryEntryTest {
             Files.write(path, candidate.bytes(file.sourceId()));
         }
 
-        return new WorkspaceDirectoryRequest(ws.repository(), ws.sources(), MultiSourceTestSupport.ENTRY, ws.output(), root);
+        return new WorkspaceDirectoryRequest(ws.repository(), ws.sources(), ProjectTestSupport.ENTRY, ws.output(), root);
     }
 
     private static Map<String, Map<String, String>> state(Workspace ws) throws Exception {
@@ -114,11 +114,11 @@ class WorkspaceDirectoryEntryTest {
         var app = new WorkspaceVersionApplication(new FakeVersionControl());
         var before = state(ws);
 
-        var missing = new WorkspaceDirectoryRequest(ws.repository(), ws.sources(), MultiSourceTestSupport.ENTRY, ws.output(), this.temp.resolve("no-such-candidate"));
+        var missing = new WorkspaceDirectoryRequest(ws.repository(), ws.sources(), ProjectTestSupport.ENTRY, ws.output(), this.temp.resolve("no-such-candidate"));
         var unreadable = assertInstanceOf(WorkspacePlanningResult.Failure.class, app.plan(missing));
         assertTrue(unreadable.diagnostics().stream().anyMatch(ExecutionDiagnostic::isError));
 
-        var outside = new WorkspaceDirectoryRequest(ws.repository(), ws.sources(), MultiSourceTestSupport.ENTRY, this.temp.resolve("elsewhere"), this.directory(ws, ws.template().candidate()).candidateRoot());
+        var outside = new WorkspaceDirectoryRequest(ws.repository(), ws.sources(), ProjectTestSupport.ENTRY, this.temp.resolve("elsewhere"), this.directory(ws, ws.template().candidate()).candidateRoot());
         var misplaced = assertInstanceOf(WorkspacePlanningResult.Failure.class, app.plan(outside));
         assertEquals("SIR-APP-WORKSPACE-REQUEST-001", misplaced.diagnostics().get(0).code());
         assertInstanceOf(WorkspaceApplyResult.Failure.class, app.apply(outside, "0".repeat(64)));

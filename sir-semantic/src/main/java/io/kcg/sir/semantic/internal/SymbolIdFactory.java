@@ -79,16 +79,6 @@ final class SymbolIdFactory {
       return capabilityVariable(declaration(softwareName, DeclarationIdentity.CAPABILITY_KIND, capabilityName), varName);
    }
 
-   static SymbolId stepScope(String softwareName, String capabilityName, String stepNodeId) {
-      return capabilityStepScope(declaration(softwareName, DeclarationIdentity.CAPABILITY_KIND, capabilityName), stepNodeId);
-   }
-
-   static SymbolId stepVariable(String softwareName, String capabilityName, String stepNodeId, String varName) {
-      return capabilityStepVariable(
-         declaration(softwareName, DeclarationIdentity.CAPABILITY_KIND, capabilityName), stepNodeId, varName
-      );
-   }
-
    /**
     * A symbol scoped to one capability. Deriving it from the capability's own identity — instead of
     * from its name — is what keeps a renamed capability's variables and step scopes identical.

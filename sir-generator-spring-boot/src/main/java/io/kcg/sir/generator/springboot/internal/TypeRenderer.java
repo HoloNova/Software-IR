@@ -14,19 +14,6 @@ final class TypeRenderer {
    private TypeRenderer() {
    }
 
-   static String renderType(LoweredJavaType type) {
-      return switch (type) {
-         case Scalar s -> scalarPrimitive(s.kind());
-         case Declared d -> d.javaName();
-         case OptionalValue o -> "java.util.Optional<" + renderBoxedType(o.elementType()) + ">";
-         case ListValue l -> "java.util.List<" + renderBoxedType(l.elementType()) + ">";
-         case EntityReference ref -> scalarBoxed(ref.identityStorageType().kind());
-         case PageValue ignored -> throw new IllegalStateException(
-                 "Page values are response carriers and are rendered by ResponseTypeRenderer");
-         default -> throw new MatchException(null, null);
-      };
-   }
-
    static String renderBoxedType(LoweredJavaType type) {
       return switch (type) {
          case Scalar s -> scalarBoxed(s.kind());
@@ -55,24 +42,6 @@ final class TypeRenderer {
          case EntityReference ref -> scalarImport(ref.identityStorageType().kind());
          case PageValue ignored -> Optional.empty();
          default -> throw new MatchException(null, null);
-      };
-   }
-
-   static boolean needsImport(LoweredJavaType type) {
-      return importFor(type).isPresent();
-   }
-
-   private static String scalarPrimitive(ScalarKind kind) {
-      return switch (kind) {
-         case BOOLEAN -> "boolean";
-         case INTEGER -> "int";
-         case LONG -> "long";
-         case BIG_DECIMAL -> "java.math.BigDecimal";
-         case STRING -> "String";
-         case UUID -> "java.util.UUID";
-         case LOCAL_DATE -> "java.time.LocalDate";
-         case INSTANT -> "java.time.Instant";
-         case VOID -> "void";
       };
    }
 
