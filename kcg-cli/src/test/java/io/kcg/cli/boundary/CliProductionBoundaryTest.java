@@ -17,8 +17,8 @@ import org.junit.jupiter.api.Test;
  *
  * <p>The claim under test is narrow and checkable: the published command surface talks to the rest of
  * the system only through the typed Application API, and does no file I/O of its own. That claim is
- * what makes the read-only contract believable — a command that opened {@code CURRENT} itself could
- * observe or disturb state the Application is supposed to own.
+ * what keeps the commands honest — a command that read or wrote the project's files itself could
+ * observe or disturb what the Application is supposed to own.
  *
  * <p>Two rules are enforced on the constant pool of every compiled class:
  *
@@ -29,19 +29,10 @@ import org.junit.jupiter.api.Test;
  *       Application.</li>
  * </ol>
  *
- * <p>One documented exception exists, and it is bounded rather than ignored: the
- * {@code io.kcg.cli.mvp} package is a non-command read-only evidence utility. Its own classes may use
- * filesystem APIs, but they may not touch Application internals, and <b>no command-path class may
- * reference them</b>. That last assertion is what keeps the exception from silently widening into the
- * published surface.
- *
  * <p>The check is proved non-vacuous by scanning {@link CliBoundaryProbe}, a class that violates every
  * rule on purpose.
  */
 class CliProductionBoundaryTest {
-
-    /** Package prefix of the documented exception. */
-    private static final String MVP_PREFIX = "io/kcg/cli/mvp/";
 
     /** Application/Change internals that the CLI must never reference. */
     private static final List<String> FORBIDDEN_INTERNAL_PREFIXES = List.of(
@@ -81,9 +72,6 @@ class CliProductionBoundaryTest {
 
         List<String> violations = new ArrayList<>();
         for (var entry : found.entrySet()) {
-            if (entry.getKey().startsWith(MVP_PREFIX)) {
-                continue; // documented exception, bounded by the next test
-            }
             for (String constant : entry.getValue()) {
                 if (FORBIDDEN_IO.contains(constant)) {
                     violations.add(entry.getKey() + " -> " + constant);
@@ -92,28 +80,6 @@ class CliProductionBoundaryTest {
         }
         assertTrue(violations.isEmpty(),
                 () -> "command-path classes must not do their own file I/O: " + violations);
-    }
-
-    @Test
-    void theNonCommandExceptionIsUnreachableFromTheCommandPath() throws IOException {
-        TreeMap<String, List<String>> found = scan(productionClasses());
-
-        List<String> violations = new ArrayList<>();
-        for (var entry : found.entrySet()) {
-            if (entry.getKey().startsWith(MVP_PREFIX)) {
-                continue;
-            }
-            for (String constant : entry.getValue()) {
-                if (constant.startsWith(MVP_PREFIX)) {
-                    violations.add(entry.getKey() + " -> " + constant);
-                }
-            }
-        }
-        assertTrue(violations.isEmpty(),
-                () -> "the mvp package is a non-command path, so no command class may reference it: "
-                        + violations
-                        + "; either wire it into a command (not published) or move it out of the "
-                        + "command path");
     }
 
     @Test
@@ -142,8 +108,6 @@ class CliProductionBoundaryTest {
                             + "nothing: " + all);
             assertTrue(all.contains("java/nio/file/Files"),
                     () -> "the scan must report real file I/O, otherwise it proves nothing: " + all);
-            assertTrue(all.stream().anyMatch(c -> c.startsWith(MVP_PREFIX)),
-                    () -> "the scan must report a real mvp reference: " + all);
         } finally {
             deleteRecursively(census);
         }
