@@ -30,7 +30,7 @@ public final class VersionResultDocument {
          }
          case WorkspacePlanningResult.NoChanges none -> {
             envelope(sb, "version-plan", "NO_CHANGES", "PLAN");
-            ContextResultDocument.comma(sb);
+            JsonFields.comma(sb);
             receipt(sb, "baseline", none.baseline());
          }
          case WorkspacePlanningResult.Failure failure -> envelope(sb, "version-plan", "FAILURE", failure.failedStage().name());
@@ -47,25 +47,25 @@ public final class VersionResultDocument {
       switch (result) {
          case WorkspaceApplyResult.Applied applied -> {
             envelope(sb, "version-apply", "APPLIED", "APPLY");
-            ContextResultDocument.comma(sb);
+            JsonFields.comma(sb);
             receipt(sb, "base", applied.base());
-            ContextResultDocument.comma(sb);
+            JsonFields.comma(sb);
             receipt(sb, "candidate", applied.candidate());
-            ContextResultDocument.comma(sb);
-            ContextResultDocument.field(sb, "beforeCommit", applied.beforeCommit().orElse(""));
-            ContextResultDocument.comma(sb);
-            ContextResultDocument.field(sb, "afterCommit", applied.afterCommit().orElse(""));
+            JsonFields.comma(sb);
+            JsonFields.field(sb, "beforeCommit", applied.beforeCommit().orElse(""));
+            JsonFields.comma(sb);
+            JsonFields.field(sb, "afterCommit", applied.afterCommit().orElse(""));
          }
          case WorkspaceApplyResult.NoChanges none -> {
             envelope(sb, "version-apply", "NO_CHANGES", "APPLY");
-            ContextResultDocument.comma(sb);
+            JsonFields.comma(sb);
             receipt(sb, "baseline", none.baseline());
          }
          case WorkspaceApplyResult.Failure failure -> envelope(sb, "version-apply", "FAILURE", failure.failedStage().name());
          case WorkspaceApplyResult.RerunRequired rerun -> {
             envelope(sb, "version-apply", "RERUN_REQUIRED", "WRITE");
-            ContextResultDocument.comma(sb);
-            ContextResultDocument.field(sb, "beforeCommit", rerun.beforeCommit().orElse(""));
+            JsonFields.comma(sb);
+            JsonFields.field(sb, "beforeCommit", rerun.beforeCommit().orElse(""));
          }
       }
 
@@ -75,33 +75,33 @@ public final class VersionResultDocument {
    }
 
    private static void envelope(StringBuilder sb, String command, String outcome, String stage) {
-      ContextResultDocument.field(sb, "protocolVersion", PROTOCOL);
-      ContextResultDocument.comma(sb);
-      ContextResultDocument.field(sb, "command", command);
-      ContextResultDocument.comma(sb);
-      ContextResultDocument.field(sb, "outcome", outcome);
-      ContextResultDocument.comma(sb);
-      ContextResultDocument.field(sb, "stage", stage);
+      JsonFields.field(sb, "protocolVersion", PROTOCOL);
+      JsonFields.comma(sb);
+      JsonFields.field(sb, "command", command);
+      JsonFields.comma(sb);
+      JsonFields.field(sb, "outcome", outcome);
+      JsonFields.comma(sb);
+      JsonFields.field(sb, "stage", stage);
    }
 
    private static void plan(StringBuilder sb, WorkspacePlan plan) {
-      ContextResultDocument.comma(sb);
-      ContextResultDocument.field(sb, "planId", plan.sha256Hex());
-      ContextResultDocument.comma(sb);
+      JsonFields.comma(sb);
+      JsonFields.field(sb, "planId", plan.sha256Hex());
+      JsonFields.comma(sb);
       receipt(sb, "base", plan.base());
-      ContextResultDocument.comma(sb);
+      JsonFields.comma(sb);
       receipt(sb, "candidate", plan.candidate());
-      ContextResultDocument.comma(sb);
+      JsonFields.comma(sb);
       sb.append("\"summary\":{");
-      ContextResultDocument.field(sb, "create", plan.count(VersionPlan.Action.CREATE));
-      ContextResultDocument.comma(sb);
-      ContextResultDocument.field(sb, "update", plan.count(VersionPlan.Action.UPDATE));
-      ContextResultDocument.comma(sb);
-      ContextResultDocument.field(sb, "delete", plan.count(VersionPlan.Action.DELETE));
-      ContextResultDocument.comma(sb);
-      ContextResultDocument.field(sb, "unchanged", plan.unchangedFiles());
+      JsonFields.field(sb, "create", plan.count(VersionPlan.Action.CREATE));
+      JsonFields.comma(sb);
+      JsonFields.field(sb, "update", plan.count(VersionPlan.Action.UPDATE));
+      JsonFields.comma(sb);
+      JsonFields.field(sb, "delete", plan.count(VersionPlan.Action.DELETE));
+      JsonFields.comma(sb);
+      JsonFields.field(sb, "unchanged", plan.unchangedFiles());
       sb.append('}');
-      ContextResultDocument.comma(sb);
+      JsonFields.comma(sb);
       sb.append("\"sources\":[");
       boolean first = true;
       for (SourceDelta.Entry entry : plan.sources().entries()) {
@@ -115,14 +115,14 @@ public final class VersionResultDocument {
 
          first = false;
          sb.append('{');
-         ContextResultDocument.field(sb, "source", entry.source().value());
-         ContextResultDocument.comma(sb);
-         ContextResultDocument.field(sb, "action", entry.action().name());
+         JsonFields.field(sb, "source", entry.source().value());
+         JsonFields.comma(sb);
+         JsonFields.field(sb, "action", entry.action().name());
          sb.append('}');
       }
 
       sb.append(']');
-      ContextResultDocument.comma(sb);
+      JsonFields.comma(sb);
       sb.append("\"files\":[");
       for (int i = 0; i < plan.files().size(); i++) {
          if (i > 0) {
@@ -131,9 +131,9 @@ public final class VersionResultDocument {
 
          VersionPlan.FileOp op = plan.files().get(i);
          sb.append('{');
-         ContextResultDocument.field(sb, "path", op.path());
-         ContextResultDocument.comma(sb);
-         ContextResultDocument.field(sb, "action", op.action().name());
+         JsonFields.field(sb, "path", op.path());
+         JsonFields.comma(sb);
+         JsonFields.field(sb, "action", op.action().name());
          sb.append('}');
       }
 
@@ -142,16 +142,16 @@ public final class VersionResultDocument {
 
    private static void receipt(StringBuilder sb, String name, ProjectBaselineReceipt receipt) {
       sb.append(JsonStringEncoder.encode(name)).append(":{");
-      ContextResultDocument.field(sb, "baselineId", receipt.baselineId());
-      ContextResultDocument.comma(sb);
-      ContextResultDocument.field(sb, "sourceSetSha256", receipt.sourceSetSha256Hex());
-      ContextResultDocument.comma(sb);
-      ContextResultDocument.field(sb, "manifestDigest", receipt.manifestDigest());
+      JsonFields.field(sb, "baselineId", receipt.baselineId());
+      JsonFields.comma(sb);
+      JsonFields.field(sb, "sourceSetSha256", receipt.sourceSetSha256Hex());
+      JsonFields.comma(sb);
+      JsonFields.field(sb, "manifestDigest", receipt.manifestDigest());
       sb.append('}');
    }
 
    private static void diagnostics(StringBuilder sb, List<ExecutionDiagnostic> diagnostics) {
-      ContextResultDocument.comma(sb);
+      JsonFields.comma(sb);
       sb.append("\"diagnostics\":[");
       for (int i = 0; i < diagnostics.size(); i++) {
          if (i > 0) {
@@ -160,16 +160,16 @@ public final class VersionResultDocument {
 
          ExecutionDiagnostic d = diagnostics.get(i);
          sb.append('{');
-         ContextResultDocument.field(sb, "code", d.code());
-         ContextResultDocument.comma(sb);
-         ContextResultDocument.field(sb, "stage", d.stage().name());
-         ContextResultDocument.comma(sb);
-         ContextResultDocument.field(sb, "severity", d.severity().name());
-         ContextResultDocument.comma(sb);
-         ContextResultDocument.field(sb, "message", d.message());
+         JsonFields.field(sb, "code", d.code());
+         JsonFields.comma(sb);
+         JsonFields.field(sb, "stage", d.stage().name());
+         JsonFields.comma(sb);
+         JsonFields.field(sb, "severity", d.severity().name());
+         JsonFields.comma(sb);
+         JsonFields.field(sb, "message", d.message());
          if (d.relativePath().isPresent()) {
-            ContextResultDocument.comma(sb);
-            ContextResultDocument.field(sb, "relativePath", d.relativePath().get());
+            JsonFields.comma(sb);
+            JsonFields.field(sb, "relativePath", d.relativePath().get());
          }
 
          sb.append('}');

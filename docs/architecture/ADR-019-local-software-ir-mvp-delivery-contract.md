@@ -442,5 +442,5 @@ The four-command lifecycle proposed above (`generate`, `register`, `apply`, `rec
 
 - The command line now publishes `version-plan` (read-only) and `version-apply` (the only command that changes a project; it requires `git`) with their own protocol, `KCG-CLI-VERSION-CHANGE-V1`. `version-apply` names the plan it was shown by its `planId`, and exit code 4 means it stopped half way and is to be run again.
 - The "read-only CLI" claim no longer holds for the whole command line; it still holds for `check`, `context`, `plan` and `version-plan`. The CLI itself still does no file I/O of its own (`CliProductionBoundaryTest`): the application reads and writes.
-- `context` and `plan` keep their accepted `KCG-CLI-CHANGE-PLANNING-V1` protocol and frozen help text and are marked DEPRECATED in the top-level help. They are removed with the state root in G4.
+- `context` and `plan` (the Change SIR planning commands, protocol `KCG-CLI-CHANGE-PLANNING-V1`) were marked deprecated in G3 and are removed in G4: they are now unknown commands. Usage errors and `--version` carry `KCG-CLI-VERSION-CHANGE-V1`; the CLI version is 0.2.0.
 - `generate`, `register` and `recover` stay unpublished. A bare `apply` is still an unknown command.

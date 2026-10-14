@@ -2,7 +2,6 @@ package io.kcg.cli;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.kcg.cli.CliTestFixtures.ProcResult;
@@ -22,51 +21,41 @@ import org.junit.jupiter.api.io.TempDir;
  * written down:
  *
  * <ol>
- *   <li><b>Only the published commands exist.</b> {@code generate}, {@code register}, {@code apply}
- *       and {@code recover} must be refused as usage errors, must leave both the state root and the
- *       output root byte-for-byte unchanged, and must not appear in the help text. The version
- *       change is published under its own names, {@code version-plan} and {@code version-apply}
- *       (ADR-027); a bare {@code apply} stays unknown.</li>
+ *   <li><b>Only the published commands exist.</b> {@code check}, {@code version-plan} and
+ *       {@code version-apply} are the whole surface (ADR-027). The commands ADR-019 proposed and the
+ *       retired Change planning commands ({@code context}, {@code plan}) must be refused as usage
+ *       errors, must leave any directory they are pointed at byte-for-byte unchanged, and must not
+ *       appear in the help text.</li>
  *   <li><b>Every command surface has a defined exit code.</b> Help and version succeed; missing,
  *       relative or unknown arguments are usage errors.</li>
- *   <li><b>Output is canonical JSON.</b> The same input produces byte-identical stdout, and errors
- *       are single-line JSON too.</li>
+ *   <li><b>Output is canonical JSON.</b> Errors are single-line JSON, and the same input produces
+ *       byte-identical stdout.</li>
  * </ol>
  *
  * <p>Exit codes are asserted on a real child process, because that is what a caller observes.
  */
 class CliProductBoundaryTest {
 
-    /** The commands ADR-019 proposes but which are not published today (the version change is {@code version-apply}). */
+    /** Commands that are not published: ADR-019's proposals, and the retired Change planning commands. */
     private static final List<String> UNPUBLISHED_COMMANDS =
-            List.of("generate", "register", "apply", "recover");
+            List.of("generate", "register", "apply", "recover", "context", "plan");
 
     @TempDir
     Path tempDir;
 
-    /**
-     * Each unpublished command is refused, changes nothing on disk, and is absent from the help.
-     *
-     * <p>The tree comparison is the part that matters: a command could be wired up but still fail,
-     * and a failing command that already wrote something would be worse than an unknown one. Both
-     * the state root and the output root are compared, because a partially implemented command could
-     * touch either.
-     */
+    /** Each unpublished command is refused, changes nothing on disk, and is absent from the help. */
     @Test
     void unpublishedCommandsAreRefusedAndChangeNothing() throws Exception {
-        CliTestFixtures.RegisteredBase base = CliTestFixtures.registerBase(tempDir,
-                "campus-market.sir", "build");
-        Path candidate = CliTestFixtures.writeSir(tempDir, "candidate.sir",
-                "campus-market-candidate.sir");
-        TreeMap<String, String> stateBefore = snapshot(base.stateRoot());
-        TreeMap<String, String> outputBefore = snapshot(base.outputRoot());
+        Path project = Files.createDirectory(tempDir.resolve("project"));
+        Files.writeString(project.resolve("marker.txt"), "untouched");
+        TreeMap<String, String> before = snapshot(project);
         String help = CliTestFixtures.runCli("--help").stdout();
 
         for (String command : UNPUBLISHED_COMMANDS) {
             ProcResult result = CliTestFixtures.runCli(command,
-                    "--state-root", base.stateRoot().toString(),
-                    "--output-root", base.outputRoot().toString(),
-                    "--candidate-sir", candidate.toString());
+                    "--state-root", project.toString(),
+                    "--output-root", project.toString(),
+                    "--candidate-sir", project.toString());
 
             assertEquals(2, result.exit(),
                     () -> "an unpublished command must be a usage error: " + command
@@ -77,12 +66,10 @@ class CliProductBoundaryTest {
             assertTrue(result.stdout().contains("unknown command"),
                     () -> "the refusal must say the command is unknown: " + command + "\n"
                             + result.stdout());
-            assertFalse(help.contains(" " + command),
+            assertTrue(help.lines().noneMatch(line -> line.startsWith("  " + command + " ")),
                     () -> "the help text must not advertise " + command + "\n" + help);
-            assertEquals(stateBefore, snapshot(base.stateRoot()),
-                    () -> "a refused command must not touch the state root: " + command);
-            assertEquals(outputBefore, snapshot(base.outputRoot()),
-                    () -> "a refused command must not touch the output root: " + command);
+            assertEquals(before, snapshot(project),
+                    () -> "a refused command must not touch the directory it is pointed at: " + command);
         }
     }
 
@@ -91,27 +78,15 @@ class CliProductBoundaryTest {
     void helpAndVersionSucceedAndListOnlyPublishedCommands() throws Exception {
         ProcResult topHelp = CliTestFixtures.runCli("--help");
         assertEquals(0, topHelp.exit(), () -> "help must succeed: " + topHelp.stderr());
-        assertTrue(topHelp.stdout().contains("context"), "top help must list the context command");
-        assertTrue(topHelp.stdout().contains("plan"), "top help must list the plan command");
-        for (String command : UNPUBLISHED_COMMANDS) {
-            assertFalse(topHelp.stdout().contains(" " + command),
-                    "top help must not list the unpublished command " + command);
+        for (String published : List.of("check", "version-plan", "version-apply")) {
+            assertTrue(topHelp.stdout().lines().anyMatch(line -> line.startsWith("  " + published + " ")),
+                    "top help must list " + published);
         }
 
         ProcResult shortHelp = CliTestFixtures.runCli("-h");
         assertEquals(0, shortHelp.exit(), "the -h alias must succeed");
         assertEquals(topHelp.stdout(), shortHelp.stdout(),
                 "the -h alias must print the same help as --help");
-
-        for (String command : List.of("context", "plan")) {
-            ProcResult commandHelp = CliTestFixtures.runCli(command, "--help");
-            assertEquals(0, commandHelp.exit(),
-                    () -> command + " --help must succeed: " + commandHelp.stderr());
-            assertTrue(commandHelp.stdout().contains("--state-root"),
-                    () -> command + " help must document --state-root");
-            assertTrue(commandHelp.stdout().contains("--output-root"),
-                    () -> command + " help must document --output-root");
-        }
 
         ProcResult version = CliTestFixtures.runCli("--version");
         assertEquals(0, version.exit(), "version must succeed");
@@ -124,25 +99,13 @@ class CliProductBoundaryTest {
     /** Argument mistakes are usage errors rather than crashes or silent successes. */
     @Test
     void argumentMistakesAreUsageErrors() throws Exception {
-        CliTestFixtures.RegisteredBase base = CliTestFixtures.registerBase(tempDir,
-                "campus-market.sir", "build");
-        Path candidate = CliTestFixtures.writeSir(tempDir, "candidate.sir",
-                "campus-market-candidate.sir");
-
         List<List<String>> mistaken = new ArrayList<>();
         mistaken.add(List.of());
         mistaken.add(List.of("not-a-command"));
-        mistaken.add(List.of("context"));
-        mistaken.add(List.of("context", "--state-root", base.stateRoot().toString()));
-        mistaken.add(List.of("plan", "--output-root", base.outputRoot().toString()));
-        mistaken.add(List.of("context",
-                "--state-root", "relative/state",
-                "--output-root", base.outputRoot().toString(),
-                "--candidate-sir", candidate.toString()));
-        mistaken.add(List.of("plan",
-                "--state-root", base.stateRoot().toString(),
-                "--output-root", base.outputRoot().toString(),
-                "--candidate-sir", "relative/candidate.sir"));
+        mistaken.add(List.of("version-plan"));
+        mistaken.add(List.of("version-plan", "--repository-root", tempDir.toString()));
+        mistaken.add(List.of("version-apply", "--output-root", tempDir.toString()));
+        mistaken.add(List.of("check", "--input", "file"));
 
         for (List<String> args : mistaken) {
             ProcResult result = CliTestFixtures.runCli(args.toArray(new String[0]));
@@ -158,73 +121,19 @@ class CliProductBoundaryTest {
     }
 
     /**
-     * The same input produces byte-identical stdout, which is what "canonical" has to mean.
-     *
-     * <p>Run in two separate child JVMs on purpose: that is the only way to catch output that
-     * depends on per-process state such as collection iteration order or hash seeding.
-     */
-    @Test
-    void repeatedRunsProduceByteIdenticalOutput() throws Exception {
-        CliTestFixtures.RegisteredBase base = CliTestFixtures.registerBase(tempDir,
-                "campus-market.sir", "build");
-        Path candidate = CliTestFixtures.writeSir(tempDir, "candidate.sir",
-                "campus-market-candidate.sir");
-
-        // The context document supplies the context id and target key that plan requires.
-        ProcResult context = CliTestFixtures.runCli("context",
-                "--state-root", base.stateRoot().toString(),
-                "--output-root", base.outputRoot().toString(),
-                "--candidate-sir", candidate.toString());
-        assertEquals(0, context.exit(), () -> "context must succeed: " + context.stdout()
-                + context.stderr());
-        // Reuse the workflow test's document helpers: the operation needs the BASE-side capability
-        // workflow target, not merely the first target key in the document.
-        String contextId = KcgCliWorkflowTest.js(context.stdout(), "contextId");
-        String targetKey = KcgCliWorkflowTest.ftk(context.stdout(), "BASE",
-                "CAPABILITY_WORKFLOW", "PublishGoods", null);
-        assertNotNull(contextId, "the context document must carry a contextId");
-
-        String[] args = {"plan",
-                "--state-root", base.stateRoot().toString(),
-                "--output-root", base.outputRoot().toString(),
-                "--candidate-sir", candidate.toString(),
-                "--expected-context-id", contextId,
-                "--target-key", targetKey,
-                "--change-ir-version", "V0_1",
-                "--operation", "modify-capability-workflow"};
-
-        ProcResult firstRun = CliTestFixtures.runCli(args);
-        ProcResult secondRun = CliTestFixtures.runCli(args);
-        assertEquals(0, firstRun.exit(), () -> "plan must succeed: " + firstRun.stdout()
-                + firstRun.stderr());
-        assertEquals(firstRun.stdout(), secondRun.stdout(),
-                "two runs of the same command must print identical bytes");
-        assertFalse(firstRun.stdout().isEmpty(), "the plan must produce a document");
-
-        // A stable document starts with the protocol version and ends with exactly one newline.
-        String first = firstRun.stdout();
-        assertTrue(first.startsWith("{\"protocolVersion\":\"KCG-CLI-CHANGE-PLANNING-V1\""),
-                () -> "the document must begin with the protocol version: "
-                        + first.substring(0, Math.min(120, first.length())));
-        assertEquals(first.indexOf('\n'), first.length() - 1,
-                "the document must be a single line ending in one newline");
-        assertEquals(1, first.lines().count(), "the document must be one line");
-    }
-
-    /**
      * Usage errors are deterministic too.
      *
-     * <p>This is a regression test for a defect this work order found: the parsers collected their
-     * known options in a {@code Map.of}, whose iteration order is not specified, so two runs of the
-     * same incomplete command line reported <em>different</em> missing options. A diagnostic that
+     * <p>This is a regression test for a defect found earlier: the parsers collected their known
+     * options in a {@code Map.of}, whose iteration order is not specified, so two runs of the same
+     * incomplete command line reported <em>different</em> missing options. A diagnostic that
      * changes between runs is not canonical output.
      */
     @Test
     void usageErrorsAreDeterministicAcrossProcesses() throws Exception {
-        String[] incomplete = {"plan",
-                "--state-root", tempDir.toString(),
-                "--output-root", tempDir.toString(),
-                "--candidate-sir", tempDir.toString()};
+        String[] incomplete = {"version-plan",
+                "--repository-root", tempDir.toString(),
+                "--source-root", tempDir.toString(),
+                "--entry", "project.sir"};
 
         String first = CliTestFixtures.runCli(incomplete).stdout();
         String second = CliTestFixtures.runCli(incomplete).stdout();
@@ -243,8 +152,9 @@ class CliProductBoundaryTest {
         assertEquals(2, result.exit(), "an unknown command must be a usage error");
         assertEquals(result.stdout().indexOf('\n'), result.stdout().length() - 1,
                 "a usage error must be a single line ending in one newline");
-        assertTrue(result.stdout().contains("\"protocolVersion\":\"KCG-CLI-CHANGE-PLANNING-V1\""),
+        assertTrue(result.stdout().contains("\"protocolVersion\":\"KCG-CLI-VERSION-CHANGE-V1\""),
                 "a usage error must carry the protocol version");
+        assertFalse(result.stdout().isEmpty());
         assertTrue(result.stdout().contains("\"diagnostics\":["),
                 "a usage error must carry diagnostics");
     }
@@ -259,25 +169,10 @@ class CliProductBoundaryTest {
             for (Path path : stream.toList()) {
                 if (Files.isRegularFile(path)) {
                     files.put(root.relativize(path).toString().replace('\\', '/'),
-                            hex(Files.readAllBytes(path)));
+                            java.util.HexFormat.of().formatHex(Files.readAllBytes(path)));
                 }
             }
         }
         return files;
     }
-
-    /**
-     * @param bytes content
-     * @return the content as lowercase hex, so comparisons are by value rather than by array
-     *         identity (comparing {@code byte[]} with {@code equals} compares references)
-     */
-    private static String hex(byte[] bytes) {
-        StringBuilder sb = new StringBuilder(bytes.length * 2);
-        for (byte b : bytes) {
-            sb.append(Character.forDigit((b >> 4) & 0xF, 16));
-            sb.append(Character.forDigit(b & 0xF, 16));
-        }
-        return sb.toString();
-    }
 }
-

@@ -223,11 +223,10 @@ class KcgVersionCommandsTest {
     }
 
     @Test
-    void topHelpListsTheNewCommandsAndMarksTheOldOnesDeprecated() throws Exception {
+    void topHelpListsTheVersionCommandsOnly() throws Exception {
         String top = CliTestFixtures.runCli("--help").stdout();
         assertTrue(top.contains("version-plan") && top.contains("version-apply"), top);
-        assertTrue(top.contains("DEPRECATED. Inspect"), top);
-        assertTrue(top.contains("DEPRECATED. Re-derive"), top);
+        assertFalse(top.contains("context") || top.contains("DEPRECATED"), "the retired Change planning commands are gone: " + top);
 
         for (String command : List.of("version-plan", "version-apply")) {
             ProcResult help = CliTestFixtures.runCli(command, "--help");
