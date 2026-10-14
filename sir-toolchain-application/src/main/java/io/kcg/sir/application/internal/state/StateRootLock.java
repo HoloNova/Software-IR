@@ -21,6 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class StateRootLock {
    public static final String LOCK_FILE = "LOCK";
    private static final ConcurrentHashMap<Path, StateRootLock.HeldLock> HELD_LOCKS = new ConcurrentHashMap<>();
+   private static final Object OPEN_GATE = new Object();
    private final Path stateRoot;
    volatile Runnable beforeOpenHook = null;
    volatile Runnable afterLockHook = null;
@@ -47,14 +48,7 @@ public final class StateRootLock {
          );
       }
 
-      FileChannel channel;
-      try {
-         channel = FileChannel.open(lockPath, StandardOpenOption.WRITE, StandardOpenOption.CREATE);
-      } catch (IOException | SecurityException e) {
-         return new StateRootLock.LockFailure("SIR-APP-CHANGE-LOCK-002", "failed to open LOCK file: " + e.getClass().getSimpleName() + ": " + e.getMessage());
-      }
-
-      return this.acquireOnChannel(channel);
+      return this.openAndAcquire(lockPath, "failed to open LOCK file: ", StandardOpenOption.WRITE, StandardOpenOption.CREATE);
    }
 
    public StateRootLock.AcquireResult tryAcquireExisting() {
@@ -82,16 +76,9 @@ public final class StateRootLock {
             }
          }
 
-         FileChannel channel;
-         try {
-            channel = FileChannel.open(lockPath, StandardOpenOption.WRITE, LinkOption.NOFOLLOW_LINKS);
-         } catch (IOException | SecurityException e) {
-            return new StateRootLock.LockFailure(
-               "SIR-APP-CHANGE-LOCK-002", "failed to open existing LOCK file: " + e.getClass().getSimpleName() + ": " + e.getMessage()
-            );
-         }
-
-         StateRootLock.AcquireResult acquired = this.acquireOnChannel(channel);
+         StateRootLock.AcquireResult acquired = this.openAndAcquire(
+            lockPath, "failed to open existing LOCK file: ", StandardOpenOption.WRITE, LinkOption.NOFOLLOW_LINKS
+         );
          if (acquired instanceof StateRootLock.HeldLock held) {
             Runnable postHook = this.afterLockHook;
             if (postHook != null) {
@@ -134,6 +121,31 @@ public final class StateRootLock {
                + attrs.isOther()
                + ")"
          );
+      }
+   }
+
+   /**
+    * Opens the LOCK file and takes the lock, but only if this JVM does not already hold it.
+    *
+    * <p>On POSIX systems closing any channel of a file releases every OS lock this JVM holds on that file. A caller
+    * that is refused because the lock is already held must therefore never open the file at all: opening and then
+    * closing a second channel would silently free the holder's lock for other processes. The check and the open
+    * happen under one gate, so two threads cannot both pass the check.
+    */
+   private StateRootLock.AcquireResult openAndAcquire(Path lockPath, String openFailure, java.nio.file.OpenOption... options) {
+      synchronized (OPEN_GATE) {
+         if (HELD_LOCKS.containsKey(this.stateRoot)) {
+            return new StateRootLock.LockFailure("SIR-APP-CHANGE-LOCK-001", "stateRoot already locked in this JVM: " + this.stateRoot);
+         }
+
+         FileChannel channel;
+         try {
+            channel = FileChannel.open(lockPath, options);
+         } catch (IOException | SecurityException e) {
+            return new StateRootLock.LockFailure("SIR-APP-CHANGE-LOCK-002", openFailure + e.getClass().getSimpleName() + ": " + e.getMessage());
+         }
+
+         return this.acquireOnChannel(channel);
       }
    }
 
@@ -243,7 +255,6 @@ public final class StateRootLock {
       public void close() {
          if (!this.released) {
             this.released = true;
-            StateRootLock.HELD_LOCKS.remove(this.stateRoot, this);
             if (this.fileLock != null) {
                try {
                   this.fileLock.release();
@@ -255,6 +266,9 @@ public final class StateRootLock {
                this.channel.close();
             } catch (IOException var2) {
             }
+
+            // Only now may another caller in this JVM open the file: while the entry exists the channel is still ours.
+            StateRootLock.HELD_LOCKS.remove(this.stateRoot, this);
          }
       }
    }
