@@ -16,7 +16,7 @@ class ParserDiagnosticSpanTest {
     void missingTokenDiagnosticUsesZeroWidthInsertionSpan() {
         String marker = "displayName \"Example\"";
         String content = validSource().replace(marker + ";", marker);
-        var result = parser.parse(new SirSource(SourceId.of("tests/missing-token.sir"), content));
+        var result = parser.parseProject(new SirSource(SourceId.of("tests/missing-token.sir"), content));
 
         assertFalse(result.isSuccess());
         Diagnostic diagnostic = result.diagnostics().stream()
@@ -30,7 +30,7 @@ class ParserDiagnosticSpanTest {
 
     private static String validSource() {
         return """
-                sir 0.1
+                sir 0.2
                 software DiagnosticSample {
                   metadata {
                     displayName "Example";
@@ -44,6 +44,8 @@ class ParserDiagnosticSpanTest {
                     build maven;
                     interface rest;
                   }
+                  sources { }
+                  imports { }
                   declarations {}
                 }
                 """;

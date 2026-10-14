@@ -6,7 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.kcg.sir.api.Diagnostic;
-import io.kcg.sir.api.ParseResult;
+import io.kcg.sir.api.SourceUnitParseResult;
 import io.kcg.sir.api.SirParser;
 import io.kcg.sir.api.SirSource;
 import io.kcg.sir.ast.AstCapabilityDecl;
@@ -32,12 +32,12 @@ class SirParserTest {
 
     @Test
     void parsesCampusMarketIntoImmutableAst() {
-        ParseResult result = parseResource("valid/campus-market.sir");
+        SourceUnitParseResult result = parseResource("valid/campus-market.sir");
 
         assertTrue(result.isSuccess(), () -> messages(result.diagnostics()));
-        AstDocument document = result.document().orElseThrow();
+        AstDocument document = result.unit().map(ParseTestSupport::document).orElseThrow();
         assertEquals(new BigInteger("0"), document.sirVersion().major());
-        assertEquals(new BigInteger("1"), document.sirVersion().minor());
+        assertEquals(new BigInteger("2"), document.sirVersion().minor());
         assertEquals("CampusMarket", document.software().name().text());
         assertEquals(6, document.software().declarations().size());
         assertInstanceOf(AstEnumDecl.class, document.software().declarations().get(0));
@@ -48,10 +48,10 @@ class SirParserTest {
 
     @Test
     void parsesAllSupportedWorkflowShapesAcrossGoldFiles() {
-        ParseResult result = parseResource("valid/all-workflow-steps.sir");
+        SourceUnitParseResult result = parseResource("valid/all-workflow-steps.sir");
         assertTrue(result.isSuccess(), () -> messages(result.diagnostics()));
 
-        AstCapabilityDecl capability = result.document().orElseThrow().software().declarations().stream()
+        AstCapabilityDecl capability = result.unit().map(ParseTestSupport::document).orElseThrow().software().declarations().stream()
                 .filter(AstCapabilityDecl.class::isInstance)
                 .map(AstCapabilityDecl.class::cast)
                 .findFirst()
@@ -61,13 +61,13 @@ class SirParserTest {
 
     @Test
     void rejectsUnsupportedSirVersionWithoutAst() {
-        ParseResult result = parseResource("invalid/unsupported-version.sir");
+        SourceUnitParseResult result = parseResource("invalid/unsupported-version.sir");
         assertFailedWith(result, "SIR-VERSION-001");
     }
 
     @Test
     void rejectsUnsupportedTargetWithoutAst() {
-        ParseResult result = parseResource("invalid/unsupported-target.sir");
+        SourceUnitParseResult result = parseResource("invalid/unsupported-target.sir");
         assertFailedWith(result, "SIR-TARGET-001");
     }
 
@@ -91,10 +91,10 @@ class SirParserTest {
 
     @Test
     void unitReturnHasDedicatedLiteralNode() {
-        ParseResult result = parseResource("valid/unit-capability.sir");
+        SourceUnitParseResult result = parseResource("valid/unit-capability.sir");
         assertTrue(result.isSuccess(), () -> messages(result.diagnostics()));
 
-        AstCapabilityDecl capability = (AstCapabilityDecl) result.document().orElseThrow()
+        AstCapabilityDecl capability = (AstCapabilityDecl) result.unit().map(ParseTestSupport::document).orElseThrow()
                 .software().declarations().getFirst();
         AstReturnStep step = (AstReturnStep) capability.workflow().steps().getFirst();
         assertInstanceOf(AstUnitLiteral.class, step.value());
@@ -105,8 +105,8 @@ class SirParserTest {
         String content = resource("valid/campus-market.sir");
         SirSource source = new SirSource(SourceId.of("examples/campus-market.sir"), content);
 
-        AstDocument first = parser.parse(source).document().orElseThrow();
-        AstDocument second = parser.parse(source).document().orElseThrow();
+        AstDocument first = parser.parseProject(source).unit().map(ParseTestSupport::document).orElseThrow();
+        AstDocument second = parser.parseProject(source).unit().map(ParseTestSupport::document).orElseThrow();
 
         assertEquals(first.id(), second.id());
         assertEquals(first.software().id(), second.software().id());
@@ -118,16 +118,16 @@ class SirParserTest {
     @Test
     void bomIsRemovedBeforePublicOffsetsAreCalculated() {
         String content = "\uFEFF" + resource("valid/campus-market.sir");
-        ParseResult result = parser.parse(new SirSource(SourceId.of("examples/bom.sir"), content));
+        SourceUnitParseResult result = parser.parseProject(new SirSource(SourceId.of("examples/bom.sir"), content));
 
         assertTrue(result.isSuccess(), () -> messages(result.diagnostics()));
-        assertEquals(0, result.document().orElseThrow().span().start().codePointOffset());
+        assertEquals(0, result.unit().map(ParseTestSupport::document).orElseThrow().span().start().codePointOffset());
     }
 
     @Test
     void sourceOffsetsCountUnicodeCodePoints() {
         String content = """
-                sir 0.1
+                sir 0.2
                 software UnicodeSample {
                   metadata { displayName "😀"; namespace "example.unicode"; }
                   target {
@@ -138,17 +138,19 @@ class SirParserTest {
                     build maven;
                     interface rest;
                   }
+                  sources { }
+                  imports { }
                   declarations {}
                 }
                 """;
-        ParseResult result = parser.parse(new SirSource(SourceId.of("tests/unicode.sir"), content));
+        SourceUnitParseResult result = parser.parseProject(new SirSource(SourceId.of("tests/unicode.sir"), content));
         assertTrue(result.isSuccess(), () -> messages(result.diagnostics()));
 
         int utf16Index = content.indexOf("\"example.unicode\"");
         int expectedCodePointOffset = content.codePointCount(0, utf16Index);
         assertEquals(
                 expectedCodePointOffset,
-                result.document().orElseThrow().software().metadata().namespaceSpan().start().codePointOffset());
+                result.unit().map(ParseTestSupport::document).orElseThrow().software().metadata().namespaceSpan().start().codePointOffset());
     }
 
     @Test
@@ -157,7 +159,7 @@ class SirParserTest {
         ByteArrayOutputStream captured = new ByteArrayOutputStream();
         try {
             System.setErr(new PrintStream(captured, true, StandardCharsets.UTF_8));
-            ParseResult result = parseResource("invalid/arbitrary-call.sir");
+            SourceUnitParseResult result = parseResource("invalid/arbitrary-call.sir");
             assertFalse(result.isSuccess());
         } finally {
             System.setErr(originalErr);
@@ -165,8 +167,8 @@ class SirParserTest {
         assertEquals("", captured.toString(StandardCharsets.UTF_8));
     }
 
-    private ParseResult parseResource(String path) {
-        return parser.parse(new SirSource(SourceId.of("tests/" + path), resource(path)));
+    private SourceUnitParseResult parseResource(String path) {
+        return parser.parseProject(new SirSource(SourceId.of("tests/" + path), resource(path)));
     }
 
     private static String resource(String path) {
@@ -180,17 +182,17 @@ class SirParserTest {
         }
     }
 
-    private static void assertFailedWith(ParseResult result, String code) {
+    private static void assertFailedWith(SourceUnitParseResult result, String code) {
         assertFalse(result.isSuccess());
-        assertTrue(result.document().isEmpty());
+        assertTrue(result.unit().isEmpty());
         assertTrue(result.diagnostics().stream().map(Diagnostic::code)
                 .anyMatch(value -> value.value().equals(code)), () -> messages(result.diagnostics()));
     }
 
     private void assertGrammarFailed(String content) {
-        ParseResult result = parser.parse(new SirSource(SourceId.of("tests/invalid/non-canonical.sir"), content));
+        SourceUnitParseResult result = parser.parseProject(new SirSource(SourceId.of("tests/invalid/non-canonical.sir"), content));
         assertFalse(result.isSuccess());
-        assertTrue(result.document().isEmpty());
+        assertTrue(result.unit().isEmpty());
         assertTrue(result.diagnostics().stream()
                 .map(Diagnostic::code)
                 .anyMatch(value -> value.value().startsWith("SIR-PARSE-")), () -> messages(result.diagnostics()));

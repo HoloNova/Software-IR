@@ -3,8 +3,7 @@ package io.kcg.sir.parser;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import io.kcg.sir.api.ParseResult;
-import io.kcg.sir.api.ParseStatus;
+import io.kcg.sir.api.SourceUnitParseResult;
 import io.kcg.sir.ast.AstEnumDecl;
 import io.kcg.sir.ast.AstEnumMember;
 import io.kcg.sir.ast.AstName;
@@ -54,13 +53,10 @@ class ModelInvariantTest {
     }
 
     @Test
-    void parseResultRejectsContradictoryStates() {
+    void parseResultRejectsAFailureWithoutAnErrorDiagnostic() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new ParseResult(ParseStatus.SUCCESS, Optional.empty(), List.of()));
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> new ParseResult(ParseStatus.FAILED, Optional.empty(), List.of()));
+                () -> new SourceUnitParseResult(Optional.empty(), List.of()));
     }
 
     private static SourceSpan span() {

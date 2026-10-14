@@ -18,7 +18,7 @@ class CommentScannerTest {
 
     @Test
     void findsLineAndBlockCommentsAtTheirExactSpans() {
-        String text = "sir 0.1 // header\nsoftware S { /* inner\n block */ }\n// last";
+        String text = "sir 0.2 // header\nsoftware S { /* inner\n block */ }\n// last";
 
         assertEquals(List.of("// header", "/* inner\n block */", "// last"), commentTexts(text));
     }
@@ -43,6 +43,6 @@ class CommentScannerTest {
 
     @Test
     void textWithoutCommentsHasNone() {
-        assertTrue(commentTexts("sir 0.1\nsoftware S {}\n").isEmpty());
+        assertTrue(commentTexts("sir 0.2\nsoftware S {}\n").isEmpty());
     }
 }

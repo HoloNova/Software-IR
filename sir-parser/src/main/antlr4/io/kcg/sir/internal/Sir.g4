@@ -1,10 +1,7 @@
 grammar Sir;
 
-document
-    : SIR versionLiteral softwareDecl EOF
-    ;
-
-// Separate 0.2 entry rules; contextual IDENT predicates preserve every legacy identifier.
+// The two entry rules: a root document and a declaration fragment. The words sources, source, imports and import
+// are contextual IDENT predicates, so they remain legal identifiers elsewhere.
 projectDocument
     : SIR versionLiteral SOFTWARE IDENT LBRACE metadataBlock targetBlock
       sourcesBlock importsBlock declarationsBlock RBRACE EOF
@@ -32,14 +29,6 @@ importEntry
 
 versionLiteral
     : DOTTED_NUMBER
-    ;
-
-softwareDecl
-    : SOFTWARE IDENT LBRACE
-        metadataBlock
-        targetBlock
-        declarationsBlock
-      RBRACE
     ;
 
 metadataBlock

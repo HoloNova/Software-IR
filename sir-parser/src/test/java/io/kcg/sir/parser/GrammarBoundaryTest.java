@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.kcg.sir.api.Diagnostic;
-import io.kcg.sir.api.ParseResult;
+import io.kcg.sir.api.SourceUnitParseResult;
 import io.kcg.sir.api.SirParser;
 import io.kcg.sir.api.SirSource;
 import io.kcg.sir.internal.DefaultSirParser;
@@ -17,14 +17,14 @@ class GrammarBoundaryTest {
 
     @Test
     void versionMustBeOneContiguousDottedToken() {
-        assertGrammarRejected(emptyDocument().replace("sir 0.1", "sir 0./*x*/01"));
-        assertGrammarRejected(emptyDocument().replace("sir 0.1", "sir 0 . 1"));
+        assertGrammarRejected(emptyDocument().replace("sir 0.2", "sir 0./*x*/01"));
+        assertGrammarRejected(emptyDocument().replace("sir 0.2", "sir 0 . 1"));
     }
 
     @Test
     void lexicallyValidButUnsupportedVersionUsesVersionDiagnostic() {
         assertRejectedWith(
-                emptyDocument().replace("sir 0.1", "sir 0.01"),
+                emptyDocument().replace("sir 0.2", "sir 0.01"),
                 "SIR-VERSION-001");
     }
 
@@ -225,11 +225,11 @@ class GrammarBoundaryTest {
     }
 
     private void assertGrammarRejected(String content) {
-        ParseResult result = parse(content);
+        SourceUnitParseResult result = parse(content);
         String diagnostics = messages(result.diagnostics());
 
         assertFalse(result.isSuccess(), () -> diagnostics);
-        assertTrue(result.document().isEmpty(), () -> diagnostics);
+        assertTrue(result.unit().isEmpty(), () -> diagnostics);
         assertTrue(
                 result.diagnostics().stream()
                         .map(Diagnostic::code)
@@ -238,11 +238,11 @@ class GrammarBoundaryTest {
     }
 
     private void assertRejectedWith(String content, String expectedCode) {
-        ParseResult result = parse(content);
+        SourceUnitParseResult result = parse(content);
         String diagnostics = messages(result.diagnostics());
 
         assertFalse(result.isSuccess(), () -> diagnostics);
-        assertTrue(result.document().isEmpty(), () -> diagnostics);
+        assertTrue(result.unit().isEmpty(), () -> diagnostics);
         assertTrue(
                 result.diagnostics().stream()
                         .map(Diagnostic::code)
@@ -250,8 +250,8 @@ class GrammarBoundaryTest {
                 () -> diagnostics);
     }
 
-    private ParseResult parse(String content) {
-        return parser.parse(new SirSource(SourceId.of("tests/invalid/grammar-boundary.sir"), content));
+    private SourceUnitParseResult parse(String content) {
+        return parser.parseProject(new SirSource(SourceId.of("tests/invalid/grammar-boundary.sir"), content));
     }
 
     private static String emptyDocument() {
@@ -281,7 +281,7 @@ class GrammarBoundaryTest {
 
     private static String document(String declarations) {
         return """
-                sir 0.1
+                sir 0.2
                 software GrammarBoundary {
                   metadata {
                     displayName "Grammar Boundary";
@@ -295,6 +295,8 @@ class GrammarBoundaryTest {
                     build maven;
                     interface rest;
                   }
+                  sources { }
+                  imports { }
                   declarations {
                     %s
                   }

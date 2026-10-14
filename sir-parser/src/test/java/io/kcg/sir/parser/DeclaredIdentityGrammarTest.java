@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import io.kcg.sir.api.ParseResult;
+import io.kcg.sir.api.SourceUnitParseResult;
 import io.kcg.sir.api.SirSource;
 import io.kcg.sir.ast.AstCapabilityDecl;
 import io.kcg.sir.ast.AstDeclaration;
@@ -31,7 +31,7 @@ class DeclaredIdentityGrammarTest {
     private final DefaultSirParser parser = new DefaultSirParser();
 
     private static final String DECLARED_IDS = """
-            sir 0.1
+            sir 0.2
 
             software Identity {
               metadata {
@@ -46,6 +46,8 @@ class DeclaredIdentityGrammarTest {
                 build maven;
                 interface rest;
               }
+              sources { }
+              imports { }
               declarations {
                 entity Course persistent {
                   identity id: Int64 generated auto;
@@ -124,13 +126,13 @@ class DeclaredIdentityGrammarTest {
                 .isSuccess());
     }
 
-    private ParseResult parse(String source) {
-        return parser.parse(new SirSource(SourceId.of("tests/declared-identity.sir"), source));
+    private SourceUnitParseResult parse(String source) {
+        return parser.parseProject(new SirSource(SourceId.of("tests/declared-identity.sir"), source));
     }
 
-    private static AstCapabilityDecl capability(ParseResult result) {
+    private static AstCapabilityDecl capability(SourceUnitParseResult result) {
         assertTrue(result.isSuccess(), result.diagnostics().toString());
-        for (AstDeclaration declaration : result.document().orElseThrow().software().declarations()) {
+        for (AstDeclaration declaration : result.unit().map(ParseTestSupport::document).orElseThrow().software().declarations()) {
             if (declaration instanceof AstCapabilityDecl capability) {
                 return capability;
             }
@@ -139,8 +141,8 @@ class DeclaredIdentityGrammarTest {
         throw new AssertionError("no capability declaration parsed");
     }
 
-    private static AstEntityDecl entity(ParseResult result) {
+    private static AstEntityDecl entity(SourceUnitParseResult result) {
         assertTrue(result.isSuccess(), result.diagnostics().toString());
-        return assertInstanceOf(AstEntityDecl.class, result.document().orElseThrow().software().declarations().get(0));
+        return assertInstanceOf(AstEntityDecl.class, result.unit().map(ParseTestSupport::document).orElseThrow().software().declarations().get(0));
     }
 }

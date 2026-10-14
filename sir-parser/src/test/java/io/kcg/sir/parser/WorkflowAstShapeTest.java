@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import io.kcg.sir.api.ParseResult;
+import io.kcg.sir.api.SourceUnitParseResult;
 import io.kcg.sir.api.SirSource;
 import io.kcg.sir.ast.AstCapabilityDecl;
 import io.kcg.sir.ast.AstCreateStep;
@@ -82,9 +82,9 @@ class WorkflowAstShapeTest {
     }
 
     private AstCapabilityDecl capability(String path) {
-        ParseResult result = parser.parse(new SirSource(SourceId.of("tests/" + path), resource(path)));
+        SourceUnitParseResult result = parser.parseProject(new SirSource(SourceId.of("tests/" + path), resource(path)));
         assertTrue(result.isSuccess(), result.diagnostics().toString());
-        return result.document().orElseThrow().software().declarations().stream()
+        return result.unit().map(ParseTestSupport::document).orElseThrow().software().declarations().stream()
                 .filter(AstCapabilityDecl.class::isInstance)
                 .map(AstCapabilityDecl.class::cast)
                 .findFirst()

@@ -9,22 +9,6 @@ final class HeaderCompatibilityCheck {
     private static final List<String> SUPPORTED_TARGET = List.of(
             "java", "spring_boot", "mybatis_plus", "mysql", "maven", "rest");
 
-    boolean validate(
-            SirParser.DocumentContext document,
-            SourceText source,
-            DiagnosticCollector diagnostics) {
-        TerminalNode version = document.versionLiteral().DOTTED_NUMBER();
-        if (!version.getText().equals("0.1")) {
-            diagnostics.error(
-                    "SIR-VERSION-001",
-                    "当前实现只支持 SIR 0.1",
-                    source.span(version.getSymbol()));
-            return false;
-        }
-
-        return validateTarget(document.softwareDecl().targetBlock(), source, diagnostics);
-    }
-
     boolean validateTarget(SirParser.TargetBlockContext target, SourceText source, DiagnosticCollector diagnostics) {
         List<TerminalNode> names = target.IDENT();
         BigInteger javaVersion = new BigInteger(target.INT().getText());

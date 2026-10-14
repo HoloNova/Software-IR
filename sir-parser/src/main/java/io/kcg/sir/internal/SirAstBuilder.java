@@ -20,18 +20,6 @@ final class SirAstBuilder {
         this.ids = new AstIdFactory(source.sourceId());
     }
 
-    AstDocument build(SirParser.DocumentContext context) {
-        String path = ids.rootPath();
-        TerminalNode versionNode = context.versionLiteral().DOTTED_NUMBER();
-        String versionText = versionNode.getText();
-        int separator = versionText.indexOf('.');
-        SirVersion version = new SirVersion(
-                new BigInteger(versionText.substring(0, separator)),
-                new BigInteger(versionText.substring(separator + 1)),
-                source.span(versionNode.getSymbol()));
-        return new AstDocument(ids.id(path), source.span(context), version, software(context.softwareDecl(), path));
-    }
-
     AstSourceUnit.Root buildProject(SirParser.ProjectDocumentContext context) {
         String parent = ids.rootPath();
         AstName softwareName = name(context.IDENT());
@@ -69,17 +57,6 @@ final class SirAstBuilder {
                     source.span(e.declarationName), e.declarationName.getText());
             return new AstImport(ids.id(path), source.span(e), declaration, sourcePath(e.STRING(), ids.fixed(path, "from")));
         }).toList();
-    }
-
-    private AstSoftware software(SirParser.SoftwareDeclContext context, String parent) {
-        AstName name = name(context.IDENT());
-        String path = ids.named(parent, "software", name.text());
-        AstMetadata metadata = metadata(context.metadataBlock(), path);
-        AstTarget target = target(context.targetBlock(), path);
-        List<AstDeclaration> declarations = context.declarationsBlock().declaration().stream()
-                .map(value -> declaration(value, path))
-                .toList();
-        return new AstSoftware(ids.id(path), source.span(context), name, metadata, target, declarations);
     }
 
     private AstMetadata metadata(SirParser.MetadataBlockContext context, String parent) {

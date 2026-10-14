@@ -6,7 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.kcg.sir.api.Diagnostic;
-import io.kcg.sir.api.ParseResult;
+import io.kcg.sir.api.SourceUnitParseResult;
 import io.kcg.sir.api.SirParser;
 import io.kcg.sir.api.SirSource;
 import io.kcg.sir.ast.AstAnyExpression;
@@ -49,7 +49,7 @@ class RelationGrammarTest {
 
     @Test
     void theRelationSliceSourceParsesWithoutDiagnostics() {
-        ParseResult result = parse(readResource(RELATION_SLICE));
+        SourceUnitParseResult result = parse(readResource(RELATION_SLICE));
 
         assertTrue(result.isSuccess(), () -> messages(result.diagnostics()));
         assertTrue(result.diagnostics().isEmpty(), () -> messages(result.diagnostics()));
@@ -79,7 +79,7 @@ class RelationGrammarTest {
 
     @Test
     void theExistencePredicateComposesWithOtherBooleanOperators() {
-        ParseResult result = parse(findDocument("any(Enrollment, course == item) or item.code == input.code"));
+        SourceUnitParseResult result = parse(findDocument("any(Enrollment, course == item) or item.code == input.code"));
 
         assertTrue(result.isSuccess(), () -> messages(result.diagnostics()));
         AstExpression predicate = findStep(software(result), "SearchCourses").predicate();
@@ -91,7 +91,7 @@ class RelationGrammarTest {
 
     @Test
     void anExistencePredicateInAValidateStepIsAGrammarLevelForm() {
-        ParseResult result = parse(document("""
+        SourceUnitParseResult result = parse(document("""
                 entity Course persistent {
                   identity id: Int64 generated auto;
                   field code: String;
@@ -183,8 +183,8 @@ class RelationGrammarTest {
         return new String(codePoints, startOffset, endOffset - startOffset);
     }
 
-    private static AstSoftware software(ParseResult result) {
-        return result.document().orElseThrow().software();
+    private static AstSoftware software(SourceUnitParseResult result) {
+        return result.unit().map(ParseTestSupport::document).orElseThrow().software();
     }
 
     private static AstCapabilityDecl capability(AstSoftware software, String name) {
@@ -220,16 +220,16 @@ class RelationGrammarTest {
                 .orElseThrow();
     }
 
-    private ParseResult parse(String content) {
-        return parser.parse(new SirSource(SourceId.of("tests/valid/course-enrollment.sir"), content));
+    private SourceUnitParseResult parse(String content) {
+        return parser.parseProject(new SirSource(SourceId.of("tests/valid/course-enrollment.sir"), content));
     }
 
     private void assertGrammarRejected(String content) {
-        ParseResult result = parse(content);
+        SourceUnitParseResult result = parse(content);
         String diagnostics = messages(result.diagnostics());
 
         assertFalse(result.isSuccess(), () -> diagnostics);
-        assertTrue(result.document().isEmpty(), () -> diagnostics);
+        assertTrue(result.unit().isEmpty(), () -> diagnostics);
         assertTrue(
                 result.diagnostics().stream()
                         .map(Diagnostic::code)
@@ -282,7 +282,7 @@ class RelationGrammarTest {
 
     private static String document(String declarations) {
         return """
-                sir 0.1
+                sir 0.2
                 software RelationGrammar {
                   metadata {
                     displayName "Relation Grammar";
@@ -296,6 +296,8 @@ class RelationGrammarTest {
                     build maven;
                     interface rest;
                   }
+                  sources { }
+                  imports { }
                   declarations {
                     %s
                   }
