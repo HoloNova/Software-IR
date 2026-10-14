@@ -11,7 +11,8 @@ name: verify
 #   4. four legacy business ITs plus the Q21 multi-source workflow IT against real MySQL 8.4
 #   5. the R5 independent verification IT: real Maven build, real application, real MySQL, separate
 #      static/build/start/business results for a correct sample, a static-valid wrong sample, a candidate
-#      that does not compile and an unreachable database
+#      that does not compile and an unreachable database; and the project (SIR 0.2) chain: a command edit is
+#      verified for real and published, a candidate that breaks the requirement is stopped before anything changes
 #
 # Artifacts: every conformance evidence directory and the surefire reports, so the
 # evidence can be tied to this commit SHA and this run URL.
@@ -146,7 +147,7 @@ jobs:
           set -euo pipefail
           mvn -B -o -pl sir-toolchain-application -am \
             -Dmaven.repo.local="$MAVEN_REPO" \
-            -Dtest=IndependentVerificationIT \
+            -Dtest=IndependentVerificationIT,ProjectVerificationChainIT \
             -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false \
             -Dkcg.verification.enabled=true \
             -Dkcg.conformance.work-parent="$KCG_CONF_WORK_PARENT" \
