@@ -33,8 +33,12 @@ public final class VersionPlans {
     }
 
     public static VersionPlan compare(Path stateRoot, ProjectBaselineVerification.Verified base, ProjectBaselineVerification.Verified candidate, FileDelta delta) {
-        Bundle b = base.bundle();
-        Bundle c = candidate.bundle();
+        SourceDelta sources = SourceDelta.between(base.bundle().sources().manifest(), candidate.bundle().sources().manifest());
+        return new VersionPlan(stateRoot, receipt(base.bundle()), receipt(candidate.bundle()), sources, operations(base, candidate, delta), (int)delta.count(FileDelta.Action.UNCHANGED));
+    }
+
+    /** The generated-file operations of a delta, with the byte counts and digests of both sides. */
+    public static List<VersionPlan.FileOp> operations(ProjectBaselineVerification.Verified base, ProjectBaselineVerification.Verified candidate, FileDelta delta) {
         Map<String, GeneratedFile> before = byPath(base.compilation().generatedFiles());
         Map<String, GeneratedFile> after = byPath(candidate.compilation().generatedFiles());
         List<VersionPlan.FileOp> operations = new ArrayList<>();
@@ -49,8 +53,7 @@ public final class VersionPlans {
                 was == null ? 0 : bytes(was), entry.beforeSha256(), now == null ? 0 : bytes(now), entry.afterSha256()));
         }
 
-        SourceDelta sources = SourceDelta.between(b.sources().manifest(), c.sources().manifest());
-        return new VersionPlan(stateRoot, receipt(b), receipt(c), sources, operations, (int)delta.count(FileDelta.Action.UNCHANGED));
+        return operations;
     }
 
     public static ProjectBaselineReceipt receipt(Bundle bundle) {

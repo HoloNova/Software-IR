@@ -90,7 +90,7 @@ public final class VersionPlanning {
     }
 
     /** A path that is a file in one version and a directory in the other cannot be replaced in place. */
-    private static String shapeChange(List<GeneratedFile> before, List<GeneratedFile> after) {
+    public static String shapeChange(List<GeneratedFile> before, List<GeneratedFile> after) {
         TreeMap<String, Boolean> paths = new TreeMap<>();
         before.forEach(f -> paths.put(f.relativePath(), true));
         after.forEach(f -> paths.put(f.relativePath(), true));
@@ -106,7 +106,7 @@ public final class VersionPlanning {
         return null;
     }
 
-    private static FileDelta.Observation observe(SecureFileAccess output, String path) {
+    public static FileDelta.Observation observe(SecureFileAccess output, String path) {
         try {
             if (!output.exists(path)) {
                 return new FileDelta.Observation.Absent();
