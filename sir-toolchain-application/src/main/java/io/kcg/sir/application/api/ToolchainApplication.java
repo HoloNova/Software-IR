@@ -48,43 +48,42 @@ public final class ToolchainApplication {
       if (!request.sourceRoot().isAbsolute() || !request.outputRoot().isAbsolute()
          || !request.sourceRoot().equals(request.sourceRoot().normalize()) || !request.outputRoot().equals(request.outputRoot().normalize())) {
          diagnostics.add(error("SIR-APP-PROJECT-REQUEST-001", "sourceRoot/outputRoot must be absolute normalized paths"));
-         return projectFailure(ExecutionStage.READ, FailureDisposition.NO_CHANGES, diagnostics);
+         return failure(ExecutionStage.READ, diagnostics);
       }
       if (request.outputRoot().startsWith(request.sourceRoot()) || request.sourceRoot().startsWith(request.outputRoot())) {
          diagnostics.add(error("SIR-APP-PROJECT-REQUEST-002", "sourceRoot and outputRoot must not overlap"));
-         return projectFailure(ExecutionStage.READ, FailureDisposition.NO_CHANGES, diagnostics);
+         return failure(ExecutionStage.READ, diagnostics);
       }
       if (java.nio.file.Files.exists(request.outputRoot(), java.nio.file.LinkOption.NOFOLLOW_LINKS)) {
          diagnostics.add(ExecutionDiagnostic.error("SIR-APP-PROJECT-OUTPUT-001", ExecutionStage.PREFLIGHT, "project first generation requires a new output root"));
-         return projectFailure(ExecutionStage.PREFLIGHT, FailureDisposition.NO_CHANGES, diagnostics);
+         return failure(ExecutionStage.PREFLIGHT, diagnostics);
       }
       var loaded = io.kcg.sir.application.internal.ProjectSourceReader.read(request, diagnostics);
-      if (loaded.isEmpty()) return projectFailure(lastErrorStage(diagnostics), FailureDisposition.NO_CHANGES, diagnostics);
+      if (loaded.isEmpty()) return failure(lastErrorStage(diagnostics), diagnostics);
       var compilation = io.kcg.sir.application.internal.ProjectCompilation.compile(loaded.get(), generationStep, diagnostics);
-      if (compilation.isEmpty()) return projectFailure(lastErrorStage(diagnostics), FailureDisposition.NO_CHANGES, diagnostics);
+      if (compilation.isEmpty()) return failure(lastErrorStage(diagnostics), diagnostics);
       var snapshot = compilation.get();
       var files = snapshot.generatedFiles();
-      diagnostics.addAll(PathGuard.preflight(request.outputRoot(), files, ConflictPolicy.FAIL_IF_EXISTS));
-      if (diagnostics.stream().anyMatch(ExecutionDiagnostic::isError)) return projectFailure(ExecutionStage.PREFLIGHT, FailureDisposition.NO_CHANGES, diagnostics);
+      diagnostics.addAll(PathGuard.preflight(request.outputRoot(), files));
+      if (diagnostics.stream().anyMatch(ExecutionDiagnostic::isError)) return failure(ExecutionStage.PREFLIGHT, diagnostics);
       var graphInput = new SpringBootProjectGraphInputFactory().build(snapshot.semanticModel(), snapshot.loweredModel(), files, loaded.get().snapshot());
       var graphAnalysis = graphStep.apply(graphInput);
       diagnostics.addAll(mapGraphDiagnostics(graphAnalysis.diagnostics()));
-      if (graphAnalysis instanceof Failure) return projectFailure(ExecutionStage.GRAPH, FailureDisposition.NO_CHANGES, diagnostics);
+      if (graphAnalysis instanceof Failure) return failure(ExecutionStage.GRAPH, diagnostics);
       var graph = ((Success) graphAnalysis).graph();
-      var transaction = new FileTransaction(request.outputRoot(), files, ConflictPolicy.FAIL_IF_EXISTS).execute();
+      var transaction = new FileTransaction(request.outputRoot(), files).execute();
       if (transaction instanceof TransactionResult.Failure failed) {
          diagnostics.addAll(failed.diagnostics());
-         return projectFailure(failed.disposition() == FailureDisposition.RECOVERY_REQUIRED ? ExecutionStage.ROLLBACK : ExecutionStage.WRITE,
-            failed.disposition(), diagnostics);
+         return failure(ExecutionStage.WRITE, diagnostics);
       }
       var success = (TransactionResult.Success) transaction;
       diagnostics.addAll(success.warnings());
-      var manifest = new ExecutionManifest(request.outputRoot(), ConflictPolicy.FAIL_IF_EXISTS, success.appliedFiles());
+      var manifest = new ExecutionManifest(request.outputRoot(), success.appliedFiles());
       return new ToolchainResult.Success(loaded.get().snapshot(), manifest, graph, diagnostics);
    }
 
-   private static ToolchainResult.Failure projectFailure(ExecutionStage stage, FailureDisposition disposition, List<ExecutionDiagnostic> diagnostics) {
-      return new ToolchainResult.Failure(stage, disposition, diagnostics);
+   private static ToolchainResult.Failure failure(ExecutionStage stage, List<ExecutionDiagnostic> diagnostics) {
+      return new ToolchainResult.Failure(stage, diagnostics);
    }
 
    private static ExecutionStage lastErrorStage(List<ExecutionDiagnostic> diagnostics) {

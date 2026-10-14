@@ -10,7 +10,6 @@ import io.kcg.sir.application.api.ExecutionDiagnostic;
 import io.kcg.sir.application.api.ExecutionManifest;
 import io.kcg.sir.application.api.ExecutionSeverity;
 import io.kcg.sir.application.api.ExecutionStage;
-import io.kcg.sir.application.api.FailureDisposition;
 import io.kcg.sir.application.api.ToolchainApplication;
 import io.kcg.sir.application.api.ToolchainRequest;
 import io.kcg.sir.application.api.ToolchainResult;
@@ -86,14 +85,12 @@ class ToolchainManifestImmutabilityTest {
                 new io.kcg.sir.lowering.api.LoweredNodeId("test");
         input.add(new AppliedFile(
                 "pom.xml",
-                io.kcg.sir.application.api.FileAction.CREATED,
                 2L,
                 "0".repeat(64),
                 artifact,
                 java.util.Optional.empty()));
         ExecutionManifest manifest = new ExecutionManifest(
                 root,
-                io.kcg.sir.application.api.ConflictPolicy.FAIL_IF_EXISTS,
                 input);
         // Mutate the original input list.
         input.clear();
@@ -107,7 +104,7 @@ class ToolchainManifestImmutabilityTest {
         input.add(ExecutionDiagnostic.error("SIR-APP-TEST-001",
                 ExecutionStage.READ, "test error"));
         ToolchainResult.Failure failure = new ToolchainResult.Failure(
-                ExecutionStage.READ, FailureDisposition.NO_CHANGES, input);
+                ExecutionStage.READ, input);
         input.clear();
         assertEquals(1, failure.diagnostics().size(),
                 "Failure must hold a defensive copy of the input diagnostics");
@@ -119,7 +116,7 @@ class ToolchainManifestImmutabilityTest {
     void failureRejectsZeroErrorDiagnostics() {
         assertThrows(IllegalArgumentException.class, () ->
                 new ToolchainResult.Failure(
-                        ExecutionStage.READ, FailureDisposition.NO_CHANGES,
+                        ExecutionStage.READ,
                         java.util.List.of(ExecutionDiagnostic.warning(
                                 "SIR-APP-TEST-001", ExecutionStage.READ, "warning only"))));
     }
@@ -128,7 +125,7 @@ class ToolchainManifestImmutabilityTest {
     void failureRejectsEmptyDiagnostics() {
         assertThrows(IllegalArgumentException.class, () ->
                 new ToolchainResult.Failure(
-                        ExecutionStage.READ, FailureDisposition.NO_CHANGES,
+                        ExecutionStage.READ,
                         java.util.List.of()));
     }
 
@@ -140,7 +137,6 @@ class ToolchainManifestImmutabilityTest {
                 java.util.Optional.empty();
         AppliedFile file = new AppliedFile(
                 "pom.xml",
-                io.kcg.sir.application.api.FileAction.CREATED,
                 2L,
                 "0".repeat(64),
                 artifact,
@@ -169,7 +165,6 @@ class ToolchainManifestImmutabilityTest {
                 .toAbsolutePath();
         ExecutionManifest manifest = new ExecutionManifest(
                 unnormalized,
-                io.kcg.sir.application.api.ConflictPolicy.FAIL_IF_EXISTS,
                 java.util.List.of());
 
         assertEquals(unnormalized.normalize(), manifest.outputRoot());
@@ -181,14 +176,12 @@ class ToolchainManifestImmutabilityTest {
                 new io.kcg.sir.lowering.api.LoweredNodeId("test");
         assertThrows(IllegalArgumentException.class, () -> new AppliedFile(
                 "pom.xml",
-                io.kcg.sir.application.api.FileAction.CREATED,
                 -1L,
                 "0".repeat(64),
                 artifact,
                 java.util.Optional.empty()));
         assertThrows(IllegalArgumentException.class, () -> new AppliedFile(
                 "pom.xml",
-                io.kcg.sir.application.api.FileAction.CREATED,
                 1L,
                 "not-a-sha256",
                 artifact,

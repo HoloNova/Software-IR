@@ -142,7 +142,7 @@ class MultiSourceVisibilityTest {
     }
     private static ToolchainResult.Failure refusal(Path source, Path output) {
         var result = assertInstanceOf(ToolchainResult.Failure.class, new ToolchainApplication().execute(new ToolchainRequest(source, ENTRY, output)));
-        assertEquals(ExecutionStage.SEMANTIC, result.failedStage()); assertEquals(FailureDisposition.NO_CHANGES, result.disposition()); return result;
+        assertEquals(ExecutionStage.SEMANTIC, result.failedStage()); return result;
     }
     private static io.kcg.sir.semantic.model.NormalizedDeclaration owner(NormalizedSemanticModel model,
             Map<SymbolId, io.kcg.sir.semantic.model.NormalizedDeclaration> declarations, ReferenceSiteBinding binding) {

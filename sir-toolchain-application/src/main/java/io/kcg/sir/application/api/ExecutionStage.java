@@ -8,6 +8,5 @@ public enum ExecutionStage {
    GENERATION,
    PREFLIGHT,
    GRAPH,
-   WRITE,
-   ROLLBACK;
+   WRITE;
 }

@@ -132,7 +132,6 @@ class MultiSourceGenerationTest {
         var original = tree(temp);
         var result = new ToolchainApplication().execute(new ToolchainRequest(source, ENTRY, output));
         var failure = assertInstanceOf(ToolchainResult.Failure.class, result);
-        assertEquals(FailureDisposition.NO_CHANGES, failure.disposition());
         assertEquals("SIR-APP-PROJECT-OUTPUT-001", failure.diagnostics().getFirst().code()); assertEquals(original, tree(temp));
     }
 }

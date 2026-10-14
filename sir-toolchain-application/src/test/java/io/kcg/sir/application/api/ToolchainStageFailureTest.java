@@ -31,7 +31,6 @@ class ToolchainStageFailureTest {
                 new ToolchainRequest(source.toAbsolutePath(), SourceId.of("project.sir"), outputRoot)));
 
         assertEquals(ExecutionStage.PARSE, failure.failedStage());
-        assertEquals(FailureDisposition.NO_CHANGES, failure.disposition());
         assertTrue(failure.diagnostics().stream().anyMatch(d -> d.code().startsWith("SIR-")), failure.diagnostics().toString());
         assertTrue(failure.diagnostics().stream().allMatch(d -> d.stage() == ExecutionStage.PARSE), failure.diagnostics().toString());
         assertFalse(Files.exists(outputRoot));
@@ -77,7 +76,6 @@ class ToolchainStageFailureTest {
         ToolchainResult.Failure failure =
                 assertInstanceOf(ToolchainResult.Failure.class, result);
         assertEquals(expectedStage, failure.failedStage());
-        assertEquals(FailureDisposition.NO_CHANGES, failure.disposition());
         assertTrue(failure.diagnostics().stream().anyMatch(ExecutionDiagnostic::isError));
         assertFalse(Files.exists(outputRoot));
         return failure;

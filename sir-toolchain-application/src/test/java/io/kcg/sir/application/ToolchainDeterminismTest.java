@@ -49,14 +49,12 @@ class ToolchainDeterminismTest {
         assertIterableEquals(pathsA, pathsB,
                 "manifest order must be identical across runs: " + pathsA + " vs " + pathsB);
 
-        // Per-file: action, byteCount, sha256 must all match.
+        // Per-file: byteCount, sha256 must all match.
         for (int i = 0; i < filesA.size(); i++) {
             AppliedFile fa = filesA.get(i);
             AppliedFile fb = filesB.get(i);
             assertEquals(fa.relativePath(), fb.relativePath(),
                     "relativePath must match at index " + i);
-            assertEquals(fa.action(), fb.action(),
-                    "action must match at index " + i + " for " + fa.relativePath());
             assertEquals(fa.byteCount(), fb.byteCount(),
                     "byteCount must match at index " + i + " for " + fa.relativePath());
             assertEquals(fa.sha256Hex(), fb.sha256Hex(),

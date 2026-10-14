@@ -21,7 +21,7 @@ import org.junit.jupiter.api.io.TempDir;
 /**
  * GRAPH-stage failure injection. Verifies that when the ProjectGraph build
  * or validation fails, the Toolchain returns a Failure annotated with
- * {@link ExecutionStage#GRAPH} and {@link FailureDisposition#NO_CHANGES},
+ * {@link ExecutionStage#GRAPH},
  * and that no output root or transaction directory is created on disk.
  *
  * <p>The test uses the package-private
@@ -62,8 +62,6 @@ class ToolchainGraphStageFailureTest {
         ToolchainResult.Failure failure = assertInstanceOf(ToolchainResult.Failure.class, result);
         assertEquals(ExecutionStage.GRAPH, failure.failedStage(),
                 "failed stage must be GRAPH");
-        assertEquals(FailureDisposition.NO_CHANGES, failure.disposition(),
-                "disposition must be NO_CHANGES");
         assertTrue(failure.diagnostics().stream().anyMatch(ExecutionDiagnostic::isError),
                 "must carry at least one ERROR diagnostic");
         assertTrue(failure.diagnostics().stream().anyMatch(d ->

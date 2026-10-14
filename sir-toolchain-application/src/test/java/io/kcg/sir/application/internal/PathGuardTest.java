@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import io.kcg.sir.application.api.ConflictPolicy;
 import io.kcg.sir.application.api.ExecutionDiagnostic;
 import io.kcg.sir.generator.springboot.api.GeneratedFile;
 import io.kcg.sir.lowering.api.LoweredNodeId;
@@ -38,9 +37,8 @@ class PathGuardTest {
         return new GeneratedFile(relativePath, "x\n", ARTIFACT, Optional.empty());
     }
 
-    private static List<ExecutionDiagnostic> preflight(
-            Path outputRoot, List<GeneratedFile> files, ConflictPolicy policy) {
-        return PathGuard.preflight(outputRoot, files, policy);
+    private static List<ExecutionDiagnostic> preflight(Path outputRoot, List<GeneratedFile> files) {
+        return PathGuard.preflight(outputRoot, files);
     }
 
     private static boolean hasCode(List<ExecutionDiagnostic> diags, String codePrefix) {
@@ -53,7 +51,7 @@ class PathGuardTest {
     void dotSegmentIsRejected() {
         Path root = temporaryDirectory.resolve("out").toAbsolutePath();
         List<ExecutionDiagnostic> errors = preflight(
-                root, List.of(file("./pom.xml")), ConflictPolicy.FAIL_IF_EXISTS);
+                root, List.of(file("./pom.xml")));
         assertTrue(hasCode(errors, "SIR-APP-PATH-001"),
                 "expected SIR-APP-PATH-001 for '.' segment: " + errors);
     }
@@ -62,7 +60,7 @@ class PathGuardTest {
     void dotSegmentInMiddleIsRejected() {
         Path root = temporaryDirectory.resolve("out").toAbsolutePath();
         List<ExecutionDiagnostic> errors = preflight(
-                root, List.of(file("src/./main/java/Foo.java")), ConflictPolicy.FAIL_IF_EXISTS);
+                root, List.of(file("src/./main/java/Foo.java")));
         assertTrue(hasCode(errors, "SIR-APP-PATH-001"),
                 "expected SIR-APP-PATH-001 for middle '.' segment: " + errors);
     }
@@ -75,7 +73,7 @@ class PathGuardTest {
         for (char c : "<>:\"|?*".toCharArray()) {
             String path = "src/Foo" + c + ".java";
             List<ExecutionDiagnostic> errors = preflight(
-                    root, List.of(file(path)), ConflictPolicy.FAIL_IF_EXISTS);
+                    root, List.of(file(path)));
             assertTrue(hasCode(errors, "SIR-APP-PATH-001"),
                     "expected SIR-APP-PATH-001 for illegal char '" + c + "' in " + path
                             + ": " + errors);
@@ -90,7 +88,7 @@ class PathGuardTest {
         for (int c : new int[]{0x00, 0x01, 0x08, 0x0A, 0x1F, 0x7F}) {
             String path = "src/Foo" + (char) c + ".java";
             List<ExecutionDiagnostic> errors = preflight(
-                    root, List.of(file(path)), ConflictPolicy.FAIL_IF_EXISTS);
+                    root, List.of(file(path)));
             assertTrue(hasCode(errors, "SIR-APP-PATH-001"),
                     "expected SIR-APP-PATH-001 for control char 0x" + Integer.toHexString(c)
                             + ": " + errors);
@@ -103,7 +101,7 @@ class PathGuardTest {
     void trailingDotIsRejected() {
         Path root = temporaryDirectory.resolve("out").toAbsolutePath();
         List<ExecutionDiagnostic> errors = preflight(
-                root, List.of(file("src/Foo.")), ConflictPolicy.FAIL_IF_EXISTS);
+                root, List.of(file("src/Foo.")));
         assertTrue(hasCode(errors, "SIR-APP-PATH-001"),
                 "expected SIR-APP-PATH-001 for trailing dot: " + errors);
     }
@@ -112,7 +110,7 @@ class PathGuardTest {
     void trailingSpaceIsRejected() {
         Path root = temporaryDirectory.resolve("out").toAbsolutePath();
         List<ExecutionDiagnostic> errors = preflight(
-                root, List.of(file("src/Foo ")), ConflictPolicy.FAIL_IF_EXISTS);
+                root, List.of(file("src/Foo ")));
         assertTrue(hasCode(errors, "SIR-APP-PATH-001"),
                 "expected SIR-APP-PATH-001 for trailing space: " + errors);
     }
@@ -121,7 +119,7 @@ class PathGuardTest {
     void trailingDotOnNonLastSegmentIsRejected() {
         Path root = temporaryDirectory.resolve("out").toAbsolutePath();
         List<ExecutionDiagnostic> errors = preflight(
-                root, List.of(file("Foo./Bar.java")), ConflictPolicy.FAIL_IF_EXISTS);
+                root, List.of(file("Foo./Bar.java")));
         assertTrue(hasCode(errors, "SIR-APP-PATH-001"),
                 "expected SIR-APP-PATH-001 for trailing dot on intermediate segment: " + errors);
     }
@@ -134,7 +132,7 @@ class PathGuardTest {
         String[] reserved = {"CON", "PRN", "AUX", "NUL", "COM1", "COM9", "LPT1", "LPT9"};
         for (String name : reserved) {
             List<ExecutionDiagnostic> errors = preflight(
-                    root, List.of(file(name + ".txt")), ConflictPolicy.FAIL_IF_EXISTS);
+                    root, List.of(file(name + ".txt")));
             assertTrue(hasCode(errors, "SIR-APP-PATH-001"),
                     "expected SIR-APP-PATH-001 for reserved name " + name + ": " + errors);
         }
@@ -144,7 +142,7 @@ class PathGuardTest {
     void windowsReservedNameWithoutExtensionIsRejected() {
         Path root = temporaryDirectory.resolve("out").toAbsolutePath();
         List<ExecutionDiagnostic> errors = preflight(
-                root, List.of(file("CON")), ConflictPolicy.FAIL_IF_EXISTS);
+                root, List.of(file("CON")));
         assertTrue(hasCode(errors, "SIR-APP-PATH-001"),
                 "expected SIR-APP-PATH-001 for reserved name CON without extension: " + errors);
     }
@@ -153,7 +151,7 @@ class PathGuardTest {
     void windowsReservedNameInSubdirectoryIsRejected() {
         Path root = temporaryDirectory.resolve("out").toAbsolutePath();
         List<ExecutionDiagnostic> errors = preflight(
-                root, List.of(file("src/COM1.java")), ConflictPolicy.FAIL_IF_EXISTS);
+                root, List.of(file("src/COM1.java")));
         assertTrue(hasCode(errors, "SIR-APP-PATH-001"),
                 "expected SIR-APP-PATH-001 for reserved name in subdir: " + errors);
     }
@@ -166,7 +164,7 @@ class PathGuardTest {
         List<GeneratedFile> files = List.of(
                 file("src/main/java/Foo.java"),
                 file("src/main/java/foo.java"));
-        List<ExecutionDiagnostic> errors = preflight(root, files, ConflictPolicy.FAIL_IF_EXISTS);
+        List<ExecutionDiagnostic> errors = preflight(root, files);
         assertTrue(hasCode(errors, "SIR-APP-PATH-002"),
                 "expected SIR-APP-PATH-002 for case-fold duplicate: " + errors);
     }
@@ -177,7 +175,7 @@ class PathGuardTest {
         List<GeneratedFile> files = List.of(
                 file("src/main/java/Foo.java"),
                 file("src/main/java/Foo.java"));
-        List<ExecutionDiagnostic> errors = preflight(root, files, ConflictPolicy.FAIL_IF_EXISTS);
+        List<ExecutionDiagnostic> errors = preflight(root, files);
         assertTrue(hasCode(errors, "SIR-APP-PATH-002"),
                 "expected SIR-APP-PATH-002 for exact duplicate: " + errors);
     }
@@ -188,7 +186,7 @@ class PathGuardTest {
     void nonAbsoluteRootIsRejected() {
         Path root = Path.of("relative/out");
         List<ExecutionDiagnostic> errors = preflight(
-                root, List.of(file("pom.xml")), ConflictPolicy.FAIL_IF_EXISTS);
+                root, List.of(file("pom.xml")));
         assertTrue(hasCode(errors, "SIR-APP-REQUEST-002"),
                 "expected SIR-APP-REQUEST-002 for non-absolute root: " + errors);
     }
@@ -201,7 +199,7 @@ class PathGuardTest {
         List<GeneratedFile> files = List.of(
                 file("pom.xml"),
                 file("src/main/java/io/kcg/Foo.java"));
-        List<ExecutionDiagnostic> errors = preflight(root, files, ConflictPolicy.FAIL_IF_EXISTS);
+        List<ExecutionDiagnostic> errors = preflight(root, files);
         assertTrue(errors.isEmpty(),
                 "valid paths must pass preflight: " + errors);
     }
@@ -209,35 +207,14 @@ class PathGuardTest {
     // ---- Conflict checks ----
 
     @Test
-    void failIfExistsRejectsAnyExistingTarget() throws Exception {
+    void anExistingTargetIsRejected() throws Exception {
         Path root = temporaryDirectory.resolve("out").toAbsolutePath();
         Files.createDirectories(root);
         Files.writeString(root.resolve("pom.xml"), "<original/>");
         List<ExecutionDiagnostic> errors = preflight(
-                root, List.of(file("pom.xml")), ConflictPolicy.FAIL_IF_EXISTS);
+                root, List.of(file("pom.xml")));
         assertTrue(hasCode(errors, "SIR-APP-CONFLICT-001"),
-                "expected SIR-APP-CONFLICT-001 when target exists under FAIL_IF_EXISTS: " + errors);
-    }
-
-    @Test
-    void replaceExistingAcceptsExistingRegularFile() throws Exception {
-        Path root = temporaryDirectory.resolve("out").toAbsolutePath();
-        Files.createDirectories(root);
-        Files.writeString(root.resolve("pom.xml"), "<original/>");
-        List<ExecutionDiagnostic> errors = preflight(
-                root, List.of(file("pom.xml")), ConflictPolicy.REPLACE_EXISTING);
-        assertTrue(errors.isEmpty(),
-                "REPLACE_EXISTING must accept an existing regular file: " + errors);
-    }
-
-    @Test
-    void replaceExistingRejectsDirectory() throws Exception {
-        Path root = temporaryDirectory.resolve("out").toAbsolutePath();
-        Files.createDirectories(root.resolve("pom.xml"));
-        List<ExecutionDiagnostic> errors = preflight(
-                root, List.of(file("pom.xml")), ConflictPolicy.REPLACE_EXISTING);
-        assertTrue(hasCode(errors, "SIR-APP-CONFLICT-002"),
-                "expected SIR-APP-CONFLICT-002 for directory under REPLACE_EXISTING: " + errors);
+                "expected SIR-APP-CONFLICT-001 when the target exists: " + errors);
     }
 
     // ---- Symlink rejection ----
@@ -259,7 +236,7 @@ class PathGuardTest {
         Path rootInsideLink = link.resolve("project");
 
         List<ExecutionDiagnostic> errors = preflight(
-                rootInsideLink, List.of(file("pom.xml")), ConflictPolicy.FAIL_IF_EXISTS);
+                rootInsideLink, List.of(file("pom.xml")));
         assertTrue(hasCode(errors, "SIR-APP-PATH-003"),
                 "expected SIR-APP-PATH-003 for symlink in root parent chain: " + errors);
     }
@@ -273,7 +250,7 @@ class PathGuardTest {
         Files.createSymbolicLink(link, real);
 
         List<ExecutionDiagnostic> errors = preflight(
-                link, List.of(file("pom.xml")), ConflictPolicy.FAIL_IF_EXISTS);
+                link, List.of(file("pom.xml")));
         assertTrue(hasCode(errors, "SIR-APP-PATH-003"),
                 "expected SIR-APP-PATH-003 when root itself is a symlink: " + errors);
     }
@@ -291,11 +268,18 @@ class PathGuardTest {
         Files.createSymbolicLink(linkedSrc, realDir);
 
         List<ExecutionDiagnostic> errors = preflight(
-                root, List.of(file("src/pom.xml")), ConflictPolicy.FAIL_IF_EXISTS);
+                root, List.of(file("src/pom.xml")));
         assertTrue(hasCode(errors, "SIR-APP-PATH-003"),
                 "expected SIR-APP-PATH-003 for symlink in target parent chain: " + errors);
     }
 
+    /**
+     * The guard that keeps the leaf symlink rejection intact: {@code checkTargetSymlinks} must not report a parent-chain violation for a
+     * symlink that IS the target, so this case has to be refused by the conflict check instead.
+     *
+     * <p>Without this test, "stop checking the leaf" could be implemented by dropping the leaf
+     * rejection entirely.
+     */
     @Test
     @EnabledOnOs({OS.LINUX, OS.MAC})
     void targetItselfIsSymlinkIsRejected() throws Exception {
@@ -307,35 +291,9 @@ class PathGuardTest {
         Files.createSymbolicLink(targetLink, realFile);
 
         List<ExecutionDiagnostic> errors = preflight(
-                root, List.of(file("pom.xml")), ConflictPolicy.REPLACE_EXISTING);
-        assertTrue(hasCode(errors, "SIR-APP-CONFLICT-002"),
-                "expected SIR-APP-CONFLICT-002 when target is a symlink under REPLACE_EXISTING: "
-                        + errors);
-    }
-
-    /**
-     * The FAIL_IF_EXISTS counterpart of the test above, and the guard that keeps the leaf symlink
-     * rejection intact: {@code checkTargetSymlinks} must not report a parent-chain violation for a
-     * symlink that IS the target, so this case has to be refused by the conflict check instead.
-     *
-     * <p>Without this test, "stop checking the leaf" could be implemented by dropping the leaf
-     * rejection entirely, which the REPLACE_EXISTING test alone would not catch.
-     */
-    @Test
-    @EnabledOnOs({OS.LINUX, OS.MAC})
-    void targetItselfIsSymlinkIsRejectedUnderFailIfExists() throws Exception {
-        Path root = temporaryDirectory.resolve("out").toAbsolutePath();
-        Files.createDirectories(root);
-        Path realFile = temporaryDirectory.resolve("real-file").toAbsolutePath();
-        Files.writeString(realFile, "x");
-        Path targetLink = root.resolve("pom.xml");
-        Files.createSymbolicLink(targetLink, realFile);
-
-        List<ExecutionDiagnostic> errors = preflight(
-                root, List.of(file("pom.xml")), ConflictPolicy.FAIL_IF_EXISTS);
+                root, List.of(file("pom.xml")));
         assertTrue(hasCode(errors, "SIR-APP-CONFLICT-001"),
-                "expected SIR-APP-CONFLICT-001 when the target symlink already exists under "
-                        + "FAIL_IF_EXISTS: " + errors);
+                "expected SIR-APP-CONFLICT-001 when the target symlink already exists: " + errors);
     }
 
     // ---- Normalization escape (defense-in-depth) ----
@@ -351,7 +309,7 @@ class PathGuardTest {
         List<GeneratedFile> files = List.of(
                 file("a/b/c/Foo.java"),
                 file("a/b/d/Bar.java"));
-        List<ExecutionDiagnostic> errors = preflight(root, files, ConflictPolicy.FAIL_IF_EXISTS);
+        List<ExecutionDiagnostic> errors = preflight(root, files);
         assertTrue(errors.isEmpty(),
                 "normalizable paths inside root must pass: " + errors);
     }
@@ -360,7 +318,7 @@ class PathGuardTest {
     void diagnosticsAreStagePreflight() {
         Path root = temporaryDirectory.resolve("out").toAbsolutePath();
         List<ExecutionDiagnostic> errors = preflight(
-                root, List.of(file("CON.txt")), ConflictPolicy.FAIL_IF_EXISTS);
+                root, List.of(file("CON.txt")));
         assertFalse(errors.isEmpty());
         for (ExecutionDiagnostic d : errors) {
             assertEquals(io.kcg.sir.application.api.ExecutionStage.PREFLIGHT, d.stage(),
@@ -373,7 +331,7 @@ class PathGuardTest {
     void emptyFileListPasses() {
         Path root = temporaryDirectory.resolve("out").toAbsolutePath();
         List<ExecutionDiagnostic> errors = preflight(
-                root, List.of(), ConflictPolicy.FAIL_IF_EXISTS);
+                root, List.of());
         assertTrue(errors.isEmpty(),
                 "empty file list must pass preflight: " + errors);
     }
@@ -385,7 +343,7 @@ class PathGuardTest {
                 file("pom.xml"),
                 file("src/main/java/io/kcg/app/Application.java"),
                 file("src/main/resources/application.properties"));
-        List<ExecutionDiagnostic> errors = preflight(root, files, ConflictPolicy.FAIL_IF_EXISTS);
+        List<ExecutionDiagnostic> errors = preflight(root, files);
         assertTrue(errors.isEmpty(),
                 "multiple distinct valid paths must pass: " + errors);
     }
@@ -395,7 +353,7 @@ class PathGuardTest {
         // Reserved name detection uses the part before the first dot.
         Path root = temporaryDirectory.resolve("out").toAbsolutePath();
         List<ExecutionDiagnostic> errors = preflight(
-                root, List.of(file("COM1.log.txt")), ConflictPolicy.FAIL_IF_EXISTS);
+                root, List.of(file("COM1.log.txt")));
         assertTrue(hasCode(errors, "SIR-APP-PATH-001"),
                 "expected SIR-APP-PATH-001 for reserved name COM1 with multiple dots: " + errors);
     }
@@ -405,7 +363,7 @@ class PathGuardTest {
         // COM10 is NOT in the reserved set (COM1..COM9 only).
         Path root = temporaryDirectory.resolve("out").toAbsolutePath();
         List<ExecutionDiagnostic> errors = preflight(
-                root, List.of(file("COM10.java")), ConflictPolicy.FAIL_IF_EXISTS);
+                root, List.of(file("COM10.java")));
         // COM10 does not match COM1..COM9, so it should pass segment validation.
         // (On Windows COM10 is technically not a reserved device name, only COM1..COM9.)
         assertFalse(hasCode(errors, "SIR-APP-PATH-001"),
@@ -417,7 +375,7 @@ class PathGuardTest {
         // Reserved-name check uppercases via Locale.ROOT before comparison.
         Path root = temporaryDirectory.resolve("out").toAbsolutePath();
         List<ExecutionDiagnostic> errors = preflight(
-                root, List.of(file("con.txt")), ConflictPolicy.FAIL_IF_EXISTS);
+                root, List.of(file("con.txt")));
         assertTrue(hasCode(errors, "SIR-APP-PATH-001"),
                 "expected SIR-APP-PATH-001 for lowercase reserved name 'con': " + errors);
     }
@@ -427,7 +385,7 @@ class PathGuardTest {
         // "Foo.java." ends with dot -> rejected.
         Path root = temporaryDirectory.resolve("out").toAbsolutePath();
         List<ExecutionDiagnostic> errors = preflight(
-                root, List.of(file("Foo.java.")), ConflictPolicy.FAIL_IF_EXISTS);
+                root, List.of(file("Foo.java.")));
         assertTrue(hasCode(errors, "SIR-APP-PATH-001"),
                 "expected SIR-APP-PATH-001 for trailing dot on filename: " + errors);
     }
@@ -439,7 +397,7 @@ class PathGuardTest {
         List<ExecutionDiagnostic> errors;
         try {
             errors = preflight(
-                    root, List.of(file("Foo/ /Bar.java")), ConflictPolicy.FAIL_IF_EXISTS);
+                    root, List.of(file("Foo/ /Bar.java")));
         } catch (IllegalArgumentException e) {
             // GeneratedFile may also reject some forms; that's acceptable defense-in-depth.
             return;
@@ -461,7 +419,7 @@ class PathGuardTest {
                     file("src/Foo.java"),
                     file("src/foo.java"));
             List<ExecutionDiagnostic> errors = preflight(
-                    root, files, ConflictPolicy.FAIL_IF_EXISTS);
+                    root, files);
             assertTrue(hasCode(errors, "SIR-APP-PATH-002"),
                     "case-fold duplicate must be detected under Turkish locale: " + errors);
         } finally {

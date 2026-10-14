@@ -1,6 +1,5 @@
 package io.kcg.sir.application.internal;
 
-import io.kcg.sir.application.api.ConflictPolicy;
 import io.kcg.sir.application.api.ExecutionDiagnostic;
 import io.kcg.sir.application.api.ExecutionSeverity;
 import io.kcg.sir.application.api.ExecutionStage;
@@ -25,7 +24,7 @@ public final class PathGuard {
    private PathGuard() {
    }
 
-   public static List<ExecutionDiagnostic> preflight(Path outputRoot, List<GeneratedFile> files, ConflictPolicy policy) {
+   public static List<ExecutionDiagnostic> preflight(Path outputRoot, List<GeneratedFile> files) {
       List<ExecutionDiagnostic> errors = new ArrayList<>();
       if (!outputRoot.isAbsolute()) {
          errors.add(diag("SIR-APP-REQUEST-002", "output root must be an absolute path: " + outputRoot));
@@ -81,7 +80,7 @@ public final class PathGuard {
             return errors;
          }
 
-         conflictCheck(outputRoot, files, policy, errors);
+         conflictCheck(outputRoot, files, errors);
       } catch (IOException e) {
          errors.add(diag("SIR-APP-PATH-005", "I/O error during path preflight: " + e.getMessage()));
       }
@@ -223,30 +222,12 @@ public final class PathGuard {
       return current;
    }
 
-   private static void conflictCheck(Path outputRoot, List<GeneratedFile> files, ConflictPolicy policy, List<ExecutionDiagnostic> errors) throws IOException {
-      boolean rootExists = Files.exists(outputRoot, LinkOption.NOFOLLOW_LINKS);
-      if (policy == ConflictPolicy.FAIL_IF_EXISTS) {
-         for (GeneratedFile file : files) {
-            Path target = outputRoot.resolve(file.relativePath()).normalize();
-            if (Files.exists(target, LinkOption.NOFOLLOW_LINKS)) {
-               errors.add(diag("SIR-APP-CONFLICT-001", "target already exists and policy is FAIL_IF_EXISTS: " + file.relativePath()));
-            }
-         }
-      } else {
-         for (GeneratedFile file : files) {
-            Path target = outputRoot.resolve(file.relativePath()).normalize();
-            if (Files.exists(target, LinkOption.NOFOLLOW_LINKS)) {
-               if (Files.isSymbolicLink(target)) {
-                  errors.add(diag("SIR-APP-CONFLICT-002", "cannot replace symbolic link: " + file.relativePath()));
-               } else if (Files.isDirectory(target, LinkOption.NOFOLLOW_LINKS)) {
-                  errors.add(diag("SIR-APP-CONFLICT-002", "cannot replace directory: " + file.relativePath()));
-               } else if (!Files.isRegularFile(target, LinkOption.NOFOLLOW_LINKS)) {
-                  errors.add(diag("SIR-APP-CONFLICT-002", "cannot replace non-regular file: " + file.relativePath()));
-               }
-            }
-         }
-
-         if (rootExists && errors.isEmpty()) {
+   /** A new project is written into a directory that does not exist, so no target may exist yet. */
+   private static void conflictCheck(Path outputRoot, List<GeneratedFile> files, List<ExecutionDiagnostic> errors) {
+      for (GeneratedFile file : files) {
+         Path target = outputRoot.resolve(file.relativePath()).normalize();
+         if (Files.exists(target, LinkOption.NOFOLLOW_LINKS)) {
+            errors.add(diag("SIR-APP-CONFLICT-001", "target already exists: " + file.relativePath()));
          }
       }
    }

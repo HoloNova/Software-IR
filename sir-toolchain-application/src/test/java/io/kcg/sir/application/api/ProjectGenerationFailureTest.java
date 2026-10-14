@@ -16,6 +16,6 @@ class ProjectGenerationFailureTest {
                 i -> new ProjectGraphAnalysis.Failure(List.of(ProjectGraphDiagnostic.error("TEST-GRAPH-001", "injected before any write"))));
         var rejected = assertInstanceOf(ToolchainResult.Failure.class, broken.execute(new ToolchainRequest(source, ENTRY, temp.resolve("new-output"))));
         assertEquals(ExecutionStage.GRAPH, rejected.failedStage());
-        assertEquals(FailureDisposition.NO_CHANGES, rejected.disposition()); assertEquals(original, tree(temp));
+        assertEquals(original, tree(temp));
     }
 }

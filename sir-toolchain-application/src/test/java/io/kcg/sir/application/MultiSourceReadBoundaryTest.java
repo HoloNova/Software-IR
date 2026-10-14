@@ -113,7 +113,7 @@ class MultiSourceReadBoundaryTest {
         for (var request : List.of(new ToolchainRequest(source, ENTRY, source.resolve("generated")),
                 new ToolchainRequest(source, ENTRY, temp), new ToolchainRequest(Path.of("relative"), ENTRY, temp.resolve("output")))) {
             var result = assertInstanceOf(ToolchainResult.Failure.class, new ToolchainApplication().execute(request));
-            assertEquals(ExecutionStage.READ, result.failedStage()); assertEquals(FailureDisposition.NO_CHANGES, result.disposition()); assertEquals(before, tree(temp));
+            assertEquals(ExecutionStage.READ, result.failedStage()); assertEquals(before, tree(temp));
         }
     }
 
@@ -122,7 +122,7 @@ class MultiSourceReadBoundaryTest {
         Path state = directory.resolve("state"); Files.createDirectories(state); Files.writeString(state.resolve("CURRENT"), "untouched authoritative sentinel");
         var before = tree(directory);
         var result = assertInstanceOf(ToolchainResult.Failure.class, new ToolchainApplication().execute(new ToolchainRequest(source, ENTRY, directory.resolve("output"))));
-        assertEquals(ExecutionStage.READ, result.failedStage()); assertEquals(FailureDisposition.NO_CHANGES, result.disposition());
+        assertEquals(ExecutionStage.READ, result.failedStage());
         assertEquals(List.of(expected), result.diagnostics().stream().filter(ExecutionDiagnostic::isError).map(ExecutionDiagnostic::code).toList());
         assertEquals(ENTRY, result.diagnostics().getFirst().sourceSpan().orElseThrow().source());
         assertEquals(before, tree(directory)); assertFalse(Files.exists(directory.resolve("output")));

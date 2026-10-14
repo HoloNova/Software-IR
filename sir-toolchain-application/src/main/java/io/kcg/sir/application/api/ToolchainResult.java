@@ -19,10 +19,9 @@ public sealed interface ToolchainResult permits ToolchainResult.Success, Toolcha
                 throw new IllegalArgumentException("graph must bind the returned source snapshot");
         }
     }
-    record Failure(ExecutionStage failedStage, FailureDisposition disposition,
-                   List<ExecutionDiagnostic> diagnostics) implements ToolchainResult {
+    record Failure(ExecutionStage failedStage, List<ExecutionDiagnostic> diagnostics) implements ToolchainResult {
         public Failure {
-            Objects.requireNonNull(failedStage); Objects.requireNonNull(disposition); diagnostics = List.copyOf(diagnostics);
+            Objects.requireNonNull(failedStage); diagnostics = List.copyOf(diagnostics);
             if (diagnostics.stream().noneMatch(ExecutionDiagnostic::isError)) throw new IllegalArgumentException("failure requires a diagnostic");
         }
     }
