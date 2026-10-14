@@ -13,7 +13,7 @@
 
     <artifactId>sir-change</artifactId>
     <name>SIR Change</name>
-    <description>Read-only change verification and planning for minimal Change SIR V0.1 (ModifyCapabilityWorkflow only)</description>
+    <description>Command editing of SIR sources: add, delete and update commands applied to the software structure and written back into the source text</description>
 
     <dependencies>
         <dependency>
@@ -24,16 +24,6 @@
         <dependency>
             <groupId>io.kcg</groupId>
             <artifactId>sir-semantic</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.kcg</groupId>
-            <artifactId>sir-lowering-api</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.kcg</groupId>
-            <artifactId>sir-project-graph</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

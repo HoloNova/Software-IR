@@ -1,7 +1,8 @@
 # G 系列计划：以 Git 取代自存版本历史
 
-- 日期：2026-10-14。状态：**G1、G2、G3 已实现并本机定向验证（[G1 报告](G1-workspace-version-report.md)），同 SHA CI 由负责人确认后再记**；G4 未授权。
-- 依据：[ADR-027](../architecture/ADR-027-git-as-version-history.md)（草案）。前置：[R5 收尾报告](R5-followup-report.md)。
+- 说明：本文的 G1–G4 是 ADR-027 迁移的步骤，与 [README](README.md) 里的 G 阶段（G2 持久身份等）无关。
+- 日期：2026-10-14。状态：**G1 至 G4 已实现并本机定向验证（[G1 报告](G1-workspace-version-report.md)），同 SHA CI 由负责人确认后再记**。
+- 依据：[ADR-027](../architecture/ADR-027-git-as-version-history.md)。前置：[R5 收尾报告](R5-followup-report.md)。
 - 原则：**先加、后替换、最后删**。每一阶段单独提交、单独由 CI 验证；旧路径在被替换并验证之前不动。
 - 负责人已授权：旧的无用测试和被本决定弃用的代码逻辑可以直接删除（仍按阶段分批，不一次性删）。
 
@@ -85,4 +86,4 @@
 | G1 | 已实现：Git 端口与适配器、不依赖状态目录的规划与应用（本机定向 34 个新测试，含 280 个中断检查点逐一重跑）；同 SHA CI 待补 |
 | G2 | 已实现（2026-10-14 授权）：证据检查抽成 `VerificationGate`，两条路径共用；与计划措辞不同的地方：没有做"应用"接口，因为两条路径的请求和结果类型不同，共用的只有"证据是否可接受"这一步，抽成静态检查比抽象接口更直接。本机定向：旧门 7 个不改全绿，新门 7 个全绿；同 SHA CI 待补 |
 | G3 | 已实现（2026-10-14 授权）：命令行发布 `version-plan`（只读）和 `version-apply`（唯一会改工程的命令，要求 git，按 `planId` 应用）；`context`、`plan` 保留，帮助文本冻结，在总帮助里标记弃用；ADR-019 增补第 16 节。负责人决定：发布 apply、旧命令保留到 G4。本机定向：命令行 41 个测试全绿（新 7 个）、应用层目录入口 5 个全绿；同 SHA CI 待补 |
-| G4 | 进行中（2026-10-14 授权）。批次 1：命令行退场 `context`、`plan`（旧规划命令成为未知命令），版本 0.2.0，协议统一为 `KCG-CLI-VERSION-CHANGE-V1`。批次 2：删除应用层旧存储族——公开接口 61 个（旧单文件变更、项目基线与项目变更、状态目录版本事务、换代、旧验证门）、内部实现 50 个（`internal/state` 25、`projectupdate` 7、`version` 8、`changeplanning` 3、`bundle`/`projectbaseline` 各 2 等）和 60 个测试（含 82 秒与 431 秒的旧故障矩阵）；共用的文件比较、磁盘观察、形状检查、`FileOp` 移入 `WorkspacePlanning`/`WorkspacePlan`；`ProjectVerificationChainIT` 改为在 Git 工作区上做同样的链路；`verify.yml` 去掉已删除的 IT。本机：应用模块 263、命令行 27 个测试全绿。批次 3（待做）：`sir-change` 旧规划器与文档收尾 |
+| G4 | 进行中（2026-10-14 授权）。批次 1：命令行退场 `context`、`plan`（旧规划命令成为未知命令），版本 0.2.0，协议统一为 `KCG-CLI-VERSION-CHANGE-V1`。批次 2：删除应用层旧存储族——公开接口 61 个（旧单文件变更、项目基线与项目变更、状态目录版本事务、换代、旧验证门）、内部实现 50 个（`internal/state` 25、`projectupdate` 7、`version` 8、`changeplanning` 3、`bundle`/`projectbaseline` 各 2 等）和 60 个测试（含 82 秒与 431 秒的旧故障矩阵）；共用的文件比较、磁盘观察、形状检查、`FileOp` 移入 `WorkspacePlanning`/`WorkspacePlan`；`ProjectVerificationChainIT` 改为在 Git 工作区上做同样的链路；`verify.yml` 去掉已删除的 IT。本机：应用模块 263、命令行 27 个测试全绿。批次 3：删除 `sir-change` 里的旧 Change IR 规划器与改名规划器（`api`/`internal` 全部，约 66 个文件和 12 个测试），`sir-change` 只剩指令编辑，不再依赖 lowering 与 project-graph；应用层去掉只为转换旧基线版本而留的 `toBaseRevision`；MAIN.md、PROJECT_STATUS、ADR-022/024 状态同步。本机：sir-change 28、应用 256、命令行 27 个测试全绿；全量闸门与 IT 待同 SHA CI |

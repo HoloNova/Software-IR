@@ -1,7 +1,6 @@
 package io.kcg.sir.application.internal.bundle;
 
 import io.kcg.sir.application.api.ChangeExecutionBaselineFormatVersion;
-import io.kcg.sir.change.api.ChangeBaseRevision;
 import io.kcg.sir.lowering.api.LoweredIrVersion;
 import io.kcg.sir.projectgraph.api.GraphVersion;
 import io.kcg.sir.projectgraph.api.ProjectGraphCanonicalFormatVersion;
@@ -116,9 +115,5 @@ public record BaselineDescriptor(
       this.loweredIrVersion = loweredIrVersion;
       this.manifest = manifest;
       this.manifestDigest = manifestDigest;
-   }
-
-   public ChangeBaseRevision toBaseRevision() {
-      return new ChangeBaseRevision(this.sourceId, this.sourceSha256Hex, this.graphVersion, this.graphCanonicalDigest, this.snapshotFormatVersion);
    }
 }

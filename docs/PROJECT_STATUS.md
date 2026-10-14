@@ -25,9 +25,9 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 | `sir-lowering-spring-boot` | Java 21/Spring Boot/MyBatis-Plus/MySQL/Maven/REST Lowered IR |
 | `sir-generator-spring-boot` | 只消费 Lowered IR 的确定性内存文件生成 |
 | `sir-project-graph` | Project Graph 构建、校验、canonical serialization/load |
-| `sir-change` | Change IR v0.1-v0.6 typed planning、scope、impact 和 closure |
-| `sir-toolchain-application` | 编译/生成/Graph、Bundle、CURRENT、文件事务、Apply 和显式恢复 |
-| `kcg-cli` | 只读 `check` / `context` / `plan` 和 canonical JSON；check资格待Q23 CI |
+| `sir-change` | 增删改指令的编辑与写回（`SourceEditor`）；旧 Change IR 规划器已删除 |
+| `sir-toolchain-application` | 编译/生成/Graph、独立验证、基于 Git 的版本规划与应用；旧状态目录/Bundle/CURRENT/事务族已删除 |
+| `kcg-cli` | `check`、只读 `version-plan`、`version-apply` 和 canonical JSON |
 
 ## 3. 当前公开能力边界
 

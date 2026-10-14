@@ -82,16 +82,15 @@ SIR Source -> ANTLR4 Parser -> Immutable AST
            -> explicit project root + immutable manifest + graph
 ```
 
-当前变更闭环：
+当前变更闭环（ADR-027：当前版本是磁盘上的 SIR，历史是 Git）：
 
 ```text
-CURRENT Bundle + output + candidate SIR
-  -> read-only context and target catalog
-  -> Change SIR planning
-  -> fresh Apply validation
-  -> UPDATE / CREATE / DELETE transaction
-  -> next immutable Bundle + CURRENT publish
-  -> explicit transaction recovery when required
+SIR sources on disk + candidate SIR (edited by commands or written by hand)
+  -> compile both, require the generated project to equal the current SIR's compile
+  -> plan (create / update / delete generated files, changed sources)
+  -> optional verify (static / build / start / business) before applying
+  -> Git requires: save the current version, write generated files then sources, save the new version
+  -> rerun the same apply if it stopped half way, or go back with Git
 ```
 
 ### 1.4 已确认的分层与指令修改方向（2026-10-13）
@@ -154,15 +153,15 @@ ANTLR4 Grammar、严格 UTF-8、不可变 AST、SourceSpan、稳定 AstNodeId �
 
 ### `sir-change`
 
-实现 Change IR v0.1-v0.6 的 typed planning API、作用域/影响分析、closure 和文件/Artifact change plan。不得用名称模糊匹配替代稳定身份。
+增删改指令（`Command`/`CommandBatch`）的编辑：把指令应用到类型化软件草稿，只重写变化的声明并写回 SIR 文本，再用正式分析复核。旧的 Change IR v0.1-v0.6 规划器与改名规划器已在 G4 删除。
 
 ### `sir-toolchain-application`
 
-统一编排编译、生成、Graph、文件事务、Bundle、CURRENT、Change context/plan、UPDATE/CREATE/DELETE Apply 和显式恢复。它是工程状态唯一写入权威。独立 `SirValidationApplication` 提供单文件纯内存静态校验及有界JSONL批流，不接工程状态；静态通过仅进入候选池，不证明生成工程可运行或满足业务需求。
+统一编排编译、生成、Graph、文件事务、独立验证（静态/构建/启动/业务四级）和基于 Git 的版本变更（`WorkspaceVersionApplication`：规划与应用，不需要状态目录）。独立 `SirValidationApplication` 提供单文件纯内存静态校验及有界JSONL批量入口。旧的状态目录、基线 Bundle、CURRENT、日志与恢复机制已在 G4 删除（ADR-027）。
 
 ### `kcg-cli`
 
-当前公开命令边界是只读 `check`、`context` 和 `plan`。`check` 从stdin接收单文件SIR0.1的JSONL，按请求阶段校验并输出canonical结果；文件由shell重定向，不在CLI中打开。使用与资格边界见 [SIR批量校验](docs/SIR_BATCH_CHECK.md)。`generate`、`register`、`apply`、`recover` 属于 ADR-019 提议的完整本地生命周期，尚未作为当前 CLI 命令发布。
+当前公开命令是 `check`、只读的 `version-plan` 和会改工程的 `version-apply`（要求 git；协议 `KCG-CLI-VERSION-CHANGE-V1`）。`check` 从stdin接收单文件SIR0.1的JSONL，按请求阶段校验并输出canonical结果；文件由shell重定向，不在CLI中打开。旧的 `context`/`plan` 已在 G4 删除。 使用与资格边界见 [SIR批量校验](docs/SIR_BATCH_CHECK.md)。`generate`、`register`、`apply`、`recover` 属于 ADR-019 提议的完整本地生命周期，尚未作为当前 CLI 命令发布。
 
 ## 5. 修改与验收协议
 
