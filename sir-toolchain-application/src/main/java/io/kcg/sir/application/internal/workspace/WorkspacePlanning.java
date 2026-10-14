@@ -6,17 +6,21 @@ import io.kcg.sir.application.api.FileDelta;
 import io.kcg.sir.application.api.ProjectBaselineReceipt;
 import io.kcg.sir.application.api.ProjectToolchainRequest;
 import io.kcg.sir.application.api.SourceDelta;
-import io.kcg.sir.application.api.VersionPlan;
 import io.kcg.sir.application.api.WorkspacePlan;
 import io.kcg.sir.application.api.WorkspaceVersionRequest;
 import io.kcg.sir.application.internal.ProjectSourceReader;
+import io.kcg.sir.application.internal.Sha256;
+import io.kcg.sir.application.internal.projectbaseline.ProjectBaselineCodec.Bundle;
+import io.kcg.sir.generator.springboot.api.GeneratedFile;
 import io.kcg.sir.application.internal.projectbaseline.ProjectBaselineVerification;
 import io.kcg.sir.application.internal.projectbaseline.SecureFileAccess;
-import io.kcg.sir.application.internal.version.VersionPlanning;
-import io.kcg.sir.application.internal.version.VersionPlans;
 import io.kcg.sir.source.SourceSnapshot;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * Plans a change against the SIR on disk. There is no stored record of the current version: the
@@ -34,6 +38,7 @@ import java.util.List;
  * apply again finishes the job instead of reporting a conflict.
  */
 public final class WorkspacePlanning {
+    private static final int MAX_OBSERVED_FILE_BYTES = 8 * 1024 * 1024;
     private static final String DRIFT = "SIR-APP-WORKSPACE-DRIFT-001";
     private static final String REGENERATE = "; the generated project does not match the SIR on disk, so regenerate it from the current SIR (or restore it from Git) and plan again";
 
@@ -67,30 +72,30 @@ public final class WorkspacePlanning {
     public static Outcome plan(WorkspaceVersionRequest request, SecureFileAccess output, List<ExecutionDiagnostic> diagnostics) throws IOException {
         var loaded = ProjectSourceReader.read(new ProjectToolchainRequest(request.sourceRoot(), request.candidate().entry(), request.outputRoot()), diagnostics);
         if (loaded.isEmpty()) {
-            return new Rejected(VersionPlanning.lastErrorStage(diagnostics), diagnostics);
+            return new Rejected(WorkspacePlanning.lastErrorStage(diagnostics), diagnostics);
         }
 
         SourceSnapshot current = loaded.get().snapshot();
         var base = ProjectBaselineVerification.compile(current, request.outputRoot(), diagnostics);
         if (base == null) {
-            return new Rejected(VersionPlanning.lastErrorStage(diagnostics), diagnostics);
+            return new Rejected(WorkspacePlanning.lastErrorStage(diagnostics), diagnostics);
         }
 
         var candidate = ProjectBaselineVerification.compile(request.candidate(), request.outputRoot(), diagnostics);
         if (candidate == null) {
-            return new Rejected(VersionPlanning.lastErrorStage(diagnostics), diagnostics);
+            return new Rejected(WorkspacePlanning.lastErrorStage(diagnostics), diagnostics);
         }
 
         // The pure difference first; what the disk holds is judged against it below.
         FileDelta delta = FileDelta.compare(base.compilation().generatedFiles(), candidate.compilation().generatedFiles(), null);
         for (FileDelta.Entry entry : delta.entries()) {
-            String problem = judge(entry, VersionPlanning.observe(output, entry.path()));
+            String problem = judge(entry, WorkspacePlanning.observe(output, entry.path()));
             if (problem != null) {
                 diagnostics.add(ExecutionDiagnostic.error(DRIFT, ExecutionStage.PREFLIGHT, entry.path() + ": " + problem + REGENERATE));
             }
         }
 
-        String shape = VersionPlanning.shapeChange(base.compilation().generatedFiles(), candidate.compilation().generatedFiles());
+        String shape = WorkspacePlanning.shapeChange(base.compilation().generatedFiles(), candidate.compilation().generatedFiles());
         if (shape != null) {
             diagnostics.add(ExecutionDiagnostic.error("SIR-APP-VERSION-SHAPE-001", ExecutionStage.PREFLIGHT, shape));
         }
@@ -100,18 +105,93 @@ public final class WorkspacePlanning {
         }
 
         if (base.bundle().baselineId().equals(candidate.bundle().baselineId())) {
-            return new Unchanged(VersionPlans.receipt(base.bundle()), diagnostics);
+            return new Unchanged(WorkspacePlanning.receipt(base.bundle()), diagnostics);
         }
 
-        List<VersionPlan.FileOp> files = VersionPlans.operations(base, candidate, delta);
-        if (files.size() > VersionPlan.MAX_FILE_OPS) {
-            diagnostics.add(ExecutionDiagnostic.error("SIR-APP-VERSION-LIMIT-001", ExecutionStage.PREFLIGHT, files.size() + " file operations exceed the limit of " + VersionPlan.MAX_FILE_OPS));
+        List<WorkspacePlan.FileOp> files = WorkspacePlanning.operations(base, candidate, delta);
+        if (files.size() > WorkspacePlan.MAX_FILE_OPS) {
+            diagnostics.add(ExecutionDiagnostic.error("SIR-APP-VERSION-LIMIT-001", ExecutionStage.PREFLIGHT, files.size() + " file operations exceed the limit of " + WorkspacePlan.MAX_FILE_OPS));
             return new Rejected(ExecutionStage.PREFLIGHT, diagnostics);
         }
 
         SourceDelta sources = SourceDelta.between(base.bundle().sources().manifest(), candidate.bundle().sources().manifest());
-        var plan = new WorkspacePlan(VersionPlans.receipt(base.bundle()), VersionPlans.receipt(candidate.bundle()), sources, files, (int)delta.count(FileDelta.Action.UNCHANGED));
+        var plan = new WorkspacePlan(WorkspacePlanning.receipt(base.bundle()), WorkspacePlanning.receipt(candidate.bundle()), sources, files, (int)delta.count(FileDelta.Action.UNCHANGED));
         return new Ready(plan, base, candidate, current, diagnostics.stream().filter(d -> !d.isError()).toList());
+    }
+
+    /** The generated-file operations of a delta, with the byte counts and digests of both sides. */
+    public static List<WorkspacePlan.FileOp> operations(ProjectBaselineVerification.Verified base, ProjectBaselineVerification.Verified candidate, FileDelta delta) {
+        Map<String, GeneratedFile> before = byPath(base.compilation().generatedFiles());
+        Map<String, GeneratedFile> after = byPath(candidate.compilation().generatedFiles());
+        List<WorkspacePlan.FileOp> operations = new ArrayList<>();
+        for (FileDelta.Entry entry : delta.entries()) {
+            if (entry.action() == FileDelta.Action.UNCHANGED) {
+                continue;
+            }
+
+            GeneratedFile was = before.get(entry.path());
+            GeneratedFile now = after.get(entry.path());
+            operations.add(new WorkspacePlan.FileOp(entry.path(), WorkspacePlan.Action.valueOf(entry.action().name()), entry.owner(),
+                was == null ? 0 : bytes(was), entry.beforeSha256(), now == null ? 0 : bytes(now), entry.afterSha256()));
+        }
+
+        return operations;
+    }
+
+    public static ProjectBaselineReceipt receipt(Bundle bundle) {
+        var d = bundle.descriptor();
+        return new ProjectBaselineReceipt(bundle.baselineId(), d.outputRoot(), d.entry(), d.sourceSetSha(), d.graphDigest(), d.manifestDigest());
+    }
+
+    private static long bytes(GeneratedFile file) {
+        return file.content().getBytes(StandardCharsets.UTF_8).length;
+    }
+
+    private static Map<String, GeneratedFile> byPath(List<GeneratedFile> files) {
+        Map<String, GeneratedFile> map = new TreeMap<>();
+        files.forEach(f -> map.put(f.relativePath(), f));
+        return map;
+    }
+
+    /** A path that is a file in one version and a directory in the other cannot be replaced in place. */
+    public static String shapeChange(List<GeneratedFile> before, List<GeneratedFile> after) {
+        TreeMap<String, Boolean> paths = new TreeMap<>();
+        before.forEach(f -> paths.put(f.relativePath(), true));
+        after.forEach(f -> paths.put(f.relativePath(), true));
+        String previous = null;
+        for (String path : paths.keySet()) {
+            if (previous != null && path.startsWith(previous + "/")) {
+                return previous + " is a file in one version and a directory (" + path + ") in the other";
+            }
+
+            previous = path;
+        }
+
+        return null;
+    }
+
+    /** What the disk holds at a path, as the plan needs to see it. */
+    public static FileDelta.Observation observe(SecureFileAccess access, String path) {
+        try {
+            if (!access.exists(path)) {
+                return new FileDelta.Observation.Absent();
+            }
+
+            return new FileDelta.Observation.Present(Sha256.hexDigest(access.read(path, MAX_OBSERVED_FILE_BYTES)));
+        } catch (IOException | RuntimeException e) {
+            return new FileDelta.Observation.Unreadable(String.valueOf(e.getMessage()));
+        }
+    }
+
+    public static ExecutionStage lastErrorStage(List<ExecutionDiagnostic> diagnostics) {
+        ExecutionStage last = ExecutionStage.PREFLIGHT;
+        for (ExecutionDiagnostic d : diagnostics) {
+            if (d.isError()) {
+                last = d.stage();
+            }
+        }
+
+        return last;
     }
 
     /**

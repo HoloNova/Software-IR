@@ -3,7 +3,6 @@ package io.kcg.sir.application.api;
 import io.kcg.sir.application.internal.ProjectSourceReader;
 import io.kcg.sir.application.internal.projectbaseline.ProjectBaselineCodec.Problem;
 import io.kcg.sir.application.internal.projectbaseline.SecureFileAccess;
-import io.kcg.sir.application.internal.version.VersionPlanning;
 import io.kcg.sir.application.internal.workspace.WorkspacePlanning;
 import io.kcg.sir.application.internal.workspace.WorkspaceWriter;
 import java.io.IOException;
@@ -153,7 +152,7 @@ public final class WorkspaceVersionApplication {
         List<ExecutionDiagnostic> diagnostics = new ArrayList<>();
         WorkspaceVersionRequest resolved = resolve(request, diagnostics);
         if (resolved == null) {
-            return new WorkspacePlanningResult.Failure(VersionPlanning.lastErrorStage(diagnostics), diagnostics);
+            return new WorkspacePlanningResult.Failure(WorkspacePlanning.lastErrorStage(diagnostics), diagnostics);
         }
 
         return this.plan(resolved);
@@ -173,7 +172,7 @@ public final class WorkspaceVersionApplication {
 
         WorkspaceVersionRequest resolved = resolve(request, diagnostics);
         if (resolved == null) {
-            return new WorkspaceApplyResult.Failure(VersionPlanning.lastErrorStage(diagnostics), diagnostics);
+            return new WorkspaceApplyResult.Failure(WorkspacePlanning.lastErrorStage(diagnostics), diagnostics);
         }
 
         return switch (this.plan(resolved)) {

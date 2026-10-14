@@ -3,7 +3,6 @@ package io.kcg.cli;
 import io.kcg.sir.application.api.ExecutionDiagnostic;
 import io.kcg.sir.application.api.ProjectBaselineReceipt;
 import io.kcg.sir.application.api.SourceDelta;
-import io.kcg.sir.application.api.VersionPlan;
 import io.kcg.sir.application.api.WorkspaceApplyResult;
 import io.kcg.sir.application.api.WorkspacePlan;
 import io.kcg.sir.application.api.WorkspacePlanningResult;
@@ -93,11 +92,11 @@ public final class VersionResultDocument {
       receipt(sb, "candidate", plan.candidate());
       JsonFields.comma(sb);
       sb.append("\"summary\":{");
-      JsonFields.field(sb, "create", plan.count(VersionPlan.Action.CREATE));
+      JsonFields.field(sb, "create", plan.count(WorkspacePlan.Action.CREATE));
       JsonFields.comma(sb);
-      JsonFields.field(sb, "update", plan.count(VersionPlan.Action.UPDATE));
+      JsonFields.field(sb, "update", plan.count(WorkspacePlan.Action.UPDATE));
       JsonFields.comma(sb);
-      JsonFields.field(sb, "delete", plan.count(VersionPlan.Action.DELETE));
+      JsonFields.field(sb, "delete", plan.count(WorkspacePlan.Action.DELETE));
       JsonFields.comma(sb);
       JsonFields.field(sb, "unchanged", plan.unchangedFiles());
       sb.append('}');
@@ -129,7 +128,7 @@ public final class VersionResultDocument {
             sb.append(',');
          }
 
-         VersionPlan.FileOp op = plan.files().get(i);
+         WorkspacePlan.FileOp op = plan.files().get(i);
          sb.append('{');
          JsonFields.field(sb, "path", op.path());
          JsonFields.comma(sb);

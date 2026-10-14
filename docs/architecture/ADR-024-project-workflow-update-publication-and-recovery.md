@@ -1,6 +1,6 @@
 # ADR-024：多源工作流 UPDATE、受限发布历史与显式恢复
 
-- Status: **Accepted**（2026-10-09，负责人提交并要求规划下一阶段；主会话核对同SHA CI/两类artifact后按D0–D8验收归档）
+- Status: **Accepted, then superseded by [ADR-027](ADR-027-git-as-version-history.md) (2026-10-14, G4): the implementation it describes was deleted**；以下为当时的合同。原状态：**Accepted**（2026-10-09，负责人提交并要求规划下一阶段；主会话核对同SHA CI/两类artifact后按D0–D8验收归档）
 - Authority: [Q21归档](../roadmap/completed/Q21-multi-source-workflow-update-and-recovery.md) D0–D8及§9–10；前置 Accepted [ADR-022](ADR-022-multi-source-baseline-storage-and-reopen.md)、[ADR-023](ADR-023-project-workflow-read-only-planning.md)。不改其Bundle字节、ID域、纯规划规则或旧V1–V4合同。
 
 ## 1. 场景与共享边界

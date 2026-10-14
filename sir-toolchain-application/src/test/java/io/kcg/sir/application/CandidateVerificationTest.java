@@ -5,9 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import io.kcg.sir.application.api.CandidateVerificationApplication;
 import io.kcg.sir.application.api.CleanupProof;
 import io.kcg.sir.application.api.CompilationInput;
-import io.kcg.sir.application.api.ProjectBaselineApplication;
-import io.kcg.sir.application.api.ProjectBaselineRegistrationRequest;
-import io.kcg.sir.application.api.ProjectBaselineResult;
+import io.kcg.sir.application.api.ExecutionDiagnostic;
 import io.kcg.sir.application.api.ResourceLimits;
 import io.kcg.sir.application.api.SirValidationApplication;
 import io.kcg.sir.application.api.SirValidationRequest;
@@ -22,6 +20,8 @@ import io.kcg.sir.application.api.VerificationReport;
 import io.kcg.sir.application.api.VerificationRequest;
 import io.kcg.sir.application.api.VerificationStage;
 import io.kcg.sir.application.api.ProjectToolchainResult;
+import io.kcg.sir.application.internal.projectbaseline.ProjectBaselineVerification;
+import io.kcg.sir.application.internal.workspace.WorkspacePlanning;
 import io.kcg.sir.source.SourceId;
 import java.io.IOException;
 import java.net.URI;
@@ -149,15 +149,17 @@ class CandidateVerificationTest {
 
     private record Fixture(CompilationInput input, Map<String, String> generatedTree, String sourceSetSha, String manifestDigest) {}
 
-    /** The multi-file fixture, its from-scratch generation, and the identity a stored baseline gives it. */
+    /** The multi-file fixture, its from-scratch generation, and the identity the version machinery gives it. */
     private Fixture project() throws Exception {
         Path source = MultiSourceTestSupport.fixture(temp.resolve("src"));
         Path output = temp.resolve("oracle-output");
         ProjectToolchainResult.Success generated = MultiSourceTestSupport.generate(source, output);
-        var saved = assertInstanceOf(ProjectBaselineResult.Success.class, new ProjectBaselineApplication()
-                .register(new ProjectBaselineRegistrationRequest(generated.sources(), output, temp.resolve("oracle-state"))));
+        var diagnostics = new java.util.ArrayList<ExecutionDiagnostic>();
+        var compiled = ProjectBaselineVerification.compile(generated.sources(), output, diagnostics);
+        assertNotNull(compiled, diagnostics.toString());
+        var identity = WorkspacePlanning.receipt(compiled.bundle());
         return new Fixture(CompilationInput.project(generated.sources()), MultiSourceTestSupport.files(output),
-                saved.receipt().sourceSetSha256Hex(), saved.receipt().manifestDigest());
+                identity.sourceSetSha256Hex(), identity.manifestDigest());
     }
 
     private CandidateVerificationApplication full(FakeSandbox sandbox, FakeBuilder builder, FakeHost host, FakeOracle oracle) {

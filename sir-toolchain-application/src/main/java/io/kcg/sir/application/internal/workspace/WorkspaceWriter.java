@@ -4,11 +4,10 @@ import io.kcg.sir.application.api.ExecutionDiagnostic;
 import io.kcg.sir.application.api.FileDelta;
 import io.kcg.sir.application.api.ProjectToolchainRequest;
 import io.kcg.sir.application.api.SourceDelta;
-import io.kcg.sir.application.api.VersionPlan;
+import io.kcg.sir.application.api.WorkspacePlan;
 import io.kcg.sir.application.internal.ProjectSourceReader;
 import io.kcg.sir.application.internal.projectbaseline.ProjectBaselineVerification;
 import io.kcg.sir.application.internal.projectbaseline.SecureFileAccess;
-import io.kcg.sir.application.internal.version.VersionPlanning;
 import io.kcg.sir.source.SourceSnapshot;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -57,19 +56,19 @@ public final class WorkspaceWriter {
         checkpoint.accept("staging-created");
         int[] staged = {0};
 
-        for (VersionPlan.FileOp op : ready.plan().files()) {
-            if (op.action() == VersionPlan.Action.DELETE) {
+        for (WorkspacePlan.FileOp op : ready.plan().files()) {
+            if (op.action() == WorkspacePlan.Action.DELETE) {
                 continue;
             }
 
-            FileDelta.Observation now = VersionPlanning.observe(output, op.path());
+            FileDelta.Observation now = WorkspacePlanning.observe(output, op.path());
             if (now instanceof FileDelta.Observation.Present present && present.sha256Hex().equals(op.afterSha256())) {
                 checkpoint.accept("already:" + op.path());
                 continue;
             }
 
             Object targetKey = null;
-            if (op.action() == VersionPlan.Action.CREATE) {
+            if (op.action() == WorkspacePlan.Action.CREATE) {
                 expect(now instanceof FileDelta.Observation.Absent, "a file the new version creates now exists: " + op.path());
                 ensureDirectories(output, parent(op.path()));
             } else {
@@ -81,12 +80,12 @@ public final class WorkspaceWriter {
             checkpoint.accept("applied:" + op.path());
         }
 
-        for (VersionPlan.FileOp op : ready.plan().files()) {
-            if (op.action() != VersionPlan.Action.DELETE) {
+        for (WorkspacePlan.FileOp op : ready.plan().files()) {
+            if (op.action() != WorkspacePlan.Action.DELETE) {
                 continue;
             }
 
-            FileDelta.Observation now = VersionPlanning.observe(output, op.path());
+            FileDelta.Observation now = WorkspacePlanning.observe(output, op.path());
             if (now instanceof FileDelta.Observation.Absent) {
                 checkpoint.accept("already:" + op.path());
                 continue;
@@ -161,7 +160,7 @@ public final class WorkspaceWriter {
                 }
 
                 String path = entry.source().value();
-                FileDelta.Observation now = VersionPlanning.observe(sources, path);
+                FileDelta.Observation now = WorkspacePlanning.observe(sources, path);
                 if (now instanceof FileDelta.Observation.Present present && present.sha256Hex().equals(entry.afterSha256())) {
                     checkpoint.accept("already:" + path);
                     continue;
@@ -194,7 +193,7 @@ public final class WorkspaceWriter {
             }
 
             String path = entry.source().value();
-            FileDelta.Observation now = VersionPlanning.observe(sources, path);
+            FileDelta.Observation now = WorkspacePlanning.observe(sources, path);
             if (now instanceof FileDelta.Observation.Absent) {
                 checkpoint.accept("already:" + path);
                 continue;
@@ -207,12 +206,12 @@ public final class WorkspaceWriter {
     }
 
     /** A directory goes away only when the new version has nothing under it and nothing else is left in it. */
-    private static void removeEmptyDirectories(List<VersionPlan.FileOp> files, Set<String> wantedFiles, SecureFileAccess output, Consumer<String> checkpoint) throws IOException {
+    private static void removeEmptyDirectories(List<WorkspacePlan.FileOp> files, Set<String> wantedFiles, SecureFileAccess output, Consumer<String> checkpoint) throws IOException {
         Set<String> wanted = new HashSet<>();
         wantedFiles.forEach(path -> wanted.addAll(ancestors(path)));
         Set<String> consider = new TreeSet<>();
-        for (VersionPlan.FileOp op : files) {
-            if (op.action() == VersionPlan.Action.DELETE) {
+        for (WorkspacePlan.FileOp op : files) {
+            if (op.action() == WorkspacePlan.Action.DELETE) {
                 for (String directory : ancestors(op.path())) {
                     if (!wanted.contains(directory)) {
                         consider.add(directory);

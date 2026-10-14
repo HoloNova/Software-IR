@@ -1,6 +1,6 @@
 # ADR-022 多源基线保存、初次发布与独立重开
 
-- Status: **Accepted**（2026-10-05，Q19确认验收）。D0–D7及P1–P5冻结合同、实现/本机定向199（新增33）和受测f3d9ef7同SHA [CI run37256515347](https://github.com/HoloNova/Software-IR/actions/runs/37256515347)双门969/0/0/5、四IT40/61/36/63已通过，artifact核对；验收/裁决见Q19归档§10，不授权下一单。
+- Status: **Accepted, then superseded by [ADR-027](ADR-027-git-as-version-history.md) (2026-10-14, G4): the implementation it describes was deleted**；以下为当时的合同。原状态：**Accepted**（2026-10-05，Q19确认验收）。D0–D7及P1–P5冻结合同、实现/本机定向199（新增33）和受测f3d9ef7同SHA [CI run37256515347](https://github.com/HoloNova/Software-IR/actions/runs/37256515347)双门969/0/0/5、四IT40/61/36/63已通过，artifact核对；验收/裁决见Q19归档§10，不授权下一单。
 - Authority: [Q19归档](../roadmap/completed/Q19-multi-source-baseline-storage-and-reopen.md)。不改变 [ADR-021](ADR-021-multi-source-compilation-and-graph-compatibility.md)、旧 V1 Bundle、ChangeBaseRevision 或 V4 工程事务。
 
 ## 1. 已有证据
