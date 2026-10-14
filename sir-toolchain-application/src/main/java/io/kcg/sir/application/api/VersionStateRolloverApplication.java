@@ -75,6 +75,8 @@ public final class VersionStateRolloverApplication {
         }
 
         boolean newTouched = false;
+        boolean markerStarted = false;
+        VersionStateRolloverResult.RolledOver done = null;
         try {
             var oldLock = new StateRootLock(oldRoot).tryAcquireExisting();
             if (!(oldLock instanceof StateRootLock.HeldLock held)) {
@@ -112,12 +114,15 @@ public final class VersionStateRolloverApplication {
                     receipt = receipt(old);
                 } else {
                     resumed = false;
+                    // From here on an exception may have left something behind; a refusal that wrote nothing says so.
                     newTouched = true;
                     var registered = new ProjectBaselineApplication().register(new ProjectBaselineRegistrationRequest(old.sources(), output, newRoot));
                     if (!(registered instanceof ProjectBaselineResult.Success success)) {
                         var failure = (ProjectBaselineResult.Failure) registered;
+                        boolean wrote = failure.disposition() != FailureDisposition.NO_CHANGES;
+                        newTouched = wrote;
                         return refused("NEW_STATE_REGISTRATION_FAILED", failure.diagnostics().stream().filter(ExecutionDiagnostic::isError)
-                                .map(d -> d.code() + ": " + d.message()).findFirst().orElse("unknown"), true);
+                                .map(d -> d.code() + ": " + d.message()).findFirst().orElse("unknown"), wrote);
                     }
 
                     if (success.outcome() != ProjectBaselineResult.Outcome.REGISTERED) {
@@ -138,15 +143,16 @@ public final class VersionStateRolloverApplication {
 
                 ProjectBaselineVerification.revalidate(oldState, old);
                 this.checkpoint.accept("old-revalidated");
+                markerStarted = true;
                 oldState.writeNew(MARKER, marker(expected, newRoot), ignored -> { });
+                done = new VersionStateRolloverResult.RolledOver(oldRoot, newRoot, output, receipt, facts, resumed, notes(oldRoot, newRoot));
                 this.checkpoint.accept("retired");
-                return new VersionStateRolloverResult.RolledOver(oldRoot, newRoot, output, receipt, facts, resumed, notes(oldRoot, newRoot));
+                return done;
             }
         } catch (Problem e) {
-            return refused("OLD_STATE_REFUSED", e.code + ": " + e.getMessage(), newTouched);
+            return afterFailure(done, markerStarted, oldRoot, newRoot, "OLD_STATE_REFUSED", e.code + ": " + e.getMessage(), newTouched);
         } catch (IOException | RuntimeException e) {
-            // A thrown exception from the middle of the work: the old state may or may not carry the marker, so say what is known.
-            return refused("ROLLOVER_INTERRUPTED", e.getClass().getSimpleName() + ": " + e.getMessage()
+            return afterFailure(done, markerStarted, oldRoot, newRoot, "ROLLOVER_INTERRUPTED", e.getClass().getSimpleName() + ": " + e.getMessage()
                     + " (run the same request again; the old state is only changed by its last step)", newTouched);
         }
     }
@@ -291,6 +297,25 @@ public final class VersionStateRolloverApplication {
                 "the old directory is evidence of the old history for manual inspection; it is valid only at its original path while the output matches",
                 "deleting the old directory is safe for the new state and the output; they share no files",
                 "to move the new state to another machine keep hard links (tar, cp -a, rsync -aH), the same absolute output path and the same toolchain build, and run an inspection there before using it");
+    }
+
+    /**
+     * Turns a failure into the right answer. Once the retirement marker was started the old state may already be
+     * retired, and then the new state is the live one: it must not be reported as discardable, and a failure that
+     * only happens after the marker was fully written (closing a file, a test hook) does not undo the rollover.
+     */
+    private static VersionStateRolloverResult afterFailure(VersionStateRolloverResult.RolledOver done, boolean markerStarted, Path oldRoot, Path newRoot,
+            String code, String message, boolean newTouched) {
+        if (done != null) {
+            return done;
+        }
+
+        if (markerStarted && Files.exists(oldRoot.resolve(MARKER), LinkOption.NOFOLLOW_LINKS)) {
+            return new VersionStateRolloverResult.Refused("RETIREMENT_UNCERTAIN", "the old state may already be retired (" + message + "). "
+                    + "The new state " + newRoot + " is the live one: do not discard it, and inspect it before using it", VersionStateRolloverResult.NewStateTouched.NO);
+        }
+
+        return refused(code, message, newTouched);
     }
 
     private static VersionStateRolloverResult.Refused refused(String code, String message, boolean newTouched) {

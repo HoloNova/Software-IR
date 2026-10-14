@@ -163,6 +163,10 @@ class VersionStateRolloverTest {
             assertEquals(List.of("CURRENT", "LOCK", "baselines"), list.map(p -> p.getFileName().toString()).sorted().toList());
         }
 
+        // Retired for real: while the output still equals the old version (so nothing but the marker can be the reason),
+        // the toolchain refuses every entry on the old state.
+        assertRetired(this.state, versionBefore);
+
         // The new state opens, carries the same sources, and goes on past the old limit.
         var inspected = assertInstanceOf(ProjectBaselineResult.Success.class,
             new ProjectBaselineApplication().inspect(new ProjectBaselineInspectionRequest(fresh, this.output, versionBefore)));
@@ -182,6 +186,18 @@ class VersionStateRolloverTest {
         var again = refused(new VersionStateRolloverApplication().rollover(new VersionStateRolloverRequest(this.state, this.output, versionBefore, this.temp.resolve("third"))), "OLD_STATE_RETIRED");
         assertTrue(again.message().contains("state-next"), again.message());
         assertFalse(Files.exists(this.temp.resolve("third")));
+    }
+
+
+    /** Planning, inspecting and applying through a retired state all fail because of the unknown marker object. */
+    private void assertRetired(Path retired, String baseline) {
+        var planning = this.request(retired, baseline, this.version(40));
+        var plan = PLANNER.plan(planning);
+        var failure = assertInstanceOf(VersionPlanningResult.Failure.class, plan, String.valueOf(plan));
+        assertTrue(failure.diagnostics().toString().contains("unknown objects"), failure.diagnostics().toString());
+        var inspect = assertInstanceOf(ProjectBaselineResult.Failure.class,
+            new ProjectBaselineApplication().inspect(new ProjectBaselineInspectionRequest(retired, this.output, baseline)));
+        assertTrue(inspect.diagnostics().toString().contains("unknown objects"), inspect.diagnostics().toString());
     }
 
     private static String onlyAdded(Map<String, String> before, Map<String, String> after) {
@@ -285,10 +301,21 @@ class VersionStateRolloverTest {
         Files.createSymbolicLink(alias, this.state);
         Map<String, String> before = this.snapshot();
 
-        var result = this.rollover(this.state, alias);
-
-        assertInstanceOf(VersionStateRolloverResult.Refused.class, result);
+        assertInstanceOf(VersionStateRolloverResult.Refused.class, this.rollover(this.state, alias));
         assertEquals(before, this.snapshot());
+
+        // A new root reached through a symlink that points at the old state's own parent is inside the old state's tree.
+        Path parentAlias = this.temp.resolve("parent-alias");
+        Files.createSymbolicLink(parentAlias, this.state.getParent());
+        Map<String, String> beforeParent = this.snapshot();
+        refused(this.rollover(this.state, parentAlias.resolve("state")), "REQUEST_PATHS");
+        refused(this.rollover(this.state, parentAlias.resolve("state").resolve("inside")), "REQUEST_PATHS");
+        assertEquals(beforeParent, this.snapshot());
+
+        // The old state inside the output, and the output inside the old state, are refused too.
+        Path nested = this.output.resolve("nested-state");
+        assertThrows(IllegalArgumentException.class, () -> new VersionStateRolloverRequest(nested, this.output.resolve("x").resolve(".."), this.current, this.temp.resolve("n")));
+        refused(new VersionStateRolloverApplication().rollover(new VersionStateRolloverRequest(this.state, this.state.resolve("out"), this.current, this.temp.resolve("n2"))), "REQUEST_PATHS");
     }
 
     @Test
@@ -407,6 +434,85 @@ class VersionStateRolloverTest {
         return app.rollover(new VersionStateRolloverRequest(this.state, this.output, this.current, newRoot));
     }
 
+
+    @Test
+    void aNewStateThatGrewItsOwnHistoryIsNeverTakenForTheFreshOne() throws Exception {
+        this.store("grown");
+        Path grown = this.temp.resolve("grown").resolve("next");
+        // First job: stop after the new state is verified but before the old one is retired. The old state stays live.
+        assertInstanceOf(VersionStateRolloverResult.Refused.class, this.runStoppedAt("new-verified", grown));
+        String v0Id = this.current;
+        // Then the new directory is used and grows: v0 -> v1 -> v0, so its CURRENT equals the old one's again.
+        this.update(grown, this.version(1));
+        this.update(grown, this.v0);
+        assertEquals(v0Id, this.current, "returning to the first version reuses its ID");
+        Map<String, String> before = this.snapshot();
+
+        var refused = assertInstanceOf(VersionStateRolloverResult.Refused.class, this.rollover(this.state, grown));
+
+        assertEquals("NEW_ROOT_NOT_EMPTY", refused.code());
+        assertEquals(NewStateTouched.NO, refused.newState());
+        assertEquals(before, this.snapshot());
+        assertFalse(Files.exists(this.state.resolve("RETIRED")), "the old state was not retired against a state with history of its own");
+    }
+
+    @Test
+    void theOldStateIsRevalidatedAfterTheNewOneIsBuiltAndItsLockIsHeldUntilTheEnd() throws Exception {
+        this.store("changed-meanwhile");
+        Path next = this.temp.resolve("changed-meanwhile").resolve("next");
+        Path tracked = this.output.resolve(MultiSourceTestSupport.files(this.output).keySet().iterator().next());
+        boolean[] lockWasHeld = new boolean[1];
+        var app = hooked(VersionStateRolloverApplication.class, step -> {
+            if (step.equals("new-verified")) {
+                lockWasHeld[0] = new io.kcg.sir.application.internal.state.StateRootLock(this.state).tryAcquireExisting()
+                    instanceof io.kcg.sir.application.internal.state.StateRootLock.LockFailure;
+                try {
+                    Files.writeString(tracked, Files.readString(tracked) + "\n// edited while the rollover ran\n");
+                } catch (java.io.IOException e) {
+                    throw new IllegalStateException(e);
+                }
+            }
+        });
+
+        var result = app.rollover(new VersionStateRolloverRequest(this.state, this.output, this.current, next));
+
+        assertTrue(lockWasHeld[0], "the old state stays locked for the whole rollover");
+        var refused = assertInstanceOf(VersionStateRolloverResult.Refused.class, result);
+        assertEquals("OLD_STATE_REFUSED", refused.code(), refused.message());
+        assertFalse(Files.exists(this.state.resolve("RETIRED")), "a project that changed under the rollover is not retired");
+        assertTrue(Files.exists(next), "the new state was already built and is reported as left behind");
+        assertEquals(NewStateTouched.PARTIAL_STATE, refused.newState());
+    }
+
+    @Test
+    void aFailureAfterTheRetirementDoesNotTurnADoneRolloverIntoARefusal() throws Exception {
+        this.store("after-retired");
+        Path next = this.temp.resolve("after-retired").resolve("next");
+
+        var result = this.runStoppedAt("retired", next);
+
+        var done = rolledOver(result);
+        assertEquals(next, done.newStateRoot());
+        assertTrue(Files.exists(this.state.resolve("RETIRED")));
+        this.update(next, this.version(1));
+    }
+
+    @Test
+    void aRegistrationThatWritesNothingIsNotReportedAsAPartialState() throws Exception {
+        this.store("nothing-written");
+        // The output disagrees with the stored version only inside the new registration's own check: make the new root's
+        // parent unusable instead, which the path guard refuses before anything is created.
+        Path blocker = this.temp.resolve("nothing-written").resolve("a-file");
+        Files.writeString(blocker, "x");
+        Path next = blocker.resolve("next");
+        Map<String, String> before = this.snapshot();
+
+        var refused = assertInstanceOf(VersionStateRolloverResult.Refused.class, this.rollover(this.state, next));
+
+        assertEquals(NewStateTouched.NO, refused.newState(), refused.message());
+        assertEquals(before, this.snapshot());
+    }
+
     @Test
     void aStopAtAnyStepLeavesTheOldStateLiveUntilTheLastStepAndTheSameRequestFinishesTheJob() throws Exception {
         for (String point : List.of("old-verified", "new-created", "new-verified", "old-revalidated")) {
@@ -418,7 +524,8 @@ class VersionStateRolloverTest {
             var stopped = assertInstanceOf(VersionStateRolloverResult.Refused.class, this.runStoppedAt(point, next), point);
             assertEquals("ROLLOVER_INTERRUPTED", stopped.code(), point);
             assertEquals(oldBefore, new TreeMap<>(MultiSourceTestSupport.tree(this.state)), point + ": the old state is unchanged before the last step");
-            // The old state is still live: an update through it works exactly as before.
+            // The old state is still live: it plans exactly as before.
+            assertInstanceOf(VersionPlanningResult.Planned.class, PLANNER.plan(this.request(this.state, this.current, this.version(2))), point);
             if (point.equals("old-verified")) {
                 assertFalse(Files.exists(next), "nothing was created yet");
             }
