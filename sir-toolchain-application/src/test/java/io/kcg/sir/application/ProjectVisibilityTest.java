@@ -1,7 +1,7 @@
 package io.kcg.sir.application;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static io.kcg.sir.application.MultiSourceTestSupport.*;
+import static io.kcg.sir.application.ProjectTestSupport.*;
 import io.kcg.sir.api.*;
 import io.kcg.sir.ast.*;
 import io.kcg.sir.application.api.*;
@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-class MultiSourceVisibilityTest {
+class ProjectVisibilityTest {
     @TempDir Path temp;
 
     @Test void everyImportSensitiveReferenceRoleHasARealPositiveAndExactMissingImportRefusal() throws Exception {

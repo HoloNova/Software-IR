@@ -18,7 +18,7 @@ class SirValidationBatchTest {
     static List<SirValidationResult> batch(String text) throws Exception { return batch(text.getBytes(StandardCharsets.UTF_8)); }
     @Test void mixedRowsRemainOrderedAndIsolated() throws Exception {
         String sir = SirValidationApplicationTest.source("campus-market.sir");
-        var rows = List.of(sample("good",sir), sample("parse","not valid SIR"), sample("semantic",ValidationFixtureProbeTest.resource("invalid/semantic-unresolved-name.sir")),
+        var rows = List.of(sample("good",sir), sample("parse","not valid SIR"), sample("semantic",SampleCorpusTest.resource("invalid/semantic-unresolved-name.sir")),
             sample("empty",""), sample("over","x".repeat(SirValidationApplication.MAX_SIR_BYTES+1)), "{invalid", "{\"sir\":"+q(sir)+"}", sample("last",sir));
         var result = batch(String.join("\n",rows)); assertEquals(rows.size(),result.size());
         assertTrue(result.getFirst().ok()); assertTrue(result.getLast().ok());

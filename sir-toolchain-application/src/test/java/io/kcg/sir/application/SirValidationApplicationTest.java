@@ -18,9 +18,9 @@ import static org.junit.jupiter.api.Assertions.*;
 class SirValidationApplicationTest {
     @TempDir Path temp;
     final SirValidationApplication app = new SirValidationApplication();
-    static String source(String file) throws Exception { return ValidationFixtureProbeTest.resource("valid/" + file); }
+    static String source(String file) throws Exception { return SampleCorpusTest.resource("valid/" + file); }
     @Test void allTwentyMatchActualToolchainOutputBytesAndIndependentDigest() throws Exception {
-        for (String name : ValidationFixtureProbeTest.VALID) {
+        for (String name : SampleCorpusTest.VALID) {
             String sir = source(name); var result = app.check(new SirValidationRequest(name, sir));
             assertTrue(result.ok(), () -> name + result.diagnostics()); assertEquals(ValidationStopAfter.GENERATION, result.stage());
             Path input = Files.createDirectories(temp.resolve(name + "-sources")); Files.writeString(input.resolve("sample.sir"), sir); Path out = temp.resolve(name + "-output");
@@ -31,7 +31,7 @@ class SirValidationApplicationTest {
                 assertEquals(files.size(), result.fileCount());
                 var hash = MessageDigest.getInstance("SHA-256"); hash.update("KCG-SIR-CHECK-GENERATED-V1\0".getBytes(StandardCharsets.US_ASCII));
                 hash.update(ByteBuffer.allocate(8).putLong(files.size()).array());
-                var direct = ProjectCompilation.compile(MultiSourceTestSupport.oneFile("sample.sir", sir), new SpringBootGenerator()::generate, new ArrayList<>()).orElseThrow();
+                var direct = ProjectCompilation.compile(ProjectTestSupport.oneFile("sample.sir", sir), new SpringBootGenerator()::generate, new ArrayList<>()).orElseThrow();
                 for (var file : files) {
                     String path = out.relativize(file).toString().replace('\\','/'); byte[] content = Files.readAllBytes(file);
                     assertArrayEquals(direct.generatedFiles().stream().filter(f -> f.relativePath().equals(path)).findFirst().orElseThrow().content().getBytes(StandardCharsets.UTF_8), content);
@@ -46,20 +46,20 @@ class SirValidationApplicationTest {
         String sir = source("campus-market.sir");
         for (var stop : ValidationStopAfter.values()) {
             var reached = new ArrayList<ValidationStopAfter>();
-            var snapshot = CompilationService.project(MultiSourceTestSupport.oneFile("sample.sir", sir), stop,
+            var snapshot = CompilationService.project(ProjectTestSupport.oneFile("sample.sir", sir), stop,
                 m -> { assertEquals(ValidationStopAfter.GENERATION, stop); return new SpringBootGenerator().generate(m); }, new ArrayList<>(), reached::add, new ArrayList<>());
             assertTrue(snapshot.success()); assertEquals(List.of(ValidationStopAfter.values()).subList(0, stop.ordinal()+1), reached);
             var result = app.check(new SirValidationRequest("opaque", sir, stop)); assertTrue(result.ok()); assertEquals(stop, result.stage());
             if (stop != ValidationStopAfter.GENERATION) { assertEquals(0, result.fileCount()); assertNull(result.digest()); }
         }
-        String invalid = ValidationFixtureProbeTest.resource("invalid/actor-non-identity.sir");
+        String invalid = SampleCorpusTest.resource("invalid/actor-non-identity.sir");
         assertTrue(app.check(new SirValidationRequest("early", invalid, ValidationStopAfter.SEMANTIC)).ok());
         assertFalse(app.check(new SirValidationRequest("late", invalid, ValidationStopAfter.LOWERING)).ok());
     }
     @Test void originalDiagnosticCodesMessagesAndPositionsRemainExact() throws Exception {
         for (String fixture : List.of("semantic-unresolved-name.sir", "actor-non-identity.sir")) {
-            String sir = ValidationFixtureProbeTest.resource("invalid/" + fixture); var legacy = new ArrayList<ExecutionDiagnostic>();
-            ProjectCompilation.compile(MultiSourceTestSupport.oneFile("sample.sir", sir), new SpringBootGenerator()::generate, legacy);
+            String sir = SampleCorpusTest.resource("invalid/" + fixture); var legacy = new ArrayList<ExecutionDiagnostic>();
+            ProjectCompilation.compile(ProjectTestSupport.oneFile("sample.sir", sir), new SpringBootGenerator()::generate, legacy);
             var checked = app.check(new SirValidationRequest(fixture, sir)); assertFalse(checked.ok());
             assertEquals(legacy.size(), checked.diagnostics().size());
             for (int i=0;i<legacy.size();i++) {
@@ -84,7 +84,7 @@ class SirValidationApplicationTest {
     @Test void generationFailureUsesOriginalCodeMessageAndNode() throws Exception {
         var node = new LoweredNodeId("lir://test/node");
         var original = GenerationDiagnostic.of("GEN-TEST", "injected generator failure", node);
-        var snapshot = CompilationService.project(MultiSourceTestSupport.oneFile("sample.sir", source("campus-market.sir")), ValidationStopAfter.GENERATION,
+        var snapshot = CompilationService.project(ProjectTestSupport.oneFile("sample.sir", source("campus-market.sir")), ValidationStopAfter.GENERATION,
             m -> new GenerationResult.Failure(List.of(original)), new ArrayList<>(), s -> {}, new ArrayList<>());
         assertFalse(snapshot.success()); assertEquals(ValidationStopAfter.GENERATION,snapshot.stage());
         var d = snapshot.diagnostics().getLast(); assertEquals(original.code(),d.code()); assertEquals(original.message(),d.message()); assertEquals(node.value(),d.loweredNodeId());
@@ -108,7 +108,7 @@ class SirValidationApplicationTest {
         var original = new Diagnostic(new DiagnosticCode("SIR-TEST-INFO"), DiagnosticSeverity.INFO, "earlier stage message", span,
             List.of(new RelatedLocation("related",span)), List.of(new FixHint("hint",span,"x")));
         var trace = new ArrayList<ValidationDiagnostic>(); trace.add(CompilationStages.fromParser(original,ValidationStopAfter.PARSE));
-        assertThrows(IllegalStateException.class, () -> CompilationService.project(MultiSourceTestSupport.oneFile("sample.sir", source("campus-market.sir")), ValidationStopAfter.GENERATION,
+        assertThrows(IllegalStateException.class, () -> CompilationService.project(ProjectTestSupport.oneFile("sample.sir", source("campus-market.sir")), ValidationStopAfter.GENERATION,
             m -> { throw new IllegalStateException("injected"); },new ArrayList<>(),s -> {},trace));
         assertEquals(original.message(),trace.getFirst().message()); assertEquals(original.related(),trace.getFirst().related()); assertEquals(original.fixes(),trace.getFirst().fixes());
     }

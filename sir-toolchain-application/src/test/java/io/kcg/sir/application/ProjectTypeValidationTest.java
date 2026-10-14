@@ -1,14 +1,14 @@
 package io.kcg.sir.application;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static io.kcg.sir.application.MultiSourceTestSupport.*;
+import static io.kcg.sir.application.ProjectTestSupport.*;
 import io.kcg.sir.application.api.*;
 import java.nio.file.*;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-class MultiSourceTypeValidationTest {
+class ProjectTypeValidationTest {
     @TempDir Path temp;
 
     @Test void importedEntityDateCannotBeComparedToInt64() throws Exception {

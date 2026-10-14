@@ -162,21 +162,21 @@ class ProjectVerificationChainIT {
         assertEquals(StageStatus.FAILED, bad.stage(VerificationStage.BUSINESS).status(), bad.canonicalText());
         assertTrue(bad.stage(VerificationStage.BUSINESS).outcome().diagnostics().stream().anyMatch(d -> d.contains("ART101")), bad.stage(VerificationStage.BUSINESS).outcome().diagnostics().toString());
 
-        Map<String, String> sourcesBefore = new TreeMap<>(io.kcg.sir.application.MultiSourceTestSupport.tree(liveSources));
-        Map<String, String> outputBefore = new TreeMap<>(io.kcg.sir.application.MultiSourceTestSupport.tree(liveOutput));
+        Map<String, String> sourcesBefore = new TreeMap<>(io.kcg.sir.application.ProjectTestSupport.tree(liveSources));
+        Map<String, String> outputBefore = new TreeMap<>(io.kcg.sir.application.ProjectTestSupport.tree(liveOutput));
         var wrongRequest = new WorkspaceVersionRequest(repository, liveSources, liveOutput, wrong);
         var wrongPlan = assertInstanceOf(WorkspacePlanningResult.Planned.class, versions.plan(wrongRequest));
         var refused = gate.apply(new VerifiedWorkspaceApplication.Request(wrongRequest, wrongPlan, bad, VerificationStage.BUSINESS));
         var no = assertInstanceOf(VerifiedWorkspaceApplication.Result.Refused.class, refused);
         assertEquals("VERIFICATION_NOT_PASSED", no.code(), no.message());
-        assertEquals(sourcesBefore, new TreeMap<>(io.kcg.sir.application.MultiSourceTestSupport.tree(liveSources)), "the sources are untouched");
-        assertEquals(outputBefore, new TreeMap<>(io.kcg.sir.application.MultiSourceTestSupport.tree(liveOutput)), "the generated project is untouched");
+        assertEquals(sourcesBefore, new TreeMap<>(io.kcg.sir.application.ProjectTestSupport.tree(liveSources)), "the sources are untouched");
+        assertEquals(outputBefore, new TreeMap<>(io.kcg.sir.application.ProjectTestSupport.tree(liveOutput)), "the generated project is untouched");
         assertEquals(publishedCommit, git(repository, "rev-parse", "HEAD").strip(), "nothing new was saved in Git");
 
         // 4. Evidence for the good candidate does not unlock the wrong one: reports are bound to their candidate.
         var mismatch = gate.apply(new VerifiedWorkspaceApplication.Request(wrongRequest, wrongPlan, good, VerificationStage.BUSINESS));
         assertEquals("VERIFICATION_CANDIDATE_MISMATCH", assertInstanceOf(VerifiedWorkspaceApplication.Result.Refused.class, mismatch).code());
-        assertEquals(sourcesBefore, new TreeMap<>(io.kcg.sir.application.MultiSourceTestSupport.tree(liveSources)));
+        assertEquals(sourcesBefore, new TreeMap<>(io.kcg.sir.application.ProjectTestSupport.tree(liveSources)));
         assertEquals(publishedCommit, git(repository, "rev-parse", "HEAD").strip());
     }
 

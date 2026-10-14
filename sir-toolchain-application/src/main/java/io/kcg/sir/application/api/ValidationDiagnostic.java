@@ -6,7 +6,7 @@ import io.kcg.sir.source.SourceSpan;
 import java.util.List;
 import java.util.Objects;
 
-/** Lossless stage diagnostic, separate from the deliberately frozen legacy projection. */
+/** Lossless stage diagnostic; the execution result carries its own projected diagnostics. */
 public record ValidationDiagnostic(String code, String severity, ValidationStopAfter stage, String message,
     SourceSpan span, List<RelatedLocation> related, List<FixHint> fixes, String sourceSymbol,
     String sourceNodeId, String loweredNodeId, String relativePath) {

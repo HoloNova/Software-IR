@@ -1,7 +1,7 @@
 package io.kcg.sir.application;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static io.kcg.sir.application.MultiSourceTestSupport.*;
+import static io.kcg.sir.application.ProjectTestSupport.*;
 import io.kcg.sir.ast.*;
 import io.kcg.sir.application.api.*;
 import io.kcg.sir.projectgraph.api.*;
@@ -13,7 +13,7 @@ import java.util.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-class MultiSourceGenerationTest {
+class ProjectGenerationTest {
     @TempDir Path temp;
 
     @Test void realCourseProjectProducesExactlyTheSingleSourceApplicationAndRealProvenance() throws Exception {

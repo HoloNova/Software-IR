@@ -36,9 +36,9 @@ class CompilationServiceTest {
 
     /** The multi-course fixture, optionally with one text replaced in the enrollment module. */
     private SourceSnapshot snapshotWith(String from, String to) throws Exception {
-        Path source = MultiSourceTestSupport.fixture(this.temp);
+        Path source = ProjectTestSupport.fixture(this.temp);
         Map<SourceId, byte[]> inputs = new LinkedHashMap<>();
-        for (String file : MultiSourceTestSupport.FILES) {
+        for (String file : ProjectTestSupport.FILES) {
             String text = Files.readString(source.resolve(file), StandardCharsets.UTF_8);
             if (from != null && file.equals("modules/enrollment.sir")) {
                 assertTrue(text.contains(from), "fixture changed: " + from);
@@ -48,7 +48,7 @@ class CompilationServiceTest {
             inputs.put(SourceId.of(file), text.getBytes(StandardCharsets.UTF_8));
         }
 
-        return new SourceSnapshot(MultiSourceTestSupport.ENTRY, inputs);
+        return new SourceSnapshot(ProjectTestSupport.ENTRY, inputs);
     }
 
     private static CompilationStages.Snapshot run(SourceSnapshot snapshot, ValidationStopAfter stop, List<ValidationDiagnostic> raw, List<ExecutionDiagnostic> legacy, List<ValidationStopAfter> trace) {
@@ -72,17 +72,17 @@ class CompilationServiceTest {
 
     @Test
     void theGeneratedFilesAreTheOnesTheProjectGenerationWritesToDisk() throws Exception {
-        Path source = MultiSourceTestSupport.fixture(this.temp);
+        Path source = ProjectTestSupport.fixture(this.temp);
         Path output = this.temp.resolve("generated");
-        MultiSourceTestSupport.generate(source, output);
-        Map<String, String> onDisk = MultiSourceTestSupport.files(output);
+        ProjectTestSupport.generate(source, output);
+        Map<String, String> onDisk = ProjectTestSupport.files(output);
 
         Map<SourceId, byte[]> inputs = new LinkedHashMap<>();
-        for (String file : MultiSourceTestSupport.FILES) {
+        for (String file : ProjectTestSupport.FILES) {
             inputs.put(SourceId.of(file), Files.readAllBytes(source.resolve(file)));
         }
 
-        var result = run(new SourceSnapshot(MultiSourceTestSupport.ENTRY, inputs), ValidationStopAfter.GENERATION, new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
+        var result = run(new SourceSnapshot(ProjectTestSupport.ENTRY, inputs), ValidationStopAfter.GENERATION, new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
         Map<String, String> compiled = new TreeMap<>();
         for (GeneratedFile file : result.files()) {
             compiled.put(file.relativePath(), java.util.HexFormat.of().formatHex(file.content().getBytes(StandardCharsets.UTF_8)));
@@ -110,13 +110,13 @@ class CompilationServiceTest {
     @Test
     void aParseFailureStopsTheStageAtTheFirstBadFile() throws Exception {
         Map<SourceId, byte[]> inputs = new LinkedHashMap<>();
-        for (String file : MultiSourceTestSupport.FILES) {
-            String text = file.equals("modules/course.sir") ? "sir 0.2\nentity {" : MultiSourceTestSupport.resource("valid/multi-course/" + file);
+        for (String file : ProjectTestSupport.FILES) {
+            String text = file.equals("modules/course.sir") ? "sir 0.2\nentity {" : ProjectTestSupport.resource("valid/multi-course/" + file);
             inputs.put(SourceId.of(file), text.getBytes(StandardCharsets.UTF_8));
         }
 
         List<ValidationDiagnostic> raw = new ArrayList<>();
-        var result = run(new SourceSnapshot(MultiSourceTestSupport.ENTRY, inputs), ValidationStopAfter.GENERATION, raw, new ArrayList<>(), new ArrayList<>());
+        var result = run(new SourceSnapshot(ProjectTestSupport.ENTRY, inputs), ValidationStopAfter.GENERATION, raw, new ArrayList<>(), new ArrayList<>());
         assertFalse(result.success());
         assertEquals(ValidationStopAfter.PARSE, result.stage());
         assertNull(result.semanticModel());
@@ -128,7 +128,7 @@ class CompilationServiceTest {
     void anOversizedSourceIsRefusedBeforeAnyParsing() {
         byte[] huge = new byte[1024 * 1024 + 1];
         java.util.Arrays.fill(huge, (byte)' ');
-        var snapshot = new SourceSnapshot(MultiSourceTestSupport.ENTRY, Map.of(MultiSourceTestSupport.ENTRY, huge));
+        var snapshot = new SourceSnapshot(ProjectTestSupport.ENTRY, Map.of(ProjectTestSupport.ENTRY, huge));
         List<ValidationDiagnostic> raw = new ArrayList<>();
         var result = run(snapshot, ValidationStopAfter.GENERATION, raw, new ArrayList<>(), new ArrayList<>());
         assertFalse(result.success());

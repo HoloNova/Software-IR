@@ -112,28 +112,6 @@ public final class SecureFileAccess implements AutoCloseable {
         }
         assertRootUnchanged();
     }
-    public void createPendingLink(String anchor) throws IOException {
-        assertRootUnchanged();var key=identity(anchor);
-        try (var p=parent(anchor)) {
-            var absoluteParent=Files.readAttributes(root.resolve(anchor).getParent(),BasicFileAttributes.class,LinkOption.NOFOLLOW_LINKS);
-            require(absoluteParent.isDirectory() && Objects.equals(absoluteParent.fileKey(),p.stream().getFileAttributeView(BasicFileAttributeView.class).readAttributes().fileKey()),"pointer-anchor parent identity changed");
-            Files.createLink(root.resolve("CURRENT.new"),root.resolve(anchor));
-        }
-        assertRootUnchanged();require(key.equals(identity("CURRENT.new")),"pending pointer is not anchored to candidate");
-    }
-    public void publishLink() throws IOException {
-        assertRootUnchanged();var key=identity("CURRENT.new");
-        Files.createLink(root.resolve("CURRENT"),root.resolve("CURRENT.new"));
-        assertRootUnchanged();require(key.equals(identity("CURRENT")) && key.equals(identity("CURRENT.new")),"pointer identity changed during publication");
-    }
-    public void deleteOwnedPointer(Object key) throws IOException {
-        assertRootUnchanged();
-        try (var p=parent("CURRENT.new")) {
-            require(key.equals(attrs(p).fileKey()) && key.equals(identity("CURRENT")),"pending pointer is not the published physical file");
-            p.stream().deleteFile(p.name());
-        }
-        assertRootUnchanged();
-    }
     /** Stable identity for a directory, including the root; never follows links. */
     public Object directoryIdentity(String relative) throws IOException {
         assertRootUnchanged();if(relative.isEmpty())return rootKey;
@@ -146,27 +124,6 @@ public final class SecureFileAccess implements AutoCloseable {
         assertRootUnchanged();var actual=Files.readAttributes(root.resolve(relative).getParent(),BasicFileAttributes.class,LinkOption.NOFOLLOW_LINKS);
         require(actual.isDirectory() && Objects.equals(actual.fileKey(),p.stream().getFileAttributeView(BasicFileAttributeView.class).readAttributes().fileKey()),"directory parent identity changed");
     }
-    /** Only fixed, physically anchored journal slots may be overwritten; never CREATE or fallback. */
-    public void overwriteOwned(String relative,Object key,byte[] bytes,Consumer<String> checkpoint) throws IOException {
-        try(var p=parent(relative)) {
-            assertParentBinding(relative,p);require(Objects.equals(key,attrs(p).fileKey()),"owned slot replaced: "+relative);
-            try(var channel=p.stream().newByteChannel(p.name(),Set.of(StandardOpenOption.WRITE,StandardOpenOption.TRUNCATE_EXISTING,StandardOpenOption.SYNC,LinkOption.NOFOLLOW_LINKS))) {
-                int offset=0;while(offset<bytes.length) {
-                    int size=Math.min(512,bytes.length-offset);var b=ByteBuffer.wrap(bytes,offset,size);while(b.hasRemaining())channel.write(b);offset+=size;checkpoint.accept("partial-owned:"+relative);
-                }
-            }
-            assertParentBinding(relative,p);require(Objects.equals(key,attrs(p).fileKey()),"owned slot identity changed during write");
-        }
-    }
-    /** Same-volume hard-link creation with anchored parents and post-link physical verification. */
-    public void linkOwned(String source,Object sourceKey,SecureFileAccess to,String target) throws IOException {
-        try(var p=parent(source);var q=to.parent(target)) {
-            assertParentBinding(source,p);to.assertParentBinding(target,q);require(Objects.equals(sourceKey,attrs(p).fileKey()),"link source replaced");
-            require(Files.getFileStore(root.resolve(source)).equals(Files.getFileStore(to.root.resolve(target).getParent())),"cross-FileStore hard link refused");
-            Files.createLink(to.root.resolve(target),root.resolve(source));
-            assertParentBinding(source,p);to.assertParentBinding(target,q);require(Objects.equals(sourceKey,to.identity(target)),"hard link physical identity mismatch");
-        }
-    }
     /** SecureDirectoryStream.move has atomic-move semantics; an existing destination is explicitly bound. */
     public void moveOwned(String source,Object sourceKey,SecureFileAccess to,String target,Object targetKey,Consumer<String> checkpoint) throws IOException {
         checkpoint.accept("before-move:"+source+"->"+target);
@@ -178,17 +135,6 @@ public final class SecureFileAccess implements AutoCloseable {
             assertParentBinding(source,p);to.assertParentBinding(target,q);require(Objects.equals(sourceKey,to.identity(target)),"moved file identity mismatch");
         }
         checkpoint.accept("moved:"+source+"->"+target);
-    }
-    /** Atomically relocate a physically verified completed receipt directory, without copying or replacement. */
-    public void moveOwnedDirectory(String source,Object sourceKey,String target,Consumer<String> checkpoint) throws IOException {
-        checkpoint.accept("before-directory-move:"+source+"->"+target);
-        try(var p=parent(source);var q=parent(target)) {
-            assertParentBinding(source,p);assertParentBinding(target,q);require(Objects.equals(sourceKey,directoryIdentity(source)),"receipt directory replaced");
-            require(!exists(target),"receipt directory target already exists");
-            require(Files.getFileStore(root.resolve(source)).equals(Files.getFileStore(root.resolve(target).getParent())),"cross-FileStore directory relocation refused");
-            p.stream().move(p.name(),q.stream(),q.name());assertParentBinding(target,q);require(Objects.equals(sourceKey,directoryIdentity(target)),"receipt directory identity changed during relocation");
-        }
-        checkpoint.accept("directory-moved:"+source+"->"+target);
     }
     public void deleteOwned(String relative,Object key) throws IOException {
         try(var p=parent(relative)) {assertParentBinding(relative,p);require(Objects.equals(key,attrs(p).fileKey()),"cleanup file replaced: "+relative);p.stream().deleteFile(p.name());assertParentBinding(relative,p);}

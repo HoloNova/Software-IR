@@ -11,15 +11,15 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.*;
 
-public final class MultiSourceTestSupport {
+public final class ProjectTestSupport {
     public static final SourceId ENTRY = SourceId.of("project.sir");
     static final List<String> FILES = List.of("project.sir", "modules/course.sir", "modules/student.sir", "modules/enrollment.sir");
-    private MultiSourceTestSupport() {}
+    private ProjectTestSupport() {}
     public static Path fixture(Path directory) throws Exception {
         Path source = directory.resolve("sources");
         for (String file : FILES) {
             Path path = source.resolve(file); Files.createDirectories(path.getParent());
-            try (var stream = MultiSourceTestSupport.class.getClassLoader().getResourceAsStream("valid/multi-course/" + file)) {
+            try (var stream = ProjectTestSupport.class.getClassLoader().getResourceAsStream("valid/multi-course/" + file)) {
                 Files.write(path, Objects.requireNonNull(stream).readAllBytes());
             }
         }
@@ -71,7 +71,7 @@ public final class MultiSourceTestSupport {
         var tree = tree(root); tree.keySet().removeIf(k -> k.endsWith("/")); return tree;
     }
     static String resource(String file) throws Exception {
-        try (var stream = MultiSourceTestSupport.class.getClassLoader().getResourceAsStream(file)) {
+        try (var stream = ProjectTestSupport.class.getClassLoader().getResourceAsStream(file)) {
             return new String(Objects.requireNonNull(stream).readAllBytes(), StandardCharsets.UTF_8);
         }
     }

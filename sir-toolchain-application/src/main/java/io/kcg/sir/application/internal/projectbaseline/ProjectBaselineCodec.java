@@ -11,7 +11,7 @@ import java.nio.charset.*;
 import java.nio.file.Path;
 import java.util.*;
 
-/** New formats only. No filesystem access and no reinterpretation of the legacy descriptor. */
+/** No filesystem access: it only encodes and decodes the baseline descriptor, source payload and graph. */
 public final class ProjectBaselineCodec {
     public static final int MAX_PAYLOAD = 8*1024*1024+128*1024, MAX_DESCRIPTOR = 2*1024*1024, MAX_GRAPH = 16*1024*1024;
     public static final int MAX_GENERATED_FILE = 8*1024*1024, MAX_MANIFEST = 8192, MAX_TEXT = 16384, MAX_OUTPUT_PATH = 4096;
@@ -149,7 +149,7 @@ public final class ProjectBaselineCodec {
     }
     private static void magic(ByteBuffer b,byte[] expected) throws Problem {
         if (b.remaining()<expected.length) throw problem("VERSION-001","missing project format magic");
-        for (byte v : expected) if (b.get()!=v) throw problem("VERSION-001","unsupported/legacy format magic");
+        for (byte v : expected) if (b.get()!=v) throw problem("VERSION-001","unsupported format magic");
     }
     private static void text(DataOutputStream d,String text) throws IOException { text(d,text,MAX_TEXT); }
     private static void text(DataOutputStream d,String text,int max) throws IOException {

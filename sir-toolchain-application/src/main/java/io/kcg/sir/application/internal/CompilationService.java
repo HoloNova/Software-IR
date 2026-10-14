@@ -36,11 +36,11 @@ public final class CompilationService {
 
     /** The snapshot's entry is the root and every other member a fragment. */
     public static CompilationStages.Snapshot project(SourceSnapshot snapshot, ValidationStopAfter stop,
-            Function<SpringBootLoweredModel, GenerationResult> generation, List<ExecutionDiagnostic> legacy,
+            Function<SpringBootLoweredModel, GenerationResult> generation, List<ExecutionDiagnostic> executionDiagnostics,
             Consumer<ValidationStopAfter> entered, List<ValidationDiagnostic> raw) {
         Objects.requireNonNull(snapshot, "snapshot");
         entered.accept(ValidationStopAfter.PARSE);
-        if (!withinBudget(snapshot, legacy, raw)) {
+        if (!withinBudget(snapshot, executionDiagnostics, raw)) {
             return new CompilationStages.Snapshot(false, ValidationStopAfter.PARSE, null, null, List.of(), raw);
         }
 
@@ -54,13 +54,13 @@ public final class CompilationService {
             } catch (SourceReader.InvalidUtf8Exception e) {
                 var zero = new SourcePosition(0, 1, 1);
                 var span = new SourceSpan(file.sourceId(), zero, zero);
-                addRead(legacy, raw, "SIR-APP-SOURCES-UTF8-001", "source is not valid UTF-8", span);
+                addRead(executionDiagnostics, raw, "SIR-APP-SOURCES-UTF8-001", "source is not valid UTF-8", span);
                 return new CompilationStages.Snapshot(false, ValidationStopAfter.PARSE, null, null, List.of(), raw);
             }
 
             var source = new SirSource(file.sourceId(), text);
             var result = file.sourceId().equals(snapshot.entry()) ? parser.parseProject(source) : parser.parseFragment(source);
-            append(result.diagnostics(), ValidationStopAfter.PARSE, legacy, raw);
+            append(result.diagnostics(), ValidationStopAfter.PARSE, executionDiagnostics, raw);
             if (!result.isSuccess()) {
                 // The first file that fails to parse ends the stage, exactly as the earlier project entry did.
                 return new CompilationStages.Snapshot(false, ValidationStopAfter.PARSE, null, null, List.of(), raw);
@@ -78,35 +78,35 @@ public final class CompilationService {
         }
 
         return parsed(new ProjectSemanticInput(Objects.requireNonNull(root, "entry source is missing from the snapshot"), fragments),
-            stop, generation, legacy, entered, raw);
+            stop, generation, executionDiagnostics, entered, raw);
     }
 
     /** A project already parsed by the source reader; compilation continues at the semantic stage. */
     public static CompilationStages.Snapshot parsed(ProjectSemanticInput input, ValidationStopAfter stop,
-            Function<SpringBootLoweredModel, GenerationResult> generation, List<ExecutionDiagnostic> legacy,
+            Function<SpringBootLoweredModel, GenerationResult> generation, List<ExecutionDiagnostic> executionDiagnostics,
             Consumer<ValidationStopAfter> entered, List<ValidationDiagnostic> raw) {
         entered.accept(ValidationStopAfter.SEMANTIC);
         var semantic = new SirSemanticAnalyzer().analyzeProject(input);
-        append(semantic.diagnostics(), ValidationStopAfter.SEMANTIC, legacy, raw);
+        append(semantic.diagnostics(), ValidationStopAfter.SEMANTIC, executionDiagnostics, raw);
         if (!semantic.isSuccess() || stop == ValidationStopAfter.SEMANTIC) {
             return new CompilationStages.Snapshot(semantic.isSuccess(), ValidationStopAfter.SEMANTIC, semantic.model().orElse(null), null, List.of(), raw);
         }
 
-        return CompilationStages.lowerAndGenerate(semantic.model().orElseThrow(), stop, generation, legacy, entered, raw);
+        return CompilationStages.lowerAndGenerate(semantic.model().orElseThrow(), stop, generation, executionDiagnostics, entered, raw);
     }
 
-    private static boolean withinBudget(SourceSnapshot snapshot, List<ExecutionDiagnostic> legacy, List<ValidationDiagnostic> raw) {
+    private static boolean withinBudget(SourceSnapshot snapshot, List<ExecutionDiagnostic> executionDiagnostics, List<ValidationDiagnostic> raw) {
         long total = 0;
         for (var file : snapshot.manifest().files()) {
             total += file.byteCount();
             if (file.byteCount() > ProjectSourceReader.MAX_FILE_BYTES || total > ProjectSourceReader.MAX_TOTAL_BYTES) {
-                addRead(legacy, raw, "SIR-APP-SOURCES-LIMIT-001", "snapshot exceeds source byte budget", null);
+                addRead(executionDiagnostics, raw, "SIR-APP-SOURCES-LIMIT-001", "snapshot exceeds source byte budget", null);
                 return false;
             }
 
             String issue = PathGuard.validateRelativePath(file.sourceId().value());
             if (issue != null) {
-                addRead(legacy, raw, "SIR-APP-SOURCES-PATH-001", issue, null);
+                addRead(executionDiagnostics, raw, "SIR-APP-SOURCES-PATH-001", issue, null);
                 return false;
             }
         }
@@ -114,16 +114,16 @@ public final class CompilationService {
         return true;
     }
 
-    /** Project parsing keeps cross-file related sites as adjacent INFO notes in the legacy list, as before. */
-    private static void append(List<Diagnostic> diagnostics, ValidationStopAfter stage, List<ExecutionDiagnostic> legacy, List<ValidationDiagnostic> raw) {
-        legacy.addAll(DiagnosticMapper.fromProjectSource(diagnostics, ExecutionStage.valueOf(stage.name())));
+    /** Project parsing keeps cross-file related sites as adjacent INFO notes in the executionDiagnostics list, as before. */
+    private static void append(List<Diagnostic> diagnostics, ValidationStopAfter stage, List<ExecutionDiagnostic> executionDiagnostics, List<ValidationDiagnostic> raw) {
+        executionDiagnostics.addAll(DiagnosticMapper.fromProjectSource(diagnostics, ExecutionStage.valueOf(stage.name())));
         for (var d : diagnostics) {
             raw.add(CompilationStages.fromParser(d, stage));
         }
     }
 
-    private static void addRead(List<ExecutionDiagnostic> legacy, List<ValidationDiagnostic> raw, String code, String message, SourceSpan span) {
-        legacy.add(span == null
+    private static void addRead(List<ExecutionDiagnostic> executionDiagnostics, List<ValidationDiagnostic> raw, String code, String message, SourceSpan span) {
+        executionDiagnostics.add(span == null
             ? ExecutionDiagnostic.error(code, ExecutionStage.READ, message)
             : new ExecutionDiagnostic(code, ExecutionStage.READ, io.kcg.sir.application.api.ExecutionSeverity.ERROR, message,
                 java.util.Optional.of(span), java.util.Optional.empty(), java.util.Optional.empty()));

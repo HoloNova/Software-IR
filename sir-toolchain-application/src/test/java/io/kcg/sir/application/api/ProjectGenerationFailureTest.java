@@ -1,7 +1,7 @@
 package io.kcg.sir.application.api;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static io.kcg.sir.application.MultiSourceTestSupport.*;
+import static io.kcg.sir.application.ProjectTestSupport.*;
 import io.kcg.sir.projectgraph.api.*;
 import java.nio.file.Path;
 import java.util.List;
