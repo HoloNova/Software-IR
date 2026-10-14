@@ -7,7 +7,6 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.kcg.sir.projectgraph.api.GraphEdgeId;
-import io.kcg.sir.projectgraph.api.GraphVersion;
 import io.kcg.sir.projectgraph.api.ProjectGraph;
 import io.kcg.sir.projectgraph.api.ProjectGraphAnalysis;
 import io.kcg.sir.projectgraph.api.ProjectGraphBuilder;
@@ -18,7 +17,6 @@ import io.kcg.sir.projectgraph.api.ProjectGraphInput.SemanticDeclarationInput;
 import io.kcg.sir.projectgraph.api.ProjectGraphNode;
 import io.kcg.sir.projectgraph.api.ProjectGraphSerialization;
 import io.kcg.sir.projectgraph.api.ProjectGraphSerializer;
-import io.kcg.sir.projectgraph.api.ProjectGraphCanonicalFormatVersion;
 import io.kcg.sir.projectgraph.internal.GraphCanonicalForm;
 import io.kcg.sir.source.SourcePosition;
 import io.kcg.sir.source.SourceSpan;
@@ -79,10 +77,10 @@ class ProjectGraphCanonicalizationTest {
 
         ProjectGraphCanonicalizer canonicalizer = new ProjectGraphCanonicalizer();
         assertEquals(graph.canonicalDigest(),
-                canonicalizer.digest(GraphVersion.V0_1, shuffledNodes, shuffledEdges),
+                canonicalizer.digest(shuffledNodes, shuffledEdges),
                 "the digest must not depend on the order of the input lists");
-        assertArrayEquals(GraphCanonicalForm.canonicalBytes(GraphVersion.V0_1, graph.nodes(), graph.edges()),
-                GraphCanonicalForm.canonicalBytes(GraphVersion.V0_1, shuffledNodes, shuffledEdges),
+        assertArrayEquals(GraphCanonicalForm.canonicalBytes(graph.nodes(), graph.edges()),
+                GraphCanonicalForm.canonicalBytes(shuffledNodes, shuffledEdges),
                 "canonical bytes must not depend on the order of the input lists");
     }
 
@@ -139,7 +137,7 @@ class ProjectGraphCanonicalizationTest {
 
     private static byte[] documentBytes(ProjectGraph graph) {
         ProjectGraphSerialization.Success serialization = assertInstanceOf(ProjectGraphSerialization.Success.class,
-                new ProjectGraphSerializer().serialize(graph, ProjectGraphCanonicalFormatVersion.V1));
+                new ProjectGraphSerializer().serialize(graph));
         return serialization.document().bytes();
     }
 

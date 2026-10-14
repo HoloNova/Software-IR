@@ -6,7 +6,6 @@ import io.kcg.sir.lowering.api.LoweredOrigin;
 import io.kcg.sir.projectgraph.api.ArtifactRole;
 import io.kcg.sir.projectgraph.api.GraphEdgeKind;
 import io.kcg.sir.projectgraph.api.GraphNodeId;
-import io.kcg.sir.projectgraph.api.GraphVersion;
 import io.kcg.sir.projectgraph.api.ProjectGraphInput;
 import io.kcg.sir.projectgraph.api.ProjectGraphInput.ArtifactInput;
 import io.kcg.sir.projectgraph.api.ProjectGraphInput.EdgeBinding;
@@ -43,6 +42,8 @@ import java.util.function.Predicate;
 final class ProjectGraphFixtures {
 
     static final SourceId SOURCE_ID = SourceId.of("campus-market.sir");
+    /** The one document of the sample software; large enough that every fixture span lies inside it. */
+    static final io.kcg.sir.source.SourceSnapshot SOURCES = new io.kcg.sir.source.SourceSnapshot(SOURCE_ID, java.util.Map.of(SOURCE_ID, new byte[100_000]));
     static final String SOFTWARE_NAME = "CampusMarket";
     static final String BASE_PACKAGE = "com.example.campusmarket";
     static final String PROJECT_DISPLAY_NAME = "Campus Market";
@@ -148,8 +149,8 @@ final class ProjectGraphFixtures {
         edges.add(new EdgeBinding(GraphEdgeKind.GENERATES_FILE, new GraphNodeId.Lowered(applicationArtifactId),
                 new GraphNodeId.File(applicationPath)));
 
-        return new ProjectGraphInput(GraphVersion.V0_1, SOURCE_ID, PROJECT_DISPLAY_NAME, semantics, lowered,
-                artifacts, files, edges);
+        return new ProjectGraphInput(SOURCE_ID, PROJECT_DISPLAY_NAME, semantics, lowered,
+                artifacts, files, edges, SOURCES.manifest());
     }
 
     // ---- perturbation helpers: each one changes exactly one aspect ----------------------------
@@ -157,8 +158,8 @@ final class ProjectGraphFixtures {
     static ProjectGraphInput rebuild(ProjectGraphInput base, List<SemanticDeclarationInput> semantics,
             List<LoweredDeclarationInput> lowered, List<ArtifactInput> artifacts, List<FileInput> files,
             List<EdgeBinding> edges) {
-        return new ProjectGraphInput(base.version(), base.sourceId(), base.projectDisplayName(), semantics, lowered,
-                artifacts, files, edges);
+        return new ProjectGraphInput(base.sourceId(), base.projectDisplayName(), semantics, lowered,
+                artifacts, files, edges, base.sourceSet());
     }
 
     static ProjectGraphInput withSemantics(ProjectGraphInput base, List<SemanticDeclarationInput> semantics) {
@@ -227,8 +228,10 @@ final class ProjectGraphFixtures {
         return new LoweredOrigin(Optional.of(owner), sourceNodeId, span);
     }
 
-    static LoweredOrigin projectOrigin(String sourceNodeId) {
-        return new LoweredOrigin(Optional.empty(), new AstNodeId(sourceNodeId), span(0));
+    /** The origin lowering gives project-level artifacts: they belong to the whole project, not to a source location. */
+    static LoweredOrigin projectOrigin(String ignoredLabel) {
+        SourcePosition zero = new SourcePosition(0, 1, 1);
+        return new LoweredOrigin(Optional.empty(), new AstNodeId("project"), new SourceSpan(SourceId.of("project"), zero, zero));
     }
 
     static AstNodeId astId(SymbolId symbol) {

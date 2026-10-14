@@ -9,28 +9,24 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import org.junit.jupiter.api.Test;
 
-class MultiSourceGraphFormatTest {
+class ProjectGraphFormatTest {
     private static final SourceId ROOT = ProjectGraphFixtures.SOURCE_ID, PART = SourceId.of("modules/model.sir");
     private static final SourceSnapshot SOURCES = new SourceSnapshot(ROOT, Map.of(ROOT, new byte[100], PART, new byte[100]));
 
-    @Test void newFormatRoundTripsEverySourceAndOriginWithoutChangingLegacyBytes() {
-        var graph = graph(input(SOURCES)); byte[] bytes = document(graph, ProjectGraphCanonicalFormatVersion.V2);
+    @Test void roundTripsEverySourceAndOrigin() {
+        var graph = graph(input(SOURCES)); byte[] bytes = document(graph);
         var loaded = assertInstanceOf(ProjectGraphAnalysis.Success.class, new ProjectGraphLoader().load(bytes));
         assertEquals(graph.nodes(), loaded.graph().nodes()); assertEquals(graph.edges(), loaded.graph().edges());
         assertEquals(graph.canonicalDigest(), loaded.graph().canonicalDigest());
-        assertArrayEquals(bytes, document(loaded.graph(), ProjectGraphCanonicalFormatVersion.V2));
+        assertArrayEquals(bytes, document(loaded.graph()));
         var root = graph.nodes().stream().filter(n -> n instanceof ProjectGraphNode.Project).map(n -> (ProjectGraphNode.Project)n).findFirst().orElseThrow();
-        assertEquals(SOURCES.manifest(), root.provenance().sourceSet().orElseThrow());
+        assertEquals(SOURCES.manifest(), root.provenance().sourceSet());
         assertTrue(graph.nodes().stream().filter(n -> n instanceof ProjectGraphNode.SemanticDeclaration).allMatch(n -> n.provenance().sourceId().equals(PART)));
-        var legacy = graph(ProjectGraphFixtures.campusMarket()); byte[] v1 = document(legacy, ProjectGraphCanonicalFormatVersion.V1);
-        assertArrayEquals(v1, document(assertInstanceOf(ProjectGraphAnalysis.Success.class, new ProjectGraphLoader().load(v1)).graph(), ProjectGraphCanonicalFormatVersion.V1));
-        assertInstanceOf(ProjectGraphSerialization.Failure.class, new ProjectGraphSerializer().serialize(graph, ProjectGraphCanonicalFormatVersion.V1));
-        assertInstanceOf(ProjectGraphSerialization.Failure.class, new ProjectGraphSerializer().serialize(legacy, ProjectGraphCanonicalFormatVersion.V2));
     }
 
     @Test void sourceManifestDigestAndGraphDigestAreSensitiveToEachSourceButNotMapInsertionOrder() {
         var reversed = new LinkedHashMap<SourceId, byte[]>(); reversed.put(PART, SOURCES.bytes(PART)); reversed.put(ROOT, SOURCES.bytes(ROOT));
-        assertArrayEquals(document(graph(input(SOURCES)), ProjectGraphCanonicalFormatVersion.V2), document(graph(input(new SourceSnapshot(ROOT, reversed))), ProjectGraphCanonicalFormatVersion.V2));
+        assertArrayEquals(document(graph(input(SOURCES))), document(graph(input(new SourceSnapshot(ROOT, reversed)))));
         for (SourceId changed : List.of(ROOT, PART)) {
             var edited = new LinkedHashMap<>(reversed); byte[] bytes = edited.get(changed).clone(); bytes[0] = 1; edited.put(changed, bytes);
             assertNotEquals(SOURCES.sha256Hex(), new SourceSnapshot(ROOT, edited).sha256Hex());
@@ -38,41 +34,35 @@ class MultiSourceGraphFormatTest {
         }
     }
 
-    @Test void missingAndFakeManifestMembersSpansAndOwnershipFailClosed() {
+    @Test void fakeManifestMembersSpansAndOwnershipFailClosed() {
         var input = input(SOURCES);
-        assertFailed(new ProjectGraphInput(input.version(), ROOT, input.projectDisplayName(), input.semanticDeclarations(), input.loweredDeclarations(), input.artifacts(), input.files(), input.edges()), "SIR-GRAPH-SOURCES-001");
         assertFailed(input(new SourceSnapshot(ROOT, Map.of(ROOT, new byte[100]))), "SIR-GRAPH-SOURCES-002");
         assertFailed(input(new SourceSnapshot(ROOT, Map.of(ROOT, new byte[100], PART, new byte[1]))), "SIR-GRAPH-SOURCES-003");
         var semantics = new ArrayList<>(input.semanticDeclarations()); var original = semantics.getFirst();
         semantics.set(0, new ProjectGraphInput.SemanticDeclarationInput(original.symbolId(), original.kind(), original.displayName(), original.sourceNodeId(),
                 new SourceSpan(ROOT, original.span().start(), original.span().end())));
-        assertFailed(new ProjectGraphInput(GraphVersion.V0_2, ROOT, input.projectDisplayName(), semantics, input.loweredDeclarations(), input.artifacts(), input.files(), input.edges(), input.sourceSet()), "SIR-GRAPH-SOURCES-004");
-        // A V1 graph must NOT inherit the V2 exception merely because it carries the same extra data.
-        assertFailed(new ProjectGraphInput(GraphVersion.V0_1, ROOT, input.projectDisplayName(), input.semanticDeclarations(), input.loweredDeclarations(), input.artifacts(), input.files(), input.edges(), input.sourceSet()), "SIR-GRAPH-SOURCES-001");
+        assertFailed(new ProjectGraphInput(ROOT, input.projectDisplayName(), semantics, input.loweredDeclarations(), input.artifacts(), input.files(), input.edges(), input.sourceSet()), "SIR-GRAPH-SOURCES-004");
     }
 
-    @Test void decoderRejectsUnknownAndCrossPairedHeaderVersionsWithRecomputedOuterIntegrity() {
-        byte[] v2 = document(graph(input(SOURCES)), ProjectGraphCanonicalFormatVersion.V2);
-        reject(patch(v2, "formatVersion", "1"), "SIR-GRAPH-COMPAT-002");
-        reject(patch(v2, "formatVersion", "3"), "SIR-GRAPH-COMPAT-001");
-        reject(patch(v2, "graphVersion", "V0_1"), "SIR-GRAPH-COMPAT-002");
-        reject(patch(v2, "graphVersion", "V0_9"), "SIR-GRAPH-COMPAT-002");
-        byte[] v1 = document(graph(ProjectGraphFixtures.campusMarket()), ProjectGraphCanonicalFormatVersion.V1);
-        reject(patch(v1, "formatVersion", "2"), "SIR-GRAPH-COMPAT-002");
-        reject(patch(v1, "graphVersion", "V0_2"), "SIR-GRAPH-COMPAT-002");
+    @Test void decoderRejectsUnknownHeaderVersionsWithRecomputedOuterIntegrity() {
+        byte[] doc = document(graph(input(SOURCES)));
+        reject(patch(doc, "formatVersion", "1"), "SIR-GRAPH-COMPAT-001");
+        reject(patch(doc, "formatVersion", "3"), "SIR-GRAPH-COMPAT-001");
+        reject(patch(doc, "graphVersion", "V0_1"), "SIR-GRAPH-COMPAT-002");
+        reject(patch(doc, "graphVersion", "V0_9"), "SIR-GRAPH-COMPAT-002");
     }
 
     @Test void innerManifestChecksumFramingOrderingAndMembershipAreValidatedNotJustOuterHash() {
-        byte[] v2 = document(graph(input(SOURCES)), ProjectGraphCanonicalFormatVersion.V2);
-        reject(patch(v2, "sources.sha256Hex", "0".repeat(64)), "SIR-GRAPH-SOURCES-005");
-        reject(patch(v2, "sources.base64", "invalid!base64"), "SIR-GRAPH-SOURCES-005");
+        byte[] doc = document(graph(input(SOURCES)));
+        reject(patch(doc, "sources.sha256Hex", "0".repeat(64)), "SIR-GRAPH-SOURCES-005");
+        reject(patch(doc, "sources.base64", "invalid!base64"), "SIR-GRAPH-SOURCES-005");
         byte[] future = SOURCES.manifest().canonicalBytes(); future[3] = 2;
-        reject(patch(v2, "sources.base64", Base64.getEncoder().encodeToString(future)), "SIR-GRAPH-SOURCES-005");
+        reject(patch(doc, "sources.base64", Base64.getEncoder().encodeToString(future)), "SIR-GRAPH-SOURCES-005");
         byte[] extra = Arrays.copyOf(SOURCES.manifest().canonicalBytes(), SOURCES.manifest().canonicalBytes().length + 1);
-        reject(patch(v2, "sources.base64", Base64.getEncoder().encodeToString(extra)), "SIR-GRAPH-SOURCES-005");
-        reject(patch(v2, "span.source", ROOT.value()), "SIR-GRAPH-SOURCES-003");
-        reject(patch(v2, "provenance.sourceId", PART.value()), "SIR-GRAPH-SOURCES-001");
-        String text = new String(v2, StandardCharsets.UTF_8).replace("sources.base64\n", "sources.base65\n");
+        reject(patch(doc, "sources.base64", Base64.getEncoder().encodeToString(extra)), "SIR-GRAPH-SOURCES-005");
+        reject(patch(doc, "span.source", ROOT.value()), "SIR-GRAPH-SOURCES-003");
+        reject(patch(doc, "provenance.sourceId", PART.value()), "SIR-GRAPH-SOURCES-001");
+        String text = new String(doc, StandardCharsets.UTF_8).replace("sources.base64\n", "sources.base65\n");
         var damaged = assertInstanceOf(ProjectGraphAnalysis.Failure.class, new ProjectGraphLoader().load(integrity(text)));
         assertTrue(damaged.diagnostics().stream().anyMatch(d -> d.code().equals("SIR-GRAPH-FORMAT-011")), damaged.diagnostics().toString());
     }
@@ -87,13 +77,13 @@ class MultiSourceGraphFormatTest {
         var artifacts = old.artifacts().stream().map(a -> new ProjectGraphInput.ArtifactInput(a.artifactId(), a.ownerSymbol(),
                 a.ownerSymbol().isPresent() ? new LoweredOrigin(a.origin().ownerSymbol(), a.origin().sourceNodeId(), new SourceSpan(PART, a.origin().span().start(), a.origin().span().end()))
                         : new LoweredOrigin(Optional.empty(), new AstNodeId("project"), new SourceSpan(SourceId.of("project"), zero, zero)), a.role(), a.qualifiedName())).toList();
-        return new ProjectGraphInput(GraphVersion.V0_2, ROOT, old.projectDisplayName(), semantics, lowered, artifacts, old.files(), old.edges(), Optional.of(sources.manifest()));
+        return new ProjectGraphInput(ROOT, old.projectDisplayName(), semantics, lowered, artifacts, old.files(), old.edges(), sources.manifest());
     }
     private static ProjectGraph graph(ProjectGraphInput input) {
         var result = new ProjectGraphBuilder().build(input); return assertInstanceOf(ProjectGraphAnalysis.Success.class, result, result.diagnostics().toString()).graph();
     }
-    private static byte[] document(ProjectGraph graph, ProjectGraphCanonicalFormatVersion version) {
-        var result = new ProjectGraphSerializer().serialize(graph, version); return assertInstanceOf(ProjectGraphSerialization.Success.class, result, result.diagnostics().toString()).document().bytes();
+    private static byte[] document(ProjectGraph graph) {
+        var result = new ProjectGraphSerializer().serialize(graph); return assertInstanceOf(ProjectGraphSerialization.Success.class, result, result.diagnostics().toString()).document().bytes();
     }
     private static void assertFailed(ProjectGraphInput input, String code) {
         var failure = assertInstanceOf(ProjectGraphAnalysis.Failure.class, new ProjectGraphBuilder().build(input));

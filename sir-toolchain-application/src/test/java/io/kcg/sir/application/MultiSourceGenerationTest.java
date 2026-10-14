@@ -33,12 +33,12 @@ class MultiSourceGenerationTest {
                 .map(n -> (ProjectGraphNode.SemanticDeclaration) n).findFirst().orElseThrow();
         assertEquals(SourceId.of("modules/course.sir"), course.provenance().sourceId());
         assertEquals(course.provenance().sourceId(), course.provenance().span().source());
-        var encoded = assertInstanceOf(ProjectGraphSerialization.Success.class, new ProjectGraphSerializer().serialize(multi.graph(), ProjectGraphCanonicalFormatVersion.V2));
+        var encoded = assertInstanceOf(ProjectGraphSerialization.Success.class, new ProjectGraphSerializer().serialize(multi.graph()));
         var restored = assertInstanceOf(ProjectGraphAnalysis.Success.class, new ProjectGraphLoader().load(encoded.document()));
         assertEquals(multi.graph().nodes(), restored.graph().nodes());
         assertEquals(multi.graph().canonicalDigest(), restored.graph().canonicalDigest());
         assertArrayEquals(encoded.document().bytes(), assertInstanceOf(ProjectGraphSerialization.Success.class,
-                new ProjectGraphSerializer().serialize(restored.graph(), ProjectGraphCanonicalFormatVersion.V2)).document().bytes());
+                new ProjectGraphSerializer().serialize(restored.graph())).document().bytes());
         assertFalse(Files.exists(temp.resolve("CURRENT"))); assertFalse(Files.exists(temp.resolve("state")));
         assertFalse(Files.exists(output.resolve("source.sir"))); // no concatenated-source product
     }

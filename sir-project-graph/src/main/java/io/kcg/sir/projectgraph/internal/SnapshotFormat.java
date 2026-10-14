@@ -78,8 +78,6 @@ final class SnapshotFormat {
    static final String PROV_KIND_FILE = "FileProvenance";
    static final String ROLE_FAMILY_DECLARATION = "Declaration";
    static final String ROLE_FAMILY_PROJECT = "Project";
-   static final String FORMAT_VERSION_V1 = "1";
-   static final String GRAPH_VERSION_V0_1 = "V0_1";
    static final String OPTIONAL_PRESENT_0 = "0";
    static final String OPTIONAL_PRESENT_1 = "1";
    static final int MAX_FIELDS_PER_RECORD = 64;

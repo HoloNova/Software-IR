@@ -20,10 +20,8 @@ public final class ProjectGraphValidator {
    public List<ProjectGraphDiagnostic> validateInput(ProjectGraphInput input) {
       Objects.requireNonNull(input, "input");
       List<ProjectGraphDiagnostic> diagnostics = new ArrayList<>();
-      if ((input.version() == GraphVersion.V0_2) != input.sourceSet().isPresent()
-         || input.sourceSet().filter(s -> !s.entry().equals(input.sourceId())).isPresent()) {
-         diagnostics.add(ProjectGraphDiagnostic.error("SIR-GRAPH-SOURCES-001",
-            "V0_2 requires a source manifest bound to its entry; V0_1 forbids it"));
+      if (!input.sourceSet().entry().equals(input.sourceId())) {
+         diagnostics.add(ProjectGraphDiagnostic.error("SIR-GRAPH-SOURCES-001", "the graph requires a source manifest bound to its entry"));
       }
 
       for (ProjectGraphInput.FileInput fi : input.files()) {
@@ -38,17 +36,8 @@ public final class ProjectGraphValidator {
       return diagnostics;
    }
 
-   public List<ProjectGraphDiagnostic> validate(GraphVersion version, List<ProjectGraphNode> nodes, List<ProjectGraphEdge> edges) {
+   public List<ProjectGraphDiagnostic> validate(List<ProjectGraphNode> nodes, List<ProjectGraphEdge> edges) {
       List<ProjectGraphDiagnostic> diagnostics = new ArrayList<>();
-      if (version == null) {
-         diagnostics.add(ProjectGraphDiagnostic.error("SIR-GRAPH-VERSION-001", "graph version must not be null"));
-         return diagnostics;
-      }
-
-      if (version != GraphVersion.V0_1 && version != GraphVersion.V0_2) {
-         diagnostics.add(ProjectGraphDiagnostic.error("SIR-GRAPH-VERSION-002", "unsupported graph version: " + version));
-      }
-
       Map<GraphNodeId, ProjectGraphNode> nodeById = new LinkedHashMap<>();
 
       for (ProjectGraphNode node : nodes) {
@@ -98,14 +87,7 @@ public final class ProjectGraphValidator {
       validateProjectRoot(nodes, diagnostics);
       validateSemanticKinds(nodes, diagnostics);
       validateTraceEdges(nodes, uniqueEdges, diagnostics);
-      if (version == GraphVersion.V0_2) validateMultiSourceProvenance(nodes, nodeById, diagnostics);
-      else {
-         if (nodes.stream().filter(n -> n instanceof ProjectGraphNode.Project).map(n -> (ProjectGraphNode.Project) n)
-            .anyMatch(p -> p.provenance().sourceSet().isPresent())) {
-            diagnostics.add(ProjectGraphDiagnostic.error("SIR-GRAPH-SOURCES-001", "V0_1 forbids a source manifest"));
-         }
-         validateProvenanceConsistency(nodes, diagnostics);
-      }
+      validateSourceProvenance(nodes, nodeById, diagnostics);
       validateArtifactFieldConsistency(nodes, diagnostics);
       validateLoweredOwnership(nodes, nodeById, uniqueEdges, diagnostics);
       validateArtifactOwnershipAndRole(nodeById, uniqueEdges, diagnostics);
@@ -263,74 +245,19 @@ public final class ProjectGraphValidator {
       }
    }
 
-   private static void validateProvenanceConsistency(List<ProjectGraphNode> nodes, List<ProjectGraphDiagnostic> diagnostics) {
-      SourceId graphSourceId = null;
-
-      for (ProjectGraphNode node : nodes) {
-         if (node instanceof ProjectGraphNode.Project p) {
-            graphSourceId = p.provenance().sourceId();
-            break;
-         }
-      }
-
-      if (graphSourceId != null) {
-         for (ProjectGraphNode node : nodes) {
-            GraphProvenance prov = node.provenance();
-            if (!prov.sourceId().equals(graphSourceId)) {
-               diagnostics.add(
-                  ProjectGraphDiagnostic.error(
-                     "SIR-GRAPH-PROVENANCE-006",
-                     "node provenance sourceId (" + prov.sourceId() + ") does not match graph sourceId (" + graphSourceId + ")",
-                     node.id(),
-                     null
-                  )
-               );
-            } else {
-               SourceSpan span = switch (prov) {
-                  case GraphProvenance.ProjectProvenance p -> null;
-                  case GraphProvenance.SemanticProvenance p -> p.span();
-                  case GraphProvenance.LoweredProvenance p -> p.origin().span();
-                  case GraphProvenance.ArtifactProvenance p -> p.origin().span();
-                  case GraphProvenance.FileProvenance p -> null;
-                  default -> throw new MatchException(null, null);
-               };
-               if (span != null && !span.source().equals(graphSourceId)) {
-                  boolean exempt = false;
-                  if (node instanceof ProjectGraphNode.Artifact artifact
-                     && artifact.role() instanceof ArtifactRole.ProjectRole
-                     && artifact.ownerSymbol().isEmpty()) {
-                     exempt = true;
-                  }
-
-                  if (!exempt) {
-                     diagnostics.add(
-                        ProjectGraphDiagnostic.error(
-                           "SIR-GRAPH-PROVENANCE-007",
-                           "provenance span source (" + span.source() + ") does not match graph sourceId (" + graphSourceId + ")",
-                           node.id(),
-                           null
-                        )
-                     );
-                  }
-               }
-            }
-         }
-      }
-   }
-
-   private static void validateMultiSourceProvenance(List<ProjectGraphNode> nodes,
+   private static void validateSourceProvenance(List<ProjectGraphNode> nodes,
       Map<GraphNodeId, ProjectGraphNode> byId, List<ProjectGraphDiagnostic> diagnostics) {
       var root = nodes.stream().filter(n -> n instanceof ProjectGraphNode.Project)
          .map(n -> (ProjectGraphNode.Project) n).findFirst();
       if (root.isEmpty()) return; // root cardinality has its own diagnostic
       var manifest = root.get().provenance().sourceSet();
-      if (manifest.isEmpty() || !manifest.get().entry().equals(root.get().provenance().sourceId())) {
-         diagnostics.add(ProjectGraphDiagnostic.error("SIR-GRAPH-SOURCES-001", "V0_2 root must contain its entry-bound source manifest"));
+      if (!manifest.entry().equals(root.get().provenance().sourceId())) {
+         diagnostics.add(ProjectGraphDiagnostic.error("SIR-GRAPH-SOURCES-001", "the root must contain its entry-bound source manifest"));
          return;
       }
       for (ProjectGraphNode node : nodes) {
          GraphProvenance p = node.provenance();
-         if (!manifest.get().contains(p.sourceId())) {
+         if (!manifest.contains(p.sourceId())) {
             diagnostics.add(ProjectGraphDiagnostic.error("SIR-GRAPH-SOURCES-002", "provenance outside source manifest: " + p.sourceId(), node.id(), null));
          }
          SourceSpan span = switch (p) {
@@ -344,14 +271,14 @@ public final class ProjectGraphValidator {
             var a = (ProjectGraphNode.Artifact) node;
             var origin = a.provenance().origin();
             // Lowering's explicit synthetic project origin is not a declaration location.
-            if (!p.sourceId().equals(manifest.get().entry()) || origin.ownerSymbol().isPresent()
+            if (!p.sourceId().equals(manifest.entry()) || origin.ownerSymbol().isPresent()
                || !origin.sourceNodeId().value().equals("project") || !span.source().equals(SourceId.of("project"))
                || !span.start().equals(new io.kcg.sir.source.SourcePosition(0, 1, 1))
                || !span.end().equals(new io.kcg.sir.source.SourcePosition(0, 1, 1))) {
                diagnostics.add(ProjectGraphDiagnostic.error("SIR-GRAPH-SOURCES-003", "invalid synthetic project artifact origin", node.id(), null));
             }
          } else if (span != null) {
-            long bytes = manifest.get().files().stream().filter(f -> f.sourceId().equals(p.sourceId())).findFirst().map(f -> f.byteCount()).orElse(-1L);
+            long bytes = manifest.files().stream().filter(f -> f.sourceId().equals(p.sourceId())).findFirst().map(f -> f.byteCount()).orElse(-1L);
             if (!span.source().equals(p.sourceId()) || span.end().codePointOffset() > bytes) {
                diagnostics.add(ProjectGraphDiagnostic.error("SIR-GRAPH-SOURCES-003", "origin/span must belong to its recorded source bytes", node.id(), null));
             }

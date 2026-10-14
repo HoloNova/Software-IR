@@ -43,10 +43,10 @@ public final class SnapshotDecoder {
                if (formatVersion == null) {
                   diagnostics.add(state.formatError("SIR-GRAPH-FORMAT-011", "HEADER missing required field: formatVersion"));
                   return null;
-               } else if (!"1".equals(formatVersion) && !"2".equals(formatVersion)) {
+               } else if (!SnapshotVersion.FORMAT.equals(formatVersion)) {
                   diagnostics.add(
                      ProjectGraphDiagnostic.error(
-                        "SIR-GRAPH-COMPAT-001", "unsupported format version: " + formatVersion + " (only '1' and '2' are supported); byte offset " + header.byteOffset
+                        "SIR-GRAPH-COMPAT-001", "unsupported format version: " + formatVersion + " (only '" + SnapshotVersion.FORMAT + "' is supported); byte offset " + header.byteOffset
                      )
                   );
                   return null;
@@ -239,23 +239,18 @@ public final class SnapshotDecoder {
          return null;
       }
 
-      if (!"V0_1".equals(graphVersion) && !"V0_2".equals(graphVersion)) {
+      if (!SnapshotVersion.GRAPH.equals(graphVersion)) {
          diagnostics.add(
             ProjectGraphDiagnostic.error(
                "SIR-GRAPH-COMPAT-002",
                "unsupported graph version: "
                   + graphVersion
-                  + " (only V0_1 and V0_2 are supported); record index "
+                  + " (only " + SnapshotVersion.GRAPH + " is supported); record index "
                   + graph.recordIndex
                   + ", byte offset "
                   + graph.byteOffset
             )
          );
-         return null;
-      }
-
-      if (!("V0_1".equals(graphVersion) ? "1" : "2").equals(header.fields.get("formatVersion"))) {
-         diagnostics.add(ProjectGraphDiagnostic.error("SIR-GRAPH-COMPAT-002", "graph/header version pair is incompatible"));
          return null;
       }
 
