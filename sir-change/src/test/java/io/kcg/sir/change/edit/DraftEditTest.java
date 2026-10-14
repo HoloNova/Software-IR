@@ -29,8 +29,9 @@ class DraftEditTest {
 
     private static SoftwareDraft draft() {
         String source = EditFixtures.courseCatalog();
-        var parsed = SirParser.create().parse(new SirSource(SourceId.of("e"), source));
-        NormalizedSemanticModel model = new SirSemanticAnalyzer().analyze(parsed.document().orElseThrow()).model().orElseThrow();
+        var parsed = SirParser.create().parseProject(new SirSource(SourceId.of("e"), source));
+        NormalizedSemanticModel model = new SirSemanticAnalyzer().analyzeProject(
+                new io.kcg.sir.semantic.api.ProjectSemanticInput((io.kcg.sir.ast.AstSourceUnit.Root) parsed.unit().orElseThrow(), java.util.List.of())).model().orElseThrow();
         return SoftwareDraft.of(model);
     }
 

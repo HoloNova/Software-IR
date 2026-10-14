@@ -81,10 +81,14 @@ public final class ProjectSourceResolver {
         var original = root.document().software();
         var software = new AstSoftware(original.id(), original.span(), original.name(), original.metadata(), original.target(), ordered);
         var resolved = new ResolvePass(software).run();
-        if (resolved.diagnostics().stream().anyMatch(Diagnostic::isError)) return failure(resolved.diagnostics());
+        // Resolution reports what it can and the later passes still run, so one check shows the type and validation errors
+        // as well. Only a broken identity stops here: nothing after it can trust the symbols.
+        if (resolved.diagnostics().stream().anyMatch(d -> d.code().value().equals("SIR-IDENTITY-002"))) return failure(resolved.diagnostics());
+        boolean resolutionFailed = resolved.diagnostics().stream().anyMatch(Diagnostic::isError);
         Map<SymbolId, AstDeclaration> top = new HashMap<>();
         ordered.forEach(d -> top.put(resolved.declarationBindings().get(d.id()), d));
-        for (var binding : resolved.referenceSiteBindings().all()) {
+        // Visibility is judged on complete bindings; after a resolution error they are not, and the check would only echo it.
+        for (var binding : resolutionFailed ? List.<ReferenceSiteBinding>of() : resolved.referenceSiteBindings().all()) {
             Symbol target = resolved.symbols().byId(binding.targetSymbol()).orElseThrow();
             if (target.kind() == SymbolKind.PRIMITIVE || target.kind() == SymbolKind.VARIABLE) continue;
             SymbolId topId = switch (target) {
@@ -104,7 +108,10 @@ public final class ProjectSourceResolver {
                         new io.kcg.sir.api.RelatedLocation("目标声明位于此处", owner.span())));
             }
         }
-        if (!diagnostics.isEmpty()) return failure(diagnostics);
+        if (!diagnostics.isEmpty()) {
+            diagnostics.addAll(0, resolved.diagnostics().stream().filter(Diagnostic::isError).toList());
+            return failure(diagnostics);
+        }
         // No second Resolve, no fallback lookup in Type/Validate/Normalize.
         var typed = new TypePass(software, resolved).run();
         var validated = new ValidatePass(software, typed).run();

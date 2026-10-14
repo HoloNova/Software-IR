@@ -1,6 +1,8 @@
 package io.kcg.sir.lowering.springboot;
 
-import io.kcg.sir.api.ParseResult;
+import io.kcg.sir.semantic.api.ProjectSemanticInput;
+import io.kcg.sir.ast.AstSourceUnit;
+import io.kcg.sir.api.SourceUnitParseResult;
 import io.kcg.sir.api.SirSource;
 import io.kcg.sir.internal.DefaultSirParser;
 import io.kcg.sir.lowering.api.LoweringAnalysis;
@@ -23,12 +25,12 @@ final class LoweringTestSupport {
     }
 
     static NormalizedSemanticModel normalized(String resource) {
-        ParseResult parsed = new DefaultSirParser().parse(
+        SourceUnitParseResult parsed = new DefaultSirParser().parseProject(
                 new SirSource(SourceId.of(resource), resource(resource)));
         if (!parsed.isSuccess()) {
             throw new AssertionError("parse failed: " + parsed.diagnostics());
         }
-        SemanticAnalysis semantic = new SirSemanticAnalyzer().analyze(parsed.document().orElseThrow());
+        SemanticAnalysis semantic = new SirSemanticAnalyzer().analyzeProject(new ProjectSemanticInput((AstSourceUnit.Root) parsed.unit().orElseThrow(), List.of()));
         if (!semantic.isSuccess()) {
             throw new AssertionError("semantic analysis failed: " + semantic.diagnostics());
         }
@@ -46,12 +48,12 @@ final class LoweringTestSupport {
 
     /** The lowered model of a source text, so a test can lower a stated variant of a legal program. */
     static SpringBootLoweredModel lowerSourceSuccess(String sourceText) {
-        ParseResult parsed = new DefaultSirParser().parse(new SirSource(SourceId.of("tests"), sourceText));
+        SourceUnitParseResult parsed = new DefaultSirParser().parseProject(new SirSource(SourceId.of("tests"), sourceText));
         if (!parsed.isSuccess()) {
             throw new AssertionError("parse failed: " + parsed.diagnostics());
         }
 
-        SemanticAnalysis semantic = new SirSemanticAnalyzer().analyze(parsed.document().orElseThrow());
+        SemanticAnalysis semantic = new SirSemanticAnalyzer().analyzeProject(new ProjectSemanticInput((AstSourceUnit.Root) parsed.unit().orElseThrow(), List.of()));
         if (!semantic.isSuccess()) {
             throw new AssertionError("semantic analysis failed: " + semantic.diagnostics());
         }
@@ -72,11 +74,11 @@ final class LoweringTestSupport {
 
     /** The target-capability diagnostics of a program, without lowering it. */
     static List<LoweringDiagnostic> inputDiagnostics(String sourceText) {
-        ParseResult parsed = new DefaultSirParser().parse(new SirSource(SourceId.of("tests"), sourceText));
+        SourceUnitParseResult parsed = new DefaultSirParser().parseProject(new SirSource(SourceId.of("tests"), sourceText));
         if (!parsed.isSuccess()) {
             throw new AssertionError("parse failed: " + parsed.diagnostics());
         }
-        SemanticAnalysis semantic = new SirSemanticAnalyzer().analyze(parsed.document().orElseThrow());
+        SemanticAnalysis semantic = new SirSemanticAnalyzer().analyzeProject(new ProjectSemanticInput((AstSourceUnit.Root) parsed.unit().orElseThrow(), List.of()));
         if (!semantic.isSuccess()) {
             throw new AssertionError("semantic analysis failed: " + semantic.diagnostics());
         }

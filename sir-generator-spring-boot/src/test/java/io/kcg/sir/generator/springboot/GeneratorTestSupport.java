@@ -1,6 +1,8 @@
 package io.kcg.sir.generator.springboot;
 
-import io.kcg.sir.api.ParseResult;
+import io.kcg.sir.semantic.api.ProjectSemanticInput;
+import io.kcg.sir.ast.AstSourceUnit;
+import io.kcg.sir.api.SourceUnitParseResult;
 import io.kcg.sir.api.SirSource;
 import io.kcg.sir.generator.springboot.api.GeneratedFile;
 import io.kcg.sir.generator.springboot.api.GenerationResult;
@@ -45,12 +47,12 @@ final class GeneratorTestSupport {
     }
 
     static SpringBootLoweredModel lowerText(String sourceText) {
-        ParseResult parsed = new DefaultSirParser().parse(new SirSource(SourceId.of("inline.sir"), sourceText));
+        SourceUnitParseResult parsed = new DefaultSirParser().parseProject(new SirSource(SourceId.of("inline.sir"), sourceText));
         if (!parsed.isSuccess()) {
             throw new AssertionError("parse failed: " + parsed.diagnostics());
         }
 
-        SemanticAnalysis semantic = new SirSemanticAnalyzer().analyze(parsed.document().orElseThrow());
+        SemanticAnalysis semantic = new SirSemanticAnalyzer().analyzeProject(new ProjectSemanticInput((AstSourceUnit.Root) parsed.unit().orElseThrow(), List.of()));
         if (!semantic.isSuccess()) {
             throw new AssertionError("semantic analysis failed: " + semantic.diagnostics());
         }
@@ -93,12 +95,12 @@ final class GeneratorTestSupport {
     }
 
     private static NormalizedSemanticModel normalized(String resource) {
-        ParseResult parsed = new DefaultSirParser().parse(
+        SourceUnitParseResult parsed = new DefaultSirParser().parseProject(
                 new SirSource(SourceId.of(resource), resource(resource)));
         if (!parsed.isSuccess()) {
             throw new AssertionError("parse failed: " + parsed.diagnostics());
         }
-        SemanticAnalysis semantic = new SirSemanticAnalyzer().analyze(parsed.document().orElseThrow());
+        SemanticAnalysis semantic = new SirSemanticAnalyzer().analyzeProject(new ProjectSemanticInput((AstSourceUnit.Root) parsed.unit().orElseThrow(), List.of()));
         if (!semantic.isSuccess()) {
             throw new AssertionError("semantic analysis failed: " + semantic.diagnostics());
         }

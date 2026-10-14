@@ -1,37 +1,40 @@
 package io.kcg.sir.change.edit;
 
+import io.kcg.sir.source.SourceId;
+import io.kcg.sir.source.SourceSnapshot;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-/** The outcome of editing a source with a command batch: a new source, or a refusal with the reason. */
+/** The outcome of editing a set of SIR sources with a command batch: new sources, or a refusal with the reason. */
 public sealed interface EditResult permits EditResult.Edited, EditResult.Refused {
    /**
-    * The batch was applied. {@code source} is a complete, valid SIR text that has already been read
-    * back through the formal analysis and found to say what the commands asked for.
+    * The batch was applied. {@code sources} has the same entry and the same files, with only the files that contain a
+    * changed declaration different, and has already been read back through the formal analysis and found to say what the
+    * commands asked for.
     *
-    * @param delta         what changed in the software
-    * @param sourceChanges what changed in the text, for review before anything is saved
+    * @param delta   what changed in the software
+    * @param changes what changed in the text, per source file, for review before anything is saved
     */
-   record Edited(String source, SemanticDelta delta, List<SourceChange> sourceChanges) implements EditResult {
+   record Edited(SourceSnapshot sources, SemanticDelta delta, List<LocatedChange> changes) implements EditResult {
       public Edited {
-         Objects.requireNonNull(source, "source");
+         Objects.requireNonNull(sources, "sources");
          Objects.requireNonNull(delta, "delta");
-         sourceChanges = List.copyOf(Objects.requireNonNull(sourceChanges, "sourceChanges"));
+         changes = List.copyOf(Objects.requireNonNull(changes, "changes"));
       }
    }
 
    /**
-    * Nothing was produced. The baseline source is untouched.
+    * Nothing was produced. The baseline sources are untouched.
     *
-    * @param candidateSource for an invalid result, the text that was tried, so the author can see it
+    * @param candidate for an invalid result, the sources that were tried, so the author can see them
     */
-   record Refused(Reason reason, String message, List<String> details, Optional<String> candidateSource) implements EditResult {
+   record Refused(Reason reason, String message, List<String> details, Optional<SourceSnapshot> candidate) implements EditResult {
       public Refused {
          Objects.requireNonNull(reason, "reason");
          Objects.requireNonNull(message, "message");
          details = List.copyOf(Objects.requireNonNull(details, "details"));
-         Objects.requireNonNull(candidateSource, "candidateSource");
+         Objects.requireNonNull(candidate, "candidate");
       }
    }
 
@@ -59,12 +62,20 @@ public sealed interface EditResult permits EditResult.Edited, EditResult.Refused
       ROUND_TRIP_MISMATCH
    }
 
-   /** One change in the text of the source. */
+   /** One change in the text of a source file. */
    record SourceChange(Type type, String declaration, String before, String after) {
       public enum Type {
          REWRITE,
          INSERT,
          REMOVE
+      }
+   }
+
+   /** One change in the text, and the source file it is in. */
+   record LocatedChange(SourceId source, SourceChange change) {
+      public LocatedChange {
+         Objects.requireNonNull(source, "source");
+         Objects.requireNonNull(change, "change");
       }
    }
 }

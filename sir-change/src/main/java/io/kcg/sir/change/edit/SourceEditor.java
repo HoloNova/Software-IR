@@ -1,10 +1,10 @@
 package io.kcg.sir.change.edit;
 
 import io.kcg.sir.api.Diagnostic;
-import io.kcg.sir.api.ParseResult;
 import io.kcg.sir.api.SirParser;
 import io.kcg.sir.api.SirSource;
 import io.kcg.sir.ast.AstSourceUnit;
+import io.kcg.sir.change.edit.EditResult.LocatedChange;
 import io.kcg.sir.change.edit.EditResult.Reason;
 import io.kcg.sir.change.edit.EditResult.SourceChange;
 import io.kcg.sir.internal.CommentScanner;
@@ -39,8 +39,8 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * Edits a SIR source - one 0.1 file, or a multi-file 0.2 project - with a batch of add, delete and
- * update commands.
+ * Edits a set of SIR sources - a software written in one file is a set with one member - with a batch of
+ * add, delete and update commands.
  *
  * <p>The edit never works on text. It reads the source with the formal analysis, takes the
  * software as a draft, applies the commands to the draft, writes <em>only the declarations that
@@ -49,14 +49,12 @@ import java.util.Set;
  * succeeds and describes exactly the draft the commands produced. Names are bound once, in that last
  * analysis; the edit never reuses a binding from the old source.
  *
- * <p>It works on declarations. For a project, each changed declaration is rewritten inside the file
- * it is in, and new declarations are appended after the last declaration that stays in the entry
- * file (names they use from other files must already be imported there; the fresh analysis refuses
- * the result otherwise). It refuses, with a reason, what it cannot do safely: editing the header or
+ * <p>It works on declarations. Each changed declaration is rewritten inside the file it is in, and new
+ * declarations are appended after the last declaration that stays in the entry file (names they use from
+ * other files must already be imported there; the fresh analysis refuses the result otherwise). It refuses, with a reason, what it cannot do safely: editing the header or
  * the imports, a source with a byte order mark, and any rewrite that would remove a comment.
  */
 public final class SourceEditor {
-   private static final SourceId SOURCE_ID = SourceId.of("edit-source");
    private static final String DECLARATIONS = SoftwareDraft.DECLARATIONS;
 
    private final SirParser parser = SirParser.create();
@@ -64,53 +62,36 @@ public final class SourceEditor {
    private final SoftwareSchema schema = SoftwareSchema.normalizedModel();
    private final DraftEdit draftEdit = new DraftEdit(this.schema);
 
-   /** The digest a batch must carry to be applied to this exact text. */
-   public static String sha256(String text) {
-      try {
-         return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(text.getBytes(StandardCharsets.UTF_8)));
-      } catch (NoSuchAlgorithmException e) {
-         throw new IllegalStateException(e);
-      }
-   }
-
-   /** The digest a batch must carry to be applied to this exact project (the digest of its source set). */
+   /** The digest a batch must carry to be applied to these exact sources (the digest of the source set). */
    public static String sha256(SourceSnapshot sources) {
       return sources.sha256Hex();
    }
 
-   public EditResult edit(String source, CommandBatch batch) {
-      Documents documents = new Documents(SOURCE_ID, Map.of(SOURCE_ID, source), false);
-      Outcome outcome = this.run(documents, batch, sha256(source));
-      if (outcome instanceof Done done) {
-         return new EditResult.Edited(done.files().get(SOURCE_ID), done.delta(), done.changes().stream().map(Located::change).toList());
-      }
-
-      Failed failed = (Failed)outcome;
-      return new EditResult.Refused(failed.reason(), failed.message(), failed.details(), Optional.ofNullable(failed.candidate()).map(c -> c.get(SOURCE_ID)));
-   }
-
-   /** Edits a multi-file 0.2 project. The batch must carry {@link #sha256(SourceSnapshot)} of {@code sources}. */
-   public ProjectEditResult edit(SourceSnapshot sources, CommandBatch batch) {
+   /** The batch must carry {@link #sha256(SourceSnapshot)} of {@code sources}. */
+   public EditResult edit(SourceSnapshot sources, CommandBatch batch) {
       Map<SourceId, String> files = new LinkedHashMap<>();
       for (var entry : sources.manifest().files()) {
          String text = decode(sources.bytes(entry.sourceId()));
          if (text == null) {
-            return new ProjectEditResult.Refused(Reason.UNSUPPORTED_SOURCE, "source '" + entry.sourceId().value() + "' is not valid UTF-8", List.of());
+            return new EditResult.Refused(Reason.UNSUPPORTED_SOURCE, "source '" + entry.sourceId().value() + "' is not valid UTF-8", List.of(), Optional.empty());
          }
 
          files.put(entry.sourceId(), text);
       }
 
-      Outcome outcome = this.run(new Documents(sources.entry(), files, true), batch, sha256(sources));
+      Outcome outcome = this.run(new Documents(sources.entry(), files), batch, sha256(sources));
       if (outcome instanceof Failed failed) {
-         return new ProjectEditResult.Refused(failed.reason(), failed.message(), failed.details());
+         return new EditResult.Refused(failed.reason(), failed.message(), failed.details(), Optional.ofNullable(failed.candidate()).map(c -> snapshotOf(sources.entry(), c)));
       }
 
       Done done = (Done)outcome;
+      return new EditResult.Edited(snapshotOf(sources.entry(), done.files()), done.delta(), done.changes());
+   }
+
+   private static SourceSnapshot snapshotOf(SourceId entry, Map<SourceId, String> files) {
       Map<SourceId, byte[]> bytes = new LinkedHashMap<>();
-      done.files().forEach((id, text) -> bytes.put(id, text.getBytes(StandardCharsets.UTF_8)));
-      return new ProjectEditResult.Edited(new SourceSnapshot(sources.entry(), bytes), done.delta(),
-         done.changes().stream().map(c -> new ProjectEditResult.LocatedChange(c.source(), c.change())).toList());
+      files.forEach((id, text) -> bytes.put(id, text.getBytes(StandardCharsets.UTF_8)));
+      return new SourceSnapshot(entry, bytes);
    }
 
    private static String decode(byte[] bytes) {
@@ -121,20 +102,17 @@ public final class SourceEditor {
       }
    }
 
-   /** The texts being edited, by source; a single 0.1 file is one text and is read with the legacy entry. */
-   private record Documents(SourceId entry, Map<SourceId, String> files, boolean project) {
+   /** The texts being edited, by source. */
+   private record Documents(SourceId entry, Map<SourceId, String> files) {
    }
 
    private sealed interface Outcome permits Done, Failed {
    }
 
-   private record Done(Map<SourceId, String> files, SemanticDelta delta, List<Located> changes) implements Outcome {
+   private record Done(Map<SourceId, String> files, SemanticDelta delta, List<LocatedChange> changes) implements Outcome {
    }
 
    private record Failed(Reason reason, String message, List<String> details, Map<SourceId, String> candidate) implements Outcome {
-   }
-
-   private record Located(SourceId source, SourceChange change) {
    }
 
    private Outcome run(Documents documents, CommandBatch batch, String baselineSha) {
@@ -233,7 +211,7 @@ public final class SourceEditor {
       }
 
       Map<SourceId, List<Splice>> splices = new LinkedHashMap<>();
-      List<Located> report = new ArrayList<>();
+      List<LocatedChange> report = new ArrayList<>();
       try {
          for (Map.Entry<NormalizedDeclaration, StructNode> entry : plan.changed.entrySet()) {
             SourceId id = sourceOf(documents, entry.getKey());
@@ -244,7 +222,7 @@ public final class SourceEditor {
             int end = span.end().codePointOffset();
             String written = new SirDeclarationWriter(indentOf(text, start).orElse("")).write(entry.getValue()).replace("\n", newline);
             splices.computeIfAbsent(id, k -> new ArrayList<>()).add(new Splice(start, end, written));
-            report.add(new Located(id, new SourceChange(SourceChange.Type.REWRITE, nameOfDeclaration(entry.getValue()), slice(text, start, end), written)));
+            report.add(new LocatedChange(id, new SourceChange(SourceChange.Type.REWRITE, nameOfDeclaration(entry.getValue()), slice(text, start, end), written)));
          }
       } catch (IllegalArgumentException e) {
          return refuse(Reason.NOT_REPRESENTABLE, e.getMessage());
@@ -257,7 +235,7 @@ public final class SourceEditor {
          int end = declaration.span().end().codePointOffset();
          int[] range = wholeLines(text, start, end);
          splices.computeIfAbsent(id, k -> new ArrayList<>()).add(new Splice(range[0], range[1], ""));
-         report.add(new Located(id, new SourceChange(SourceChange.Type.REMOVE, declaration.name(), slice(text, start, end), "")));
+         report.add(new LocatedChange(id, new SourceChange(SourceChange.Type.REMOVE, declaration.name(), slice(text, start, end), "")));
       }
 
       if (!plan.added.isEmpty()) {
@@ -278,7 +256,7 @@ public final class SourceEditor {
             for (StructNode node : plan.added) {
                String written = new SirDeclarationWriter(indent).write(node).replace("\n", newline);
                inserted.append(gap).append(indent).append(written);
-               report.add(new Located(id, new SourceChange(SourceChange.Type.INSERT, nameOfDeclaration(node), "", written)));
+               report.add(new LocatedChange(id, new SourceChange(SourceChange.Type.INSERT, nameOfDeclaration(node), "", written)));
             }
          } catch (IllegalArgumentException e) {
             return refuse(Reason.NOT_REPRESENTABLE, e.getMessage());
@@ -297,7 +275,7 @@ public final class SourceEditor {
 
       Map<SourceId, String> candidate = new LinkedHashMap<>(documents.files());
       splices.forEach((id, inFile) -> candidate.put(id, apply(texts.get(id), inFile)));
-      Documents result = new Documents(documents.entry(), candidate, documents.project());
+      Documents result = new Documents(documents.entry(), candidate);
       Analyzed analyzed = this.analyze(result);
       if (analyzed.model == null) {
          return new Failed(Reason.INVALID_RESULT, "the edited software is not valid", analyzed.problems, candidate);
@@ -311,13 +289,13 @@ public final class SourceEditor {
          return new Failed(Reason.ROUND_TRIP_MISMATCH, "the written source does not read back as the edited draft", difference.changes().stream().map(Object::toString).toList(), candidate);
       }
 
-      report.sort(Comparator.comparing((Located c) -> c.change().type().ordinal()).thenComparing(c -> c.change().declaration()));
+      report.sort(Comparator.comparing((LocatedChange c) -> c.change().type().ordinal()).thenComparing(c -> c.change().declaration()));
       return new Done(candidate, SemanticDelta.between(before, after, this.schema), report);
    }
 
    /** The source file a declaration was read from. */
    private static SourceId sourceOf(Documents documents, NormalizedDeclaration declaration) {
-      return documents.project() ? declaration.span().source() : documents.entry();
+      return declaration.span().source();
    }
 
    private static String newlineOf(String text) {
@@ -354,7 +332,7 @@ public final class SourceEditor {
          int end = declaration.span().end().codePointOffset();
          for (SourceSpan comment : comments.get(id)) {
             if (comment.start().codePointOffset() >= start && comment.end().codePointOffset() <= end) {
-               found.add((documents.project() ? id.value() + " " : "") + "line " + comment.start().line() + ", inside '" + declaration.name() + "'");
+               found.add(id.value() + " line " + comment.start().line() + ", inside '" + declaration.name() + "'");
             }
          }
       }
@@ -369,20 +347,6 @@ public final class SourceEditor {
    // ----- text helpers -------------------------------------------------------------------------
 
    private Analyzed analyze(Documents documents) {
-      if (!documents.project()) {
-         ParseResult parsed = this.parser.parse(new SirSource(SOURCE_ID, documents.files().get(SOURCE_ID)));
-         if (!parsed.isSuccess()) {
-            return new Analyzed(null, describe(parsed.diagnostics(), false));
-         }
-
-         SemanticAnalysis analysis = this.analyzer.analyze(parsed.document().orElseThrow());
-         if (!analysis.isSuccess()) {
-            return new Analyzed(null, describe(analysis.diagnostics(), false));
-         }
-
-         return new Analyzed(analysis.model().orElseThrow(), List.of());
-      }
-
       AstSourceUnit.Root root = null;
       List<AstSourceUnit.Fragment> fragments = new ArrayList<>();
       List<String> problems = new ArrayList<>();
@@ -390,7 +354,7 @@ public final class SourceEditor {
          SirSource source = new SirSource(file.getKey(), file.getValue());
          var parsed = file.getKey().equals(documents.entry()) ? this.parser.parseProject(source) : this.parser.parseFragment(source);
          if (!parsed.isSuccess()) {
-            problems.addAll(describe(parsed.diagnostics(), true));
+            problems.addAll(describe(parsed.diagnostics()));
          } else if (parsed.unit().orElseThrow() instanceof AstSourceUnit.Root r) {
             root = r;
          } else {
@@ -404,7 +368,7 @@ public final class SourceEditor {
 
       SemanticAnalysis analysis = this.analyzer.analyzeProject(new ProjectSemanticInput(root, fragments));
       if (!analysis.isSuccess()) {
-         return new Analyzed(null, describe(analysis.diagnostics(), true));
+         return new Analyzed(null, describe(analysis.diagnostics()));
       }
 
       return new Analyzed(analysis.model().orElseThrow(), List.of());
@@ -413,10 +377,10 @@ public final class SourceEditor {
    private record Analyzed(NormalizedSemanticModel model, List<String> problems) {
    }
 
-   private static List<String> describe(List<Diagnostic> diagnostics, boolean withFile) {
+   private static List<String> describe(List<Diagnostic> diagnostics) {
       return diagnostics.stream()
          .filter(Diagnostic::isError)
-         .map(d -> d.code().value() + (withFile ? " " + d.primarySpan().source().value() : "") + " line " + d.primarySpan().start().line() + ": " + d.message())
+         .map(d -> d.code().value() + " " + d.primarySpan().source().value() + " line " + d.primarySpan().start().line() + ": " + d.message())
          .toList();
    }
 

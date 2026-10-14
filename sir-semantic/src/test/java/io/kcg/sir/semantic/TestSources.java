@@ -1,10 +1,11 @@
 package io.kcg.sir.semantic;
 
 import io.kcg.sir.api.Diagnostic;
-import io.kcg.sir.api.ParseResult;
+import io.kcg.sir.api.SourceUnitParseResult;
 import io.kcg.sir.api.SirParser;
 import io.kcg.sir.api.SirSource;
-import io.kcg.sir.ast.AstDocument;
+import io.kcg.sir.ast.AstSourceUnit;
+import io.kcg.sir.semantic.api.ProjectSemanticInput;
 import io.kcg.sir.internal.DefaultSirParser;
 import io.kcg.sir.semantic.api.SemanticAnalysis;
 import io.kcg.sir.semantic.api.SirSemanticAnalyzer;
@@ -24,15 +25,20 @@ public final class TestSources {
     }
 
     public static SemanticAnalysis analyze(String source) {
-        return ANALYZER.analyze(parse(source));
+        return analyze(parse(source));
     }
 
-    public static AstDocument parse(String source) {
-        ParseResult parseResult = PARSER.parse(new SirSource(SourceId.of("test"), source));
+    /** A software written in one file: the root document with no fragments. */
+    public static SemanticAnalysis analyze(AstSourceUnit.Root root) {
+        return ANALYZER.analyzeProject(new ProjectSemanticInput(root, List.of()));
+    }
+
+    public static AstSourceUnit.Root parse(String source) {
+        SourceUnitParseResult parseResult = PARSER.parseProject(new SirSource(SourceId.of("test"), source));
         if (!parseResult.isSuccess()) {
             throw new AssertionError("Parse failed: " + messages(parseResult.diagnostics()));
         }
-        return parseResult.document().orElseThrow();
+        return (AstSourceUnit.Root) parseResult.unit().orElseThrow();
     }
 
     public static SemanticAnalysis analyzeResource(String path) {
@@ -69,7 +75,7 @@ public final class TestSources {
 
     public static String sir(String declarations) {
         return """
-                sir 0.1
+                sir 0.2
 
                 software Test {
                   metadata {
@@ -86,6 +92,8 @@ public final class TestSources {
                     interface rest;
                   }
 
+                  sources { }
+                  imports { }
                   declarations {
                 """ + declarations + """
                   }

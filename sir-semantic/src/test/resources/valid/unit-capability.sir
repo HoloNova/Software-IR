@@ -1,4 +1,4 @@
-sir 0.1
+sir 0.2
 
 software UnitSample {
   metadata {
@@ -13,6 +13,8 @@ software UnitSample {
     build maven;
     interface rest;
   }
+  sources { }
+  imports { }
   declarations {
     capability Ping {
       output Unit;

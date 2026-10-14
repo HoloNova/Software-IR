@@ -24,7 +24,7 @@ import io.kcg.sir.application.internal.ProjectSourceReader;
 import io.kcg.sir.application.internal.projectbaseline.ProjectBaselineVerification;
 import io.kcg.sir.change.edit.Command;
 import io.kcg.sir.change.edit.CommandBatch;
-import io.kcg.sir.change.edit.ProjectEditResult;
+import io.kcg.sir.change.edit.EditResult;
 import io.kcg.sir.change.edit.Selector;
 import io.kcg.sir.change.edit.SourceEditor;
 import io.kcg.sir.semantic.schema.SoftwareDraft;
@@ -205,7 +205,7 @@ class ProjectVerificationChainIT {
         assertNotEquals(course, wider);
         var batch = new CommandBatch(CommandBatch.PROTOCOL, "CourseAdmin", SourceEditor.sha256(v0),
                 List.of(new Command.Update(Selector.root().named("declarations", "Course"), new StructValue.Child(wider))));
-        var edited = assertInstanceOf(ProjectEditResult.Edited.class, new SourceEditor().edit(v0, batch));
+        var edited = assertInstanceOf(EditResult.Edited.class, new SourceEditor().edit(v0, batch));
         return edited.sources();
     }
 
