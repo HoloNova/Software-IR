@@ -141,8 +141,8 @@ public final class VersionTransaction {
             : new ProjectPublicationHistory.View(b.baselineId(), Set.of(b.baselineId()), Set.of(), b.descriptorBytes().length + b.payloadBytes().length + b.graphBytes().length + 65, Set.of(), 0);
         var edge = ProjectPublicationHistory.Edge.of(history.origin(), b, c, VersionPlans.contextDigest(this.state.root(), b.baselineId(), c.baselineId()), plan.sha256Hex(), VersionPlans.SUBJECT);
         budget(history.receiptCount() < ProjectUpdateReceipt.MAX_RECEIPTS, "terminal receipt budget exhausted");
-        budget(history.baselineIds().contains(c.baselineId()) || history.baselineIds().size() < ProjectPublicationHistory.MAX_BASELINES, "baseline history count exhausted");
-        budget(history.edgeIds().contains(edge.id()) || history.edgeIds().size() < ProjectPublicationHistory.MAX_EDGES, "publication history count exhausted");
+        budget(history.baselineIds().contains(c.baselineId()) || history.baselineIds().size() < ProjectPublicationHistory.MAX_BASELINES, "baseline history count exhausted; continue in a fresh state with VersionStateRolloverApplication");
+        budget(history.edgeIds().contains(edge.id()) || history.edgeIds().size() < ProjectPublicationHistory.MAX_EDGES, "publication history count exhausted; continue in a fresh state with VersionStateRolloverApplication");
         long added = history.baselineIds().contains(c.baselineId()) ? 0 : c.descriptorBytes().length + c.payloadBytes().length + c.graphBytes().length + 65;
         budget(history.byteCount() + 2 * added + 2L * edge.bytes().length + 2L * c.payloadBytes().length + baseBytes + stageBytes + 4L * 65536 <= ProjectPublicationHistory.MAX_HISTORY_BYTES,
             "history or receipt byte budget exhausted before writes");
