@@ -1,9 +1,9 @@
 # ADR-027：以 Git 和磁盘上的 SIR 作为版本历史，取代自存历史
 
-- Status: **Accepted for G1**（2026-10-14，负责人确认第 6 节的三项并授权开始 G1；G1 已实现，见[G1 报告](../roadmap/G1-workspace-version-report.md)；G2 至 G4 仍按计划分阶段确认）
+- Status: **Accepted，已全部实施**（2026-10-14，负责人确认第 6 节的三项；G1–G4 已实现，见[G1 报告](../history/roadmap/G1-workspace-version-report.md)与[迁移计划](../history/roadmap/G-git-version-history-plan.md)；旧存储族已删除）
 - 起因：负责人 2026-10-14 的决定——使用 Git；工具链升级后按最新版本重新生成；明确**不支持用户手改生成的代码**；旧的无用测试和被本决定弃用的代码逻辑允许直接删除。
-- 影响的已验收 ADR：[ADR-022](ADR-022-multi-source-baseline-storage-and-reopen.md)、[ADR-024](ADR-024-project-workflow-update-publication-and-recovery.md) 的存储、历史、事务与恢复部分；[ADR-026](ADR-026-layered-semantic-command-architecture.md) 的 R3/R4 版本事务部分。**不改**：解析、语义、降级、生成、指令编辑、R5 独立验证。
-- 计划：[G 系列迁移计划](../roadmap/G-git-version-history-plan.md)。
+- 影响的已验收 ADR：[ADR-022](../history/adr/ADR-022-multi-source-baseline-storage-and-reopen.md)、[ADR-024](../history/adr/ADR-024-project-workflow-update-publication-and-recovery.md) 的存储、历史、事务与恢复部分；[ADR-026](ADR-026-layered-semantic-command-architecture.md) 的 R3/R4 版本事务部分。**不改**：解析、语义、降级、生成、指令编辑、R5 独立验证。
+- 计划：[G 系列迁移计划](../history/roadmap/G-git-version-history-plan.md)。
 
 ## 1. 要解决的问题
 

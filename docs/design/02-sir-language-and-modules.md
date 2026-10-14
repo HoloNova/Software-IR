@@ -1,8 +1,10 @@
 # 第二步：SIR 语言、业务契约与模块组合
 
+> 目标设计，不代表已实现。文中凡涉及 Bundle、CURRENT、状态目录、事务日志与恢复、`context`/`plan` 命令、单文件 0.1 入口的描述，都是 2026-10-14 之前的方案：工程版本现在由磁盘上的 SIR 加 Git 承担（见 [ADR-027](../architecture/ADR-027-git-as-version-history.md)），语言只有 `sir 0.2` 一种文档形式。现有能力以 [项目状态](../PROJECT_STATUS.md) 为准。
+
 日期：2026-09-08。状态：推荐设计草案。依赖[共享契约](00-shared-contracts.md)和[产品范围](01-product-and-delivery.md)，由[编译生成设计](03-compiler-and-generated-backend.md)实现这些语义。
 
-本文件规定主设计目标语义。当前 Grammar 是单个 software 下的 enum/entity/input/error/capability 及有限 workflow；下面的 valueType/query/operation/policy/module/application/lifecycle、@id 和 nodeKey 均为目标形式，不是当前可执行示例。正式实现必须覆盖业务语义与反例，不能以能解析作为完成门。[源码与测试依据](implementation-baseline.md)
+本文件规定主设计目标语义。当前 Grammar 是单个 software 下的 enum/entity/input/error/capability 及有限 workflow；下面的 valueType/query/operation/policy/module/application/lifecycle、@id 和 nodeKey 均为目标形式，不是当前可执行示例。正式实现必须覆盖业务语义与反例，不能以能解析作为完成门。[源码与测试依据](../history/design/implementation-baseline.md)
 
 G1 先在单文件链中增加课程业务切片；G2 再完成本章多文件模块与持久身份。保留现有 capability/workflow 到目标 operation/query 的语义映射，正式语法可经版本化演进确定，不要求仅为换术语重写编译器。
 

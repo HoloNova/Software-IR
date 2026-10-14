@@ -1,0 +1,63 @@
+# 验证说明
+
+本文件说明**怎样验证**、**证据怎么写**，以及目前有哪些证据。能力边界看 [项目状态](../PROJECT_STATUS.md)。2026-10-14 之前累积的资格报告和覆盖清单已移到 [history/qualification](../history/qualification/)，其中的数字和已删除机制的描述只代表当时。
+
+## 1. 验证分三层
+
+| 层 | 做什么 | 在哪里跑 |
+| --- | --- | --- |
+| 定向测试 | 单模块、`-Dtest=...`，覆盖本次改动影响的类 | 本机（受限资源） |
+| 全量闸门 | `mvn -o clean verify`，冻结形式与完成形式（`-Dmaven.test.failure.ignore=true`）各一次 | GitHub CI |
+| 业务／独立验证 IT | 真实 MySQL 8.4 + 生成工程构建／启动 + HTTP 断言 | GitHub CI |
+
+本机资源很小（见 [AGENTS.md](../../AGENTS.md)「测试资源约束」），所以重活交给 CI；Claude 会话环境的约定见 [CLAUDE_EXECUTION_POLICY](../CLAUDE_EXECUTION_POLICY.md)。同一批改动只在 CI 上验证一次，本机不重复跑全量。
+
+## 2. CI 工作流（`.github/workflows/verify.yml`）
+
+每次 push 触发，一个 job 内依次：在线预热 Maven 仓库 → 预热生成工程依赖 → 冻结全量闸门 → 完成全量闸门 → 三个业务场景 IT（查询／写入／关系，真实 MySQL 8.4）→ 独立验证 IT → 上传证据。
+
+| 步骤 | 内容 |
+| --- | --- |
+| 业务场景 IT | `QuerySliceBusinessConformanceIT`、`WriteSliceBusinessConformanceIT`、`RelationSliceBusinessConformanceIT`：生成工程，离线构建，连真实 MySQL，启动 Spring Boot，用独立 JDBC 与 HTTP 断言 |
+| 独立验证 IT | `IndependentVerificationIT`：静态／构建／启动／业务四级各自独立出结果（正确样本、静态合法但业务错误的样本、不能编译的候选、数据库不可达）；`ProjectVerificationChainIT`：在 Git 工作区里，一个指令编辑经真实验证后发布，破坏需求的候选在改动前被拦下 |
+| 证据 | 每个 IT 的证据目录与 surefire 报告作为 artifact 上传；证据要能对应到 commit SHA 和 run URL |
+
+## 3. 证据口径
+
+1. 测试数量只引用当次 Surefire 输出或 CI 的报告；历史数字不混写。
+2. 被跳过、被排除、未启动的测试记为 `SKIPPED`／`BLOCKED`／`NOT_RUN`，不折算成通过。需要真实 MySQL 或参考环境变量的 IT 在环境缺失时只打印 `NOT_RUN`。
+3. CI 证据必须覆盖待验收源码：给出 commit SHA、run URL 和 artifact。后续又有新提交时，旧运行不证明新提交。
+4. 静态校验通过（`check`）只说明所请求的阶段通过，不证明生成的 Java 能构建、能启动或业务正确；独立验证的四级分别记录。
+5. 纯文档修改只做 `git diff --check`、`git status --short` 与链接检查，不跑构建。
+
+## 4. 当前证据
+
+**最近一次已核验的 CI 运行：** [verify #58](https://github.com/HoloNova/Software-IR/actions/runs/38534225348)，受测提交 `07f29f6`，通过（负责人确认）。其前一次 #57 失败，原因是 `ProjectVerificationChainIT` 把工作目录建在检出目录内部，Git 顶层与预期不一致而被拒绝（`NOT_TOP_LEVEL`），属于测试夹具的问题，在 `07f29f6` 中修正（IT 自建独立仓库并打印诊断）；生产代码未改。
+
+**之后的提交尚未经 CI 验证：** 07f29f6 之后进行了统一清理（删除 `sir 0.1` 单文档形式和相关入口、图的第一版格式、基线 Bundle 与若干无调用的辅助代码、文档归档），这些提交的 CI 结果待负责人通知后再记录。
+
+**本机定向（2026-10-14，清理后的工作树，各模块 `*Test` 单元测试，不含 IT）：**
+
+| 模块 | run / fail / error / skip |
+| --- | --- |
+| sir-parser | 96 / 0 / 0 / 0 |
+| sir-semantic | 229 / 0 / 0 / 0 |
+| sir-lowering-api | 4 / 0 / 0 / 0 |
+| sir-lowering-spring-boot | 86 / 0 / 0 / 0 |
+| sir-generator-spring-boot | 77 / 0 / 0 / 0 |
+| sir-project-graph | 73 / 0 / 0 / 0 |
+| sir-change | 28 / 0 / 0 / 0 |
+| sir-toolchain-application | 216 / 0 / 0 / 0 |
+| kcg-cli | 21 / 0 / 0 / 0 |
+
+这是本机定向结果，不是全量闸门，也不含需要 MySQL 的 IT。
+
+**历史证据：** 版本变更路径的专项证据（七类变更与从零生成逐字节一致、280 个中断检查点逐一重跑）见 [G1 报告](../history/roadmap/G1-workspace-version-report.md)；独立验证见 [R5 报告](../history/roadmap/R5-independent-verification-report.md)；课程查询／写入／关系场景的真实 MySQL 结果见 [history/work-orders](../history/work-orders/) 中 Q9、Q10、Q11、Q13。
+
+## 5. 未覆盖
+
+- Windows 平台证据（junction 相关用例只在 Windows 上执行）。
+- 独立发行包（fat JAR）；命令行当前通过 Maven exec 运行。
+- 没有跨进程锁；真实断电验证；对真实 Git 的故障注入（钩子失败、索引锁被占用）。
+- SLM 生成样本集上的评测尚未启动，见 [SLM 评测计划](SLM_GENERATED_PROJECT_EVALUATION_PLAN.md)。
+- 数据库初始化／迁移不是产品能力，业务 IT 的表结构是测试夹具。

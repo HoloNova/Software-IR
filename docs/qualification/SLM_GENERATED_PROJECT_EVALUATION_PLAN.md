@@ -1,6 +1,8 @@
 # SLM生成工程真实评测——总设计与限定试跑
 
-> 2026-10-09负责人要求“先进行真实工程评测”，按[ACTIVE_WORK §11](../roadmap/ACTIVE_WORK.md)仅执行已有课程题目的正/错误两样本试跑，结果见[实际报告](Q23_REAL_EVALUATION_PILOT.md)。其余通用平台/新SLM题目仍是待审设计。
+> 2026-10-14 更新：SLM 评测**尚未启动**。文中的 Q23、Q22、ACTIVE_WORK 属于已退役的工作单机制（见 [history](../history/README.md)）；`kcg check` 现在校验的是 `sir 0.2` 文档，`sir 0.1` 已删除，下文所说“单文件 0.1 样本”按此理解。两样本限定试跑是历史记录，不是评测集。
+
+> 2026-10-09负责人要求“先进行真实工程评测”，按[ACTIVE_WORK §11](../history/roadmap/ACTIVE_WORK.md)仅执行已有课程题目的正/错误两样本试跑，结果见[实际报告](../history/qualification/Q23_REAL_EVALUATION_PILOT.md)。其余通用平台/新SLM题目仍是待审设计。
 
 ## 1. 资格分开，不把静态通过当业务正确
 

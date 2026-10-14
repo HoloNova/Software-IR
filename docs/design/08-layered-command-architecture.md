@@ -1,10 +1,12 @@
 # 分层架构：统一软件语义与指令式增删改
 
+> 目标设计，不代表已实现。文中凡涉及 Bundle、CURRENT、状态目录、事务日志与恢复、`context`/`plan` 命令、单文件 0.1 入口的描述，都是 2026-10-14 之前的方案：工程版本现在由磁盘上的 SIR 加 Git 承担（见 [ADR-027](../architecture/ADR-027-git-as-version-history.md)），语言只有 `sir 0.2` 一种文档形式。现有能力以 [项目状态](../PROJECT_STATUS.md) 为准。
+
 - 日期：2026-10-13。
-- 状态：**目标架构方案**。负责人已确认工作流和分层方向，并授权本轮详细设计、文档更新、提交与推送；**未授权生产代码重构**。
-- 源码起点：`dac046309686b8bbb910624bbed04717e7481b2f`。现有行为仍以源码、测试和[资格报告](../qualification/CURRENT_QUALIFICATION.md)为准。
-- 决策入口：[ADR-026](../architecture/ADR-026-layered-semantic-command-architecture.md)。迁移顺序：[分层迁移路线](../roadmap/LAYERED_ARCHITECTURE_MIGRATION.md)。
-- 本方案定义核心工具链的新方向，不取消 G0–G7 产品目标，不把旧 Change/Bundle/日志静默升级成新合同。Q22、Q23 后续执行暂停；历史证据不撤销。
+- 状态：方案已确认并**已实施**（R1–R5，见[迁移记录](../history/roadmap/LAYERED_ARCHITECTURE_MIGRATION.md)）；其中的版本事务部分（CURRENT、Bundle、日志、恢复）已被 [ADR-027](../architecture/ADR-027-git-as-version-history.md) 取代。
+- 源码起点：`dac046309686b8bbb910624bbed04717e7481b2f`。现有行为以源码、测试和[项目状态](../PROJECT_STATUS.md)为准。
+- 决策入口：[ADR-026](../architecture/ADR-026-layered-semantic-command-architecture.md)。迁移顺序：[分层迁移路线](../history/roadmap/LAYERED_ARCHITECTURE_MIGRATION.md)。
+- 本方案定义核心工具链的新方向，不取消 G0–G7 产品目标，不把旧 Change/Bundle/日志静默升级成新合同。
 
 ## 1. 先用用户流程说明系统
 
@@ -241,4 +243,4 @@ Schema 内的引用和强类型检查归 Semantic；文本 writer 由解析层�
 
 不采用“保留特殊分支，只把名字改成增删改”；不把业务判断搬成 Change 插件；不建立用户可提交的规则 DSL；不直接改生成 Java；不反射比较整个 record；不全量重写现有编译器；不拆为微服务；不同时建设增量编译、第二 Target、数据库迁移和 Web 平台。
 
-选择理由：统一的是软件结构接口与机械编辑算法；领域规则和实现仍在应在的层中。这样既使一类组合业务共同受益，也保留现有类型系统与生成成果。具体实施按[迁移路线](../roadmap/LAYERED_ARCHITECTURE_MIGRATION.md)分阶段授权，本方案和 Git 推送均不授权开工。
+选择理由：统一的是软件结构接口与机械编辑算法；领域规则和实现仍在应在的层中。这样既使一类组合业务共同受益，也保留现有类型系统与生成成果。具体实施按[迁移路线](../history/roadmap/LAYERED_ARCHITECTURE_MIGRATION.md)分阶段授权，本方案和 Git 推送均不授权开工。

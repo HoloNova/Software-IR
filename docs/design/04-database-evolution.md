@@ -1,10 +1,12 @@
 # 第四步：数据库新建、保留数据更新与恢复
 
+> 目标设计，不代表已实现。文中凡涉及 Bundle、CURRENT、状态目录、事务日志与恢复、`context`/`plan` 命令、单文件 0.1 入口的描述，都是 2026-10-14 之前的方案：工程版本现在由磁盘上的 SIR 加 Git 承担（见 [ADR-027](../architecture/ADR-027-git-as-version-history.md)），语言只有 `sir 0.2` 一种文档形式。现有能力以 [项目状态](../PROJECT_STATUS.md) 为准。
+
 日期：2026-09-08。状态：推荐设计草案。依赖[共享契约](00-shared-contracts.md)与[编译模型](03-compiler-and-generated-backend.md)，由[本地部署设计](05-source-package-and-docker-deployment.md)调用。
 
 本设计以专用本地 MySQL/InnoDB、单个业务应用、停写升级为首轮环境。平台产出迁移定义，随包执行器在用户本地核验和执行。没有访问真实数据库，也没有完成迁移故障测试。
 
-**实现边界：**本章 INITIALIZE/UPDATE、MigrationDefinition、数据库 history/漂移核验与恢复均为尚未实现的目标闭环。当前生产 Application 的 CREATE/UPDATE/DELETE 操作工程文件；conformance 中的建库/SQL 辅助代码是测试设施，不能算迁移产品。G3 依赖 G2 的持久身份与物理映射，通过 DB-01..11 后才具备数据库更新资格；G4 再将其封装到 Docker 交付。[实现依据](implementation-baseline.md)
+**实现边界：**本章 INITIALIZE/UPDATE、MigrationDefinition、数据库 history/漂移核验与恢复均为尚未实现的目标闭环。当前生产 Application 的 CREATE/UPDATE/DELETE 操作工程文件；conformance 中的建库/SQL 辅助代码是测试设施，不能算迁移产品。G3 依赖 G2 的持久身份与物理映射，通过 DB-01..11 后才具备数据库更新资格；G4 再将其封装到 Docker 交付。[实现依据](../history/design/implementation-baseline.md)
 
 文件 Bundle/CURRENT、不可变源码 Release、数据库 schema/history、部署收据是四组独立事实。文件 CURRENT=B1 不授权执行 SQL，不证明迁移完成；数据库 DDL 已提交后也不得通过文件 CURRENT 回退假装数据库回滚。本章 UPDATE 均指数据库更新，不包含业务记录更新或文件 UPDATE。
 

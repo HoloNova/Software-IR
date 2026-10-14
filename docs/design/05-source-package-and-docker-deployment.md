@@ -1,10 +1,12 @@
 # 第五步：完整源码包与一键 Docker 部署
 
+> 目标设计，不代表已实现。文中凡涉及 Bundle、CURRENT、状态目录、事务日志与恢复、`context`/`plan` 命令、单文件 0.1 入口的描述，都是 2026-10-14 之前的方案：工程版本现在由磁盘上的 SIR 加 Git 承担（见 [ADR-027](../architecture/ADR-027-git-as-version-history.md)），语言只有 `sir 0.2` 一种文档形式。现有能力以 [项目状态](../PROJECT_STATUS.md) 为准。
+
 日期：2026-09-08。状态：推荐设计草案。使用[共享契约](00-shared-contracts.md)与[数据库执行规则](04-database-evolution.md)。下列路径、服务和命令入口是交付设计，不是已经生成的可执行工具。
 
 ## 1. 部署必须满足的条件
 
-**实现边界：**当前 Generator 已输出 Maven 与 Java 源文件，属于源码交付基础的部分实现；下面的完整 ZIP、ReleaseManifest、bootstrap、deployment-runner、入口脚本和 Docker/Compose 部署闭环尚未实现。G4 以 GEN-03、DEP-01..08 验证包的独立性，依赖 G3 的真实数据库迁移证据；G6 才把已验证的包接到网页下载。[实现依据](implementation-baseline.md)
+**实现边界：**当前 Generator 已输出 Maven 与 Java 源文件，属于源码交付基础的部分实现；下面的完整 ZIP、ReleaseManifest、bootstrap、deployment-runner、入口脚本和 Docker/Compose 部署闭环尚未实现。G4 以 GEN-03、DEP-01..08 验证包的独立性，依赖 G3 的真实数据库迁移证据；G6 才把已验证的包接到网页下载。[实现依据](../history/design/implementation-baseline.md)
 
 Lowering 确定依赖与容器配方，Generator 纯渲染，导出服务计算清单并打包；部署入口实际调用 Docker，容器内构建工具取得依赖，deployment-runner 负责数据库操作。生成 pom.xml 不等于依赖已经安装，生成源码文件也不等于一键部署已完成。
 
