@@ -56,7 +56,7 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 
 ## 4. 验证状态
 
-- 最近核验的 CI：`verify` #58（`07f29f6`）通过。之后的统一清理提交尚未经 CI，待负责人通知后记录。
+- 最近核验的 CI：`verify` #70（`4e17ca3`，即整理提交记录后的 `main`）通过，覆盖统一清理后的全部源码，见[验证说明](qualification/README.md)。
 - 清理后工作树的本机定向单元测试共 830 项、0 失败（各模块数字见[验证说明](qualification/README.md)）；不含需要 MySQL 的 IT，也不是全量闸门。
 - 被跳过、未运行的内容一律记为 `SKIPPED`／`NOT_RUN`，不折算成通过。
 

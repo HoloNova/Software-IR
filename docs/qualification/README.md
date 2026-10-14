@@ -32,9 +32,11 @@
 
 ## 4. 当前证据
 
-**最近一次已核验的 CI 运行：** [verify #58](https://github.com/HoloNova/Software-IR/actions/runs/38534225348)，受测提交 `07f29f6`，通过（负责人确认）。其前一次 #57 失败，原因是 `ProjectVerificationChainIT` 把工作目录建在检出目录内部，Git 顶层与预期不一致而被拒绝（`NOT_TOP_LEVEL`），属于测试夹具的问题，在 `07f29f6` 中修正（IT 自建独立仓库并打印诊断）；生产代码未改。
+**最近一次已核验的 CI 运行：** [verify #70](https://github.com/HoloNova/Software-IR/actions/runs/38546065357)，受测提交 `4e17ca3`（整理提交记录后的 `main`），通过（负责人确认）。它覆盖 `sir 0.1` 单文档形式、图的第一版格式、基线 Bundle 和无调用辅助代码删除之后的全部源码。整理前同一内容的 `0350e8f` 也通过（[#67](https://github.com/HoloNova/Software-IR/actions/runs/38544793410)）。
 
-**之后的提交尚未经 CI 验证：** 07f29f6 之后进行了统一清理（删除 `sir 0.1` 单文档形式和相关入口、图的第一版格式、基线 Bundle 与若干无调用的辅助代码、文档归档），这些提交的 CI 结果待负责人通知后再记录。
+**更早的运行：** [#58](https://github.com/HoloNova/Software-IR/actions/runs/38534225348)（`07f29f6`，整理前的旧 SHA，见 [COMMIT_MAP](../history/COMMIT_MAP.md)）通过。其前一次 #57 失败，原因是 `ProjectVerificationChainIT` 把工作目录建在检出目录内部，Git 顶层与预期不一致而被拒绝（`NOT_TOP_LEVEL`），属于测试夹具的问题，在 `07f29f6` 中修正（IT 自建独立仓库并打印诊断）；生产代码未改。
+
+本文件未逐项抄录 #70 的测试数字和 IT 条目，需要时以该运行页面的报告和 artifact 为准。
 
 **本机定向（2026-10-14，清理后的工作树，各模块 `*Test` 单元测试，不含 IT）：**
 
