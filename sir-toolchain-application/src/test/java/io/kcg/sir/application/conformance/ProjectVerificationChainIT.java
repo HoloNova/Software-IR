@@ -77,13 +77,28 @@ class ProjectVerificationChainIT {
         }
 
         Path work = env.workParent().resolve("chain-" + Long.toHexString(System.currentTimeMillis()));
+        Throwable failure = null;
         try {
             run(env, work);
+        } catch (Throwable t) {
+            failure = t;
+            throw t;
         } finally {
-            BusinessSliceHarness.deleteRecursively(work);
-            Files.createDirectories(env.evidenceParent());
-            Files.writeString(env.evidenceParent().resolve("verification-chain-report.txt"), reportText.toString(), StandardCharsets.UTF_8);
-            assertFalse(Files.exists(work), "the chain work area must be removed");
+            try {
+                Files.createDirectories(env.evidenceParent());
+                Files.writeString(env.evidenceParent().resolve("verification-chain-report.txt"), reportText.toString(), StandardCharsets.UTF_8);
+                if (failure == null) {
+                    // Kept when the test failed, like the other conformance tests, so the stored versions and the project can be inspected.
+                    BusinessSliceHarness.deleteRecursively(work);
+                    assertFalse(Files.exists(work), "the chain work area must be removed");
+                }
+            } catch (Exception | AssertionError cleanup) {
+                if (failure != null) {
+                    failure.addSuppressed(cleanup);
+                } else {
+                    throw cleanup;
+                }
+            }
         }
     }
 
