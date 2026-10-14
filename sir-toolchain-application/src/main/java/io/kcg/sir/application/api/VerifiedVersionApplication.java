@@ -56,34 +56,10 @@ public final class VerifiedVersionApplication {
             return new Result.Completed(this.apply.apply(request.change()));
         }
 
-        VerificationReport report = request.verification();
-        VerificationBinding binding = report.binding().orElse(null);
-        if (binding == null) {
-            return new Result.Refused("VERIFICATION_NOT_BOUND", "the verification did not generate a project, so it is evidence about no candidate");
-        }
-
         VersionPlan plan = planned.plan();
-        String sourceSet = request.change().planning().candidate().sha256Hex();
-        if (!binding.sourceSetSha256().equals(sourceSet) || !binding.sourceSetSha256().equals(plan.candidate().sourceSetSha256Hex())
-                || !binding.manifestDigest().equals(plan.candidate().manifestDigest())) {
-            return new Result.Refused("VERIFICATION_CANDIDATE_MISMATCH",
-                    "the verification is about a different source set or a different generated file list than the candidate being published");
-        }
-
-        for (VerificationStage stage : VerificationStage.values()) {
-            if (stage.ordinal() > request.required().ordinal()) {
-                break;
-            }
-
-            StageOutcome outcome = report.stage(stage).outcome();
-            if (outcome.status() != StageStatus.PASSED) {
-                return new Result.Refused("VERIFICATION_NOT_PASSED", stage + " is " + outcome.status() + " (" + outcome.code()
-                        + "), but " + request.required() + " is required");
-            }
-        }
-
-        if (!report.cleanup().proved()) {
-            return new Result.Refused("VERIFICATION_CLEANUP_NOT_PROVED", "the verification could not prove it left nothing behind");
+        var refusal = VerificationGate.check(request.verification(), request.required(), request.change().planning().candidate().sha256Hex(), plan.candidate());
+        if (refusal.isPresent()) {
+            return new Result.Refused(refusal.get().code(), refusal.get().message());
         }
 
         return new Result.Completed(this.apply.apply(request.change()));
