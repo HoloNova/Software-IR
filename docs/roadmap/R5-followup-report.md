@@ -75,7 +75,13 @@ SIR 0.2 的多文件课程项目，真实流程：保存的版本先过一遍业
 
 - 提交 `57fd548`（换代代码）的 [verify 运行 #45](https://github.com/HoloNova/Software-IR/actions/runs/38497848523)：success（冻结闸门、完成闸门、五个旧业务 IT、独立验证 IT 全部成功）。
 - 提交 `a01372c`（链路 IT 首次加入 CI）的运行 #46 被后一次推送顶替而取消，不作为证据。
-- **最终代码**提交 `8d0da8e` 的 [verify 运行 #47](https://github.com/HoloNova/Software-IR/actions/runs/38499644407)：撰写本报告时仍在运行，包含新的 `ProjectVerificationChainIT` 与锁／换代的评审修复。**以该运行的结论为准**；若它不是 success，本报告的 CI 一项不成立，需要按它的日志处理。
+- **最终代码**提交 `8d0da8e` 的 [verify 运行 #47](https://github.com/HoloNova/Software-IR/actions/runs/38499644407)：**success**。冻结闸门、完成闸门、五个旧业务 IT、独立验证 IT 四步都成功，证据产物已上传（conformance-evidence 129 个文件、surefire-reports 340 个文件）。
+- 其中独立验证步骤在真实的 MySQL **8.4.11**、Maven 3.10.0、JDK 21.0.12.1 上跑了 4 个测试，4/4 通过（`IndependentVerificationIT` 3 个、`ProjectVerificationChainIT` 1 个，后者 28 秒），日志里的报告显示它们真的运行了，不是"未运行"：
+  - 工程形式、保存的版本（35 个生成文件）：四档全过。
+  - 更新指令改出的候选：四档全过，生成文件清单的摘要与保存版本不同（`9044…` 对 `4641…`），证明指令确实改了生成的文件。
+  - 放宽状态过滤的候选：静态、构建、启动通过，业务档失败，`total=4 codes=[ART101, CS101, CS102, MAT101]`；门拒绝发布，状态目录与工程未变。
+  - 每次运行的清理证明都是 true（应用进程、端口、schema、互斥锁、连接、候选目录）。
+- 提交 `a01372c` 的运行 #46 被后一次推送顶替而取消，不作为证据；其后的文档提交触发的运行只含文档改动。
 
 ## 4. 与计划不一致或需要你知道的地方
 
