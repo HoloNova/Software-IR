@@ -1,6 +1,6 @@
 package io.kcg.cli.boundary;
 
-import io.kcg.sir.application.internal.bundle.BaselineBundleStore;
+import io.kcg.sir.application.internal.Sha256;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -22,9 +22,9 @@ final class CliBoundaryProbe {
     private CliBoundaryProbe() {
     }
 
-    /** Reaches into the Application's internal state package. */
-    static Object forbiddenInternalAccess(Path stateRoot) {
-        return new BaselineBundleStore(stateRoot);
+    /** Reaches into the Application's internal package. */
+    static Object forbiddenInternalAccess(Path anyPath) {
+        return Sha256.hexDigest(anyPath.toString().getBytes());
     }
 
     /** Does file I/O directly instead of using the typed Application API. */

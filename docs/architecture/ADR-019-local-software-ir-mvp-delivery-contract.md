@@ -435,3 +435,12 @@ Any change to Bundle, `CURRENT`, lock, journal, Recovery direction, Graph/Snapsh
 ## 15. Consequence
 
 If accepted and implemented slice by slice, this contract supplies the smallest supported local lifecycle around the already proven compiler and change engine. Until all four slices and the real acceptance matrix pass, the project must not claim that the local MVP is complete or feasible.
+
+## 16. Amendment (2026-10-14, ADR-027 / G3)
+
+The four-command lifecycle proposed above (`generate`, `register`, `apply`, `recover`) was designed around the stored baseline and the state root. It is not implemented and is superseded in part by [ADR-027](ADR-027-git-as-version-history.md), which drops the stored history in favour of the SIR on disk and Git.
+
+- The command line now publishes `version-plan` (read-only) and `version-apply` (the only command that changes a project; it requires `git`) with their own protocol, `KCG-CLI-VERSION-CHANGE-V1`. `version-apply` names the plan it was shown by its `planId`, and exit code 4 means it stopped half way and is to be run again.
+- The "read-only CLI" claim no longer holds for the whole command line; it still holds for `check`, `context`, `plan` and `version-plan`. The CLI itself still does no file I/O of its own (`CliProductionBoundaryTest`): the application reads and writes.
+- `context` and `plan` (the Change SIR planning commands, protocol `KCG-CLI-CHANGE-PLANNING-V1`) were marked deprecated in G3 and are removed in G4: they are now unknown commands. Usage errors and `--version` carry `KCG-CLI-VERSION-CHANGE-V1`; the CLI version is 0.2.0.
+- `generate`, `register` and `recover` stay unpublished. A bare `apply` is still an unknown command.

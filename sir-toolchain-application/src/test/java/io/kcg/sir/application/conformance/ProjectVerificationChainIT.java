@@ -4,10 +4,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import io.kcg.sir.application.api.CandidateVerificationApplication;
 import io.kcg.sir.application.api.CompilationInput;
-import io.kcg.sir.application.api.ProjectBaselineApplication;
-import io.kcg.sir.application.api.ProjectBaselineInspectionRequest;
-import io.kcg.sir.application.api.ProjectBaselineRegistrationRequest;
-import io.kcg.sir.application.api.ProjectBaselineResult;
 import io.kcg.sir.application.api.ProjectToolchainRequest;
 import io.kcg.sir.application.api.ProjectToolchainResult;
 import io.kcg.sir.application.api.ResourceLimits;
@@ -16,13 +12,16 @@ import io.kcg.sir.application.api.ToolchainApplication;
 import io.kcg.sir.application.api.VerificationReport;
 import io.kcg.sir.application.api.VerificationRequest;
 import io.kcg.sir.application.api.VerificationStage;
-import io.kcg.sir.application.api.VerifiedVersionApplication;
-import io.kcg.sir.application.api.VersionApplyRequest;
-import io.kcg.sir.application.api.VersionApplyResult;
-import io.kcg.sir.application.api.VersionPlanningApplication;
-import io.kcg.sir.application.api.VersionPlanningRequest;
+import io.kcg.sir.application.api.VerifiedWorkspaceApplication;
+import io.kcg.sir.application.api.WorkspaceApplyResult;
+import io.kcg.sir.application.api.WorkspacePlanningResult;
+import io.kcg.sir.application.api.WorkspaceVersionApplication;
+import io.kcg.sir.application.api.WorkspaceVersionRequest;
+import io.kcg.sir.application.api.ExecutionDiagnostic;
+import io.kcg.sir.application.execution.GitVersionControl;
 import io.kcg.sir.application.execution.MavenProjectBuilder;
 import io.kcg.sir.application.execution.SpringBootApplicationHost;
+import io.kcg.sir.application.internal.ProjectSourceReader;
 import io.kcg.sir.application.internal.projectbaseline.ProjectBaselineVerification;
 import io.kcg.sir.change.edit.Command;
 import io.kcg.sir.change.edit.CommandBatch;
@@ -47,13 +46,13 @@ import org.junit.jupiter.api.Test;
 
 /**
  * The whole path of the layered design for a project (SIR 0.2), against the real reference environment: commands edit
- * the stored sources, the candidate is verified for real (a real Maven build, a real Spring Boot process, a real MySQL
+ * the sources on disk, the candidate is verified for real (a real Maven build, a real Spring Boot process, a real MySQL
  * schema owned by the run, an oracle written from the original requirement), and only candidates whose verification
- * covers the business level are published as the next stored version.
+ * covers the business level are published (written to the project and saved in Git).
  *
  * <p>Opt-in with the same switch as the other independent verification test. It shows that the gate lets a good
  * candidate through, that a candidate which is valid SIR and builds and starts but breaks the requirement is stopped
- * at the business level without touching the stored version or the generated project, and that the published version
+ * at the business level without touching the sources, the generated project or Git, and that the published version
  * is the one that was verified.
  */
 class ProjectVerificationChainIT {
@@ -88,7 +87,7 @@ class ProjectVerificationChainIT {
                 Files.createDirectories(env.evidenceParent());
                 Files.writeString(env.evidenceParent().resolve("verification-chain-report.txt"), reportText.toString(), StandardCharsets.UTF_8);
                 if (failure == null) {
-                    // Kept when the test failed, like the other conformance tests, so the stored versions and the project can be inspected.
+                    // Kept when the test failed, like the other conformance tests, so the sources, the project and the Git history can be inspected.
                     BusinessSliceHarness.deleteRecursively(work);
                     assertFalse(Files.exists(work), "the chain work area must be removed");
                 }
@@ -113,37 +112,49 @@ class ProjectVerificationChainIT {
         }
 
         Path output = work.resolve("output");
-        Path state = work.resolve("state");
         var generated = assertInstanceOf(ProjectToolchainResult.Success.class, new ToolchainApplication().executeProject(new ProjectToolchainRequest(sources, ENTRY, output)));
-        var stored = assertInstanceOf(ProjectBaselineResult.Success.class, new ProjectBaselineApplication().register(new ProjectBaselineRegistrationRequest(generated.sources(), output, state)));
-        SourceSnapshot v0 = stored.sources();
-        String b0 = stored.receipt().baselineId();
+        SourceSnapshot v0 = generated.sources();
 
         var sandbox = new MysqlVerificationSandbox(env, DDL, SEED, "chain");
         var app = new CandidateVerificationApplication(sandbox, new MavenProjectBuilder(env.mavenExecutable(), env.mavenRepo(), env.mavenOffline(), Optional.empty(), sandbox.secrets()),
                 new SpringBootApplicationHost(Path.of(System.getProperty("java.home"), "bin", "java"), env.serverPort(), ChangeLoopCourseOracle.ROUTE, sandbox.secrets()),
                 new ChangeLoopCourseOracle(sandbox), limits());
 
-        // 1. The stored version itself satisfies the requirement: the oracle accepts the starting point.
-        var baseline = verify(app, "stored-v0", v0);
+        // 1. The version on disk itself satisfies the requirement: the oracle accepts the starting point.
+        var baseline = verify(app, "version-0", v0);
         assertTrue(baseline.passedThrough(VerificationStage.BUSINESS), baseline.canonicalText());
 
-        // 2. A user's command edits the stored sources (a wider course-code limit, which changes generated files): requirement-preserving.
+        // 2. A user's command edits the sources (a wider course-code limit, which changes generated files): requirement-preserving.
         SourceSnapshot candidate = widenCourseCode(v0, output);
         assertNotEquals(v0.sha256Hex(), candidate.sha256Hex());
         var good = verify(app, "command-edit", candidate);
         assertTrue(good.passedThrough(VerificationStage.BUSINESS), good.canonicalText());
         assertNotEquals(baseline.binding().orElseThrow().manifestDigest(), good.binding().orElseThrow().manifestDigest(), "the command changed the generated files");
 
-        var planning = new VersionPlanningRequest(state, output, b0, candidate);
-        var planned = new VersionPlanningApplication().plan(planning);
-        var published = new VerifiedVersionApplication().apply(new VerifiedVersionApplication.Request(new VersionApplyRequest(planning, planned), good, VerificationStage.BUSINESS));
-        var applied = assertInstanceOf(VersionApplyResult.Applied.class, assertInstanceOf(VerifiedVersionApplication.Result.Completed.class, published).result());
-        String b1 = applied.candidate().baselineId();
-        assertNotEquals(b0, b1);
+        // The project is a Git working tree: the SIR sources and the generated files side by side, history in Git.
+        Path repository = Files.createDirectories(work.resolve("repository"));
+        Files.move(sources, repository.resolve("sources"));
+        Files.move(output, repository.resolve("generated"));
+        Path liveSources = repository.resolve("sources");
+        Path liveOutput = repository.resolve("generated");
+        var git = new GitVersionControl();
+        // The work area sits under the checkout this test runs in, so Git would find that outer repository and the application would refuse a
+        // root that is not its own top level. The project is made its own repository here, as a user's project would be.
+        assertEquals(Optional.empty(), git.initialize(repository));
+        var versions = new WorkspaceVersionApplication(git);
+        var gate = new VerifiedWorkspaceApplication(git);
+
+        var request = new WorkspaceVersionRequest(repository, liveSources, liveOutput, candidate);
+        var planned = versions.plan(request);
+        var published = gate.apply(new VerifiedWorkspaceApplication.Request(request, planned, good, VerificationStage.BUSINESS));
+        var outcome = assertInstanceOf(VerifiedWorkspaceApplication.Result.Completed.class, published).result();
+        var applied = assertInstanceOf(WorkspaceApplyResult.Applied.class, outcome, () -> String.valueOf(outcome.diagnostics()));
         assertEquals(good.binding().orElseThrow().manifestDigest(), applied.candidate().manifestDigest(), "the published version is the verified one");
-        var reopened = assertInstanceOf(ProjectBaselineResult.Success.class, new ProjectBaselineApplication().inspect(new ProjectBaselineInspectionRequest(state, output, b1)));
-        assertEquals(candidate.manifest(), reopened.sources().manifest(), "the stored version holds the edited sources, and the project on disk matches it");
+        assertTrue(applied.beforeCommit().isPresent() && applied.afterCommit().isPresent(), "both versions are saved in Git");
+        assertEquals("2", git(repository, "rev-list", "--count", "HEAD").strip());
+        var onDisk = ProjectSourceReader.read(new io.kcg.sir.application.api.ProjectToolchainRequest(liveSources, ENTRY, liveOutput), new ArrayList<ExecutionDiagnostic>()).orElseThrow();
+        assertEquals(candidate.manifest(), onDisk.snapshot().manifest(), "the sources on disk are the edited ones, and the project matches them");
+        String publishedCommit = git(repository, "rev-parse", "HEAD").strip();
 
         // 3. A candidate that is valid SIR, builds and starts, but widens the filter and so breaks the original requirement.
         SourceSnapshot wrong = replaceEntry(candidate, "status == EnrollmentStatus.ACTIVE", "(status == EnrollmentStatus.ACTIVE or status == EnrollmentStatus.CANCELLED)");
@@ -152,22 +163,31 @@ class ProjectVerificationChainIT {
         assertEquals(StageStatus.FAILED, bad.stage(VerificationStage.BUSINESS).status(), bad.canonicalText());
         assertTrue(bad.stage(VerificationStage.BUSINESS).outcome().diagnostics().stream().anyMatch(d -> d.contains("ART101")), bad.stage(VerificationStage.BUSINESS).outcome().diagnostics().toString());
 
-        Map<String, String> stateBefore = new TreeMap<>(io.kcg.sir.application.MultiSourceTestSupport.tree(state));
-        Map<String, String> outputBefore = new TreeMap<>(io.kcg.sir.application.MultiSourceTestSupport.tree(output));
-        var wrongPlanning = new VersionPlanningRequest(state, output, b1, wrong);
-        var refused = new VerifiedVersionApplication().apply(new VerifiedVersionApplication.Request(
-                new VersionApplyRequest(wrongPlanning, new VersionPlanningApplication().plan(wrongPlanning)), bad, VerificationStage.BUSINESS));
-        var no = assertInstanceOf(VerifiedVersionApplication.Result.Refused.class, refused);
+        Map<String, String> sourcesBefore = new TreeMap<>(io.kcg.sir.application.MultiSourceTestSupport.tree(liveSources));
+        Map<String, String> outputBefore = new TreeMap<>(io.kcg.sir.application.MultiSourceTestSupport.tree(liveOutput));
+        var wrongRequest = new WorkspaceVersionRequest(repository, liveSources, liveOutput, wrong);
+        var wrongPlan = assertInstanceOf(WorkspacePlanningResult.Planned.class, versions.plan(wrongRequest));
+        var refused = gate.apply(new VerifiedWorkspaceApplication.Request(wrongRequest, wrongPlan, bad, VerificationStage.BUSINESS));
+        var no = assertInstanceOf(VerifiedWorkspaceApplication.Result.Refused.class, refused);
         assertEquals("VERIFICATION_NOT_PASSED", no.code(), no.message());
-        assertEquals(stateBefore, new TreeMap<>(io.kcg.sir.application.MultiSourceTestSupport.tree(state)), "the stored versions are untouched");
-        assertEquals(outputBefore, new TreeMap<>(io.kcg.sir.application.MultiSourceTestSupport.tree(output)), "the generated project is untouched");
-        assertInstanceOf(ProjectBaselineResult.Success.class, new ProjectBaselineApplication().inspect(new ProjectBaselineInspectionRequest(state, output, b1)));
+        assertEquals(sourcesBefore, new TreeMap<>(io.kcg.sir.application.MultiSourceTestSupport.tree(liveSources)), "the sources are untouched");
+        assertEquals(outputBefore, new TreeMap<>(io.kcg.sir.application.MultiSourceTestSupport.tree(liveOutput)), "the generated project is untouched");
+        assertEquals(publishedCommit, git(repository, "rev-parse", "HEAD").strip(), "nothing new was saved in Git");
 
-        // 4. Evidence for the wrong candidate does not unlock the good one, and the reverse: reports are bound to their candidate.
-        var mismatch = new VerifiedVersionApplication().apply(new VerifiedVersionApplication.Request(
-                new VersionApplyRequest(wrongPlanning, new VersionPlanningApplication().plan(wrongPlanning)), good, VerificationStage.BUSINESS));
-        assertEquals("VERIFICATION_CANDIDATE_MISMATCH", assertInstanceOf(VerifiedVersionApplication.Result.Refused.class, mismatch).code());
-        assertEquals(stateBefore, new TreeMap<>(io.kcg.sir.application.MultiSourceTestSupport.tree(state)));
+        // 4. Evidence for the good candidate does not unlock the wrong one: reports are bound to their candidate.
+        var mismatch = gate.apply(new VerifiedWorkspaceApplication.Request(wrongRequest, wrongPlan, good, VerificationStage.BUSINESS));
+        assertEquals("VERIFICATION_CANDIDATE_MISMATCH", assertInstanceOf(VerifiedWorkspaceApplication.Result.Refused.class, mismatch).code());
+        assertEquals(sourcesBefore, new TreeMap<>(io.kcg.sir.application.MultiSourceTestSupport.tree(liveSources)));
+        assertEquals(publishedCommit, git(repository, "rev-parse", "HEAD").strip());
+    }
+
+    private static String git(Path repository, String... args) throws Exception {
+        List<String> command = new ArrayList<>(List.of("git"));
+        command.addAll(List.of(args));
+        Process process = new ProcessBuilder(command).directory(repository.toFile()).redirectErrorStream(true).start();
+        String text = new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+        assertEquals(0, process.waitFor(), String.join(" ", command) + ": " + text);
+        return text;
     }
 
     private VerificationReport verify(CandidateVerificationApplication app, String id, SourceSnapshot candidate) {

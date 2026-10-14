@@ -1,0 +1,12 @@
+sir 0.2
+imports {}
+declarations {
+  entity Course persistent {
+    identity id: Int64 generated auto;
+    field code: String where notBlank, length(1, 32);
+    field name: String where notBlank, length(1, 100);
+    field description: Optional<String> where length(0, 500);
+    field capacity: Int32 where min(1);
+    field version: Int64 versioned;
+  }
+}

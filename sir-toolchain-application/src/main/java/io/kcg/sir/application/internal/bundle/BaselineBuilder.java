@@ -3,7 +3,6 @@ package io.kcg.sir.application.internal.bundle;
 import io.kcg.sir.application.api.ChangeExecutionBaselineFormatVersion;
 import io.kcg.sir.application.internal.Sha256;
 import io.kcg.sir.application.internal.SirCompilation;
-import io.kcg.sir.change.api.ChangeBaseRevision;
 import io.kcg.sir.generator.springboot.api.GeneratedFile;
 import io.kcg.sir.projectgraph.api.ProjectGraph;
 import io.kcg.sir.projectgraph.api.ProjectGraphCanonicalFormatVersion;
@@ -74,9 +73,5 @@ public final class BaselineBuilder {
       Objects.requireNonNull(graph, "graph");
       ProjectGraphSerialization serialization = new ProjectGraphSerializer().serialize(graph, ProjectGraphCanonicalFormatVersion.V1);
       return serialization instanceof Failure ? null : ((Success)serialization).document().bytes();
-   }
-
-   public static ChangeBaseRevision toBaseRevision(BaselineDescriptor descriptor) {
-      return descriptor.toBaseRevision();
    }
 }

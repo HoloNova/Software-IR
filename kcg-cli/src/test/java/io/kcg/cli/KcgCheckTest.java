@@ -50,16 +50,16 @@ class KcgCheckTest {
         assertTrue(rows.get(1).contains("\"id\":null,\"ok\":false"));assertTrue(rows.get(2).contains("\"stage\":\"SEMANTIC\""));
         assertTrue(rows.get(2).contains("SIR-FLOW-001"));assertFalse(first.stdout().contains(root.toString()));assertEquals(before,fingerprint(root));
     }
-    @Test void commandParsingHelpAndFrozenOldHelpGolden() throws Exception {
+    @Test void commandParsingHelpAndVersionGolden() throws Exception {
         assertInstanceOf(CliCommandLine.ParsedCheck.class,CliCommandLine.parse(new String[]{"check"}));
         for(var args:List.of(new String[]{"check","--input","file"},new String[]{"check","--help","extra"},new String[]{"check","--state-root","/tmp"}))
             assertInstanceOf(CliCommandLine.UsageError.class,CliCommandLine.parse(args));
         var help=run(root,"en","","check","--help");assertEquals(0,help.exit());assertTrue(help.stdout().contains("Static checking only"));
         var top=run(root,"en","","--help");assertTrue(top.stdout().contains("  check "));
-        for(var pair:List.of(new String[]{"context","f10a662800168dd3ac6ddb3ba7662e13c9b2b707a05a6d224eb3316d96399b1f"},new String[]{"plan","6233fa562e6fd5dd3f50b1dfae35e2e5083b72b5f433153d1d85680cc754265e"})) {
-            var r=run(root,"en","",pair[0],"--help");assertEquals(0,r.exit());assertEquals(pair[1],HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(r.stdout().getBytes(StandardCharsets.UTF_8))));
+        for(var gone:List.of("context","plan")) {
+            var r=run(root,"en","",gone,"--help");assertEquals(2,r.exit());assertTrue(r.stdout().contains("unknown command: "+gone));
         }
-        assertEquals("984ddae03b52a99319e5a47e795720d5b6193cdf78b17b4f98c4f9a63b2549f5",HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(run(root,"en","","--version").stdout().getBytes(StandardCharsets.UTF_8))));
+        assertEquals("1affadf4876da6befa615031c6fd6a4f5ded98724718f4f472414f5a31ecc372",HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(run(root,"en","","--version").stdout().getBytes(StandardCharsets.UTF_8))));
     }
     @Test void renderingKeepsOriginalRelatedFixIdentityAndUnicodeInformation() throws Exception {
         var span=new SourceSpan(SourceId.of("sample.sir"),new SourcePosition(0,1,1),new SourcePosition(2,1,3));

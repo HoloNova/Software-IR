@@ -5,7 +5,7 @@
 
 ### 2026-10-13 当前授权与目标变化
 
-负责人确认[分层与指令式修改方案](design/08-layered-command-architecture.md)，方向见[ADR-026](architecture/ADR-026-layered-semantic-command-architecture.md)。本轮只更新文档并明确允许提交/推送；Q22/Q23后续执行暂停，[R1–R5](roadmap/LAYERED_ARCHITECTURE_MIGRATION.md)中 R1（类型化软件结构）、R2（增删改指令与 SIR 往返）与 R3（统一编译与只读更新预览）与 R4（版本应用与恢复）已获授权并在 Claude 会话环境验证（[R1 报告](roadmap/R1-semantic-structure-report.md)、[R2 报告](roadmap/R2-command-editing-report.md)、[R3 报告](roadmap/R3-compilation-preview-report.md)、[R4 报告](roadmap/R4-version-apply-report.md)，业务 IT 为 NOT_RUN），R5（独立构建与真实验收接入）也已实施并验证（[计划](roadmap/R5-independent-verification-plan.md)、[R5 报告](roadmap/R5-independent-verification-report.md)；同 SHA CI 含真实 MySQL 8.4.11 上的独立验证 IT），R1–R5 路线全部完成。统一SoftwareSchema、固定增删改、SIR writer/往返、混合/source-only应用和通用runner是目标，不是已实现能力。历史资格不变。
+负责人确认[分层与指令式修改方案](design/08-layered-command-architecture.md)，方向见[ADR-026](architecture/ADR-026-layered-semantic-command-architecture.md)。本轮只更新文档并明确允许提交/推送；Q22/Q23后续执行暂停，[R1–R5](roadmap/LAYERED_ARCHITECTURE_MIGRATION.md)中 R1（类型化软件结构）、R2（增删改指令与 SIR 往返）与 R3（统一编译与只读更新预览）与 R4（版本应用与恢复）已获授权并在 Claude 会话环境验证（[R1 报告](roadmap/R1-semantic-structure-report.md)、[R2 报告](roadmap/R2-command-editing-report.md)、[R3 报告](roadmap/R3-compilation-preview-report.md)、[R4 报告](roadmap/R4-version-apply-report.md)，业务 IT 为 NOT_RUN），R5（独立构建与真实验收接入）也已实施并验证（[计划](roadmap/R5-independent-verification-plan.md)、[R5 报告](roadmap/R5-independent-verification-report.md)；同 SHA CI 含真实 MySQL 8.4.11 上的独立验证 IT），R1–R5 路线全部完成。此后改用 Git 作版本历史（[ADR-027](architecture/ADR-027-git-as-version-history.md)、[G 系列计划](roadmap/G-git-version-history-plan.md)），G1 已实现并本机定向验证（[G1 报告](roadmap/G1-workspace-version-report.md)），G2 至 G4 未授权，旧版本变更路径仍在。统一SoftwareSchema、固定增删改、SIR writer/往返、混合/source-only应用和通用runner是目标，不是已实现能力。历史资格不变。
 
 ## 1. 项目定位
 
@@ -25,9 +25,9 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 | `sir-lowering-spring-boot` | Java 21/Spring Boot/MyBatis-Plus/MySQL/Maven/REST Lowered IR |
 | `sir-generator-spring-boot` | 只消费 Lowered IR 的确定性内存文件生成 |
 | `sir-project-graph` | Project Graph 构建、校验、canonical serialization/load |
-| `sir-change` | Change IR v0.1-v0.6 typed planning、scope、impact 和 closure |
-| `sir-toolchain-application` | 编译/生成/Graph、Bundle、CURRENT、文件事务、Apply 和显式恢复 |
-| `kcg-cli` | 只读 `check` / `context` / `plan` 和 canonical JSON；check资格待Q23 CI |
+| `sir-change` | 增删改指令的编辑与写回（`SourceEditor`）；旧 Change IR 规划器已删除 |
+| `sir-toolchain-application` | 编译/生成/Graph、独立验证、基于 Git 的版本规划与应用；旧状态目录/Bundle/CURRENT/事务族已删除 |
+| `kcg-cli` | `check`、只读 `version-plan`、`version-apply` 和 canonical JSON |
 
 ## 3. 当前公开能力边界
 

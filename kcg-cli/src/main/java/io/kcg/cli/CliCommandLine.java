@@ -1,6 +1,6 @@
 package io.kcg.cli;
 
-import io.kcg.sir.change.api.ChangeIrVersion;
+import io.kcg.sir.source.SourceId;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -10,7 +10,7 @@ import java.util.regex.Pattern;
 
 public final class CliCommandLine {
    private static final Pattern LOWER_HEX_64 = Pattern.compile("[0-9a-f]{64}");
-   public static final String PROTOCOL_VERSION = "KCG-CLI-CHANGE-PLANNING-V1";
+   public static final String PROTOCOL_VERSION = VersionResultDocument.PROTOCOL;
 
    private CliCommandLine() {
    }
@@ -22,8 +22,8 @@ public final class CliCommandLine {
          return (CliCommandLine.ParseResult)(switch (first) {
             case "--help", "-h", "help" -> new CliCommandLine.Help(null);
             case "--version", "-V", "version" -> new CliCommandLine.Version();
-            case "context" -> parseContext(args);
-            case "plan" -> parsePlan(args);
+            case "version-plan" -> parseVersion(args, "version-plan", false);
+            case "version-apply" -> parseVersion(args, "version-apply", true);
             case "check" -> args.length == 1 ? new ParsedCheck() : args.length == 2 && isHelp(args[1])
                 ? new Help("check") : new UsageError("KCG-CLI-USAGE-002", "check accepts no options; read JSONL from stdin");
             default -> new CliCommandLine.UsageError("KCG-CLI-USAGE-001", "unknown command: " + first);
@@ -33,109 +33,58 @@ public final class CliCommandLine {
       }
    }
 
-   private static CliCommandLine.ParseResult parseContext(String[] args) {
+   /** {@code version-plan} and {@code version-apply}: the SIR on disk, the generated project, a candidate directory and (to apply) the plan id seen. */
+   private static CliCommandLine.ParseResult parseVersion(String[] args, String command, boolean apply) {
       if (args.length >= 2 && isHelp(args[1])) {
-         return new CliCommandLine.Help("context");
-      } else {
-         // Declared order, not Map.of: the missing-required-option diagnostic below reports the
-         // first absent option, and an unspecified iteration order would make that message differ
-         // between two runs of the same command line.
-         Map<String, String> opts = new LinkedHashMap<>();
-         opts.put("--state-root", "stateRoot");
-         opts.put("--output-root", "outputRoot");
-         opts.put("--candidate-sir", "candidateSir");
-         Object om = parseOptions(args, 1, opts, "context");
-         if (om instanceof CliCommandLine.UsageError ue) {
-            return ue;
-         } else {
-            CliCommandLine.OptionMap ok = (CliCommandLine.OptionMap)om;
-            Path stateRoot = requireAbsPath(ok, "--state-root");
-            if (stateRoot == null) {
-               return new CliCommandLine.UsageError("KCG-CLI-USAGE-003", "--state-root must be an absolute path");
-            }
+         return new CliCommandLine.Help(command);
+      }
 
-            Path outputRoot = requireAbsPath(ok, "--output-root");
-            if (outputRoot == null) {
-               return new CliCommandLine.UsageError("KCG-CLI-USAGE-003", "--output-root must be an absolute path");
-            }
+      Map<String, String> opts = new LinkedHashMap<>();
+      opts.put("--repository-root", "repositoryRoot");
+      opts.put("--source-root", "sourceRoot");
+      opts.put("--entry", "entry");
+      opts.put("--output-root", "outputRoot");
+      opts.put("--candidate-root", "candidateRoot");
+      if (apply) {
+         opts.put("--expected-plan-id", "expectedPlanId");
+      }
 
-            Path candidateSir = requireAbsPath(ok, "--candidate-sir");
-            return candidateSir == null
-               ? new CliCommandLine.UsageError("KCG-CLI-USAGE-003", "--candidate-sir must be an absolute path")
-               : new CliCommandLine.ParsedContext(new ContextArguments(stateRoot, outputRoot, candidateSir));
+      Object om = parseOptions(args, 1, opts, command);
+      if (om instanceof CliCommandLine.UsageError ue) {
+         return ue;
+      }
+
+      CliCommandLine.OptionMap ok = (CliCommandLine.OptionMap)om;
+      Path[] roots = new Path[4];
+      String[] names = {"--repository-root", "--source-root", "--output-root", "--candidate-root"};
+      for (int i = 0; i < names.length; i++) {
+         roots[i] = requireAbsPath(ok, names[i]);
+         if (roots[i] == null) {
+            return new CliCommandLine.UsageError("KCG-CLI-USAGE-003", names[i] + " must be an absolute path");
          }
       }
-   }
 
-   private static CliCommandLine.ParseResult parsePlan(String[] args) {
-      if (args.length >= 2 && isHelp(args[1])) {
-         return new CliCommandLine.Help("plan");
-      } else {
-         // Declared order, not Map.of: see the note in parseContext — the first missing required
-         // option must be the same one on every run.
-         Map<String, String> opts = new LinkedHashMap<>();
-         opts.put("--state-root", "stateRoot");
-         opts.put("--output-root", "outputRoot");
-         opts.put("--candidate-sir", "candidateSir");
-         opts.put("--expected-context-id", "expectedContextId");
-         opts.put("--target-key", "targetKey");
-         opts.put("--change-ir-version", "changeIrVersion");
-         opts.put("--operation", "operation");
-         Object om = parseOptions(args, 1, opts, "plan");
-         if (om instanceof CliCommandLine.UsageError ue) {
-            return ue;
-         } else {
-            CliCommandLine.OptionMap ok = (CliCommandLine.OptionMap)om;
-            Path stateRoot = requireAbsPath(ok, "--state-root");
-            if (stateRoot == null) {
-               return new CliCommandLine.UsageError("KCG-CLI-USAGE-003", "--state-root must be an absolute path");
-            }
+      SourceId entry;
+      try {
+         entry = SourceId.of(ok.get("--entry"));
+      } catch (IllegalArgumentException e) {
+         return new CliCommandLine.UsageError("KCG-CLI-USAGE-003", "--entry must be a relative source path such as project.sir");
+      }
 
-            Path outputRoot = requireAbsPath(ok, "--output-root");
-            if (outputRoot == null) {
-               return new CliCommandLine.UsageError("KCG-CLI-USAGE-003", "--output-root must be an absolute path");
-            }
-
-            Path candidateSir = requireAbsPath(ok, "--candidate-sir");
-            if (candidateSir == null) {
-               return new CliCommandLine.UsageError("KCG-CLI-USAGE-003", "--candidate-sir must be an absolute path");
-            }
-
-            String expectedContextId = ok.get("--expected-context-id");
-            if (!LOWER_HEX_64.matcher(expectedContextId).matches()) {
-               return new CliCommandLine.UsageError("KCG-CLI-USAGE-003", "--expected-context-id must be 64 lower-case hex characters");
-            }
-
-            String targetKey = ok.get("--target-key");
-            if (!LOWER_HEX_64.matcher(targetKey).matches()) {
-               return new CliCommandLine.UsageError("KCG-CLI-USAGE-003", "--target-key must be 64 lower-case hex characters");
-            }
-
-            ChangeIrVersion version = parseVersion(ok.get("--change-ir-version"));
-            if (version == null) {
-               return new CliCommandLine.UsageError("KCG-CLI-USAGE-003", "--change-ir-version must be one of V0_1..V0_6");
-            }
-
-            OperationToken op = OperationToken.parse(ok.get("--operation")).orElse(null);
-            return op == null
-               ? new CliCommandLine.UsageError("KCG-CLI-USAGE-003", "--operation must be a frozen operation token")
-               : new CliCommandLine.ParsedPlan(new PlanArguments(stateRoot, outputRoot, candidateSir, expectedContextId, targetKey, version, op));
+      String expectedPlanId = null;
+      if (apply) {
+         expectedPlanId = ok.get("--expected-plan-id");
+         if (!LOWER_HEX_64.matcher(expectedPlanId).matches()) {
+            return new CliCommandLine.UsageError("KCG-CLI-USAGE-003", "--expected-plan-id must be 64 lower-case hex characters");
          }
       }
+
+      VersionArguments arguments = new VersionArguments(roots[0], roots[1], entry, roots[2], roots[3], expectedPlanId);
+      return apply ? new CliCommandLine.ParsedVersionApply(arguments) : new CliCommandLine.ParsedVersionPlan(arguments);
    }
 
    private static boolean isHelp(String arg) {
       return "--help".equals(arg) || "-h".equals(arg) || "help".equals(arg);
-   }
-
-   private static ChangeIrVersion parseVersion(String value) {
-      for (ChangeIrVersion v : ChangeIrVersion.values()) {
-         if (v.name().equals(value)) {
-            return v;
-         }
-      }
-
-      return null;
    }
 
    private static Path requireAbsPath(CliCommandLine.OptionMap om, String key) {
@@ -203,8 +152,8 @@ public final class CliCommandLine {
    }
 
    public sealed interface ParseResult
-      permits CliCommandLine.ParsedContext,
-      CliCommandLine.ParsedPlan,
+      permits CliCommandLine.ParsedVersionPlan,
+      CliCommandLine.ParsedVersionApply,
       CliCommandLine.ParsedCheck,
       CliCommandLine.Help,
       CliCommandLine.Version,
@@ -214,10 +163,10 @@ public final class CliCommandLine {
    public record ParsedCheck() implements CliCommandLine.ParseResult {
    }
 
-   public record ParsedContext(ContextArguments arguments) implements CliCommandLine.ParseResult {
+   public record ParsedVersionPlan(VersionArguments arguments) implements CliCommandLine.ParseResult {
    }
 
-   public record ParsedPlan(PlanArguments arguments) implements CliCommandLine.ParseResult {
+   public record ParsedVersionApply(VersionArguments arguments) implements CliCommandLine.ParseResult {
    }
 
    public record UsageError(String code, String message) implements CliCommandLine.ParseResult {
