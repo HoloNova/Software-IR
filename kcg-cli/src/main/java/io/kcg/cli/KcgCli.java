@@ -28,11 +28,8 @@ public final class KcgCli {
       try {
          return runInternal(args);
       } catch (Exception e) {
-         if (e instanceof RuntimeException re && re == crashInjection) {
-         }
-
          ResultRenderer.render(ResultRenderer.internalFailure("KCG-CLI-INTERNAL-001", "unexpected internal error"));
-         return 70;
+         return CliExit.INTERNAL;
       }
    }
 
@@ -46,15 +43,15 @@ public final class KcgCli {
       return switch (parsed) {
          case CliCommandLine.Help h -> {
             printHelp(h);
-            yield 0;
+            yield CliExit.OK;
          }
          case CliCommandLine.Version v -> {
             printVersion();
-            yield 0;
+            yield CliExit.OK;
          }
          case CliCommandLine.UsageError ue -> {
             ResultRenderer.render(ResultRenderer.usageError(ue.code(), ue.message()));
-            yield 2;
+            yield CliExit.USAGE;
          }
          case CliCommandLine.ParsedVersionPlan vp -> runVersionPlan(vp.arguments());
          case CliCommandLine.ParsedVersionApply va -> runVersionApply(va.arguments());
@@ -71,7 +68,7 @@ public final class KcgCli {
    private static int runVersionPlan(VersionArguments args) {
       WorkspacePlanningResult result = new WorkspaceVersionApplication(new GitVersionControl()).plan(directoryRequest(args));
       ResultRenderer.render(VersionResultDocument.render(result));
-      return result instanceof WorkspacePlanningResult.Failure ? 3 : 0;
+      return result instanceof WorkspacePlanningResult.Failure ? CliExit.FAILURE : CliExit.OK;
    }
 
    /** The only command that changes the project. Exit 4 means it stopped half way and must be run again. */
@@ -79,10 +76,10 @@ public final class KcgCli {
       WorkspaceApplyResult result = new WorkspaceVersionApplication(new GitVersionControl()).apply(directoryRequest(args), args.expectedPlanId());
       ResultRenderer.render(VersionResultDocument.render(result));
       return switch (result) {
-         case WorkspaceApplyResult.Applied a -> 0;
-         case WorkspaceApplyResult.NoChanges n -> 0;
-         case WorkspaceApplyResult.Failure f -> 3;
-         case WorkspaceApplyResult.RerunRequired r -> 4;
+         case WorkspaceApplyResult.Applied a -> CliExit.OK;
+         case WorkspaceApplyResult.NoChanges n -> CliExit.OK;
+         case WorkspaceApplyResult.Failure f -> CliExit.FAILURE;
+         case WorkspaceApplyResult.RerunRequired r -> CliExit.RERUN_REQUIRED;
       };
    }
 
@@ -93,13 +90,13 @@ public final class KcgCli {
                CheckResultRenderer.render(System.out, result);
                if (System.out.checkError()) throw new java.io.IOException("output unavailable");
             }));
-         return summary.internalFailure() ? 70 : 0;
+         return summary.internalFailure() ? CliExit.INTERNAL : CliExit.OK;
       } catch (java.io.IOException e) {
          System.err.println("KCG-CHECK-IO-001: JSONL transport could not complete");
-         return 3;
+         return CliExit.FAILURE;
       } catch (RuntimeException | StackOverflowError e) {
          System.err.println("KCG-CHECK-INTERNAL-001: batch checking could not complete");
-         return 70;
+         return CliExit.INTERNAL;
       }
    }
 
