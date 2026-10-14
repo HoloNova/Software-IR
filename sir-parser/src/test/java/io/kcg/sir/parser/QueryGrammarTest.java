@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import io.kcg.sir.api.ParseResult;
+import io.kcg.sir.api.SourceUnitParseResult;
 import io.kcg.sir.api.SirSource;
 import io.kcg.sir.ast.AstBinaryExpression;
 import io.kcg.sir.ast.AstBinaryOperator;
@@ -55,11 +55,11 @@ class QueryGrammarTest {
 
     @Test
     void viewFieldsStillAcceptConstraintsSoThatValidateOwnsThatRule() {
-        ParseResult result = parseText("valid/course-catalog-with-constraint.sir", resource(CATALOG)
+        SourceUnitParseResult result = parseText("valid/course-catalog-with-constraint.sir", resource(CATALOG)
                 .replace("field code: String;", "field code: String where notBlank;"));
 
         assertTrue(result.isSuccess(), result.diagnostics().toString());
-        AstViewDecl view = (AstViewDecl) result.document().orElseThrow().software().declarations().get(1);
+        AstViewDecl view = (AstViewDecl) result.unit().map(ParseTestSupport::document).orElseThrow().software().declarations().get(1);
         assertEquals(1, view.fields().getFirst().constraints().size());
     }
 
@@ -96,7 +96,7 @@ class QueryGrammarTest {
 
     @Test
     void descendingOrderDirectionIsExplicitAndOptional() {
-        ParseResult result = parseText("valid/course-catalog-descending.sir", resource(CATALOG)
+        SourceUnitParseResult result = parseText("valid/course-catalog-descending.sir", resource(CATALOG)
                 .replace("order by code ascending, id ascending", "order by code descending, id ascending"));
 
         assertTrue(result.isSuccess(), result.diagnostics().toString());
@@ -118,8 +118,8 @@ class QueryGrammarTest {
         assertTrue(plain.page().isEmpty());
     }
 
-    private AstFindStep findStep(ParseResult result) {
-        AstDeclaration declaration = result.document()
+    private AstFindStep findStep(SourceUnitParseResult result) {
+        AstDeclaration declaration = result.unit().map(ParseTestSupport::document)
                 .orElseThrow()
                 .software()
                 .declarations()
@@ -137,7 +137,7 @@ class QueryGrammarTest {
 
     private <T extends AstDeclaration> T declaration(int index, Class<T> type) {
         return assertInstanceOf(type, parseDocument(CATALOG)
-                .document()
+                .unit().map(ParseTestSupport::document)
                 .orElseThrow()
                 .software()
                 .declarations()
@@ -158,12 +158,12 @@ class QueryGrammarTest {
                 .toList();
     }
 
-    private ParseResult parseDocument(String resourcePath) {
+    private SourceUnitParseResult parseDocument(String resourcePath) {
         return parseText(resourcePath, resource(resourcePath));
     }
 
-    private ParseResult parseText(String label, String content) {
-        return parser.parse(new SirSource(SourceId.of("tests/" + label), content));
+    private SourceUnitParseResult parseText(String label, String content) {
+        return parser.parseProject(new SirSource(SourceId.of("tests/" + label), content));
     }
 
     private static String resource(String path) {

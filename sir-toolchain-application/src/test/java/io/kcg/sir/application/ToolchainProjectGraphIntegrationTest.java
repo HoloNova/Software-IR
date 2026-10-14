@@ -7,7 +7,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import io.kcg.sir.api.ParseResult;
 import io.kcg.sir.api.SirParser;
 import io.kcg.sir.api.SirSource;
 import io.kcg.sir.application.api.AppliedFile;
@@ -84,7 +83,7 @@ class ToolchainProjectGraphIntegrationTest {
         assertFalse(graph.nodes().isEmpty(), "graph must contain nodes");
         assertFalse(graph.edges().isEmpty(), "graph must contain edges");
         assertNotNull(graph.canonicalDigest(), "graph must have a canonical digest");
-        assertEquals(io.kcg.sir.projectgraph.api.GraphVersion.V0_1, graph.version());
+        assertEquals(io.kcg.sir.projectgraph.api.GraphVersion.V0_2, graph.version());
     }
 
     @Test
@@ -330,25 +329,21 @@ class ToolchainProjectGraphIntegrationTest {
         ToolchainResult.Success success = runCampusMarket();
         ProjectGraph graph = success.graph();
         // Every node's provenance sourceId must be the workspace-relative
-        // SourceId ("campus-market.sir"), never an absolute path.
+        // SourceId ("project.sir"), never an absolute path.
         for (ProjectGraphNode node : graph.nodes()) {
             String sourceIdValue = node.provenance().sourceId().value();
             assertFalse(sourceIdValue.contains(":") && sourceIdValue.contains("\\"),
                     "provenance sourceId must not be an absolute path: " + sourceIdValue
                             + " for node " + node.id());
-            assertEquals("campus-market.sir", sourceIdValue,
+            assertEquals("project.sir", sourceIdValue,
                     "provenance sourceId must be the workspace-relative SIR id");
         }
     }
 
     @Test
     void projectArtifactOriginsArePreservedVerbatimFromLowering() throws Exception {
-        SourceId sourceId = SourceId.of("campus-market.sir");
-        ParseResult parse = SirParser.create().parse(new SirSource(
-                sourceId, ApplicationTestSupport.resource("valid/campus-market.sir")));
-        SemanticAnalysis semantic = new SirSemanticAnalyzer().analyze(
-                parse.document().orElseThrow());
-        NormalizedSemanticModel normalized = semantic.model().orElseThrow();
+        var sources = MultiSourceTestSupport.oneFile("campus-market.sir", ApplicationTestSupport.resource("valid/campus-market.sir"));
+        NormalizedSemanticModel normalized = MultiSourceTestSupport.model(sources);
         LoweringAnalysis<SpringBootLoweredModel> lowering =
                 new SpringBootTargetLowering().lower(normalized);
         SpringBootLoweredModel lowered = lowering.model().orElseThrow();
@@ -356,7 +351,7 @@ class ToolchainProjectGraphIntegrationTest {
                 GenerationResult.Success.class,
                 new SpringBootGenerator().generate(lowered));
         ProjectGraphInput input = new SpringBootProjectGraphInputFactory().build(
-                normalized, lowered, generation.files(), sourceId);
+                normalized, lowered, generation.files(), sources);
 
         ProjectGraphInput.ArtifactInput mavenInput = input.artifacts().stream()
                 .filter(a -> a.role() == ArtifactRole.ProjectRole.MAVEN_PROJECT)

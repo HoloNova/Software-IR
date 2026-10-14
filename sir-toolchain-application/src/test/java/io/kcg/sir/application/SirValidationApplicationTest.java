@@ -23,15 +23,15 @@ class SirValidationApplicationTest {
         for (String name : ValidationFixtureProbeTest.VALID) {
             String sir = source(name); var result = app.check(new SirValidationRequest(name, sir));
             assertTrue(result.ok(), () -> name + result.diagnostics()); assertEquals(ValidationStopAfter.GENERATION, result.stage());
-            Path input = temp.resolve(name); Files.writeString(input, sir); Path out = temp.resolve(name + "-output");
-            var old = new ToolchainApplication().execute(new ToolchainRequest(input.toAbsolutePath(), SourceId.of("sample.sir"), out.toAbsolutePath(), ConflictPolicy.FAIL_IF_EXISTS));
+            Path input = Files.createDirectories(temp.resolve(name + "-sources")); Files.writeString(input.resolve("sample.sir"), sir); Path out = temp.resolve(name + "-output");
+            var old = new ToolchainApplication().execute(new ToolchainRequest(input.toAbsolutePath(), SourceId.of("sample.sir"), out.toAbsolutePath()));
             assertInstanceOf(ToolchainResult.Success.class, old, () -> name + old);
             try (var paths = Files.walk(out)) {
                 var files = paths.filter(Files::isRegularFile).sorted(Comparator.comparing(p -> out.relativize(p).toString())).toList();
                 assertEquals(files.size(), result.fileCount());
                 var hash = MessageDigest.getInstance("SHA-256"); hash.update("KCG-SIR-CHECK-GENERATED-V1\0".getBytes(StandardCharsets.US_ASCII));
                 hash.update(ByteBuffer.allocate(8).putLong(files.size()).array());
-                var direct = SirCompilation.compile(sir, SourceId.of("sample.sir"), new SpringBootGenerator()::generate, new ArrayList<>()).orElseThrow();
+                var direct = ProjectCompilation.compile(MultiSourceTestSupport.oneFile("sample.sir", sir), new SpringBootGenerator()::generate, new ArrayList<>()).orElseThrow();
                 for (var file : files) {
                     String path = out.relativize(file).toString().replace('\\','/'); byte[] content = Files.readAllBytes(file);
                     assertArrayEquals(direct.generatedFiles().stream().filter(f -> f.relativePath().equals(path)).findFirst().orElseThrow().content().getBytes(StandardCharsets.UTF_8), content);
@@ -46,8 +46,8 @@ class SirValidationApplicationTest {
         String sir = source("campus-market.sir");
         for (var stop : ValidationStopAfter.values()) {
             var reached = new ArrayList<ValidationStopAfter>();
-            var snapshot = CompilationStages.compile(sir, SourceId.of("sample.sir"), stop,
-                m -> { assertEquals(ValidationStopAfter.GENERATION, stop); return new SpringBootGenerator().generate(m); }, new ArrayList<>(), reached::add);
+            var snapshot = CompilationService.project(MultiSourceTestSupport.oneFile("sample.sir", sir), stop,
+                m -> { assertEquals(ValidationStopAfter.GENERATION, stop); return new SpringBootGenerator().generate(m); }, new ArrayList<>(), reached::add, new ArrayList<>());
             assertTrue(snapshot.success()); assertEquals(List.of(ValidationStopAfter.values()).subList(0, stop.ordinal()+1), reached);
             var result = app.check(new SirValidationRequest("opaque", sir, stop)); assertTrue(result.ok()); assertEquals(stop, result.stage());
             if (stop != ValidationStopAfter.GENERATION) { assertEquals(0, result.fileCount()); assertNull(result.digest()); }
@@ -59,7 +59,7 @@ class SirValidationApplicationTest {
     @Test void originalDiagnosticCodesMessagesAndPositionsRemainExact() throws Exception {
         for (String fixture : List.of("semantic-unresolved-name.sir", "actor-non-identity.sir")) {
             String sir = ValidationFixtureProbeTest.resource("invalid/" + fixture); var legacy = new ArrayList<ExecutionDiagnostic>();
-            SirCompilation.compile(sir, SourceId.of("sample.sir"), new SpringBootGenerator()::generate, legacy);
+            ProjectCompilation.compile(MultiSourceTestSupport.oneFile("sample.sir", sir), new SpringBootGenerator()::generate, legacy);
             var checked = app.check(new SirValidationRequest(fixture, sir)); assertFalse(checked.ok());
             assertEquals(legacy.size(), checked.diagnostics().size());
             for (int i=0;i<legacy.size();i++) {
@@ -84,8 +84,8 @@ class SirValidationApplicationTest {
     @Test void generationFailureUsesOriginalCodeMessageAndNode() throws Exception {
         var node = new LoweredNodeId("lir://test/node");
         var original = GenerationDiagnostic.of("GEN-TEST", "injected generator failure", node);
-        var snapshot = CompilationStages.compile(source("campus-market.sir"), SourceId.of("sample.sir"), ValidationStopAfter.GENERATION,
-            m -> new GenerationResult.Failure(List.of(original)), new ArrayList<>(), s -> {});
+        var snapshot = CompilationService.project(MultiSourceTestSupport.oneFile("sample.sir", source("campus-market.sir")), ValidationStopAfter.GENERATION,
+            m -> new GenerationResult.Failure(List.of(original)), new ArrayList<>(), s -> {}, new ArrayList<>());
         assertFalse(snapshot.success()); assertEquals(ValidationStopAfter.GENERATION,snapshot.stage());
         var d = snapshot.diagnostics().getLast(); assertEquals(original.code(),d.code()); assertEquals(original.message(),d.message()); assertEquals(node.value(),d.loweredNodeId());
     }
@@ -100,14 +100,15 @@ class SirValidationApplicationTest {
         assertFalse(app.check(new SirValidationRequest("x".repeat(1025),sir)).ok());
         assertNull(app.check(new SirValidationRequest("x","x".repeat(SirValidationApplication.MAX_SIR_BYTES+1))).sourceSha256());
         var bom = app.check(new SirValidationRequest("a","\ufeff"+sir)); assertTrue(bom.ok()); assertEquals(a.digest(),bom.digest()); assertNotEquals(a.sourceSha256(),bom.sourceSha256());
-        assertFalse(app.check(new SirValidationRequest("v2",sir.replace("sir 0.1","sir 0.2"))).ok());
+        var old = app.check(new SirValidationRequest("v1",sir.replace("sir 0.2","sir 0.1")));
+        assertFalse(old.ok()); assertEquals("SIR-VERSION-001", old.diagnostics().get(0).code());
     }
     @Test void callerOwnedOriginalDiagnosticTraceSurvivesLaterStageException() throws Exception {
         var span = new SourceSpan(SourceId.of("sample.sir"), new SourcePosition(0,1,1), new SourcePosition(2,1,3));
         var original = new Diagnostic(new DiagnosticCode("SIR-TEST-INFO"), DiagnosticSeverity.INFO, "earlier stage message", span,
             List.of(new RelatedLocation("related",span)), List.of(new FixHint("hint",span,"x")));
         var trace = new ArrayList<ValidationDiagnostic>(); trace.add(CompilationStages.fromParser(original,ValidationStopAfter.PARSE));
-        assertThrows(IllegalStateException.class, () -> CompilationStages.compile(source("campus-market.sir"), SourceId.of("sample.sir"), ValidationStopAfter.GENERATION,
+        assertThrows(IllegalStateException.class, () -> CompilationService.project(MultiSourceTestSupport.oneFile("sample.sir", source("campus-market.sir")), ValidationStopAfter.GENERATION,
             m -> { throw new IllegalStateException("injected"); },new ArrayList<>(),s -> {},trace));
         assertEquals(original.message(),trace.getFirst().message()); assertEquals(original.related(),trace.getFirst().related()); assertEquals(original.fixes(),trace.getFirst().fixes());
     }

@@ -79,19 +79,6 @@ class ToolchainHappyPathTest {
     }
 
     @Test
-    void allAppliedFilesMarkedCreatedForNewRoot() throws Exception {
-        Path source = ApplicationTestSupport.writeCampusMarketSource(temporaryDirectory);
-        Path outputRoot = temporaryDirectory.resolve("out").toAbsolutePath();
-
-        ToolchainResult.Success success = ApplicationTestSupport.runCampusMarket(source, outputRoot);
-
-        for (AppliedFile f : success.manifest().files()) {
-            assertEquals(io.kcg.sir.application.api.FileAction.CREATED, f.action(),
-                    "new root files must be CREATED: " + f.relativePath());
-        }
-    }
-
-    @Test
     void sha256MatchesActualUtf8Bytes() throws Exception {
         Path source = ApplicationTestSupport.writeCampusMarketSource(temporaryDirectory);
         Path outputRoot = temporaryDirectory.resolve("out").toAbsolutePath();

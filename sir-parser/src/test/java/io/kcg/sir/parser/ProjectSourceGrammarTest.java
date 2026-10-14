@@ -33,8 +33,7 @@ class ProjectSourceGrammarTest {
         assertTrue(fragment.isSuccess(), fragment.diagnostics().toString());
         assertInstanceOf(AstSourceUnit.Fragment.class, fragment.unit().orElseThrow());
     }
-    @Test void oldParserAndNewParserRemainVersionAndShapeIsolated() {
-        assertFalse(parser.parse(new SirSource(id, ROOT)).isSuccess());
+    @Test void aRootAndAFragmentAreNotInterchangeableAndOnlyVersionTwoIsAccepted() {
         assertFalse(parser.parseProject(new SirSource(id, ROOT.replace("0.2", "0.1"))).isSuccess());
         assertFalse(parser.parseFragment(new SirSource(id, ROOT)).isSuccess());
         assertFalse(parser.parseFragment(new SirSource(id, "sir 0.2 sources {} imports {} declarations {} ")).isSuccess());
@@ -42,12 +41,12 @@ class ProjectSourceGrammarTest {
         assertFalse(parser.parseProject(new SirSource(id, ROOT.replace("sources {", "anything {"))).isSuccess());
         assertFalse(parser.parseProject(new SirSource(id, ROOT.replace("java 21", "java 17"))).isSuccess());
     }
-    @Test void projectWordsStillParseAsLegacyIdentifiers() {
+    @Test void theWordsOfTheSourceListStillParseAsDeclarationNames() {
         for (String word : List.of("sources", "source", "imports", "import")) {
-            String text = ROOT.replace("sir 0.2", "sir 0.1");
-            text = text.substring(0, text.indexOf("  sources {")) + "declarations { entity " + word
+            String text = ROOT;
+            text = text.substring(0, text.indexOf("  sources {")) + "sources { } imports { } declarations { entity " + word
                     + " persistent { identity id: Int64 generated auto; } } }";
-            var result = parser.parse(new SirSource(id, text));
+            var result = parser.parseProject(new SirSource(id, text));
             assertTrue(result.isSuccess(), result.diagnostics().toString());
         }
     }

@@ -1,4 +1,4 @@
-sir 0.1
+sir 0.2
 
 software RenameCourseSearch {
   metadata {
@@ -15,6 +15,8 @@ software RenameCourseSearch {
     interface rest;
   }
 
+  sources { }
+  imports { }
   declarations {
     entity Course persistent {
       identity id: Int64 generated auto;

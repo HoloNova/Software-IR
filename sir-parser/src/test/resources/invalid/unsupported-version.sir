@@ -13,5 +13,7 @@ software Unsupported {
     build maven;
     interface rest;
   }
+  sources { }
+  imports { }
   declarations {}
 }

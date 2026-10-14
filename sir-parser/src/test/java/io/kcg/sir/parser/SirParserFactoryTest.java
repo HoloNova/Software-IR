@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import io.kcg.sir.api.ParseResult;
+import io.kcg.sir.api.SourceUnitParseResult;
 import io.kcg.sir.api.SirParser;
 import io.kcg.sir.api.SirSource;
 import io.kcg.sir.source.SourceId;
@@ -17,7 +17,7 @@ class SirParserFactoryTest {
 
     @Test
     void factoryParserParsesValidResource() throws Exception {
-        ParseResult result = SirParser.create().parse(new SirSource(
+        SourceUnitParseResult result = SirParser.create().parseProject(new SirSource(
                 SourceId.of("valid/campus-market.sir"), resource("valid/campus-market.sir")));
         assertTrue(result.isSuccess(), () -> "expected success: " + result.diagnostics());
     }

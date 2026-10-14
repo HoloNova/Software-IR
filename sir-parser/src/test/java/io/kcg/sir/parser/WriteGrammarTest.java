@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.kcg.sir.api.Diagnostic;
-import io.kcg.sir.api.ParseResult;
+import io.kcg.sir.api.SourceUnitParseResult;
 import io.kcg.sir.api.SirParser;
 import io.kcg.sir.api.SirSource;
 import io.kcg.sir.ast.AstCapabilityDecl;
@@ -42,7 +42,7 @@ class WriteGrammarTest {
 
     @Test
     void theWriteSliceSourceParsesWithoutDiagnostics() {
-        ParseResult result = parse(readResource(CATALOG));
+        SourceUnitParseResult result = parse(readResource(CATALOG));
 
         assertTrue(result.isSuccess(), () -> messages(result.diagnostics()));
         assertTrue(result.diagnostics().isEmpty(), () -> messages(result.diagnostics()));
@@ -50,7 +50,7 @@ class WriteGrammarTest {
 
     @Test
     void theVersionMarkerIsCarriedOnTheEntityFieldOnly() {
-        AstSoftware software = parse(readResource(CATALOG)).document().orElseThrow().software();
+        AstSoftware software = parse(readResource(CATALOG)).unit().map(ParseTestSupport::document).orElseThrow().software();
         AstField version = entityField(software, "Course", "version");
 
         assertTrue(version.versioned(), "the version field carries the marker");
@@ -60,7 +60,7 @@ class WriteGrammarTest {
 
     @Test
     void aViewFieldParsesTheMarkerSoALaterPhaseCanRejectIt() {
-        ParseResult result = parse(document("""
+        SourceUnitParseResult result = parse(document("""
                 entity Course persistent {
                   identity id: Int64 generated auto;
                   field code: String;
@@ -71,7 +71,7 @@ class WriteGrammarTest {
                 """));
 
         assertTrue(result.isSuccess(), () -> messages(result.diagnostics()));
-        AstViewDecl view = (AstViewDecl) result.document().orElseThrow().software().declarations().stream()
+        AstViewDecl view = (AstViewDecl) result.unit().map(ParseTestSupport::document).orElseThrow().software().declarations().stream()
                 .filter(AstViewDecl.class::isInstance)
                 .findFirst()
                 .orElseThrow();
@@ -80,7 +80,7 @@ class WriteGrammarTest {
 
     @Test
     void thePatchMarkerNamesItsSourceEntity() {
-        AstSoftware software = parse(readResource(CATALOG)).document().orElseThrow().software();
+        AstSoftware software = parse(readResource(CATALOG)).unit().map(ParseTestSupport::document).orElseThrow().software();
         AstInputDecl patch = (AstInputDecl) software.declarations().stream()
                 .filter(AstInputDecl.class::isInstance)
                 .map(AstInputDecl.class::cast)
@@ -115,7 +115,7 @@ class WriteGrammarTest {
 
     @Test
     void anErrorStatusIsParsedWhenPresent() {
-        AstSoftware software = parse(readResource(CATALOG)).document().orElseThrow().software();
+        AstSoftware software = parse(readResource(CATALOG)).unit().map(ParseTestSupport::document).orElseThrow().software();
 
         assertEquals(java.math.BigInteger.valueOf(404), errorStatus(software, "CourseNotFound"));
         assertEquals(java.math.BigInteger.valueOf(409), errorStatus(software, "StaleVersion"));
@@ -136,7 +136,7 @@ class WriteGrammarTest {
 
     @Test
     void aPersistStepCarriesItsDeclaredFailure() {
-        AstSoftware software = parse(readResource(CATALOG)).document().orElseThrow().software();
+        AstSoftware software = parse(readResource(CATALOG)).unit().map(ParseTestSupport::document).orElseThrow().software();
         AstPersistStep failing = persistStep(software, "UpdateCourse");
         AstPersistStep plain = persistStep(software, "CreateCourse");
 
@@ -160,7 +160,7 @@ class WriteGrammarTest {
 
     @Test
     void presenceIsAPostfixOnAReference() {
-        AstSoftware software = parse(readResource(CATALOG)).document().orElseThrow().software();
+        AstSoftware software = parse(readResource(CATALOG)).unit().map(ParseTestSupport::document).orElseThrow().software();
         AstValidateStep step = (AstValidateStep) capability(software, "UpdateCourse").workflow().steps().get(0);
 
         assertTrue(
@@ -271,16 +271,16 @@ class WriteGrammarTest {
         throw new IllegalStateException("no persist step in " + capabilityName);
     }
 
-    private ParseResult parse(String content) {
-        return parser.parse(new SirSource(SourceId.of("tests/valid/course-admin.sir"), content));
+    private SourceUnitParseResult parse(String content) {
+        return parser.parseProject(new SirSource(SourceId.of("tests/valid/course-admin.sir"), content));
     }
 
     private void assertGrammarRejected(String content) {
-        ParseResult result = parse(content);
+        SourceUnitParseResult result = parse(content);
         String diagnostics = messages(result.diagnostics());
 
         assertFalse(result.isSuccess(), () -> diagnostics);
-        assertTrue(result.document().isEmpty(), () -> diagnostics);
+        assertTrue(result.unit().isEmpty(), () -> diagnostics);
         assertTrue(
                 result.diagnostics().stream()
                         .map(Diagnostic::code)
@@ -311,7 +311,7 @@ class WriteGrammarTest {
 
     private static String document(String declarations) {
         return """
-                sir 0.1
+                sir 0.2
                 software WriteGrammar {
                   metadata {
                     displayName "Write Grammar";
@@ -325,6 +325,8 @@ class WriteGrammarTest {
                     build maven;
                     interface rest;
                   }
+                  sources { }
+                  imports { }
                   declarations {
                     %s
                   }

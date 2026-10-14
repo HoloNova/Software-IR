@@ -3,7 +3,6 @@ package io.kcg.sir.application.api;
 import io.kcg.sir.application.internal.CompilationService;
 import io.kcg.sir.application.internal.CompilationStages;
 import io.kcg.sir.application.internal.PathGuard;
-import io.kcg.sir.application.internal.SourceReader;
 import io.kcg.sir.application.internal.ValidationHashes;
 import io.kcg.sir.application.internal.bundle.BaselineBuilder;
 import io.kcg.sir.application.internal.bundle.BaselineDescriptorCodec;
@@ -120,18 +119,8 @@ public final class CandidateVerificationApplication {
             CompilationStages.Snapshot snapshot;
             try {
                 java.util.function.Function<SpringBootLoweredModel, GenerationResult> generation = model -> new SpringBootGenerator().generate(model);
-                var sources = request.input().sources();
-                if (request.input().kind() == CompilationInput.Kind.SINGLE_FILE) {
-                    String text = SourceReader.decodeStrictUtf8(sources.bytes(sources.entry()));
-                    snapshot = CompilationService.single(text, sources.entry(), ValidationStopAfter.GENERATION, generation, legacy,
-                            stage -> entered[0] = stage, raw);
-                } else {
-                    snapshot = CompilationService.project(sources, ValidationStopAfter.GENERATION, generation, legacy,
-                            stage -> entered[0] = stage, raw);
-                }
-            } catch (SourceReader.InvalidUtf8Exception e) {
-                record(VerificationStage.STATIC, StageOutcome.failed("STATIC_INPUT", "the source is not valid UTF-8"), started);
-                return;
+                snapshot = CompilationService.project(request.sources(), ValidationStopAfter.GENERATION, generation, legacy,
+                        stage -> entered[0] = stage, raw);
             } catch (RuntimeException | StackOverflowError e) {
                 record(VerificationStage.STATIC, StageOutcome.failed("STATIC_INTERNAL",
                         "static generation could not complete (" + entered[0] + ")"), started);
@@ -157,10 +146,10 @@ public final class CandidateVerificationApplication {
             }
 
             files = snapshot.files();
-            binding = new VerificationBinding(request.input().sources().sha256Hex(),
+            binding = new VerificationBinding(request.sources().sha256Hex(),
                     BaselineDescriptorCodec.computeManifestDigest(BaselineBuilder.buildManifest(files)),
                     ValidationHashes.generated(files), files.size(), snapshot.loweredModel().targetId(),
-                    snapshot.loweredModel().irVersion().value(), request.input().kind());
+                    snapshot.loweredModel().irVersion().value());
             record(VerificationStage.STATIC, StageOutcome.passed("the sources generate " + files.size() + " files"), started);
         }
 

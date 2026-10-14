@@ -75,7 +75,7 @@ class DeclaredIdentityPhysicalNameTest {
 
     private static String source(String capabilityName) {
         return """
-                sir 0.1
+                sir 0.2
 
                 software PhysicalNames {
                   metadata {
@@ -90,6 +90,8 @@ class DeclaredIdentityPhysicalNameTest {
                     build maven;
                     interface rest;
                   }
+                  sources { }
+                  imports { }
                   declarations {
                     entity Course persistent {
                       identity id: Int64 generated auto;

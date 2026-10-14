@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import io.kcg.sir.api.ParseResult;
+import io.kcg.sir.api.SourceUnitParseResult;
 import io.kcg.sir.api.SirSource;
 import io.kcg.sir.ast.AstBinaryExpression;
 import io.kcg.sir.ast.AstCapabilityDecl;
@@ -39,15 +39,15 @@ class AstDeterminismTest {
 
     @Test
     void negativeConstantsHaveTheSameUnaryAstShapeInEveryContext() {
-        ParseResult result = parser.parse(new SirSource(SourceId.of("tests/negative-constants.sir"), negativeSource()));
+        SourceUnitParseResult result = parser.parseProject(new SirSource(SourceId.of("tests/negative-constants.sir"), negativeSource()));
         assertTrue(result.isSuccess(), result.diagnostics().toString());
 
-        AstEntityDecl entity = (AstEntityDecl) result.document().orElseThrow().software().declarations().get(0);
+        AstEntityDecl entity = (AstEntityDecl) result.unit().map(ParseTestSupport::document).orElseThrow().software().declarations().get(0);
         AstUnaryExpression constraintValue = assertInstanceOf(
                 AstUnaryExpression.class,
                 entity.fields().getFirst().constraints().getFirst().arguments().getFirst());
 
-        AstCapabilityDecl capability = (AstCapabilityDecl) result.document().orElseThrow()
+        AstCapabilityDecl capability = (AstCapabilityDecl) result.unit().map(ParseTestSupport::document).orElseThrow()
                 .software().declarations().get(3);
         AstValidateStep validate = (AstValidateStep) capability.workflow().steps().getFirst();
         AstBinaryExpression condition = assertInstanceOf(AstBinaryExpression.class, validate.condition());
@@ -60,11 +60,11 @@ class AstDeterminismTest {
     }
 
     private List<String> workflowStepIds() {
-        ParseResult result = parser.parse(new SirSource(
+        SourceUnitParseResult result = parser.parseProject(new SirSource(
                 SourceId.of("tests/locale/campus-market.sir"),
                 resource("valid/campus-market.sir")));
         assertTrue(result.isSuccess(), result.diagnostics().toString());
-        AstCapabilityDecl capability = (AstCapabilityDecl) result.document().orElseThrow()
+        AstCapabilityDecl capability = (AstCapabilityDecl) result.unit().map(ParseTestSupport::document).orElseThrow()
                 .software().declarations().get(5);
         return capability.workflow().steps().stream().map(step -> step.id().value()).toList();
     }
@@ -82,7 +82,7 @@ class AstDeterminismTest {
 
     private static String negativeSource() {
         return """
-                sir 0.1
+                sir 0.2
                 software NegativeConstants {
                   metadata { displayName "Negative Constants"; namespace "tests.negative"; }
                   target {
@@ -93,6 +93,8 @@ class AstDeterminismTest {
                     build maven;
                     interface rest;
                   }
+                  sources { }
+                  imports { }
                   declarations {
                     entity Measure persistent {
                       identity id: Int64 generated auto;

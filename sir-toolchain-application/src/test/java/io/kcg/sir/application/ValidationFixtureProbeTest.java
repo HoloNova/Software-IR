@@ -1,7 +1,7 @@
 package io.kcg.sir.application;
 
 import io.kcg.sir.application.api.ExecutionDiagnostic;
-import io.kcg.sir.application.internal.SirCompilation;
+import io.kcg.sir.application.internal.ProjectCompilation;
 import io.kcg.sir.generator.springboot.api.SpringBootGenerator;
 import io.kcg.sir.source.SourceId;
 import java.nio.charset.StandardCharsets;
@@ -10,7 +10,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
-/** Pins the existing single-source corpus before changing the internal compilation helper. */
+/** Pins the corpus of single-file software samples: every valid one compiles through generation, every invalid one stops at its stage. */
 class ValidationFixtureProbeTest {
     static final List<String> VALID = List.of(
         "campus-market.sir", "campus-market-candidate.sir", "campus-market-actorless-readonly-base.sir",
@@ -29,7 +29,7 @@ class ValidationFixtureProbeTest {
     @Test void allTwentyExistingFixturesCompileThroughGeneration() throws Exception {
         for (String file : VALID) {
             var diagnostics = new ArrayList<ExecutionDiagnostic>();
-            var snapshot = SirCompilation.compile(resource("valid/" + file), SourceId.of("sample.sir"),
+            var snapshot = ProjectCompilation.compile(MultiSourceTestSupport.oneFile("sample.sir", resource("valid/" + file)),
                 new SpringBootGenerator()::generate, diagnostics);
             assertTrue(snapshot.isPresent(), () -> file + ": " + diagnostics);
             assertFalse(snapshot.orElseThrow().generatedFiles().isEmpty());
@@ -40,7 +40,7 @@ class ValidationFixtureProbeTest {
     @Test void existingInvalidStagesArePinned() throws Exception {
         for (var item : List.of("semantic-unresolved-name.sir:SEMANTIC", "actor-non-identity.sir:LOWERING")) {
             var parts = item.split(":"); var diagnostics = new ArrayList<ExecutionDiagnostic>();
-            assertTrue(SirCompilation.compile(resource("invalid/" + parts[0]), SourceId.of("sample.sir"),
+            assertTrue(ProjectCompilation.compile(MultiSourceTestSupport.oneFile("sample.sir", resource("invalid/" + parts[0])),
                 new SpringBootGenerator()::generate, diagnostics).isEmpty());
             assertEquals(parts[1], diagnostics.stream().filter(ExecutionDiagnostic::isError).findFirst().orElseThrow().stage().name());
             System.out.println("Q23_INVALID " + parts[0] + " " + diagnostics);

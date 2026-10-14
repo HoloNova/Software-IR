@@ -482,7 +482,7 @@ class RelationSliceSemanticsTest {
 
     private static String document(String declarations) {
         return """
-                sir 0.1
+                sir 0.2
                 software CourseEnrollment {
                   metadata {
                     displayName "Course Enrollment";
@@ -496,6 +496,8 @@ class RelationSliceSemanticsTest {
                     build maven;
                     interface rest;
                   }
+                  sources { }
+                  imports { }
                   declarations {
                     %s
                   }

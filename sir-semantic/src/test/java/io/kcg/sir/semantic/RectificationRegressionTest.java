@@ -644,8 +644,9 @@ class RectificationRegressionTest {
                 }
                 """);
 
-        var document = TestSources.parse(source);
-        SemanticAnalysis analysis = new io.kcg.sir.semantic.api.SirSemanticAnalyzer().analyze(document);
+        var root = TestSources.parse(source);
+        var document = root.document();
+        SemanticAnalysis analysis = TestSources.analyze(root);
         assertTrue(analysis.isSuccess(), () -> "Expected success: " + analysis.diagnostics());
         Map<AstNodeId, SymbolId> bindings = analysis.model().orElseThrow().referenceBindings();
         AstCapabilityDecl capability = document.software().declarations().stream()

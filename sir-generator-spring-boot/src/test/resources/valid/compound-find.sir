@@ -1,4 +1,4 @@
-sir 0.1
+sir 0.2
 
 software CompoundFindSample {
   metadata {
@@ -13,6 +13,8 @@ software CompoundFindSample {
     build maven;
     interface rest;
   }
+  sources { }
+  imports { }
   declarations {
     enum State { ACTIVE, INACTIVE }
     entity User persistent {

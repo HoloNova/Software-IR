@@ -1,13 +1,16 @@
 package io.kcg.sir.application.api;
 
-import io.kcg.sir.application.internal.CompilationStages;
+import io.kcg.sir.application.internal.CompilationService;
 import io.kcg.sir.application.internal.ValidationHashes;
 import io.kcg.sir.application.internal.ValidationJsonLines;
 import io.kcg.sir.generator.springboot.api.SpringBootGenerator;
 import io.kcg.sir.source.SourceId;
+import io.kcg.sir.source.SourceSnapshot;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /** Read-only static checking. No state, files, project graph, build or business qualification. */
 public final class SirValidationApplication {
@@ -39,7 +42,9 @@ public final class SirValidationApplication {
         var entered = new ValidationStopAfter[]{ValidationStopAfter.PARSE};
         var trace = new ArrayList<ValidationDiagnostic>();
         try {
-            var result = CompilationStages.compile(sir, SourceId.of("sample.sir"), request.stopAfter(),
+            var entry = SourceId.of("sample.sir");
+            var sources = new SourceSnapshot(entry, Map.of(entry, sir.getBytes(StandardCharsets.UTF_8)));
+            var result = CompilationService.project(sources, request.stopAfter(),
                 generation, new ArrayList<>(), stage -> entered[0] = stage, trace);
             boolean ok = result.success() && result.diagnostics().stream().noneMatch(d -> "ERROR".equals(d.severity()));
             boolean generated = ok && result.stage() == ValidationStopAfter.GENERATION;

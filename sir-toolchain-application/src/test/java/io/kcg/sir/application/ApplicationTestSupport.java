@@ -18,25 +18,16 @@ final class ApplicationTestSupport {
     private ApplicationTestSupport() {
     }
 
+    /** The campus-market software as a source root holding one document, project.sir. */
     static Path writeCampusMarketSource(Path dir) throws IOException {
-        Path source = dir.resolve("campus-market.sir");
-        Files.writeString(source, resource("valid/campus-market.sir"), StandardCharsets.UTF_8);
-        return source.toAbsolutePath();
+        Path root = Files.createDirectories(dir.resolve("campus-market-sources-" + System.nanoTime()));
+        Files.writeString(root.resolve("project.sir"), resource("valid/campus-market.sir"), StandardCharsets.UTF_8);
+        return root.toAbsolutePath();
     }
 
-    static ToolchainResult.Success runCampusMarket(Path source, Path outputRoot) throws IOException {
-        return runCampusMarket(source, outputRoot,
-                io.kcg.sir.application.api.ConflictPolicy.FAIL_IF_EXISTS);
-    }
-
-    static ToolchainResult.Success runCampusMarket(Path source, Path outputRoot,
-                                                    io.kcg.sir.application.api.ConflictPolicy policy)
-            throws IOException {
+    static ToolchainResult.Success runCampusMarket(Path sourceRoot, Path outputRoot) throws IOException {
         ToolchainResult result = new ToolchainApplication().execute(new ToolchainRequest(
-                source.toAbsolutePath(),
-                SourceId.of("campus-market.sir"),
-                outputRoot.toAbsolutePath(),
-                policy));
+                sourceRoot.toAbsolutePath(), SourceId.of("project.sir"), outputRoot.toAbsolutePath()));
         if (!(result instanceof ToolchainResult.Success success)) {
             ToolchainResult.Failure failure = (ToolchainResult.Failure) result;
             throw new AssertionError("expected Success but got Failure at " + failure.failedStage()

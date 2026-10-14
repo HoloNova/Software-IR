@@ -553,8 +553,9 @@ class TypedReferenceSiteContractTest {
 
     @Test
     void allReferenceSiteAstNodeIdsMapBackToOriginalAst() {
-        var document = TestSources.parse(contractSource());
-        SemanticAnalysis analysis = new io.kcg.sir.semantic.api.SirSemanticAnalyzer().analyze(document);
+        var root = TestSources.parse(contractSource());
+        var document = root.document();
+        SemanticAnalysis analysis = TestSources.analyze(root);
         assertTrue(analysis.isSuccess(), () -> "Expected success: " + analysis.diagnostics());
 
         Map<AstNodeId, String> astRefTexts = new LinkedHashMap<>();

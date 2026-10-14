@@ -5,10 +5,9 @@ import io.kcg.sir.semantic.symbol.SymbolId;
 import java.util.Objects;
 import java.util.Optional;
 
-public record AppliedFile(String relativePath, FileAction action, long byteCount, String sha256Hex, LoweredNodeId artifactId, Optional<SymbolId> symbolId) {
+public record AppliedFile(String relativePath, long byteCount, String sha256Hex, LoweredNodeId artifactId, Optional<SymbolId> symbolId) {
    public AppliedFile {
       Objects.requireNonNull(relativePath, "relativePath");
-      Objects.requireNonNull(action, "action");
       Objects.requireNonNull(sha256Hex, "sha256Hex");
       Objects.requireNonNull(artifactId, "artifactId");
       symbolId = Objects.requireNonNull(symbolId, "symbolId");

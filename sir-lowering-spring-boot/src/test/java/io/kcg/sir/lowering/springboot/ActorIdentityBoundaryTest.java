@@ -22,7 +22,7 @@ class ActorIdentityBoundaryTest {
         assertEquals("SIR-LOWER-FEATURE-001", diagnostic.code().value());
         assertTrue(diagnostic.message().contains("actor"), diagnostic.message());
         assertTrue(diagnostic.message().contains("identity"), diagnostic.message());
-        assertEquals(28, diagnostic.primarySpan().start().line());
+        assertEquals(30, diagnostic.primarySpan().start().line());
         assertEquals(16, diagnostic.primarySpan().start().column());
     }
 }

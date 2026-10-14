@@ -2,7 +2,7 @@ package io.kcg.sir.application.internal.workspace;
 
 import io.kcg.sir.application.api.ExecutionDiagnostic;
 import io.kcg.sir.application.api.FileDelta;
-import io.kcg.sir.application.api.ProjectToolchainRequest;
+import io.kcg.sir.application.api.ToolchainRequest;
 import io.kcg.sir.application.api.SourceDelta;
 import io.kcg.sir.application.api.WorkspacePlan;
 import io.kcg.sir.application.internal.ProjectSourceReader;
@@ -261,7 +261,7 @@ public final class WorkspaceWriter {
     /** After the move, the sources on disk must read back as exactly the candidate. */
     private static void verifySources(Path sourceRoot, Path outputRoot, SourceSnapshot candidate) throws IOException {
         List<ExecutionDiagnostic> diagnostics = new ArrayList<>();
-        var read = ProjectSourceReader.read(new ProjectToolchainRequest(sourceRoot, candidate.entry(), outputRoot), diagnostics);
+        var read = ProjectSourceReader.read(new ToolchainRequest(sourceRoot, candidate.entry(), outputRoot), diagnostics);
         expect(read.isPresent() && read.get().snapshot().sha256Hex().equals(candidate.sha256Hex()), "the sources on disk are not the candidate after writing them: " + diagnostics);
     }
 

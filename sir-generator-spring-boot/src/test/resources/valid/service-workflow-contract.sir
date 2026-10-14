@@ -1,4 +1,4 @@
-sir 0.1
+sir 0.2
 
 software ServiceWorkflowContract {
   metadata {
@@ -13,6 +13,8 @@ software ServiceWorkflowContract {
     build maven;
     interface rest;
   }
+  sources { }
+  imports { }
   declarations {
     enum State { ACTIVE, INACTIVE }
     entity User persistent {

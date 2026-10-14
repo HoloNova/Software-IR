@@ -1,4 +1,4 @@
-sir 0.1
+sir 0.2
 
 software CampusMarket {
   metadata {
@@ -15,6 +15,8 @@ software CampusMarket {
     interface rest;
   }
 
+  sources { }
+  imports { }
   declarations {
     enum GoodsStatus {
       AVAILABLE,

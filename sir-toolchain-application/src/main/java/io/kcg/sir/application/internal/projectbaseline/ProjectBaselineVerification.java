@@ -13,7 +13,7 @@ import java.util.*;
 /** Compiles a source set into a candidate version (its identity and generated files) and checks the generated project on disk against it. */
 public final class ProjectBaselineVerification {
     private ProjectBaselineVerification() {}
-    public record Verified(Bundle bundle,SirCompilation.CompilationSnapshot compilation) {}
+    public record Verified(Bundle bundle,ProjectCompilation.Compiled compilation) {}
     public static Verified compile(SourceSnapshot sources,Path output,List<ExecutionDiagnostic> diagnostics) throws IOException {
         var compiled=ProjectCompilation.compile(sources,new SpringBootGenerator()::generate,diagnostics);
         if(compiled.isEmpty())return null;var c=compiled.get();

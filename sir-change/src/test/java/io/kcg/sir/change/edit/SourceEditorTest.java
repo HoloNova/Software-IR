@@ -8,7 +8,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.kcg.sir.change.edit.EditResult.Reason;
 import io.kcg.sir.semantic.schema.StructValue;
+import io.kcg.sir.source.SourceId;
+import io.kcg.sir.source.SourceSnapshot;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -25,8 +29,22 @@ class SourceEditorTest {
         return EditFixtures.courseCatalog();
     }
 
+    private static final SourceId ENTRY = SourceId.of("project.sir");
+
+    private static SourceSnapshot snapshot(String text) {
+        return new SourceSnapshot(ENTRY, Map.of(ENTRY, text.getBytes(StandardCharsets.UTF_8)));
+    }
+
+    private static EditResult edit(String text, CommandBatch batch) {
+        return EDITOR.edit(snapshot(text), batch);
+    }
+
+    private static String textOf(EditResult.Edited edited) {
+        return new String(edited.sources().bytes(ENTRY), StandardCharsets.UTF_8);
+    }
+
     private static CommandBatch batch(String source, Command... commands) {
-        return new CommandBatch(CommandBatch.PROTOCOL, "ProjectionParity", SourceEditor.sha256(source), List.of(commands));
+        return new CommandBatch(CommandBatch.PROTOCOL, "ProjectionParity", SourceEditor.sha256(snapshot(source)), List.of(commands));
     }
 
     private static EditResult.Edited edited(EditResult result) {
@@ -64,9 +82,9 @@ class SourceEditorTest {
     void oneBatchAddsAnInputAddsACapabilityThatUsesItAndUpdatesAnOldWorkflow() {
         String base = source();
 
-        EditResult.Edited result = edited(EDITOR.edit(base, batch(base, searchByNameBatch())));
+        EditResult.Edited result = edited(edit(base, batch(base, searchByNameBatch())));
 
-        String text = result.source();
+        String text = textOf(result);
         assertTrue(text.contains("input SearchByNameInput {"), text);
         assertTrue(text.contains("capability SearchCoursesByName {"), text);
         assertTrue(text.contains("validate input.name.present or input.capacity.present else EmptyChange;"), text);
@@ -89,7 +107,7 @@ class SourceEditorTest {
         CommandBatch goods = new CommandBatch(
             CommandBatch.PROTOCOL,
             "CampusMarketMinimal",
-            SourceEditor.sha256(base),
+            SourceEditor.sha256(snapshot(base)),
             List.of(
                 new Command.Add(DECLARATIONS, child(input("SearchGoodsByTitleInput", field("title", primitive("STRING"), constraint("notBlank"))))),
                 new Command.Add(DECLARATIONS, child(queryCapability(
@@ -106,7 +124,7 @@ class SourceEditorTest {
             )
         );
 
-        String text = edited(EDITOR.edit(base, goods)).source();
+        String text = textOf(edited(edit(base, goods)));
 
         assertTrue(text.contains("capability SearchGoodsByTitle {"), text);
         assertTrue(text.contains("validate input.price >= 0.05 else InvalidGoodsPrice;"), text);
@@ -117,7 +135,7 @@ class SourceEditorTest {
     void everythingTheBatchDidNotTouchStaysByteForByte() {
         String base = source();
 
-        String text = edited(EDITOR.edit(base, batch(base, searchByNameBatch()))).source();
+        String text = textOf(edited(edit(base, batch(base, searchByNameBatch()))));
 
         // the comment inside Student, untouched declarations and the header are identical bytes
         assertTrue(text.contains("/* Student has no patch input, so this versioned field isolates the versioned fact"));
@@ -131,12 +149,12 @@ class SourceEditorTest {
     @Test
     void theEditedSourceCanBeEditedAgainBecauseItIsAnOrdinaryValidSource() {
         String base = source();
-        String once = edited(EDITOR.edit(base, batch(base, searchByNameBatch()))).source();
+        String once = textOf(edited(edit(base, batch(base, searchByNameBatch()))));
 
-        EditResult.Edited twice = edited(EDITOR.edit(once, batch(once, new Command.Delete(Selector.root().named("declarations", "SearchCoursesByName")))));
+        EditResult.Edited twice = edited(edit(once, batch(once, new Command.Delete(Selector.root().named("declarations", "SearchCoursesByName")))));
 
-        assertFalse(twice.source().contains("SearchCoursesByName"));
-        assertTrue(twice.source().contains("input SearchByNameInput {"), "only the named capability was removed");
+        assertFalse(textOf(twice).contains("SearchCoursesByName"));
+        assertTrue(textOf(twice).contains("input SearchByNameInput {"), "only the named capability was removed");
     }
 
     @Test
@@ -144,7 +162,7 @@ class SourceEditorTest {
         String base = source();
         CommandBatch forBase = batch(base, new Command.Delete(Selector.root().named("declarations", "EmptyChange")));
 
-        EditResult.Refused result = refused(EDITOR.edit(base + "\n// moved on\n", forBase));
+        EditResult.Refused result = refused(edit(base + "\n// moved on\n", forBase));
 
         assertEquals(Reason.STALE_BASELINE, result.reason());
     }
@@ -152,16 +170,16 @@ class SourceEditorTest {
     @Test
     void aBatchForAnotherSoftwareIsRefused() {
         String base = source();
-        CommandBatch other = new CommandBatch(CommandBatch.PROTOCOL, "SomethingElse", SourceEditor.sha256(base), List.of(new Command.Delete(Selector.root().named("declarations", "EmptyChange"))));
+        CommandBatch other = new CommandBatch(CommandBatch.PROTOCOL, "SomethingElse", SourceEditor.sha256(snapshot(base)), List.of(new Command.Delete(Selector.root().named("declarations", "EmptyChange"))));
 
-        assertEquals(Reason.STALE_BASELINE, refused(EDITOR.edit(base, other)).reason());
+        assertEquals(Reason.STALE_BASELINE, refused(edit(base, other)).reason());
     }
 
     @Test
     void aBatchFailsAsAWholeAndNamesTheCommandThatBrokeIt() {
         String base = source();
 
-        EditResult.Refused result = refused(EDITOR.edit(base, batch(
+        EditResult.Refused result = refused(edit(base, batch(
             base,
             new Command.Delete(Selector.root().named("declarations", "EmptyChange")),
             new Command.Delete(Selector.root().named("declarations", "NoSuchThing"))
@@ -175,13 +193,13 @@ class SourceEditorTest {
     void deletingAFieldThatIsStillUsedIsReportedByTheFormalAnalysisNotByTheEditor() {
         String base = source();
 
-        EditResult.Refused result = refused(EDITOR.edit(base, batch(
+        EditResult.Refused result = refused(edit(base, batch(
             base, new Command.Delete(Selector.root().named("declarations", "Course").named("fields", "code"))
         )));
 
         assertEquals(Reason.INVALID_RESULT, result.reason());
         assertTrue(result.details().stream().anyMatch(d -> d.startsWith("SIR-")), result.details().toString());
-        assertTrue(result.candidateSource().isPresent(), "the author can see the text that was tried");
+        assertTrue(result.candidate().isPresent(), "the author can see the text that was tried");
     }
 
     @Test
@@ -189,7 +207,7 @@ class SourceEditorTest {
         String base = source();
         StructValue query = child(queryCapability("Orphan", "NoSuchInput", listOfRef("Course"), find("Course", binary(name("item"), "EQ", name("item")), "courses"), returnStep(name("courses"))));
 
-        EditResult.Refused result = refused(EDITOR.edit(base, batch(base, new Command.Add(DECLARATIONS, query))));
+        EditResult.Refused result = refused(edit(base, batch(base, new Command.Add(DECLARATIONS, query))));
 
         assertEquals(Reason.INVALID_RESULT, result.reason());
     }
@@ -198,27 +216,27 @@ class SourceEditorTest {
     void aRewriteThatWouldRemoveACommentIsRefusedAndNamesIt() {
         String base = source();
 
-        EditResult.Refused result = refused(EDITOR.edit(base, batch(
+        EditResult.Refused result = refused(edit(base, batch(
             base, new Command.Update(Selector.root().named("declarations", "Student").named("fields", "name").slot("constraints"), seq())
         )));
 
         assertEquals(Reason.PROTECTED_COMMENT, result.reason());
         assertTrue(result.details().get(0).contains("'Student'"), result.details().toString());
-        assertTrue(result.details().get(0).startsWith("line "), result.details().toString());
+        assertTrue(result.details().get(0).startsWith("project.sir line "), result.details().toString());
     }
 
     @Test
     void deletingADeclarationThatContainsACommentIsAlsoRefused() {
         String base = source();
 
-        assertEquals(Reason.PROTECTED_COMMENT, refused(EDITOR.edit(base, batch(base, new Command.Delete(Selector.root().named("declarations", "Student"))))).reason());
+        assertEquals(Reason.PROTECTED_COMMENT, refused(edit(base, batch(base, new Command.Delete(Selector.root().named("declarations", "Student"))))).reason());
     }
 
     @Test
     void theSoftwareHeaderCannotBeEditedYet() {
         String base = source();
 
-        EditResult.Refused result = refused(EDITOR.edit(base, batch(
+        EditResult.Refused result = refused(edit(base, batch(
             base, new Command.Update(Selector.root().slot("metadata").slot("displayName"), text("Renamed"))
         )));
 
@@ -229,20 +247,20 @@ class SourceEditorTest {
     void updatingToTheSameValueChangesNothing() {
         String base = source();
 
-        EditResult.Edited result = edited(EDITOR.edit(base, batch(
+        EditResult.Edited result = edited(edit(base, batch(
             base, new Command.Update(Selector.root().named("declarations", "StaleVersion").slot("httpStatus"), text("400"))
         )));
 
-        assertEquals(base, result.source());
+        assertEquals(base, textOf(result));
         assertTrue(result.delta().isEmpty());
-        assertTrue(result.sourceChanges().isEmpty());
+        assertTrue(result.changes().isEmpty());
     }
 
     @Test
     void lineEndingsOfTheSourceAreKept() {
         String base = source().replace("\n", "\r\n");
 
-        String text = edited(EDITOR.edit(base, batch(base, searchByNameBatch()))).source();
+        String text = textOf(edited(edit(base, batch(base, searchByNameBatch()))));
 
         assertFalse(text.replace("\r\n", "").contains("\n"), "no bare line feed was introduced");
         assertTrue(text.contains("capability SearchCoursesByName {\r\n"));
@@ -252,15 +270,15 @@ class SourceEditorTest {
     void aSourceWithAByteOrderMarkIsNotSupportedYet() {
         String base = "﻿" + source();
 
-        assertEquals(Reason.UNSUPPORTED_SOURCE, refused(EDITOR.edit(base, batch(base, new Command.Delete(Selector.root().named("declarations", "EmptyChange"))))).reason());
+        assertEquals(Reason.UNSUPPORTED_SOURCE, refused(edit(base, batch(base, new Command.Delete(Selector.root().named("declarations", "EmptyChange"))))).reason());
     }
 
     @Test
     void anUnknownProtocolIsRefused() {
         String base = source();
-        CommandBatch future = new CommandBatch("sir-command/9", "ProjectionParity", SourceEditor.sha256(base), List.of(new Command.Delete(Selector.root().named("declarations", "EmptyChange"))));
+        CommandBatch future = new CommandBatch("sir-command/9", "ProjectionParity", SourceEditor.sha256(snapshot(base)), List.of(new Command.Delete(Selector.root().named("declarations", "EmptyChange"))));
 
-        assertEquals(Reason.UNSUPPORTED_BATCH, refused(EDITOR.edit(base, future)).reason());
+        assertEquals(Reason.UNSUPPORTED_BATCH, refused(edit(base, future)).reason());
     }
 
     /** The text of the declaration that starts with {@code opening}, through its closing line. */

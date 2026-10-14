@@ -3,7 +3,6 @@ package io.kcg.sir.application.conformance;
 import static org.junit.jupiter.api.Assertions.*;
 
 import io.kcg.sir.application.api.CandidateVerificationApplication;
-import io.kcg.sir.application.api.CompilationInput;
 import io.kcg.sir.application.api.ResourceLimits;
 import io.kcg.sir.application.api.SirValidationApplication;
 import io.kcg.sir.application.api.SirValidationRequest;
@@ -68,7 +67,7 @@ class IndependentVerificationIT {
     }
 
     private VerificationReport verify(CandidateVerificationApplication app, String id, String resource, VerificationStage through) throws IOException {
-        var report = app.verify(new VerificationRequest(id, CompilationInput.singleFile(SourceId.of(id + ".sir"), ConformanceFixtures.readResource(resource)), through));
+        var report = app.verify(new VerificationRequest(id, io.kcg.sir.application.MultiSourceTestSupport.oneFile(id + ".sir", ConformanceFixtures.readResource(resource)), through));
         reportText.append(report.canonicalText()).append("reportSha256=").append(report.sha256Hex()).append("\n\n");
         System.out.println(report.canonicalText());
         return report;

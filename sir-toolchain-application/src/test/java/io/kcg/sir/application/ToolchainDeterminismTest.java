@@ -49,14 +49,12 @@ class ToolchainDeterminismTest {
         assertIterableEquals(pathsA, pathsB,
                 "manifest order must be identical across runs: " + pathsA + " vs " + pathsB);
 
-        // Per-file: action, byteCount, sha256 must all match.
+        // Per-file: byteCount, sha256 must all match.
         for (int i = 0; i < filesA.size(); i++) {
             AppliedFile fa = filesA.get(i);
             AppliedFile fb = filesB.get(i);
             assertEquals(fa.relativePath(), fb.relativePath(),
                     "relativePath must match at index " + i);
-            assertEquals(fa.action(), fb.action(),
-                    "action must match at index " + i + " for " + fa.relativePath());
             assertEquals(fa.byteCount(), fb.byteCount(),
                     "byteCount must match at index " + i + " for " + fa.relativePath());
             assertEquals(fa.sha256Hex(), fb.sha256Hex(),
@@ -172,17 +170,6 @@ class ToolchainDeterminismTest {
         }
         assertIterableEquals(runs.get(0), runs.get(1), "runs 0 and 1 must match");
         assertIterableEquals(runs.get(0), runs.get(2), "runs 0 and 2 must match");
-    }
-
-    @Test
-    void manifestConflictPolicyMatchesRequest() throws Exception {
-        Path source = ApplicationTestSupport.writeCampusMarketSource(temporaryDirectory);
-        Path out = temporaryDirectory.resolve("out").toAbsolutePath();
-        ToolchainResult.Success success = ApplicationTestSupport.runCampusMarket(
-                source, out, io.kcg.sir.application.api.ConflictPolicy.FAIL_IF_EXISTS);
-        assertEquals(io.kcg.sir.application.api.ConflictPolicy.FAIL_IF_EXISTS,
-                success.manifest().conflictPolicy(),
-                "manifest conflictPolicy must match request");
     }
 
     @Test

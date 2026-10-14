@@ -109,7 +109,7 @@ final class WorkspaceScenarios {
 
     static SourceSnapshot read(Path sources, Path output) {
         var diagnostics = new ArrayList<ExecutionDiagnostic>();
-        var loaded = ProjectSourceReader.read(new ProjectToolchainRequest(sources, MultiSourceTestSupport.ENTRY, output), diagnostics);
+        var loaded = ProjectSourceReader.read(new ToolchainRequest(sources, MultiSourceTestSupport.ENTRY, output), diagnostics);
         assertTrue(loaded.isPresent(), diagnostics.toString());
         return loaded.get().snapshot();
     }

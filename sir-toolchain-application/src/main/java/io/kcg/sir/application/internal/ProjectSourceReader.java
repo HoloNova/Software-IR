@@ -19,7 +19,7 @@ public final class ProjectSourceReader {
 
     public record Loaded(SourceSnapshot snapshot, ProjectSemanticInput semanticInput) {}
 
-    public static Optional<Loaded> read(ProjectToolchainRequest request, List<ExecutionDiagnostic> diagnostics) {
+    public static Optional<Loaded> read(ToolchainRequest request, List<ExecutionDiagnostic> diagnostics) {
         var parser = SirParser.create();
         SourceSpan active = zero(request.entry());
         try {

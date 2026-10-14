@@ -20,10 +20,10 @@ class MultiSourceGenerationTest {
         Path source = fixture(temp), output = temp.resolve("multi-output");
         Files.writeString(source.resolve("unlisted.sir"), "not a valid source, must never be discovered");
         var multi = generate(source, output);
-        Path singleFile = temp.resolve("single.sir"), singleOutput = temp.resolve("single-output");
-        Files.writeString(singleFile, resource("valid/course-admin-enrollment.sir"));
+        Path singleRoot = Files.createDirectories(temp.resolve("single")), singleOutput = temp.resolve("single-output");
+        Files.writeString(singleRoot.resolve(ENTRY.value()), resource("valid/course-admin-enrollment.sir"));
         var single = assertInstanceOf(ToolchainResult.Success.class, new ToolchainApplication().execute(
-                new ToolchainRequest(singleFile, ENTRY, singleOutput, ConflictPolicy.FAIL_IF_EXISTS)));
+                new ToolchainRequest(singleRoot, ENTRY, singleOutput)));
         assertEquals(files(singleOutput), files(output));
         assertEquals(single.manifest().files().size(), multi.manifest().files().size());
         assertEquals(4, multi.sources().manifest().files().size());
@@ -130,9 +130,8 @@ class MultiSourceGenerationTest {
     @Test void existingOutputDoesNotMutateAnySourceOrOutputState() throws Exception {
         Path source = fixture(temp), output = temp.resolve("occupied"); Files.createDirectory(output); Files.writeString(output.resolve("user.txt"), "keep");
         var original = tree(temp);
-        var result = new ToolchainApplication().executeProject(new ProjectToolchainRequest(source, ENTRY, output));
-        var failure = assertInstanceOf(ProjectToolchainResult.Failure.class, result);
-        assertEquals(FailureDisposition.NO_CHANGES, failure.disposition());
+        var result = new ToolchainApplication().execute(new ToolchainRequest(source, ENTRY, output));
+        var failure = assertInstanceOf(ToolchainResult.Failure.class, result);
         assertEquals("SIR-APP-PROJECT-OUTPUT-001", failure.diagnostics().getFirst().code()); assertEquals(original, tree(temp));
     }
 }
