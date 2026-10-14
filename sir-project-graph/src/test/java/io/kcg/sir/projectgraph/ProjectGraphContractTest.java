@@ -10,7 +10,6 @@ import io.kcg.sir.lowering.api.LoweredNodeId;
 import io.kcg.sir.projectgraph.api.ArtifactRole;
 import io.kcg.sir.projectgraph.api.GraphEdgeKind;
 import io.kcg.sir.projectgraph.api.GraphNodeId;
-import io.kcg.sir.projectgraph.api.GraphVersion;
 import io.kcg.sir.projectgraph.api.ProjectGraph;
 import io.kcg.sir.projectgraph.api.ProjectGraphAnalysis;
 import io.kcg.sir.projectgraph.api.ProjectGraphBuilder;
@@ -46,7 +45,6 @@ class ProjectGraphContractTest {
         assertEquals(List.of(), success.diagnostics(), "a valid input must build without diagnostics");
 
         ProjectGraph graph = success.graph();
-        assertEquals(GraphVersion.V0_1, graph.version());
         assertEquals(EXPECTED_NODES, graph.nodes().size(), () -> summarize(graph));
         assertEquals(EXPECTED_EDGES, graph.edges().size(), () -> summarize(graph));
         assertTrue(graph.canonicalDigest().matches("[0-9a-f]{64}"),
@@ -209,7 +207,7 @@ class ProjectGraphContractTest {
     void validatorAcceptsTheCanonicalGraphFromTheBuilder() {
         ProjectGraph graph = build().graph();
         List<io.kcg.sir.projectgraph.api.ProjectGraphDiagnostic> diagnostics =
-                new ProjectGraphValidator().validate(graph.version(), graph.nodes(), graph.edges());
+                new ProjectGraphValidator().validate(graph.nodes(), graph.edges());
         assertEquals(List.of(), diagnostics, () -> diagnostics.toString());
     }
 

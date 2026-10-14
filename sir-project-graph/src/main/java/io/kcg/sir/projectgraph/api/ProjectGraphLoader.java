@@ -35,14 +35,14 @@ public final class ProjectGraphLoader {
 
       ProjectGraph graph;
       try {
-         graph = new ProjectGraph(loaded.version, loaded.nodes, loaded.edges, loaded.canonicalDigest);
+         graph = new ProjectGraph(loaded.nodes, loaded.edges, loaded.canonicalDigest);
       } catch (Exception e) {
          diagnostics.add(ProjectGraphDiagnostic.error("SIR-GRAPH-INTEGRITY-002", "ProjectGraph construction failed: " + e.getMessage()));
          return fail(diagnostics);
       }
 
       List<ProjectGraphDiagnostic> reserializeDiags = new ArrayList<>();
-      SnapshotEncoder.EncodeResult reserialized = SnapshotEncoder.encode(graph, graph.version() == GraphVersion.V0_1 ? ProjectGraphCanonicalFormatVersion.V1 : ProjectGraphCanonicalFormatVersion.V2, reserializeDiags);
+      SnapshotEncoder.EncodeResult reserialized = SnapshotEncoder.encode(graph, reserializeDiags);
       if (reserialized == null) {
          String firstReason = reserializeDiags.isEmpty()
             ? "encoder returned null without diagnostics"

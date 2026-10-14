@@ -4,7 +4,6 @@ import io.kcg.sir.lowering.api.LoweredOrigin;
 import io.kcg.sir.projectgraph.api.ArtifactRole;
 import io.kcg.sir.projectgraph.api.GraphNodeId;
 import io.kcg.sir.projectgraph.api.ProjectGraph;
-import io.kcg.sir.projectgraph.api.ProjectGraphCanonicalFormatVersion;
 import io.kcg.sir.projectgraph.api.ProjectGraphCanonicalizer;
 import io.kcg.sir.projectgraph.api.ProjectGraphDiagnostic;
 import io.kcg.sir.projectgraph.api.ProjectGraphEdge;
@@ -26,21 +25,11 @@ public final class SnapshotEncoder {
    private SnapshotEncoder() {
    }
 
-   public static SnapshotEncoder.EncodeResult encode(
-      ProjectGraph graph, ProjectGraphCanonicalFormatVersion formatVersion, List<ProjectGraphDiagnostic> diagnostics
-   ) {
-      if ((graph.version() == io.kcg.sir.projectgraph.api.GraphVersion.V0_1 && formatVersion != ProjectGraphCanonicalFormatVersion.V1)
-         || (graph.version() == io.kcg.sir.projectgraph.api.GraphVersion.V0_2 && formatVersion != ProjectGraphCanonicalFormatVersion.V2)) {
-         diagnostics.add(
-            ProjectGraphDiagnostic.error("SIR-GRAPH-COMPAT-001", "canonical format " + formatVersion + " does not match graph " + graph.version())
-         );
-         return null;
-      }
-
+   public static SnapshotEncoder.EncodeResult encode(ProjectGraph graph, List<ProjectGraphDiagnostic> diagnostics) {
       ProjectGraphValidator validator = new ProjectGraphValidator();
       List<ProjectGraphNode> nodes = new ArrayList<>(graph.nodes());
       List<ProjectGraphEdge> edges = new ArrayList<>(graph.edges());
-      List<ProjectGraphDiagnostic> validateDiags = validator.validate(graph.version(), nodes, edges);
+      List<ProjectGraphDiagnostic> validateDiags = validator.validate(nodes, edges);
       if (validateDiags.stream().anyMatch(ProjectGraphDiagnostic::isError)) {
          diagnostics.add(
             ProjectGraphDiagnostic.error(
@@ -51,7 +40,7 @@ public final class SnapshotEncoder {
          return null;
       }
 
-      String recomputedDigest = GraphCanonicalForm.digest(graph.version(), nodes, edges);
+      String recomputedDigest = GraphCanonicalForm.digest(nodes, edges);
       if (!recomputedDigest.equals(graph.canonicalDigest())) {
          diagnostics.add(
             ProjectGraphDiagnostic.error(
@@ -68,7 +57,7 @@ public final class SnapshotEncoder {
       }
 
       String payloadSha256Hex = Sha256Helper.hexDigest(payload);
-      byte[] header = encodeHeader(payload.length, payloadSha256Hex, formatVersion);
+      byte[] header = encodeHeader(payload.length, payloadSha256Hex);
       ByteArrayOutputStream out = new ByteArrayOutputStream();
       out.write(SnapshotFormat.MAGIC, 0, SnapshotFormat.MAGIC.length);
       out.write(header, 0, header.length);
@@ -87,7 +76,7 @@ public final class SnapshotEncoder {
       Map<String, String> graphFields = new TreeMap<>();
       graphFields.put("canonicalDigest", graph.canonicalDigest());
       graphFields.put("edgeCount", Integer.toString(sortedEdges.size()));
-      graphFields.put("graphVersion", graph.version().name());
+      graphFields.put("graphVersion", SnapshotVersion.GRAPH);
       graphFields.put("nodeCount", Integer.toString(sortedNodes.size()));
       writeRecord(out, "GRAPH", graphFields, diagnostics);
       if (diagnostics.stream().anyMatch(ProjectGraphDiagnostic::isError)) {
@@ -118,9 +107,9 @@ public final class SnapshotEncoder {
       return diagnostics.stream().anyMatch(ProjectGraphDiagnostic::isError) ? null : out.toByteArray();
    }
 
-   private static byte[] encodeHeader(int payloadByteCount, String payloadSha256Hex, ProjectGraphCanonicalFormatVersion formatVersion) {
+   private static byte[] encodeHeader(int payloadByteCount, String payloadSha256Hex) {
       Map<String, String> headerFields = new TreeMap<>();
-      headerFields.put("formatVersion", formatVersion.name().substring(1));
+      headerFields.put("formatVersion", SnapshotVersion.FORMAT);
       headerFields.put("payloadByteCount", Integer.toString(payloadByteCount));
       headerFields.put("payloadSha256Hex", payloadSha256Hex);
       ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -140,10 +129,8 @@ public final class SnapshotEncoder {
             f.put("nodeKind", "Project");
             f.put("provenance.kind", "ProjectProvenance");
             f.put("provenance.sourceId", p.provenance().sourceId().value());
-            p.provenance().sourceSet().ifPresent(s -> {
-               f.put("sources.base64", java.util.Base64.getEncoder().encodeToString(s.canonicalBytes()));
-               f.put("sources.sha256Hex", s.sha256Hex());
-            });
+            f.put("sources.base64", java.util.Base64.getEncoder().encodeToString(p.provenance().sourceSet().canonicalBytes()));
+            f.put("sources.sha256Hex", p.provenance().sourceSet().sha256Hex());
             break;
          case ProjectGraphNode.SemanticDeclaration s:
             f.put("displayName", s.displayName());

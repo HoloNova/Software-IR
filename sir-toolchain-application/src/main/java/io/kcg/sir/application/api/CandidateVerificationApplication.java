@@ -4,8 +4,7 @@ import io.kcg.sir.application.internal.CompilationService;
 import io.kcg.sir.application.internal.CompilationStages;
 import io.kcg.sir.application.internal.PathGuard;
 import io.kcg.sir.application.internal.ValidationHashes;
-import io.kcg.sir.application.internal.bundle.BaselineBuilder;
-import io.kcg.sir.application.internal.bundle.BaselineDescriptorCodec;
+import io.kcg.sir.application.internal.projectbaseline.GeneratedManifest;
 import io.kcg.sir.generator.springboot.api.GeneratedFile;
 import io.kcg.sir.generator.springboot.api.GenerationResult;
 import io.kcg.sir.generator.springboot.api.SpringBootGenerator;
@@ -147,7 +146,7 @@ public final class CandidateVerificationApplication {
 
             files = snapshot.files();
             binding = new VerificationBinding(request.sources().sha256Hex(),
-                    BaselineDescriptorCodec.computeManifestDigest(BaselineBuilder.buildManifest(files)),
+                    GeneratedManifest.digest(GeneratedManifest.of(files)),
                     ValidationHashes.generated(files), files.size(), snapshot.loweredModel().targetId(),
                     snapshot.loweredModel().irVersion().value());
             record(VerificationStage.STATIC, StageOutcome.passed("the sources generate " + files.size() + " files"), started);

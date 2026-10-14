@@ -11,7 +11,6 @@ import io.kcg.sir.lowering.springboot.model.ProjectArtifact.MavenProject;
 import io.kcg.sir.lowering.springboot.model.SpringArtifact.Role;
 import io.kcg.sir.projectgraph.api.ArtifactRole;
 import io.kcg.sir.projectgraph.api.GraphEdgeKind;
-import io.kcg.sir.projectgraph.api.GraphVersion;
 import io.kcg.sir.projectgraph.api.ProjectGraphInput;
 import io.kcg.sir.projectgraph.api.ArtifactRole.DeclarationRole;
 import io.kcg.sir.projectgraph.api.ArtifactRole.ProjectRole;
@@ -105,8 +104,8 @@ public final class SpringBootProjectGraphInputFactory {
          edges.add(new EdgeBinding(GraphEdgeKind.GENERATES_FILE, new Lowered(gf.artifactId()), new File(gf.relativePath())));
       }
 
-      return new ProjectGraphInput(GraphVersion.V0_2, sourceId, loweredModel.displayName(), semanticDeclarations, loweredDeclarations, artifacts, files, edges,
-         Optional.of(sources.manifest()));
+      return new ProjectGraphInput(sourceId, loweredModel.displayName(), semanticDeclarations, loweredDeclarations, artifacts, files, edges,
+         sources.manifest());
    }
 
    private static SymbolKind symbolKindOf(NormalizedDeclaration decl) {

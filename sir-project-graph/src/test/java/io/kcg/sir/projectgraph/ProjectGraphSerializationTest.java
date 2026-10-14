@@ -7,11 +7,9 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.kcg.sir.projectgraph.api.CanonicalProjectGraphDocument;
-import io.kcg.sir.projectgraph.api.GraphVersion;
 import io.kcg.sir.projectgraph.api.ProjectGraph;
 import io.kcg.sir.projectgraph.api.ProjectGraphAnalysis;
 import io.kcg.sir.projectgraph.api.ProjectGraphBuilder;
-import io.kcg.sir.projectgraph.api.ProjectGraphCanonicalFormatVersion;
 import io.kcg.sir.projectgraph.api.ProjectGraphDiagnostic;
 import io.kcg.sir.projectgraph.api.ProjectGraphLoader;
 import io.kcg.sir.projectgraph.api.ProjectGraphInput;
@@ -206,50 +204,6 @@ class ProjectGraphSerializationTest {
     }
 
     @Test
-    void encoderRejectsUnsupportedCanonicalFormatVersion() {
-        List<ProjectGraphDiagnostic> diagnostics = new ArrayList<>();
-
-        SnapshotEncoder.EncodeResult result = SnapshotEncoder.encode(validGraph(), null, diagnostics);
-
-        assertNull(result, "a non-V1 format version must not produce a document");
-        assertEquals(Set.of("SIR-GRAPH-COMPAT-001"),
-                diagnostics.stream().map(ProjectGraphDiagnostic::code)
-                        .collect(Collectors.toCollection(TreeSet::new)),
-                () -> diagnostics.toString());
-        assertTrue(diagnostics.stream().allMatch(ProjectGraphDiagnostic::isError));
-    }
-
-    /**
-     * Evidence for the version-skew guard that is actually reachable from a file: the decoder checks
-     * the declared {@code graphVersion} as a raw string and rejects anything but {@code V0_1}. The
-     * integrity fields are repaired first, so the document really reaches this rule instead of
-     * failing earlier at the payload digest.
-     *
-     * <p>This is the document-level counterpart of the validator's unreachable
-     * {@code SIR-GRAPH-VERSION-002}: the same concern is guarded twice, once by an enum comparison in
-     * the validator and once by a string comparison in the decoder. Only the decoder path can be
-     * reached from untrusted bytes, and it is covered here.
-     */
-    @Test
-    void rejectsV2GraphFalselyLabeledAsV1Format() {
-        byte[] document = documentBytes(validGraph());
-        byte[] patched = withConsistentIntegrity(patchRecordField(document, "graphVersion", "V0_2"));
-
-        assertRejected(patched, "SIR-GRAPH-COMPAT-002");
-    }
-
-    /** Pin supported versions and drive the newly reachable incompatible-format branch. */
-    @Test
-    void supportedVersionInventoryAndLegacyFormatRejectionRemainExplicit() {
-        assertEquals(List.of("V0_1", "V0_2"), Arrays.stream(GraphVersion.values()).map(Enum::name).toList());
-        assertEquals(List.of("V1", "V2"), Arrays.stream(ProjectGraphCanonicalFormatVersion.values()).map(Enum::name).toList());
-        var mismatch = assertInstanceOf(ProjectGraphSerialization.Failure.class,
-                new ProjectGraphSerializer().serialize(validGraph(), ProjectGraphCanonicalFormatVersion.V2));
-        assertEquals(List.of("SIR-GRAPH-COMPAT-001"), mismatch.diagnostics().stream().map(ProjectGraphDiagnostic::code).toList());
-        // MultiSourceGraphFormatTest covers the V2 positive, inverse pair, and unknown string versions.
-    }
-
-    @Test
     void rejectsNodeFieldsThatCannotBeEncodedAsUtf8() {
         ProjectGraphInput base = ProjectGraphFixtures.campusMarket();
         SemanticDeclarationInput original = ProjectGraphFixtures.first(base.semanticDeclarations(),
@@ -267,7 +221,7 @@ class ProjectGraphSerializationTest {
                 new ProjectGraphBuilder().build(input)).graph();
 
         ProjectGraphSerialization.Failure failure = assertInstanceOf(ProjectGraphSerialization.Failure.class,
-                new ProjectGraphSerializer().serialize(graph, ProjectGraphCanonicalFormatVersion.V1),
+                new ProjectGraphSerializer().serialize(graph),
                 "a node field that cannot be encoded as UTF-8 must fail serialization instead of being replaced");
 
         assertEquals(Set.of("SIR-GRAPH-SERIALIZE-001"),
@@ -299,7 +253,7 @@ class ProjectGraphSerializationTest {
 
     private static CanonicalProjectGraphDocument serialize(ProjectGraph graph) {
         return assertInstanceOf(ProjectGraphSerialization.Success.class,
-                new ProjectGraphSerializer().serialize(graph, ProjectGraphCanonicalFormatVersion.V1)).document();
+                new ProjectGraphSerializer().serialize(graph)).document();
     }
 
     private static byte[] documentBytes(ProjectGraph graph) {

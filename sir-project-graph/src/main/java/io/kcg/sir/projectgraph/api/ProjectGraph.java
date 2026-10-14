@@ -12,7 +12,6 @@ import java.util.Optional;
 import java.util.Map.Entry;
 
 public final class ProjectGraph {
-   private final GraphVersion version;
    private final List<ProjectGraphNode> nodes;
    private final List<ProjectGraphEdge> edges;
    private final String canonicalDigest;
@@ -22,8 +21,7 @@ public final class ProjectGraph {
    private final Map<SymbolId, List<ProjectGraphNode.Artifact>> artifactsBySymbol;
    private final Map<LoweredNodeId, List<ProjectGraphNode.ProjectFile>> filesByArtifact;
 
-   ProjectGraph(GraphVersion version, List<ProjectGraphNode> nodes, List<ProjectGraphEdge> edges, String canonicalDigest) {
-      this.version = Objects.requireNonNull(version, "version");
+   ProjectGraph(List<ProjectGraphNode> nodes, List<ProjectGraphEdge> edges, String canonicalDigest) {
       this.nodes = List.copyOf(Objects.requireNonNull(nodes, "nodes"));
       this.edges = List.copyOf(Objects.requireNonNull(edges, "edges"));
       this.canonicalDigest = Objects.requireNonNull(canonicalDigest, "canonicalDigest");
@@ -80,10 +78,6 @@ public final class ProjectGraph {
       this.outgoingIndex = Collections.unmodifiableMap(frozenOut);
       this.artifactsBySymbol = Collections.unmodifiableMap(frozenAbs);
       this.filesByArtifact = Collections.unmodifiableMap(frozenFba);
-   }
-
-   public GraphVersion version() {
-      return this.version;
    }
 
    public List<ProjectGraphNode> nodes() {

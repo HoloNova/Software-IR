@@ -1,7 +1,6 @@
 package io.kcg.sir.application.internal.projectbaseline;
 
 import io.kcg.sir.application.internal.*;
-import io.kcg.sir.application.internal.bundle.*;
 import io.kcg.sir.lowering.api.LoweredNodeId;
 import io.kcg.sir.projectgraph.api.*;
 import io.kcg.sir.semantic.symbol.SymbolId;
@@ -32,7 +31,7 @@ public final class ProjectBaselineCodec {
 
     public record Descriptor(Path outputRoot,SourceId entry,String sourceSetSha,long payloadSize,String payloadSha,
             String graphDigest,long graphSize,String graphSha,String targetId,String loweredIrVersion,
-            List<BaselineManifestEntry> manifest,String manifestDigest) {
+            List<GeneratedManifest.Entry> manifest,String manifestDigest) {
         public Descriptor {
             Objects.requireNonNull(outputRoot); Objects.requireNonNull(entry);Objects.requireNonNull(targetId);Objects.requireNonNull(loweredIrVersion);
             if (!outputRoot.isAbsolute() || !outputRoot.equals(outputRoot.normalize())) throw new IllegalArgumentException("outputRoot must be absolute normalized");
@@ -48,7 +47,7 @@ public final class ProjectBaselineCodec {
                     throw new IllegalArgumentException("invalid, unsorted or oversized manifest entry: "+e.relativePath());
                 previous=e.relativePath();
             }
-            if (!BaselineDescriptorCodec.computeManifestDigest(manifest).equals(manifestDigest)) throw new IllegalArgumentException("manifest digest mismatch");
+            if (!GeneratedManifest.digest(manifest).equals(manifestDigest)) throw new IllegalArgumentException("manifest digest mismatch");
         }
     }
     public record Bundle(Descriptor descriptor,SourceSnapshot sources,ProjectGraph graph,byte[] descriptorBytes,byte[] payloadBytes,byte[] graphBytes) {
@@ -111,24 +110,24 @@ public final class ProjectBaselineCodec {
             var graphDigest=text(b);if (!text(b).equals("V2")) throw problem("VERSION-001","project baseline requires snapshot V2");
             long graphSize=b.getLong();var graphSha=text(b);var target=text(b);var ir=text(b);var manifestSha=text(b);int count=b.getInt();
             budget(payloadSize>0 && payloadSize<=MAX_PAYLOAD && graphSize>0 && graphSize<=MAX_GRAPH,"payload/graph budget exceeded");
-            budget(count>=1 && count<=MAX_MANIFEST,"manifest count outside budget");var manifest=new ArrayList<BaselineManifestEntry>();
+            budget(count>=1 && count<=MAX_MANIFEST,"manifest count outside budget");var manifest=new ArrayList<GeneratedManifest.Entry>();
             for (int i=0;i<count;i++) {
                 var path=text(b,MAX_OUTPUT_PATH);long size=b.getLong();budget(size>=0 && size<=MAX_GENERATED_FILE,"generated-file budget exceeded");
                 var sha=text(b);var artifact=new LoweredNodeId(text(b));int flag=b.get()&255;require(flag<=1,"invalid owner flag");
-                var owner=flag==0?Optional.<SymbolId>empty():Optional.of(new SymbolId(text(b)));manifest.add(new BaselineManifestEntry(path,size,sha,artifact,owner));
+                var owner=flag==0?Optional.<SymbolId>empty():Optional.of(new SymbolId(text(b)));manifest.add(new GeneratedManifest.Entry(path,size,sha,artifact,owner));
             }
             require(!b.hasRemaining(),"trailing descriptor bytes");var result=new Descriptor(root,entry,sourceSha,payloadSize,payloadSha,graphDigest,graphSize,graphSha,target,ir,manifest,manifestSha);
             require(Arrays.equals(bytes,encodeDescriptor(result)),"noncanonical descriptor");return result;
         } catch (BufferUnderflowException|IllegalArgumentException e) { throw problem("FORMAT-001","invalid project descriptor: "+e.getMessage()); }
     }
     public static Bundle build(SourceSnapshot sources,ProjectCompilation.Compiled compilation,ProjectGraph graph,Path outputRoot) throws IOException {
-        var serialized=new ProjectGraphSerializer().serialize(graph,ProjectGraphCanonicalFormatVersion.V2);
+        var serialized=new ProjectGraphSerializer().serialize(graph);
         if (!(serialized instanceof ProjectGraphSerialization.Success ok)) throw problem("FORMAT-001","cannot serialize V2 graph");
         var payload=encodeSources(sources);var graphBytes=ok.document().bytes();budget(graphBytes.length<=MAX_GRAPH,"graph budget exceeded");
-        var manifest=BaselineBuilder.buildManifest(compilation.generatedFiles());budget(manifest.size()<=MAX_MANIFEST,"manifest budget exceeded");
+        var manifest=GeneratedManifest.of(compilation.generatedFiles());budget(manifest.size()<=MAX_MANIFEST,"manifest budget exceeded");
         for (var entry : manifest) budget(entry.byteCount()<=MAX_GENERATED_FILE,"generated-file budget exceeded");
         var descriptor=new Descriptor(outputRoot,sources.entry(),sources.sha256Hex(),payload.length,Sha256.hexDigest(payload),graph.canonicalDigest(),graphBytes.length,
-            Sha256.hexDigest(graphBytes),compilation.loweredModel().targetId(),compilation.loweredModel().irVersion().value(),manifest,BaselineDescriptorCodec.computeManifestDigest(manifest));
+            Sha256.hexDigest(graphBytes),compilation.loweredModel().targetId(),compilation.loweredModel().irVersion().value(),manifest,GeneratedManifest.digest(manifest));
         return load(encodeDescriptor(descriptor),payload,graphBytes);
     }
     public static Bundle load(byte[] descriptorBytes,byte[] payload,byte[] graphBytes) throws IOException {
@@ -138,11 +137,11 @@ public final class ProjectBaselineCodec {
         var sources=decodeSources(payload);require(d.entry().equals(sources.entry()) && d.sourceSetSha().equals(sources.sha256Hex()),"source-set evidence mismatch");
         var parsed=new ProjectGraphLoader().load(new CanonicalProjectGraphDocument(graphBytes));
         if (!(parsed instanceof ProjectGraphAnalysis.Success ok)) throw problem("FORMAT-001","graph rejected: "+parsed.diagnostics());
-        var graph=ok.graph();if (graph.version()!=GraphVersion.V0_2) throw problem("VERSION-001","project bundle requires a V2 graph");
+        var graph=ok.graph();
         require(d.graphDigest().equals(graph.canonicalDigest()),"graph canonical digest mismatch");
         var origins=graph.nodes().stream().filter(n->n instanceof ProjectGraphNode.Project).map(n->((ProjectGraphNode.Project)n).provenance()).toList();
-        require(origins.size()==1 && origins.getFirst().sourceId().equals(sources.entry()) && origins.getFirst().sourceSet().equals(Optional.of(sources.manifest())),"graph source provenance mismatch");
-        require(Arrays.equals(graphBytes,((ProjectGraphSerialization.Success)new ProjectGraphSerializer().serialize(graph,ProjectGraphCanonicalFormatVersion.V2)).document().bytes()),"noncanonical graph bytes");
+        require(origins.size()==1 && origins.getFirst().sourceId().equals(sources.entry()) && origins.getFirst().sourceSet().equals(sources.manifest()),"graph source provenance mismatch");
+        require(Arrays.equals(graphBytes,((ProjectGraphSerialization.Success)new ProjectGraphSerializer().serialize(graph)).document().bytes()),"noncanonical graph bytes");
         return new Bundle(d,sources,graph,descriptorBytes,payload,graphBytes);
     }
     public static String id(byte[] descriptor) {

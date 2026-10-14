@@ -68,14 +68,14 @@ public final class SpringBootIrValidation {
          this.error(pom.origin(), "MavenProject path must be 'pom.xml': " + pom.path());
       }
 
-      if (pom.javaVersion() != SpringBootTargetProfile.V0_1.javaVersion()) {
-         this.error(pom.origin(), "MavenProject javaVersion must be " + SpringBootTargetProfile.V0_1.javaVersion() + ": " + pom.javaVersion());
+      if (pom.javaVersion() != SpringBootTargetProfile.V0_2.javaVersion()) {
+         this.error(pom.origin(), "MavenProject javaVersion must be " + SpringBootTargetProfile.V0_2.javaVersion() + ": " + pom.javaVersion());
       }
 
-      if (!pom.springBootParentVersion().equals(SpringBootTargetProfile.V0_1.springBootVersion())) {
+      if (!pom.springBootParentVersion().equals(SpringBootTargetProfile.V0_2.springBootVersion())) {
          this.error(
             pom.origin(),
-            "MavenProject springBootParentVersion must be " + SpringBootTargetProfile.V0_1.springBootVersion() + ": " + pom.springBootParentVersion()
+            "MavenProject springBootParentVersion must be " + SpringBootTargetProfile.V0_2.springBootVersion() + ": " + pom.springBootParentVersion()
          );
       }
 
@@ -159,8 +159,8 @@ public final class SpringBootIrValidation {
    private SpringBootIrValidation.VersionProfileStatus validateRoot() {
       LoweredIrVersion ir = this.model.irVersion();
       SpringBootTargetProfile profile = this.model.profile();
-      boolean irKnown = LoweredIrVersion.V0_1.equals(ir) || LoweredIrVersion.V0_2.equals(ir);
-      boolean profileKnown = SpringBootTargetProfile.V0_1.equals(profile) || SpringBootTargetProfile.V0_2.equals(profile);
+      boolean irKnown = LoweredIrVersion.V0_2.equals(ir);
+      boolean profileKnown = SpringBootTargetProfile.V0_2.equals(profile);
       if (!irKnown) {
          this.error(this.model.applicationMain().origin(), "unsupported Lowered IR version: " + ir.value());
          return SpringBootIrValidation.VersionProfileStatus.UNKNOWN;
@@ -168,14 +168,7 @@ public final class SpringBootIrValidation {
          this.error(this.model.applicationMain().origin(), "unsupported Spring Boot target profile: " + profile.id());
          return SpringBootIrValidation.VersionProfileStatus.UNKNOWN;
       } else {
-         boolean v01 = LoweredIrVersion.V0_1.equals(ir) && SpringBootTargetProfile.V0_1.equals(profile);
-         boolean v02 = LoweredIrVersion.V0_2.equals(ir) && SpringBootTargetProfile.V0_2.equals(profile);
-         if (!v01 && !v02) {
-            this.error(this.model.applicationMain().origin(), "Lowered IR version " + ir.value() + " does not match profile " + profile.id());
-            return SpringBootIrValidation.VersionProfileStatus.MISMATCH;
-         } else {
-            return SpringBootIrValidation.VersionProfileStatus.OK;
-         }
+         return SpringBootIrValidation.VersionProfileStatus.OK;
       }
    }
 
@@ -188,12 +181,7 @@ public final class SpringBootIrValidation {
          .map(SpringBootDeclaration.CapabilityDeclaration.class::cast)
          .filter(cap -> cap.actor().isPresent())
          .count();
-      boolean isV01 = LoweredIrVersion.V0_1.equals(this.model.irVersion());
-      if (isV01) {
-         if (planOpt.isPresent()) {
-            this.error(this.model.applicationMain().origin(), "V0_1 Lowered IR must not carry an ActorIdentityTransportPlan");
-         }
-      } else if (actorCount == 0L) {
+      if (actorCount == 0L) {
          if (planOpt.isPresent()) {
             this.error(this.model.applicationMain().origin(), "V0_2 Lowered IR with no actor capability must not carry an ActorIdentityTransportPlan");
          }
@@ -1298,7 +1286,6 @@ public final class SpringBootIrValidation {
 
    private enum VersionProfileStatus {
       OK,
-      MISMATCH,
       UNKNOWN;
    }
 }

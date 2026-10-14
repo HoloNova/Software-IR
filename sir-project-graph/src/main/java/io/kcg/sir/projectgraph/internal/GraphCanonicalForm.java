@@ -3,7 +3,6 @@ package io.kcg.sir.projectgraph.internal;
 import io.kcg.sir.lowering.api.LoweredOrigin;
 import io.kcg.sir.projectgraph.api.ArtifactRole;
 import io.kcg.sir.projectgraph.api.GraphProvenance;
-import io.kcg.sir.projectgraph.api.GraphVersion;
 import io.kcg.sir.projectgraph.api.ProjectGraphCanonicalizer;
 import io.kcg.sir.projectgraph.api.ProjectGraphEdge;
 import io.kcg.sir.projectgraph.api.ProjectGraphNode;
@@ -21,8 +20,8 @@ public final class GraphCanonicalForm {
    private GraphCanonicalForm() {
    }
 
-   public static String digest(GraphVersion version, List<ProjectGraphNode> nodes, List<ProjectGraphEdge> edges) {
-      byte[] bytes = canonicalBytes(version, nodes, edges);
+   public static String digest(List<ProjectGraphNode> nodes, List<ProjectGraphEdge> edges) {
+      byte[] bytes = canonicalBytes(nodes, edges);
 
       try {
          byte[] hash = MessageDigest.getInstance("SHA-256").digest(bytes);
@@ -32,13 +31,13 @@ public final class GraphCanonicalForm {
       }
    }
 
-   public static byte[] canonicalBytes(GraphVersion version, List<ProjectGraphNode> nodes, List<ProjectGraphEdge> edges) {
+   public static byte[] canonicalBytes(List<ProjectGraphNode> nodes, List<ProjectGraphEdge> edges) {
       List<ProjectGraphNode> sortedNodes = new ArrayList<>(nodes);
       sortedNodes.sort(ProjectGraphCanonicalizer.nodeComparator());
       List<ProjectGraphEdge> sortedEdges = new ArrayList<>(edges);
       sortedEdges.sort(Comparator.comparing(ProjectGraphEdge::id));
       CanonicalForm form = new CanonicalForm();
-      form.raw("VERSION").field(version.name());
+      form.raw("VERSION").field(SnapshotVersion.GRAPH);
 
       for (ProjectGraphNode node : sortedNodes) {
          emitNode(form, node);
@@ -87,10 +86,8 @@ public final class GraphCanonicalForm {
       form.field(provenance.sourceId().value());
       switch (provenance) {
          case GraphProvenance.ProjectProvenance p:
-            p.sourceSet().ifPresent(s -> {
-               form.field(java.util.Base64.getEncoder().encodeToString(s.canonicalBytes()));
-               form.field(s.sha256Hex());
-            });
+            form.field(java.util.Base64.getEncoder().encodeToString(p.sourceSet().canonicalBytes()));
+            form.field(p.sourceSet().sha256Hex());
             break;
          case GraphProvenance.SemanticProvenance p:
             form.field(p.sourceNodeId().value());

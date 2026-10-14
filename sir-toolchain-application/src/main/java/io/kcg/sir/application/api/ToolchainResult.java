@@ -11,11 +11,11 @@ public sealed interface ToolchainResult permits ToolchainResult.Success, Toolcha
         public Success {
             Objects.requireNonNull(sources); Objects.requireNonNull(manifest); Objects.requireNonNull(graph);
             diagnostics = List.copyOf(diagnostics);
-            if (graph.version() != GraphVersion.V0_2 || diagnostics.stream().anyMatch(ExecutionDiagnostic::isError))
-                throw new IllegalArgumentException("project success requires a V0_2 graph without errors");
+            if (diagnostics.stream().anyMatch(ExecutionDiagnostic::isError))
+                throw new IllegalArgumentException("project success requires no errors");
             var project = graph.nodes().stream().filter(n -> n instanceof ProjectGraphNode.Project)
                     .map(n -> (ProjectGraphNode.Project) n).findFirst().orElseThrow();
-            if (!project.provenance().sourceSet().orElseThrow().equals(sources.manifest()))
+            if (!project.provenance().sourceSet().equals(sources.manifest()))
                 throw new IllegalArgumentException("graph must bind the returned source snapshot");
         }
     }

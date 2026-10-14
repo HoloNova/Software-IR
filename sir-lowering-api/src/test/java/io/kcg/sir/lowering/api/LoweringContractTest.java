@@ -75,7 +75,7 @@ class LoweringContractTest {
     private record TestModel() implements LoweredModel {
         @Override
         public LoweredIrVersion irVersion() {
-            return LoweredIrVersion.V0_1;
+            return LoweredIrVersion.V0_2;
         }
 
         @Override

@@ -5,8 +5,8 @@ import java.util.Comparator;
 import java.util.List;
 
 public final class ProjectGraphCanonicalizer {
-   public String digest(GraphVersion version, List<ProjectGraphNode> nodes, List<ProjectGraphEdge> edges) {
-      return GraphCanonicalForm.digest(version, nodes, edges);
+   public String digest(List<ProjectGraphNode> nodes, List<ProjectGraphEdge> edges) {
+      return GraphCanonicalForm.digest(nodes, edges);
    }
 
    public static Comparator<ProjectGraphNode> nodeComparator() {

@@ -158,7 +158,7 @@ public final class SpringBootModelLowerer {
     private ProjectArtifact.MavenProject lowerMavenProject() {
         List<ProjectArtifact.MavenDependency> dependencies = List.of(new ProjectArtifact.MavenDependency("org.springframework.boot", "spring-boot-starter-web", "3.5.3", "compile"), new ProjectArtifact.MavenDependency("org.springframework.boot", "spring-boot-starter-validation", "3.5.3", "compile"), new ProjectArtifact.MavenDependency("com.baomidou", "mybatis-plus-spring-boot3-starter", "3.5.12", "compile"), new ProjectArtifact.MavenDependency("com.mysql", "mysql-connector-j", "9.3.0", "runtime"), new ProjectArtifact.MavenDependency("org.springframework.boot", "spring-boot-starter-test", "3.5.3", "test"));
         List<ProjectArtifact.MavenPlugin> plugins = List.of(new ProjectArtifact.MavenPlugin("org.springframework.boot", "spring-boot-maven-plugin", "3.5.3"));
-        return new ProjectArtifact.MavenProject(this.nodeId("project", "maven"), this.projectOrigin(), "pom.xml", this.source.metadata().namespace(), this.kebab(this.source.softwareName()), "0.1.0-SNAPSHOT", SpringBootTargetProfile.V0_1.javaVersion(), SpringBootTargetProfile.V0_1.springBootVersion(), dependencies, plugins);
+        return new ProjectArtifact.MavenProject(this.nodeId("project", "maven"), this.projectOrigin(), "pom.xml", this.source.metadata().namespace(), this.kebab(this.source.softwareName()), "0.1.0-SNAPSHOT", SpringBootTargetProfile.V0_2.javaVersion(), SpringBootTargetProfile.V0_2.springBootVersion(), dependencies, plugins);
     }
 
     private ProjectArtifact.ApplicationMain lowerApplicationMain(

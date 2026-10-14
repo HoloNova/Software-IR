@@ -12,7 +12,6 @@ import java.util.Objects;
 import java.util.Optional;
 
 public record ProjectGraphInput(
-   GraphVersion version,
    SourceId sourceId,
    String projectDisplayName,
    List<ProjectGraphInput.SemanticDeclarationInput> semanticDeclarations,
@@ -20,17 +19,10 @@ public record ProjectGraphInput(
    List<ProjectGraphInput.ArtifactInput> artifacts,
    List<ProjectGraphInput.FileInput> files,
    List<ProjectGraphInput.EdgeBinding> edges,
-   Optional<io.kcg.sir.source.SourceSetManifest> sourceSet
+   io.kcg.sir.source.SourceSetManifest sourceSet
 ) {
-   public ProjectGraphInput(GraphVersion version, SourceId sourceId, String projectDisplayName,
-      List<SemanticDeclarationInput> semanticDeclarations, List<LoweredDeclarationInput> loweredDeclarations,
-      List<ArtifactInput> artifacts, List<FileInput> files, List<EdgeBinding> edges) {
-      this(version, sourceId, projectDisplayName, semanticDeclarations, loweredDeclarations, artifacts, files, edges, Optional.empty());
-   }
-
    public ProjectGraphInput {
-      Objects.requireNonNull(version, "version");
-      sourceSet = Objects.requireNonNull(sourceSet, "sourceSet");
+      Objects.requireNonNull(sourceSet, "sourceSet");
       Objects.requireNonNull(sourceId, "sourceId");
       Objects.requireNonNull(projectDisplayName, "projectDisplayName");
       if (projectDisplayName.isBlank()) {

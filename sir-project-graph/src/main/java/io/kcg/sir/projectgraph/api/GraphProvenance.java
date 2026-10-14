@@ -55,8 +55,7 @@ public sealed interface GraphProvenance
       }
    }
 
-   record ProjectProvenance(SourceId sourceId, Optional<io.kcg.sir.source.SourceSetManifest> sourceSet) implements GraphProvenance {
-      public ProjectProvenance(SourceId sourceId) { this(sourceId, Optional.empty()); }
+   record ProjectProvenance(SourceId sourceId, io.kcg.sir.source.SourceSetManifest sourceSet) implements GraphProvenance {
       public ProjectProvenance {
          Objects.requireNonNull(sourceId, "sourceId");
          sourceSet = Objects.requireNonNull(sourceSet, "sourceSet");

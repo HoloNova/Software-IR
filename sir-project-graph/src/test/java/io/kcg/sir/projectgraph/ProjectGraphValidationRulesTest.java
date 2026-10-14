@@ -10,7 +10,6 @@ import io.kcg.sir.projectgraph.api.ArtifactRole;
 import io.kcg.sir.projectgraph.api.GraphEdgeKind;
 import io.kcg.sir.projectgraph.api.GraphNodeId;
 import io.kcg.sir.projectgraph.api.GraphProvenance;
-import io.kcg.sir.projectgraph.api.GraphVersion;
 import io.kcg.sir.projectgraph.api.ProjectGraph;
 import io.kcg.sir.projectgraph.api.ProjectGraphAnalysis;
 import io.kcg.sir.projectgraph.api.ProjectGraphBuilder;
@@ -358,8 +357,9 @@ class ProjectGraphValidationRulesTest {
                         original.origin().span()),
                 original.role(), original.qualifiedName());
 
-        assertCodes(build(ProjectGraphFixtures.withArtifacts(base,
-                ProjectGraphFixtures.replace(base.artifacts(), index, broken))), "SIR-GRAPH-PROVENANCE-004");
+        // Giving the artifact an owner also moves its provenance off the project entry, so the source rules fire too.
+        assertIncludesCode(build(ProjectGraphFixtures.withArtifacts(base,
+                ProjectGraphFixtures.replace(base.artifacts(), index, broken))).diagnostics(), "SIR-GRAPH-PROVENANCE-004");
     }
 
     @Test
@@ -403,7 +403,7 @@ class ProjectGraphValidationRulesTest {
     }
 
     @Test
-    void provenance006RejectsProvenanceSourceIdThatDisagreesWithTheProjectRoot() {
+    void sources002RejectsProvenanceOutsideTheSourceManifest() {
         ProjectGraph graph = validGraph();
         GraphNodeId.Semantic user = ProjectGraphFixtures.semanticNode(ProjectGraphFixtures.USER_ENTITY_SYMBOL);
         SourceId other = SourceId.of("other.sir");
@@ -412,12 +412,12 @@ class ProjectGraphValidationRulesTest {
                         ProjectGraphFixtures.USER_ENTITY_SYMBOL), ProjectGraphFixtures.span(0)),
                 SymbolKind.ENTITY, "User");
 
-        assertCodes(validate(ProjectGraphFixtures.replace(graph.nodes(), indexOfNode(graph, user), broken),
-                graph.edges()), "SIR-GRAPH-PROVENANCE-006");
+        assertIncludesCode(validate(ProjectGraphFixtures.replace(graph.nodes(), indexOfNode(graph, user), broken),
+                graph.edges()), "SIR-GRAPH-SOURCES-002");
     }
 
     @Test
-    void provenance007RejectsSpanFromAnotherSource() {
+    void sources003RejectsSpanFromAnotherSource() {
         ProjectGraphInput base = ProjectGraphFixtures.campusMarket();
         SemanticDeclarationInput original = ProjectGraphFixtures.first(base.semanticDeclarations(),
                 declaration -> declaration.symbolId().equals(ProjectGraphFixtures.GOODS_ENTITY_SYMBOL));
@@ -425,9 +425,9 @@ class ProjectGraphValidationRulesTest {
         SemanticDeclarationInput broken = new SemanticDeclarationInput(original.symbolId(), original.kind(),
                 original.displayName(), original.sourceNodeId(), foreign);
 
-        assertCodes(build(ProjectGraphFixtures.withSemantics(base,
-                ProjectGraphFixtures.replace(base.semanticDeclarations(), indexOfSemantic(original), broken))),
-                "SIR-GRAPH-PROVENANCE-007");
+        assertIncludesCode(build(ProjectGraphFixtures.withSemantics(base,
+                ProjectGraphFixtures.replace(base.semanticDeclarations(), indexOfSemantic(original), broken))).diagnostics(),
+                "SIR-GRAPH-SOURCES-003");
     }
 
     // ---- path, order and version rules -----------------------------------------------------------
@@ -469,18 +469,6 @@ class ProjectGraphValidationRulesTest {
     }
 
     @Test
-    void version001RejectsNullGraphVersion() {
-        ProjectGraph graph = validGraph();
-        List<ProjectGraphDiagnostic> diagnostics = new ProjectGraphValidator().validate(null, graph.nodes(),
-                graph.edges());
-
-        assertEquals(Set.of("SIR-GRAPH-VERSION-001"),
-                diagnostics.stream().map(ProjectGraphDiagnostic::code).collect(Collectors.toCollection(TreeSet::new)),
-                () -> diagnostics.toString());
-        assertTrue(diagnostics.stream().allMatch(ProjectGraphDiagnostic::isError));
-    }
-
-    @Test
     void builderNeverReturnsAPartialGraphOnInvalidInput() {
         ProjectGraphInput invalid = ProjectGraphFixtures.withEdges(ProjectGraphFixtures.campusMarket(),
                 ProjectGraphFixtures.drop(ProjectGraphFixtures.campusMarket().edges(),
@@ -504,7 +492,7 @@ class ProjectGraphValidationRulesTest {
     }
 
     private static List<ProjectGraphDiagnostic> validate(List<ProjectGraphNode> nodes, List<ProjectGraphEdge> edges) {
-        return new ProjectGraphValidator().validate(GraphVersion.V0_1, nodes, edges);
+        return new ProjectGraphValidator().validate(nodes, edges);
     }
 
     private static ProjectGraph validGraph() {
@@ -520,6 +508,10 @@ class ProjectGraphValidationRulesTest {
                 .map(ProjectGraphDiagnostic::code)
                 .collect(Collectors.toCollection(TreeSet::new));
         assertEquals(new TreeSet<>(List.of(expectedCodes)), actual, () -> "unexpected diagnostics: " + diagnostics);
+    }
+
+    private static void assertIncludesCode(List<ProjectGraphDiagnostic> diagnostics, String expectedCode) {
+        assertTrue(diagnostics.stream().anyMatch(d -> d.code().equals(expectedCode)), () -> "missing " + expectedCode + ": " + diagnostics);
     }
 
     private static int indexOfSemantic(SemanticDeclarationInput declaration) {

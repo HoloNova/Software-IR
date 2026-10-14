@@ -83,7 +83,6 @@ class ToolchainProjectGraphIntegrationTest {
         assertFalse(graph.nodes().isEmpty(), "graph must contain nodes");
         assertFalse(graph.edges().isEmpty(), "graph must contain edges");
         assertNotNull(graph.canonicalDigest(), "graph must have a canonical digest");
-        assertEquals(io.kcg.sir.projectgraph.api.GraphVersion.V0_2, graph.version());
     }
 
     @Test
