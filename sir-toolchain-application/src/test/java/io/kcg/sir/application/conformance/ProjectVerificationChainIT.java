@@ -138,13 +138,17 @@ class ProjectVerificationChainIT {
         Path liveSources = repository.resolve("sources");
         Path liveOutput = repository.resolve("generated");
         var git = new GitVersionControl();
+        // The work area sits under the checkout this test runs in, so Git would find that outer repository and the application would refuse a
+        // root that is not its own top level. The project is made its own repository here, as a user's project would be.
+        assertEquals(Optional.empty(), git.initialize(repository));
         var versions = new WorkspaceVersionApplication(git);
         var gate = new VerifiedWorkspaceApplication(git);
 
         var request = new WorkspaceVersionRequest(repository, liveSources, liveOutput, candidate);
         var planned = versions.plan(request);
         var published = gate.apply(new VerifiedWorkspaceApplication.Request(request, planned, good, VerificationStage.BUSINESS));
-        var applied = assertInstanceOf(WorkspaceApplyResult.Applied.class, assertInstanceOf(VerifiedWorkspaceApplication.Result.Completed.class, published).result());
+        var outcome = assertInstanceOf(VerifiedWorkspaceApplication.Result.Completed.class, published).result();
+        var applied = assertInstanceOf(WorkspaceApplyResult.Applied.class, outcome, () -> String.valueOf(outcome.diagnostics()));
         assertEquals(good.binding().orElseThrow().manifestDigest(), applied.candidate().manifestDigest(), "the published version is the verified one");
         assertTrue(applied.beforeCommit().isPresent() && applied.afterCommit().isPresent(), "both versions are saved in Git");
         assertEquals("2", git(repository, "rev-list", "--count", "HEAD").strip());
