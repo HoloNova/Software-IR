@@ -6,6 +6,8 @@ import io.kcg.sir.semantic.schema.Reference;
 import io.kcg.sir.semantic.schema.Source;
 import io.kcg.sir.ast.AstBinaryOperator;
 import io.kcg.sir.ast.AstNodeId;
+import io.kcg.sir.ast.AstShiftDirection;
+import io.kcg.sir.ast.AstTimeUnit;
 import io.kcg.sir.ast.AstUnaryOperator;
 import io.kcg.sir.semantic.symbol.SymbolId;
 import io.kcg.sir.semantic.type.SirType;
@@ -25,6 +27,7 @@ public sealed interface NormalizedExpression
    NormalizedExpression.MemberExpression,
    NormalizedExpression.UnaryExpression,
    NormalizedExpression.BinaryExpression,
+   NormalizedExpression.TimeShiftExpression,
    NormalizedExpression.PresentExpression,
    NormalizedExpression.ExistsExpression {
    AstNodeId sourceNodeId();
@@ -99,6 +102,25 @@ public sealed interface NormalizedExpression
          Objects.requireNonNull(sourceNodeId, "sourceNodeId");
          Objects.requireNonNull(span, "span");
          Objects.requireNonNull(type, "type");
+      }
+   }
+
+   /**
+   * A date or date-time moved by a whole number of units. The duration belongs to this expression and
+   * is not a value of its own, so nothing downstream has a duration type to carry.
+   */
+   record TimeShiftExpression(
+      @Source AstNodeId sourceNodeId, @Source SourceSpan span, @Derived SirType type,
+      @Fact NormalizedExpression base, @Fact AstShiftDirection direction, @Fact BigInteger amount, @Fact AstTimeUnit unit
+   ) implements NormalizedExpression {
+      public TimeShiftExpression {
+         Objects.requireNonNull(sourceNodeId, "sourceNodeId");
+         Objects.requireNonNull(span, "span");
+         Objects.requireNonNull(type, "type");
+         Objects.requireNonNull(base, "base");
+         Objects.requireNonNull(direction, "direction");
+         Objects.requireNonNull(amount, "amount");
+         Objects.requireNonNull(unit, "unit");
       }
    }
 

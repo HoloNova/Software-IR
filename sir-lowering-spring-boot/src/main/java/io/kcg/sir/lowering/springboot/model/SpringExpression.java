@@ -19,6 +19,7 @@ public sealed interface SpringExpression
    SpringExpression.MemberExpression,
    SpringExpression.UnaryExpression,
    SpringExpression.BinaryExpression,
+   SpringExpression.TimeShiftExpression,
    SpringExpression.PayloadPresence,
    SpringExpression.ExistsPredicate {
    LoweredNodeId id();
@@ -60,7 +61,41 @@ public sealed interface SpringExpression
       LE,
       GT,
       GE,
-      CONTAINS_LITERAL;
+      CONTAINS_LITERAL,
+      ADD,
+      SUB;
+   }
+
+   /**
+   * A date or date-time moved by a whole number of units: {@code base.plus(amount, unit)} or
+   * {@code base.minus(amount, unit)}. The amount is already known to fit a 32-bit integer, and
+   * the unit is one the base's own Java type can move by.
+   */
+   record TimeShiftExpression(
+      LoweredNodeId id, LoweredOrigin origin, LoweredJavaType type, SpringExpression base,
+      SpringExpression.ShiftDirection direction, long amount, SpringExpression.ShiftUnit unit
+   ) implements SpringExpression {
+      public TimeShiftExpression {
+         SpringExpression.requireNode(id, origin, type);
+         Objects.requireNonNull(base, "base");
+         Objects.requireNonNull(direction, "direction");
+         Objects.requireNonNull(unit, "unit");
+         if (amount < 0 || amount > Integer.MAX_VALUE) {
+            throw new IllegalArgumentException("a time shift amount must fit a 32-bit integer: " + amount);
+         }
+      }
+   }
+
+   enum ShiftDirection {
+      ADD,
+      SUBTRACT
+   }
+
+   enum ShiftUnit {
+      SECONDS,
+      MINUTES,
+      HOURS,
+      DAYS
    }
 
    /**

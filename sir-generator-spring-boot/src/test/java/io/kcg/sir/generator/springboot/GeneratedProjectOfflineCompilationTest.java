@@ -117,6 +117,28 @@ class GeneratedProjectOfflineCompilationTest {
         }
     }
 
+    /**
+     * Plus, minus and time shifts render as {@code Math.addExact} and {@code Instant.plus}: calls on boxed
+     * input values and on {@code Instant} and {@code LocalDate}, whose overloads only a compiler can vouch for.
+     */
+    @Test
+    void timeArithmeticProjectCompilesWithFrozenDependenciesOffline(@TempDir Path tempDir)
+            throws Exception {
+        Path projectRoot = tempDir.resolve("generated-project");
+        List<GeneratedFile> files = GeneratorTestSupport.generateSuccess("valid/time-arithmetic.sir");
+        materialize(files, projectRoot);
+        compileOffline(projectRoot, tempDir);
+
+        for (String classFile : List.of(
+                "example/tickets/Application.class",
+                "example/tickets/domain/Ticket.class",
+                "example/tickets/application/OpenTicketService.class",
+                "example/tickets/application/LiveTicketsService.class")) {
+            assertTrue(Files.isRegularFile(projectRoot.resolve("target/classes").resolve(classFile)),
+                    () -> "offline Maven compile did not create representative class: " + classFile);
+        }
+    }
+
     private static void compileOffline(Path projectRoot, Path tempDir) throws Exception {
         Path maven = locateMavenExecutable();
         Path localRepository = frozenLocalRepository();

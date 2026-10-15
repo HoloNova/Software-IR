@@ -42,6 +42,7 @@ import io.kcg.sir.ast.AstReturnStep;
 import io.kcg.sir.ast.AstSoftware;
 import io.kcg.sir.ast.AstStep;
 import io.kcg.sir.ast.AstTypeRef;
+import io.kcg.sir.ast.AstTimeShiftExpression;
 import io.kcg.sir.ast.AstUnaryExpression;
 import io.kcg.sir.ast.AstUpdateStep;
 import io.kcg.sir.ast.AstValidateStep;
@@ -920,6 +921,9 @@ final class ResolvePass {
              case AstBinaryExpression e:
                 this.resolveExpression(e.left(), capName, scopeId, visibleVars, currentItemSymbol, anyEntityName);
                 this.resolveExpression(e.right(), capName, scopeId, visibleVars, currentItemSymbol, anyEntityName);
+                break;
+             case AstTimeShiftExpression e:
+                this.resolveExpression(e.base(), capName, scopeId, visibleVars, currentItemSymbol, anyEntityName);
                 break;
              default:
           }

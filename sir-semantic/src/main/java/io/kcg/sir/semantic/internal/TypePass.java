@@ -30,6 +30,8 @@ import io.kcg.sir.ast.AstReturnStep;
 import io.kcg.sir.ast.AstSoftware;
 import io.kcg.sir.ast.AstStep;
 import io.kcg.sir.ast.AstStringLiteral;
+import io.kcg.sir.ast.AstTimeShiftExpression;
+import io.kcg.sir.ast.AstTimeUnit;
 import io.kcg.sir.ast.AstUnaryExpression;
 import io.kcg.sir.ast.AstUnitLiteral;
 import io.kcg.sir.ast.AstUpdateStep;
@@ -543,6 +545,7 @@ final class TypePass {
           case AstAnyExpression e -> this.typeAnyExpression(e, scopeId, visibleVars);
          case AstUnaryExpression e -> this.typeUnaryExpression(e, scopeId, visibleVars);
          case AstBinaryExpression e -> this.typeBinaryExpression(e, scopeId, visibleVars);
+         case AstTimeShiftExpression e -> this.typeTimeShift(e, scopeId, visibleVars);
          default -> throw new IllegalStateException("unexpected expression: " + expr);
       };
       if (result != null) {
@@ -676,6 +679,42 @@ final class TypePass {
       }
    }
 
+   /** The largest amount a time shift may state: what a 32-bit signed integer holds. */
+   private static final java.math.BigInteger MAX_SHIFT_AMOUNT = java.math.BigInteger.valueOf(Integer.MAX_VALUE);
+
+   /**
+   * A time shift keeps the type of what it moves. A date can only move by whole days, because a date
+   * has no time of day to move by hours; a date-time moves by any unit.
+   */
+   private SirType typeTimeShift(AstTimeShiftExpression expr, SymbolId scopeId, Set<String> visibleVars) {
+      SirType baseType = this.typeExpression(expr.base(), scopeId, visibleVars);
+      if (baseType == null) {
+         return null;
+      }
+
+      if (expr.amount().compareTo(MAX_SHIFT_AMOUNT) > 0) {
+         this.diagnostics.add(DiagnosticBuilder.error(
+            "SIR-TYPE-001", "时间平移的数值不能大于 " + MAX_SHIFT_AMOUNT, expr.span()));
+         return null;
+      }
+
+      if (baseType == PrimitiveType.DATE_TIME) {
+         return baseType;
+      }
+
+      if (baseType == PrimitiveType.DATE) {
+         if (expr.unit() != AstTimeUnit.DAYS) {
+            this.diagnostics.add(DiagnosticBuilder.error("SIR-TYPE-001", "Date 只能按天平移", expr.span()));
+            return null;
+         }
+
+         return baseType;
+      }
+
+      this.diagnostics.add(DiagnosticBuilder.error("SIR-TYPE-001", "只有 Date 和 DateTime 可以平移: " + baseType, expr.span()));
+      return null;
+   }
+
    private SirType typeBinaryExpression(AstBinaryExpression expr, SymbolId scopeId, Set<String> visibleVars) {
       SirType leftType = this.typeExpression(expr.left(), scopeId, visibleVars);
       SirType rightType = this.typeExpression(expr.right(), scopeId, visibleVars);
@@ -713,6 +752,15 @@ final class TypePass {
 
                   return PrimitiveType.BOOLEAN;
                }
+            case ADD:
+            case SUB:
+               if (!leftType.equals(rightType) || !TypeRules.isNumeric(leftType)) {
+                  this.diagnostics.add(DiagnosticBuilder.error(
+                     "SIR-TYPE-001", "加减的两侧必须是同一种数值类型（Int32、Int64 或 Decimal）", expr.span()));
+                  return null;
+               }
+
+               return leftType;
             case AND:
             case OR:
                if (TypeRules.isBoolean(leftType) && TypeRules.isBoolean(rightType)) {

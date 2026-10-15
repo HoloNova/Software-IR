@@ -1173,11 +1173,44 @@ public final class SpringBootIrValidation {
          case SpringExpression.BinaryExpression value:
             this.validateExpression(value.left(), owner);
             this.validateExpression(value.right(), owner);
+            this.validateArithmetic(value, owner);
+            break;
+         case SpringExpression.TimeShiftExpression value:
+            this.validateExpression(value.base(), owner);
+            this.validateTimeShift(value, owner);
             break;
          case SpringExpression.ExistsPredicate value:
             this.validateExistsPredicate(value, owner);
             break;
          default:
+      }
+   }
+
+   /** Plus and minus take two operands of one numeric Java type and answer in that type. */
+   private void validateArithmetic(SpringExpression.BinaryExpression value, SpringBootDeclaration owner) {
+      if (value.operator() != SpringExpression.BinaryOperator.ADD && value.operator() != SpringExpression.BinaryOperator.SUB) {
+         return;
+      }
+
+      boolean numeric = value.type() instanceof LoweredJavaType.Scalar scalar
+         && (scalar.kind() == LoweredJavaType.ScalarKind.INTEGER || scalar.kind() == LoweredJavaType.ScalarKind.LONG
+            || scalar.kind() == LoweredJavaType.ScalarKind.BIG_DECIMAL);
+      if (!numeric || !value.left().type().equals(value.type()) || !value.right().type().equals(value.type())) {
+         this.error(owner, "arithmetic needs two operands of the result's numeric type: " + value.id());
+      }
+   }
+
+   /**
+   * A time shift answers in the type of what it moves, and that type must be one Java can move: an
+   * instant by any unit, a local date by days only (it has no time of day to move by hours).
+   */
+   private void validateTimeShift(SpringExpression.TimeShiftExpression value, SpringBootDeclaration owner) {
+      LoweredJavaType.ScalarKind kind = value.base().type() instanceof LoweredJavaType.Scalar scalar ? scalar.kind() : null;
+      boolean movable = kind == LoweredJavaType.ScalarKind.INSTANT || kind == LoweredJavaType.ScalarKind.LOCAL_DATE;
+      if (!movable || !value.type().equals(value.base().type())) {
+         this.error(owner, "a time shift moves a date or a date-time and answers in the same type: " + value.id());
+      } else if (kind == LoweredJavaType.ScalarKind.LOCAL_DATE && value.unit() != SpringExpression.ShiftUnit.DAYS) {
+         this.error(owner, "a date can only be shifted by days: " + value.id());
       }
    }
 

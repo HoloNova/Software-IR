@@ -29,14 +29,19 @@ public final class SirDeclarationWriter {
    private static final int EQUALITY = 3;
    private static final int CONTAINS = 4;
    private static final int RELATIONAL = 5;
-   private static final int UNARY = 6;
-   private static final int POSTFIX = 7;
+   private static final int ADDITIVE = 6;
+   private static final int UNARY = 7;
+   private static final int POSTFIX = 8;
 
-   private static final Map<String, String> OPERATOR_TEXT = Map.of(
-      "OR", "or", "AND", "and", "EQ", "==", "NE", "!=", "GT", ">", "GE", ">=", "LT", "<", "LE", "<=", "CONTAINS_LITERAL", "containsLiteral"
+   private static final Map<String, String> OPERATOR_TEXT = Map.ofEntries(
+      Map.entry("OR", "or"), Map.entry("AND", "and"), Map.entry("EQ", "=="), Map.entry("NE", "!="),
+      Map.entry("GT", ">"), Map.entry("GE", ">="), Map.entry("LT", "<"), Map.entry("LE", "<="),
+      Map.entry("CONTAINS_LITERAL", "containsLiteral"), Map.entry("ADD", "+"), Map.entry("SUB", "-")
    );
-   private static final Map<String, Integer> OPERATOR_LEVEL = Map.of(
-      "OR", OR, "AND", AND, "EQ", EQUALITY, "NE", EQUALITY, "GT", RELATIONAL, "GE", RELATIONAL, "LT", RELATIONAL, "LE", RELATIONAL, "CONTAINS_LITERAL", CONTAINS
+   private static final Map<String, Integer> OPERATOR_LEVEL = Map.ofEntries(
+      Map.entry("OR", OR), Map.entry("AND", AND), Map.entry("EQ", EQUALITY), Map.entry("NE", EQUALITY),
+      Map.entry("GT", RELATIONAL), Map.entry("GE", RELATIONAL), Map.entry("LT", RELATIONAL), Map.entry("LE", RELATIONAL),
+      Map.entry("CONTAINS_LITERAL", CONTAINS), Map.entry("ADD", ADDITIVE), Map.entry("SUB", ADDITIVE)
    );
    private static final Map<String, String> PRIMITIVE_TEXT = Map.of(
       "BOOLEAN", "Boolean", "INT32", "Int32", "INT64", "Int64", "DECIMAL", "Decimal", "STRING", "String", "UUID", "Uuid", "DATE", "Date", "DATE_TIME", "DateTime", "UNIT", "Unit"
@@ -263,6 +268,8 @@ public final class SirDeclarationWriter {
          case "StringLiteral" -> string(text(node, "value"));
          case "UnitLiteral" -> "unit";
          case "NowExpression" -> "now()";
+         case "TimeShiftExpression" -> expression(child(node, "base"), ADDITIVE) + (text(node, "direction").equals("ADD") ? " + " : " - ")
+            + text(node, "amount") + " " + text(node, "unit").toLowerCase(java.util.Locale.ROOT);
          case "NameExpression" -> text(node, "name");
          case "MemberExpression" -> expression(child(node, "receiver"), POSTFIX) + "." + text(node, "member");
          case "PresentExpression" -> expression(child(node, "target"), POSTFIX) + ".present";
@@ -279,8 +286,8 @@ public final class SirDeclarationWriter {
          throw new IllegalArgumentException("unknown binary operator " + operator);
       }
 
-      // or/and chain to the left; every other operator takes exactly one operand per side.
-      boolean chains = level == OR || level == AND;
+      // or/and and plus/minus chain to the left; every other operator takes exactly one operand per side.
+      boolean chains = level == OR || level == AND || level == ADDITIVE;
       int leftNeeds = chains ? level : level + 1;
       return expression(child(node, "left"), leftNeeds) + " " + OPERATOR_TEXT.get(operator) + " " + expression(child(node, "right"), level + 1);
    }
@@ -289,6 +296,7 @@ public final class SirDeclarationWriter {
       return switch (node.kind()) {
          case "BinaryExpression" -> OPERATOR_LEVEL.getOrDefault(text(node, "operator"), POSTFIX);
          case "UnaryExpression" -> UNARY;
+         case "TimeShiftExpression" -> ADDITIVE;
          case "IntegerLiteral" -> text(node, "value").startsWith("-") ? UNARY : POSTFIX;
          case "DecimalLiteral" -> text(node, "value").startsWith("-") ? UNARY : POSTFIX;
          default -> POSTFIX;

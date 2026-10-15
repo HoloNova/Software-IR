@@ -362,7 +362,7 @@ persist c;
 ### 15.3 建议的实现顺序（只是依赖关系，不是排期，每一步需要负责人授权）
 
 1. 字段 `unique` 与按唯一字段 `load`。（已实现，见第 17 节；未提交，CI 未运行。）
-2. 算术一族的最小范围（时长字面量、时间加减、数值加减）。
+2. 算术一族的最小范围（时长字面量、时间加减、数值加减）。（已实现，见第 19 节；工作区未提交，CI 未运行。）
 3. 守卫更新（`update … when … else …`）；需要真实 MySQL 并发测试作验收。
 4. 错误状态码加入 401。
 5. 字段 `secret`（口令摘要）。
@@ -429,7 +429,7 @@ load Account by name: input.name as acc else BadCredentials;
 - `unique` 是否按上下文关键字处理。
 - 语言版本号是否保持 `sir 0.2`。
 
-## 17. 第 1 步的实现结果（2026-10-15，工作区未提交，CI 未运行）
+## 17. 第 1 步的实现结果（2026-10-15，提交 `058c9d6`，CI #76 通过）
 
 负责人授权开始第 1 步；`unique` 按上下文关键字处理，`sir 0.2` 版本号保持（按推荐）。范围就是第 16.1–16.3 节，没有多做。
 
@@ -466,8 +466,8 @@ load Account by name: input.name as acc else BadCredentials;
 
 ### 17.4 没有做、没有跑
 
-- **CI 全量闸门：NOT_RUN。** 按规则等授权提交推送后以同 SHA 的 CI 为准。
-- **生成的 Java 能否编译：NOT_RUN。** 本机没有生成工程需要的依赖（`~/.m2` 里没有 Spring Boot、MyBatis-Plus），所以 `GeneratedProjectOfflineCompilationTest` 在本机无法运行（它要求 CI 的冻结依赖仓库）。已新增一个用例 `uniqueLookupProjectCompilesWithFrozenDependenciesOffline`，由 CI 编译 `unique-lookup.sir` 生成的工程；本机只能人工核对生成的源码，没有编译过它。
+- **CI 全量闸门：PASSED。** [verify #76](https://github.com/HoloNova/Software-IR/actions/runs/38710339131)，提交 `058c9d6`：冻结与完成两条全量闸门、业务场景 IT、独立验证 IT、单文件包冒烟均 success。核对时只读了运行与步骤状态，没有逐项读取测试数字。
+- **生成的 Java 能否编译：本机 NOT_RUN，CI 的完整闸门通过。** 本机没有生成工程需要的依赖（`~/.m2` 里没有 Spring Boot、MyBatis-Plus），`GeneratedProjectOfflineCompilationTest` 在本机无法运行（它要求 CI 的冻结依赖仓库）。新增的用例 `uniqueLookupProjectCompilesWithFrozenDependenciesOffline` 在 CI 的完整闸门里运行；闸门整体 success，但我没有单独读取这个用例的结果。
 - **真实 MySQL 的业务场景 IT：未写。** 第 16.5 节计划的“命中、未命中、构造重复行得到 500”场景没有实现，需要先读懂 `BusinessSliceHarness`，且只能在 CI 里跑。
 - 并发与唯一索引：不在本步范围；数据库唯一性仍由部署方保证，`LIMIT 2` 只是兜底。
 
@@ -475,3 +475,120 @@ load Account by name: input.name as acc else BadCredentials;
 
 - `unique` 事实槽位是否保持必填（见 17.2），还是改成可选以避免破坏外部指令 JSON。
 - 是否补写真实 MySQL 的 IT 场景（17.4），以及是否授权提交推送让 CI 验证。
+
+## 18. 第 2 步的具体方案（供评审，未授权实现）
+
+范围是第 12.1 节的最小范围：时间平移与数值加减。方案来自对现有表达式流水线的阅读（`Sir.g4`、`AstBinaryOperator`、`TypePass.typeBinaryExpression`、`TypeRules`、`ExpressionRenderer`、`WorkflowRenderer.renderPredicateNode`），没有运行代码，写法是示意。
+
+### 18.1 要写出的东西
+
+```
+create Session as s { issuedAt: now(); expiresAt: now() + 15 minutes; revoked: false; }
+validate token.expiresAt > now() else Expired;
+update c { remaining: input.base - 1; }
+```
+
+### 18.2 语义规则
+
+1. **时间平移是一种表达式，不是一种类型。** 形态是“表达式 加或减 整数 单位”，单位为 `second(s)`、`minute(s)`、`hour(s)`、`day(s)`（单复数都接受，上下文关键字，叫 `minutes` 的标识符照常可用）。左侧必须是 `DateTime`（任意单位）或 `Date`（只能用天）；结果与左侧同类型。时长不是 SIR 的类型：不能声明成字段、不能比较、不能单独出现，因此不会出现“存了一个时长字段却无法降级”的情形。量值是 0 到 2147483647 的整数字面量。
+2. **数值加减。** `Int32`、`Int64`、`Decimal` 内部的 `+` 与 `-`，两侧类型必须相同（与 `==` 的现有要求一致），结果同类型；`Optional` 操作数不可。不含乘、除、取余。整数溢出不静默回绕：生成 `Math.addExact`／`Math.subtractExact`，溢出抛 `ArithmeticException`，按内部错误（500）处理；`Decimal` 无溢出。
+3. **优先级与结合。** 加减高于比较、低于一元负号，左结合，因此 `now() + 1 day + 2 hours > x` 按预期解析。`-` 原来只作一元负号和常量前缀，现在也作二元减法。
+4. **用在哪里。** 工作流表达式：绑定值、`validate` 条件、`return`。`find … where` 谓词里：不依赖 `item` 的部分（比较的值）可以用，例如 `item.expiresAt > now() + 5 minutes` 照常生成成 Java 值；依赖 `item` 的算术（例如 `item.a + 1 > x`）要翻译成 SQL，不在本步范围，Validate 明确拒绝而不是生成坏代码。
+5. **语义细节要写明。** `DateTime` 在生成里是 `Instant`，“天”按 24 小时（UTC）平移；`Date` 是 `LocalDate`，按日历天平移。不提供“月”“年”，因为它们的长度不定。
+6. **回写。** 规范化后的文本写成 `表达式 + 15 minutes`，单位统一写复数，所以 `1 day` 会被回写成 `1 days`，含义不变。
+
+### 18.3 不做什么
+
+乘除取余；时长作为类型或字段；月、年单位；时区；带 `item` 的算术下推到 SQL（第 12.4 节说的后续一问）；溢出时返回声明的错误（先按 500，需要时再讨论）。
+
+### 18.4 改动面（估计，实现时逐个核实）
+
+- 数值加减：新增两个二元运算符。检索 `BinaryExpression`，主代码里有 16 个文件提到它，其中 11 个同时枚举运算符（`CONTAINS_LITERAL` 的出现位置）：`Sir.g4`、`AstBinaryOperator`、`SirAstBuilder`、`TypePass`、`ValidatePass`、`SirDeclarationWriter`、`SpringBootModelLowerer`、`SpringExpression`、`SpringBootIrValidation`、`ExpressionRenderer`、`WorkflowRenderer`。
+- 时间平移：新增一个表达式变体。以 `now()` 的 `NowExpression` 为样板，它出现在 10 个主代码文件里。
+- 合计大约 17 到 19 个主代码文件，分布在 parser、semantic、lowering、generator 四个模块；不涉及 `sir-toolchain-application`。
+- **与第 1 步的区别：** 新增表达式变体和运算符不给任何现有节点加槽位，所以现有指令载荷不会失效；第 1 步给 `NormalizedField` 加必填事实槽位才会。
+
+### 18.5 验收
+
+- 旧文档不变：11 个现有夹具重新生成，逐文件字节相同。
+- 定向单元测试：解析的优先级与结合；类型诊断（`Date` 加小时、`Optional`、不同类型相加、时长单独出现、量值越界）；规范化文本往返；生成的 Java 表达式文本（`plus`、`minus`、`addExact`、`add`）；find 谓词里带 `item` 的算术被拒绝。契约类测试（“每个表达式变体都被覆盖”之类）按第 1 步的经验预计会要求补样例。
+- 探针复测：第 7 节的 P3（`now() + 900`，现在应改写成 `now() + 15 minutes`）通过 GENERATION；刷新轮换的有效期检查能完整写出。
+- CI：生成工程的编译新增用例；真实 MySQL 的“过期”场景（先建凭据，推进时间或构造过期行，期望被拒）按第 1 步同样的理由，列为未写，需要负责人决定是否补。
+
+### 18.6 风险与待决定
+
+- **单位词。** 上下文关键字，沿用第 1 步的做法。
+- **一步还是两步。** 建议时间平移与数值加减同一步做：它们共享同一层语法、同一套类型规则和同一个渲染分支，分开做会重复改同一批文件。时间平移本身是双 Token 所需，数值加减是名额类业务所需，且后者单独没有用处，除非第 9 节的守卫放宽（第 12.4 节）。如果只想要双 Token 的最短路径，可以只做时间平移，数值加减留到守卫放宽那一问。
+- **溢出的报告方式。** 先按 500，因为溢出是数据或字面量问题，不是业务错误；若业务需要，之后再加声明错误的写法。
+- **与第 1 步的衔接。** 第 1 步还在等 CI（verify #76）；建议第 1 步的 CI 通过之后再开始第 2 步，避免在未验证的基础上继续堆改动。
+
+### 18.7 需要负责人授权
+
+- 是否开始第 2 步，以及范围：时间平移加数值加减，或只做时间平移。
+- 是否等 verify #76 通过之后再开始。
+
+## 19. 第 2 步的实现结果（2026-10-15，工作区未提交，CI 未运行）
+
+范围就是第 18 节的方案：时间平移与数值加减同一步做（按第 18.6 节的推荐）。第 1 步的 CI（#76）已经通过，再开始的这一步；负责人对这一步回复“continue”，我按第 18.6 节的推荐范围推进，没有多做。
+
+### 19.1 做了什么
+
+- 语言：`表达式 + 15 minutes`、`表达式 - 2 hours`（单位 `second(s)`、`minute(s)`、`hour(s)`、`day(s)`，上下文关键字，叫 `minutes` 的名字照常可用）；`Int32`、`Int64`、`Decimal` 同类型内的 `+` 与 `-`。加减高于比较、低于一元负号，左结合。`-` 在表达式里除了前缀负号，现在也是二元减法。
+- 规则（`SIR-TYPE-001`）：平移的底必须是 `DateTime`，或只按天平移的 `Date`；数值加减两侧必须同为一种数值类型，不接受 `Optional`、`String` 等；平移量不能大于 2147483647。时长不是类型，不能单独出现，所以孤立的 `15 minutes` 在语法层就被拒绝。
+- `find` 谓词（`SIR-VALID-001`）：值侧的算术照常生成（`item.expiresAt > now() + 5 minutes` 把时间算好再绑进查询）；对列的算术，或 `any(...)` 条件里的任何算术，因无法翻译成查询而被拒绝。
+- 生成：`DateTime` 渲染为 `Instant`、`Date` 为 `LocalDate`，平移成 `.plus(15L, java.time.temporal.ChronoUnit.MINUTES)`；`Int32`／`Int64` 的加减用 `Math.addExact`／`Math.subtractExact`，溢出抛异常而不是静默回绕；`Decimal` 用 `add`／`subtract`。
+- 回写：SIR 文本回写支持新写法，运算符的绑定强度新增“加减”一级，`a - (b - c)` 和 `-(a + b)` 的括号保留（夹具里有这两条，往返测试通过）；单位统一写成复数。
+- 降级与生成的双层校验：降级后的模型里，平移的底必须是 `Instant` 或 `LocalDate`、结果类型与底相同、`LocalDate` 只能按天；加减的两个操作数与结果必须是同一个数值类型。
+
+### 19.2 改动面的实测（对照第 18.4 节的估计）
+
+- 主代码 17 个文件，分布在 parser（`Sir.g4`、`AstBinaryOperator`、`AstExpression`、`SirAstBuilder` 加 3 个新 AST 类）、semantic（`NormalizedExpression`、`ResolvePass`、`TypePass`、`NormalizePass`、`ValidatePass`、`SirDeclarationWriter`）、lowering（`SpringExpression`、`SpringBootModelLowerer`、`SpringBootIrValidation`、`SpringBootInputValidator`）、generator（`ExpressionRenderer`、`WorkflowRenderer`）四个模块。估计是 17 到 19 个、四个模块，吻合。
+- **两个没被编译器发现的缺漏点**：`AstExpression` 虽然是密封接口，但处理它的 `switch` 大多带 `default`，所以新增节点后编译全部通过，缺漏会在运行时才暴露（比如降级验证器的 `default` 会让新节点的子表达式不被检查）。我是按“处理一元表达式的位置”逐个找出来的。这是扩展表达式的一个固有风险，值得一条自动守卫：见第 19.5 节。
+- **与第 1 步的对比成立：** 这一步没有给任何现有节点加槽位，所以现有指令载荷、测试辅助都不用改。`inspect` 的输出与上一版比较，只有 `schema` 一处不同（节点种类 44 到 45，表达式联合 12 到 13 项）；`draft`、源码摘要、基线摘要完全相同，说明现有文档的节点身份没有变化。
+- 一个契约测试要求补样例：`StructureViewCoverageTest`（“schema 里每种节点都被某个有效样例用到”），新夹具加进它的清单。
+
+### 19.3 验证（本机，定向；同第 17.3 节的资源说明）
+
+| 模块 | 结果 |
+| --- | --- |
+| sir-parser | 111 项，0 失败（新增 8） |
+| sir-semantic | 245 项，0 失败（新增 8） |
+| sir-lowering-api／sir-lowering-spring-boot | 4／93 项，0 失败（新增 4） |
+| sir-generator-spring-boot | 83 项，0 失败（新增 4；已排除只能在 CI 跑的离线编译） |
+| sir-project-graph／sir-change | 73／28 项，0 失败 |
+| sir-toolchain-application | 231 项，0 失败 |
+| kcg-cli | 28 项，0 失败 |
+
+- 旧输出不变：用上一次提交（`058c9d6`）打出旧 jar，与新 jar 对 12 个现有夹具（含第 1 步的 `unique-lookup`）各生成一次，逐文件比对，全部字节相同。
+- 探针复测（第 7 节的双 Token 七条行为）：带 15 分钟有效期的“按账号名登录”（M1）、带 7 天有效期的刷新轮换（M2）通过 GENERATION；值侧算术的 `find`（M3）通过；对列的算术（M4）与孤立的时长（M5）被拒绝。
+- 环境说明同第 17.3 节：容器没有 systemd，没有按 AGENTS 的 scope 限制资源；`JAVA_TOOL_OPTIONS` 的影响已规避。
+
+### 19.4 没有做、没有跑
+
+- **CI 全量闸门：NOT_RUN。** 工作区未提交。
+- **生成的 Java 能否编译：本机 NOT_RUN。** 新增了 `timeArithmeticProjectCompilesWithFrozenDependenciesOffline`，由 CI 编译。其中有两处只有编译器能确认的重载：`Math.addExact` 作用在装箱的输入值上，`Instant.plus`／`LocalDate.plus` 取 `ChronoUnit`。
+- **真实 MySQL 的“有效期”场景：未写。** 例如先建凭据、构造过期行、期望被拒。与第 1 步同样的原因。
+- 当前类型规则里，整数字面量总是 `Int32`，所以 `Int64` 字段与字面量相加会报类型不一致（与现有的 `==` 一致，不是这一步引入的）。想对 `Int64` 计数器写 `x - 1` 要先决定是否放宽字面量。这是一个已知限制。
+- 带 `item` 的算术下推到 SQL、乘除取余、月与年、时区：按第 18.3 节不做。
+
+### 19.5 建议与待决定
+
+- **自动守卫（已加）。** 因为密封接口的 `switch` 带 `default`，新增表达式节点时缺漏不会被编译器发现。`ExpressionVariantCoverageTest`（在 `sir-toolchain-application`）读取三个密封接口 `AstExpression`、`NormalizedExpression`、`SpringExpression` 的变体清单，要求 11 个处理位置（Resolve、Type、Normalize、Validate、AST 构建、SIR 回写、两个降级验证器、IR 验证、表达式渲染、导入收集）对每个变体至少提到一次；确实不需要处理的（叶子节点等）必须在测试里显式列出并写明原因，清单里的项一旦被提到也会报错，防止清单过期。已做变异验证：删掉 `ResolvePass` 对时间平移的导入和分支，代码仍能编译，守卫立刻报出“从未提到 AstTimeShiftExpression”；还原后文件与变异前字节一致。这是粗粒度检查（按文件内是否出现类名判断），抓的是遗漏，不证明分支写得对。
+- 是否放宽整数字面量对 `Int64` 的类型（见 19.4）；本步没有做。
+- 是否补写真实 MySQL 的 IT 场景（第 1 步、第 2 步各一个）；本步没有做。
+
+## 20. 双 Token 七条行为的当前状态（探针读数更新）
+
+第 7 节的七条行为，在第 1、2 步之后：
+
+| 行为 | 现在 |
+| --- | --- |
+| ① 登录成功得到一对令牌 | 能写：按账号名取账号、比对口令、创建带 15 分钟和 7 天有效期的凭据（M1）。口令仍是明文比较 |
+| ② 受保护接口认证 | 仍缺：登录签发的凭据与 `requires authenticated` 之间没有语义连接 |
+| ③ 过期访问令牌被拒 | 能写：`validate token.expiresAt > now() else Expired`；但声明不了 401，只能用 400／404／409 |
+| ④ 刷新令牌换新一对、旧的失效 | 能写（M2），但并发下不安全：缺带条件的状态流转（守卫更新） |
+| ⑤ 重放旧刷新令牌被拒 | 单线程下能写；并发下同上 |
+| ⑥ 登出后刷新令牌失效 | 能写（原本就能） |
+| ⑦ 错误密码被拒且不泄露账号是否存在 | 能写：账号不存在和口令错误都用同一个错误；但声明不了 401 |
+
+第 15.3 节的剩余依赖链：守卫更新、状态码 401、口令摘要、凭据与认证的连接、修饰糖。

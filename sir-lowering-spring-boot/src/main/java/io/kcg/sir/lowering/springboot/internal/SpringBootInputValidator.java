@@ -641,6 +641,9 @@ public final class SpringBootInputValidator {
             this.validateExpression(value.left(), owner, actorAccess);
             this.validateExpression(value.right(), owner, actorAccess);
             break;
+         case NormalizedExpression.TimeShiftExpression value:
+            this.validateExpression(value.base(), owner, actorAccess);
+            break;
          case ExistsExpression value:
             this.validateExistsPredicate(value, owner);
             break;

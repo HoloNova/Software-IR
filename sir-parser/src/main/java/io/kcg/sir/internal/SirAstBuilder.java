@@ -497,8 +497,8 @@ final class SirAstBuilder {
     }
 
     private AstExpression relationalExpression(SirParser.RelationalExpressionContext context, String parent) {
-        List<SirParser.UnaryExpressionContext> operands = context.unaryExpression();
-        AstExpression left = unaryExpression(operands.getFirst(), parent);
+        List<SirParser.AdditiveExpressionContext> operands = context.additiveExpression();
+        AstExpression left = additiveExpression(operands.getFirst(), parent);
         if (operands.size() == 1) {
             return left;
         }
@@ -512,7 +512,37 @@ final class SirAstBuilder {
         } else {
             operator = AstBinaryOperator.LT;
         }
-        return binary(left, operator, unaryExpression(operands.get(1), parent), parent);
+        return binary(left, operator, additiveExpression(operands.get(1), parent), parent);
+    }
+
+    /** Plus and minus chain to the left; a time shift is built where the operand is "integer unit". */
+    private AstExpression additiveExpression(SirParser.AdditiveExpressionContext context, String parent) {
+        AstExpression result = unaryExpression(context.unaryExpression(), parent);
+        for (SirParser.AdditiveStepContext step : context.additiveStep()) {
+            boolean plus = step.PLUS() != null;
+            if (step.durationOperand() != null) {
+                SirParser.DurationOperandContext duration = step.durationOperand();
+                String path = ids.indexed(parent, "expression");
+                result = new AstTimeShiftExpression(
+                        ids.id(path), combine(result.span(), source.span(duration)), result,
+                        plus ? AstShiftDirection.ADD : AstShiftDirection.SUBTRACT,
+                        new BigInteger(duration.INT().getText()), timeUnit(duration.durationUnit().IDENT().getText()));
+            } else {
+                AstExpression right = unaryExpression(step.unaryExpression(), parent);
+                result = binary(result, plus ? AstBinaryOperator.ADD : AstBinaryOperator.SUB, right, parent);
+            }
+        }
+        return result;
+    }
+
+    private static AstTimeUnit timeUnit(String word) {
+        return switch (word.endsWith("s") ? word.substring(0, word.length() - 1) : word) {
+            case "second" -> AstTimeUnit.SECONDS;
+            case "minute" -> AstTimeUnit.MINUTES;
+            case "hour" -> AstTimeUnit.HOURS;
+            case "day" -> AstTimeUnit.DAYS;
+            default -> throw new IllegalStateException("the grammar admits only the unit words, got " + word);
+        };
     }
 
     private AstExpression unaryExpression(SirParser.UnaryExpressionContext context, String parent) {

@@ -969,6 +969,11 @@ public final class SpringBootModelLowerer {
                     id, origin, type, lowerExpression(value.left(), owner, actorSymbol, itemSymbol),
                     SpringExpression.BinaryOperator.valueOf(value.operator().name()),
                     lowerExpression(value.right(), owner, actorSymbol, itemSymbol));
+            case NormalizedExpression.TimeShiftExpression value -> new SpringExpression.TimeShiftExpression(
+                    id, origin, type, lowerExpression(value.base(), owner, actorSymbol, itemSymbol),
+                    SpringExpression.ShiftDirection.valueOf(value.direction().name()),
+                    value.amount().longValueExact(),
+                    SpringExpression.ShiftUnit.valueOf(value.unit().name()));
             case NormalizedExpression.PresentExpression value -> new SpringExpression.PayloadPresence(
                     id, origin, type, this.presencePropertyName(value));
             case NormalizedExpression.ExistsExpression value -> this.lowerExistsPredicate(value, id, origin, type, itemSymbol);

@@ -13,5 +13,6 @@ public sealed interface AstExpression extends AstNode permits
         AstGroupedExpression,
         AstUnaryExpression,
         AstBinaryExpression,
+        AstTimeShiftExpression,
         AstAnyExpression {
 }

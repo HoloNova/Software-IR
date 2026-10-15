@@ -272,7 +272,27 @@ stringMatchExpression
     ;
 
 relationalExpression
-    : unaryExpression ((GT | GE | LT | LE) unaryExpression)?
+    : additiveExpression ((GT | GE | LT | LE) additiveExpression)?
+    ;
+
+// Plus and minus bind tighter than a comparison and looser than a prefix operator, and chain to the left.
+// After an operator, "INT unit" is a time shift; a plain operand is arithmetic. The two are told apart by
+// the unit word that follows the integer, which no expression is otherwise followed by.
+additiveExpression
+    : unaryExpression additiveStep*
+    ;
+
+additiveStep
+    : (PLUS | MINUS) (durationOperand | unaryExpression)
+    ;
+
+durationOperand
+    : INT durationUnit
+    ;
+
+// The unit words are contextual, like sources and unique: minutes stays a legal name everywhere else.
+durationUnit
+    : {_input.LT(1).getText().matches("seconds?|minutes?|hours?|days?")}? IDENT
     ;
 
 unaryExpression
@@ -390,6 +410,7 @@ LE              : '<=';
 GT              : '>';
 LT              : '<';
 MINUS           : '-';
+PLUS            : '+';
 // The persistent declaration-id annotation. '@' appears nowhere else in the language, so this
 // token cannot collide with IDENT.
 ID_ANNOTATION   : '@id';

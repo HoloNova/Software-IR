@@ -1066,6 +1066,9 @@ final class WorkflowRenderer {
             collectExpressionImports(ctx, binary.left(), variableNames, imports, currentPackage);
             collectExpressionImports(ctx, binary.right(), variableNames, imports, currentPackage);
             break;
+         case SpringExpression.TimeShiftExpression shift:
+            collectExpressionImports(ctx, shift.base(), variableNames, imports, currentPackage);
+            break;
          default:
       }
    }

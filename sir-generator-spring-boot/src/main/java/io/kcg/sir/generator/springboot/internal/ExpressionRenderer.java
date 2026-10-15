@@ -15,6 +15,7 @@ import io.kcg.sir.lowering.springboot.model.SpringExpression.MemberExpression;
 import io.kcg.sir.lowering.springboot.model.SpringExpression.NameExpression;
 import io.kcg.sir.lowering.springboot.model.SpringExpression.NowExpression;
 import io.kcg.sir.lowering.springboot.model.SpringExpression.StringLiteral;
+import io.kcg.sir.lowering.springboot.model.SpringExpression.TimeShiftExpression;
 import io.kcg.sir.lowering.springboot.model.SpringExpression.UnaryExpression;
 import io.kcg.sir.lowering.springboot.model.SpringExpression.UnitLiteral;
 import io.kcg.sir.semantic.symbol.SymbolId;
@@ -58,6 +59,7 @@ final class ExpressionRenderer {
          case MemberExpression member -> renderMember(member, variableNames, presence);
          case UnaryExpression unary -> renderUnary(unary, variableNames, presence);
          case BinaryExpression binary -> renderBinary(binary, variableNames, presence);
+         case TimeShiftExpression shift -> renderTimeShift(shift, variableNames, presence);
          case SpringExpression.PayloadPresence payloadPresence -> renderPresence(payloadPresence, presence);
          default -> throw new MatchException(null, null);
       };
@@ -126,9 +128,36 @@ final class ExpressionRenderer {
          case LE -> renderOrdering(left, right, operandType, "<=");
          case GT -> renderOrdering(left, right, operandType, ">");
          case GE -> renderOrdering(left, right, operandType, ">=");
+         case ADD -> renderArithmetic(left, right, binary.type(), "add", "addExact");
+         case SUB -> renderArithmetic(left, right, binary.type(), "subtract", "subtractExact");
          case CONTAINS_LITERAL -> throw new IllegalStateException(
                  "literal matching is a query predicate, not a value expression: " + binary.id());
       };
+   }
+
+   /**
+   * Plus and minus on the language's numbers. A decimal has no overflow; the two integers must not
+   * wrap around silently, so they use the exact forms, which throw {@code ArithmeticException} instead
+   * and end the request as an internal error.
+   */
+   private static String renderArithmetic(String left, String right, LoweredJavaType type, String decimalMethod, String exactMethod) {
+      if (isScalarKind(type, ScalarKind.BIG_DECIMAL)) {
+         return "(" + left + ")." + decimalMethod + "(" + right + ")";
+      } else if (isScalarKind(type, ScalarKind.INTEGER) || isScalarKind(type, ScalarKind.LONG)) {
+         return "Math." + exactMethod + "(" + left + ", " + right + ")";
+      } else {
+         throw new IllegalStateException("Unsupported arithmetic operand type: " + type);
+      }
+   }
+
+   /**
+   * A date-time is an {@code Instant} and a date a {@code LocalDate}; both move by {@code plus} and
+   * {@code minus} with a {@link java.time.temporal.ChronoUnit}. A day moves an instant by 24 hours.
+   */
+   private static String renderTimeShift(TimeShiftExpression shift, Map<SymbolId, String> variableNames, PresenceScope presence) {
+      String base = renderExpression(shift.base(), variableNames, presence);
+      String method = shift.direction() == SpringExpression.ShiftDirection.ADD ? "plus" : "minus";
+      return "(" + base + ")." + method + "(" + shift.amount() + "L, java.time.temporal.ChronoUnit." + shift.unit().name() + ")";
    }
 
    private static String renderEquality(String left, String right, LoweredJavaType type, String primitiveOp, boolean equality) {

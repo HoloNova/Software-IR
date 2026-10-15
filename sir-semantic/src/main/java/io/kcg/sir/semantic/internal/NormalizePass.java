@@ -38,6 +38,7 @@ import io.kcg.sir.ast.AstReturnStep;
 import io.kcg.sir.ast.AstSoftware;
 import io.kcg.sir.ast.AstStep;
 import io.kcg.sir.ast.AstStringLiteral;
+import io.kcg.sir.ast.AstTimeShiftExpression;
 import io.kcg.sir.ast.AstUnaryExpression;
 import io.kcg.sir.ast.AstUnitLiteral;
 import io.kcg.sir.ast.AstUpdateStep;
@@ -522,6 +523,13 @@ final class NormalizePass {
                : null;
          }
          case AstGroupedExpression e -> this.normalizeExpression(e.inner());
+         case AstTimeShiftExpression e -> {
+            NormalizedExpression shifted = this.normalizeExpression(e.base());
+            SirType type = this.typeOf(e.id(), null);
+            yield shifted != null && type != null
+               ? new NormalizedExpression.TimeShiftExpression(e.id(), e.span(), type, shifted, e.direction(), e.amount(), e.unit())
+               : null;
+         }
           case AstPresentExpression e -> {
              NormalizedExpression target = this.normalizeExpression(e.target());
              SirType type = this.typeOf(e.id(), PrimitiveType.BOOLEAN);

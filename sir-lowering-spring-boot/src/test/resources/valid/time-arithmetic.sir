@@ -1,0 +1,82 @@
+sir 0.2
+
+software TicketDesk {
+  metadata {
+    displayName "Ticket Desk";
+    namespace "example.tickets";
+  }
+  target {
+    language java 21;
+    framework spring_boot;
+    persistence mybatis_plus;
+    database mysql;
+    build maven;
+    interface rest;
+  }
+  sources { }
+  imports { }
+  declarations {
+    entity Ticket persistent {
+      identity id: Int64 generated auto;
+      field issuedAt: DateTime;
+      field expiresAt: DateTime;
+      field dueOn: Date;
+      field attempts: Int32;
+      field score: Decimal;
+    }
+    view TicketView from Ticket {
+      field id: Int64;
+      field expiresAt: DateTime;
+      field dueOn: Date;
+      field attempts: Int32;
+    }
+    input OpenInput {
+      field start: Date;
+      field base: Int32;
+      field bonus: Decimal;
+    }
+    input PageInput {
+      field page: Int32;
+      field size: Int32;
+    }
+    error BadPage;
+    error Expired;
+    capability LiveTickets {
+      input PageInput;
+      output Page<TicketView>;
+      fails BadPage;
+      requires readonly;
+      expose query;
+      workflow {
+        find Ticket
+          where item.expiresAt > now() + 5 minutes
+          order by id descending
+          Page input.page, input.size else BadPage
+        as live;
+        return live;
+      }
+    }
+    capability OpenTicket {
+      input OpenInput;
+      output TicketView;
+      fails Expired;
+      requires atomic;
+      expose command;
+      workflow {
+        validate input.base - 1 + 2 > 0 else Expired;
+        validate input.base - (input.base - 1) == 1 else Expired;
+        validate -(input.base + 1) < 0 else Expired;
+        validate now() + 1 day - 2 hours < now() + 7 days else Expired;
+        create Ticket as ticket {
+          issuedAt: now();
+          expiresAt: now() + 15 minutes;
+          dueOn: input.start + 3 days;
+          attempts: input.base + 1;
+          score: input.bonus - input.bonus;
+        }
+        persist ticket;
+        return ticket;
+      }
+    }
+  }
+}

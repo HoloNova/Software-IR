@@ -34,6 +34,7 @@ import io.kcg.sir.ast.AstReturnStep;
 import io.kcg.sir.ast.AstSoftware;
 import io.kcg.sir.ast.AstStep;
 import io.kcg.sir.ast.AstTypeRef;
+import io.kcg.sir.ast.AstTimeShiftExpression;
 import io.kcg.sir.ast.AstUnaryExpression;
 import io.kcg.sir.ast.AstUnaryOperator;
 import io.kcg.sir.ast.AstUpdateStep;
@@ -317,6 +318,58 @@ final class ValidatePass {
       step.page().ifPresent(page -> this.validatePageClause(step, capDecl, failsSet, page));
       step.order().ifPresent(order -> this.validateOrderKeys(order.keys()));
       this.validateStringMatchShape(step.predicate());
+      this.rejectArithmeticTheQueryCannotCarry(step.predicate(), false);
+   }
+
+   /**
+   * A find predicate becomes one parameterized query. A value computed from the request or the clock is
+   * evaluated in Java and bound as a parameter, so {@code item.expiresAt > now() + 5 minutes} is fine; arithmetic
+   * on a column ({@code item.a + 1 > x}), or on any name inside an {@code any(...)} condition where bare names
+   * are columns, would have to be translated into the query, which this language does not do. It is refused
+   * here instead of being generated into code that cannot work.
+   */
+   private void rejectArithmeticTheQueryCannotCarry(AstExpression expression, boolean insideAny) {
+      switch (expression) {
+         case null -> {
+         }
+         case AstGroupedExpression e -> this.rejectArithmeticTheQueryCannotCarry(e.inner(), insideAny);
+         case AstUnaryExpression e -> this.rejectArithmeticTheQueryCannotCarry(e.operand(), insideAny);
+         case AstAnyExpression e -> this.rejectArithmeticTheQueryCannotCarry(e.conditions(), true);
+         case AstTimeShiftExpression e -> {
+            if (insideAny || this.mentionsItem(e)) {
+               this.diagnostics.add(DiagnosticBuilder.error("SIR-VALID-001", ARITHMETIC_ON_COLUMN, e.span()));
+            } else {
+               this.rejectArithmeticTheQueryCannotCarry(e.base(), insideAny);
+            }
+         }
+         case AstBinaryExpression e -> {
+            boolean arithmetic = e.operator() == AstBinaryOperator.ADD || e.operator() == AstBinaryOperator.SUB;
+            if (arithmetic && (insideAny || this.mentionsItem(e))) {
+               this.diagnostics.add(DiagnosticBuilder.error("SIR-VALID-001", ARITHMETIC_ON_COLUMN, e.span()));
+            } else {
+               this.rejectArithmeticTheQueryCannotCarry(e.left(), insideAny);
+               this.rejectArithmeticTheQueryCannotCarry(e.right(), insideAny);
+            }
+         }
+         default -> {
+         }
+      }
+   }
+
+   private static final String ARITHMETIC_ON_COLUMN =
+      "find 谓词里对列做加减或时间平移无法翻译成查询；请把运算放到不依赖 item 的一侧";
+
+   private boolean mentionsItem(AstExpression expression) {
+      return switch (expression) {
+         case AstNameExpression name -> "item".equals(name.name().text());
+         case AstMemberExpression member -> this.mentionsItem(member.receiver());
+         case AstGroupedExpression grouped -> this.mentionsItem(grouped.inner());
+         case AstUnaryExpression unary -> this.mentionsItem(unary.operand());
+         case AstPresentExpression present -> this.mentionsItem(present.target());
+         case AstTimeShiftExpression shift -> this.mentionsItem(shift.base());
+         case AstBinaryExpression binary -> this.mentionsItem(binary.left()) || this.mentionsItem(binary.right());
+         default -> false;
+      };
    }
 
    private void validatePageClause(AstFindStep step, AstCapabilityDecl capDecl, Set<SymbolId> failsSet, AstFindPage page) {
@@ -782,6 +835,7 @@ final class ValidatePass {
          case AstPresentExpression e -> action.accept(e);
          case AstGroupedExpression e -> this.walkPresent(e.inner(), action);
          case AstUnaryExpression e -> this.walkPresent(e.operand(), action);
+         case AstTimeShiftExpression e -> this.walkPresent(e.base(), action);
          case AstBinaryExpression e -> {
             this.walkPresent(e.left(), action);
             this.walkPresent(e.right(), action);
@@ -840,6 +894,7 @@ final class ValidatePass {
          }
          case AstGroupedExpression grouped -> this.validateExistenceUsage(grouped.inner(), usage);
          case AstUnaryExpression unary -> this.validateExistenceUsage(unary.operand(), usage);
+         case AstTimeShiftExpression shift -> this.validateExistenceUsage(shift.base(), usage);
          case AstBinaryExpression binary -> {
             this.validateExistenceUsage(binary.left(), usage);
             this.validateExistenceUsage(binary.right(), usage);
