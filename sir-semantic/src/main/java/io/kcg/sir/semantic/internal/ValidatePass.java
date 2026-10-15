@@ -268,6 +268,9 @@ final class ValidatePass {
                }
 
                this.validateUpdateStep(s);
+               if (s.guard().isPresent()) {
+                  this.validateUpdateGuard(s, capDecl, failsSet);
+               }
                break;
             case AstPersistStep s:
                if (isReadonly || isQuery) {
@@ -786,6 +789,92 @@ final class ValidatePass {
       return null;
    }
 
+   /**
+   * What a guarded update may be.
+   *
+   * <p>The guard becomes part of the one statement that writes the row, so it can only say what a
+   * statement can check on the stored row: a column compared with a value computed before the write.
+   * The write sets only the columns the update binds, so a binding that read another column of the
+   * same row would be computing from a copy that another request may already have changed, and the
+   * guard would not cover it; that is refused.
+   *
+   * <p>The row must have been loaded (a row created in this workflow has no stored state to test) and
+   * must not be versioned (a versioned row is already protected by comparing its version, and mixing
+   * the two protections is left for a later decision).
+   */
+   private void validateUpdateGuard(AstUpdateStep step, AstCapabilityDecl capDecl, Set<SymbolId> failsSet) {
+      AstExpression guard = step.guard().orElseThrow();
+      SymbolId errorSymbol = this.typed.referenceSiteBindings().targetFor(step.guardError().orElseThrow().id()).orElse(null);
+      if (errorSymbol != null && failsSet != null && !failsSet.contains(errorSymbol)) {
+         this.diagnostics.add(DiagnosticBuilder.error(
+            "SIR-FLOW-003", "update 的守卫引用未声明的 Error: " + step.guardError().orElseThrow().text(), step.guardError().orElseThrow().span()));
+      }
+
+      SymbolId target = this.typed.referenceSiteBindings().targetFor(step.target().id()).orElse(null);
+      if (target == null) {
+         return;
+      }
+
+      boolean loaded = capDecl.workflow().steps().stream()
+         .anyMatch(other -> other instanceof AstLoadStep load && target.equals(this.typed.referenceBindings().get(load.id())));
+      if (!loaded) {
+         this.diagnostics.add(DiagnosticBuilder.error(
+            "SIR-VALID-007", "update 的守卫只能用于 load 出来的行: " + step.target().text(), step.target().span()));
+      }
+
+      SymbolId entity = this.updateTargetEntitySymId(step);
+      if (entity != null && this.entityVersionFields.get(entity) != null) {
+         this.diagnostics.add(DiagnosticBuilder.error(
+            "SIR-VALID-007", "带 version 的实体不能使用 update 的守卫（版本已经保护了这一行）", step.target().span()));
+      }
+
+      this.validateGuardShape(guard, target);
+      for (AstBinding binding : step.bindings()) {
+         if (this.mentionsVariable(binding.value(), target)) {
+            this.diagnostics.add(DiagnosticBuilder.error(
+               "SIR-VALID-007", "带守卫的 update 的绑定值不能读取目标自身的字段: " + binding.fieldName().text(), binding.value().span()));
+         }
+      }
+   }
+
+   private static final String GUARD_SHAPE =
+      "update 的守卫必须是“目标.字段 与值的比较”（==、!=、<、<=、>、>=），可以用 and、or、not 组合；值不能读取目标自身的字段";
+
+   private void validateGuardShape(AstExpression expression, SymbolId target) {
+      switch (this.ungroup(expression)) {
+         case AstBinaryExpression binary when binary.operator() == AstBinaryOperator.AND || binary.operator() == AstBinaryOperator.OR -> {
+            this.validateGuardShape(binary.left(), target);
+            this.validateGuardShape(binary.right(), target);
+         }
+         case AstBinaryExpression binary when binary.operator() == AstBinaryOperator.EQ || binary.operator() == AstBinaryOperator.NE
+            || binary.operator() == AstBinaryOperator.GT || binary.operator() == AstBinaryOperator.GE
+            || binary.operator() == AstBinaryOperator.LT || binary.operator() == AstBinaryOperator.LE -> {
+            boolean columnOnTheLeft = this.ungroup(binary.left()) instanceof AstMemberExpression member
+               && this.ungroup(member.receiver()) instanceof AstNameExpression name
+               && target.equals(this.typed.referenceSiteBindings().targetFor(name.name().id()).orElse(null));
+            if (!columnOnTheLeft || this.mentionsVariable(binary.right(), target)) {
+               this.diagnostics.add(DiagnosticBuilder.error("SIR-VALID-007", GUARD_SHAPE, binary.span()));
+            }
+         }
+         case AstUnaryExpression unary when unary.operator() == AstUnaryOperator.NOT -> this.validateGuardShape(unary.operand(), target);
+         default -> this.diagnostics.add(DiagnosticBuilder.error("SIR-VALID-007", GUARD_SHAPE, expression.span()));
+      }
+   }
+
+   /** Whether the expression reads the variable, directly or through a member of it. */
+   private boolean mentionsVariable(AstExpression expression, SymbolId variable) {
+      return switch (expression) {
+         case AstNameExpression name -> variable.equals(this.typed.referenceSiteBindings().targetFor(name.name().id()).orElse(null));
+         case AstMemberExpression member -> this.mentionsVariable(member.receiver(), variable);
+         case AstGroupedExpression grouped -> this.mentionsVariable(grouped.inner(), variable);
+         case AstUnaryExpression unary -> this.mentionsVariable(unary.operand(), variable);
+         case AstPresentExpression present -> this.mentionsVariable(present.target(), variable);
+         case AstTimeShiftExpression shift -> this.mentionsVariable(shift.base(), variable);
+         case AstBinaryExpression binary -> this.mentionsVariable(binary.left(), variable) || this.mentionsVariable(binary.right(), variable);
+         default -> false;
+      };
+   }
+
    private SymbolId updateTargetEntitySymId(AstUpdateStep step) {
       SymbolId targetVarId = this.typed.referenceSiteBindings().targetFor(step.target().id()).orElse(null);
       SymbolId identitySiteTarget = null;
@@ -819,7 +908,10 @@ final class ValidatePass {
          case AstLoadStep s -> walkPresent(s.idExpression(), action);
          case AstFindStep s -> walkPresent(s.predicate(), action);
          case AstCreateStep s -> s.bindings().forEach(binding -> walkPresent(binding.value(), action));
-         case AstUpdateStep s -> s.bindings().forEach(binding -> walkPresent(binding.value(), action));
+         case AstUpdateStep s -> {
+            s.guard().ifPresent(guard -> walkPresent(guard, action));
+            s.bindings().forEach(binding -> walkPresent(binding.value(), action));
+         }
          case AstReturnStep s -> walkPresent(s.value(), action);
          default -> {
          }
@@ -868,6 +960,7 @@ final class ValidatePass {
          } else if (step instanceof AstCreateStep createStep) {
             createStep.bindings().forEach(binding -> this.validateExistenceUsage(binding.value(), ExistenceUsage.REJECTED));
          } else if (step instanceof AstUpdateStep updateStep) {
+            updateStep.guard().ifPresent(guard -> this.validateExistenceUsage(guard, ExistenceUsage.REJECTED));
             updateStep.bindings().forEach(binding -> this.validateExistenceUsage(binding.value(), ExistenceUsage.REJECTED));
          } else if (step instanceof AstReturnStep returnStep) {
             this.validateExistenceUsage(returnStep.value(), ExistenceUsage.REJECTED);

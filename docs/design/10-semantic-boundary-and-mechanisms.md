@@ -363,7 +363,7 @@ persist c;
 
 1. 字段 `unique` 与按唯一字段 `load`。（已实现，见第 17 节；未提交，CI 未运行。）
 2. 算术一族的最小范围（时长字面量、时间加减、数值加减）。（已实现，见第 19 节；工作区未提交，CI 未运行。）
-3. 守卫更新（`update … when … else …`）；需要真实 MySQL 并发测试作验收。
+3. 守卫更新（`update … when … else …`）；需要真实 MySQL 并发测试作验收。（已实现，见第 22 节；工作区未提交，CI 未运行。）
 4. 错误状态码加入 401。
 5. 字段 `secret`（口令摘要）。
 6. 凭据角色绑定与“已认证”的连接。
@@ -527,7 +527,7 @@ update c { remaining: input.base - 1; }
 - 是否开始第 2 步，以及范围：时间平移加数值加减，或只做时间平移。
 - 是否等 verify #76 通过之后再开始。
 
-## 19. 第 2 步的实现结果（2026-10-15，工作区未提交，CI 未运行）
+## 19. 第 2 步的实现结果（2026-10-15，提交 `1f947db`，CI #77 通过）
 
 范围就是第 18 节的方案：时间平移与数值加减同一步做（按第 18.6 节的推荐）。第 1 步的 CI（#76）已经通过，再开始的这一步；负责人对这一步回复“continue”，我按第 18.6 节的推荐范围推进，没有多做。
 
@@ -565,8 +565,8 @@ update c { remaining: input.base - 1; }
 
 ### 19.4 没有做、没有跑
 
-- **CI 全量闸门：NOT_RUN。** 工作区未提交。
-- **生成的 Java 能否编译：本机 NOT_RUN。** 新增了 `timeArithmeticProjectCompilesWithFrozenDependenciesOffline`，由 CI 编译。其中有两处只有编译器能确认的重载：`Math.addExact` 作用在装箱的输入值上，`Instant.plus`／`LocalDate.plus` 取 `ChronoUnit`。
+- **CI 全量闸门：PASSED。** [verify #77](https://github.com/HoloNova/Software-IR/actions/runs/38712747591)，提交 `1f947db`：冻结与完成两条全量闸门、业务场景 IT、独立验证 IT、单文件包冒烟均 success。核对时只读了运行与步骤状态，没有逐项读取测试数字。
+- **生成的 Java 能否编译：本机 NOT_RUN，CI 的完整闸门通过。** 新增的 `timeArithmeticProjectCompilesWithFrozenDependenciesOffline` 在 CI 的完整闸门里运行；闸门整体 success，我没有单独读取这个用例的结果。其中有两处只有编译器能确认的重载：`Math.addExact` 作用在装箱的输入值上，`Instant.plus`／`LocalDate.plus` 取 `ChronoUnit`。
 - **真实 MySQL 的“有效期”场景：未写。** 例如先建凭据、构造过期行、期望被拒。与第 1 步同样的原因。
 - 当前类型规则里，整数字面量总是 `Int32`，所以 `Int64` 字段与字面量相加会报类型不一致（与现有的 `==` 一致，不是这一步引入的）。想对 `Int64` 计数器写 `x - 1` 要先决定是否放宽字面量。这是一个已知限制。
 - 带 `item` 的算术下推到 SQL、乘除取余、月与年、时区：按第 18.3 节不做。
@@ -592,3 +592,140 @@ update c { remaining: input.base - 1; }
 | ⑦ 错误密码被拒且不泄露账号是否存在 | 能写：账号不存在和口令错误都用同一个错误；但声明不了 401 |
 
 第 15.3 节的剩余依赖链：守卫更新、状态码 401、口令摘要、凭据与认证的连接、修饰糖。
+
+## 21. 第 3 步的具体方案（供评审，未授权实现）
+
+范围是第 9 节定稿的最小语义：守卫挂在 `update` 上，只用于不带 `version` 的实体，绑定表达式不读目标自身字段。方案来自对现有更新、持久化、降级和生成代码的阅读（`AstUpdateStep`、`SpringBootWorkflow.UpdateStep`、`ConditionalUpdate`、`WorkflowRenderer.renderUpdate／renderPersist／renderPredicateChain`、`ValidatePass` 的 `SIR-VALID-004`），没有运行代码，写法是示意。
+
+### 21.1 要写出的东西
+
+```
+load Credential by input.token as old else Invalid;
+validate old.expiresAt > now() else Expired;
+update old when old.used == false else Invalid { used: true; }
+create Credential as fresh { owner: old.owner; used: false; expiresAt: now() + 7 days; }
+persist old;
+persist fresh;
+return fresh;
+```
+
+这就是刷新令牌的轮换：旧凭据只有在“尚未使用”时才被标记为已使用，两个并发请求拿着同一个旧凭据，恰有一个成功。`when` 是上下文关键字；`persist old;` 不再带 `else`，失败的错误写在 `update` 上。
+
+### 21.2 语义规则
+
+1. **守卫是一个 Boolean 表达式。** 能引用：目标变量的字段（读存储中更新前的值，写作 `old.used`）、`input`、常量、`now()`、值侧的时间平移与算术。不用 `any`。
+2. **形状。** 与 `find` 谓词一致：比较的左侧必须是目标的列（`old.字段`），右侧是不依赖目标列的值；可以用 `and`、`or`、`not` 组合。这条形状规则现在对 `find` 没有显式校验（左右颠倒会在生成时才出问题，是现有行为），守卫路径显式校验。
+3. **目标。** 必须是 `load` 出来的变量，不能是 `create` 的变量（新建的行谈不上“从什么状态改”）；实体不能带 `version`（最小范围，`SIR-VALID-007`）；`else` 的错误必须在 `fails` 里声明（`SIR-FLOW-003`）。
+4. **绑定表达式不得读目标自身的字段**（`SIR-VALID-007`）：绑定值在 Java 里按加载时的副本算出，守卫只钉住它判断的那些列；绑定若读了别的列，就会读到过期值再写回。可以读 `input`、常量、`now()`，也可以读别的变量的字段。
+5. **与 `persist`。** 带守卫的 `update` 之后的 `persist` 不能带 `else`（现有规则已拒绝对不带 `version` 的实体写 `else`）。
+6. **与 `atomic`。** 正交：守卫保证一行的“检查并写入”不可分，`atomic` 保证多步全有或全无。轮换需要两者同时用：守卫失败抛错，同一事务里的“创建新凭据”随之回滚。
+
+### 21.3 生成
+
+不需要新的 Mapper 方法。`persist` 对带守卫的更新生成 MyBatis-Plus 的 `LambdaUpdateWrapper`，一条语句里同时检查和写入：
+
+```java
+int oldAffected = credentialMapper.update(null, new LambdaUpdateWrapper<Credential>()
+        .eq(Credential::getId, old.getId())
+        .and(g -> g.eq(Credential::getUsed, false))
+        .set(Credential::getUsed, old.getUsed()));
+if (oldAffected != 1) {
+    throw new InvalidException();
+}
+```
+
+- `SET` 只含被绑定的列，值取自内存里已更新的对象（绑定值只算一次）；`WHERE` 是主键加守卫。这与版本路径不同：版本路径写全部变更列，之所以安全是因为版本把整行钉住了，守卫路径没有版本。
+- 守卫谓词复用 `find` 的谓词渲染，把目标变量当作“被查询的行”（降级时把目标变量当作 `find` 的 `item` 变量传入，这是 `FindStep` 已有的做法）。
+- 影响行数不是 1 就抛声明的错误。
+
+### 21.4 不做什么
+
+带 `version` 的实体用守卫；守卫里引用别的实体；乘除与对列的算术；守卫失败与“记录不存在”的区分（`load … else` 已覆盖不存在）；守卫失败时的重试。
+
+### 21.5 改动面（估计，实现时逐个核实）
+
+- 语法与 AST：`Sir.g4`（`updateStep` 增加可选的 `when 表达式 else 错误`）、`AstUpdateStep`、`SirAstBuilder`。
+- 语义：`ReferenceRole` 新增 `UPDATE_GUARD_ERROR`、`NormalizedStep.UpdateStep`（新增可选的守卫表达式与可选的错误引用）、`ResolvePass`、`TypePass`（守卫须为 Boolean）、`ValidatePass`（第 21.2 节的规则）、`NormalizePass`、`SirDeclarationWriter`。
+- 降级：`SpringBootWorkflow.UpdateStep`（新增守卫）、`SpringBootModelLowerer`、`SpringBootIrValidation`、`SpringBootInputValidator`。
+- 生成：`WorkflowRenderer`（持久化一处）。
+- 合计大约 15 个主代码文件，4 个模块。
+- 新增的是**可选**槽位，所以与第 1 步不同，现有指令载荷不会失效。
+- 新增引用角色，按第 1 步的经验会牵动两个“每个角色都被覆盖”的契约测试（`TypedReferenceSiteContractTest`、`ProjectVisibilityTest`），都要补样例，后者要有跨文件的“缺导入恰好报一次”的例子。
+
+### 21.6 验收
+
+- 旧文档不变：现有全部夹具重新生成，逐文件字节相同；`inspect` 只有 schema 的新增。
+- 定向单元测试：解析正反例、语义诊断（`version` 实体、`create` 的目标、绑定读自身字段、守卫形状、错误未声明）、降级、生成的代码文本、SIR 文本往返。
+- 探针：第 7 节的刷新轮换（M2）改写成守卫形式后通过 GENERATION。
+- **真实 MySQL 并发 IT（这一步的核心证据，由 CI 承担）。** 新增一个与现有写入场景同构的业务 IT（`BusinessSliceHarness` 的固定装置：SIR、建表脚本、种子、就绪路由、启用开关）。场景：种子里有一条未使用的凭据；多个线程同时用同一个旧凭据请求刷新；断言恰有一个请求成功，其余得到声明的错误状态；数据库里旧凭据只被标记一次，新凭据恰好多出一条；失败的请求没有留下新凭据；成功之后再重放同一个旧凭据，得到声明的错误。同一份 IT 也顺带证明第 2 步的有效期（过期的凭据被拒）。需要把它加进 `verify.yml` 的“Business conformance ITs”步骤（现在列了三个，各有 `-Dkcg.*-conformance.enabled=true`）。
+- 本机照例只跑定向单元测试，这个 IT 本机无法运行，记 NOT_RUN，以 CI 为准。
+
+### 21.7 风险与待决定
+
+- **“影响行数”的含义。** MySQL 的 Connector/J 默认返回“匹配的行数”而不是“实际改变的行数”，守卫路径依赖前者。版本路径总会改变版本列所以不受影响，守卫路径不是。这一点必须由真实 MySQL 的 IT 来证明，不能靠读文档。
+- **失败的状态码。** 现在只能用 400、404、409；轮换重放用 409 更贴切。401 要等错误状态码那一步。
+- **与第 1 步、第 2 步的衔接。** 第 1 步的 CI 已通过（#76）；第 2 步的 CI（#77）还在运行，建议它通过后再开始这一步。
+
+### 21.8 需要负责人授权
+
+- 是否开始第 3 步，范围就是第 21.1–21.4 节。
+- 是否同意新增一个真实 MySQL 的并发 IT 和对 `verify.yml` 的相应修改（会触及 CI 配置，需要你明确同意）。
+- 是否等 #77 通过之后再开始。
+
+## 22. 第 3 步的实现结果（2026-10-15，工作区未提交，CI 未运行）
+
+负责人确认第 21 节的方案（开始第 3 步、同意新增真实 MySQL 并发 IT 并修改 `verify.yml`、等第 2 步的 CI 通过）。第 2 步的 CI #77 在我动手实现的中途通过，提交前已核对。范围就是第 21.1–21.4 节，没有多做。
+
+### 22.1 做了什么
+
+- 语言：`update 行 when 条件 else 错误 { … }`（`when` 是上下文关键字，叫 `when` 的字段名照常可用）。
+- 规则：守卫必须是 Boolean（`SIR-TYPE-001`）；形状必须是“目标.字段 与值的比较”，可用 `and`、`or`、`not` 组合，值不能读取目标自身的字段（`SIR-VALID-007`）；目标必须是 `load` 出来的行，不能是本工作流 `create` 的；实体不能带 `version`；错误必须在 `fails` 里声明（`SIR-FLOW-003`）；带守卫的 `update` 的绑定值不能读取目标自身的字段。
+- 生成：`persist` 对带守卫的更新生成一条 `LambdaUpdateWrapper` 语句，`WHERE` 是主键加守卫，`SET` 只含被绑定的列，值取自 `update` 步骤已在内存里算好的对象；`update(null, wrapper)` 的影响行数不是 1 就抛声明的错误。没有新增 Mapper 方法。
+- 降级后的模型再校验：同一个 `update` 不能既有版本检查又有守卫；带守卫的更新必须有对同一行的普通 `persist`。
+- SIR 文本回写支持新写法，往返测试通过。
+- 新增引用角色 `UPDATE_GUARD_ERROR`。
+
+### 22.2 改动面的实测（对照第 21.5 节的估计）
+
+- 主代码约 16 个文件、4 个模块（parser 3、semantic 8、lowering 4、generator 1），估计是约 15 个、4 个模块，吻合。
+- **新增的是可选槽位，现有指令载荷不受影响，已实测：** `sir-change` 的编辑器测试和来源图测试没有修改就全部通过。`inspect` 的 `draft` 里现有更新步骤多出 `guard`、`guardError` 两个值为空的槽位，源码摘要与基线摘要不变。这与第 1 步（必填槽位，破坏现有载荷）形成对照，也验证了“可选槽位兼容、必填槽位不兼容”。
+- 新引用角色再次牵动两个“每个角色都被覆盖”的契约测试：`TypedReferenceSiteContractTest` 补了样例，`ProjectVisibilityTest` 补了一个跨文件的守卫例子（错误声明在另一个文件）。这已经是第二次，新增引用角色的固定成本是稳定的两处样例。
+- 表达式没有新增变体，所以表达式变体守卫（第 19.5 节）不需要改动，且仍然通过。
+
+### 22.3 验证（本机，定向；同第 17.3 节的资源说明）
+
+| 模块 | 结果 |
+| --- | --- |
+| sir-parser | 116 项，0 失败（新增 5） |
+| sir-semantic | 255 项，0 失败（新增 10） |
+| sir-lowering-api／sir-lowering-spring-boot | 4／96 项，0 失败（新增 3） |
+| sir-generator-spring-boot | 87 项，0 失败（新增 4；已排除只能在 CI 跑的离线编译） |
+| sir-project-graph／sir-change | 73／28 项，0 失败 |
+| sir-toolchain-application | 236 项，0 失败（含新并发 IT 的未启用路径，它只是打印 `NOT_RUN`，不算验证） |
+| kcg-cli | 28 项，0 失败 |
+
+- 旧输出不变：用上一次提交（`1f947db`）打出旧 jar，与新 jar 对 13 个现有夹具各生成一次，逐文件比对，全部字节相同。
+- 新并发 IT 的编译已验证，未启用环境时按设计打印 `NOT_RUN`。
+
+### 22.4 真实 MySQL 的并发 IT（本步的核心证据）
+
+新增 `GuardedTransitionBusinessConformanceIT`，与现有查询、写入、关系三个业务 IT 同构：SIR 夹具 `valid/guarded-transition.sir`，建表与种子在 `conformance/mysql/credential-rotation-*.sql`，开关 `kcg.guard-conformance.enabled`，并已加入 `verify.yml` 的“Business conformance ITs”步骤（命令行多一个测试类名和一个启用开关）。场景：
+
+- 已用过的凭据被守卫拒绝（409），一行未写；已过期但未用的凭据被有效期检查拒绝（400），一行未写；不存在的凭据 404。
+- 8 个线程用同一个未使用的凭据同时请求轮换：恰有一个成功；其余 7 个都得到 409；新凭据恰好多出一条；旧凭据被标记已使用；新凭据未使用、属主相同、有效期约 7 天后。
+- 成功之后重放同一个旧凭据，得到 409，没有写入；其他种子行不变。
+
+**这个 IT 本机没有运行**：本机没有 MySQL 和参考环境，只验证了它能编译、未启用时走 `NOT_RUN` 分支。它的结论以 CI 为准，在 CI 通过之前，“并发下恰有一个成功”的证据是 **NOT_RUN**。第 21.7 节说的风险（Connector/J 默认返回“匹配的行数”）也只能由这个 IT 证明。
+
+### 22.5 没有做、没有跑，以及一个待核实的风险
+
+- **CI 全量闸门：NOT_RUN。** 工作区未提交。
+- **生成的 Java 能否编译：本机 NOT_RUN。** 新增了 `guardedUpdateProjectCompilesWithFrozenDependenciesOffline`，由 CI 编译。
+- **待核实的风险（与本步无关，但影响到双 Token 的方案）：`Uuid` 主键。** 生成的实体对 `Uuid` 主键写的是 `@TableId(type = IdType.ASSIGN_UUID)` 配 `java.util.UUID` 类型的字段。我没有读 MyBatis-Plus 的源码，也没有在真实库里验证过，不知道 `ASSIGN_UUID`（按我的记忆它生成字符串）能否正确写入 `UUID` 类型的属性。现有的所有真实库 IT 都用 `Int64` 主键，所以这个组合没有经过真实库的检验。因此本步的 IT 夹具用 `Int64` 主键，没有掩盖这个问题；第 7.2 节“用 `uuid` 主键当不可猜测的令牌”这个组合结论，目前只通过了 GENERATION 和编译，没有真实库证据。需要一个真实库场景来确认，或者改用别的令牌生成办法。
+- 带 `version` 的实体用守卫、守卫里引用别的实体、对列的算术：按第 21.4 节不做。
+
+### 22.6 待负责人决定
+
+- 是否授权提交推送，让 CI 验证这一步（并发 IT 只能在 CI 里跑）。
+- 是否另立一步验证 `Uuid` 主键（22.5 的风险）。
+- 双 Token 剩余的依赖链：401 状态码、口令摘要、凭据与认证的连接、修饰糖。

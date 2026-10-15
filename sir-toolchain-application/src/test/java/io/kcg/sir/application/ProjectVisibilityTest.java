@@ -20,6 +20,7 @@ class ProjectVisibilityTest {
     @Test void everyImportSensitiveReferenceRoleHasARealPositiveAndExactMissingImportRefusal() throws Exception {
         Path source = fixture(temp);
         addKeyedLookup(source);
+        addGuardedUpdate(source);
         moveContracts(source);
         var positive = generate(source, temp.resolve("positive"));
         var model = model(positive.sources());
@@ -169,6 +170,26 @@ class ProjectVisibilityTest {
                         + "      input FindCourseByCodeInput;\n      output CourseDetail;\n      fails CourseNotFound;\n"
                         + "      requires readonly;\n      expose query;\n"
                         + "      workflow {\n        load Course by code: input.code as course else CourseNotFound;\n        return course;\n      }\n    }\n"
+                        + anchor));
+    }
+
+    /**
+     * Gives this test's own copy of the project an update with a guard whose error is declared in another
+     * file, the one reference role neither the shared fixture nor the keyed lookup uses.
+     */
+    private static void addGuardedUpdate(Path source) throws Exception {
+        Path root = source.resolve("project.sir");
+        String project = Files.readString(root);
+        String input = "input GetCourseInput { field id: Int64; }";
+        String anchor = "    capability CreateCourse {";
+        assertTrue(project.contains(input) && project.contains(anchor), "the fixture changed under this test");
+        Files.writeString(root, project.replace(input, input + "\n    input RenameStudentInput { field id: Int64; field name: String; }")
+                .replace(anchor, "    capability RenameStudent {\n"
+                        + "      input RenameStudentInput;\n      output StudentSummary;\n      fails CourseNotFound;\n"
+                        + "      requires atomic;\n      expose command;\n"
+                        + "      workflow {\n        load Student by input.id as student else CourseNotFound;\n"
+                        + "        update student when student.name != input.name else CourseNotFound { name: input.name; }\n"
+                        + "        persist student;\n        return student;\n      }\n    }\n"
                         + anchor));
     }
 

@@ -139,6 +139,27 @@ class GeneratedProjectOfflineCompilationTest {
         }
     }
 
+    /**
+     * A guarded update is written with {@code LambdaUpdateWrapper}: a nested condition, a column per
+     * {@code set}, and the row count of {@code update(null, wrapper)}. Only a compiler can vouch for those overloads.
+     */
+    @Test
+    void guardedUpdateProjectCompilesWithFrozenDependenciesOffline(@TempDir Path tempDir)
+            throws Exception {
+        Path projectRoot = tempDir.resolve("generated-project");
+        List<GeneratedFile> files = GeneratorTestSupport.generateSuccess("valid/guarded-update.sir");
+        materialize(files, projectRoot);
+        compileOffline(projectRoot, tempDir);
+
+        for (String classFile : List.of(
+                "example/credentials/Application.class",
+                "example/credentials/domain/Credential.class",
+                "example/credentials/application/RefreshService.class")) {
+            assertTrue(Files.isRegularFile(projectRoot.resolve("target/classes").resolve(classFile)),
+                    () -> "offline Maven compile did not create representative class: " + classFile);
+        }
+    }
+
     private static void compileOffline(Path projectRoot, Path tempDir) throws Exception {
         Path maven = locateMavenExecutable();
         Path localRepository = frozenLocalRepository();

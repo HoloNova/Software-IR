@@ -216,7 +216,14 @@ createStep
     ;
 
 updateStep
-    : UPDATE IDENT LBRACE binding+ RBRACE
+    : UPDATE IDENT guardClause? LBRACE binding+ RBRACE
+    ;
+
+// "update row when <condition> else Error { ... }": the write happens only if the stored row still satisfies
+// the condition when it is written, and the error is raised if it does not. "when" is a contextual word
+// like sources and unique, so it stays a legal name everywhere else.
+guardClause
+    : {_input.LT(1).getText().equals("when")}? IDENT expression ELSE IDENT
     ;
 
 persistStep

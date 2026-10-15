@@ -91,7 +91,7 @@ final class WorkflowRenderer {
             renderUpdate(ctx, capability, update, workflow, variableNames, imports, currentPackage, lines);
             break;
          case PersistStep persist:
-            renderPersist(ctx, capability, persist, workflow, imports, currentPackage, lines, mappers);
+            renderPersist(ctx, capability, persist, workflow, variableNames, imports, currentPackage, lines, mappers);
             break;
          case ReturnStep ret:
             renderReturn(ctx, capability, ret, responseRepresentation, variableNames, imports, currentPackage, lines);
@@ -545,6 +545,7 @@ final class WorkflowRenderer {
       CapabilityDeclaration capability,
       PersistStep step,
       SpringBootWorkflow workflow,
+      Map<SymbolId, String> variableNames,
       ImportSorter imports,
       String currentPackage,
       List<String> lines,
@@ -561,6 +562,12 @@ final class WorkflowRenderer {
       String targetName = target.targetName();
       EntityDeclaration entity = ctx.entity(declared.symbolId());
       renderCandidateChecks(ctx, capability, step, entity, targetName, imports, currentPackage, lines);
+      UpdateStep guarded = guardedUpdateOf(workflow, step);
+      if (guarded != null) {
+         renderGuardedPersist(ctx, guarded, target, entity, mapper, variableNames, imports, currentPackage, lines);
+         return;
+      }
+
       SpringBootWorkflow.ConditionalUpdate conditional = step.conditional().orElse(null);
       if (conditional == null) {
          if (step.action() == PersistenceAction.INSERT) {
@@ -595,6 +602,64 @@ final class WorkflowRenderer {
       // one rather than the version the request was matched against.
       entity.version().ifPresent(version -> lines.add("        " + targetName + "."
          + setter(version.javaName()) + "(" + expectedVersion + " + " + conditional.versionIncrement() + "L);"));
+   }
+
+   /** The guarded update this persist writes, if its row was updated under a guard. */
+   private static UpdateStep guardedUpdateOf(SpringBootWorkflow workflow, PersistStep persist) {
+      if (persist.conditional().isPresent() || persist.action() != PersistenceAction.UPDATE) {
+         return null;
+      }
+
+      return workflow.steps().stream()
+         .filter(UpdateStep.class::isInstance)
+         .map(UpdateStep.class::cast)
+         .filter(update -> update.guard().isPresent() && update.targetVariable().equals(persist.targetVariable()))
+         .findFirst()
+         .orElse(null);
+   }
+
+   /**
+   * Writes a guarded update as the one statement that both checks and writes the row.
+   *
+   * <p>The statement is {@code UPDATE ... SET <only the bound columns> WHERE id = ? AND <guard>}. The guard
+   * is evaluated by the database against the row as it is stored at that moment, so two requests that both
+   * read the row as eligible cannot both write it: the second matches no row and gets the guard's error.
+   * Only the bound columns are written, because nothing pins the rest of the row the way a version would,
+   * and the values come from the candidate the update step already built in memory, so they are computed once.
+   */
+   private static void renderGuardedPersist(
+      GenerationContext ctx,
+      UpdateStep update,
+      Variable target,
+      EntityDeclaration entity,
+      WorkflowRenderer.MapperReference mapper,
+      Map<SymbolId, String> variableNames,
+      ImportSorter imports,
+      String currentPackage,
+      List<String> lines
+   ) {
+      SpringBootWorkflow.UpdateGuard guard = update.guard().orElseThrow();
+      imports.add("com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper");
+      String errorName = errorJavaName(ctx, guard.failure(), imports, currentPackage);
+      String targetName = target.targetName();
+      int[] counter = new int[]{0};
+      String rootName = nextWrapperName(counter);
+      String condition = renderPredicateNode(
+         ctx, guard.predicate(), target, entity, Map.of(), variableNames, imports, currentPackage, rootName, counter);
+      String identity = getterName(entity.identity().javaName());
+      String updated = targetName + "Updated";
+      lines.add("        int " + updated + " = " + mapper.mapperFieldName() + ".update(null, new LambdaUpdateWrapper<" + entity.javaName() + ">()");
+      lines.add("                .eq(" + entity.javaName() + "::" + identity + ", " + targetName + "." + identity + "())");
+      lines.add("                .and(" + rootName + " -> " + condition + ")");
+      for (int index = 0; index < update.bindings().size(); index++) {
+         String property = getterName(update.bindings().get(index).targetProperty());
+         String closing = index == update.bindings().size() - 1 ? ");" : "";
+         lines.add("                .set(" + entity.javaName() + "::" + property + ", " + targetName + "." + property + "())" + closing);
+      }
+
+      lines.add("        if (" + updated + " != 1) {");
+      lines.add("            throw new " + errorName + "();");
+      lines.add("        }");
    }
 
    private static String expectedVersionPropertyOf(CapabilityDeclaration capability, GenerationContext ctx) {

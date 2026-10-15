@@ -752,6 +752,8 @@ final class ResolvePass {
                this.resolveVarTarget(s.target(), capName, capScopeId, visibleVars, ReferenceRole.UPDATE_TARGET);
                SymbolId targetVarSymId = this.referenceSiteBindingsTarget(s.target().id());
                String entityName = this.entityNameFromBinding(targetVarSymId);
+               s.guard().ifPresent(guard -> this.resolveExpression(guard, capName, capScopeId, visibleVars, null, null));
+               s.guardError().ifPresent(error -> this.resolveErrorRef(error, capName, ReferenceRole.UPDATE_GUARD_ERROR));
 
                for (AstBinding binding : s.bindings()) {
                   this.resolveExpression(binding.value(), capName, capScopeId, visibleVars, null, null);

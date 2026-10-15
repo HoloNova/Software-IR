@@ -515,6 +515,8 @@ public final class SpringBootInputValidator {
          case UpdateStep value:
             this.validateVariable(value.targetVariable(), capability);
             value.bindings().forEach(binding -> this.validateBinding(binding, capability, actorAccess));
+            value.guard().ifPresent(guard -> this.validateExpression(guard, capability.id(), actorAccess));
+            value.guardError().ifPresent(error -> this.validateDeclarationKind(error, NormalizedError.class, capability));
             break;
          case PersistStep value:
             this.validateVariable(value.targetVariable(), capability);

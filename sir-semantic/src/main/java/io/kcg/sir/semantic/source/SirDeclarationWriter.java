@@ -195,7 +195,9 @@ public final class SirDeclarationWriter {
             out.line(2, "}");
          }
          case "UpdateStep" -> {
-            out.line(2, "update " + text(step, "targetVariable") + " {");
+            out.line(2, "update " + text(step, "targetVariable")
+               + optionalChild(step, "guard").map(guard -> " when " + expression(guard, 0) + " else " + text(step, "guardError")).orElse("")
+               + " {");
             this.bindings(step, out);
             out.line(2, "}");
          }

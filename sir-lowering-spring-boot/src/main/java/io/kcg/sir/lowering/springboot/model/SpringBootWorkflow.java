@@ -233,22 +233,42 @@ public record SpringBootWorkflow(LoweredNodeId id, LoweredOrigin origin, List<Sp
       LoweredOrigin origin();
    }
 
+   /**
+   * The condition a stored row must still meet when its update is written, and what is raised when it
+   * does not. It is checked inside the one statement that writes the row, never in Java beforehand.
+   */
+   public record UpdateGuard(SpringExpression predicate, SymbolId failure) {
+      public UpdateGuard {
+         Objects.requireNonNull(predicate, "predicate");
+         Objects.requireNonNull(failure, "failure");
+      }
+   }
+
    public record UpdateStep(
       LoweredNodeId id,
       LoweredOrigin origin,
       SymbolId targetVariable,
       List<SpringBootWorkflow.Binding> bindings,
-      java.util.Optional<SpringBootWorkflow.ConditionalUpdate> conditional
+      java.util.Optional<SpringBootWorkflow.ConditionalUpdate> conditional,
+      java.util.Optional<SpringBootWorkflow.UpdateGuard> guard
    ) implements SpringBootWorkflow.Step {
       public UpdateStep {
          SpringBootWorkflow.requireStep(id, origin);
          Objects.requireNonNull(targetVariable, "targetVariable");
          bindings = List.copyOf(Objects.requireNonNull(bindings, "bindings"));
          Objects.requireNonNull(conditional, "conditional");
+         Objects.requireNonNull(guard, "guard");
+      }
+
+      public UpdateStep(
+         LoweredNodeId id, LoweredOrigin origin, SymbolId targetVariable, List<SpringBootWorkflow.Binding> bindings,
+         java.util.Optional<SpringBootWorkflow.ConditionalUpdate> conditional
+      ) {
+         this(id, origin, targetVariable, bindings, conditional, java.util.Optional.empty());
       }
 
       public UpdateStep(LoweredNodeId id, LoweredOrigin origin, SymbolId targetVariable, List<SpringBootWorkflow.Binding> bindings) {
-         this(id, origin, targetVariable, bindings, java.util.Optional.empty());
+         this(id, origin, targetVariable, bindings, java.util.Optional.empty(), java.util.Optional.empty());
       }
    }
 

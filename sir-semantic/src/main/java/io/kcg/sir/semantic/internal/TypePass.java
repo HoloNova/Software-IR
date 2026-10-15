@@ -457,6 +457,12 @@ final class TypePass {
                visibleVars.add(s.result().text());
                break;
             case AstUpdateStep s:
+               s.guard().ifPresent(guard -> {
+                  SirType guardType = this.typeExpression(guard, capScopeId, visibleVars);
+                  if (guardType != null && !TypeRules.isBoolean(guardType)) {
+                     this.diagnostics.add(DiagnosticBuilder.error("SIR-TYPE-001", "update 的守卫条件必须是 Boolean", guard.span()));
+                  }
+               });
                Set<SymbolId> updateBoundFieldIds = new LinkedHashSet<>();
 
                for (AstBinding binding : s.bindings()) {

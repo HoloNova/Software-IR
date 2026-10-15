@@ -432,7 +432,9 @@ final class NormalizePass {
          case AstUpdateStep s -> {
             SymbolId targetVar = this.siteTargetOrUnknown(s.target().id());
             List<NormalizedBinding> bindings = this.normalizeBindings(s.bindings());
-            yield new NormalizedStep.UpdateStep(s.id(), s.span(), targetVar, bindings);
+            Optional<NormalizedExpression> guard = s.guard().map(this::normalizeExpression);
+            Optional<SymbolId> guardError = s.guardError().flatMap(ref -> this.validated.referenceSiteBindings().targetFor(ref.id()));
+            yield new NormalizedStep.UpdateStep(s.id(), s.span(), targetVar, guard, guardError, bindings);
          }
          case AstPersistStep s -> {
             SymbolId targetVar = this.siteTargetOrUnknown(s.target().id());

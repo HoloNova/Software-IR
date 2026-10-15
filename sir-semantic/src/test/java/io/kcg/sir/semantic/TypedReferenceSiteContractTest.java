@@ -117,6 +117,19 @@ class TypedReferenceSiteContractTest {
                 return users;
               }
             }
+            capability GuardUser {
+              input LookupInput;
+              output Unit;
+              fails NotFound;
+              requires atomic;
+              expose command;
+              workflow {
+                load User by input.id as user else NotFound;
+                update user when user.state == Status.ACTIVE else NotFound { state: Status.INACTIVE; }
+                persist user;
+                return unit;
+              }
+            }
             capability FindHandle {
               input HandleInput;
               output HandleSummary;
@@ -675,6 +688,8 @@ class TypedReferenceSiteContractTest {
             }
             case AstUpdateStep s -> {
                 sink.put(s.target().id(), s.target().text());
+                s.guard().ifPresent(guard -> collectExpressionRefs(guard, sink));
+                s.guardError().ifPresent(error -> sink.put(error.id(), error.text()));
                 for (var b : s.bindings()) {
                     sink.put(b.fieldName().id(), b.fieldName().text());
                     collectExpressionRefs(b.value(), sink);

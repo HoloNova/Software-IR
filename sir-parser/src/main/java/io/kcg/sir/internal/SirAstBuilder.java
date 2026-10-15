@@ -400,8 +400,11 @@ final class SirAstBuilder {
         }
         if (context.updateStep() != null) {
             var value = context.updateStep();
+            var guard = value.guardClause();
             return new AstUpdateStep(
                     ids.id(path), source.span(value), nameRef(value.IDENT(), path, "target"),
+                    Optional.ofNullable(guard).map(clause -> expression(clause.expression(), path)),
+                    Optional.ofNullable(guard).map(clause -> nameRef(clause.IDENT(1), path, "guardError")),
                     bindings(value.binding(), path));
         }
         if (context.persistStep() != null) {

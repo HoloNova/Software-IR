@@ -123,12 +123,25 @@ public sealed interface NormalizedStep
       }
    }
 
-   record UpdateStep(@Source AstNodeId sourceNodeId, @Source SourceSpan span, @Reference SymbolId targetVariable, @Fact List<NormalizedBinding> bindings) implements NormalizedStep {
+   /**
+   * Changes a loaded row. {@code guard}, when present, is a condition on the row as it is stored at the
+   * moment of the write; {@code guardError} is raised when the stored row no longer meets it.
+   */
+   record UpdateStep(
+      @Source AstNodeId sourceNodeId, @Source SourceSpan span, @Reference SymbolId targetVariable,
+      @Fact Optional<NormalizedExpression> guard, @Reference Optional<SymbolId> guardError, @Fact List<NormalizedBinding> bindings
+   ) implements NormalizedStep {
       public UpdateStep {
          Objects.requireNonNull(sourceNodeId, "sourceNodeId");
          Objects.requireNonNull(span, "span");
          Objects.requireNonNull(targetVariable, "targetVariable");
+         Objects.requireNonNull(guard, "guard");
+         Objects.requireNonNull(guardError, "guardError");
          bindings = List.copyOf(Objects.requireNonNull(bindings, "bindings"));
+      }
+
+      public UpdateStep(AstNodeId sourceNodeId, SourceSpan span, SymbolId targetVariable, List<NormalizedBinding> bindings) {
+         this(sourceNodeId, span, targetVariable, Optional.empty(), Optional.empty(), bindings);
       }
    }
 

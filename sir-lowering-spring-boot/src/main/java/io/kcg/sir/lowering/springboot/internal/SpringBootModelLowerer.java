@@ -658,7 +658,9 @@ public final class SpringBootModelLowerer {
             case NormalizedStep.UpdateStep value -> new SpringBootWorkflow.UpdateStep(
                     id, origin, value.targetVariable(),
                     value.bindings().stream().map(binding -> lowerBinding(binding, owner, actorSymbol)).toList(),
-                    this.lowerConditionalUpdate(value, owner, actorSymbol));
+                    this.lowerConditionalUpdate(value, owner, actorSymbol),
+                    value.guard().map(guard -> new SpringBootWorkflow.UpdateGuard(
+                            lowerExpression(guard, owner, actorSymbol), value.guardError().orElseThrow())));
             case NormalizedStep.PersistStep value -> {
                 Provenance p = provenance.get(value.targetVariable());
                 if (p == null) {
