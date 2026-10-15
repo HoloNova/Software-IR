@@ -79,7 +79,7 @@ systemd-run --scope -q -p MemoryMax=2G -p CPUQuota=150% -- \
 
 没有交付自然语言→指令、数据库初始化/迁移、Docker/Web、公开构建/启动命令；单文件包见第4节。负责人已验收本阶段（2026-10-15）。
 
-## 4. 补充：单文件包（2026-10-15，未提交）
+## 4. 补充：单文件包（2026-10-15，提交 `3ebe5f1`，CI 通过）
 
 验收后把命令行打成可直接运行的一个文件。这一步只重新打包已有类，不改任何源码、不新增模块。
 
@@ -87,7 +87,7 @@ systemd-run --scope -q -p MemoryMax=2G -p CPUQuota=150% -- \
 - 构建：`mvn -B -pl kcg-cli -am -Dmaven.test.skip=true package`，在线、全新的本地仓库，约25秒，jar 约1.7 MB。
 - 对比：同一个固定路径的工作区里，分别用类路径和 `java -jar` 跑完整流程——`--help`、`generate --help`、`--version`、`check`（3行）、`generate`、`inspect`、`edit`（[CLI使用说明](CLI_WORKFLOW.md)第2节的示例，原样）、`version-plan`、`version-apply`。所有退出码为0；各步输出、磁盘上的39个文件、4个候选文件逐字节一致。唯一的差别是 `version-apply` 结果里两个 Git 提交 ID：它们含提交时间，每次运行都不同；两次运行的提交树哈希相同。
 - 反向对照：没有依赖的薄 jar（`original-kcg.jar`）启动即 `NoClassDefFoundError`，说明冒烟步骤能抓到漏打包。
-- CI：`verify.yml` 在独立验证 IT 之后增加“Standalone CLI smoke”步骤（`--help`、`inspect`、`generate`）。同样的脚本在本机用相同变量原样执行通过。**该步骤和单文件包尚未经 CI 运行：NOT_RUN，直到包含它们的提交推送。** 冻结离线仓库依赖在线预热阶段取得 shade 插件，这一点也要等该次 CI 确认。
+- CI：`verify.yml` 在独立验证 IT 之后增加“Standalone CLI smoke”步骤（`--help`、`inspect`、`generate`）。同样的脚本在本机用相同变量原样执行通过。**CI 已运行：PASSED。** [verify #73](https://github.com/HoloNova/Software-IR/actions/runs/38677243253)，提交 `3ebe5f1`（`main`），整个运行 success；“Standalone CLI smoke”步骤 success（不是跳过），冻结全量闸门、完成全量闸门、业务场景 IT、独立验证 IT 同样 success。这也确认了冻结离线仓库能经在线预热阶段取得 shade 插件。核对时只读了运行与步骤状态，没有读取冒烟步骤的日志输出。
 - 环境：4 vCPU / 16 GiB、Java 21.0.12、Maven 3.9.11；单构建、无 `-T`，`MAVEN_OPTS=-Xmx1g`、`nice -n 10`，没有使用 `systemd-run`（会话环境资源充足，单次构建约25秒）。对比脚本只放在会话临时目录，不入库。
 - 未覆盖：Windows；版本化的发布渠道。
 - 顺带发现（未改）：解析与词法诊断文案仍写“SIR v0.1”（`ParserDiagnosticListener`、`LexerDiagnosticListener` 共3处），而当前语言是 `sir 0.2`；改文案会改 parser 行为，留给负责人决定。

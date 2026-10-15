@@ -41,7 +41,7 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 
 公开入口已验收（2026-10-15，提交 `1c80c73`，CI [verify #72](https://github.com/HoloNova/Software-IR/actions/runs/38671123332) 通过）：`generate`调用原首次生成，`inspect`只读schema/draft与源集合摘要，`edit`读取JSON增删改批次并保存完整候选源目录，再接原version-plan/apply。原源与生成工程在edit期间不变；CLI不直接访问文件系统、不构建/启动。详见[CLI使用说明](CLI_WORKFLOW.md)。
 
-命令行可以打成单文件 `kcg-cli/target/kcg.jar` 直接 `java -jar` 运行（`mvn -B -pl kcg-cli -am -Dmaven.test.skip=true package`）。整条链运行时只依赖 antlr4-runtime；包只重新打包已有类，不新增模块。本机已验证它与类路径启动的完整流程输出一致；包和 CI 冒烟步骤尚未经 CI 运行，见[阶段报告第4节](CLI_WORKFLOW_REPORT.md)。
+命令行可以打成单文件 `kcg-cli/target/kcg.jar` 直接 `java -jar` 运行（`mvn -B -pl kcg-cli -am -Dmaven.test.skip=true package`）。整条链运行时只依赖 antlr4-runtime；包只重新打包已有类，不新增模块。本机已验证它与类路径启动的完整流程输出一致；CI 冒烟步骤已通过（[verify #73](https://github.com/HoloNova/Software-IR/actions/runs/38677243253)，`3ebe5f1`），见[阶段报告第4节](CLI_WORKFLOW_REPORT.md)。
 
 ### 基于 Git 的版本变更（ADR-027）
 
@@ -60,10 +60,10 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 
 ## 4. 验证状态
 
-- 最近核验的 CI：`verify` [#72](https://github.com/HoloNova/Software-IR/actions/runs/38671123332)（`1c80c73`，公开 CLI 入口提交，`main`）通过：冻结与完成两条全量闸门、三个业务场景 IT、独立验证 IT 均 success，见[验证说明](qualification/README.md)。#72 之后的未提交改动（单文件包、本轮文档）不在其覆盖内。
+- 最近核验的 CI：`verify` [#73](https://github.com/HoloNova/Software-IR/actions/runs/38677243253)（`3ebe5f1`，单文件包提交，`main`）通过：冻结与完成两条全量闸门、三个业务场景 IT、独立验证 IT、单文件包冒烟均 success，见[验证说明](qualification/README.md)。上一次 [#72](https://github.com/HoloNova/Software-IR/actions/runs/38671123332)（`1c80c73`，公开 CLI 入口提交）同样通过。核对时只读了运行与步骤状态。
 - 清理后工作树的本机定向单元测试共 830 项、0 失败（各模块数字见[验证说明](qualification/README.md)）；不含需要 MySQL 的 IT，也不是全量闸门。
 - 公开CLI入口的本机定向验证（提交前）：29项、0失败/错误/跳过，来自7个类各自最新Surefire XML；新命令用真实CLI子进程及临时Git工程串起多源编辑/应用，结果与候选从零生成逐字节相同，详见[阶段报告](CLI_WORKFLOW_REPORT.md)。#72 的测试数字未在此抄录，需要时以该运行页面的报告和 artifact 为准。
-- 单文件包（未提交）：本机对比 `java -jar` 与类路径启动的完整流程，除 Git 提交 ID（含提交时间）外逐字节一致；CI 门 NOT_RUN，见[阶段报告第4节](CLI_WORKFLOW_REPORT.md)。
+- 单文件包：本机对比 `java -jar` 与类路径启动的完整流程，除 Git 提交 ID（含提交时间）外逐字节一致；CI 冒烟步骤在 #73 通过，见[阶段报告第4节](CLI_WORKFLOW_REPORT.md)。
 - 被跳过、未运行的内容一律记为 `SKIPPED`／`NOT_RUN`，不折算成通过。
 
 ## 5. 已知限制
@@ -88,8 +88,8 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 
 公开CLI流程已验收，不重开已完成R1–R5，不改变Git版本合同。下面的 S1/S2 是负责人 2026-10-15 确认的阶段划分。
 
-- S1（进行中，本轮改动未提交）：把 #72 的证据写入文档，命令行打成可直接运行的单文件包。
-- S2（下一步，只做设计评审，不实现）：双 Token 一类机制怎样拆解到语义层、“带条件的状态流转”语义、登记的类型化端口，以及小规模模型实验的接入。尚缺第一道实验题和实验手册。已确认的方向与待答问题见[设计 10 草稿](design/10-semantic-boundary-and-mechanisms.md)。
+- S1（已完成，`3ebe5f1`，CI #73 通过）：把 #72 的证据写入文档，命令行打成可直接运行的单文件包。
+- S2（进行中，只做设计评审，不实现）：用双 Token 作为扩展性探针，已完成纸面拆解与对现有编译器的实测（16 个最小样本，到 GENERATION），并回答了设计 10 第 4 节的第 1、2 问，方向已确认（先组合、后升格、修饰定义为展开）。第 3–6 问（带条件的状态流转的最小语义、登记端口、小规模模型实验的接入、移除记录）未答；实验接入仍缺第一道实验题和可读的实验手册。结果见[设计 10 草稿](design/10-semantic-boundary-and-mechanisms.md)第 7、8 节。
 
 ## 8. 文档分工
 
