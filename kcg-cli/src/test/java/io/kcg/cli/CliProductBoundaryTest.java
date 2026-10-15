@@ -21,8 +21,8 @@ import org.junit.jupiter.api.io.TempDir;
  * written down:
  *
  * <ol>
- *   <li><b>Only the published commands exist.</b> {@code check}, {@code version-plan} and
- *       {@code version-apply} are the whole surface (ADR-027). The commands ADR-019 proposed and the
+ *   <li><b>Only the published commands exist.</b> {@code generate}, {@code inspect}, {@code edit}, {@code check}, {@code version-plan} and
+ *       {@code version-apply} are the whole surface. The commands ADR-019 proposed and the
  *       retired Change planning commands ({@code context}, {@code plan}) must be refused as usage
  *       errors, must leave any directory they are pointed at byte-for-byte unchanged, and must not
  *       appear in the help text.</li>
@@ -38,7 +38,7 @@ class CliProductBoundaryTest {
 
     /** Commands that are not published: ADR-019's proposals, and the retired Change planning commands. */
     private static final List<String> UNPUBLISHED_COMMANDS =
-            List.of("generate", "register", "apply", "recover", "context", "plan");
+            List.of("register", "apply", "recover", "context", "plan");
 
     @TempDir
     Path tempDir;
@@ -78,7 +78,7 @@ class CliProductBoundaryTest {
     void helpAndVersionSucceedAndListOnlyPublishedCommands() throws Exception {
         ProcResult topHelp = CliTestFixtures.runCli("--help");
         assertEquals(0, topHelp.exit(), () -> "help must succeed: " + topHelp.stderr());
-        for (String published : List.of("check", "version-plan", "version-apply")) {
+        for (String published : List.of("generate", "inspect", "edit", "check", "version-plan", "version-apply")) {
             assertTrue(topHelp.stdout().lines().anyMatch(line -> line.startsWith("  " + published + " ")),
                     "top help must list " + published);
         }

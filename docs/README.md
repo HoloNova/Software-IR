@@ -14,6 +14,9 @@
 | [`KCG-Code_系统架构与实现指南.md`](KCG-Code_%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E4%B8%8E%E5%AE%9E%E7%8E%B0%E6%8C%87%E5%8D%97.md) | 不看代码也能理解：每一层为什么存在、版本怎么保存 |
 | [`PROJECT_OWNER_GUIDE.md`](PROJECT_OWNER_GUIDE.md) | 负责人怎么交办任务、验收、授权 Git 操作 |
 | [`SIR_BATCH_CHECK.md`](SIR_BATCH_CHECK.md) | `kcg check` 的 JSONL 协议、预算与退出码 |
+| [`CLI使用说明`](CLI_WORKFLOW.md) | 首次生成、只读结构查询、指令JSON、候选编辑与版本应用 |
+| [`CLI阶段报告`](CLI_WORKFLOW_REPORT.md) | 本轮实现、定向证据与尚未运行的CI门 |
+| [`入口阶段方案`](design/09-public-cli-workflow.md) | 已授权实施，定向验证完成、待验收；范围及完成门 |
 | [`CLAUDE_EXECUTION_POLICY.md`](CLAUDE_EXECUTION_POLICY.md) | 执行者是 Claude 时的提交、测试与资源约定 |
 | [`architecture/`](architecture/) | Accepted ADR：Resolve-once（001）、Application 所有权（003）、项目文档与源快照（021）、批量校验（025）、分层与指令修改（026）、Git 版本历史（027） |
 | [`design/`](design/README.md) | 目标产品设计（课程后端、数据库演进、Docker 交付、Web 平台）；不证明已实现 |

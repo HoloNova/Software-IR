@@ -22,6 +22,7 @@ public final class CliCommandLine {
          return (CliCommandLine.ParseResult)(switch (first) {
             case "--help", "-h", "help" -> new CliCommandLine.Help(null);
             case "--version", "-V", "version" -> new CliCommandLine.Version();
+            case "generate", "inspect", "edit" -> parseWorkflow(args, first);
             case "version-plan" -> parseVersion(args, "version-plan", false);
             case "version-apply" -> parseVersion(args, "version-apply", true);
             case "check" -> args.length == 1 ? new ParsedCheck() : args.length == 2 && isHelp(args[1])
@@ -30,6 +31,27 @@ public final class CliCommandLine {
          });
       } else {
          return new CliCommandLine.UsageError("KCG-CLI-USAGE-001", "no command given");
+      }
+   }
+
+   private static ParseResult parseWorkflow(String[] args, String command) {
+      if (args.length == 2 && isHelp(args[1])) return new Help(command);
+      Map<String, String> opts = new LinkedHashMap<>();
+      opts.put("--source-root", "sourceRoot");
+      opts.put("--entry", "entry");
+      String destination = command.equals("generate") ? "--output-root" : command.equals("edit") ? "--candidate-root" : null;
+      if (destination != null) opts.put(destination, "destination");
+      Object parsed = parseOptions(args, 1, opts, command);
+      if (parsed instanceof UsageError error) return error;
+      OptionMap values = (OptionMap) parsed;
+      try {
+         Path source = requireAbsPath(values, "--source-root");
+         Path target = destination == null ? null : requireAbsPath(values, destination);
+         if (source == null || !source.equals(source.normalize()) || (destination != null && (target == null || !target.equals(target.normalize()))))
+            return new UsageError("KCG-CLI-USAGE-003", "roots must be absolute normalized paths");
+         return new ParsedWorkflow(command, source, SourceId.of(values.get("--entry")), target);
+      } catch (IllegalArgumentException e) {
+         return new UsageError("KCG-CLI-USAGE-003", "invalid source entry or path");
       }
    }
 
@@ -151,8 +173,12 @@ public final class CliCommandLine {
       }
    }
 
+   public record ParsedWorkflow(String command, Path sourceRoot, SourceId entry, Path destination) implements ParseResult {
+   }
+
    public sealed interface ParseResult
-      permits CliCommandLine.ParsedVersionPlan,
+      permits CliCommandLine.ParsedWorkflow,
+      CliCommandLine.ParsedVersionPlan,
       CliCommandLine.ParsedVersionApply,
       CliCommandLine.ParsedCheck,
       CliCommandLine.Help,

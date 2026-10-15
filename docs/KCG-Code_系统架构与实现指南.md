@@ -21,7 +21,7 @@ SIR 是软件描述，生成的 Java 是实现。修改指令不是 Java 补丁�
 | 文件渲染 | 根据实现方案输出源码和构建文件 | `sir-generator-spring-boot` |
 | 工程应用 | 编排编译、写文件、比较、验证和版本发布 | `sir-toolchain-application` |
 
-`sir-project-graph` 是生成物的来源地图（每个生成文件能追到哪个声明、哪个源文件），不是另一个理解业务的层。CLI 只处理参数和输出。分层不等于拆成微服务，也不意味着增加 Maven 模块。
+`sir-project-graph` 是生成物的来源地图（每个生成文件能追到哪个声明、哪个源文件），不是另一个理解业务的层。CLI 只处理参数、指令JSON和输出：`generate`首次生成，`inspect`查询结构，`edit`保存候选，再接现有version-plan/apply；具体用法见[CLI流程](CLI_WORKFLOW.md)。分层不等于拆成微服务，也不意味着增加 Maven 模块。
 
 ## 3. 一个软件怎么由一个或多个文件组成
 

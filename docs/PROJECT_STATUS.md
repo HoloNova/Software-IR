@@ -19,8 +19,8 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 | `sir-generator-spring-boot` | 只消费降级模型的确定性内存文件生成 |
 | `sir-project-graph` | 来源图的构建、校验、canonical 序列化与加载 |
 | `sir-change` | 增删改指令（`Command`/`CommandBatch`）的编辑与写回（`SourceEditor`） |
-| `sir-toolchain-application` | 编译、首次生成、基于 Git 的版本规划与应用、独立验证、静态校验与 JSONL 批量 |
-| `kcg-cli` | `check`、只读 `version-plan`、`version-apply`，canonical JSON 输出 |
+| `sir-toolchain-application` | 编译、首次生成、只读结构查询/候选源编辑、基于 Git 的版本规划与应用、独立验证、静态校验与 JSONL 批量 |
+| `kcg-cli` | `generate`、只读 `inspect`、候选 `edit`、`check`、只读 `version-plan`、`version-apply`，canonical JSON 输出 |
 
 ## 3. 当前能力
 
@@ -38,6 +38,8 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 ### 增删改指令编辑
 
 `SourceEditor` 把 `CommandBatch`（增加／删除／更新三种固定指令）应用到类型化草稿，只重写变化的声明、写回 SIR 文本，并用正式分析复核。保持强类型模型，不为新增功能补专用操作。
+
+公开入口已接入（本轮待验收、未提交）：`generate`调用原首次生成，`inspect`只读schema/draft与源集合摘要，`edit`读取JSON增删改批次并保存完整候选源目录，再接原version-plan/apply。原源与生成工程在edit期间不变；CLI不直接访问文件系统、不构建/启动。详见[CLI使用说明](CLI_WORKFLOW.md)。
 
 ### 基于 Git 的版本变更（ADR-027）
 
@@ -58,6 +60,7 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 
 - 最近核验的 CI：`verify` #70（`4e17ca3`，即整理提交记录后的 `main`）通过，覆盖统一清理后的全部源码，见[验证说明](qualification/README.md)。
 - 清理后工作树的本机定向单元测试共 830 项、0 失败（各模块数字见[验证说明](qualification/README.md)）；不含需要 MySQL 的 IT，也不是全量闸门。
+- 本轮新增CLI入口的本机定向验证：29项、0失败/错误/跳过，来自7个类各自最新Surefire XML；新命令用真实CLI子进程及临时Git工程串起多源编辑/应用，结果与候选从零生成逐字节相同。新源码尚未提交，CI/真实业务IT为NOT_RUN，旧#70不证明新增入口，详见[阶段报告](CLI_WORKFLOW_REPORT.md)。
 - 被跳过、未运行的内容一律记为 `SKIPPED`／`NOT_RUN`，不折算成通过。
 
 ## 5. 已知限制
@@ -72,13 +75,17 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 
 ## 6. 尚未作为产品能力发布
 
-- 命令行 `generate`、`register`、`apply`、`recover` 完整生命周期；独立发行包（fat JAR）。
+- 独立发行包（fat JAR）、公开构建/运行入口；旧 `register`、`apply`、`recover` 命令不恢复，现有版本应用入口为version-apply。
 - 数据库初始化与迁移、Docker／Compose 交付、Web 平台、模块市场、跨项目缓存。
 - Redis Extension、第二个目标、Constraint VM、Java 反向解析、GUI/daemon、多用户。
 - SLM 评测：总设计见 [SLM 评测计划](qualification/SLM_GENERATED_PROJECT_EVALUATION_PLAN.md)，尚未启动。
 - Windows 平台证据；生产、安全认证、性能、高可用资格均未声明。
 
-## 7. 文档分工
+## 7. 当前阶段（2026-10-14，待验收）
+
+负责人已确认[公开CLI流程方案](design/09-public-cli-workflow.md)并授权实现；generate/inspect/edit已完成定向验证，等待负责人验收与独立Git授权。不重开已完成R1–R5，不改变Git版本合同，不把现有云端CI资格扩大到未提交改动。
+
+## 8. 文档分工
 
 - 本文件：当前能力、验证状态、限制。
 - [验证说明](qualification/README.md)：验证方式、证据口径、当前证据。

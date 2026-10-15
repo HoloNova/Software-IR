@@ -141,11 +141,11 @@ ANTLR4 语法（`sir 0.2` 根文档与声明片段两个入口）、严格 UTF-8
 
 ### `sir-toolchain-application`
 
-统一编排：编译（`ToolchainApplication` 首次生成）、基于 Git 的版本变更（`WorkspaceVersionApplication`：规划与应用）、独立验证（`CandidateVerificationApplication`/`VerifiedWorkspaceApplication`，静态／构建／启动／业务四级）、`SirValidationApplication`（纯内存静态校验与有界 JSONL 批量）。Git、Maven 构建、应用进程通过端口接入（`execution` 包是适配器）。
+统一编排：编译（`ToolchainApplication` 首次生成）、基于 Git 的版本变更（`WorkspaceVersionApplication`：规划与应用）、独立验证（`CandidateVerificationApplication`/`VerifiedWorkspaceApplication`，静态／构建／启动／业务四级）、`SirValidationApplication`（纯内存静态校验与有界 JSONL 批量）。`SourceEditingApplication` 提供只读结构查询及指令编辑候选发布，复用受控读源、正式语义分析和SourceEditor，不修改原SIR或工程。Git、Maven 构建、应用进程通过端口接入（`execution` 包是适配器）。
 
 ### `kcg-cli`
 
-公开命令是 `check`、只读的 `version-plan` 和会改工程的 `version-apply`（要求 git；协议 `KCG-CLI-VERSION-CHANGE-V1`）。`check` 从 stdin 接收 JSONL（每行一个 `sir 0.2` 文档），按请求阶段校验并输出 canonical 结果；使用与边界见 [SIR 批量校验](docs/SIR_BATCH_CHECK.md)。`generate`、`register`、`apply`、`recover` 不是公开命令。
+公开命令是首次生成 `generate`、只读结构查询 `inspect`、只保存候选源的 `edit`，以及 `check`、只读的 `version-plan` 和会改已有工程的 `version-apply`（要求 git；协议 `KCG-CLI-VERSION-CHANGE-V1`）。`check` 从 stdin 接收 JSONL（每行一个 `sir 0.2` 文档），按请求阶段校验并输出 canonical 结果；使用与边界见 [SIR 批量校验](docs/SIR_BATCH_CHECK.md)。新三命令的结果协议为 `KCG-CLI-WORKFLOW-V1`，edit外部JSON为 `KCG-CLI-COMMANDS-V1` 包装核心 `sir-command/1`；说明见 [CLI流程](docs/CLI_WORKFLOW.md)。`register`、`apply`、`recover` 不是公开命令。
 
 ## 5. 修改与验收协议
 

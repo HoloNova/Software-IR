@@ -56,6 +56,10 @@
 
 **历史证据：** 版本变更路径的专项证据（七类变更与从零生成逐字节一致、280 个中断检查点逐一重跑）见 [G1 报告](../history/roadmap/G1-workspace-version-report.md)；独立验证见 [R5 报告](../history/roadmap/R5-independent-verification-report.md)；课程查询／写入／关系场景的真实 MySQL 结果见 [history/work-orders](../history/work-orders/) 中 Q9、Q10、Q11、Q13。
 
+### 本轮公开CLI入口（2026-10-14，未提交、待验收）
+
+新增generate/inspect/edit的定向证据为7类最新Surefire XML合计29 / 0 / 0 / 0，包含真实CLI子进程、多源组合候选和临时Git工程应用，详细范围与命令见[阶段报告](../CLI_WORKFLOW_REPORT.md)。这是本轮定向结果，不加到云端旧830项或#70 CI计数，也不抵扣真实MySQL门。新commit SHA/CI URL/artifact尚不可得，全量闸门和业务IT均NOT_RUN，等待独立Git授权。
+
 ## 5. 未覆盖
 
 - Windows 平台证据（junction 相关用例只在 Windows 上执行）。

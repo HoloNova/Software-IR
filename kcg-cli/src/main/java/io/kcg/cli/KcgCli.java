@@ -10,7 +10,7 @@ import java.nio.charset.StandardCharsets;
 public final class KcgCli {
    public static final String VERSION = "kcg 0.2.0 (" + VersionResultDocument.PROTOCOL + ")";
    static volatile RuntimeException crashInjection = null;
-   private static final String TOP_HELP = "Usage: kcg <command> [options]\nSIR validation and version change CLI.\n\nCommands:\n  check          Validate SIR software samples (one document each) from UTF-8 JSONL stdin.\n  version-plan   Plan a change of a project kept in a Git working tree. Read-only.\n  version-apply  Carry out a planned change; the previous and the new version are saved in Git.\n\nGlobal options:\n  --help, -h     Show this help (or command help with `kcg <command> --help`).\n  --version, -V  Show the CLI version.";
+   private static final String TOP_HELP = "Usage: kcg <command> [options]\nSIR generation, command editing and version change CLI.\n\nCommands:\n  generate       Generate a new Spring Boot project from SIR sources.\n  inspect        Read the software structure and command baseline. Read-only.\n  edit           Read command JSON from stdin and save a new candidate source directory.\n  check          Validate SIR software samples (one document each) from UTF-8 JSONL stdin.\n  version-plan   Plan a change of a project kept in a Git working tree. Read-only.\n  version-apply  Carry out a planned change; the previous and the new version are saved in Git.\n\nGlobal options:\n  --help, -h     Show this help (or command help with `kcg <command> --help`).\n  --version, -V  Show the CLI version.";
    private static final String VERSION_OPTIONS = "--repository-root <absolute-path> --source-root <absolute-path> --entry <relative-path>\n                 --output-root <absolute-path> --candidate-root <absolute-path>";
    private static final String VERSION_PLAN_HELP = "Usage: kcg version-plan " + VERSION_OPTIONS + "\nCompiles the SIR sources in --source-root and the candidate sources in --candidate-root, requires the project\nfiles in --output-root to be exactly what the current SIR compiles to, and prints the plan with its planId.\nChanges nothing. All roots must be inside --repository-root, and --source-root and --output-root must be\nseparate directories. --entry is the entry source, for example project.sir.\n\nAll options are required and must occur exactly once. Paths must be absolute.";
    private static final String VERSION_APPLY_HELP = "Usage: kcg version-apply " + VERSION_OPTIONS + "\n                    --expected-plan-id <64-lower-hex>\nCarries out the plan that version-plan printed, only if planning now gives exactly that plan (same planId).\nRequires git: the previous version is saved in Git first, then the project files and the SIR sources are\nwritten, then the new version is saved. A directory that is not a repository yet becomes one.\nIf it stops half way (exit 4) nothing is repaired: run the same command again to finish, or return to the\nsaved previous version with git.\n\nAll options are required and must occur exactly once. Paths must be absolute.";
@@ -56,6 +56,7 @@ public final class KcgCli {
          case CliCommandLine.ParsedVersionPlan vp -> runVersionPlan(vp.arguments());
          case CliCommandLine.ParsedVersionApply va -> runVersionApply(va.arguments());
          case CliCommandLine.ParsedCheck pc -> runCheck();
+         case CliCommandLine.ParsedWorkflow workflow -> runWorkflow(workflow);
          default -> throw new MatchException(null, null);
       };
    }
@@ -71,7 +72,7 @@ public final class KcgCli {
       return result instanceof WorkspacePlanningResult.Failure ? CliExit.FAILURE : CliExit.OK;
    }
 
-   /** The only command that changes the project. Exit 4 means it stopped half way and must be run again. */
+   /** The only command that changes an existing project. Exit 4 means it stopped half way and must be run again. */
    private static int runVersionApply(VersionArguments args) {
       WorkspaceApplyResult result = new WorkspaceVersionApplication(new GitVersionControl()).apply(directoryRequest(args), args.expectedPlanId());
       ResultRenderer.render(VersionResultDocument.render(result));
@@ -81,6 +82,34 @@ public final class KcgCli {
          case WorkspaceApplyResult.Failure f -> CliExit.FAILURE;
          case WorkspaceApplyResult.RerunRequired r -> CliExit.RERUN_REQUIRED;
       };
+   }
+
+   private static int runWorkflow(CliCommandLine.ParsedWorkflow args) {
+      if (args.command().equals("generate")) {
+         var result = new io.kcg.sir.application.api.ToolchainApplication().execute(
+            new io.kcg.sir.application.api.ToolchainRequest(args.sourceRoot(), args.entry(), args.destination()));
+         ResultRenderer.render(WorkflowResultDocument.render(result));
+         return result instanceof io.kcg.sir.application.api.ToolchainResult.Success ? CliExit.OK : CliExit.FAILURE;
+      }
+      var app = new io.kcg.sir.application.api.SourceEditingApplication();
+      if (args.command().equals("inspect")) {
+         var result = app.inspect(new io.kcg.sir.application.api.SourceInspectionRequest(args.sourceRoot(), args.entry()));
+         ResultRenderer.render(WorkflowResultDocument.render(result));
+         return result instanceof io.kcg.sir.application.api.SourceInspectionResult.Success ? CliExit.OK : CliExit.FAILURE;
+      }
+      io.kcg.sir.change.edit.CommandBatch batch;
+      try {
+         batch = CommandJson.read(System.in);
+      } catch (IllegalArgumentException e) {
+         ResultRenderer.render(WorkflowResultDocument.inputFailure("USAGE_ERROR", "KCG-CLI-COMMAND-INPUT-001", e.getMessage()));
+         return CliExit.USAGE;
+      } catch (java.io.IOException e) {
+         ResultRenderer.render(WorkflowResultDocument.inputFailure("FAILURE", "KCG-CLI-COMMAND-IO-001", "command input could not be read"));
+         return CliExit.FAILURE;
+      }
+      var result = app.edit(new io.kcg.sir.application.api.SourceEditRequest(args.sourceRoot(), args.entry(), args.destination(), batch));
+      ResultRenderer.render(WorkflowResultDocument.render(result));
+      return result instanceof io.kcg.sir.application.api.SourceEditResult.Saved ? CliExit.OK : CliExit.FAILURE;
    }
 
    private static int runCheck() {
@@ -104,6 +133,9 @@ public final class KcgCli {
       String text = switch (h.command()) {
          case null -> TOP_HELP;
          case "check" -> "Usage: kcg check < samples.jsonl\nReads UTF-8 JSONL from stdin and writes one canonical JSON result per input line.\nStatic checking only; does not build, start or certify business behavior.\nEach object requires id and sir, with optional stopAfter: PARSE, SEMANTIC, LOWERING, GENERATION.\nDefault GENERATION. Limits: 1 MiB SIR, 8 MiB JSON line, 10000 accepted lines.\nOrdinary rejected samples do not make the process fail. No options; no files or state written.";
+         case "generate" -> "Usage: kcg generate --source-root <absolute-path> --entry <relative-path> --output-root <absolute-path>\nGenerates a new Spring Boot project; --output-root must not exist and must not overlap the source root.\nDoes not change SIR, save Git snapshots, download dependencies or run the project.\nAll options required once; roots must be absolute normalized paths. Result: KCG-CLI-WORKFLOW-V1.";
+         case "inspect" -> "Usage: kcg inspect --source-root <absolute-path> --entry <relative-path>\nRead-only software/schema inspection, using the formal semantic analysis.\nPrints the source-set baselineSha256, softwareName and generic editable draft templates.\nNo target generation, files, Git or processes. Result: KCG-CLI-WORKFLOW-V1.";
+         case "edit" -> "Usage: kcg edit --source-root <absolute-path> --entry <relative-path> --candidate-root <absolute-path> < commands.json\nReads one UTF-8 JSON object: KCG-CLI-COMMANDS-V1 wrapping sir-command/1 add/delete/update.\nLimits: 8 MiB JSON, 1 MiB/string, 64 JSON levels, 100000 values, 1000 commands, 64 selector steps.\nOnly declarations can be edited; header/import edits, BOM and rewrites losing comments are refused.\nSaves all candidate source files to a new nonoverlapping root. Never changes the original sources or project.\nUse version-plan/apply to publish the candidate. No Git, builds or processes here.\nExit 0 saved, 2 input/usage error, 3 refusal/I/O failure, 70 unexpected internal error. Result: KCG-CLI-WORKFLOW-V1.";
          case "version-plan" -> VERSION_PLAN_HELP;
          case "version-apply" -> VERSION_APPLY_HELP;
          default -> TOP_HELP;

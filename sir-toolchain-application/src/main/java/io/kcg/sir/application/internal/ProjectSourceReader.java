@@ -20,22 +20,27 @@ public final class ProjectSourceReader {
     public record Loaded(SourceSnapshot snapshot, ProjectSemanticInput semanticInput) {}
 
     public static Optional<Loaded> read(ToolchainRequest request, List<ExecutionDiagnostic> diagnostics) {
+        return read(request.sourceRoot(), request.entry(), diagnostics);
+    }
+
+    /** Source-only consumers use exactly the same bounded, NOFOLLOW reader as compilation. */
+    public static Optional<Loaded> read(Path sourceRoot, SourceId entry, List<ExecutionDiagnostic> diagnostics) {
         var parser = SirParser.create();
-        SourceSpan active = zero(request.entry());
+        SourceSpan active = zero(entry);
         try {
-            validateRoot(request.sourceRoot());
-            validateLogicalPath(request.entry().value());
-            try (var opened = openRoot(request.sourceRoot())) {
+            validateRoot(sourceRoot);
+            validateLogicalPath(entry.value());
+            try (var opened = openRoot(sourceRoot)) {
                 var secure = opened.directory();
-                var read = readFile(secure, request.entry());
-                var rootResult = parser.parseProject(new SirSource(request.entry(), SourceReader.decodeStrictUtf8(read.bytes())));
+                var read = readFile(secure, entry);
+                var rootResult = parser.parseProject(new SirSource(entry, SourceReader.decodeStrictUtf8(read.bytes())));
                 diagnostics.addAll(DiagnosticMapper.fromProjectSource(rootResult.diagnostics(), ExecutionStage.PARSE));
                 if (!rootResult.isSuccess()) return Optional.empty();
                 var root = (AstSourceUnit.Root) rootResult.unit().orElseThrow();
                 if (root.sources().size() + 1 > SourceSetManifest.MAX_FILES)
                     throw new ReadFailure("SIR-APP-SOURCES-LIMIT-001", "source list exceeds 128 files including entry");
                 var locations = new LinkedHashMap<SourceId, SourceSpan>();
-                Set<String> folded = new HashSet<>(); folded.add(request.entry().value().toLowerCase(Locale.ROOT));
+                Set<String> folded = new HashSet<>(); folded.add(entry.value().toLowerCase(Locale.ROOT));
                 for (var listed : root.sources()) {
                     active = listed.span();
                     validateLogicalPath(listed.path());
@@ -44,7 +49,7 @@ public final class ProjectSourceReader {
                         throw new ReadFailure("SIR-APP-SOURCES-PATH-002", "duplicate, entry or case-colliding source: " + id.value());
                     locations.put(id, listed.span());
                 }
-                Map<SourceId, byte[]> bytes = new LinkedHashMap<>(); bytes.put(request.entry(), read.bytes());
+                Map<SourceId, byte[]> bytes = new LinkedHashMap<>(); bytes.put(entry, read.bytes());
                 Set<Object> identities = new HashSet<>(); identities.add(read.fileKey());
                 List<AstSourceUnit.Fragment> fragments = new ArrayList<>();
                 int total = read.bytes().length;
@@ -62,7 +67,7 @@ public final class ProjectSourceReader {
                     if (!parsed.isSuccess()) return Optional.empty();
                     fragments.add((AstSourceUnit.Fragment) parsed.unit().orElseThrow());
                 }
-                return Optional.of(new Loaded(new SourceSnapshot(request.entry(), bytes), new ProjectSemanticInput(root, fragments)));
+                return Optional.of(new Loaded(new SourceSnapshot(entry, bytes), new ProjectSemanticInput(root, fragments)));
             }
         } catch (ReadFailure e) {
             add(diagnostics, e.code, e.getMessage(), active);
