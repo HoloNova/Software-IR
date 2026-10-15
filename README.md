@@ -54,6 +54,7 @@ SIR 只有一种文档形式：`sir 0.2` 根文档（含 `metadata`、`target`�
 mvn -Dmaven.repo.local=<repo> -o clean verify
 ```
 
+命令行可打成单个文件：`mvn -B -pl kcg-cli -am -Dmaven.test.skip=true package` 后运行 `java -jar kcg-cli/target/kcg.jar --help`，见[CLI使用说明](docs/CLI_WORKFLOW.md)。
 全量构建与真实 MySQL 场景较重，权威验证放在 GitHub CI（`.github/workflows/verify.yml`），本机只跑受影响的定向测试；规则和证据口径见 [验证说明](docs/qualification/README.md)。被跳过或未运行的测试一律记为 `SKIPPED`／`NOT_RUN`，不折算成通过。
 
 ## 从哪里开始读
@@ -63,4 +64,4 @@ mvn -Dmaven.repo.local=<repo> -o clean verify
 3. [文档导航](docs/README.md)；[系统架构与实现指南](docs/KCG-Code_%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84%E4%B8%8E%E5%AE%9E%E7%8E%B0%E6%8C%87%E5%8D%97.md)讲每一层为什么存在。
 4. 已完成或退役的计划、报告都在 [docs/history](docs/history/README.md)。
 
-本项目不宣称生产就绪：Windows 平台证据、独立发行包、数据库迁移、Docker 交付、Web 平台等仍未交付，见项目状态第 6 节。
+本项目不宣称生产就绪：Windows 平台证据、预构建的发行物、数据库迁移、Docker 交付、Web 平台等仍未交付，见项目状态第 6 节。

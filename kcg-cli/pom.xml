@@ -29,6 +29,8 @@
     </dependencies>
 
     <build>
+        <!-- A stable name for the runnable jar: java -jar kcg-cli/target/kcg.jar -->
+        <finalName>kcg</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -48,6 +50,42 @@
                         </manifest>
                     </archive>
                 </configuration>
+            </plugin>
+            <!--
+              Folds the eight sir-* modules and antlr4-runtime (the only runtime dependency of the whole chain)
+              into the one jar, so the CLI runs without assembling a classpath. The jar only repackages existing
+              classes: no module, no relocation, no behavior of its own.
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <!-- Otherwise the plugin writes dependency-reduced-pom.xml into the source tree. -->
+                            <createDependencyReducedPom>false</createDependencyReducedPom>
+                            <filters>
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/*.SF</exclude>
+                                        <exclude>META-INF/*.DSA</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>io.kcg.cli.KcgCli</mainClass>
+                                </transformer>
+                            </transformers>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

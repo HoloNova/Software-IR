@@ -1,6 +1,6 @@
 # KCG-Code 当前项目状态
 
-> 更新：2026-10-14。状态：正常开发中的工程，不宣称生产就绪。本文说明**现在能做什么**；验证口径与证据在[验证说明](qualification/README.md)；已完成或退役的材料在 [history](history/README.md)。
+> 更新：2026-10-15。状态：正常开发中的工程，不宣称生产就绪。本文说明**现在能做什么**；验证口径与证据在[验证说明](qualification/README.md)；已完成或退役的材料在 [history](history/README.md)。
 
 ## 1. 定位
 
@@ -39,7 +39,9 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 
 `SourceEditor` 把 `CommandBatch`（增加／删除／更新三种固定指令）应用到类型化草稿，只重写变化的声明、写回 SIR 文本，并用正式分析复核。保持强类型模型，不为新增功能补专用操作。
 
-公开入口已接入（本轮待验收、未提交）：`generate`调用原首次生成，`inspect`只读schema/draft与源集合摘要，`edit`读取JSON增删改批次并保存完整候选源目录，再接原version-plan/apply。原源与生成工程在edit期间不变；CLI不直接访问文件系统、不构建/启动。详见[CLI使用说明](CLI_WORKFLOW.md)。
+公开入口已验收（2026-10-15，提交 `1c80c73`，CI [verify #72](https://github.com/HoloNova/Software-IR/actions/runs/38671123332) 通过）：`generate`调用原首次生成，`inspect`只读schema/draft与源集合摘要，`edit`读取JSON增删改批次并保存完整候选源目录，再接原version-plan/apply。原源与生成工程在edit期间不变；CLI不直接访问文件系统、不构建/启动。详见[CLI使用说明](CLI_WORKFLOW.md)。
+
+命令行可以打成单文件 `kcg-cli/target/kcg.jar` 直接 `java -jar` 运行（`mvn -B -pl kcg-cli -am -Dmaven.test.skip=true package`）。整条链运行时只依赖 antlr4-runtime；包只重新打包已有类，不新增模块。本机已验证它与类路径启动的完整流程输出一致；包和 CI 冒烟步骤尚未经 CI 运行，见[阶段报告第4节](CLI_WORKFLOW_REPORT.md)。
 
 ### 基于 Git 的版本变更（ADR-027）
 
@@ -58,9 +60,10 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 
 ## 4. 验证状态
 
-- 最近核验的 CI：`verify` #70（`4e17ca3`，即整理提交记录后的 `main`）通过，覆盖统一清理后的全部源码，见[验证说明](qualification/README.md)。
+- 最近核验的 CI：`verify` [#72](https://github.com/HoloNova/Software-IR/actions/runs/38671123332)（`1c80c73`，公开 CLI 入口提交，`main`）通过：冻结与完成两条全量闸门、三个业务场景 IT、独立验证 IT 均 success，见[验证说明](qualification/README.md)。#72 之后的未提交改动（单文件包、本轮文档）不在其覆盖内。
 - 清理后工作树的本机定向单元测试共 830 项、0 失败（各模块数字见[验证说明](qualification/README.md)）；不含需要 MySQL 的 IT，也不是全量闸门。
-- 本轮新增CLI入口的本机定向验证：29项、0失败/错误/跳过，来自7个类各自最新Surefire XML；新命令用真实CLI子进程及临时Git工程串起多源编辑/应用，结果与候选从零生成逐字节相同。新源码尚未提交，CI/真实业务IT为NOT_RUN，旧#70不证明新增入口，详见[阶段报告](CLI_WORKFLOW_REPORT.md)。
+- 公开CLI入口的本机定向验证（提交前）：29项、0失败/错误/跳过，来自7个类各自最新Surefire XML；新命令用真实CLI子进程及临时Git工程串起多源编辑/应用，结果与候选从零生成逐字节相同，详见[阶段报告](CLI_WORKFLOW_REPORT.md)。#72 的测试数字未在此抄录，需要时以该运行页面的报告和 artifact 为准。
+- 单文件包（未提交）：本机对比 `java -jar` 与类路径启动的完整流程，除 Git 提交 ID（含提交时间）外逐字节一致；CI 门 NOT_RUN，见[阶段报告第4节](CLI_WORKFLOW_REPORT.md)。
 - 被跳过、未运行的内容一律记为 `SKIPPED`／`NOT_RUN`，不折算成通过。
 
 ## 5. 已知限制
@@ -75,15 +78,18 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 
 ## 6. 尚未作为产品能力发布
 
-- 独立发行包（fat JAR）、公开构建/运行入口；旧 `register`、`apply`、`recover` 命令不恢复，现有版本应用入口为version-apply。
+- 预构建的发行物与发布渠道、公开构建/运行入口（单文件包能由 `mvn package` 在本地产出，但没有版本化发布）；旧 `register`、`apply`、`recover` 命令不恢复，现有版本应用入口为version-apply。
 - 数据库初始化与迁移、Docker／Compose 交付、Web 平台、模块市场、跨项目缓存。
 - Redis Extension、第二个目标、Constraint VM、Java 反向解析、GUI/daemon、多用户。
 - SLM 评测：总设计见 [SLM 评测计划](qualification/SLM_GENERATED_PROJECT_EVALUATION_PLAN.md)，尚未启动。
 - Windows 平台证据；生产、安全认证、性能、高可用资格均未声明。
 
-## 7. 当前阶段（2026-10-14，待验收）
+## 7. 当前阶段（2026-10-15）
 
-负责人已确认[公开CLI流程方案](design/09-public-cli-workflow.md)并授权实现；generate/inspect/edit已完成定向验证，等待负责人验收与独立Git授权。不重开已完成R1–R5，不改变Git版本合同，不把现有云端CI资格扩大到未提交改动。
+公开CLI流程已验收，不重开已完成R1–R5，不改变Git版本合同。下面的 S1/S2 是负责人 2026-10-15 确认的阶段划分。
+
+- S1（进行中，本轮改动未提交）：把 #72 的证据写入文档，命令行打成可直接运行的单文件包。
+- S2（下一步，只做设计评审，不实现）：双 Token 一类机制怎样拆解到语义层、“带条件的状态流转”语义、登记的类型化端口，以及小规模模型实验的接入。尚缺第一道实验题和实验手册。已确认的方向与待答问题见[设计 10 草稿](design/10-semantic-boundary-and-mechanisms.md)。
 
 ## 8. 文档分工
 

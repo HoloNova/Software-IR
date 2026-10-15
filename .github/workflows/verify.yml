@@ -155,6 +155,26 @@ jobs:
             -Dkcg.conformance.maven-repo="$MAVEN_REPO" \
             test
 
+      # The runnable jar must start with nothing but the JDK: every sir-* module and antlr4-runtime are
+      # inside it. A class missing from the jar shows up here as NoClassDefFoundError, which no test that
+      # runs on the reactor's own classpath can show. It sits after the business evidence so that a failure
+      # here cannot hide the results above. The jar comes from the completion gate's `clean verify`; the
+      # steps in between do not clean.
+      - name: Standalone CLI smoke
+        run: |
+          set -euo pipefail
+          JAR="$GITHUB_WORKSPACE/kcg-cli/target/kcg.jar"
+          SOURCE="$GITHUB_WORKSPACE/kcg-cli/src/test/resources/io/kcg/cli/multi-course"
+          OUTPUT="$RUNNER_TEMP/standalone-smoke-generated"
+          test -f "$JAR"
+          java -jar "$JAR" --help
+          # Results go to files first: with pipefail, `grep -q` quitting early would kill the writer.
+          java -jar "$JAR" inspect --source-root "$SOURCE" --entry project.sir > "$RUNNER_TEMP/standalone-smoke-inspect.json"
+          grep -q '"outcome":"INSPECTED"' "$RUNNER_TEMP/standalone-smoke-inspect.json"
+          java -jar "$JAR" generate --source-root "$SOURCE" --entry project.sir --output-root "$OUTPUT" > "$RUNNER_TEMP/standalone-smoke-generate.json"
+          grep -q '"outcome":"GENERATED"' "$RUNNER_TEMP/standalone-smoke-generate.json"
+          test -f "$OUTPUT/pom.xml"
+
       - name: Upload conformance evidence
         if: always()
         uses: actions/upload-artifact@v4

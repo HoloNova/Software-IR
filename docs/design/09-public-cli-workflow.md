@@ -1,7 +1,7 @@
 # 下一阶段方案：打通首次生成与指令编辑的公开入口
 
 - 日期：2026-10-14。
-- 状态：**AWAITING_ACCEPTANCE**。负责人已确认方案并授权整阶段实现（2026-10-14）；实现和定向验证完成，提交与推送未授权。
+- 状态：**ACCEPTED**（2026-10-15）。负责人 2026-10-14 确认方案并授权整阶段实现；提交 `1c80c73`，CI [verify #72](https://github.com/HoloNova/Software-IR/actions/runs/38671123332) 通过。
 - 实现起点：云端 `main` / `ad64a39`。按负责人要求信任云端成果，不重复复核或运行已完成阶段的测试。
 - 依据：[MAIN](../../MAIN.md)、[现状](../PROJECT_STATUS.md)、[ADR-026](../architecture/ADR-026-layered-semantic-command-architecture.md)、[ADR-027](../architecture/ADR-027-git-as-version-history.md)。
 
@@ -119,7 +119,7 @@ SourceEditor的现有限制原样呈现：只编辑声明；新增声明落入�
 
 本阶段不做数据库初始化/迁移、Docker/Web、更多业务语法、并发锁/恢复体系重写、构建缓存、真实SLM样本评测。它是入口交付，不是再次做核心架构重构。
 
-入口闭环之后优先评审独立可执行包和小规模模型实验接入；fat JAR目前未交付，先确认打包依赖与离线仓库再立项。数据库演进仍作为独立产品阶段，不因CLI可用就承诺任意字段变更可保留数据库数据。
+入口闭环之后优先评审独立可执行包和小规模模型实验接入。单文件包已在 S1 完成（整条链运行时只依赖 antlr4-runtime，见[阶段报告第4节](../CLI_WORKFLOW_REPORT.md)）；数据库演进仍作为独立产品阶段，不因CLI可用就承诺任意字段变更可保留数据库数据。
 
 ## 9. 规划轮记录
 
@@ -131,4 +131,4 @@ generate/inspect/edit与typed Application编排已实现；节点及槽位映射
 
 定向验证7类最新XML合计29项、0失败/错误/跳过；真实CLI完成多源新增输入/能力、删除、更新、候选输出与Git应用，结果等于候选从零生成；商品复用同一协议。失败路径和CLI边界均有定向证据。详见[阶段报告](../CLI_WORKFLOW_REPORT.md)与[使用说明](../CLI_WORKFLOW.md)。
 
-当前状态AWAITING_ACCEPTANCE；未提交/推送，新源码的全量CI与真实业务IT为NOT_RUN。云端旧CI只作起点，不扩大资格。不自动启动下个阶段。
+当前状态ACCEPTED（2026-10-15）：`1c80c73` 的两条全量闸门、业务场景 IT 与独立验证 IT 已在 CI #72 通过，见[阶段报告](../CLI_WORKFLOW_REPORT.md)。不自动启动下个阶段。

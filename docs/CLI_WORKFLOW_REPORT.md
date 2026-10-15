@@ -1,8 +1,8 @@
 # 公开CLI流程：实现与定向验证报告
 
-- 日期：2026-10-14；状态：**AWAITING_ACCEPTANCE**。
-- 授权：负责人确认[入口方案](design/09-public-cli-workflow.md)，要求进入整阶段实现；没有提交/推送授权。
-- 起点：`ad64a39`（云端main）。本轮改动未提交，没有可绑定的新commit SHA或CI run URL。
+- 日期：2026-10-14；状态：**ACCEPTED**（负责人 2026-10-15 验收；提交 `1c80c73`，CI [verify #72](https://github.com/HoloNova/Software-IR/actions/runs/38671123332) 通过）。
+- 授权：负责人确认[入口方案](design/09-public-cli-workflow.md)，要求进入整阶段实现；提交与推送由负责人另行执行。
+- 起点：`ad64a39`（云端main）；受测提交 `1c80c73`（feat(cli): 公开CLI流程）。
 - 使用方式：[CLI流程及JSON合同](CLI_WORKFLOW.md)。
 
 ## 1. 交付
@@ -70,11 +70,24 @@ systemd-run --scope -q -p MemoryMax=2G -p CPUQuota=150% -- \
 | 门 | 状态 |
 | --- | --- |
 | 本轮定向测试、真实CLI及临时Git流程 | PASSED（上表） |
-| 全量冻结/完成闸门 | NOT_RUN |
-| 真实MySQL业务/独立验证IT | NOT_RUN |
-| 新commit SHA + CI URL/artifact | NOT_RUN：尚未授权提交/推送 |
+| 全量冻结/完成闸门 | PASSED：[verify #72](https://github.com/HoloNova/Software-IR/actions/runs/38671123332)，提交 `1c80c73` |
+| 真实MySQL业务/独立验证IT | PASSED：同一运行的业务场景 IT 与独立验证 IT 步骤 |
+| commit SHA + CI URL/artifact | `1c80c73`；run URL 同上；artifact：`conformance-evidence`、`surefire-reports` |
 | Windows、断电与并发竞争资格 | NOT_RUN；不声明支持扩大 |
 
-云端verify #70绑定`4e17ca3`，只证明本轮之前的代码，不能替代新增入口验证。已有Git并发/多源中断限制不变，没有重做恢复或锁体系。
+#72 绑定 `1c80c73`，覆盖本阶段新增的公开入口；#70 只证明此前的代码。核对 #72 时只读了运行与步骤状态，没有逐项读取测试数字，需要时以运行页面的报告和 artifact 为准。已有Git并发/多源中断限制不变，没有重做恢复或锁体系。
 
-没有交付fat JAR、自然语言→指令、数据库初始化/迁移、Docker/Web、公开构建/启动命令；这些不属于本阶段。发布/验收状态和Git授权分开，等待负责人裁决，不自动进入下一阶段。
+没有交付自然语言→指令、数据库初始化/迁移、Docker/Web、公开构建/启动命令；单文件包见第4节。负责人已验收本阶段（2026-10-15）。
+
+## 4. 补充：单文件包（2026-10-15，未提交）
+
+验收后把命令行打成可直接运行的一个文件。这一步只重新打包已有类，不改任何源码、不新增模块。
+
+- 做法：`kcg-cli` 在 `package` 阶段用 maven-shade-plugin 3.6.0 生成 `kcg-cli/target/kcg.jar`（Main-Class `io.kcg.cli.KcgCli`），内含八个 `sir-*` 模块和 `antlr4-runtime`。整条链运行时只依赖 `antlr4-runtime`（`mysql-connector-j`、`jna-platform` 只在测试范围）；`src/main` 没有资源文件，也没有 `getResource` 调用，所以没有资源合并问题。
+- 构建：`mvn -B -pl kcg-cli -am -Dmaven.test.skip=true package`，在线、全新的本地仓库，约25秒，jar 约1.7 MB。
+- 对比：同一个固定路径的工作区里，分别用类路径和 `java -jar` 跑完整流程——`--help`、`generate --help`、`--version`、`check`（3行）、`generate`、`inspect`、`edit`（[CLI使用说明](CLI_WORKFLOW.md)第2节的示例，原样）、`version-plan`、`version-apply`。所有退出码为0；各步输出、磁盘上的39个文件、4个候选文件逐字节一致。唯一的差别是 `version-apply` 结果里两个 Git 提交 ID：它们含提交时间，每次运行都不同；两次运行的提交树哈希相同。
+- 反向对照：没有依赖的薄 jar（`original-kcg.jar`）启动即 `NoClassDefFoundError`，说明冒烟步骤能抓到漏打包。
+- CI：`verify.yml` 在独立验证 IT 之后增加“Standalone CLI smoke”步骤（`--help`、`inspect`、`generate`）。同样的脚本在本机用相同变量原样执行通过。**该步骤和单文件包尚未经 CI 运行：NOT_RUN，直到包含它们的提交推送。** 冻结离线仓库依赖在线预热阶段取得 shade 插件，这一点也要等该次 CI 确认。
+- 环境：4 vCPU / 16 GiB、Java 21.0.12、Maven 3.9.11；单构建、无 `-T`，`MAVEN_OPTS=-Xmx1g`、`nice -n 10`，没有使用 `systemd-run`（会话环境资源充足，单次构建约25秒）。对比脚本只放在会话临时目录，不入库。
+- 未覆盖：Windows；版本化的发布渠道。
+- 顺带发现（未改）：解析与词法诊断文案仍写“SIR v0.1”（`ParserDiagnosticListener`、`LexerDiagnosticListener` 共3处），而当前语言是 `sir 0.2`；改文案会改 parser 行为，留给负责人决定。

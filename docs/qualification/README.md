@@ -32,11 +32,11 @@
 
 ## 4. 当前证据
 
-**最近一次已核验的 CI 运行：** [verify #70](https://github.com/HoloNova/Software-IR/actions/runs/38546065357)，受测提交 `4e17ca3`（整理提交记录后的 `main`），通过（负责人确认）。它覆盖 `sir 0.1` 单文档形式、图的第一版格式、基线 Bundle 和无调用辅助代码删除之后的全部源码。整理前同一内容的 `0350e8f` 也通过（[#67](https://github.com/HoloNova/Software-IR/actions/runs/38544793410)）。
+**最近一次已核验的 CI 运行：** [verify #72](https://github.com/HoloNova/Software-IR/actions/runs/38671123332)，受测提交 `1c80c73`（`main`，feat(cli): 公开CLI流程），success。冻结全量闸门、完成全量闸门、业务场景 IT、独立验证 IT 四个步骤均成功；上传的 artifact 为 `conformance-evidence` 与 `surefire-reports`。它覆盖公开 CLI 入口（generate／inspect／edit）。
 
-**更早的运行：** [#58](https://github.com/HoloNova/Software-IR/actions/runs/38534225348)（`07f29f6`，整理前的旧 SHA，见 [COMMIT_MAP](../history/COMMIT_MAP.md)）通过。其前一次 #57 失败，原因是 `ProjectVerificationChainIT` 把工作目录建在检出目录内部，Git 顶层与预期不一致而被拒绝（`NOT_TOP_LEVEL`），属于测试夹具的问题，在 `07f29f6` 中修正（IT 自建独立仓库并打印诊断）；生产代码未改。
+**更早的运行：** [#70](https://github.com/HoloNova/Software-IR/actions/runs/38546065357)（`4e17ca3`，清理后、公开 CLI 入口之前的 `main`；整理前同一内容的 `0350e8f` 为 [#67](https://github.com/HoloNova/Software-IR/actions/runs/38544793410)）通过。[#58](https://github.com/HoloNova/Software-IR/actions/runs/38534225348)（`07f29f6`，整理前的旧 SHA，见 [COMMIT_MAP](../history/COMMIT_MAP.md)）通过。其前一次 #57 失败，原因是 `ProjectVerificationChainIT` 把工作目录建在检出目录内部，Git 顶层与预期不一致而被拒绝（`NOT_TOP_LEVEL`），属于测试夹具的问题，在 `07f29f6` 中修正（IT 自建独立仓库并打印诊断）；生产代码未改。
 
-本文件未逐项抄录 #70 的测试数字和 IT 条目，需要时以该运行页面的报告和 artifact 为准。
+本文件未逐项抄录 #72 的测试数字和 IT 条目，需要时以该运行页面的报告和 artifact 为准。
 
 **本机定向（2026-10-14，清理后的工作树，各模块 `*Test` 单元测试，不含 IT）：**
 
@@ -56,14 +56,18 @@
 
 **历史证据：** 版本变更路径的专项证据（七类变更与从零生成逐字节一致、280 个中断检查点逐一重跑）见 [G1 报告](../history/roadmap/G1-workspace-version-report.md)；独立验证见 [R5 报告](../history/roadmap/R5-independent-verification-report.md)；课程查询／写入／关系场景的真实 MySQL 结果见 [history/work-orders](../history/work-orders/) 中 Q9、Q10、Q11、Q13。
 
-### 本轮公开CLI入口（2026-10-14，未提交、待验收）
+### 公开CLI入口（2026-10-14 本机定向；2026-10-15 CI 通过）
 
-新增generate/inspect/edit的定向证据为7类最新Surefire XML合计29 / 0 / 0 / 0，包含真实CLI子进程、多源组合候选和临时Git工程应用，详细范围与命令见[阶段报告](../CLI_WORKFLOW_REPORT.md)。这是本轮定向结果，不加到云端旧830项或#70 CI计数，也不抵扣真实MySQL门。新commit SHA/CI URL/artifact尚不可得，全量闸门和业务IT均NOT_RUN，等待独立Git授权。
+新增generate/inspect/edit的本机定向证据为7类最新Surefire XML合计29 / 0 / 0 / 0，包含真实CLI子进程、多源组合候选和临时Git工程应用，详细范围与命令见[阶段报告](../CLI_WORKFLOW_REPORT.md)。这是提交前的本机结果，不加到云端旧830项。同一源码随后由 #72 的全量闸门、业务场景 IT 和独立验证 IT 覆盖。
+
+### 单文件包（2026-10-15，未提交）
+
+`kcg-cli/target/kcg.jar` 与类路径启动的完整流程输出在本机对比一致（除含提交时间的 Git 提交 ID），见[阶段报告第4节](../CLI_WORKFLOW_REPORT.md)。`verify.yml` 新增的“Standalone CLI smoke”步骤与该包尚未经 CI 运行：NOT_RUN，待包含它们的提交推送后以同 SHA 的运行为准。
 
 ## 5. 未覆盖
 
 - Windows 平台证据（junction 相关用例只在 Windows 上执行）。
-- 独立发行包（fat JAR）；命令行当前通过 Maven exec 运行。
+- 预构建的发行物与版本化发布渠道（单文件包可由 `mvn package` 在本地产出，尚未经 CI 运行）。
 - 没有跨进程锁；真实断电验证；对真实 Git 的故障注入（钩子失败、索引锁被占用）。
 - SLM 生成样本集上的评测尚未启动，见 [SLM 评测计划](SLM_GENERATED_PROJECT_EVALUATION_PLAN.md)。
 - 数据库初始化／迁移不是产品能力，业务 IT 的表结构是测试夹具。

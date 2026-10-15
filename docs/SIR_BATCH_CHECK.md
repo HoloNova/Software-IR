@@ -8,7 +8,7 @@
 
 ## 当前源码构建后的直接调用
 
-在仓库根目录，已有Java21编译产物与ANTLR运行时后执行（不是新发行脚本或fat JAR）：
+在仓库根目录。可直接用单文件包 `java -jar kcg-cli/target/kcg.jar check < samples.jsonl`（见[CLI使用说明](CLI_WORKFLOW.md)）；下面是不依赖单文件包、直接用各模块编译产物和ANTLR运行时的写法：
 
 ```bash
 CP="$(printf '%s:' "$PWD"/{kcg-cli,sir-toolchain-application,sir-change,sir-project-graph,sir-generator-spring-boot,sir-lowering-spring-boot,sir-lowering-api,sir-semantic,sir-parser}/target/classes)$HOME/.m2/repository/org/antlr/antlr4-runtime/4.13.2/antlr4-runtime-4.13.2.jar"

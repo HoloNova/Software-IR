@@ -4,25 +4,18 @@
 
 ## 1. 启动CLI
 
-需要Java 21。当前仍没有独立fat JAR，下面使用已有的各模块编译输出启动，不要求写Java调用程序。首次准备编译输出按[测试资源约束](../AGENTS.md)安排，不在这里默认执行全量构建。
-
-Linux示例（修改REPO；ANTLR runtime须已在本地Maven仓库）：
+需要Java 21。整条工具链可以打成一个可运行文件，不要求写Java调用程序，也不用手拼类路径：
 
 ```bash
 REPO=/absolute/path/to/Software-IR
-M2_REPO="$HOME/.m2/repository"
-CP="$M2_REPO/org/antlr/antlr4-runtime/4.13.2/antlr4-runtime-4.13.2.jar"
-for module in sir-parser sir-semantic sir-lowering-api sir-lowering-spring-boot \
-              sir-generator-spring-boot sir-project-graph sir-change \
-              sir-toolchain-application kcg-cli; do
-  CP="$CP:$REPO/$module/target/classes"
-done
-kcg() { java -Xmx384m -cp "$CP" io.kcg.cli.KcgCli "$@"; }
+mvn -B -pl kcg-cli -am -Dmaven.test.skip=true package   # 产出 $REPO/kcg-cli/target/kcg.jar；只构建CLI及其依赖模块，不跑测试
+kcg() { java -Xmx384m -jar "$REPO/kcg-cli/target/kcg.jar" "$@"; }
 kcg --help
 ```
 
-该函数只是启动器，不编译、不扫描项目源码、不实现变更规则。也可由已有的Java/Maven启动方式调用同一主类。
+单文件包只是把已有的八个模块和 `antlr4-runtime`（整条链运行时唯一的依赖）放进一个 jar，没有自己的行为；它与“各模块 `target/classes` 加类路径启动 `io.kcg.cli.KcgCli`”的输出逐字节一致，只有 `version-apply` 结果里的 Git 提交 ID 因含提交时间而每次不同（对比见[阶段报告第4节](CLI_WORKFLOW_REPORT.md)）。目前没有预构建的发布物，jar 由上面的命令在本地产出；首次构建需要联网预热 Maven 仓库，按[测试资源约束](../AGENTS.md)安排，不在这里默认执行全量构建。
 
+该函数只是启动器，不编译、不扫描项目源码、不实现变更规则。
 ## 2. 一次完整流程
 
 假设一个Git工作目录中，`sir/`保存课程SIR，`generated/`尚不存在；候选放在另一目录。源根、生成根在同一仓库内且互不包含，沿用ADR-027。
@@ -130,4 +123,4 @@ kcg version-apply --repository-root "$WORK" --source-root "$SOURCE" \
 
 退出码：0成功、2参数/外部JSON错误、3Application失败或编辑拒绝、70意外内部错误。version-apply仍额外使用4表示需要重跑；generate/edit不使用4。程序性失败（70）不同于普通不合法输入。
 
-编辑范围沿用现有SourceEditor：只改声明，新声明加入入口文件；跨文件引用需要已有import。BOM、会丢失注释的重写、header/import编辑明确拒绝。本阶段没有自动移动声明、数据库迁移、构建/启动命令、fat JAR或自然语言解析。
+编辑范围沿用现有SourceEditor：只改声明，新声明加入入口文件；跨文件引用需要已有import。BOM、会丢失注释的重写、header/import编辑明确拒绝。本阶段没有自动移动声明、数据库迁移、构建/启动命令、版本化发布渠道或自然语言解析。

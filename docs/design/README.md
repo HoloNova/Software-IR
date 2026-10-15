@@ -19,7 +19,8 @@
 | 6 | [网页平台与构建缓存](06-web-platform-and-build-cache.md) | 平台如何调度、导出、安全复用工作 | API、后台任务、版本发布和缓存契约 |
 | 7 | [验证与方向路线](07-validation-and-direction-roadmap.md) | 按什么顺序验证价值和决定后续投入 | 场景、完成门、证据与决策标准 |
 | 核心架构 | [分层与指令式修改](08-layered-command-architecture.md) | 如何避免新增语义时重复修改Change | 统一结构、三种指令、源往返、工程应用和迁移路线 |
-| 入口阶段（待验收） | [公开CLI流程](09-public-cli-workflow.md) | 如何不写Java就完成首次生成、指令编辑和应用 | 已授权实现；薄入口、JSON指令、候选源输出与定向证据 |
+| 入口阶段（已验收） | [公开CLI流程](09-public-cli-workflow.md) | 如何不写Java就完成首次生成、指令编辑和应用 | 薄入口、JSON指令、候选源输出；CI #72 通过 |
+| 设计评审（草稿） | [机制与语义的边界](10-semantic-boundary-and-mechanisms.md) | 双 Token 这类机制怎样拆到语义层，缺口与登记端口 | 已确认的方向、核实过的现状、S2 要回答的问题 |
 
 ## 2. 文档之间的权责
 
