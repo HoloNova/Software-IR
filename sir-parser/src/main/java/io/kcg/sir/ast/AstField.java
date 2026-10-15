@@ -13,6 +13,9 @@ import java.util.Optional;
  * {@link Optional#empty()} because their identity stays name-derived. A field with a declared id
  * keeps that id when its name changes, and a field re-created under the same name with a different
  * declared id is a different declaration.
+ *
+ * <p>{@code unique} is the author's statement that no two rows hold the same value in this field.
+ * Only entity members may carry it, and it is what allows a {@code load} to find a row by the field.
  */
 public record AstField(
         AstNodeId id,
@@ -21,6 +24,7 @@ public record AstField(
         AstTypeRef type,
         List<AstConstraint> constraints,
         boolean versioned,
+        boolean unique,
         Optional<String> declaredId) implements AstNode {
 
     public AstField(
@@ -30,7 +34,7 @@ public record AstField(
             AstTypeRef type,
             List<AstConstraint> constraints,
             boolean versioned) {
-        this(id, span, name, type, constraints, versioned, Optional.empty());
+        this(id, span, name, type, constraints, versioned, false, Optional.empty());
     }
 
     public AstField(
@@ -39,7 +43,7 @@ public record AstField(
             AstName name,
             AstTypeRef type,
             List<AstConstraint> constraints) {
-        this(id, span, name, type, constraints, false, Optional.empty());
+        this(id, span, name, type, constraints, false, false, Optional.empty());
     }
 
     public AstField {

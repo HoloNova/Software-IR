@@ -164,6 +164,10 @@ public final class SirDeclarationWriter {
          line.append(" versioned");
       }
 
+      if (entityField && text(field, "unique").equals("true")) {
+         line.append(" unique");
+      }
+
       if (entityField) {
          DeclaredIds.of(field).ifPresent(id -> line.append(" @id(").append(string(id)).append(")"));
       }
@@ -178,7 +182,7 @@ public final class SirDeclarationWriter {
          case "ValidateStep" ->
             out.line(2, "validate " + expression(child(step, "condition"), 0) + " else " + text(step, "errorSymbol") + ";");
          case "LoadStep" ->
-            out.line(2, "load " + text(step, "entitySymbol") + " by " + expression(child(step, "idExpression"), 0) + " as " + text(step, "resultVariable") + " else " + text(step, "errorSymbol") + ";");
+            out.line(2, "load " + text(step, "entitySymbol") + " by " + optionalText(step, "keyField").map(key -> key + ": ").orElse("") + expression(child(step, "idExpression"), 0) + " as " + text(step, "resultVariable") + " else " + text(step, "errorSymbol") + ";");
          case "FindStep" -> this.writeFind(step, out);
          case "CreateStep" -> {
             out.line(2, "create " + text(step, "entitySymbol") + " as " + text(step, "resultVariable") + " {");

@@ -12,6 +12,7 @@ public enum ReferenceRole {
    VALIDATE_ERROR(SymbolKind.ERROR),
    LOAD_ERROR(SymbolKind.ERROR),
    LOAD_ENTITY(SymbolKind.ENTITY),
+   LOAD_KEY_FIELD(SymbolKind.FIELD),
    FIND_ENTITY(SymbolKind.ENTITY),
    CREATE_ENTITY(SymbolKind.ENTITY),
    UPDATE_TARGET(SymbolKind.VARIABLE),

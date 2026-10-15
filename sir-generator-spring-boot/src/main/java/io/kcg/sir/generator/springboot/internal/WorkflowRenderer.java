@@ -139,12 +139,54 @@ final class WorkflowRenderer {
       collectExpressionImports(ctx, step.idExpression(), variableNames, imports, currentPackage);
       String resultName = step.result().targetName();
       String errorName = errorJavaName(ctx, step.errorSymbol(), imports, currentPackage);
+      if (step.keyField().isPresent()) {
+         renderKeyedLoad(step, entity, mapper, idExpr, resultName, errorName, imports, lines);
+         return;
+      }
+
       String readMethod = step.forUpdate() ? "selectByIdForUpdate" : "selectById";
       lines.add("        var " + resultName + " = " + mapper.mapperFieldName() + "." + readMethod + "(" + idExpr + ");");
       lines.add("        if (" + resultName + " == null) {");
       lines.add("            throw new " + errorName + "();");
       lines.add("        }");
       renderVersionGuard(ctx, capability, step, entity, resultName, imports, currentPackage, lines);
+   }
+
+   /**
+   * Loads the one row whose unique field holds the value.
+   *
+   * <p>Zero rows is the load's declared failure. More than one means the data breaks the uniqueness
+   * the author declared, which the request cannot repair, so it fails as an internal error instead of
+   * handing back whichever row came first; the query stops at two rows because two are enough to know,
+   * and the message names the entity and field but never the value that was looked up.
+   */
+   private static void renderKeyedLoad(
+      LoadStep step,
+      EntityDeclaration entity,
+      WorkflowRenderer.MapperReference mapper,
+      String valueExpr,
+      String resultName,
+      String errorName,
+      ImportSorter imports,
+      List<String> lines
+   ) {
+      SymbolId keySymbol = step.keyField().orElseThrow();
+      SpringBootDeclaration.Property key = entity.fields().stream()
+         .filter(property -> property.sourceSymbol().equals(keySymbol))
+         .findFirst()
+         .orElseThrow(() -> new IllegalStateException("load key is not a stored field of " + entity.javaName() + ": " + keySymbol));
+      imports.add("com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper");
+      String matches = resultName + "Matches";
+      lines.add("        var " + matches + " = " + mapper.mapperFieldName() + ".selectList(new LambdaQueryWrapper<" + entity.javaName() + ">()");
+      lines.add("                .eq(" + entity.javaName() + "::" + getterName(key.javaName()) + ", " + valueExpr + ")");
+      lines.add("                .last(\"LIMIT 2\"));");
+      lines.add("        if (" + matches + ".isEmpty()) {");
+      lines.add("            throw new " + errorName + "();");
+      lines.add("        }");
+      lines.add("        if (" + matches + ".size() > 1) {");
+      lines.add("            throw new IllegalStateException(\"more than one " + entity.javaName() + " row has the same " + key.javaName() + "\");");
+      lines.add("        }");
+      lines.add("        var " + resultName + " = " + matches + ".get(0);");
    }
 
    /**

@@ -19,6 +19,7 @@ class ProjectVisibilityTest {
 
     @Test void everyImportSensitiveReferenceRoleHasARealPositiveAndExactMissingImportRefusal() throws Exception {
         Path source = fixture(temp);
+        addKeyedLookup(source);
         moveContracts(source);
         var positive = generate(source, temp.resolve("positive"));
         var model = model(positive.sources());
@@ -150,6 +151,27 @@ class ProjectVisibilityTest {
         var id = switch (symbol) { case Symbol.FieldSymbol f -> f.ownerId(); case Symbol.EnumMemberSymbol e -> e.enumId(); default -> symbol.id(); };
         return declarations.get(id);
     }
+    /**
+     * Gives this test's own copy of the project a load by a unique field of an imported entity, the one
+     * reference role the shared fixture has no use for. The fixture stays as it is because other
+     * tests count its files and compare its digests.
+     */
+    private static void addKeyedLookup(Path source) throws Exception {
+        Path course = source.resolve("modules/course.sir"), root = source.resolve("project.sir");
+        String entity = Files.readString(course), project = Files.readString(root);
+        String code = "field code: String where notBlank, length(1, 32);";
+        String input = "input GetCourseInput { field id: Int64; }";
+        String anchor = "    capability CreateCourse {";
+        assertTrue(entity.contains(code) && project.contains(input) && project.contains(anchor), "the fixture changed under this test");
+        Files.writeString(course, entity.replace(code, code.substring(0, code.length() - 1) + " unique;"));
+        Files.writeString(root, project.replace(input, input + "\n    input FindCourseByCodeInput { field code: String; }")
+                .replace(anchor, "    capability GetCourseByCode {\n"
+                        + "      input FindCourseByCodeInput;\n      output CourseDetail;\n      fails CourseNotFound;\n"
+                        + "      requires readonly;\n      expose query;\n"
+                        + "      workflow {\n        load Course by code: input.code as course else CourseNotFound;\n        return course;\n      }\n    }\n"
+                        + anchor));
+    }
+
     private static void moveContracts(Path source) throws Exception {
         Path file = source.resolve("project.sir"); String root = Files.readString(file);
         var result = SirParser.create().parseProject(new SirSource(ENTRY, root)); assertTrue(result.isSuccess());

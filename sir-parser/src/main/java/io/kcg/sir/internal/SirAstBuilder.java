@@ -215,7 +215,7 @@ final class SirAstBuilder {
                         .toList();
         return new AstField(
                 ids.id(path), source.span(context), name, type(context.typeRef(), path), constraints,
-                context.VERSIONED() != null, declaredId);
+                context.VERSIONED() != null, context.uniqueModifier() != null, declaredId);
     }
 
     private Optional<String> declaredId(SirParser.IdAnnotationContext context) {
@@ -364,14 +364,14 @@ final class SirAstBuilder {
         }
         if (context.loadStep() != null) {
             var value = context.loadStep();
-            List<TerminalNode> names = value.IDENT();
             return new AstLoadStep(
                     ids.id(path),
                     source.span(value),
-                    nameRef(names.get(0), path, "entity"),
+                    nameRef(value.entity, path, "entity"),
                     expression(value.expression(), path),
-                    name(names.get(1)),
-                    nameRef(names.get(2), path, "error"));
+                    Optional.ofNullable(value.key).map(key -> nameRef(key, path, "key")),
+                    name(value.result),
+                    nameRef(value.error, path, "error"));
         }
         if (context.findStep() != null) {
             var value = context.findStep();

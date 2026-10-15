@@ -645,7 +645,7 @@ public final class SpringBootModelLowerer {
                     id, origin, lowerExpression(value.condition(), owner, actorSymbol), value.errorSymbol());
             case NormalizedStep.LoadStep value -> new SpringBootWorkflow.LoadStep(
                     id, origin, value.entitySymbol(), lowerExpression(value.idExpression(), owner, actorSymbol),
-                    variable(value.resultVariable()), value.errorSymbol(), this.locksRow(value, owner));
+                    variable(value.resultVariable()), value.errorSymbol(), this.locksRow(value, owner), value.keyField());
             case NormalizedStep.FindStep value -> new SpringBootWorkflow.FindStep(
                     id, origin, value.entitySymbol(),
                     lowerExpression(value.predicate(), owner, actorSymbol, this.findItemSymbol(value)),
@@ -686,7 +686,8 @@ public final class SpringBootModelLowerer {
      * version this load saw.
      */
     private boolean locksRow(NormalizedStep.LoadStep step, SymbolId owner) {
-        NormalizedCapability capability = this.capability(owner);
+        // The lock is taken by identity, so a load by another field never holds one.
+        NormalizedCapability capability = step.keyField().isPresent() ? null : this.capability(owner);
         if (capability == null) {
             return false;
         }

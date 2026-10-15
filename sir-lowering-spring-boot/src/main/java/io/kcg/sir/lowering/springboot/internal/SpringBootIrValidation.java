@@ -613,6 +613,22 @@ public final class SpringBootIrValidation {
       return entity.fields().stream().anyMatch(property -> property.javaName().equals(javaName));
    }
 
+   /**
+   * A load by a field must name a stored field of the very entity it loads, and cannot also lock the
+   * row: the lock reads by identity, so asking for both would generate a query that locks nothing.
+   */
+   private void validateLoadKey(SpringBootWorkflow.LoadStep load, SymbolId key, SpringBootDeclaration.CapabilityDeclaration owner) {
+      this.requireKnown(key, owner, "load key");
+      if (load.forUpdate()) {
+         this.error(owner, "a load by a field cannot be a load for update: " + load.result().symbol());
+      }
+
+      if (this.declarations.get(load.entitySymbol()) instanceof SpringBootDeclaration.EntityDeclaration entity
+         && entity.fields().stream().noneMatch(property -> property.sourceSymbol().equals(key))) {
+         this.error(owner, "load key is not a stored field of the loaded entity: " + key);
+      }
+   }
+
    private LoweredJavaType entityFieldType(SpringBootDeclaration.EntityDeclaration entity, SymbolId fieldSymbol) {
       if (entity.identity().sourceSymbol().equals(fieldSymbol)) {
          return entity.identity().type();
@@ -971,6 +987,7 @@ public final class SpringBootIrValidation {
             this.validateExpression(value.idExpression(), owner);
             this.requireKnown(value.result().symbol(), owner, "load result variable");
             this.requireDeclaration(value.errorSymbol(), SpringBootDeclaration.ErrorDeclaration.class, owner);
+            value.keyField().ifPresent(key -> this.validateLoadKey(value, key, owner));
             break;
          case SpringBootWorkflow.FindStep value:
             this.requireDeclaration(value.entitySymbol(), SpringBootDeclaration.EntityDeclaration.class, owner);

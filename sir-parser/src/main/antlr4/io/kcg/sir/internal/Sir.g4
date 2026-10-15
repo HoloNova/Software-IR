@@ -100,7 +100,15 @@ fieldDecl
 // input/view fields deliberately keep the plain fieldDecl rule: a stray @id there is a parse
 // error rather than a silently ignored annotation.
 entityMemberDecl
-    : FIELD IDENT COLON typeRef constraintList? VERSIONED? idAnnotation? SEMI
+    : FIELD IDENT COLON typeRef constraintList? VERSIONED? uniqueModifier? idAnnotation? SEMI
+    ;
+
+// "unique" is a contextual word, like sources and imports above: it is only a modifier here, after
+// the field's type, constraints and versioned. A reserved token would turn every existing identifier
+// spelled unique into a parse error, and the language adds this modifier without invalidating any
+// document that already parses.
+uniqueModifier
+    : {_input.LT(1).getText().equals("unique")}? IDENT
     ;
 
 idAnnotation
@@ -180,8 +188,11 @@ validateStep
     : VALIDATE expression ELSE IDENT SEMI
     ;
 
+// "by name: expr" loads by a field the entity declares unique; without it the expression is the
+// identity, as before. A key field is told apart from an expression by its colon, which no expression
+// contains.
 loadStep
-    : LOAD IDENT BY expression AS IDENT ELSE IDENT SEMI
+    : LOAD entity=IDENT BY (key=IDENT COLON)? expression AS result=IDENT ELSE error=IDENT SEMI
     ;
 
 findStep

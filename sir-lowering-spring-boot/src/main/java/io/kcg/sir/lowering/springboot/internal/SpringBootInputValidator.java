@@ -496,6 +496,7 @@ public final class SpringBootInputValidator {
             this.validateExpression(value.idExpression(), capability.id(), actorAccess);
             this.validateVariable(value.resultVariable(), capability);
             this.validateDeclarationKind(value.errorSymbol(), NormalizedError.class, capability);
+            value.keyField().ifPresent(key -> this.validateLoadKey(value, key, capability));
             break;
          case FindStep value:
             this.validateDeclarationKind(value.entitySymbol(), NormalizedEntity.class, capability);
@@ -523,6 +524,22 @@ public final class SpringBootInputValidator {
             break;
          default:
             throw new MatchException(null, null);
+      }
+   }
+
+   /** A load by a field must name a field the loaded entity declares unique. */
+   private void validateLoadKey(LoadStep step, SymbolId key, NormalizedCapability capability) {
+      this.validateBound(key, step.span(), step.sourceNodeId(), FieldSymbol.class);
+      NormalizedDeclaration declaration = this.declarationsById.get(step.entitySymbol());
+      if (declaration instanceof NormalizedEntity entity
+         && entity.fields().stream().noneMatch(field -> field.id().equals(key) && field.unique())) {
+         this.error(
+               "SIR-LOWER-BINDING-001",
+               "load key is not a unique field of the loaded entity: " + key,
+               step.span(),
+               capability.id(),
+               step.sourceNodeId()
+         );
       }
    }
 

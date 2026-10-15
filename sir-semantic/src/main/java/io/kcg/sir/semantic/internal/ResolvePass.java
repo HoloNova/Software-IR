@@ -715,6 +715,7 @@ final class ResolvePass {
             case AstLoadStep s:
                this.resolveExpression(s.idExpression(), capName, capScopeId, visibleVars, null, null);
                this.resolveEntityRef(s.entity(), ReferenceRole.LOAD_ENTITY);
+               s.keyField().ifPresent(key -> this.resolveEntityFieldRef(key, s.entity().text(), ReferenceRole.LOAD_KEY_FIELD));
                this.resolveErrorRef(s.error(), capName, ReferenceRole.LOAD_ERROR);
                this.registerStepResultVar(s.result(), s.id(), capScopeId, visibleVars, this.buildRefType(s.entity().text()));
                break;
@@ -776,20 +777,31 @@ final class ResolvePass {
    }
 
    private void resolveOrderKey(AstFindOrderKey key, String entityName) {
+      this.resolveEntityFieldRef(key.field(), entityName, ReferenceRole.ORDER_FIELD);
+   }
+
+   /**
+   * Binds a field name written against a known entity to that entity's field.
+   *
+   * <p>The identity is accepted as a field because it is one for ordering. A load key that names it
+   * is bound too, so that the mistake is reported by Validate as what it is (the identity needs no
+   * field name) rather than as an unknown name.
+   */
+   private void resolveEntityFieldRef(AstNameRef field, String entityName, ReferenceRole role) {
       if (entityName == null || !this.entityDecls.containsKey(entityName)) {
          return;
       }
 
-      String fieldName = key.field().text();
+      String fieldName = field.text();
       SymbolId fieldSymId = this.entityFieldSymbols.getOrDefault(entityName, Map.of()).get(fieldName);
       if (fieldSymId == null && this.entityDecls.get(entityName).identity().name().text().equals(fieldName)) {
          fieldSymId = this.entityIdentitySymbols.get(entityName);
       }
 
       if (fieldSymId != null) {
-         this.bindReference(key.field(), ReferenceRole.ORDER_FIELD, fieldSymId);
+         this.bindReference(field, role, fieldSymId);
       } else {
-         this.diagnostics.add(DiagnosticBuilder.error("SIR-SYMBOL-002", "未知字段: " + fieldName, key.field().span()));
+         this.diagnostics.add(DiagnosticBuilder.error("SIR-SYMBOL-002", "未知字段: " + fieldName, field.span()));
       }
    }
 

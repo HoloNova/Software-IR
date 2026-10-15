@@ -153,6 +153,11 @@ public record SpringBootWorkflow(LoweredNodeId id, LoweredOrigin origin, List<Sp
       }
    }
 
+   /**
+   * Loads one row. {@code idExpression} is the value to look it up by: the identity when
+   * {@code keyField} is empty, otherwise the value of the unique entity field {@code keyField} names.
+   * A load by a field is never a load for update, because the row lock is taken by identity.
+   */
    public record LoadStep(
       LoweredNodeId id,
       LoweredOrigin origin,
@@ -160,7 +165,8 @@ public record SpringBootWorkflow(LoweredNodeId id, LoweredOrigin origin, List<Sp
       SpringExpression idExpression,
       SpringBootWorkflow.Variable result,
       SymbolId errorSymbol,
-      boolean forUpdate
+      boolean forUpdate,
+      java.util.Optional<SymbolId> keyField
    ) implements SpringBootWorkflow.Step {
       public LoadStep {
          SpringBootWorkflow.requireStep(id, origin);
@@ -168,13 +174,21 @@ public record SpringBootWorkflow(LoweredNodeId id, LoweredOrigin origin, List<Sp
          Objects.requireNonNull(idExpression, "idExpression");
          Objects.requireNonNull(result, "result");
          Objects.requireNonNull(errorSymbol, "errorSymbol");
+         Objects.requireNonNull(keyField, "keyField");
+      }
+
+      public LoadStep(
+         LoweredNodeId id, LoweredOrigin origin, SymbolId entitySymbol, SpringExpression idExpression,
+         SpringBootWorkflow.Variable result, SymbolId errorSymbol, boolean forUpdate
+      ) {
+         this(id, origin, entitySymbol, idExpression, result, errorSymbol, forUpdate, java.util.Optional.empty());
       }
 
       public LoadStep(
          LoweredNodeId id, LoweredOrigin origin, SymbolId entitySymbol, SpringExpression idExpression,
          SpringBootWorkflow.Variable result, SymbolId errorSymbol
       ) {
-         this(id, origin, entitySymbol, idExpression, result, errorSymbol, false);
+         this(id, origin, entitySymbol, idExpression, result, errorSymbol, false, java.util.Optional.empty());
       }
    }
 

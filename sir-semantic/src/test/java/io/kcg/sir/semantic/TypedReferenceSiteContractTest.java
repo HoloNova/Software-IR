@@ -61,9 +61,20 @@ class TypedReferenceSiteContractTest {
               field owner: Ref<User>;
               field version: Int64 versioned;
             }
+            entity Handle persistent {
+              identity id: Int64 generated auto;
+              field label: String unique;
+            }
             input LookupInput {
               field id: Int64;
               field active: Boolean;
+            }
+            input HandleInput {
+              field label: String;
+            }
+            view HandleSummary from Handle {
+              field id: Int64;
+              field label: String;
             }
             view UserSummary from User {
               field id: Int64;
@@ -104,6 +115,17 @@ class TypedReferenceSiteContractTest {
                 persist user;
                 find User where item.id == input.id as users;
                 return users;
+              }
+            }
+            capability FindHandle {
+              input HandleInput;
+              output HandleSummary;
+              fails NotFound;
+              requires readonly;
+              expose query;
+              workflow {
+                load Handle by label: input.label as handle else NotFound;
+                return handle;
               }
             }
             capability PatchAccount {
@@ -631,6 +653,7 @@ class TypedReferenceSiteContractTest {
             case AstLoadStep s -> {
                 sink.put(s.entity().id(), s.entity().text());
                 sink.put(s.error().id(), s.error().text());
+                s.keyField().ifPresent(key -> sink.put(key.id(), key.text()));
                 collectExpressionRefs(s.idExpression(), sink);
             }
             case AstFindStep s -> {

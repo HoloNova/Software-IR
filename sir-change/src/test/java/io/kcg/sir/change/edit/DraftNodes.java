@@ -57,7 +57,7 @@ final class DraftNodes {
 
     static StructNode field(String name, StructNode type, StructNode... constraints) {
         return node(
-            "NormalizedField", "name", FACT, text(name), "type", FACT, child(type), "constraints", FACT, seqOf(List.of(constraints)), "versioned", FACT, text("false")
+            "NormalizedField", "name", FACT, text(name), "type", FACT, child(type), "constraints", FACT, seqOf(List.of(constraints)), "versioned", FACT, text("false"), "unique", FACT, text("false")
         );
     }
 

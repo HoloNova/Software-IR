@@ -80,16 +80,25 @@ public sealed interface NormalizedStep
       }
    }
 
+   /**
+   * Loads one row. {@code idExpression} is the value the row is looked up by: its identity when
+   * {@code keyField} is empty, otherwise the value of the unique field {@code keyField} names.
+   */
    record LoadStep(
-      @Source AstNodeId sourceNodeId, @Source SourceSpan span, @Reference SymbolId entitySymbol, @Fact NormalizedExpression idExpression, @Reference SymbolId resultVariable, @Reference SymbolId errorSymbol
+      @Source AstNodeId sourceNodeId, @Source SourceSpan span, @Reference SymbolId entitySymbol, @Fact NormalizedExpression idExpression, @Reference Optional<SymbolId> keyField, @Reference SymbolId resultVariable, @Reference SymbolId errorSymbol
    ) implements NormalizedStep {
       public LoadStep {
          Objects.requireNonNull(sourceNodeId, "sourceNodeId");
          Objects.requireNonNull(span, "span");
          Objects.requireNonNull(entitySymbol, "entitySymbol");
          Objects.requireNonNull(idExpression, "idExpression");
+         Objects.requireNonNull(keyField, "keyField");
          Objects.requireNonNull(resultVariable, "resultVariable");
          Objects.requireNonNull(errorSymbol, "errorSymbol");
+      }
+
+      public LoadStep(AstNodeId sourceNodeId, SourceSpan span, SymbolId entitySymbol, NormalizedExpression idExpression, SymbolId resultVariable, SymbolId errorSymbol) {
+         this(sourceNodeId, span, entitySymbol, idExpression, Optional.empty(), resultVariable, errorSymbol);
       }
    }
 

@@ -1,0 +1,84 @@
+sir 0.2
+
+software AccountLookup {
+  metadata {
+    displayName "Account Lookup";
+    namespace "example.lookup";
+  }
+  target {
+    language java 21;
+    framework spring_boot;
+    persistence mybatis_plus;
+    database mysql;
+    build maven;
+    interface rest;
+  }
+  sources { }
+  imports { }
+  declarations {
+    entity Account persistent {
+      identity id: Int64 generated auto;
+      field name: String where notBlank, length(1, 64) unique;
+      field email: String where notBlank unique;
+      field badge: Int64 unique;
+      field token: Uuid unique;
+      field nickname: String;
+    }
+    view AccountView from Account {
+      field id: Int64;
+      field name: String;
+      field nickname: String;
+    }
+    input GetAccountInput { field id: Int64; }
+    input FindByNameInput { field name: String; }
+    input FindByBadgeInput { field badge: Int64; }
+    input RenameInput { field name: String; field nickname: String; }
+    error AccountNotFound http 404;
+    capability FindAccountByBadge {
+      input FindByBadgeInput;
+      output AccountView;
+      fails AccountNotFound;
+      requires readonly;
+      expose query;
+      workflow {
+        load Account by badge: input.badge as account else AccountNotFound;
+        return account;
+      }
+    }
+    capability FindAccountByName {
+      input FindByNameInput;
+      output AccountView;
+      fails AccountNotFound;
+      requires readonly;
+      expose query;
+      workflow {
+        load Account by name: input.name as account else AccountNotFound;
+        return account;
+      }
+    }
+    capability GetAccount {
+      input GetAccountInput;
+      output AccountView;
+      fails AccountNotFound;
+      requires readonly;
+      expose query;
+      workflow {
+        load Account by input.id as account else AccountNotFound;
+        return account;
+      }
+    }
+    capability RenameAccount {
+      input RenameInput;
+      output AccountView;
+      fails AccountNotFound;
+      requires atomic;
+      expose command;
+      workflow {
+        load Account by name: input.name as account else AccountNotFound;
+        update account { nickname: input.nickname; }
+        persist account;
+        return account;
+      }
+    }
+  }
+}

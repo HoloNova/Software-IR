@@ -92,6 +92,31 @@ class GeneratedProjectOfflineCompilationTest {
         }
     }
 
+    /**
+     * The lookup by a unique field is the one generated shape no other project here contains: a list
+     * query bounded at two rows, then the first row. Its Java has to compile, not just be written.
+     */
+    @Test
+    void uniqueLookupProjectCompilesWithFrozenDependenciesOffline(@TempDir Path tempDir)
+            throws Exception {
+        Path projectRoot = tempDir.resolve("generated-project");
+        List<GeneratedFile> files = GeneratorTestSupport.generateSuccess("valid/unique-lookup.sir");
+        materialize(files, projectRoot);
+        compileOffline(projectRoot, tempDir);
+
+        for (String classFile : List.of(
+                "example/lookup/Application.class",
+                "example/lookup/domain/Account.class",
+                "example/lookup/persistence/AccountMapper.class",
+                "example/lookup/application/FindAccountByNameService.class",
+                "example/lookup/application/FindAccountByBadgeService.class",
+                "example/lookup/application/GetAccountService.class",
+                "example/lookup/application/RenameAccountService.class")) {
+            assertTrue(Files.isRegularFile(projectRoot.resolve("target/classes").resolve(classFile)),
+                    () -> "offline Maven compile did not create representative class: " + classFile);
+        }
+    }
+
     private static void compileOffline(Path projectRoot, Path tempDir) throws Exception {
         Path maven = locateMavenExecutable();
         Path localRepository = frozenLocalRepository();

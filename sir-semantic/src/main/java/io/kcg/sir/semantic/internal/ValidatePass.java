@@ -80,6 +80,8 @@ final class ValidatePass {
    private final Map<SymbolId, SymbolId> viewSourceEntities = new LinkedHashMap<>();
    /** Entity symbol -> its version field, for entities that declare one. */
    private final Map<SymbolId, SymbolId> entityVersionFields = new LinkedHashMap<>();
+   /** Entity field symbols the author declared unique: the only fields a load may look a row up by. */
+   private final Set<SymbolId> uniqueFields = new LinkedHashSet<>();
    /** Patch payload symbol -> the entity it changes. */
    private final Map<SymbolId, SymbolId> patchInputSourceEntities = new LinkedHashMap<>();
    /** AST input declarations by symbol, for the payload-shape rules. */
@@ -111,6 +113,10 @@ final class ValidatePass {
 
                      if (f.versioned() && fieldSymId != null) {
                         this.entityVersionFields.put(declSymId, fieldSymId);
+                     }
+
+                     if (f.unique() && fieldSymId != null) {
+                        this.uniqueFields.add(fieldSymId);
                      }
                   }
 
@@ -176,6 +182,7 @@ final class ValidatePass {
             if (decl instanceof AstEntityDecl entityDecl) {
                this.validateEntityConstraints(entityDecl);
                this.validateEntityVersionField(entityDecl);
+               this.validateEntityUniqueField(entityDecl);
             } else if (decl instanceof AstInputDecl inputDecl) {
                this.validateInputConstraints(inputDecl);
                this.validatePatchPayload(inputDecl);
@@ -244,6 +251,8 @@ final class ValidatePass {
                if (errorSymId.isPresent() && failsSet != null && !failsSet.contains(errorSymId.get())) {
                   this.diagnostics.add(DiagnosticBuilder.error("SIR-FLOW-003", "load 引用未声明的 Error: " + s.error().text(), s.error().span()));
                }
+
+               s.keyField().ifPresent(key -> this.validateKeyedLoad(s, key, capDecl));
                break;
             case AstCreateStep s:
                if (isReadonly || isQuery) {
@@ -387,6 +396,68 @@ final class ValidatePass {
       return this.ungroup(expression) instanceof AstMemberExpression member
          ? this.typed.referenceSiteBindings().targetFor(member.member().id()).orElse(null)
          : null;
+   }
+
+   /**
+   * The unique marker's own rule: it cannot sit on the version field.
+   *
+   * <p>The version changes with every write and is not a value the author chooses, so it identifies
+   * nothing a caller could look a row up by. Where a unique field may be declared, and of what type,
+   * is the grammar's and the type check's business.
+   */
+   private void validateEntityUniqueField(AstEntityDecl entityDecl) {
+      for (AstField field : entityDecl.fields()) {
+         if (field.unique() && field.versioned()) {
+            this.diagnostics.add(DiagnosticBuilder.error(
+               "SIR-VALID-002", "version 字段不能同时声明 unique: " + entityDecl.name().text() + "." + field.name().text(), field.name().span()));
+         }
+      }
+   }
+
+   /**
+   * What a load may look a row up by.
+   *
+   * <p>The field must be one the author declared unique, so a missing row and a found row are the
+   * only outcomes. The identity is rejected on purpose: loading by it is the form without a field
+   * name, and accepting both would give one thing two spellings.
+   *
+   * <p>A versioned entity that is loaded and then updated is locked by its identity (the conditional
+   * update compares the version it read under that lock), so a load by another field cannot take that
+   * path. It is refused rather than quietly generated without the lock.
+   */
+   private void validateKeyedLoad(AstLoadStep load, AstNameRef key, AstCapabilityDecl capDecl) {
+      SymbolId keySymId = this.typed.referenceSiteBindings().targetFor(key.id()).orElse(null);
+      if (keySymId == null) {
+         return;
+      }
+
+      if (!this.uniqueFields.contains(keySymId)) {
+         boolean isIdentity = this.entityIdentitySymbolIds.containsValue(keySymId);
+         this.diagnostics.add(DiagnosticBuilder.error(
+            "SIR-VALID-006",
+            isIdentity
+               ? "按主键加载不需要字段名，请写 load " + load.entity().text() + " by 表达式: " + key.text()
+               : "load 只能按声明了 unique 的字段查找: " + load.entity().text() + "." + key.text(),
+            key.span()));
+         return;
+      }
+
+      SymbolId entitySymId = this.typed.referenceSiteBindings().targetFor(load.entity().id()).orElse(null);
+      SymbolId resultVar = this.typed.referenceBindings().get(load.id());
+      if (entitySymId == null || resultVar == null || this.entityVersionFields.get(entitySymId) == null) {
+         return;
+      }
+
+      for (AstStep step : capDecl.workflow().steps()) {
+         if (step instanceof AstUpdateStep update
+            && resultVar.equals(this.typed.referenceSiteBindings().targetFor(update.target().id()).orElse(null))) {
+            this.diagnostics.add(DiagnosticBuilder.error(
+               "SIR-VALID-006",
+               "带 version 的实体先按字段加载再更新时无法加行锁，请改为按主键加载: " + load.entity().text(),
+               load.span()));
+            return;
+         }
+      }
    }
 
    private void validateViewFields(AstViewDecl viewDecl) {

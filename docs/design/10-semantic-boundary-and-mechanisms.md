@@ -361,7 +361,7 @@ persist c;
 
 ### 15.3 建议的实现顺序（只是依赖关系，不是排期，每一步需要负责人授权）
 
-1. 字段 `unique` 与按唯一字段 `load`。
+1. 字段 `unique` 与按唯一字段 `load`。（已实现，见第 17 节；未提交，CI 未运行。）
 2. 算术一族的最小范围（时长字面量、时间加减、数值加减）。
 3. 守卫更新（`update … when … else …`）；需要真实 MySQL 并发测试作验收。
 4. 错误状态码加入 401。
@@ -375,3 +375,103 @@ persist c;
 
 - 是否授权开始第 15.3 节的第 1 步，以及是否按一个阶段还是逐步授权。
 - 第 13 节的两项输入：手册的位置，第一道实验题。
+
+## 16. 实现链第 1 步的具体方案（供评审，未授权实现）
+
+范围只有第 15.3 节的第 1 步：字段 `unique`，以及按唯一字段 `load`。下面的语法是示意；改动面来自对现有同类功能的文件检索，数字用于评审，实现时再逐个核实。
+
+### 16.1 要写出的东西
+
+```
+field name: String where notBlank, length(1, 64) unique;
+...
+load Account by name: input.name as acc else BadCredentials;
+```
+
+`load` 的 `by` 后面可以多出一个“字段名加冒号”，与现有 `create`／`update` 里“字段名冒号表达式”的写法一致，不会和现有的 `load … by 表达式` 混淆（表达式里没有冒号）。不写字段名时仍是按主键加载，旧文档逐字节不变。
+
+### 16.2 语义规则
+
+1. `unique` 只能用在实体字段上；不能用于主键、`version` 字段、`Optional` 字段（多个空值的唯一性在 SQL 里有歧义）。字段类型限于 `String`、`Int32`、`Int64`、`Uuid`（`Decimal` 的标度、`DateTime` 的精度会让相等比较有歧义，不纳入最小范围；`Ref` 上的唯一性是设计 02 第 143 行说的“一对一要求唯一外键”，是另一件事）。
+2. 按字段 `load`：该字段必须声明了 `unique`；表达式类型必须能赋给字段类型；结果变量的类型与按主键加载相同。
+3. 结果：零行，报 `else` 声明的错误；一行，得到该行；多于一行，说明数据违反了声明，按内部错误（500）处理，日志不写入键值。
+4. 与 `version` 的衔接：带版本的实体做条件更新时，行锁路径要按主键读（`selectByIdForUpdate`）。因此“对带版本实体按字段加载后再更新”在最小范围内用诊断拒绝，不静默退化成没有锁的路径。
+
+### 16.3 不做什么
+
+- 不生成数据库唯一索引：数据库初始化不是产品能力，测试夹具的表结构自己加 `UNIQUE KEY`。生成代码用 `LIMIT 2` 查询做运行时保护，是对声明被违反时的兜底，不是唯一性的保证。
+- 不处理“创建时键重复”的报告：重复键现在会变成数据库异常，对应 500。这是第 9.3 节里说的幂等键那一类，另有一问。
+- 不改指令层。
+
+### 16.4 改动面（以现有功能为样板的检索结果）
+
+- 字段修饰：以 `versioned` 为样板，它出现在 16 个主代码文件里，分布在五个模块：`Sir.g4`、`AstField`、`AstViewField`、`AstPersistStep`、`SirAstBuilder`、`SourceSetManifest`（parser）；`NormalizePass`、`TypePass`、`ValidatePass`、`NormalizedField`、`SirDeclarationWriter`（semantic）；`SpringBootModelLowerer`、`SpringBootIrValidation`、`SpringBootWorkflow`、`SpringBootWritePolicy`（lowering）；`ValidationHashes`（application）。`unique` 不带写入语义，实际会少一些，但数量级是十来个文件。
+- 按字段加载：以 `load` 步骤为样板，出现在 14 个主代码文件里：`Sir.g4`、`AstLoadStep`、`AstStep`、`SirAstBuilder`；`ResolvePass`、`TypePass`、`ValidatePass`、`NormalizePass`、`NormalizedStep`、`SirDeclarationWriter`；`SpringBootModelLowerer`、`SpringBootWorkflow`、`SpringBootIrValidation`、`SpringBootInputValidator`；`WorkflowRenderer`（generator）。
+- 两部分有重叠，合计大约二十几个文件、五个模块。`sir-change`（指令层）在两个样板的检索结果里都没有出现。
+- 对照第 12.3 节：新增一个字段修饰或一种步骤的变体，比新增错误状态码贵一个量级，原因是它们要穿过完整的 Parser → Resolve → Type → Validate → Normalize → 降级 → 生成 → 回写 SIR 文本。
+
+### 16.5 验收
+
+- 旧文档不变：现有全部样例工程重新生成后逐字节相同（项目对确定性的既有要求）。
+- 定向单元测试：解析的正反例、语义诊断（`unique` 的位置和类型、按非唯一字段加载、类型不匹配、对带版本实体先按字段加载再更新）、降级与生成的期望输出、SIR 文本回写的往返。
+- 真实 MySQL 的 IT，由 CI 承担：按账号名登录的最小场景——命中、未命中（得到声明的错误）、构造重复行（夹具里不建唯一索引）时得到 500 而不是任选一行。本机不跑。
+- 探针复测：第 7 节里的 P4、P4b、P5 三个样本，改成新写法后通过 GENERATION；原来的诊断消失。
+
+### 16.6 风险与待决定
+
+- **关键字。** `unique` 若作为保留字，已有 SIR 里叫 `unique` 的标识符会失效。现有语法对 `sources`、`imports` 采用“上下文关键字”（按位置判断的标识符），建议 `unique` 同样处理。
+- **语言版本。** 这是一次向后兼容的加法，现有文档仍可解析；但 `sir 0.2` 这个版本号在新增语法时是否保持，我没有找到明确的规则，需要负责人决定。
+- **输出确定性。** 新增的 `LIMIT 2` 查询只出现在使用新写法的工程里，不影响旧工程。
+
+### 16.7 需要负责人授权
+
+- 是否开始第 1 步，范围就是第 16.1–16.3 节，不含其他。
+- `unique` 是否按上下文关键字处理。
+- 语言版本号是否保持 `sir 0.2`。
+
+## 17. 第 1 步的实现结果（2026-10-15，工作区未提交，CI 未运行）
+
+负责人授权开始第 1 步；`unique` 按上下文关键字处理，`sir 0.2` 版本号保持（按推荐）。范围就是第 16.1–16.3 节，没有多做。
+
+### 17.1 做了什么
+
+- 语言：实体字段可写 `unique`（出现在类型、约束、`versioned` 之后，`@id` 之前）；`load E by 字段: 表达式 as v else 错误;` 按唯一字段加载。不写字段名时仍是按主键加载。`unique` 是上下文关键字，叫 `unique` 的字段名、标识符照常可用（有测试）。
+- 规则：`unique` 只允许在实体字段上（输入和视图字段由语法拒绝）；类型限于 `String`、`Int32`、`Int64`、`Uuid`（`SIR-TYPE-001`）；不能与 `versioned` 同用（`SIR-VALID-002`）。按字段加载要求该字段已声明 `unique`，写主键名则提示去掉字段名（`SIR-VALID-006`）；键表达式类型必须与字段兼容（`SIR-TYPE-001`）；带 `version` 的实体先按字段加载再更新被拒绝（`SIR-VALID-006`），因为行锁按主键读。
+- 生成：`selectList(new LambdaQueryWrapper<E>().eq(E::getF, 值).last("LIMIT 2"))`；零行抛声明的错误；多于一行抛 `IllegalStateException`，消息只含实体名和字段名，不含查询的值；取第一行。按主键加载的生成结果不变。
+- 新增引用角色 `LOAD_KEY_FIELD`；SIR 文本回写支持 `unique` 与 `by 字段:`，往返测试通过。
+
+### 17.2 改动面的实测（对照第 16.4 节的估计）
+
+- 主代码 17 个文件、4 个模块：parser 4、semantic 8、lowering 4、generator 1。估计是“二十几个文件、五个模块”；`sir-toolchain-application` 的 `ValidationHashes` 与 `SourceSetManifest` 里的 `versioned` 只是文字出现，不需要改。
+- **更正第 16.4 节的一个说法。** `sir-change` 的主代码确实一处没改，但指令层并非不受影响：`NormalizedField` 新增了必填事实槽位 `unique`，所有“添加字段”的指令载荷都必须带它（`DraftValidator` 对缺失的事实槽位直接拒绝：`declarations.fields[0].unique: missing FACT slot`）。两个测试用的节点辅助类要补这一槽位。新增的 `keyField` 是可选引用槽位，旧的 `LoadStep` 载荷不受影响。含义：**给已有节点类型增加必填事实槽位，是对外部指令 JSON 的破坏性变更**；增加可选槽位不是。本阶段按 `versioned` 的先例选了必填，如需避免破坏，可以改为可选事实，代价是模型里出现 `Optional<Boolean>`。这是一个待负责人决定的点。
+- 两个“每个引用角色都必须被样例覆盖”的契约测试（`TypedReferenceSiteContractTest`、`ProjectVisibilityTest`）要求新引用角色必须出现在样例里，并且有“去掉导入就恰好报一次可见性错误”的跨文件例子，已补。这是新增一个引用角色的固定成本。
+
+### 17.3 验证（本机，定向；容器 4 vCPU／16 GiB，单构建、不并行，`nice` 加 JVM 内存上限）
+
+`systemd-run` 在这个容器里不可用（没有 systemd），没有按 AGENTS 的 scope 方式限制资源，只用了 `nice -n 10` 和 `-Xmx1g`，如实记录。
+
+| 模块 | 结果 |
+| --- | --- |
+| sir-parser | 103 项，0 失败（新增 7） |
+| sir-semantic | 237 项，0 失败（新增 8） |
+| sir-lowering-api／sir-lowering-spring-boot | 4／89 项，0 失败（新增 3） |
+| sir-generator-spring-boot | 79 项，0 失败（新增 5；已排除 `GeneratedProjectOfflineCompilationTest`，见下） |
+| sir-project-graph／sir-change | 73／28 项，0 失败 |
+| sir-toolchain-application | 231 项，0 失败 |
+| kcg-cli | 28 项，0 失败 |
+
+- 旧输出不变：用未改动的 HEAD 打出旧 jar，与新 jar 对同样的 11 个现有夹具（含多源工程）各生成一次，逐文件比对，全部字节相同。旧 jar 解析新写法会报 `SIR-PARSE-003`，符合预期：新文档不能被旧工具链读取，反向兼容成立。
+- 探针复测（第 7 节）：按账号名加口令登录的写法（N1）通过 GENERATION，原来的 P5 写法（N2）通过；字段未声明 `unique`（N3）与键类型不匹配（N4）分别被 `SIR-VALID-006`、`SIR-TYPE-001` 拒绝；旧的登出写法不受影响。
+- 环境带来的失败（不是本次改动）：本会话给所有 JVM 注入了 `JAVA_TOOL_OPTIONS`，JVM 启动时往 stderr 写一行，导致 `GeneratorDeterminismMatrixTest` 因“子进程 stderr 必须为空”失败；去掉该环境变量后 5 项全过，下游模块的测试也都在去掉该变量的环境里跑。
+
+### 17.4 没有做、没有跑
+
+- **CI 全量闸门：NOT_RUN。** 按规则等授权提交推送后以同 SHA 的 CI 为准。
+- **生成的 Java 能否编译：NOT_RUN。** 本机没有生成工程需要的依赖（`~/.m2` 里没有 Spring Boot、MyBatis-Plus），所以 `GeneratedProjectOfflineCompilationTest` 在本机无法运行（它要求 CI 的冻结依赖仓库）。已新增一个用例 `uniqueLookupProjectCompilesWithFrozenDependenciesOffline`，由 CI 编译 `unique-lookup.sir` 生成的工程；本机只能人工核对生成的源码，没有编译过它。
+- **真实 MySQL 的业务场景 IT：未写。** 第 16.5 节计划的“命中、未命中、构造重复行得到 500”场景没有实现，需要先读懂 `BusinessSliceHarness`，且只能在 CI 里跑。
+- 并发与唯一索引：不在本步范围；数据库唯一性仍由部署方保证，`LIMIT 2` 只是兜底。
+
+### 17.5 待负责人决定
+
+- `unique` 事实槽位是否保持必填（见 17.2），还是改成可选以避免破坏外部指令 JSON。
+- 是否补写真实 MySQL 的 IT 场景（17.4），以及是否授权提交推送让 CI 验证。

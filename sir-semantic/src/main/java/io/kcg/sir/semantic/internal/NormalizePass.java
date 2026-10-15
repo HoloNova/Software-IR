@@ -178,6 +178,10 @@ final class NormalizePass {
                   versionFieldId = field.id();
                }
 
+               if (f.unique()) {
+                  field = field.withUnique(true);
+               }
+
                fields.add(field);
             }
          }
@@ -396,7 +400,8 @@ final class NormalizePass {
             SymbolId resultVar = this.definitionBindingOrUnknown(s.id());
             SymbolId errorSym = this.siteTargetOrUnknown(s.error().id());
             NormalizedExpression idExpr = this.normalizeExpression(s.idExpression());
-            yield new NormalizedStep.LoadStep(s.id(), s.span(), entitySym, idExpr != null ? idExpr : this.unitExpr(s.span()), resultVar, errorSym);
+            Optional<SymbolId> keyField = s.keyField().map(key -> this.siteTargetOrUnknown(key.id()));
+            yield new NormalizedStep.LoadStep(s.id(), s.span(), entitySym, idExpr != null ? idExpr : this.unitExpr(s.span()), keyField, resultVar, errorSym);
          }
          case AstFindStep s -> {
             SymbolId entitySym = this.siteTargetOrUnknown(s.entity().id());

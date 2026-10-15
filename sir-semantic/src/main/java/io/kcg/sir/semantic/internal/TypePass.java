@@ -67,6 +67,8 @@ final class TypePass {
    private final Map<AstNodeId, SirType> expressionTypes = new LinkedHashMap<>();
    private final List<Diagnostic> diagnostics = new ArrayList<>();
    private final Map<SymbolId, SirType> entityIdentityTypes = new LinkedHashMap<>();
+   /** Entity field symbol -> its declared type, for the value a keyed load compares the field with. */
+   private final Map<SymbolId, SirType> entityFieldTypes = new LinkedHashMap<>();
    private final Map<SymbolId, DeclaredType> declaredTypesBySymbolId = new LinkedHashMap<>();
    /** View symbol -> the entity it projects, for the return-projection rule. */
    private final Map<SymbolId, SymbolId> viewSourceEntities = new LinkedHashMap<>();
@@ -85,6 +87,14 @@ final class TypePass {
             SirType idType = this.resolved.typeRefTypes().get(entity.identity().type().id());
             if (idType != null) {
                this.entityIdentityTypes.put(entityId, idType);
+            }
+
+            for (AstField field : entity.fields()) {
+               SymbolId fieldId = this.resolved.referenceBindings().get(field.id());
+               SirType fieldType = this.resolved.typeRefTypes().get(field.type().id());
+               if (fieldId != null && fieldType != null) {
+                  this.entityFieldTypes.put(fieldId, fieldType);
+               }
             }
          }
       }
@@ -129,6 +139,7 @@ final class TypePass {
             case AstEntityDecl entity -> {
                this.typeFieldConstraints(entity.fields(), declarationId);
                this.typeEntityVersionField(entity);
+               this.typeEntityUniqueField(entity);
             }
             case AstInputDecl input -> {
                this.typeFieldConstraints(input.fields(), declarationId);
@@ -281,6 +292,31 @@ final class TypePass {
    }
 
    /**
+   * A unique field is looked up by equality, so its type must have one value per row and an equality
+   * that means the same thing in the language, in Java and in SQL: text, the two integers and the
+   * uuid. An absent value is no value to look up (and SQL lets many rows hold none), a decimal's scale
+   * and a date-time's precision make equal values unequal, and the rest are not keys.
+   */
+   private void typeEntityUniqueField(AstEntityDecl entity) {
+      for (AstField field : entity.fields()) {
+         if (!field.unique()) {
+            continue;
+         }
+
+         SirType declaredType = this.resolved.typeRefTypes().get(field.type().id());
+         boolean keyType = declaredType == PrimitiveType.STRING || declaredType == PrimitiveType.INT32
+            || declaredType == PrimitiveType.INT64 || declaredType == PrimitiveType.UUID;
+         if (declaredType != null && !keyType) {
+            this.diagnostics.add(DiagnosticBuilder.error(
+               "SIR-TYPE-001",
+               "unique 字段必须是 String、Int32、Int64 或 Uuid: " + entity.name().text() + "." + field.name().text() + " 声明为 " + declaredType,
+               field.type().span()
+            ));
+         }
+      }
+   }
+
+   /**
    * A patch payload field must declare exactly the type of the entity member it applies
    * to; otherwise a request could carry a value the target cannot store.
    */
@@ -371,9 +407,19 @@ final class TypePass {
             case AstLoadStep s:
                SirType idType = this.typeExpression(s.idExpression(), capScopeId, visibleVars);
                SymbolId entityId = this.resolved.referenceSiteBindings().targetFor(s.entity().id()).orElse(null);
-               SirType identityType = entityId == null ? null : this.entityIdentityTypes.get(entityId);
-               if (idType != null && identityType != null && !TypeRules.isAssignable(idType, identityType)) {
-                  this.diagnostics.add(DiagnosticBuilder.error("SIR-TYPE-001", "load 的 id 表达式类型与 Entity identity 不兼容", s.idExpression().span()));
+               if (s.keyField().isPresent()) {
+                  // The key field is bound by Resolve; one that did not bind was already reported there.
+                  SymbolId keyId = this.resolved.referenceSiteBindings().targetFor(s.keyField().orElseThrow().id()).orElse(null);
+                  SirType keyType = keyId == null ? null : this.entityFieldTypes.get(keyId);
+                  if (idType != null && keyType != null && !TypeRules.isAssignable(idType, keyType)) {
+                     this.diagnostics.add(DiagnosticBuilder.error(
+                        "SIR-TYPE-001", "load 的键表达式类型与字段 " + s.keyField().orElseThrow().text() + " 不兼容", s.idExpression().span()));
+                  }
+               } else {
+                  SirType identityType = entityId == null ? null : this.entityIdentityTypes.get(entityId);
+                  if (idType != null && identityType != null && !TypeRules.isAssignable(idType, identityType)) {
+                     this.diagnostics.add(DiagnosticBuilder.error("SIR-TYPE-001", "load 的 id 表达式类型与 Entity identity 不兼容", s.idExpression().span()));
+                  }
                }
 
                visibleVars.add(s.result().text());
