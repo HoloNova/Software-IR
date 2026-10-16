@@ -63,7 +63,7 @@ import java.util.Set;
 
 final class TypePass {
    /** The statuses the Spring Boot target can report for the failure kinds this slice implements. */
-   private static final Set<Integer> ALLOWED_ERROR_STATUSES = Set.of(400, 404, 409);
+   private static final Set<Integer> ALLOWED_ERROR_STATUSES = Set.of(400, 401, 404, 409);
 
    private final AstSoftware software;
    private final String softwareName;
@@ -371,7 +371,7 @@ final class TypePass {
          if (value == null || !ALLOWED_ERROR_STATUSES.contains(value)) {
             this.diagnostics.add(DiagnosticBuilder.error(
                "SIR-TYPE-001",
-               "error 状态码只允许 400/404/409: " + error.name().text() + " 声明为 " + status,
+               "error 状态码只允许 400/401/404/409: " + error.name().text() + " 声明为 " + status,
                error.span()
             ));
          }

@@ -412,6 +412,15 @@ class WriteSliceSemanticsTest {
     }
 
     @Test
+    void unauthorizedIsASupportedErrorStatusButForbiddenIsNot() {
+        String source = replaceBlock(ERRORS, replaceLine(ERRORS, "error StaleVersion http 409;", "error StaleVersion http 401;"));
+        assertTrue(analyze(source).isSuccess(), () -> analyze(source).diagnostics().toString());
+        assertRejectedWith(
+                replaceBlock(ERRORS, replaceLine(ERRORS, "error StaleVersion http 409;", "error StaleVersion http 403;")),
+                "SIR-TYPE-001", 1);
+    }
+
+    @Test
     void aPatchFieldWithConstraintsIsRejected() {
         assertRejectedWith(
                 replaceBlock(PATCH_INPUT,

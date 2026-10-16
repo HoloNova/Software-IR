@@ -410,6 +410,7 @@ public final class SpringBootModelLowerer {
             case 404 -> SpringBootDeclaration.HttpStatus.NOT_FOUND;
             case 409 -> SpringBootDeclaration.HttpStatus.CONFLICT;
             case 400 -> SpringBootDeclaration.HttpStatus.BAD_REQUEST;
+            case 401 -> SpringBootDeclaration.HttpStatus.UNAUTHORIZED;
             default -> throw new IllegalStateException(
                     "validated error status is unsupported by this target: " + error.httpStatus());
         };
