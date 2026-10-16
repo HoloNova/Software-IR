@@ -781,7 +781,7 @@ if (oldAffected != 1) {
 
 **验证（本机，定向）：** `WriteSliceSemanticsTest` 新增一项（401 通过，403 以 `SIR-TYPE-001` 拒绝）；`GeneratorUnauthorizedStatusContractTest` 新增一项（声明 `http 401` 的错误生成 `HttpStatus.UNAUTHORIZED`）。旧状态码的输出不变。**CI：** [verify #81](https://github.com/HoloNova/Software-IR/actions/runs/38886724501)（提交 `e3b74e3`）success。
 
-## 25. 第 5 步：`secret` 字段与 `matches`（2026-10-16，工作区未提交，CI 未运行）
+## 25. 第 5 步：`secret` 字段与 `matches`（2026-10-16，提交 `de563f6`，CI #82 通过）
 
 ### 25.1 为什么存在
 
@@ -821,10 +821,58 @@ parser：语法两处（`secretModifier`、`matchesOperator`）、`AstField.secr
 - **本机真实 MySQL（手工）：** 注册后库里是 `pbkdf2-sha256$600000$…`，不含原文；对的口令 200；错的口令和不存在的账号都是同样的 401 响应体；库里存的不是摘要格式的账号，即使候选与存的文本相同也是 401。
 - **单元／契约（本机）：** `SecretFieldGrammarTest`（6）、`SecretFieldSemanticsTest`（7）、`SecretFieldLoweringTest`（4）、`GeneratorSecretFieldContractTest`（4）。最后一个把生成的 `SecretDigest` 真的编译并运行：不存原文、盐不同、对的接受错的拒绝、八种无法识别的存储文本都返回 false。全模块本机定向：parser 122、semantic 269、lowering 4／100、generator 95、project-graph 73、change 28、toolchain 237、kcg-cli 28，0 失败（已排除只能在 CI 跑的离线编译用例）。
 - **旧输出对比：** 与上一提交打出的旧 jar 对 28 个夹具各生成一次，26 个字节相同；另两个（`secret-field`、`token-desk`）用了新语法，旧工具链无法解析。
-- **CI：** 新增 `TokenDeskBusinessConformanceIT` 的 S1–S5（注册、摘要不含原文、对错口令、未知账号与错口令响应一致、非摘要格式的存储文本）和离线编译用例；以 CI 为准，未运行。
+- **CI：** [verify #82](https://github.com/HoloNova/Software-IR/actions/runs/38890915687)（提交 `de563f6`）success：两条全量闸门（含新增的离线编译用例）、业务场景 IT、独立验证 IT、单文件包冒烟均成功。读了业务场景 IT 的日志，`TokenDeskBusinessConformanceIT` 的 S1–S5 全部 PASS：注册得 201 且响应不含口令或摘要；库里是 `pbkdf2-sha256$600000$…` 且不含原文；对的口令 200；错的口令与不存在的账号都是 401 且响应体完全相同；存储文本不是摘要格式的账号，即使候选与它相同也是 401。
 
 ### 25.6 已知限制（没有假装解决）
 
 - **账号是否存在的时序差异。** `load … else BadLogin` 在账号不存在时直接返回，不做 PBKDF2，响应约快几百毫秒；响应体相同，但计时可以区分。堵上它需要“账号不存在时也做一次空摘要”，这是一个独立的语义（不属于 `secret`），这里没有做。
 - **没有口令强度、长度、锁定、限流。** 强度可在输入字段上用约束表达；锁定和限流是别的能力。
 - 迭代次数是常量，不可按工程配置。
+
+## 26. 第 6 步的设计：登录签发的凭据与 `requires authenticated` 的连接（供评审，未实现）
+
+本节只是设计，来自对现有认证代码的阅读（`ApplicationRenderer` 的 `ActorIdentityRuntime`／拦截器、`buildActorIdentityTransportPlan`、`AstActorClause`），没有运行新代码。按负责人“改代码前先说明为什么存在”的规矩，这一步在实现前先写出设计。
+
+### 26.1 现状（已核实）
+
+- 能力里写 `actor Ref<User>;` 加 `requires authenticated`，生成工程里有一个拦截器：对这些路由调 `ActorIdentityAdapter.resolveAuthenticatedIdentity(request, context)`；没有身份或类型不对就直接写 401；有身份就放进请求属性 `actorId`，服务里的 `actor` 就是它。
+- 这个 `ActorIdentityAdapter` 只有两种来源，由部署方的属性 `kcg.actor-identity.mode` 显式选择：`external`（部署方提供一个名字固定、且是唯一的 `ActorIdentityAdapter` bean，否则启动失败）和 `local-fixed`（只在本地 profile，固定一个身份）。
+- 所以“拿登录签发的凭据去认证”这件事，**SIR 里没有任何位置能写**：凭据怎么变成身份，全在部署方手写的 bean 里。行为 ②（受保护接口认证）因此是唯一仍写不出来的一条。
+
+### 26.2 要写出的东西
+
+登录签发的凭据本来就是一行普通实体（第 23 节的 `Credential`：`Uuid` 主键、属主、有效期）。缺的只是一句话：“这个实体的行就是 `User` 的承载令牌”。建议新增一种顶层声明：
+
+```
+credential AccessToken for User {
+  subject owner;        // AccessToken 的字段，类型 Ref<User>：令牌属于谁
+  expires expiresAt;    // AccessToken 的字段，类型 DateTime：晚于现在才有效
+}
+```
+
+含义：请求头 `Authorization: Bearer <令牌>` 里的令牌是 `AccessToken` 的主键（`Uuid`）；找到这一行、且 `expiresAt` 晚于现在，则身份是它的 `owner`。任何 `actor Ref<User>` 且 `requires authenticated` 的能力都用它认证。作废（登出）不需要新词：把 `expiresAt` 更新成现在，或删掉这一行，用现有的 `update`。刷新令牌是另一个实体，它的轮换已经是第 3 步的守卫更新，**不**声明为 `credential`，因此访问令牌和刷新令牌不会互相冒充。
+
+### 26.3 语义规则
+
+1. 声明的实体必须是持久实体，主键类型是 `Uuid`（令牌不可猜测，见第 23.1 节）。
+2. `subject` 必须是该实体的 `Ref<User>` 字段，`expires` 必须是 `DateTime` 字段；两者都是引用，与 `unique` 的 `load … by 字段` 一样走引用角色，因此“每个引用角色都有样例”的两个契约测试要补。
+3. 同一个 `User` 最多一个 `credential` 声明；有 `credential` 的 `User` 才能用凭据认证，其他 `actor` 仍走原来的 `external`／`local-fixed`。
+4. 一个工程里，`requires authenticated` 的能力要么全部由 `credential` 认证，要么全部不是（拦截器背后只有一个 adapter bean），混用在语义阶段报错，而不是在启动时才发现。
+
+### 26.4 生成
+
+生成一个 `CredentialIdentityAdapter`，名字取现有 `external` 模式要求的那个固定 bean 名，所以**不新增运行模式**：部署方仍写 `kcg.actor-identity.mode=external`，启动检查“恰有一个 adapter”照旧（部署方又手写一个就冲突、启动失败，这是想要的）。它读 `Authorization: Bearer`，用实体的 mapper 按主键查，校验有效期，返回 `owner` 的主键；格式不对、查不到、已过期都返回空，由拦截器写 401。没有 `credential` 声明的工程输出不变。
+
+### 26.5 改动面（估计，实现时逐个核实）
+
+一个新的顶层声明意味着：parser（语法、AST、builder）、semantic（`ResolvePass` 声明与两个引用角色、`TypePass`、`ValidatePass`、`NormalizePass`、规范化节点与指令层 schema、`SirDeclarationWriter`、`StructureView`）、lowering（声明、`ActorIdentityTransportPlan` 增加凭据来源、IR 校验）、generator（`CredentialIdentityAdapter` 和 `ApplicationRenderer` 的接线）、项目图（声明角色）。规模大致是第 1 步（`unique`）加第 3 步（守卫更新）之和，是这条链上最大的一步。
+
+### 26.6 替代方案
+
+- **不加新词，adapter 仍由部署方手写。** 约 15 行 Java：读头、按主键查、比较有效期。SIR 作者（包括小模型）仍然写不出行为 ②，七条行为里留一条永远要靠外部代码。这违背“扩展性探针”的目的，所以不推荐。
+- **把来源挂在 `actor` 子句上**（`actor Ref<User> from AccessToken.owner, AccessToken.expiresAt`）。每个能力都重复一遍，且“一个工程只能一种”的规则无处存放。不推荐。
+- **JWT（无状态令牌）。** 需要签名密钥这类新的配置面和依赖，且登出作废要另设黑名单；与第 3 步以后“凭据就是一行”的路线不一致。不推荐。
+
+### 26.7 验收与已知限制
+
+验收：真实 MySQL 的 IT 里，登录签发令牌后用 `Authorization: Bearer` 调受保护接口得 200 且 `actor` 是令牌的属主；无头、格式不对、未知令牌、已过期令牌都得 401；把 `expiresAt` 更新成现在后同一令牌得 401。已知限制：每次受保护请求多一次按主键的查询（没有缓存）；令牌明文存储（它本身就是不可猜测的随机值，与口令不同；若要存摘要，需要另一种查找键，不在本步范围）。
