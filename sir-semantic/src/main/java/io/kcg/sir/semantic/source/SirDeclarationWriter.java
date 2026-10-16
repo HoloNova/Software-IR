@@ -36,12 +36,12 @@ public final class SirDeclarationWriter {
    private static final Map<String, String> OPERATOR_TEXT = Map.ofEntries(
       Map.entry("OR", "or"), Map.entry("AND", "and"), Map.entry("EQ", "=="), Map.entry("NE", "!="),
       Map.entry("GT", ">"), Map.entry("GE", ">="), Map.entry("LT", "<"), Map.entry("LE", "<="),
-      Map.entry("CONTAINS_LITERAL", "containsLiteral"), Map.entry("ADD", "+"), Map.entry("SUB", "-")
+      Map.entry("CONTAINS_LITERAL", "containsLiteral"), Map.entry("MATCHES", "matches"), Map.entry("ADD", "+"), Map.entry("SUB", "-")
    );
    private static final Map<String, Integer> OPERATOR_LEVEL = Map.ofEntries(
       Map.entry("OR", OR), Map.entry("AND", AND), Map.entry("EQ", EQUALITY), Map.entry("NE", EQUALITY),
       Map.entry("GT", RELATIONAL), Map.entry("GE", RELATIONAL), Map.entry("LT", RELATIONAL), Map.entry("LE", RELATIONAL),
-      Map.entry("CONTAINS_LITERAL", CONTAINS), Map.entry("ADD", ADDITIVE), Map.entry("SUB", ADDITIVE)
+      Map.entry("CONTAINS_LITERAL", CONTAINS), Map.entry("MATCHES", CONTAINS), Map.entry("ADD", ADDITIVE), Map.entry("SUB", ADDITIVE)
    );
    private static final Map<String, String> PRIMITIVE_TEXT = Map.of(
       "BOOLEAN", "Boolean", "INT32", "Int32", "INT64", "Int64", "DECIMAL", "Decimal", "STRING", "String", "UUID", "Uuid", "DATE", "Date", "DATE_TIME", "DateTime", "UNIT", "Unit"
@@ -171,6 +171,10 @@ public final class SirDeclarationWriter {
 
       if (entityField && text(field, "unique").equals("true")) {
          line.append(" unique");
+      }
+
+      if (entityField && text(field, "secret").equals("true")) {
+         line.append(" secret");
       }
 
       if (entityField) {

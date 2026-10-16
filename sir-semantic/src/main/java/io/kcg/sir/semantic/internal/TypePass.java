@@ -146,6 +146,7 @@ final class TypePass {
                this.typeFieldConstraints(entity.fields(), declarationId);
                this.typeEntityVersionField(entity);
                this.typeEntityUniqueField(entity);
+               this.typeEntitySecretField(entity);
             }
             case AstInputDecl input -> {
                this.typeFieldConstraints(input.fields(), declarationId);
@@ -294,6 +295,26 @@ final class TypePass {
                "version 字段必须是 Int64: " + entity.name().text() + "." + field.name().text() + " 声明为 " + declaredType,
                field.type().span()
             ));
+         }
+      }
+   }
+
+   /**
+   * A secret is kept as a digest of a text the author never sees again, so only text can be one.
+   * Whether its other declarations make sense (unique, constraints) is the validator's business.
+   */
+   private void typeEntitySecretField(AstEntityDecl entity) {
+      for (AstField field : entity.fields()) {
+         if (!field.secret()) {
+            continue;
+         }
+
+         SirType declaredType = this.resolved.typeRefTypes().get(field.type().id());
+         if (declaredType != null && declaredType != PrimitiveType.STRING) {
+            this.diagnostics.add(DiagnosticBuilder.error(
+               "SIR-TYPE-001",
+               "secret 字段必须是 String: " + entity.name().text() + "." + field.name().text() + " 声明为 " + declaredType,
+               field.type().span()));
          }
       }
    }
@@ -751,6 +772,14 @@ final class TypePass {
                   }
 
                   return PrimitiveType.BOOLEAN;
+            case MATCHES:
+               if (leftType != PrimitiveType.STRING || rightType != PrimitiveType.STRING) {
+                  this.diagnostics.add(DiagnosticBuilder.error(
+                     "SIR-TYPE-001", "matches 的两侧都必须是 String", expr.span()));
+                  return null;
+               }
+
+               return PrimitiveType.BOOLEAN;
             case EQ:
             case NE:
                if (!leftType.equals(rightType)) {

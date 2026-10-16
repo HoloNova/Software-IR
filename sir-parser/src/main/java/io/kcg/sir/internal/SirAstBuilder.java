@@ -215,7 +215,7 @@ final class SirAstBuilder {
                         .toList();
         return new AstField(
                 ids.id(path), source.span(context), name, type(context.typeRef(), path), constraints,
-                context.VERSIONED() != null, context.uniqueModifier() != null, declaredId);
+                context.VERSIONED() != null, context.uniqueModifier() != null, context.secretModifier() != null, declaredId);
     }
 
     private Optional<String> declaredId(SirParser.IdAnnotationContext context) {
@@ -496,7 +496,8 @@ final class SirAstBuilder {
         if (operands.size() == 1) {
             return left;
         }
-        return binary(left, AstBinaryOperator.CONTAINS_LITERAL, relationalExpression(operands.get(1), parent), parent);
+        AstBinaryOperator operator = context.CONTAINS_LITERAL() != null ? AstBinaryOperator.CONTAINS_LITERAL : AstBinaryOperator.MATCHES;
+        return binary(left, operator, relationalExpression(operands.get(1), parent), parent);
     }
 
     private AstExpression relationalExpression(SirParser.RelationalExpressionContext context, String parent) {

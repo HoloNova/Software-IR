@@ -365,7 +365,7 @@ persist c;
 2. 算术一族的最小范围（时长字面量、时间加减、数值加减）。（已实现，见第 19 节；工作区未提交，CI 未运行。）
 3. 守卫更新（`update … when … else …`）；需要真实 MySQL 并发测试作验收。（已实现，见第 22 节；工作区未提交，CI 未运行。）
 4. 错误状态码加入 401。（已实现，见第 24 节。）
-5. 字段 `secret`（口令摘要）。
+5. 字段 `secret`（口令摘要）与 `matches`。（已实现，见第 25 节。）
 6. 凭据角色绑定与“已认证”的连接。
 7. 把前六项组成的双 Token 组合升格为内建修饰（定义为展开）。
 
@@ -583,7 +583,7 @@ update c { remaining: input.base - 1; }
 
 | 行为 | 现在 |
 | --- | --- |
-| ① 登录成功得到一对令牌 | 能写：按账号名取账号、比对口令、创建带 15 分钟和 7 天有效期的凭据（M1）。口令仍是明文比较 |
+| ① 登录成功得到一对令牌 | 能写：按账号名取账号、比对口令、创建带 15 分钟和 7 天有效期的凭据（M1）。口令现在以摘要存储、用 `matches` 比对（第 25 节） |
 | ② 受保护接口认证 | 仍缺：登录签发的凭据与 `requires authenticated` 之间没有语义连接 |
 | ③ 过期访问令牌被拒 | 能写：`validate token.expiresAt > now() else Expired`；`error Expired http 401;` 现在也能声明（第 24 节） |
 | ④ 刷新令牌换新一对、旧的失效 | 能写（M2），但并发下不安全：缺带条件的状态流转（守卫更新） |
@@ -779,4 +779,52 @@ if (oldAffected != 1) {
 
 **不做什么：** 不加 403 及其他状态码（没有对应的业务；加一个只需要同样的三处，需要时再加）。这一步也不引入认证本身：生成工程里“没有认证身份”的 401 由 `ActorIdentityInterceptor` 直接写响应，与这里声明的错误无关。
 
-**验证（本机，定向）：** `WriteSliceSemanticsTest` 新增一项（401 通过，403 以 `SIR-TYPE-001` 拒绝）；`GeneratorUnauthorizedStatusContractTest` 新增一项（声明 `http 401` 的错误生成 `HttpStatus.UNAUTHORIZED`）。旧状态码的输出不变。CI 未运行。
+**验证（本机，定向）：** `WriteSliceSemanticsTest` 新增一项（401 通过，403 以 `SIR-TYPE-001` 拒绝）；`GeneratorUnauthorizedStatusContractTest` 新增一项（声明 `http 401` 的错误生成 `HttpStatus.UNAUTHORIZED`）。旧状态码的输出不变。**CI：** [verify #81](https://github.com/HoloNova/Software-IR/actions/runs/38886724501)（提交 `e3b74e3`）success。
+
+## 25. 第 5 步：`secret` 字段与 `matches`（2026-10-16，工作区未提交，CI 未运行）
+
+### 25.1 为什么存在
+
+登录要比对口令，而口令不能明文存、不能被读出来、也不能被拿去做别的运算。原来的语言里口令只能是普通 `String` 字段：存得下明文、能原样返回、能用 `==` 比对。双 Token 的行为 ① 和 ⑦ 因此停在“口令是明文比较”。这是第 15.3 节依赖链的第 5 步。
+
+按三条规则打分：**新业务靠组合已有能力吗？** 不行——语言里没有“存摘要”这个动作，也没有办法在不暴露摘要的前提下比对。**一个普通需求在 SIR 里变得绕口吗？** 有：不加这个词，作者只能自己调用外部实现。**修复一类问题能让一类业务受益吗？** 能：所有“存了就不该再读出来、只需要验证”的字段（口令、PIN、API 密钥的哈希）都是同一类。
+
+### 25.2 写法与语义
+
+```
+entity Account persistent {
+  field name: String unique;
+  field passwordHash: String secret;
+}
+...
+create Account as account { name: input.name; passwordHash: input.password; }
+...
+validate account.passwordHash matches input.password else BadLogin;
+```
+
+- `secret` 与 `unique` 一样是上下文关键字，只在实体字段的类型之后有意义，叫 `secret` 的字段名照常可用；`matches` 是上下文的二元运算符，位置在 `containsLiteral` 同级（比相等紧，比比较松），叫 `matches` 的名字照常可用。`sir 0.2` 版本号保持，旧文档不受影响。
+- **写**：给 secret 字段绑定的值（`create`／`update` 的绑定）由降级包进 `DigestExpression`，生成的服务存的是摘要，永远不是原文。
+- **读**：secret 字段只能作为 `matches` 的左侧读取（`SIR-VALID-008`）。不能返回、比较、运算，也不能出现在 `view` 里，不能出现在 `find` 里（`matches` 比对发生在加载出行之后，由服务完成）。
+- **声明**：只能是 `String`（`SIR-TYPE-001`）；不能同时 `unique`、`version`，不能带约束（`SIR-VALID-008`）。unique 的摘要没有任何调用者能构造出查找键；约束是对作者的值生效的，而存的不是作者的值。
+- `matches` 的两侧都是 `String`，结果是 `Boolean`（`SIR-TYPE-001`）。
+
+### 25.3 摘要方案
+
+PBKDF2-HMAC-SHA256（JDK 自带，生成工程不增加依赖），每次随机 16 字节盐，600000 次迭代（OWASP 对该算法的当前建议），存成 `pbkdf2-sha256$<迭代次数>$<盐>$<哈希>`。迭代次数写在每条记录里，将来调高不会让已存的失效。比对用恒定时间。存储的文本不是这个格式（空、被截断、别的算法、迭代次数越界）时 `matches` 为 false，而不是抛异常——这样导入的旧数据只会匹配失败。
+
+### 25.4 改动面（实测）
+
+parser：语法两处（`secretModifier`、`matchesOperator`）、`AstField.secret`、`AstBinaryOperator.MATCHES`、builder。semantic：`NormalizedField.secret`（**必填事实槽位**，与 `unique`、`versioned` 同；现有“添加字段”的指令载荷须带它，是否改为可选仍留给负责人）、`TypePass`（secret 类型、`matches` 类型）、`ValidatePass`（声明规则、读取规则、view 规则、find 规则）、`SirDeclarationWriter`。lowering：`DigestExpression`、`BinaryOperator.MATCHES`、`ProjectArtifact.SecretDigest`、IR 校验两条。generator：`SecretDigestRenderer`、`ExpressionRenderer` 两处、导入收集。项目图：新的项目角色 `SECRET_DIGEST`。
+
+### 25.5 验证
+
+- **本机真实 MySQL（手工）：** 注册后库里是 `pbkdf2-sha256$600000$…`，不含原文；对的口令 200；错的口令和不存在的账号都是同样的 401 响应体；库里存的不是摘要格式的账号，即使候选与存的文本相同也是 401。
+- **单元／契约（本机）：** `SecretFieldGrammarTest`（6）、`SecretFieldSemanticsTest`（7）、`SecretFieldLoweringTest`（4）、`GeneratorSecretFieldContractTest`（4）。最后一个把生成的 `SecretDigest` 真的编译并运行：不存原文、盐不同、对的接受错的拒绝、八种无法识别的存储文本都返回 false。全模块本机定向：parser 122、semantic 269、lowering 4／100、generator 95、project-graph 73、change 28、toolchain 237、kcg-cli 28，0 失败（已排除只能在 CI 跑的离线编译用例）。
+- **旧输出对比：** 与上一提交打出的旧 jar 对 28 个夹具各生成一次，26 个字节相同；另两个（`secret-field`、`token-desk`）用了新语法，旧工具链无法解析。
+- **CI：** 新增 `TokenDeskBusinessConformanceIT` 的 S1–S5（注册、摘要不含原文、对错口令、未知账号与错口令响应一致、非摘要格式的存储文本）和离线编译用例；以 CI 为准，未运行。
+
+### 25.6 已知限制（没有假装解决）
+
+- **账号是否存在的时序差异。** `load … else BadLogin` 在账号不存在时直接返回，不做 PBKDF2，响应约快几百毫秒；响应体相同，但计时可以区分。堵上它需要“账号不存在时也做一次空摘要”，这是一个独立的语义（不属于 `secret`），这里没有做。
+- **没有口令强度、长度、锁定、限流。** 强度可在输入字段上用约束表达；锁定和限流是别的能力。
+- 迭代次数是常量，不可按工程配置。

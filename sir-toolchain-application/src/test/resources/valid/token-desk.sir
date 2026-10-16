@@ -25,6 +25,7 @@ software TokenDesk {
     entity Account persistent {
       identity id: Int64 generated auto;
       field name: String unique;
+      field passwordHash: String secret;
     }
     view CredentialView from Credential {
       field id: Uuid;
@@ -44,10 +45,15 @@ software TokenDesk {
     input AccountName {
       field name: String;
     }
+    input Credentials {
+      field name: String;
+      field password: String;
+    }
     error Expired;
     error Invalid http 409;
     error AccountNotFound http 404;
     error CredentialNotFound http 404;
+    error BadLogin http 401;
     capability GetCredential {
       input GetCredentialInput;
       output CredentialView;
@@ -91,6 +97,32 @@ software TokenDesk {
         update held when held.owner == "alice" else Invalid { used: true; }
         persist held;
         return held;
+      }
+    }
+    capability Register {
+      input Credentials;
+      output AccountView;
+      requires atomic;
+      expose command;
+      workflow {
+        create Account as account {
+          name: input.name;
+          passwordHash: input.password;
+        }
+        persist account;
+        return account;
+      }
+    }
+    capability Login {
+      input Credentials;
+      output AccountView;
+      fails BadLogin;
+      requires readonly;
+      expose command;
+      workflow {
+        load Account by name: input.name as account else BadLogin;
+        validate account.passwordHash matches input.password else BadLogin;
+        return account;
       }
     }
     capability FindAccount {

@@ -183,6 +183,10 @@ final class NormalizePass {
                   field = field.withUnique(true);
                }
 
+               if (f.secret()) {
+                  field = field.withSecret(true);
+               }
+
                fields.add(field);
             }
          }

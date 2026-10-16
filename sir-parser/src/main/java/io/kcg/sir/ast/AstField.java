@@ -16,6 +16,10 @@ import java.util.Optional;
  *
  * <p>{@code unique} is the author's statement that no two rows hold the same value in this field.
  * Only entity members may carry it, and it is what allows a {@code load} to find a row by the field.
+ *
+ * <p>{@code secret} is the author's statement that the field holds a credential the system must never
+ * keep or show as written: what is stored is a digest of the value, and the only way to read it is to ask
+ * whether a candidate matches.
  */
 public record AstField(
         AstNodeId id,
@@ -25,6 +29,7 @@ public record AstField(
         List<AstConstraint> constraints,
         boolean versioned,
         boolean unique,
+        boolean secret,
         Optional<String> declaredId) implements AstNode {
 
     public AstField(
@@ -34,7 +39,7 @@ public record AstField(
             AstTypeRef type,
             List<AstConstraint> constraints,
             boolean versioned) {
-        this(id, span, name, type, constraints, versioned, false, Optional.empty());
+        this(id, span, name, type, constraints, versioned, false, false, Optional.empty());
     }
 
     public AstField(
@@ -43,7 +48,7 @@ public record AstField(
             AstName name,
             AstTypeRef type,
             List<AstConstraint> constraints) {
-        this(id, span, name, type, constraints, false, false, Optional.empty());
+        this(id, span, name, type, constraints, false, false, false, Optional.empty());
     }
 
     public AstField {

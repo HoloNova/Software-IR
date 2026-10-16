@@ -100,7 +100,7 @@ fieldDecl
 // input/view fields deliberately keep the plain fieldDecl rule: a stray @id there is a parse
 // error rather than a silently ignored annotation.
 entityMemberDecl
-    : FIELD IDENT COLON typeRef constraintList? VERSIONED? uniqueModifier? idAnnotation? SEMI
+    : FIELD IDENT COLON typeRef constraintList? VERSIONED? uniqueModifier? secretModifier? idAnnotation? SEMI
     ;
 
 // "unique" is a contextual word, like sources and imports above: it is only a modifier here, after
@@ -109,6 +109,12 @@ entityMemberDecl
 // document that already parses.
 uniqueModifier
     : {_input.LT(1).getText().equals("unique")}? IDENT
+    ;
+
+// "secret" is contextual for the same reason as unique: it follows the field's type, constraints, versioned
+// and unique, and every identifier spelled secret stays legal.
+secretModifier
+    : {_input.LT(1).getText().equals("secret")}? IDENT
     ;
 
 idAnnotation
@@ -275,7 +281,13 @@ equalityExpression
     ;
 
 stringMatchExpression
-    : relationalExpression (CONTAINS_LITERAL relationalExpression)?
+    : relationalExpression ((CONTAINS_LITERAL | matchesOperator) relationalExpression)?
+    ;
+
+// "stored matches candidate" asks whether a candidate text produces a stored secret. It is contextual: no
+// expression is otherwise followed by an identifier here, so a name spelled matches elsewhere is unaffected.
+matchesOperator
+    : {_input.LT(1).getText().equals("matches")}? IDENT
     ;
 
 relationalExpression

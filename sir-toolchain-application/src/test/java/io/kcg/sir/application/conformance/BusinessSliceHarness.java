@@ -492,6 +492,11 @@ final class BusinessSliceHarness {
         return observer.queryRows(this.environment.schemaName(), this.fixture.table(), "id");
     }
 
+    /** Every row of another table of the owned schema, for assertions on what the application stored there. */
+    List<String> rowsOf(MysqlObserver observer, String table) throws SQLException {
+        return observer.queryRows(this.environment.schemaName(), table, "id");
+    }
+
     String baseUrl() {
         return baseUrl(this.environment.serverPort());
     }

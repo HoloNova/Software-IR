@@ -124,6 +124,7 @@ class TokenDeskBusinessConformanceIT {
             assertUuidKeys(slice, observer);
             assertNoOpGuardedUpdate(slice, observer);
             assertBrokenUniqueness(slice);
+            assertSecretField(slice, observer);
             slice.setRowsAfter(slice.rowsNow(observer));
         }
     }
@@ -196,6 +197,51 @@ class TokenDeskBusinessConformanceIT {
         HttpAssertionClient.Response duplicate = http.get(base + "/api/find-account?name=dup", Map.of());
         slice.record("K3 GET find-account (two rows)", duplicate);
         slice.expectStatus("a name held by two rows is an internal error, not an arbitrary one of them", duplicate, 500);
+    }
+
+    /**
+     * S1-S5: a secret is stored as a digest, and only the right candidate matches it. A wrong password
+     * and an unknown account answer the same declared 401, so the response does not tell which it was.
+     */
+    private void assertSecretField(BusinessSliceHarness slice, MysqlObserver observer) throws Exception {
+        HttpAssertionClient http = new HttpAssertionClient();
+        String base = slice.baseUrl();
+
+        HttpAssertionClient.Response registered = http.postJson(base + "/api/register", Map.of(),
+                "{\"name\":\"zoe\",\"password\":\"correct horse battery\"}");
+        slice.record("S1 POST register", registered);
+        slice.check("registering stores an account", registered.statusCode() / 100 == 2, "status=" + registered.statusCode());
+        slice.check("the response does not carry the password or its digest",
+                !registered.body().contains("correct horse") && !registered.body().toLowerCase().contains("password"),
+                "body=" + registered.body());
+
+        List<String> accounts = slice.rowsOf(observer, "account");
+        String stored = accounts.stream().filter(row -> row.contains("|zoe|")).findFirst().orElse("<absent>");
+        slice.check("the stored text is a salted digest and does not contain the password",
+                stored.contains("|pbkdf2-sha256$") && !stored.contains("correct horse"), "row=" + stored);
+
+        HttpAssertionClient.Response right = http.postJson(base + "/api/login", Map.of(),
+                "{\"name\":\"zoe\",\"password\":\"correct horse battery\"}");
+        slice.record("S2 POST login (right password)", right);
+        slice.expectStatus("the right password logs in", right, 200);
+        slice.expectFields("the login answers the account without its secret", right, Map.of("name", "zoe"));
+
+        HttpAssertionClient.Response wrong = http.postJson(base + "/api/login", Map.of(),
+                "{\"name\":\"zoe\",\"password\":\"correct horse batterz\"}");
+        slice.record("S3 POST login (wrong password)", wrong);
+        slice.expectStatus("a wrong password is the declared 401", wrong, 401);
+
+        HttpAssertionClient.Response unknown = http.postJson(base + "/api/login", Map.of(),
+                "{\"name\":\"nobody\",\"password\":\"correct horse battery\"}");
+        slice.record("S4 POST login (unknown account)", unknown);
+        slice.expectStatus("an unknown account is the declared 401", unknown, 401);
+        slice.check("a wrong password and an unknown account are answered identically",
+                wrong.body().equals(unknown.body()), "wrong=" + wrong.body() + " unknown=" + unknown.body());
+
+        HttpAssertionClient.Response unusable = http.postJson(base + "/api/login", Map.of(),
+                "{\"name\":\"ann\",\"password\":\"not-a-digest\"}");
+        slice.record("S5 POST login (stored text is not a digest)", unusable);
+        slice.expectStatus("a stored text that is not a digest never matches, even when the candidate equals it", unusable, 401);
     }
 
     private static boolean isUuid(String text) {

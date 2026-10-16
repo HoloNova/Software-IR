@@ -20,6 +20,7 @@ public sealed interface SpringExpression
    SpringExpression.UnaryExpression,
    SpringExpression.BinaryExpression,
    SpringExpression.TimeShiftExpression,
+   SpringExpression.DigestExpression,
    SpringExpression.PayloadPresence,
    SpringExpression.ExistsPredicate {
    LoweredNodeId id();
@@ -62,8 +63,22 @@ public sealed interface SpringExpression
       GT,
       GE,
       CONTAINS_LITERAL,
+      MATCHES,
       ADD,
       SUB;
+   }
+
+   /**
+   * The digest of a text, written where a secret field is bound: the service stores what the value
+   * produces, never the value itself. Only a binding to a secret field gets one.
+   */
+   record DigestExpression(
+      LoweredNodeId id, LoweredOrigin origin, LoweredJavaType type, SpringExpression operand
+   ) implements SpringExpression {
+      public DigestExpression {
+         SpringExpression.requireNode(id, origin, type);
+         Objects.requireNonNull(operand, "operand");
+      }
    }
 
    /**

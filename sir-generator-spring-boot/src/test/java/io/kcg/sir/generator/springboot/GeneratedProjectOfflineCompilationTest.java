@@ -160,6 +160,24 @@ class GeneratedProjectOfflineCompilationTest {
         }
     }
 
+    /** A secret field adds a generated digest class and calls it from two services; only a compiler can vouch for both. */
+    @Test
+    void secretFieldProjectCompilesWithFrozenDependenciesOffline(@TempDir Path tempDir)
+            throws Exception {
+        Path projectRoot = tempDir.resolve("generated-project");
+        List<GeneratedFile> files = GeneratorTestSupport.generateSuccess("valid/secret-field.sir");
+        materialize(files, projectRoot);
+        compileOffline(projectRoot, tempDir);
+
+        for (String classFile : List.of(
+                "example/accounts/persistence/SecretDigest.class",
+                "example/accounts/application/RegisterService.class",
+                "example/accounts/application/LoginService.class")) {
+            assertTrue(Files.isRegularFile(projectRoot.resolve("target/classes").resolve(classFile)),
+                    () -> "offline Maven compile did not create representative class: " + classFile);
+        }
+    }
+
     private static void compileOffline(Path projectRoot, Path tempDir) throws Exception {
         Path maven = locateMavenExecutable();
         Path localRepository = frozenLocalRepository();

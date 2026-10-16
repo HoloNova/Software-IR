@@ -21,6 +21,7 @@ public sealed interface ArtifactRole permits ArtifactRole.DeclarationRole, Artif
       API_EXCEPTION_ADVICE,
       VALIDATION_SUPPORT,
       APPLICATION_CONFIG,
-      UUID_TYPE_HANDLER;
+      UUID_TYPE_HANDLER,
+      SECRET_DIGEST;
    }
 }

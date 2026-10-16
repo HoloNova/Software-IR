@@ -1135,8 +1135,16 @@ final class WorkflowRenderer {
             collectExpressionImports(ctx, unary.operand(), variableNames, imports, currentPackage);
             break;
          case BinaryExpression binary:
+            if (binary.operator() == SpringExpression.BinaryOperator.MATCHES) {
+               imports.add(ctx.model().basePackage() + ".persistence.SecretDigest");
+            }
+
             collectExpressionImports(ctx, binary.left(), variableNames, imports, currentPackage);
             collectExpressionImports(ctx, binary.right(), variableNames, imports, currentPackage);
+            break;
+         case SpringExpression.DigestExpression digest:
+            imports.add(ctx.model().basePackage() + ".persistence.SecretDigest");
+            collectExpressionImports(ctx, digest.operand(), variableNames, imports, currentPackage);
             break;
          case SpringExpression.TimeShiftExpression shift:
             collectExpressionImports(ctx, shift.base(), variableNames, imports, currentPackage);

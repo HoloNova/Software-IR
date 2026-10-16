@@ -83,6 +83,8 @@ final class ValidatePass {
    private final Map<SymbolId, SymbolId> entityVersionFields = new LinkedHashMap<>();
    /** Entity field symbols the author declared unique: the only fields a load may look a row up by. */
    private final Set<SymbolId> uniqueFields = new LinkedHashSet<>();
+   /** Entity field symbols the author declared secret: stored as a digest, readable only through matches. */
+   private final Set<SymbolId> secretFields = new LinkedHashSet<>();
    /** Patch payload symbol -> the entity it changes. */
    private final Map<SymbolId, SymbolId> patchInputSourceEntities = new LinkedHashMap<>();
    /** AST input declarations by symbol, for the payload-shape rules. */
@@ -118,6 +120,10 @@ final class ValidatePass {
 
                      if (f.unique() && fieldSymId != null) {
                         this.uniqueFields.add(fieldSymId);
+                     }
+
+                     if (f.secret() && fieldSymId != null) {
+                        this.secretFields.add(fieldSymId);
                      }
                   }
 
@@ -184,6 +190,7 @@ final class ValidatePass {
                this.validateEntityConstraints(entityDecl);
                this.validateEntityVersionField(entityDecl);
                this.validateEntityUniqueField(entityDecl);
+               this.validateEntitySecretField(entityDecl);
             } else if (decl instanceof AstInputDecl inputDecl) {
                this.validateInputConstraints(inputDecl);
                this.validatePatchPayload(inputDecl);
@@ -227,6 +234,7 @@ final class ValidatePass {
       this.validatePageUsage(capDecl, isQuery);
       this.validateWriteWorkflow(capDecl, failsSet);
       this.validateExistencePlacement(capDecl);
+      this.validateSecretUsage(capDecl);
       int returnCount = 0;
       boolean returnSeen = false;
 
@@ -504,6 +512,114 @@ final class ValidatePass {
       }
    }
 
+   private static final String SECRET_CODE = "SIR-VALID-008";
+
+   /**
+   * What a secret field may be declared together with.
+   *
+   * <p>It holds a digest, not the author's value, so a constraint on the value would be checked
+   * against something it never describes; a unique secret could be looked up, which is a lookup by
+   * digest that no caller can form; and the version field is the concurrency token, not a credential.
+   */
+   private void validateEntitySecretField(AstEntityDecl entityDecl) {
+      for (AstField field : entityDecl.fields()) {
+         if (!field.secret()) {
+            continue;
+         }
+
+         String name = entityDecl.name().text() + "." + field.name().text();
+         if (field.unique()) {
+            this.diagnostics.add(DiagnosticBuilder.error(SECRET_CODE, "secret 字段不能同时声明 unique: " + name, field.name().span()));
+         }
+
+         if (field.versioned()) {
+            this.diagnostics.add(DiagnosticBuilder.error(SECRET_CODE, "secret 字段不能同时声明 version: " + name, field.name().span()));
+         }
+
+         if (!field.constraints().isEmpty()) {
+            this.diagnostics.add(DiagnosticBuilder.error(SECRET_CODE, "secret 字段不能声明约束: " + name, field.constraints().getFirst().span()));
+         }
+      }
+   }
+
+   /**
+   * How a secret is read: only as the left side of {@code matches}, and {@code matches} reads nothing else.
+   *
+   * <p>The stored value is a digest. Returning it, comparing it, or putting it in a query would either
+   * expose something that helps an attacker or compare something no caller can form, so the one
+   * permitted read asks whether a candidate text produces it. Writing a secret (a binding to the
+   * field) is not a read and needs no rule here: the generated code digests the value on the way in.
+   * A {@code find} cannot carry {@code matches}, because the digest comparison happens in the service,
+   * after the row is loaded.
+   */
+   private void validateSecretUsage(AstCapabilityDecl capDecl) {
+      for (AstStep step : capDecl.workflow().steps()) {
+         switch (step) {
+            case AstValidateStep s -> this.checkSecretReads(s.condition(), false);
+            case AstLoadStep s -> this.checkSecretReads(s.idExpression(), false);
+            case AstFindStep s -> {
+               this.checkSecretReads(s.predicate(), true);
+               s.page().ifPresent(page -> {
+                  this.checkSecretReads(page.page(), true);
+                  this.checkSecretReads(page.size(), true);
+               });
+            }
+            case AstCreateStep s -> s.bindings().forEach(binding -> this.checkSecretReads(binding.value(), false));
+            case AstUpdateStep s -> {
+               s.guard().ifPresent(guard -> this.checkSecretReads(guard, false));
+               s.bindings().forEach(binding -> this.checkSecretReads(binding.value(), false));
+            }
+            case AstReturnStep s -> this.checkSecretReads(s.value(), false);
+            default -> {
+            }
+         }
+      }
+   }
+
+   private void checkSecretReads(AstExpression expression, boolean inFind) {
+      switch (expression) {
+         case null -> {
+         }
+         case AstGroupedExpression e -> this.checkSecretReads(e.inner(), inFind);
+         case AstUnaryExpression e -> this.checkSecretReads(e.operand(), inFind);
+         case AstPresentExpression e -> this.checkSecretReads(e.target(), inFind);
+         case AstTimeShiftExpression e -> this.checkSecretReads(e.base(), inFind);
+         case AstAnyExpression e -> this.checkSecretReads(e.conditions(), true);
+         case AstNameExpression e -> {
+            SymbolId target = this.typed.referenceSiteBindings().targetFor(e.name().id()).orElse(null);
+            if (target != null && this.secretFields.contains(target)) {
+               this.diagnostics.add(DiagnosticBuilder.error(SECRET_CODE, SECRET_READ, e.span()));
+            }
+         }
+         case AstMemberExpression e -> {
+            if (this.secretFields.contains(this.memberTarget(e))) {
+               this.diagnostics.add(DiagnosticBuilder.error(SECRET_CODE, SECRET_READ, e.span()));
+            } else {
+               this.checkSecretReads(e.receiver(), inFind);
+            }
+         }
+         case AstBinaryExpression e when e.operator() == AstBinaryOperator.MATCHES -> {
+            if (inFind) {
+               this.diagnostics.add(DiagnosticBuilder.error(SECRET_CODE, "matches 不能用在 find 的谓词里：摘要的比对在加载出行之后、由服务完成", e.span()));
+            } else if (this.ungroup(e.left()) instanceof AstMemberExpression stored && this.secretFields.contains(this.memberTarget(stored))) {
+               this.checkSecretReads(stored.receiver(), inFind);
+            } else {
+               this.diagnostics.add(DiagnosticBuilder.error(SECRET_CODE, "matches 的左侧必须是 secret 字段", e.left().span()));
+            }
+
+            this.checkSecretReads(e.right(), inFind);
+         }
+         case AstBinaryExpression e -> {
+            this.checkSecretReads(e.left(), inFind);
+            this.checkSecretReads(e.right(), inFind);
+         }
+         default -> {
+         }
+      }
+   }
+
+   private static final String SECRET_READ = "secret 字段只能作为 matches 的左侧读取，不能返回、比较或参与其他运算";
+
    /**
    * What a load may look a row up by.
    *
@@ -552,6 +668,12 @@ final class ValidatePass {
 
    private void validateViewFields(AstViewDecl viewDecl) {
       for (AstViewField field : viewDecl.fields()) {
+         SymbolId projected = this.typed.referenceSiteBindings().targetFor(field.name().id()).orElse(null);
+         if (projected != null && this.secretFields.contains(projected)) {
+            this.diagnostics.add(DiagnosticBuilder.error(
+               SECRET_CODE, "secret 字段不能出现在响应投影里: " + viewDecl.name().text() + "." + field.name().text(), field.name().span()));
+         }
+
          if (field.versioned()) {
          this.diagnostics.add(DiagnosticBuilder.error(
                "SIR-VALID-002", "version 标记只允许用于实体字段: " + viewDecl.name().text() + "." + field.name().text(), field.name().span()));

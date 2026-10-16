@@ -11,6 +11,7 @@ public sealed interface ProjectArtifact
    ProjectArtifact.ApplicationMain,
    ProjectArtifact.PageResponse,
    ProjectArtifact.UuidTypeHandler,
+   ProjectArtifact.SecretDigest,
    ProjectArtifact.ApiErrorResponse,
    ProjectArtifact.ApiExceptionBase,
    ProjectArtifact.ApiExceptionAdvice,
@@ -69,6 +70,20 @@ public sealed interface ProjectArtifact
    */
    record UuidTypeHandler(LoweredNodeId id, LoweredOrigin origin, String path, String packageName, String simpleName) implements ProjectArtifact {
       public UuidTypeHandler {
+         Objects.requireNonNull(id, "id");
+         Objects.requireNonNull(origin, "origin");
+         ProjectArtifact.requireText(path, "path");
+         ProjectArtifact.requireText(packageName, "packageName");
+         ProjectArtifact.requireText(simpleName, "simpleName");
+      }
+   }
+
+   /**
+   * The digest a secret field is stored as, and the check of a candidate against it. Emitted only where
+   * an entity declares a secret field, so the project that has none is unchanged.
+   */
+   record SecretDigest(LoweredNodeId id, LoweredOrigin origin, String path, String packageName, String simpleName) implements ProjectArtifact {
+      public SecretDigest {
          Objects.requireNonNull(id, "id");
          Objects.requireNonNull(origin, "origin");
          ProjectArtifact.requireText(path, "path");

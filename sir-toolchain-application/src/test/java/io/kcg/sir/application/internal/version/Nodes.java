@@ -53,7 +53,7 @@ final class Nodes {
     }
 
     static StructNode field(String name, StructNode type, StructNode... constraints) {
-        return node("NormalizedField", "name", FACT, text(name), "type", FACT, child(type), "constraints", FACT, seqOf(List.of(constraints)), "versioned", FACT, text("false"), "unique", FACT, text("false"));
+        return node("NormalizedField", "name", FACT, text(name), "type", FACT, child(type), "constraints", FACT, seqOf(List.of(constraints)), "versioned", FACT, text("false"), "unique", FACT, text("false"), "secret", FACT, text("false"));
     }
 
     static StructNode input(String name, StructNode... fields) {

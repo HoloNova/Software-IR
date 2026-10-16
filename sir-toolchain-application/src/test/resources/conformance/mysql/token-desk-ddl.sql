@@ -1,4 +1,4 @@
--- Conformance fixture DDL for the token-desk slice (Uuid keys, no-op guarded update, unique lookup).
+-- Conformance fixture DDL for the token-desk slice (Uuid keys, no-op guarded update, unique lookup, secret field).
 --
 -- TEST_FIXTURE_DDL, not a product capability. Two choices are deliberate:
 --   * credential.id is CHAR(36): a Uuid is stored as its canonical text.
@@ -17,5 +17,6 @@ CREATE TABLE credential (
 CREATE TABLE account (
     id BIGINT NOT NULL AUTO_INCREMENT,
     name VARCHAR(64) NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
     PRIMARY KEY (id)
 );

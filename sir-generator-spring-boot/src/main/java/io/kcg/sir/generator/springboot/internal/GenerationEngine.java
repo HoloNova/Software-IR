@@ -88,6 +88,7 @@ public final class GenerationEngine {
       return switch (artifact) {
          case ProjectArtifact.PageResponse page -> PageResponseRenderer.render(page);
          case ProjectArtifact.UuidTypeHandler handler -> UuidTypeHandlerRenderer.render(handler);
+         case ProjectArtifact.SecretDigest digest -> SecretDigestRenderer.render(digest);
          case ProjectArtifact.ApiErrorResponse error -> ApiErrorRenderer.render(error);
          case ProjectArtifact.ApiExceptionBase base -> ApiExceptionRenderer.render(base);
          case ProjectArtifact.ApiExceptionAdvice advice -> ApiExceptionAdviceRenderer.render(advice);

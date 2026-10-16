@@ -1175,6 +1175,11 @@ public final class SpringBootIrValidation {
             this.validateExpression(value.left(), owner);
             this.validateExpression(value.right(), owner);
             this.validateArithmetic(value, owner);
+            this.validateMatches(value, owner);
+            break;
+         case SpringExpression.DigestExpression value:
+            this.validateExpression(value.operand(), owner);
+            this.validateDigest(value, owner);
             break;
          case SpringExpression.TimeShiftExpression value:
             this.validateExpression(value.base(), owner);
@@ -1209,6 +1214,29 @@ public final class SpringBootIrValidation {
          if (!persistedPlainly) {
             this.error(owner, "a guarded update must be persisted by a plain persist of the same row: " + update.targetVariable());
          }
+      }
+   }
+
+   private static boolean isText(LoweredJavaType type) {
+      return type instanceof LoweredJavaType.Scalar scalar && scalar.kind() == LoweredJavaType.ScalarKind.STRING;
+   }
+
+   /** A match asks whether a candidate text produces a stored text: two texts, a truth value. */
+   private void validateMatches(SpringExpression.BinaryExpression value, SpringBootDeclaration owner) {
+      if (value.operator() != SpringExpression.BinaryOperator.MATCHES) {
+         return;
+      }
+
+      boolean truth = value.type() instanceof LoweredJavaType.Scalar scalar && scalar.kind() == LoweredJavaType.ScalarKind.BOOLEAN;
+      if (!truth || !isText(value.left().type()) || !isText(value.right().type())) {
+         this.error(owner, "a match needs two texts and answers a boolean: " + value.id());
+      }
+   }
+
+   /** A digest is the digest of a text and is itself a text. */
+   private void validateDigest(SpringExpression.DigestExpression value, SpringBootDeclaration owner) {
+      if (!isText(value.operand().type()) || !isText(value.type())) {
+         this.error(owner, "a digest is taken of a text and is a text: " + value.id());
       }
    }
 

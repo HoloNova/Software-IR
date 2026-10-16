@@ -72,6 +72,8 @@ public final class SpringBootModelLowerer {
     private final SpringBootWritePolicy writePolicy;
     private final Map<SymbolId, NormalizedEntity> entities = new LinkedHashMap<SymbolId, NormalizedEntity>();
     private final Map<SymbolId, String> targetMemberNames = new LinkedHashMap<SymbolId, String>();
+    /** Entity fields declared secret: what a binding to one stores is the digest of the value. */
+    private final java.util.Set<SymbolId> secretFields = new java.util.LinkedHashSet<>();
     private final Map<SymbolId, NormalizedView> views = new LinkedHashMap<SymbolId, NormalizedView>();
     private final Map<SymbolId, NormalizedInput> inputs = new LinkedHashMap<SymbolId, NormalizedInput>();
     private final Map<SymbolId, SymbolId> viewSourceEntities = new LinkedHashMap<SymbolId, SymbolId>();
@@ -96,6 +98,10 @@ public final class SpringBootModelLowerer {
                 this.entities.put(entity.id(), entity);
                 this.targetMemberNames.put(entity.identity().id(), entity.identity().name());
                 for (NormalizedField field : entity.fields()) {
+                    if (field.secret()) {
+                        this.secretFields.add(field.id());
+                    }
+
                     this.targetMemberNames.put(field.id(), this.targetPropertyName(field, true));
                     this.columns.put(
                         field.id(), field.type() instanceof RefType ? this.snake(field.name()) + "_id" : this.snake(field.name()));
@@ -142,6 +148,9 @@ public final class SpringBootModelLowerer {
         ArrayList<ProjectArtifact> projectArtifacts = new ArrayList<ProjectArtifact>();
         if (this.storesUuid(declarations)) {
             projectArtifacts.add(this.uuidTypeHandlerArtifact());
+        }
+        if (!this.secretFields.isEmpty()) {
+            projectArtifacts.add(this.secretDigestArtifact());
         }
         if (this.hasPagedFind(declarations)) {
             projectArtifacts.add(this.pageResponseArtifact());
@@ -223,6 +232,12 @@ public final class SpringBootModelLowerer {
         return new ProjectArtifact.ApplicationConfig(
                 this.nodeId("project", "application-config"), this.projectOrigin(), "src/main/resources/application.yml",
                 this.kebab(this.softwareName()), true);
+    }
+
+    private ProjectArtifact.SecretDigest secretDigestArtifact() {
+        String packageName = this.source.metadata().namespace() + ".persistence";
+        String simpleName = "SecretDigest";
+        return new ProjectArtifact.SecretDigest(this.nodeId("project", "secret-digest"), this.projectOrigin(), "src/main/java/" + packageName.replace('.', '/') + "/" + simpleName + ".java", packageName, simpleName);
     }
 
     private ProjectArtifact.UuidTypeHandler uuidTypeHandlerArtifact() {
@@ -925,6 +940,13 @@ public final class SpringBootModelLowerer {
     private SpringBootWorkflow.Binding lowerBinding(NormalizedBinding binding, SymbolId owner, Optional<SymbolId> actorSymbol) {
         String targetName = this.targetMemberNames.get(binding.fieldSymbol());
         SpringExpression value = this.lowerExpression(binding.value(), owner, actorSymbol);
+        if (this.secretFields.contains(binding.fieldSymbol())) {
+            // The property name is read from the unwrapped value: it names the request field, not the digest.
+            return new SpringBootWorkflow.Binding(binding.fieldSymbol(), targetName,
+                    new SpringExpression.DigestExpression(this.nodeId(binding.value().sourceNodeId().value(), "digest"), value.origin(), value.type(), value),
+                    this.sourcePropertyName(value, owner));
+        }
+
         return new SpringBootWorkflow.Binding(binding.fieldSymbol(), targetName, value, this.sourcePropertyName(value, owner));
     }
 

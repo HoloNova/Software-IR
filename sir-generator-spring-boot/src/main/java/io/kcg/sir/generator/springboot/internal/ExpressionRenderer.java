@@ -58,6 +58,8 @@ final class ExpressionRenderer {
          }
          case MemberExpression member -> renderMember(member, variableNames, presence);
          case UnaryExpression unary -> renderUnary(unary, variableNames, presence);
+         case SpringExpression.DigestExpression digest ->
+            "SecretDigest.digest(" + renderExpression(digest.operand(), variableNames, presence) + ")";
          case BinaryExpression binary -> renderBinary(binary, variableNames, presence);
          case TimeShiftExpression shift -> renderTimeShift(shift, variableNames, presence);
          case SpringExpression.PayloadPresence payloadPresence -> renderPresence(payloadPresence, presence);
@@ -130,6 +132,7 @@ final class ExpressionRenderer {
          case GE -> renderOrdering(left, right, operandType, ">=");
          case ADD -> renderArithmetic(left, right, binary.type(), "add", "addExact");
          case SUB -> renderArithmetic(left, right, binary.type(), "subtract", "subtractExact");
+         case MATCHES -> "SecretDigest.matches(" + right + ", " + left + ")";
          case CONTAINS_LITERAL -> throw new IllegalStateException(
                  "literal matching is a query predicate, not a value expression: " + binary.id());
       };
