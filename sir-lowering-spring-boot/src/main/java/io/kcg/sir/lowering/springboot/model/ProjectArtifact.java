@@ -10,6 +10,7 @@ public sealed interface ProjectArtifact
    permits ProjectArtifact.MavenProject,
    ProjectArtifact.ApplicationMain,
    ProjectArtifact.PageResponse,
+   ProjectArtifact.UuidTypeHandler,
    ProjectArtifact.ApiErrorResponse,
    ProjectArtifact.ApiExceptionBase,
    ProjectArtifact.ApiExceptionAdvice,
@@ -58,6 +59,24 @@ public sealed interface ProjectArtifact
    * <p>Paging itself runs as a counted query plus an explicit limit: the frozen dependency set has no
    * MyBatis-Plus pagination interceptor, so no interceptor plan is part of the IR.
    */
+   /**
+   * Reads and writes {@code java.util.UUID} as its canonical text, so a {@code Uuid} column is a
+   * {@code CHAR(36)} holding the lower-case hyphenated form.
+   *
+   * <p>MyBatis has no handler for {@code UUID} of its own and treats one as a bean with properties, which
+   * fails on the first lookup by a {@code Uuid} identity. It is emitted only where an entity actually
+   * stores a {@code Uuid}.
+   */
+   record UuidTypeHandler(LoweredNodeId id, LoweredOrigin origin, String path, String packageName, String simpleName) implements ProjectArtifact {
+      public UuidTypeHandler {
+         Objects.requireNonNull(id, "id");
+         Objects.requireNonNull(origin, "origin");
+         ProjectArtifact.requireText(path, "path");
+         ProjectArtifact.requireText(packageName, "packageName");
+         ProjectArtifact.requireText(simpleName, "simpleName");
+      }
+   }
+
    record PageResponse(LoweredNodeId id, LoweredOrigin origin, String path, String packageName, String simpleName) implements ProjectArtifact {
       public PageResponse {
          Objects.requireNonNull(id, "id");

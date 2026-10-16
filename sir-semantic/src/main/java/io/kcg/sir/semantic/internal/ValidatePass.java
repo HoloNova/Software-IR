@@ -437,11 +437,45 @@ final class ValidatePass {
          }
          }
 
+         if (isComparison(binary.operator())) {
+            this.validateComparisonShape(binary);
+         }
+
          this.validateStringMatchShape(binary.left());
          this.validateStringMatchShape(binary.right());
       } else if (ungrouped instanceof AstUnaryExpression unary) {
          this.validateStringMatchShape(unary.operand());
       }
+   }
+
+   /**
+   * A comparison in a find predicate becomes one column condition with a bound value, so the column
+   * must be on the left and the other side must be a value that does not read the row. The renderer
+   * takes the left side as the column; without this rule {@code input.n < item.qty} would only fail
+   * while generating code, and {@code item.a == item.b} would have no single-statement form at all.
+   * A column with arithmetic on it is already refused with its own message, so it is not repeated here.
+   */
+   private void validateComparisonShape(AstBinaryExpression comparison) {
+      boolean columnOnLeft = this.ungroup(comparison.left()) instanceof AstMemberExpression member && this.isItemName(member.receiver());
+      boolean leftIsColumnArithmetic = this.mentionsItem(comparison.left())
+         && (this.ungroup(comparison.left()) instanceof AstTimeShiftExpression || this.ungroup(comparison.left()) instanceof AstBinaryExpression);
+      if (leftIsColumnArithmetic && !this.mentionsItem(comparison.right())) {
+         return;
+      }
+
+      if (!columnOnLeft || this.mentionsItem(comparison.right())) {
+         this.diagnostics.add(DiagnosticBuilder.error("SIR-VALID-001", COMPARISON_SHAPE, comparison.span()));
+      }
+   }
+
+   private static final String COMPARISON_SHAPE =
+      "find 谓词里的比较，左侧必须是 item.<字段>，右侧必须是不读取 item 的值；例如把 0 < item.qty 写成 item.qty > 0";
+
+   private static boolean isComparison(AstBinaryOperator operator) {
+      return switch (operator) {
+         case EQ, NE, LT, LE, GT, GE -> true;
+         default -> false;
+      };
    }
 
    private boolean isItemName(AstExpression expression) {

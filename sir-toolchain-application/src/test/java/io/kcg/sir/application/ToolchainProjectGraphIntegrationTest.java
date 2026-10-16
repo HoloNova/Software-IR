@@ -413,6 +413,7 @@ class ToolchainProjectGraphIntegrationTest {
             case API_EXCEPTION_ADVICE -> lowerProjectArtifact(lowered, ProjectArtifact.ApiExceptionAdvice.class);
             case VALIDATION_SUPPORT -> lowerProjectArtifact(lowered, ProjectArtifact.ValidationSupport.class);
             case APPLICATION_CONFIG -> lowerProjectArtifact(lowered, ProjectArtifact.ApplicationConfig.class);
+            case UUID_TYPE_HANDLER -> lowerProjectArtifact(lowered, ProjectArtifact.UuidTypeHandler.class);
         };
     }
 

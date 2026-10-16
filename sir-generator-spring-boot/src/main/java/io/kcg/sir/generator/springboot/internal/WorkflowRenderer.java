@@ -571,6 +571,13 @@ final class WorkflowRenderer {
       SpringBootWorkflow.ConditionalUpdate conditional = step.conditional().orElse(null);
       if (conditional == null) {
          if (step.action() == PersistenceAction.INSERT) {
+            if (entity.identity().generation() == SpringBootDeclaration.Generation.UUID) {
+               String identity = entity.identity().javaName();
+               lines.add("        if (" + targetName + "." + getterName(identity) + "() == null) {");
+               lines.add("            " + targetName + "." + setter(identity) + "(java.util.UUID.randomUUID());");
+               lines.add("        }");
+            }
+
             // A new row starts at the version the target initializes, so the first change can be
             // matched against it.
             entity.version().ifPresent(version -> lines.add("        " + targetName + "."

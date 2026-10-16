@@ -32,7 +32,9 @@ import io.kcg.sir.ast.AstStep;
 import io.kcg.sir.ast.AstStringLiteral;
 import io.kcg.sir.ast.AstTimeShiftExpression;
 import io.kcg.sir.ast.AstTimeUnit;
+import io.kcg.sir.ast.AstBinaryOperator;
 import io.kcg.sir.ast.AstUnaryExpression;
+import io.kcg.sir.ast.AstUnaryOperator;
 import io.kcg.sir.ast.AstUnitLiteral;
 import io.kcg.sir.ast.AstUpdateStep;
 import io.kcg.sir.ast.AstValidateStep;
@@ -68,6 +70,8 @@ final class TypePass {
    private final ResolvedContext resolved;
    private final Map<AstNodeId, SirType> expressionTypes = new LinkedHashMap<>();
    private final List<Diagnostic> diagnostics = new ArrayList<>();
+   /** Every integer literal typed, to check its range once its width is settled. */
+   private final List<AstIntegerLiteral> integerLiterals = new ArrayList<>();
    private final Map<SymbolId, SirType> entityIdentityTypes = new LinkedHashMap<>();
    /** Entity field symbol -> its declared type, for the value a keyed load compares the field with. */
    private final Map<SymbolId, SirType> entityFieldTypes = new LinkedHashMap<>();
@@ -155,6 +159,7 @@ final class TypePass {
          }
       }
 
+      this.checkIntegerLiteralRanges();
       return TypedContext.from(this.resolved, this.expressionTypes, List.copyOf(this.diagnostics));
    }
 
@@ -536,7 +541,10 @@ final class TypePass {
 
       SirType result = switch (expr) {
          case AstBooleanLiteral e -> PrimitiveType.BOOLEAN;
-         case AstIntegerLiteral e -> PrimitiveType.INT32;
+         case AstIntegerLiteral e -> {
+            this.integerLiterals.add(e);
+            yield PrimitiveType.INT32;
+         }
          case AstDecimalLiteral e -> PrimitiveType.DECIMAL;
          case AstStringLiteral e -> PrimitiveType.STRING;
          case AstUnitLiteral e -> PrimitiveType.UNIT;
@@ -724,6 +732,14 @@ final class TypePass {
    private SirType typeBinaryExpression(AstBinaryExpression expr, SymbolId scopeId, Set<String> visibleVars) {
       SirType leftType = this.typeExpression(expr.left(), scopeId, visibleVars);
       SirType rightType = this.typeExpression(expr.right(), scopeId, visibleVars);
+      if (leftType != null && rightType != null && this.mixesInt32AndInt64(expr.operator())) {
+         if (leftType == PrimitiveType.INT32 && rightType == PrimitiveType.INT64 && this.widenIntegerLiteral(expr.left())) {
+            leftType = PrimitiveType.INT64;
+         } else if (leftType == PrimitiveType.INT64 && rightType == PrimitiveType.INT32 && this.widenIntegerLiteral(expr.right())) {
+            rightType = PrimitiveType.INT64;
+         }
+      }
+
       if (leftType != null && rightType != null) {
          switch (expr.operator()) {
                case CONTAINS_LITERAL:
@@ -781,5 +797,60 @@ final class TypePass {
       } else {
          return null;
       }
+   }
+   /**
+   * The generated code writes a literal as written, so one that does not fit its type would only fail
+   * when the generated project is compiled. The width is settled by now (an Int32 unless the other
+   * operand made it an Int64), so the check is made once, here, against that. A minus sign is written
+   * in front of the literal, so the most negative value of a type cannot be written as a literal.
+   */
+   private void checkIntegerLiteralRanges() {
+      for (AstIntegerLiteral literal : this.integerLiterals) {
+         boolean wide = this.expressionTypes.get(literal.id()) == PrimitiveType.INT64;
+         int bits = wide ? 63 : 31;
+         java.math.BigInteger largest = java.math.BigInteger.ONE.shiftLeft(bits).subtract(java.math.BigInteger.ONE);
+         if (literal.value().compareTo(largest) > 0) {
+            this.diagnostics.add(DiagnosticBuilder.error(
+               "SIR-TYPE-001",
+               "整数字面量超出 " + (wide ? "Int64" : "Int32") + " 的范围: " + literal.value()
+                  + (wide ? "" : "（与 Int64 的值比较或运算时，字面量按 Int64 理解）"),
+               literal.span()));
+         }
+      }
+   }
+
+   private boolean mixesInt32AndInt64(AstBinaryOperator operator) {
+      return switch (operator) {
+         case EQ, NE, GT, GE, LT, LE, ADD, SUB -> true;
+         default -> false;
+      };
+   }
+
+   /**
+   * An integer literal has no width of its own: it is an Int32 unless the other operand is an Int64, in
+   * which case it is read as an Int64 (so {@code item.qty > 0} and {@code input.amount - 1} need no
+   * conversion). Only a literal does this, optionally negated or in parentheses; an Int32 field or input
+   * is still not an Int64. Returns whether the operand was such a literal and has been retyped.
+   */
+   private boolean widenIntegerLiteral(AstExpression operand) {
+      AstExpression inner = operand;
+      List<AstExpression> chain = new ArrayList<>();
+      while (true) {
+         chain.add(inner);
+         if (inner instanceof AstGroupedExpression grouped) {
+            inner = grouped.inner();
+         } else if (inner instanceof AstUnaryExpression unary && unary.operator() == AstUnaryOperator.NEGATE) {
+            inner = unary.operand();
+         } else {
+            break;
+         }
+      }
+
+      if (!(inner instanceof AstIntegerLiteral)) {
+         return false;
+      }
+
+      chain.forEach(node -> this.expressionTypes.put(node.id(), PrimitiveType.INT64));
+      return true;
    }
 }

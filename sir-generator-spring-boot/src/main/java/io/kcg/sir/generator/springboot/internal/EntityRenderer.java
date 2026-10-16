@@ -90,7 +90,9 @@ final class EntityRenderer {
    private static String idTypeAnnotation(Generation generation) {
       return switch (generation) {
          case AUTO_INCREMENT -> "IdType.AUTO";
-         case UUID -> "IdType.ASSIGN_UUID";
+         // MyBatis-Plus's ASSIGN_UUID produces a String, which cannot be put in a UUID property; the service
+         // that inserts the row sets the identity itself, so the annotation only says that the value is supplied.
+         case UUID -> "IdType.INPUT";
       };
    }
 

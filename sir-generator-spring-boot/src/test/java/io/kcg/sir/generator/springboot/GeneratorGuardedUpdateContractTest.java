@@ -42,6 +42,7 @@ class GeneratorGuardedUpdateContractTest {
         String service = service();
 
         assertTrue(service.contains("if (oldUpdated != 1) {\n            throw new InvalidException();\n        }\n"
+                + "        if (fresh.getId() == null) {\n            fresh.setId(java.util.UUID.randomUUID());\n        }\n"
                 + "        credentialMapper.insert(fresh);"), service);
     }
 

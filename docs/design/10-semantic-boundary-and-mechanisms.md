@@ -672,7 +672,7 @@ if (oldAffected != 1) {
 - 是否同意新增一个真实 MySQL 的并发 IT 和对 `verify.yml` 的相应修改（会触及 CI 配置，需要你明确同意）。
 - 是否等 #77 通过之后再开始。
 
-## 22. 第 3 步的实现结果（2026-10-15，工作区未提交，CI 未运行）
+## 22. 第 3 步的实现结果（2026-10-15，提交 `aa1ad70`，CI #78 通过）
 
 负责人确认第 21 节的方案（开始第 3 步、同意新增真实 MySQL 并发 IT 并修改 `verify.yml`、等第 2 步的 CI 通过）。第 2 步的 CI #77 在我动手实现的中途通过，提交前已核对。范围就是第 21.1–21.4 节，没有多做。
 
@@ -715,17 +715,57 @@ if (oldAffected != 1) {
 - 8 个线程用同一个未使用的凭据同时请求轮换：恰有一个成功；其余 7 个都得到 409；新凭据恰好多出一条；旧凭据被标记已使用；新凭据未使用、属主相同、有效期约 7 天后。
 - 成功之后重放同一个旧凭据，得到 409，没有写入；其他种子行不变。
 
-**这个 IT 本机没有运行**：本机没有 MySQL 和参考环境，只验证了它能编译、未启用时走 `NOT_RUN` 分支。它的结论以 CI 为准，在 CI 通过之前，“并发下恰有一个成功”的证据是 **NOT_RUN**。第 21.7 节说的风险（Connector/J 默认返回“匹配的行数”）也只能由这个 IT 证明。
+**CI 结果：** [verify #78](https://github.com/HoloNova/Software-IR/actions/runs/38715357765)（受测提交 `aa1ad70`）success。读了“Business conformance ITs”步骤的日志，新 IT 确实运行并通过（步骤用时 41 秒，比以前短，是因为日志里该 IT 的检查全部 PASS，不是因为被跳过）。因此“并发下恰有一个成功”和“Connector/J 默认返回匹配的行数”在真实 MySQL 上得到了证明。本机仍然没有运行过这个 IT。
 
 ### 22.5 没有做、没有跑，以及一个待核实的风险
 
-- **CI 全量闸门：NOT_RUN。** 工作区未提交。
-- **生成的 Java 能否编译：本机 NOT_RUN。** 新增了 `guardedUpdateProjectCompilesWithFrozenDependenciesOffline`，由 CI 编译。
-- **待核实的风险（与本步无关，但影响到双 Token 的方案）：`Uuid` 主键。** 生成的实体对 `Uuid` 主键写的是 `@TableId(type = IdType.ASSIGN_UUID)` 配 `java.util.UUID` 类型的字段。我没有读 MyBatis-Plus 的源码，也没有在真实库里验证过，不知道 `ASSIGN_UUID`（按我的记忆它生成字符串）能否正确写入 `UUID` 类型的属性。现有的所有真实库 IT 都用 `Int64` 主键，所以这个组合没有经过真实库的检验。因此本步的 IT 夹具用 `Int64` 主键，没有掩盖这个问题；第 7.2 节“用 `uuid` 主键当不可猜测的令牌”这个组合结论，目前只通过了 GENERATION 和编译，没有真实库证据。需要一个真实库场景来确认，或者改用别的令牌生成办法。
+- 全量闸门与离线编译：CI #78 通过。
+- **`Uuid` 主键的风险已经证实，不是假设，并在第 23 节修复。** 上面这一条原来写的是“待核实”；2026-10-16 在本机真实 MySQL 上验证，`POST /api/refresh` 以 `Uuid` 主键加载时得到 500（`There is no getter for property named 'id' in 'class java.util.UUID'`）：MyBatis 把 `UUID` 当成有属性的对象，而 `ASSIGN_UUID` 生成的是字符串。
 - 带 `version` 的实体用守卫、守卫里引用别的实体、对列的算术：按第 21.4 节不做。
 
-### 22.6 待负责人决定
+### 22.6 后续
 
-- 是否授权提交推送，让 CI 验证这一步（并发 IT 只能在 CI 里跑）。
-- 是否另立一步验证 `Uuid` 主键（22.5 的风险）。
-- 双 Token 剩余的依赖链：401 状态码、口令摘要、凭据与认证的连接、修饰糖。
+`Uuid` 主键与另外几项在真实库里发现的问题，见第 23 节。双 Token 剩余的依赖链：401 状态码、口令摘要、凭据与认证的连接、修饰糖。
+
+## 23. 对前几步的真实库核验（2026-10-16）
+
+负责人要求直接核验前面提出的问题，而不是逐项请示。方法：在本机用无特权账号起一个 MySQL 8.4 实例，对生成的工程跑真实请求（生成工程用本仓库打出的 `kcg.jar` 生成、构建并启动）。结果如下，每项都标明“证实”或“未发现问题”。
+
+### 23.1 `Uuid` 主键：证实是缺陷，已修复
+
+- **现象：** 以 `Uuid` 主键加载，500，`ReflectionException: There is no getter for property named 'id' in 'class java.util.UUID'`。
+- **原因（两个）：** MyBatis 没有 `UUID` 的类型处理器，把它当成有属性的对象；`IdType.ASSIGN_UUID` 产出的是 `String`，不能放进 `UUID` 属性。
+- **修复：** 凡是有实体存 `Uuid`（主键或字段），工程多生成一个 `persistence/UuidTypeHandler`（`@Component @MappedTypes(UUID.class)`，以规范文本存取）；`Uuid` 主键的 `@TableId` 改为 `IdType.INPUT`，服务在 `INSERT` 之前、主键为空时自己赋 `UUID.randomUUID()`。不存 `Uuid` 的工程输出不变（逐字节）。项目图为此多了一个项目级角色 `UUID_TYPE_HANDLER`。
+- **验证：** 本机真实库——按 `Uuid` 加载、守卫更新、插入新的 `Uuid` 行、重放旧令牌得 409，全部符合预期；CI 上由新的 `TokenDeskBusinessConformanceIT` 覆盖。
+- **范围说明：** 表里 `Uuid` 列按 `CHAR(36)` 的规范文本存取。用二进制列（`BINARY(16)`）不在本次范围内。
+
+### 23.2 守卫更新“设成同值”：未发现问题，但依赖驱动默认值
+
+`update ... when ... else ... { used: true; }` 对已经是 `used = true` 的行，在默认的 Connector/J 下仍返回 201/200（匹配到一行）。把连接串改成 `useAffectedRows=true`（驱动按“实际改变的行数”计数）后，同一请求变成 409。也就是说，守卫更新的语义依赖于“影响行数 = 匹配行数”这一驱动默认值。生成的工程的数据库连接串由部署方提供，生成器管不到；这是一条**部署约定**，不是生成器能强制的。新 IT 在 CI 的默认连接串下证明默认值成立。
+
+### 23.3 按唯一字段加载：未发现问题
+
+命中返回 200，未命中返回声明的错误（404），数据库里同一个键有两行（没有建唯一索引）时返回 500，日志是 `more than one Account row has the same name`，而不是悄悄取其中一行。这符合第 16 节的设计；新 IT 的 K1–K3 在 CI 上证明。
+
+### 23.4 `Int64` 字段与整数字面量：证实是障碍，已修复
+
+- **现象：** `item.qty > 0`、`input.amount - 1`、`input.amount == 5`，其中字段是 `Int64`，都报 `SIR-TYPE-001`（比较／加减两侧类型不一致），因为整数字面量一律是 `Int32`。凡有 `Int64` 字段的业务都会碰到，不只是双 Token。
+- **修复：** 整数字面量（可带括号和负号）在比较或加减的另一侧是 `Int64` 时按 `Int64` 理解；`Int32` 的字段或输入仍不是 `Int64`，不会隐式转换。生成器本来就按字面量自己的类型写 `0L`，所以后面几层没改。
+- **验证：** 本机真实库——`Int64` 的比较、加减、`find` 的 `item.qty > input.min + 1`（含大于 `Int32` 的值 10000000000）得到的行都对。
+
+### 23.5 整数字面量超出范围：证实是缺陷，已修复
+
+探针发现 `validate input.small < 5000000000 else Bad;` 通过所有静态阶段，生成的 Java 写 `5000000000`，编译时才报 `integer number too large`。现在 `SIR-TYPE-001` 在类型阶段拒绝超出所属类型范围的字面量。负号写在字面量前面，所以一个类型最小的值（`-2147483648`）无法写成字面量，这一点保留。
+
+### 23.6 `find` 谓词的比较左右颠倒：证实是缺陷，已修复
+
+`find Item where input.amount < item.qty ...` 通过所有静态阶段，生成时才以 `SIR-GEN-NODE-001`（`Find predicate left side must be item.<field>`）崩溃；`item.a == item.b` 也没有单语句形式。现在 Validate 阶段以 `SIR-VALID-001` 拒绝：比较的左侧必须是 `item.<字段>`，右侧必须是不读取 `item` 的值，并在消息里给出把 `0 < item.qty` 改写为 `item.qty > 0` 的写法。对列做算术仍由原有的消息拒绝，不重复报。
+
+### 23.7 测试与证据
+
+- 新增：`IntegerWidthSemanticsTest`（6 项）、`GeneratorUuidStorageContractTest`（3 项）；`TokenDeskBusinessConformanceIT`（真实 MySQL，加入 `verify.yml`，开关 `kcg.token-conformance.enabled`，夹具 `valid/token-desk.sir`、`conformance/mysql/token-desk-*.sql`）。
+- 更新：`GeneratorEntityDtoContractTest`、`GeneratorGuardedUpdateContractTest` 中 `Uuid` 主键的预期；`ToolchainProjectGraphIntegrationTest` 加新的项目角色。
+- 本机定向（容器 `nice`、单构建、不并行；已排除只能在 CI 跑的离线编译用例）：parser 116、semantic 261、lowering-api／lowering 4／96、generator 90、project-graph 73、change 28、toolchain 237、kcg-cli 28 项，0 失败。
+- 旧输出对比：用上一次提交（`aa1ad70`）打出旧 jar，与新 jar 对 31 个现有夹具各生成一次逐文件比对。其中 28 个字节相同；只有存 `Uuid` 的夹具有差异，且差异恰好是预期的三处——多一个 `UuidTypeHandler`、实体 `@TableId` 变为 `IdType.INPUT`、服务在插入前赋 `Uuid`（`all-workflow-steps`、`guarded-update`、`unique-lookup` 及新夹具 `token-desk`）。
+- 新的 `TokenDeskBusinessConformanceIT` 的每个场景，先在本机真实 MySQL 上手工跑过一遍，响应与 IT 的断言一致；IT 本身本机没有运行，以 CI 为准。
+- 本机定向结果与 CI 结果见 `PROJECT_STATUS.md` 和 `qualification/README.md`；CI 才是这一批改动的验收证据。

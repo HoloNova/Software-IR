@@ -1,0 +1,108 @@
+sir 0.2
+
+software TokenDesk {
+  metadata {
+    displayName "Token Desk";
+    namespace "com.example.tokendesk";
+  }
+  target {
+    language java 21;
+    framework spring_boot;
+    persistence mybatis_plus;
+    database mysql;
+    build maven;
+    interface rest;
+  }
+  sources { }
+  imports { }
+  declarations {
+    entity Credential persistent {
+      identity id: Uuid generated uuid;
+      field owner: String;
+      field used: Boolean;
+      field expiresAt: DateTime;
+    }
+    entity Account persistent {
+      identity id: Int64 generated auto;
+      field name: String unique;
+    }
+    view CredentialView from Credential {
+      field id: Uuid;
+      field owner: String;
+      field expiresAt: DateTime;
+    }
+    view AccountView from Account {
+      field id: Int64;
+      field name: String;
+    }
+    input CredentialRef {
+      field token: Uuid;
+    }
+    input GetCredentialInput {
+      field id: Uuid;
+    }
+    input AccountName {
+      field name: String;
+    }
+    error Expired;
+    error Invalid http 409;
+    error AccountNotFound http 404;
+    error CredentialNotFound http 404;
+    capability GetCredential {
+      input GetCredentialInput;
+      output CredentialView;
+      fails CredentialNotFound;
+      requires readonly;
+      expose query;
+      workflow {
+        load Credential by input.id as found else CredentialNotFound;
+        return found;
+      }
+    }
+    capability Refresh {
+      input CredentialRef;
+      output CredentialView;
+      fails Expired;
+      fails Invalid;
+      requires atomic;
+      expose command;
+      workflow {
+        load Credential by input.token as old else Invalid;
+        validate old.expiresAt > now() else Expired;
+        update old when old.used == false and old.expiresAt > now() else Invalid { used: true; }
+        create Credential as fresh {
+          owner: old.owner;
+          used: false;
+          expiresAt: now() + 7 days;
+        }
+        persist old;
+        persist fresh;
+        return fresh;
+      }
+    }
+    capability Touch {
+      input CredentialRef;
+      output CredentialView;
+      fails Invalid;
+      requires atomic;
+      expose command;
+      workflow {
+        load Credential by input.token as held else Invalid;
+        update held when held.owner == "alice" else Invalid { used: true; }
+        persist held;
+        return held;
+      }
+    }
+    capability FindAccount {
+      input AccountName;
+      output AccountView;
+      fails AccountNotFound;
+      requires readonly;
+      expose query;
+      workflow {
+        load Account by name: input.name as account else AccountNotFound;
+        return account;
+      }
+    }
+  }
+}

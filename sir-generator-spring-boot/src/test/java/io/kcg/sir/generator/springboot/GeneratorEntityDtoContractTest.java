@@ -55,7 +55,7 @@ class GeneratorEntityDtoContractTest {
     }
 
     @Test
-    void uuidEntityRendersAllSupportedFieldTypeShapesAndAssignUuidIdentity() {
+    void uuidEntityRendersAllSupportedFieldTypeShapesAndInputUuidIdentity() {
         SpringBootLoweredModel model = GeneratorTestSupport.lowerSuccess(ENTITY_DTO_CONTRACT);
         EntityDeclaration account = entity(model, "Account");
         SpringArtifact artifact = artifact(model, account.sourceSymbol(), Role.ENTITY_MODEL);
@@ -64,7 +64,7 @@ class GeneratorEntityDtoContractTest {
         assertEquals(Generation.UUID, account.identity().generation());
         assertEquals(ScalarKind.UUID, account.identity().type().kind());
         assertTrue(source.contains("@TableName(\"account\")"), source);
-        assertTrue(source.contains("    @TableId(value = \"account_id\", type = IdType.ASSIGN_UUID)\n"
+        assertTrue(source.contains("    @TableId(value = \"account_id\", type = IdType.INPUT)\n"
                 + "    private java.util.UUID accountId;"), source);
         assertAccessor(source, "java.util.UUID", "accountId");
 

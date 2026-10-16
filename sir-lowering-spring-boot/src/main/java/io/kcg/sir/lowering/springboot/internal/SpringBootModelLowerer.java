@@ -140,6 +140,9 @@ public final class SpringBootModelLowerer {
         }
         Optional<ActorIdentityTransportPlan> transportPlan = this.buildActorIdentityTransportPlan(declarations);
         ArrayList<ProjectArtifact> projectArtifacts = new ArrayList<ProjectArtifact>();
+        if (this.storesUuid(declarations)) {
+            projectArtifacts.add(this.uuidTypeHandlerArtifact());
+        }
         if (this.hasPagedFind(declarations)) {
             projectArtifacts.add(this.pageResponseArtifact());
         }
@@ -220,6 +223,33 @@ public final class SpringBootModelLowerer {
         return new ProjectArtifact.ApplicationConfig(
                 this.nodeId("project", "application-config"), this.projectOrigin(), "src/main/resources/application.yml",
                 this.kebab(this.softwareName()), true);
+    }
+
+    private ProjectArtifact.UuidTypeHandler uuidTypeHandlerArtifact() {
+        String packageName = this.source.metadata().namespace() + ".persistence";
+        String simpleName = "UuidTypeHandler";
+        return new ProjectArtifact.UuidTypeHandler(this.nodeId("project", "uuid-type-handler"), this.projectOrigin(), "src/main/java/" + packageName.replace('.', '/') + "/" + simpleName + ".java", packageName, simpleName);
+    }
+
+    /** Whether any entity stores a {@code Uuid}, as its identity or in a field (a reference to such an entity stores one too). */
+    private boolean storesUuid(List<SpringBootDeclaration> declarations) {
+        for (SpringBootDeclaration declaration : declarations) {
+            if (declaration instanceof SpringBootDeclaration.EntityDeclaration entity
+                    && (this.isUuid(entity.identity().type()) || entity.fields().stream().anyMatch(field -> this.isUuid(field.type())))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isUuid(LoweredJavaType type) {
+        return switch (type) {
+            case LoweredJavaType.Scalar scalar -> scalar.kind() == LoweredJavaType.ScalarKind.UUID;
+            case LoweredJavaType.OptionalValue optional -> this.isUuid(optional.elementType());
+            case LoweredJavaType.ListValue list -> this.isUuid(list.elementType());
+            case LoweredJavaType.PageValue page -> this.isUuid(page.elementType());
+            default -> false;
+        };
     }
 
     private ProjectArtifact.PageResponse pageResponseArtifact() {
