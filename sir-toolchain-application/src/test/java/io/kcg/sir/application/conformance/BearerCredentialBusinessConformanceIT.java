@@ -184,7 +184,7 @@ class BearerCredentialBusinessConformanceIT {
         HttpAssertionClient.Response signedIn = http.postJson(base + "/api/login", Map.of(),
                 "{\"name\":\"" + name + "\",\"password\":\"pw-" + name + "\"}");
         slice.record("B2 POST login (" + name + ")", signedIn);
-        slice.expectStatus("the right password logs " + name + " in", signedIn, 200);
+        slice.expectStatus("the right password logs " + name + " in (a login creates the token row, so it answers 201)", signedIn, 201);
         String token = BusinessSliceHarness.field(signedIn.body(), "id");
         slice.check("the login answers a well-formed token", isUuid(token), "token=" + token);
         String stored = slice.rowsOf(observer, "access_token").stream().filter(row -> row.startsWith(token + "|")).findFirst().orElse("<absent>");
