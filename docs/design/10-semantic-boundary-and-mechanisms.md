@@ -829,7 +829,7 @@ parser：语法两处（`secretModifier`、`matchesOperator`）、`AstField.secr
 - **没有口令强度、长度、锁定、限流。** 强度可在输入字段上用约束表达；锁定和限流是别的能力。
 - 迭代次数是常量，不可按工程配置。
 
-## 26. 第 6 步：登录签发的凭据与 `requires authenticated` 的连接（2026-10-16，设计经负责人确认，实现见 26.8，工作区未提交，CI 未运行）
+## 26. 第 6 步：登录签发的凭据与 `requires authenticated` 的连接（2026-10-16，提交 `55898e7`／`70dc6cc`，CI #85 通过）
 
 本节只是设计，来自对现有认证代码的阅读（`ApplicationRenderer` 的 `ActorIdentityRuntime`／拦截器、`buildActorIdentityTransportPlan`、`AstActorClause`），没有运行新代码。按负责人“改代码前先说明为什么存在”的规矩，这一步在实现前先写出设计。
 
@@ -905,5 +905,7 @@ entity AccessToken persistent {
 - CI 侧新增：`BearerCredentialBusinessConformanceIT`（B1–B6：两个账号各自登录、令牌属主决定笔记作者、五种不合格的头都是 401、登出只作废一个令牌）和离线编译用例。IT 的各步骤先在本机真实库上手工跑过，IT 本身本机没有运行，以 CI 为准。
 
 **已知限制。** 每次受保护请求多一次按主键的查询（没有缓存）；令牌明文存储（它是不可猜测的随机值；与口令不同，若要存摘要需要另一种查找键，不在本步范围）；受保护接口的 401 响应没有响应体（沿用原拦截器的行为）；`logout` 以“知道令牌”为凭据，不要求已认证（令牌本身不可猜测）；没有刷新令牌的专门语法——刷新令牌是另一个实体，它的轮换用第 3 步的守卫更新写（见 `TokenDeskBusinessConformanceIT`）。
+
+**CI。** [verify #84](https://github.com/HoloNova/Software-IR/actions/runs/38895567394)（提交 `55898e7`）：两条全量闸门（含新增的离线编译用例）通过；`BearerCredentialBusinessConformanceIT` 在真实 MySQL 上，读了日志：两个账号各自登录得到令牌，令牌按属主存储、约 15 分钟后过期；不带头、`Basic`、格式不对、未知令牌、只有 `Bearer`、只有裸令牌都是 401 且不写笔记；`Bearer` 与小写 `bearer` 的令牌各以自己属主的身份写笔记（库里的作者与令牌属主一致）；`logout` 只作废一个令牌，另一个账号的令牌不受影响——除两项外全部通过。失败的两项是 IT 自己的期望写错了：登录创建令牌行，与注册一样应答 201，我断言成了 200。产品行为没有问题，只改了 IT 的期望，这次失败如实记在这里。[verify #85](https://github.com/HoloNova/Software-IR/actions/runs/38897336941)（提交 `70dc6cc`）全部 success。
 
 至此双 Token 七条行为在语言里都能写出，剩下的只有第 15.3 节的最后一步：把组合升格为内建修饰（定义为展开）。
