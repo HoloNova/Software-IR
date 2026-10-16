@@ -727,7 +727,7 @@ if (oldAffected != 1) {
 
 `Uuid` 主键与另外几项在真实库里发现的问题，见第 23 节。双 Token 剩余的依赖链：401 状态码、口令摘要、凭据与认证的连接、修饰糖。
 
-## 23. 对前几步的真实库核验（2026-10-16）
+## 23. 对前几步的真实库核验（2026-10-16，提交 `6f244fa`，CI #79 通过）
 
 负责人要求直接核验前面提出的问题，而不是逐项请示。方法：在本机用无特权账号起一个 MySQL 8.4 实例，对生成的工程跑真实请求（生成工程用本仓库打出的 `kcg.jar` 生成、构建并启动）。结果如下，每项都标明“证实”或“未发现问题”。
 
@@ -768,4 +768,5 @@ if (oldAffected != 1) {
 - 本机定向（容器 `nice`、单构建、不并行；已排除只能在 CI 跑的离线编译用例）：parser 116、semantic 261、lowering-api／lowering 4／96、generator 90、project-graph 73、change 28、toolchain 237、kcg-cli 28 项，0 失败。
 - 旧输出对比：用上一次提交（`aa1ad70`）打出旧 jar，与新 jar 对 31 个现有夹具各生成一次逐文件比对。其中 28 个字节相同；只有存 `Uuid` 的夹具有差异，且差异恰好是预期的三处——多一个 `UuidTypeHandler`、实体 `@TableId` 变为 `IdType.INPUT`、服务在插入前赋 `Uuid`（`all-workflow-steps`、`guarded-update`、`unique-lookup` 及新夹具 `token-desk`）。
 - 新的 `TokenDeskBusinessConformanceIT` 的每个场景，先在本机真实 MySQL 上手工跑过一遍，响应与 IT 的断言一致；IT 本身本机没有运行，以 CI 为准。
-- 本机定向结果与 CI 结果见 `PROJECT_STATUS.md` 和 `qualification/README.md`；CI 才是这一批改动的验收证据。
+- **CI 结果：** [verify #79](https://github.com/HoloNova/Software-IR/actions/runs/38884618786)（受测提交 `6f244fa`）success：冻结与完成两条全量闸门、业务场景 IT、独立验证 IT、单文件包冒烟均成功。读了业务场景 IT 步骤的日志，`TokenDeskBusinessConformanceIT` 确实运行并通过（13 秒，不是被跳过）：`Uuid` 主键的轮换得 201 且新键是合法且不同的 Uuid，重放得 409，未知键得 409；“设成同值”的守卫更新得 200（默认驱动下算命中）；唯一名命中 200、未命中 404、两行同名 500。因此 23.1–23.3 的结论在 CI 的真实 MySQL 上也成立。
+- 本机定向结果见 `PROJECT_STATUS.md` 和 `qualification/README.md`。
