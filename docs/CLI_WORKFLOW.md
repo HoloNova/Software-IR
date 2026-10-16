@@ -1,6 +1,6 @@
 # 生成、检查结构、指令编辑与应用
 
-本说明对应公开命令 `generate / inspect / edit / check / version-plan / version-apply`。源码生成不等于构建或业务验证；这些命令不下载依赖、不启动数据库或Spring Boot。
+本说明对应公开命令 `generate / inspect / edit / scaffold / check / version-plan / version-apply`。源码生成不等于构建或业务验证；这些命令不下载依赖、不启动数据库或Spring Boot。
 
 ## 1. 启动CLI
 
@@ -124,3 +124,23 @@ kcg version-apply --repository-root "$WORK" --source-root "$SOURCE" \
 退出码：0成功、2参数/外部JSON错误、3Application失败或编辑拒绝、70意外内部错误。version-apply仍额外使用4表示需要重跑；generate/edit不使用4。程序性失败（70）不同于普通不合法输入。
 
 编辑范围沿用现有SourceEditor：只改声明，新声明加入入口文件；跨文件引用需要已有import。BOM、会丢失注释的重写、header/import编辑明确拒绝。本阶段没有自动移动声明、数据库迁移、构建/启动命令、版本化发布渠道或自然语言解析。
+
+## 5. scaffold：把一个模式写成 edit 命令批
+
+`scaffold`只读，不写任何文件，不调用Git。目前只有一个模式`dual-token`（双Token登录：访问令牌与刷新令牌、登录／刷新／登出三个能力、`401`错误）：
+
+```bash
+kcg scaffold dual-token --source-root "$SOURCE" --entry project.sir \
+  --account User --name-field name --password-field passwordHash \
+  [--prefix Auth] [--access-minutes 15] [--refresh-days 7] > scaffold.json
+
+kcg edit --source-root "$SOURCE" --entry project.sir --candidate-root "$CANDIDATE" < scaffold.json
+```
+
+`--account`是登录的账号实体，必须已经声明唯一的文本字段`--name-field`和`secret`字段`--password-field`。`--prefix`加在模式声明的每个名字前面（默认为空），用来避开已有名字；有效期默认15分钟和7天。
+
+成功时stdout**恰好**是一个`KCG-CLI-COMMANDS-V1`命令批（一行JSON加换行，每个新声明一条`add`），可以直接作为`edit`的输入；批里带的`baselineSha256`就是当前源集合的摘要。模式声明的是**普通SIR文本**：`edit`保存后，它们和作者自己写的声明没有区别，之后可以随便改，模板以后的改进不会传播到已生成的工程。
+
+模式声明与你的软件一起经过同一个正式语义分析，所以不合适的情况在这里就被拒绝，消息是分析自己的：名字已被占用（`SIR-SYMBOL-001`，用`--prefix`避开）、账号实体缺字段或字段不对（`SIR-SYMBOL-002`、`SIR-VALID-006`、`SIR-VALID-008`）、同一个账号已经有凭据实体（`SIR-VALID-009`）、源本身不是合法软件。拒绝时stdout是一个`KCG-CLI-WORKFLOW-V1`文档（`outcome`为`REFUSED`，含`message`与`details`），没有批。
+
+退出码：0 批已写出；2 参数错误（缺选项、未知模式、选项重复、数字不合法）；3 拒绝或源不可读。生成的工程要这样运行：`kcg.actor-identity.mode=external`（生成的认证器取这个模式要求的bean名，见[设计10第26节](design/10-semantic-boundary-and-mechanisms.md)）。

@@ -501,6 +501,16 @@ final class BusinessSliceHarness {
                 this.environment.runtimeUsername(), this.environment.runtimePassword());
     }
 
+    /**
+     * Puts the data into a state the application cannot reach within a test run, such as letting a token run
+     * out. Fixture work, like the seed: the run's own control session, no application involved.
+     */
+    void fixtureStatement(String sql) throws SQLException {
+        try (Statement statement = this.control.createStatement()) {
+            statement.execute(sql);
+        }
+    }
+
     List<String> rowsNow(MysqlObserver observer) throws SQLException {
         return observer.queryRows(this.environment.schemaName(), this.fixture.table(), "id");
     }

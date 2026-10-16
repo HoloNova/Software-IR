@@ -88,6 +88,88 @@ public final class SourceEditor {
       return new EditResult.Edited(snapshotOf(sources.entry(), done.files()), done.delta(), done.changes());
    }
 
+   /**
+    * What declarations written as text would add to these sources.
+    *
+    * <p>The text is placed after the last declaration of the entry source - where {@link #edit} puts a new
+    * declaration - and the result goes through the same formal analysis as any edit, so a name that is
+    * already taken, a reference to something that is not there, or a rule the declarations break all
+    * come back as the analysis' own findings. Only the declarations that were not already there are
+    * returned. Nothing is written: the caller sends them as {@code add} commands, and the edit then
+    * checks them once more against the digest returned here.
+    */
+   public ScaffoldResult scaffold(SourceSnapshot sources, String declarationsText) {
+      Map<SourceId, String> files = new LinkedHashMap<>();
+      for (var entry : sources.manifest().files()) {
+         String text = decode(sources.bytes(entry.sourceId()));
+         if (text == null) {
+            return new ScaffoldResult.Refused("source '" + entry.sourceId().value() + "' is not valid UTF-8", List.of());
+         }
+
+         if (text.startsWith("﻿")) {
+            return new ScaffoldResult.Refused("a source with a leading byte order mark is not supported yet", List.of());
+         }
+
+         files.put(entry.sourceId(), text);
+      }
+
+      Documents documents = new Documents(sources.entry(), files);
+      Analyzed baseline = this.analyze(documents);
+      if (baseline.model == null) {
+         return new ScaffoldResult.Refused("the source to add to is not a valid software", baseline.problems);
+      }
+
+      String entryText = files.get(sources.entry());
+      var parsed = this.parser.parseProject(new SirSource(sources.entry(), entryText));
+      List<io.kcg.sir.ast.AstDeclaration> declared = parsed.unit().orElseThrow() instanceof AstSourceUnit.Root root
+         ? root.document().software().declarations()
+         : List.of();
+      if (declared.isEmpty()) {
+         return new ScaffoldResult.Refused("the entry source declares nothing yet, so there is nothing to attach the declarations to", List.of());
+      }
+
+      int[] points = entryText.codePoints().toArray();
+      int insertAt = declared.stream().mapToInt(d -> d.span().end().codePointOffset()).max().orElseThrow();
+      String extended = new String(points, 0, insertAt) + "\n" + declarationsText.stripTrailing() + new String(points, insertAt, points.length - insertAt);
+      Map<SourceId, String> candidateFiles = new LinkedHashMap<>(files);
+      candidateFiles.put(sources.entry(), extended);
+      Analyzed candidate = this.analyze(new Documents(sources.entry(), candidateFiles));
+      if (candidate.model == null) {
+         return new ScaffoldResult.Refused("the declarations do not fit this software", candidate.problems);
+      }
+
+      Set<String> present = new java.util.HashSet<>();
+      for (StructNode node : SoftwareDraft.of(baseline.model).declarations()) {
+         present.add(SoftwareDraft.identityOf(node).orElseThrow());
+      }
+
+      List<StructNode> added = SoftwareDraft.of(candidate.model).declarations().stream()
+         .filter(node -> !present.contains(SoftwareDraft.identityOf(node).orElseThrow()))
+         .map(SourceEditor::authored)
+         .toList();
+      return new ScaffoldResult.Scaffolded(baseline.model.softwareName(), sha256(sources), added);
+   }
+
+   /** The part of a node a command may supply: its authored slots only, all the way down (identities and computed slots are the editor's own). */
+   private static StructNode authored(StructNode node) {
+      List<StructNode.Slot> slots = new ArrayList<>();
+      for (StructNode.Slot slot : node.slots()) {
+         if (slot.kind() == SlotKind.FACT || slot.kind() == SlotKind.REFERENCE) {
+            slots.add(new StructNode.Slot(slot.key(), slot.kind(), authored(slot.value())));
+         }
+      }
+
+      return new StructNode(node.kind(), slots);
+   }
+
+   private static StructValue authored(StructValue value) {
+      return switch (value) {
+         case StructValue.Child child -> new StructValue.Child(authored(child.node()));
+         case StructValue.Seq seq -> new StructValue.Seq(seq.elements().stream().map(SourceEditor::authored).toList());
+         default -> value;
+      };
+   }
+
    private static SourceSnapshot snapshotOf(SourceId entry, Map<SourceId, String> files) {
       Map<SourceId, byte[]> bytes = new LinkedHashMap<>();
       files.forEach((id, text) -> bytes.put(id, text.getBytes(StandardCharsets.UTF_8)));

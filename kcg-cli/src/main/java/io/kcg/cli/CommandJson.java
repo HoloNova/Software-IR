@@ -163,6 +163,23 @@ final class CommandJson {
         }
     }
 
+    /** A batch of {@code add} commands, one per declaration, ready to be sent to {@code edit} as it is. */
+    static String writeBatch(String softwareName, String baselineSha256, List<StructNode> declarations) {
+        var out = new StringBuilder("{");
+        JsonFields.field(out, "protocolVersion", PROTOCOL);
+        out.append(','); JsonFields.field(out, "protocol", CommandBatch.PROTOCOL);
+        out.append(','); JsonFields.field(out, "softwareName", softwareName);
+        out.append(','); JsonFields.field(out, "baselineSha256", baselineSha256);
+        out.append(",\"commands\":[");
+        for (int i = 0; i < declarations.size(); i++) {
+            if (i != 0) out.append(',');
+            out.append("{\"op\":\"add\",\"container\":{\"steps\":[{\"slot\":\"declarations\"}]},\"value\":");
+            writeValue(out, new StructValue.Child(declarations.get(i)));
+            out.append('}');
+        }
+        return out.append("]}").toString();
+    }
+
     /** Public-facing templates omit identities and computed/source slots; roles are assigned by the schema on read. */
     static void writeValue(StringBuilder out, StructValue value) {
         switch (value) {
