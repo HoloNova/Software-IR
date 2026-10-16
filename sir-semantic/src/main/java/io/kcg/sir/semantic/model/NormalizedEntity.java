@@ -12,8 +12,12 @@ import java.util.Objects;
 import java.util.Optional;
 
 public record NormalizedEntity(
-   @Identity SymbolId id, @Fact String name, @Source SourceSpan span, @Source AstNodeId sourceNodeId, @Fact boolean persistent, @Fact NormalizedIdentity identity, @Fact List<NormalizedField> fields, @Derived Optional<SymbolId> versionField
+   @Identity SymbolId id, @Fact String name, @Source SourceSpan span, @Source AstNodeId sourceNodeId, @Fact boolean persistent, @Fact NormalizedIdentity identity, @Fact List<NormalizedField> fields, @Derived Optional<SymbolId> versionField, @Fact Optional<NormalizedCredential> credential
 ) implements NormalizedDeclaration {
+   public NormalizedEntity(SymbolId id, String name, SourceSpan span, AstNodeId sourceNodeId, boolean persistent, NormalizedIdentity identity, List<NormalizedField> fields, Optional<SymbolId> versionField) {
+      this(id, name, span, sourceNodeId, persistent, identity, fields, versionField, Optional.empty());
+   }
+
    public NormalizedEntity {
       Objects.requireNonNull(id, "id");
       Objects.requireNonNull(name, "name");
@@ -22,5 +26,6 @@ public record NormalizedEntity(
       Objects.requireNonNull(identity, "identity");
       fields = List.copyOf(Objects.requireNonNull(fields, "fields"));
       Objects.requireNonNull(versionField, "versionField");
+      Objects.requireNonNull(credential, "credential");
    }
 }

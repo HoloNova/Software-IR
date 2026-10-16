@@ -13,6 +13,8 @@ public enum ReferenceRole {
    LOAD_ERROR(SymbolKind.ERROR),
    LOAD_ENTITY(SymbolKind.ENTITY),
    LOAD_KEY_FIELD(SymbolKind.FIELD),
+   CREDENTIAL_SUBJECT_FIELD(SymbolKind.FIELD),
+   CREDENTIAL_EXPIRY_FIELD(SymbolKind.FIELD),
    FIND_ENTITY(SymbolKind.ENTITY),
    CREATE_ENTITY(SymbolKind.ENTITY),
    UPDATE_TARGET(SymbolKind.VARIABLE),

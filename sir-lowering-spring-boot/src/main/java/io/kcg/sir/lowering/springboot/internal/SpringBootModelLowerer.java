@@ -152,6 +152,7 @@ public final class SpringBootModelLowerer {
         if (!this.secretFields.isEmpty()) {
             projectArtifacts.add(this.secretDigestArtifact());
         }
+        this.credentialIdentityAdapterArtifact().ifPresent(projectArtifacts::add);
         if (this.hasPagedFind(declarations)) {
             projectArtifacts.add(this.pageResponseArtifact());
         }
@@ -232,6 +233,36 @@ public final class SpringBootModelLowerer {
         return new ProjectArtifact.ApplicationConfig(
                 this.nodeId("project", "application-config"), this.projectOrigin(), "src/main/resources/application.yml",
                 this.kebab(this.softwareName()), true);
+    }
+
+    /**
+     * The generated authenticator, when an entity is declared a credential. The actor of a source is the
+     * entity its subject field refers to; the validator has already guaranteed that every such entity has
+     * a reference subject and one credential entity.
+     */
+    private Optional<ProjectArtifact.CredentialIdentityAdapter> credentialIdentityAdapterArtifact() {
+        List<ProjectArtifact.CredentialSource> sources = new ArrayList<>();
+        for (NormalizedDeclaration declaration : this.source.declarations()) {
+            if (declaration instanceof NormalizedEntity entity && entity.credential().isPresent()) {
+                var credential = entity.credential().get();
+                NormalizedField subject = entity.fields().stream().filter(field -> field.id().equals(credential.subjectField())).findFirst().orElseThrow();
+                if (!(subject.type() instanceof RefType reference)) {
+                    throw new IllegalStateException("validated credential subject must be a reference: " + entity.name());
+                }
+
+                sources.add(new ProjectArtifact.CredentialSource(reference.entityId(), entity.id(), credential.subjectField(), credential.expiryField()));
+            }
+        }
+
+        if (sources.isEmpty()) {
+            return Optional.empty();
+        }
+
+        String packageName = this.source.metadata().namespace() + ".application";
+        String simpleName = "CredentialIdentityAdapter";
+        return Optional.of(new ProjectArtifact.CredentialIdentityAdapter(
+                this.nodeId("project", "credential-identity-adapter"), this.projectOrigin(),
+                "src/main/java/" + packageName.replace('.', '/') + "/" + simpleName + ".java", packageName, simpleName, sources));
     }
 
     private ProjectArtifact.SecretDigest secretDigestArtifact() {
@@ -939,7 +970,7 @@ public final class SpringBootModelLowerer {
 
     private SpringBootWorkflow.Binding lowerBinding(NormalizedBinding binding, SymbolId owner, Optional<SymbolId> actorSymbol) {
         String targetName = this.targetMemberNames.get(binding.fieldSymbol());
-        SpringExpression value = this.lowerExpression(binding.value(), owner, actorSymbol);
+        SpringExpression value = this.referencedIdentity(this.lowerExpression(binding.value(), owner, actorSymbol), actorSymbol);
         if (this.secretFields.contains(binding.fieldSymbol())) {
             // The property name is read from the unwrapped value: it names the request field, not the digest.
             return new SpringBootWorkflow.Binding(binding.fieldSymbol(), targetName,
@@ -948,6 +979,24 @@ public final class SpringBootModelLowerer {
         }
 
         return new SpringBootWorkflow.Binding(binding.fieldSymbol(), targetName, value, this.sourcePropertyName(value, owner));
+    }
+
+    /**
+     * A reference field stores the identity of the row it refers to. The actor already stands for that
+     * identity in the generated code, but a variable that holds a loaded or created row is the row itself,
+     * so binding it to a reference field means binding that row's identity.
+     */
+    private SpringExpression referencedIdentity(SpringExpression value, Optional<SymbolId> actorSymbol) {
+        if (value instanceof SpringExpression.NameExpression name
+                && name.type() instanceof LoweredJavaType.EntityReference reference
+                && !actorSymbol.map(name.resolvedSymbol()::equals).orElse(false)) {
+            NormalizedEntity entity = this.entities.get(reference.entitySymbol());
+            return new SpringExpression.MemberExpression(
+                    this.nodeId(name.id().value(), "referenced-identity"), name.origin(), reference.identityStorageType(), name,
+                    entity.identity().id(), entity.identity().name());
+        }
+
+        return value;
     }
 
     private SpringExpression lowerExpression(NormalizedExpression expression, SymbolId owner) {

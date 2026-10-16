@@ -196,6 +196,7 @@ final class BusinessSliceHarness {
     private boolean lockAcquired;
     private String lockName;
     private SpringApplicationProcess springProcess;
+    private String actorMode;
     private Process process;
     private boolean schemaCreated;
     private String failure;
@@ -390,6 +391,14 @@ final class BusinessSliceHarness {
      *
      * @return the executable jar, or {@code null} when the build failed
      */
+    /**
+     * Starts the application with an actor identity mode, which an application with authenticated routes
+     * refuses to start without. Slices that declare no actor never call this.
+     */
+    void useActorMode(String mode) {
+        this.actorMode = mode;
+    }
+
     Path buildAndLocateJar(MysqlRuntimeJdbcUrl runtimeUrl) throws IOException, InterruptedException {
         ChildEnvironmentBuilder childEnvironment = new ChildEnvironmentBuilder()
                 .copyOsAllowlist()
@@ -399,6 +408,10 @@ final class BusinessSliceHarness {
                 .datasourceUrl(runtimeUrl)
                 .datasourceUsername(this.environment.runtimeUsername())
                 .datasourcePassword(this.environment.runtimePassword());
+        if (this.actorMode != null) {
+            childEnvironment.actorMode(this.actorMode);
+        }
+
         Map<String, String> childEnv = new java.util.LinkedHashMap<>(childEnvironment.build());
         // ChildEnvironmentBuilder deliberately drops inherited MAVEN_OPTS; limits must be explicit.
         List<String> mavenLimits = ConformanceJvmLimits.arguments("maven");

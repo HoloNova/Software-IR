@@ -32,8 +32,11 @@ class ProjectVisibilityTest {
             if (owner != null && !owner.span().source().equals(binding.site().span().source())) examples.putIfAbsent(binding.site().role(), binding);
         }
         var expected = EnumSet.allOf(ReferenceRole.class);
-        expected.removeAll(EnumSet.of(ReferenceRole.UPDATE_TARGET, ReferenceRole.PERSIST_TARGET));
-        assertEquals(expected, examples.keySet(), "every public role is either exercised cross-file or explicitly local-variable-only");
+        // Local by construction: a workflow variable lives in its own workflow, and the credential clause names fields
+        // of the entity it sits in, so neither can refer to a declaration in another file.
+        expected.removeAll(EnumSet.of(ReferenceRole.UPDATE_TARGET, ReferenceRole.PERSIST_TARGET,
+                ReferenceRole.CREDENTIAL_SUBJECT_FIELD, ReferenceRole.CREDENTIAL_EXPIRY_FIELD));
+        assertEquals(expected, examples.keySet(), "every public role is either exercised cross-file or explicitly local by construction");
         var before = tree(temp);
         for (var example : examples.entrySet()) {
             var using = example.getValue().site().span().source();

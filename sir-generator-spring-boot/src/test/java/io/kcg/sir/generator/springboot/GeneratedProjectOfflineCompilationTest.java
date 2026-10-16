@@ -178,6 +178,24 @@ class GeneratedProjectOfflineCompilationTest {
         }
     }
 
+    /** A credential entity adds a generated authenticator that is a conditional component of the application; only a compiler can vouch for it. */
+    @Test
+    void bearerCredentialProjectCompilesWithFrozenDependenciesOffline(@TempDir Path tempDir)
+            throws Exception {
+        Path projectRoot = tempDir.resolve("generated-project");
+        List<GeneratedFile> files = GeneratorTestSupport.generateSuccess("valid/bearer-credential.sir");
+        materialize(files, projectRoot);
+        compileOffline(projectRoot, tempDir);
+
+        for (String classFile : List.of(
+                "example/notes/application/CredentialIdentityAdapter.class",
+                "example/notes/application/LoginService.class",
+                "example/notes/application/PostNoteService.class")) {
+            assertTrue(Files.isRegularFile(projectRoot.resolve("target/classes").resolve(classFile)),
+                    () -> "offline Maven compile did not create representative class: " + classFile);
+        }
+    }
+
     private static void compileOffline(Path projectRoot, Path tempDir) throws Exception {
         Path maven = locateMavenExecutable();
         Path localRepository = frozenLocalRepository();

@@ -53,6 +53,7 @@ import io.kcg.sir.semantic.model.NormalizedBinding;
 import io.kcg.sir.semantic.model.NormalizedCapability;
 import io.kcg.sir.semantic.model.NormalizedConstraint;
 import io.kcg.sir.semantic.model.NormalizedDeclaration;
+import io.kcg.sir.semantic.model.NormalizedCredential;
 import io.kcg.sir.semantic.model.NormalizedEntity;
 import io.kcg.sir.semantic.model.NormalizedEnum;
 import io.kcg.sir.semantic.model.NormalizedError;
@@ -200,7 +201,9 @@ final class NormalizePass {
          true,
          identity,
          List.copyOf(fields),
-         Optional.ofNullable(versionFieldId)
+         Optional.ofNullable(versionFieldId),
+         decl.credential().map(clause -> new NormalizedCredential(
+            clause.id(), clause.span(), this.siteTargetOrUnknown(clause.subject().id()), this.siteTargetOrUnknown(clause.expires().id())))
       );
    }
 

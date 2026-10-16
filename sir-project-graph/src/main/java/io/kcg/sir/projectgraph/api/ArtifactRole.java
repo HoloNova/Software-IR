@@ -22,6 +22,7 @@ public sealed interface ArtifactRole permits ArtifactRole.DeclarationRole, Artif
       VALIDATION_SUPPORT,
       APPLICATION_CONFIG,
       UUID_TYPE_HANDLER,
-      SECRET_DIGEST;
+      SECRET_DIGEST,
+      CREDENTIAL_IDENTITY_ADAPTER;
    }
 }

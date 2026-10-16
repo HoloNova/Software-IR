@@ -132,7 +132,8 @@ final class SirAstBuilder {
         String path = ids.named(parent, "entity", name.text());
         AstIdentity identity = identity(context.identityDecl(), path);
         List<AstField> fields = context.entityMemberDecl().stream().map(value -> entityField(value, path)).toList();
-        return new AstEntityDecl(ids.id(path), source.span(context), name, identity, fields);
+        Optional<AstCredentialClause> credential = Optional.ofNullable(context.credentialClause()).map(value -> credentialClause(value, path));
+        return new AstEntityDecl(ids.id(path), source.span(context), name, identity, fields, credential);
     }
 
     private AstInputDecl inputDeclaration(SirParser.InputDeclContext context, String parent) {
@@ -172,6 +173,12 @@ final class SirAstBuilder {
                 ? Optional.empty()
                 : Optional.of(new BigInteger(context.INT().getText()));
         return new AstErrorDecl(ids.id(path), source.span(context), name, httpStatus);
+    }
+
+    private AstCredentialClause credentialClause(SirParser.CredentialClauseContext context, String parent) {
+        String path = ids.fixed(parent, "credential");
+        return new AstCredentialClause(
+                ids.id(path), source.span(context), nameRef(context.subject, path, "subject"), nameRef(context.expires, path, "expires"));
     }
 
     private AstIdentity identity(SirParser.IdentityDeclContext context, String parent) {

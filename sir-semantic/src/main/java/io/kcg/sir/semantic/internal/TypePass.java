@@ -12,6 +12,7 @@ import io.kcg.sir.ast.AstDeclaration;
 import io.kcg.sir.ast.AstEntityDecl;
 import io.kcg.sir.ast.AstExpression;
 import io.kcg.sir.ast.AstField;
+import io.kcg.sir.ast.AstNameRef;
 import io.kcg.sir.ast.AstFindOrderKey;
 import io.kcg.sir.ast.AstFindPage;
 import io.kcg.sir.ast.AstFindStep;
@@ -147,6 +148,7 @@ final class TypePass {
                this.typeEntityVersionField(entity);
                this.typeEntityUniqueField(entity);
                this.typeEntitySecretField(entity);
+               this.typeEntityCredential(entity);
             }
             case AstInputDecl input -> {
                this.typeFieldConstraints(input.fields(), declarationId);
@@ -295,6 +297,45 @@ final class TypePass {
                "version 字段必须是 Int64: " + entity.name().text() + "." + field.name().text() + " 声明为 " + declaredType,
                field.type().span()
             ));
+         }
+      }
+   }
+
+   /**
+   * What a credential entity's rows must be able to carry: a token nobody can guess (a uuid key), the
+   * subject it belongs to (a reference to another entity's row) and the moment it expires. The two named
+   * members must be fields, not the key, and only their types are checked here; that every
+   * subject has one credential entity and how the capabilities use it is the validator's business.
+   */
+   private void typeEntityCredential(AstEntityDecl entity) {
+      entity.credential().ifPresent(credential -> {
+         SirType identityType = this.resolved.typeRefTypes().get(entity.identity().type().id());
+         if (identityType != null && identityType != PrimitiveType.UUID) {
+            this.diagnostics.add(DiagnosticBuilder.error(
+               "SIR-TYPE-001", "凭据实体的主键必须是 Uuid（令牌不可猜测）: " + entity.name().text(), entity.identity().type().span()));
+         }
+
+         this.typeCredentialMember(entity, credential.subject(), "subject", "引用其他实体的字段（Ref<实体>）", type -> type instanceof RefType);
+         this.typeCredentialMember(entity, credential.expires(), "expires", "DateTime 字段", type -> type == PrimitiveType.DATE_TIME);
+      });
+   }
+
+   private void typeCredentialMember(
+      AstEntityDecl entity, AstNameRef member, String role, String expectation, java.util.function.Predicate<SirType> fits
+   ) {
+      if (member.text().equals(entity.identity().name().text())) {
+         this.diagnostics.add(DiagnosticBuilder.error(
+            "SIR-TYPE-001", role + " 必须是" + expectation + "，不能是主键: " + member.text(), member.span()));
+         return;
+      }
+
+      for (AstField field : entity.fields()) {
+         if (field.name().text().equals(member.text())) {
+            SirType declared = this.resolved.typeRefTypes().get(field.type().id());
+            if (declared != null && !fits.test(declared)) {
+               this.diagnostics.add(DiagnosticBuilder.error(
+                  "SIR-TYPE-001", role + " 必须是" + expectation + ": " + member.text() + " 声明为 " + declared, member.span()));
+            }
          }
       }
    }

@@ -89,6 +89,7 @@ public final class GenerationEngine {
          case ProjectArtifact.PageResponse page -> PageResponseRenderer.render(page);
          case ProjectArtifact.UuidTypeHandler handler -> UuidTypeHandlerRenderer.render(handler);
          case ProjectArtifact.SecretDigest digest -> SecretDigestRenderer.render(digest);
+         case ProjectArtifact.CredentialIdentityAdapter adapter -> CredentialIdentityAdapterRenderer.render(this.ctx, adapter);
          case ProjectArtifact.ApiErrorResponse error -> ApiErrorRenderer.render(error);
          case ProjectArtifact.ApiExceptionBase base -> ApiExceptionRenderer.render(base);
          case ProjectArtifact.ApiExceptionAdvice advice -> ApiExceptionAdviceRenderer.render(advice);

@@ -65,6 +65,12 @@ class TypedReferenceSiteContractTest {
               identity id: Int64 generated auto;
               field label: String unique;
             }
+            entity Token persistent {
+              identity id: Uuid generated uuid;
+              field owner: Ref<User>;
+              field expiresAt: DateTime;
+              credential subject owner expires expiresAt;
+            }
             input LookupInput {
               field id: Int64;
               field active: Boolean;
@@ -620,6 +626,10 @@ class TypedReferenceSiteContractTest {
                     for (io.kcg.sir.ast.AstField f : e.fields()) {
                         collectTypeRef(f.type(), sink);
                     }
+                    e.credential().ifPresent(credential -> {
+                        sink.put(credential.subject().id(), credential.subject().text());
+                        sink.put(credential.expires().id(), credential.expires().text());
+                    });
                 }
                 case io.kcg.sir.ast.AstInputDecl e -> {
                     e.patchSourceEntity().ifPresent(source -> sink.put(source.id(), source.text()));

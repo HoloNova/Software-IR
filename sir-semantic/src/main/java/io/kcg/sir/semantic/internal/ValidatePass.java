@@ -201,6 +201,7 @@ final class ValidatePass {
          }
       }
 
+      this.validateCredentials();
       return ValidatedContext.from(this.typed, List.copyOf(this.diagnostics));
    }
 
@@ -513,6 +514,65 @@ final class ValidatePass {
    }
 
    private static final String SECRET_CODE = "SIR-VALID-008";
+   private static final String CREDENTIAL_CODE = "SIR-VALID-009";
+
+   /**
+   * How credential entities and authenticated capabilities fit together.
+   *
+   * <p>A subject can be known by one kind of token only, or the same request could be authenticated two
+   * ways. And the generated service has one authenticator for the whole application, so it either knows
+   * the credentials of every authenticated capability's actor or of none: a mixture would leave some
+   * routes to a hand-written adapter and some to the generated one, which is only discovered when the
+   * application fails to start. Both are refused here, where they are written.
+   */
+   private void validateCredentials() {
+      Map<SymbolId, AstEntityDecl> credentialBySubject = new LinkedHashMap<>();
+      for (AstDeclaration decl : this.software.declarations()) {
+         if (!(decl instanceof AstEntityDecl entity) || entity.credential().isEmpty()
+            || !this.typed.declarationBindings().containsKey(entity.id())) {
+            continue;
+         }
+
+         SymbolId subjectField = this.typed.referenceSiteBindings().targetFor(entity.credential().get().subject().id()).orElse(null);
+         SymbolId subjectEntity = null;
+         for (Map<SymbolId, SirType> fields : this.entityFieldTypes.values()) {
+            if (fields.get(subjectField) instanceof RefType reference) {
+               subjectEntity = reference.entityId();
+            }
+         }
+
+         if (subjectEntity != null && credentialBySubject.putIfAbsent(subjectEntity, entity) != null) {
+            this.diagnostics.add(DiagnosticBuilder.error(
+               CREDENTIAL_CODE, "同一个主体只能有一种凭据实体: " + credentialBySubject.get(subjectEntity).name().text() + " 与 " + entity.name().text(),
+               entity.credential().get().span()));
+         }
+      }
+
+      List<AstCapabilityDecl> backed = new ArrayList<>();
+      List<AstCapabilityDecl> unbacked = new ArrayList<>();
+      for (AstDeclaration decl : this.software.declarations()) {
+         if (!(decl instanceof AstCapabilityDecl capability) || capability.actor().isEmpty()
+            || capability.requirements().stream().noneMatch(requirement -> requirement.requirement() == AstRequirementKind.AUTHENTICATED)) {
+            continue;
+         }
+
+         SirType actor = this.typed.typeRefTypes().get(capability.actor().get().type().id());
+         if (actor instanceof RefType reference && credentialBySubject.containsKey(reference.entityId())) {
+            backed.add(capability);
+         } else {
+            unbacked.add(capability);
+         }
+      }
+
+      if (!backed.isEmpty() && !unbacked.isEmpty()) {
+         for (AstCapabilityDecl capability : unbacked) {
+            this.diagnostics.add(DiagnosticBuilder.error(
+               CREDENTIAL_CODE,
+               "认证方式不能混用：有的能力的 actor 由凭据实体认证，这个能力的 actor 没有凭据实体: " + capability.name().text(),
+               capability.actor().get().span()));
+         }
+      }
+   }
 
    /**
    * What a secret field may be declared together with.

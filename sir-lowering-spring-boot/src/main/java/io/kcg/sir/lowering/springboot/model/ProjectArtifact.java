@@ -5,6 +5,7 @@ import io.kcg.sir.lowering.api.LoweredOrigin;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import io.kcg.sir.semantic.symbol.SymbolId;
 
 public sealed interface ProjectArtifact
    permits ProjectArtifact.MavenProject,
@@ -12,6 +13,7 @@ public sealed interface ProjectArtifact
    ProjectArtifact.PageResponse,
    ProjectArtifact.UuidTypeHandler,
    ProjectArtifact.SecretDigest,
+   ProjectArtifact.CredentialIdentityAdapter,
    ProjectArtifact.ApiErrorResponse,
    ProjectArtifact.ApiExceptionBase,
    ProjectArtifact.ApiExceptionAdvice,
@@ -89,6 +91,40 @@ public sealed interface ProjectArtifact
          ProjectArtifact.requireText(path, "path");
          ProjectArtifact.requireText(packageName, "packageName");
          ProjectArtifact.requireText(simpleName, "simpleName");
+      }
+   }
+
+   /**
+   * One credential entity the generated authenticator knows: the rows of {@code credentialEntity} are
+   * bearer tokens for {@code actorEntity}; {@code subjectField} says whom a token belongs to and
+   * {@code expiryField} when it stops being valid.
+   */
+   record CredentialSource(SymbolId actorEntity, SymbolId credentialEntity, SymbolId subjectField, SymbolId expiryField) {
+      public CredentialSource {
+         Objects.requireNonNull(actorEntity, "actorEntity");
+         Objects.requireNonNull(credentialEntity, "credentialEntity");
+         Objects.requireNonNull(subjectField, "subjectField");
+         Objects.requireNonNull(expiryField, "expiryField");
+      }
+   }
+
+   /**
+   * The authenticator that recognises the bearer tokens of the credential entities, in place of a
+   * hand-written adapter. It is emitted only where a credential entity is declared.
+   */
+   record CredentialIdentityAdapter(
+      LoweredNodeId id, LoweredOrigin origin, String path, String packageName, String simpleName, List<CredentialSource> sources
+   ) implements ProjectArtifact {
+      public CredentialIdentityAdapter {
+         Objects.requireNonNull(id, "id");
+         Objects.requireNonNull(origin, "origin");
+         ProjectArtifact.requireText(path, "path");
+         ProjectArtifact.requireText(packageName, "packageName");
+         ProjectArtifact.requireText(simpleName, "simpleName");
+         sources = List.copyOf(Objects.requireNonNull(sources, "sources"));
+         if (sources.isEmpty()) {
+            throw new IllegalArgumentException("a credential authenticator needs at least one credential entity");
+         }
       }
    }
 

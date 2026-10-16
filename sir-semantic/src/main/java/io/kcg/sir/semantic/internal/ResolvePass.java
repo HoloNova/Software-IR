@@ -393,6 +393,11 @@ final class ResolvePass {
             this.bind(field.id(), fieldSymId);
          }
       }
+
+      entityDecl.credential().ifPresent(credential -> {
+         this.resolveEntityFieldRef(credential.subject(), entityName, ReferenceRole.CREDENTIAL_SUBJECT_FIELD);
+         this.resolveEntityFieldRef(credential.expires(), entityName, ReferenceRole.CREDENTIAL_EXPIRY_FIELD);
+      });
    }
 
    /**

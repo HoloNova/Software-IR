@@ -72,6 +72,7 @@ entityDecl
     : ENTITY IDENT PERSISTENT LBRACE
         identityDecl
         entityMemberDecl*
+        credentialClause?
       RBRACE
     ;
 
@@ -101,6 +102,15 @@ fieldDecl
 // error rather than a silently ignored annotation.
 entityMemberDecl
     : FIELD IDENT COLON typeRef constraintList? VERSIONED? uniqueModifier? secretModifier? idAnnotation? SEMI
+    ;
+
+// "credential subject owner expires expiresAt;" closes an entity whose rows are bearer credentials. Its three
+// words are contextual: only here do they mean anything, so every identifier spelled credential, subject or
+// expires stays legal. It follows the fields, where no member can start with an identifier.
+credentialClause
+    : {_input.LT(1).getText().equals("credential")}? IDENT
+      {_input.LT(1).getText().equals("subject")}? IDENT subject=IDENT
+      {_input.LT(1).getText().equals("expires")}? IDENT expires=IDENT SEMI
     ;
 
 // "unique" is a contextual word, like sources and imports above: it is only a modifier here, after

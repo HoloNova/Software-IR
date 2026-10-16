@@ -366,7 +366,7 @@ persist c;
 3. 守卫更新（`update … when … else …`）；需要真实 MySQL 并发测试作验收。（已实现，见第 22 节；工作区未提交，CI 未运行。）
 4. 错误状态码加入 401。（已实现，见第 24 节。）
 5. 字段 `secret`（口令摘要）与 `matches`。（已实现，见第 25 节。）
-6. 凭据角色绑定与“已认证”的连接。
+6. 凭据角色绑定与“已认证”的连接。（已实现，见第 26 节。）
 7. 把前六项组成的双 Token 组合升格为内建修饰（定义为展开）。
 
 端口（第 10 节）不在这条链上，需要时单独授权。每一步都应以“双 Token 七条行为多写出来一条”作为可观测的进展，最后一步完成时七条全部能用语言本身写出。
@@ -829,7 +829,7 @@ parser：语法两处（`secretModifier`、`matchesOperator`）、`AstField.secr
 - **没有口令强度、长度、锁定、限流。** 强度可在输入字段上用约束表达；锁定和限流是别的能力。
 - 迭代次数是常量，不可按工程配置。
 
-## 26. 第 6 步的设计：登录签发的凭据与 `requires authenticated` 的连接（供评审，未实现）
+## 26. 第 6 步：登录签发的凭据与 `requires authenticated` 的连接（2026-10-16，设计经负责人确认，实现见 26.8，工作区未提交，CI 未运行）
 
 本节只是设计，来自对现有认证代码的阅读（`ApplicationRenderer` 的 `ActorIdentityRuntime`／拦截器、`buildActorIdentityTransportPlan`、`AstActorClause`），没有运行新代码。按负责人“改代码前先说明为什么存在”的规矩，这一步在实现前先写出设计。
 
@@ -876,3 +876,34 @@ credential AccessToken for User {
 ### 26.7 验收与已知限制
 
 验收：真实 MySQL 的 IT 里，登录签发令牌后用 `Authorization: Bearer` 调受保护接口得 200 且 `actor` 是令牌的属主；无头、格式不对、未知令牌、已过期令牌都得 401；把 `expiresAt` 更新成现在后同一令牌得 401。已知限制：每次受保护请求多一次按主键的查询（没有缓存）；令牌明文存储（它本身就是不可猜测的随机值，与口令不同；若要存摘要，需要另一种查找键，不在本步范围）。
+
+### 26.8 实现结果与对设计的一处偏离
+
+**偏离：语法位置。** 设计 26.2 写的是顶层声明 `credential AccessToken for User { subject owner; expires expiresAt; }`。实现时我读了引用角色与声明的代码，发现顶层声明要新增“声明种类”（符号、规范化声明、结构视图、项目图都要认识它），还要三个引用角色（含实体名，需要跨文件的“缺少 import”样例）。把同样的语义写成**实体的结尾子句**，所需的东西少得多，也不改变语义：
+
+```
+entity AccessToken persistent {
+  identity id: Uuid generated uuid;
+  field owner: Ref<User>;
+  field expiresAt: DateTime;
+  credential subject owner expires expiresAt;
+}
+```
+
+“`for User`”可以省略，因为主体就是 `subject` 字段的 `Ref<User>` 指向的实体。只剩两个引用角色（`CREDENTIAL_SUBJECT_FIELD`、`CREDENTIAL_EXPIRY_FIELD`），都指向这个实体自己的字段，因此永远不会跨文件。`credential`、`subject`、`expires` 是上下文关键字，叫这些名字的字段或实体照常可用。语义规则 26.3 的四条一字不改：主键必须是 `Uuid`（`SIR-TYPE-001`）、`subject` 必须是 `Ref<实体>` 字段而 `expires` 必须是 `DateTime` 字段（不能是主键）、同一主体最多一种凭据实体、一个工程里“由凭据认证的能力”与“不由凭据认证的能力”不能混用（后两条 `SIR-VALID-009`）。
+
+**生成。** 有凭据实体的工程多一个 `application/CredentialIdentityAdapter`：`@Component("kcgActorIdentityTransport")`（`external` 模式要求的那个固定 bean 名），并且 `@ConditionalOnProperty(kcg.actor-identity.mode=external)`——所以不新增运行模式，本地的 `local-fixed` 开发模式也照旧可用（它拒绝任何 adapter bean）。它读 `Authorization: Bearer <uuid>`（方案名不区分大小写；长度不是 36、不是合法 uuid、查不到、已过期都返回空，由拦截器写 401），按 `actor` 的实体选对应的凭据实体，用该实体的 mapper 按主键查，返回 `subject` 字段里的主体主键。没有凭据实体的工程输出不变。
+
+**顺带修复的一个生成缺陷（本步发现）。** 引用字段用“一行的变量”绑定（`owner: user`，`user` 是 `load` 出来的行）会生成 `token.setOwnerId(user)`，类型不符，编译失败——这种写法此前没有任何夹具用过。降级现在把这样的绑定写成该行的主键（`user.getId()`）；`actor` 本来就代表主键，保持原样。
+
+**改动面（实测）。** parser：语法一处、`AstCredentialClause`、`AstEntityDecl.credential`、builder。semantic：`NormalizedCredential`、`NormalizedEntity.credential`（**可选**槽位，现有指令载荷不受影响，与第 5 步的必填槽位相反）、两个引用角色、`ResolvePass`／`TypePass`／`ValidatePass`／`NormalizePass`、`SirDeclarationWriter`。lowering：`ProjectArtifact.CredentialIdentityAdapter`（含 `CredentialSource`）、引用绑定改写。generator：`CredentialIdentityAdapterRenderer`。项目图：项目角色 `CREDENTIAL_IDENTITY_ADAPTER`。两个“每个引用角色都有样例”的契约测试：`TypedReferenceSiteContractTest` 加了样例；`ProjectVisibilityTest` 把这两个角色列入“按构造就是本地的”（与 `UPDATE_TARGET`、`PERSIST_TARGET` 同类，理由写在测试里）。
+
+**验证（本机）。**
+- 真实 MySQL 手工：注册、登录得到令牌（库里一行：主体、约 15 分钟后过期）；不带头、`Basic`、格式不对、未知令牌、已过期令牌都是 401；带 `Bearer`（及小写 `bearer`）令牌得 201，库里该条笔记的作者是令牌的属主；`logout`（用现有的 `update` 把 `expiresAt` 改成现在）之后同一令牌得 401。
+- 单元／契约：`CredentialClauseGrammarTest`（4）、`CredentialSemanticsTest`（7）、`CredentialLoweringTest`（3）、`GeneratorCredentialContractTest`（4）。各模块定向：parser 126、semantic 276、lowering 4／103、generator 99、project-graph 73、change 28、toolchain 238、kcg-cli 28，0 失败（已排除只能在 CI 跑的离线编译用例）。
+- 旧输出对比：与上一提交打出的旧 jar 对 29 个夹具各生成一次，28 个逐文件字节相同，另一个是新夹具（旧工具链无法解析）。
+- CI 侧新增：`BearerCredentialBusinessConformanceIT`（B1–B6：两个账号各自登录、令牌属主决定笔记作者、五种不合格的头都是 401、登出只作废一个令牌）和离线编译用例。IT 的各步骤先在本机真实库上手工跑过，IT 本身本机没有运行，以 CI 为准。
+
+**已知限制。** 每次受保护请求多一次按主键的查询（没有缓存）；令牌明文存储（它是不可猜测的随机值；与口令不同，若要存摘要需要另一种查找键，不在本步范围）；受保护接口的 401 响应没有响应体（沿用原拦截器的行为）；`logout` 以“知道令牌”为凭据，不要求已认证（令牌本身不可猜测）；没有刷新令牌的专门语法——刷新令牌是另一个实体，它的轮换用第 3 步的守卫更新写（见 `TokenDeskBusinessConformanceIT`）。
+
+至此双 Token 七条行为在语言里都能写出，剩下的只有第 15.3 节的最后一步：把组合升格为内建修饰（定义为展开）。

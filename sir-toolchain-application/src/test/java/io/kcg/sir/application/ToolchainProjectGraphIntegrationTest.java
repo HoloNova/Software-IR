@@ -415,6 +415,7 @@ class ToolchainProjectGraphIntegrationTest {
             case APPLICATION_CONFIG -> lowerProjectArtifact(lowered, ProjectArtifact.ApplicationConfig.class);
             case UUID_TYPE_HANDLER -> lowerProjectArtifact(lowered, ProjectArtifact.UuidTypeHandler.class);
             case SECRET_DIGEST -> lowerProjectArtifact(lowered, ProjectArtifact.SecretDigest.class);
+            case CREDENTIAL_IDENTITY_ADAPTER -> lowerProjectArtifact(lowered, ProjectArtifact.CredentialIdentityAdapter.class);
         };
     }
 

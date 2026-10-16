@@ -144,6 +144,7 @@ public final class SpringBootProjectGraphInputFactory {
          case ProjectArtifact.ApplicationMain main -> ProjectRole.APPLICATION_MAIN;
          case ProjectArtifact.UuidTypeHandler handler -> ProjectRole.UUID_TYPE_HANDLER;
          case ProjectArtifact.SecretDigest digest -> ProjectRole.SECRET_DIGEST;
+         case ProjectArtifact.CredentialIdentityAdapter adapter -> ProjectRole.CREDENTIAL_IDENTITY_ADAPTER;
       };
    }
 
@@ -159,6 +160,7 @@ public final class SpringBootProjectGraphInputFactory {
          case ProjectArtifact.ApplicationMain main -> main.path();
          case ProjectArtifact.UuidTypeHandler handler -> handler.path();
          case ProjectArtifact.SecretDigest digest -> digest.path();
+         case ProjectArtifact.CredentialIdentityAdapter adapter -> adapter.path();
       };
    }
 
