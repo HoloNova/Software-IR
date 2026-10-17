@@ -228,6 +228,6 @@ update顺序及失败结果：加锁与前置检查（2/3）；卷与`initialize
 
 **重复执行。** 只由（`state/package.id`，活库判定，包内合同链）决定：同包且AT(n)→CURRENT；异包且AT(n)→不执行SQL，改绑并启动（覆盖schema不变更新与改绑前崩溃）；AT(k<n)→只应用`V<k+1>..V<n>`；FAILED_MIGRATION/INTERRUPTED→每次（含start）均为5，恢复需人工；AHEAD（较旧的包）→3。
 
-**默认取舍（负责人可改）。** 准入以活库谱系为准，不在包内记录base id：允许跨版本和在schema相同的包间切换，代价是无法识别来自其他项目但schema相同的包。`kcg.package`标签降为创建者。本轮矩阵仅上表三类。无DDL的业务规则收紧放行并标NOT_VERIFIED。更新前不备份，报告写明“未备份，恢复需人工”。CI不手工改SQL制造中断或漂移，INTERRUPTED/DRIFT门本轮记NOT_RUN，由单元测试覆盖判定规则。恢复动作、旧镜像与`artifacts/`清理不在步骤③。
+**取舍（负责人2026-10-17确认）。** 准入以活库谱系为准，不在包内记录base id：允许跨版本和在schema相同的包间切换，代价是无法识别来自其他项目但schema相同的包。`kcg.package`标签降为创建者。本轮矩阵仅上表三类。无DDL的业务规则收紧放行并标NOT_VERIFIED。更新前不备份，报告写明“未备份，恢复需人工”。CI不手工改SQL制造中断或漂移，INTERRUPTED/DRIFT门本轮记NOT_RUN，由单元测试覆盖判定规则。恢复动作、旧镜像与`artifacts/`清理不在步骤③。
 
 **完成门与CI。** 同包v1部署并经HTTP写入数据→导出schema不变的新包并`update`（无SQL，改绑）→导出含新表与新可空列的v2包并`update`（逐版本迁移，摘要一致，旧主键/字段/关系保持，新功能可经HTTP使用）→重复`update`为CURRENT→用较旧的包`update`被拒绝（AHEAD/3）→新实例直接部署v2包时从V1重放全链。原步骤①②门不回退。
