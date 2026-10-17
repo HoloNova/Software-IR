@@ -290,3 +290,30 @@ use 登录 {
 - 单元测试：变更层的 `trail`；规划器的不变、加表加列（含依赖顺序）、各类拒绝、带 `@id` 改名被认出、物理差异无法解释时的自检。
 - 应用层测试：现有的继承旧链、拒绝回退、篡改旧包三项照旧通过；新增"旧包缺 `sir-entry`"的拒绝。
 - CI：步骤③的三个实例（`next`、`v2`、新实例）结果和 CI #98 相同，即 `schemaVersion == 3`，update、dataUpdate、freshChain 都是 PASSED。
+
+### 12.7 实现结果（2026-10-17，待同 SHA 的 CI）
+
+按第 12.2–12.4 节实现，和方案相比有一处变化：
+
+- **`SemanticDelta.Change` 增加了 `trail` 和 `subject` 两项，而不是一项。** 原方案只有 `trail`，并把被增删的元素放在它的末尾。但这样一来，"新增字段"和"给已有字段加约束"两条变化的 `trail` 末尾都是这个字段，规划器分不出来。所以拆成两项：`trail` 只放这条变化所在的外层元素，`subject` 放被增删的元素本身。
+
+本机定向测试（4 vCPU / 15 GiB 容器，单构建，`nice` 加 JVM 内存上限）：
+
+| 测试 | 结果 |
+| --- | --- |
+| `NewStructureProbeTest` | 5 项 |
+| `SourceEditorTest` | 16 项 |
+| `DeploymentPlannerTest` | 5 项 |
+| `SchemaEvolutionPlannerTest` | 6 项（新增：带 `@id` 改名被认出、变更层未报告时自检） |
+| `DeploymentPackageApplicationTest` | 8 项（继承旧链一项里新增：`changes`、`sir-entry`、旧包 SIR 不能复现清单时报 `BASE-004`、缺 `sir-entry` 时报 `BASE-003`） |
+| `KcgPackageCommandTest` | 1 项 |
+
+以上 0 失败。
+
+另外用本机构建的 `kcg.jar` 按 CI 的顺序走了一遍导出（只导出，不部署）：
+
+- next 包：`schemaVersion` 为 1，没有新步骤；
+- v2 包：`schemaVersion` 为 3，步骤是 `V2 CREATE_TABLE label`、`V3 ADD_NULLABLE_COLUMN note.title`；
+- 在 v2 上导出 v1：退出码 3，没有产生输出，拒绝理由是 `TABLE_REMOVED label`、`COLUMN_REMOVED note.title`。
+
+部署、更新和数据比对以同 SHA 的 CI 为准，本机没有运行。

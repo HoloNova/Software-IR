@@ -12,9 +12,12 @@ public sealed interface DeploymentPackageResult {
             this(packageId, sources, manifest, diagnostics, java.util.Optional.empty());
         }
     }
-    /** How the export continues a base delivery's chain: the schema version it ends at and the versions it appends. */
-    record Continuation(String basePackageId, int schemaVersion, List<String> steps) {
-        public Continuation { steps = List.copyOf(steps); }
+    /**
+     * How the export continues a base delivery's chain: what changed in the software since the base (as the change layer
+     * reports it), the schema version the chain ends at, and the versions it appends.
+     */
+    record Continuation(String basePackageId, int schemaVersion, List<String> changes, List<String> steps) {
+        public Continuation { changes = List.copyOf(changes); steps = List.copyOf(steps); }
     }
     record Failure(List<ExecutionDiagnostic> diagnostics) implements DeploymentPackageResult {
         public Failure { diagnostics = List.copyOf(diagnostics); }

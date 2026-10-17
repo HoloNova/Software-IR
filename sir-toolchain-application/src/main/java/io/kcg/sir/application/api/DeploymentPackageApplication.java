@@ -1,10 +1,19 @@
 package io.kcg.sir.application.api;
 
 import io.kcg.sir.application.internal.*;
+import io.kcg.sir.change.edit.SemanticDelta;
 import io.kcg.sir.generator.springboot.api.*;
 import io.kcg.sir.lowering.springboot.api.SpringBootDeploymentPlanner;
 import io.kcg.sir.lowering.springboot.api.SpringBootSchemaEvolutionPlanner;
+import io.kcg.sir.lowering.springboot.model.DeploymentPlan;
+import io.kcg.sir.lowering.springboot.model.SchemaContract;
 import io.kcg.sir.lowering.springboot.model.SchemaEvolution;
+import io.kcg.sir.semantic.api.NormalizedSemanticModel;
+import io.kcg.sir.semantic.schema.SoftwareDraft;
+import io.kcg.sir.semantic.schema.SoftwareSchema;
+import io.kcg.sir.source.SourceId;
+import io.kcg.sir.source.SourceSetManifest;
+import io.kcg.sir.source.SourceSnapshot;
 import java.nio.ByteBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.CodingErrorAction;
@@ -62,12 +71,24 @@ public final class DeploymentPackageApplication {
         }
         Optional<DeploymentPackageResult.Continuation> continuation = Optional.empty();
         if (base != null) {
-            SpringBootSchemaEvolutionPlanner.Outcome outcome;
-            try {
-                outcome = new SpringBootSchemaEvolutionPlanner().plan(base.schema().lines().toList(), base.version(), base.mysqlImage(), plan);
-            } catch (IllegalArgumentException invalid) {
-                return fail(diagnostics, ExecutionStage.PREFLIGHT, "SIR-APP-PACKAGE-BASE-003", "base schema contract is invalid: " + invalid.getMessage());
+            // The running delivery's model is rebuilt from its own sources. Only if that rebuild renders exactly the
+            // schema the running delivery was published with is it the model the database is actually at.
+            var baseDiagnostics = new ArrayList<ExecutionDiagnostic>();
+            var rebuilt = ProjectCompilation.compile(base.sources(), model -> new SpringBootGenerator().generate(model), baseDiagnostics);
+            if (rebuilt.isEmpty()) return fail(diagnostics, ExecutionStage.PREFLIGHT, "SIR-APP-PACKAGE-BASE-004",
+                "base package's SIR does not compile with this toolchain: " + baseDiagnostics.stream().filter(ExecutionDiagnostic::isError)
+                    .findFirst().map(d -> d.code() + " " + d.message()).orElse("no diagnostic"));
+            NormalizedSemanticModel baseModel = rebuilt.get().semanticModel();
+            DeploymentPlan basePlan;
+            try { basePlan = new SpringBootDeploymentPlanner().plan(baseModel, rebuilt.get().loweredModel()); }
+            catch (IllegalArgumentException unsupported) {
+                return fail(diagnostics, ExecutionStage.PREFLIGHT, "SIR-APP-PACKAGE-BASE-004", "base package's SIR is no longer deliverable: " + unsupported.getMessage());
             }
+            if (!SchemaContract.render(basePlan.tables()).equals(base.schema())) return fail(diagnostics, ExecutionStage.PREFLIGHT,
+                "SIR-APP-PACKAGE-BASE-004", "base package's SIR does not reproduce its schema contract with this toolchain");
+            SemanticDelta delta = SemanticDelta.between(SoftwareDraft.of(baseModel), SoftwareDraft.of(snapshot.semanticModel()),
+                SoftwareSchema.normalizedModel());
+            var outcome = new SpringBootSchemaEvolutionPlanner().plan(basePlan, base.mysqlImage(), base.version(), delta, plan);
             if (outcome.evolution().isEmpty()) {
                 for (String refusal : outcome.refusals()) diagnostics.add(ExecutionDiagnostic.error(refusal.startsWith("SELFCHECK ")
                     ? "SIR-DEPLOY-UPDATE-SELFCHECK-001" : "SIR-DEPLOY-UPDATE-UNSUPPORTED-001", ExecutionStage.LOWERING, refusal));
@@ -84,12 +105,15 @@ public final class DeploymentPackageApplication {
                     files.put(file.relativePath(), file);
             }
             continuation = Optional.of(new DeploymentPackageResult.Continuation(base.id(), evolution.targetVersion(),
+                delta.changes().stream().map(SemanticDelta.Change::toString).toList(),
                 evolution.steps().stream().map(SchemaEvolution.Step::describe).toList()));
         }
         for (var entry : acceptance.entrySet()) {
             String path = "acceptance/" + entry.getKey();
             files.put(path, new GeneratedFile(path, entry.getValue(), plan.id(), Optional.empty()));
         }
+        // Which source is the entry, so a later update can rebuild this delivery's model from sir/.
+        files.put(SIR_ENTRY, new GeneratedFile(SIR_ENTRY, loaded.get().snapshot().entry().value() + "\n", plan.id(), Optional.empty()));
         for (var entry : loaded.get().snapshot().manifest().files()) {
             String path = "sir/" + entry.sourceId().value();
             files.put(path, new GeneratedFile(path, new String(loaded.get().snapshot().bytes(entry.sourceId()), StandardCharsets.UTF_8), plan.id(), Optional.empty()));
@@ -112,13 +136,15 @@ public final class DeploymentPackageApplication {
         return new DeploymentPackageResult.Exported(packageId, loaded.get().snapshot().manifest(),
             new ExecutionManifest(output, saved.appliedFiles()), diagnostics, continuation);
     }
+    private static final String SIR_ENTRY = "sir-entry";
+
     private static boolean overlaps(Path a, Path b) { return a.startsWith(b) || b.startsWith(a); }
 
     /**
      * The frozen schema side of the delivery an instance runs now, read under the same integrity rules its Bootstrap
      * applies: package.id is the digest of package.sha256, every listed file matches, nothing is unlisted, no links.
      */
-    record BaseDelivery(String id, int version, Map<String, String> chain, String schema, String mysqlImage) {
+    record BaseDelivery(String id, int version, Map<String, String> chain, String schema, String mysqlImage, SourceSnapshot sources) {
         static final class Refused extends Exception {
             final String code;
             Refused(String code, String message) { super(message); this.code = code; }
@@ -178,7 +204,21 @@ public final class DeploymentPackageApplication {
                 String image = text(Files.readAllBytes(root.resolve("deploy/compose.yaml")), "deploy/compose.yaml").lines()
                     .map(String::strip).filter(l -> l.startsWith("image: ")).findFirst()
                     .map(l -> l.substring("image: ".length())).orElseThrow(() -> new Refused("SIR-APP-PACKAGE-BASE-003", "base compose file names no database image"));
-                return new BaseDelivery(id, version, chain, schema, image);
+                if (!listed.containsKey(SIR_ENTRY)) throw new Refused("SIR-APP-PACKAGE-BASE-003",
+                    "base package records no SIR entry; it was exported by an earlier toolchain and cannot be continued");
+                String entry = text(Files.readAllBytes(root.resolve(SIR_ENTRY)), SIR_ENTRY).strip();
+                Map<SourceId, byte[]> sources = new LinkedHashMap<>();
+                SourceSnapshot snapshot;
+                try {
+                    SourceId entryId = SourceSetManifest.strictId(entry);
+                    for (String path : listed.keySet())
+                        if (path.startsWith("sir/")) sources.put(SourceSetManifest.strictId(path.substring(4)), Files.readAllBytes(root.resolve(path)));
+                    if (!sources.containsKey(entryId)) throw new Refused("SIR-APP-PACKAGE-BASE-003", "base package SIR entry is missing: " + entry);
+                    snapshot = new SourceSnapshot(entryId, sources);
+                } catch (IllegalArgumentException invalid) {
+                    throw new Refused("SIR-APP-PACKAGE-BASE-003", "base package SIR sources are invalid: " + invalid.getMessage());
+                }
+                return new BaseDelivery(id, version, chain, schema, image, snapshot);
             } catch (java.io.IOException | java.io.UncheckedIOException unreadable) {
                 throw new Refused("SIR-APP-PACKAGE-BASE-001", "base package cannot be read: " + unreadable.getClass().getSimpleName());
             }

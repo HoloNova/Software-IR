@@ -31,7 +31,7 @@ public final class SpringBootDeploymentPlanner {
                 throw new IllegalArgumentException("conflicting deployment table: " + entity.tableName());
             List<Column> columns = new ArrayList<>();
             var identity = entity.identity();
-            columns.add(new Column(identity.columnName(), scalar(identity.type()), 0, false, true,
+            columns.add(new Column(identity.sourceSymbol().value(), identity.columnName(), scalar(identity.type()), 0, false, true,
                 identity.generation() == SpringBootDeclaration.Generation.AUTO_INCREMENT, false, Optional.empty()));
             for (var property : entity.fields()) {
                 var field = Objects.requireNonNull(fields.get(property.sourceSymbol()));
@@ -61,7 +61,7 @@ public final class SpringBootDeploymentPlanner {
                 } else throw new IllegalArgumentException("unsupported persistent deployment type: " + type);
                 if (field.unique() && storage == Storage.LONGTEXT)
                     throw new IllegalArgumentException("unique text needs a declared length at most 768: " + field.name());
-                columns.add(new Column(property.columnName().orElseThrow(), storage, length, nullable, false, false, field.unique(), reference));
+                columns.add(new Column(property.sourceSymbol().value(), property.columnName().orElseThrow(), storage, length, nullable, false, false, field.unique(), reference));
             }
             Set<String> columnNames = new HashSet<>();
             int inlineBytes = 0;
@@ -72,7 +72,7 @@ public final class SpringBootDeploymentPlanner {
             long indexes = columns.stream().filter(c -> c.primary() || c.unique() || c.reference().isPresent()).count();
             if (inlineBytes > 60000 || columns.size() > 1000 || indexes > 64)
                 throw new IllegalArgumentException("deployment exceeds conservative MySQL row/column/index budget: " + entity.tableName());
-            tables.add(new Table(entity.tableName(), columns));
+            tables.add(new Table(entity.sourceSymbol().value(), entity.tableName(), columns));
         }
         var original = model.mavenProject();
         var dependencies = new ArrayList<>(original.dependencies());

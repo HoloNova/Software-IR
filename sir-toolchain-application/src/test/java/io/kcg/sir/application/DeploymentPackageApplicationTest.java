@@ -102,6 +102,10 @@ class DeploymentPackageApplicationTest {
         var exported = assertInstanceOf(DeploymentPackageResult.Exported.class, result, result.toString());
         Path next = exported.manifest().outputRoot();
         assertEquals(List.of("V2 ADD_NULLABLE_COLUMN note.title"), exported.continuation().orElseThrow().steps());
+        // The steps translate what the change layer reports: the field added to Note.
+        var changes = exported.continuation().orElseThrow().changes();
+        assertTrue(changes.stream().anyMatch(c -> c.startsWith("ADD ") && c.contains("title")), changes.toString());
+        assertEquals("project.sir\n", Files.readString(next.resolve("sir-entry")));
         assertArrayEquals(Files.readAllBytes(base.resolve("deploy/migrations/V1__initialize.sql")), Files.readAllBytes(next.resolve("deploy/migrations/V1__initialize.sql")));
         assertArrayEquals(Files.readAllBytes(base.resolve("deploy/schema.tsv")), Files.readAllBytes(next.resolve("deploy/contracts/V1.tsv")));
         assertEquals("-- KCG delivery schema version 2; frozen once published.\nALTER TABLE `note` ADD COLUMN `title` VARCHAR(80) NULL, ALGORITHM=INSTANT;\n",
@@ -114,10 +118,50 @@ class DeploymentPackageApplicationTest {
         assertTrue(back.diagnostics().stream().anyMatch(d -> d.code().equals("SIR-DEPLOY-UPDATE-UNSUPPORTED-001") && d.message().equals("COLUMN_REMOVED note.title")), back.toString());
         assertFalse(Files.exists(temp.resolve("back")));
 
+        // The base's sources must rebuild exactly the schema it was published with, or its model is not the database's.
+        Path drifted = copy(next, temp.resolve("drifted"));
+        String published = Files.readString(drifted.resolve("sir/project.sir"));
+        republish(drifted, "sir/project.sir", published.replace("field title: Optional<String> where length(0, 80);", "field title: Optional<String> where length(0, 90);"));
+        var notReproduced = new DeploymentPackageApplication().export(new DeploymentPackageRequest(source, ENTRY, temp.resolve("not-reproduced"), Optional.empty(), Optional.of(drifted)));
+        assertTrue(notReproduced.diagnostics().stream().anyMatch(d -> d.code().equals("SIR-APP-PACKAGE-BASE-004")), notReproduced.toString());
+        assertFalse(Files.exists(temp.resolve("not-reproduced")));
+        // A base that does not say which source is its entry cannot be rebuilt, so it cannot be continued.
+        Path entryless = copy(next, temp.resolve("entryless"));
+        republish(entryless, "sir-entry", null);
+        var noEntry = new DeploymentPackageApplication().export(new DeploymentPackageRequest(source, ENTRY, temp.resolve("no-entry"), Optional.empty(), Optional.of(entryless)));
+        assertTrue(noEntry.diagnostics().stream().anyMatch(d -> d.code().equals("SIR-APP-PACKAGE-BASE-003") && d.message().contains("SIR entry")), noEntry.toString());
+        assertFalse(Files.exists(temp.resolve("no-entry")));
+
         Files.writeString(next.resolve("deploy/migrations/V2__add_column_note_title.sql"), "DROP TABLE note;\n");
         var tampered = new DeploymentPackageApplication().export(new DeploymentPackageRequest(source, ENTRY, temp.resolve("tampered"), Optional.empty(), Optional.of(next)));
         assertTrue(tampered.diagnostics().stream().anyMatch(d -> d.code().equals("SIR-APP-PACKAGE-BASE-002")), tampered.toString());
         assertFalse(Files.exists(temp.resolve("tampered")));
+    }
+
+    private static Path copy(Path from, Path to) throws Exception {
+        try (var walk = Files.walk(from)) {
+            for (Path file : (Iterable<Path>) walk::iterator) {
+                Path target = to.resolve(from.relativize(file).toString());
+                if (Files.isDirectory(file)) Files.createDirectories(target); else Files.copy(file, target);
+            }
+        }
+        return to;
+    }
+
+    /** Replaces (or, with null, removes) one file and reissues the manifest and id, so integrity checks still pass. */
+    private static void republish(Path root, String path, String content) throws Exception {
+        if (content == null) Files.delete(root.resolve(path)); else Files.writeString(root.resolve(path), content);
+        StringBuilder manifest = new StringBuilder();
+        for (String line : Files.readAllLines(root.resolve("package.sha256"))) {
+            if (!line.endsWith("  " + path)) manifest.append(line).append('\n');
+            else if (content != null) manifest.append(sha256(content.getBytes(java.nio.charset.StandardCharsets.UTF_8))).append("  ").append(path).append('\n');
+        }
+        Files.writeString(root.resolve("package.sha256"), manifest.toString());
+        Files.writeString(root.resolve("package.id"), sha256(manifest.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8)) + "\n");
+    }
+
+    private static String sha256(byte[] bytes) throws Exception {
+        return java.util.HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256").digest(bytes));
     }
 
     @Test void unsupportedStorageAndExistingOutputsAreRefusedBeforePublication() throws Exception {

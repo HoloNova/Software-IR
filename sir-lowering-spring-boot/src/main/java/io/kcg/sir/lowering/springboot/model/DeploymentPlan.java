@@ -52,17 +52,19 @@ public record DeploymentPlan(LoweredNodeId id, ProjectArtifact.MavenProject appl
             if (minLength < 0 || maxLength.isPresent() && maxLength.getAsInt() < minLength) throw new IllegalArgumentException("invalid length rule");
         }
     }
-    public record Table(String name, List<Column> columns) {
-        public Table { identifier(name); columns = List.copyOf(columns); }
+    /** {@code symbol} is the semantic identity of the entity the table stores; updates match tables by it, not by name. */
+    public record Table(String symbol, String name, List<Column> columns) {
+        public Table { Objects.requireNonNull(symbol); identifier(name); columns = List.copyOf(columns); }
     }
     public enum Storage { INT, BIGINT, BOOLEAN, VARCHAR, LONGTEXT, UUID, DATE, DATETIME }
     public record ForeignKey(String table, String column) {
         public ForeignKey { identifier(table); identifier(column); }
     }
-    public record Column(String name, Storage storage, int length, boolean nullable, boolean primary,
+    /** {@code symbol} is the semantic identity of the entity identity or field the column stores. */
+    public record Column(String symbol, String name, Storage storage, int length, boolean nullable, boolean primary,
             boolean autoIncrement, boolean unique, Optional<ForeignKey> reference) {
         public Column {
-            identifier(name); Objects.requireNonNull(storage); Objects.requireNonNull(reference);
+            Objects.requireNonNull(symbol); identifier(name); Objects.requireNonNull(storage); Objects.requireNonNull(reference);
             if (storage == Storage.VARCHAR && (length < 1 || length > 768)) throw new IllegalArgumentException("invalid VARCHAR length");
         }
     }

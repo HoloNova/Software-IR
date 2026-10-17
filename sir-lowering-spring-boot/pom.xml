@@ -21,6 +21,12 @@
             <artifactId>sir-lowering-api</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <!-- An update's schema steps are a translation of what the change layer says changed (design 12, section 12). -->
+        <dependency>
+            <groupId>io.kcg</groupId>
+            <artifactId>sir-change</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>

@@ -111,6 +111,31 @@ class NewStructureProbeTest {
     }
 
     @Test
+    void every_change_names_by_identity_where_it_lies_and_what_it_adds_or_deletes() {
+        SoftwareDraft base = shelf();
+        SoftwareDraft edited = assertInstanceOf(DraftEdit.Applied.class, EDIT.apply(base, List.of(
+            new Command.Update(Selector.root().named("books", "Dune").slot("pages"), text("500")),
+            new Command.Delete(Selector.root().named("books", "Emma")),
+            new Command.Add(Selector.root().slot("tags"), text("classic"))
+        ))).draft();
+
+        List<SemanticDelta.Change> changes = SemanticDelta.between(base, edited, SCHEMA).changes();
+
+        // A change inside a book lies in that book and adds or deletes nothing that has an identity.
+        SemanticDelta.Change pages = changes.stream().filter(c -> c.kind() == SemanticDelta.Kind.UPDATE).findFirst().orElseThrow();
+        assertEquals(List.of("b/1"), pages.trail());
+        assertEquals(Optional.empty(), pages.subject());
+        // Deleting a book names the book itself as the subject, not as a place the change lies in.
+        SemanticDelta.Change emma = changes.stream().filter(c -> c.kind() == SemanticDelta.Kind.DELETE).findFirst().orElseThrow();
+        assertEquals(List.of(), emma.trail());
+        assertEquals(Optional.of("b/2"), emma.subject());
+        // A plain value has no identity to name.
+        SemanticDelta.Change tag = changes.stream().filter(c -> c.kind() == SemanticDelta.Kind.ADD).findFirst().orElseThrow();
+        assertEquals(List.of(), tag.trail());
+        assertEquals(Optional.empty(), tag.subject());
+    }
+
+    @Test
     void a_field_added_to_the_structure_without_a_classification_stops_the_build_instead_of_being_ignored() {
         record Unclassified(@Fact String label, int forgotten) {
         }

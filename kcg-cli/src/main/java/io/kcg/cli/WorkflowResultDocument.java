@@ -40,7 +40,9 @@ final class WorkflowResultDocument {
             exported.continuation().ifPresent(c -> {
                 field(out, "basePackageId", c.basePackageId());
                 out.append(','); JsonFields.field(out, "schemaVersion", c.schemaVersion());
-                out.append(",\"steps\":[");
+                out.append(",\"changes\":[");
+                for (int i = 0; i < c.changes().size(); i++) { if (i > 0) out.append(','); out.append('{'); JsonFields.field(out, "change", c.changes().get(i)); out.append('}'); }
+                out.append("],\"steps\":[");
                 for (int i = 0; i < c.steps().size(); i++) { if (i > 0) out.append(','); out.append('{'); JsonFields.field(out, "step", c.steps().get(i)); out.append('}'); }
                 out.append(']');
             });
