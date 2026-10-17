@@ -16,6 +16,7 @@
 | [`SIR_BATCH_CHECK.md`](SIR_BATCH_CHECK.md) | `kcg check` 的 JSONL 协议、预算与退出码 |
 | [`CLI使用说明`](CLI_WORKFLOW.md) | 首次生成、只读结构查询、指令JSON、候选编辑与版本应用 |
 | [`CLI阶段报告`](CLI_WORKFLOW_REPORT.md) | 实现、定向证据、CI 证据与单文件包 |
+| [`SIR 语言参考`](SIR_LANGUAGE_REFERENCE.md) | 用 SIR 写软件：能写什么、怎么写、写错了会得到哪个诊断码；示例由测试逐个检查 |
 | [`入口阶段方案`](design/09-public-cli-workflow.md) | 已验收（CI #72 通过）；范围及完成门 |
 | [`机制与语义的边界（草稿）`](design/10-semantic-boundary-and-mechanisms.md) | 双 Token 这类机制怎样拆到语义层；探针读数、S2 各问答案与实现依赖顺序 |
 | [`CLAUDE_EXECUTION_POLICY.md`](CLAUDE_EXECUTION_POLICY.md) | 执行者是 Claude 时的提交、测试与资源约定 |

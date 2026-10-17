@@ -44,7 +44,7 @@ SIR 只有一种文档形式：`sir 0.2` 根文档（含 `metadata`、`target`�
 | `kcg version-plan …` | 只读：把当前 SIR 与候选 SIR 各编译一遍，给出计划和 `planId` |
 | `kcg version-apply …` | 按计划应用；需要 `git`，应用前后各保存一次版本；中途停下时重跑同一命令 |
 
-用法和退出码见 `kcg <command> --help`；完整流程、指令JSON及启动方式见[CLI使用说明](docs/CLI_WORKFLOW.md)，`check` 的协议见 [SIR 批量校验](docs/SIR_BATCH_CHECK.md)。
+用法和退出码见 `kcg <command> --help`；完整流程、指令JSON及启动方式见[CLI使用说明](docs/CLI_WORKFLOW.md)，怎么写 SIR 见[SIR 语言参考](docs/SIR_LANGUAGE_REFERENCE.md)，`check` 的协议见 [SIR 批量校验](docs/SIR_BATCH_CHECK.md)。
 
 ## 构建
 

@@ -19,7 +19,7 @@
 
 **(c) 固定的接口与名字。** 判题是 HTTP 加数据库断言，所以名字必须写死，否则判题器不知道请求哪条路由、查哪张表：能力名 `Login`、`Refresh`、`Logout`；实体名 `AccessToken`、`RefreshToken`、`TokenPair`（登录与刷新的返回）；请求与响应的字段：登录请求 `{name,password}`，登录和刷新的响应 `{accessToken,accessExpiresAt,refreshToken,refreshExpiresAt}`，刷新与登出的请求 `{refreshToken}`；错误状态码 401。（这些就是 `kcg scaffold dual-token` 用的名字。）
 
-**(d) 语言参考。** 是否把 SIR 语言参考放进提示词，要作为实验变量，不能默认。建议两组都做：不给参考（测模型已知多少）、给参考（测模型能否按参考写出新构造）。
+**(d) 语言参考。** 参考文档已经有了：[`SIR_LANGUAGE_REFERENCE.md`](../SIR_LANGUAGE_REFERENCE.md)，其中示例由测试检查，不会和语言脱节。是否把它放进提示词，要作为实验变量，不能默认。建议两组都做：不给参考（测模型已知多少）、给参考（测模型能否按参考写出新构造）。
 
 ## 3. 判题（来自需求，不来自候选答案）
 

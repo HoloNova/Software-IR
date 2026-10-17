@@ -1,0 +1,1399 @@
+# SIR 语言参考（`sir 0.2`）
+
+这份文档写给**用 SIR 写软件的人**（包括让模型写 SIR 的人）。它回答“能写什么、怎么写、写错了会怎样”，不讲编译器内部。想知道为什么这样设计，看[设计 02](design/02-sir-language-and-modules.md) 和[设计 10](design/10-semantic-boundary-and-mechanisms.md)；想知道命令行怎么用，看 [CLI 说明](CLI_WORKFLOW.md)。
+
+**文中的示例都是被检查过的。** 代码块有三种：
+
+- ` ```sir `：一份完整的文档，必须能通过 `kcg check`（解析、语义、降级、生成全部通过）；
+- ` ```sir-declarations `：只有 `declarations { ... }` 里面的内容，测试把它放进一个标准外壳里，同样必须通过；
+- ` ```sir-error SIR-XXX-NNN `：故意写错的声明，必须被拒绝，并且诊断里必须有这个码。
+
+检查它们的测试是 `LanguageReferenceExamplesTest`；这份文档和语言不一致时，测试会失败，所以以示例为准。
+
+## 1. 一个最小的软件
+
+一个 SIR 文档描述一个**软件**：它有什么数据（实体）、对外露出什么（视图、输入）、能做什么（能力）。下面是一个只能按编号查一本书的软件：
+
+```sir
+sir 0.2
+
+software Library {
+  metadata {
+    displayName "Library";
+    namespace "example.library";
+  }
+  target {
+    language java 21;
+    framework spring_boot;
+    persistence mybatis_plus;
+    database mysql;
+    build maven;
+    interface rest;
+  }
+  sources { }
+  imports { }
+  declarations {
+    entity Book persistent {
+      identity id: Int64 generated auto;
+      field title: String where notBlank, length(1, 200);
+    }
+    view BookView from Book {
+      field id: Int64;
+      field title: String;
+    }
+    input GetBookInput {
+      field id: Int64;
+    }
+    error BookNotFound http 404;
+    capability GetBook {
+      input GetBookInput;
+      output BookView;
+      fails BookNotFound;
+      requires readonly;
+      expose query;
+      workflow {
+        load Book by input.id as book else BookNotFound;
+        return book;
+      }
+    }
+  }
+}
+```
+
+**文档的骨架是固定的：** 版本行 `sir 0.2`、`software 名字 { ... }`，里面依次是 `metadata`、`target`、`sources`、`imports`、`declarations`。
+
+- `metadata`：`displayName`（给人看的名字）和 `namespace`（生成的 Java 包名，必须是合法的 Java 包名）。
+- `target`：目前只接受这一组值（Java 21、Spring Boot、MyBatis-Plus、MySQL、Maven、REST），写别的会被拒绝（`SIR-LOWER-TARGET-001`）。
+- `sources` 和 `imports`：多文件工程才用，见第 8 节；单文件写空的 `{ }`。
+- 注释：`// 到行尾` 和 `/* 块注释 */`。`kcg edit` 遇到会丢失注释的改写时会拒绝这次编辑（见 [CLI 说明](CLI_WORKFLOW.md)），所以要被工具改写的声明里最好不要放注释。
+- 字符串用双引号，不能跨行。
+
+**保留字。** 下面这些词在语言里有固定含义，不能当实体、字段、变量、错误或能力的名字，写了是语法错误（`SIR-PARSE-001`）：
+
+`sir software metadata displayName namespace target language framework persistence database build interface declarations enum entity persistent identity generated auto uuid field versioned present where input patch of view from order ascending descending Page containsLiteral error http capability actor output fails requires authenticated atomic readonly expose command query workflow validate else load by as find item any create update persist return Optional List Ref true false and or not now unit`
+
+最容易撞上的是 `item`、`order`、`error`、`input`、`target`、`query`、`command`、`build`、`from`、`field`、`present`。另一类词只在特定位置才有含义，别的地方仍然可以当名字：`sources source imports import unique secret credential subject expires when matches`，以及时间单位 `second(s) minute(s) hour(s) day(s)`。
+
+```sir-error SIR-PARSE-001
+entity Booking persistent {
+  identity id: Int64 generated auto;
+  field order: Int32;
+}
+```
+
+## 2. 类型
+
+| 类型 | 含义 | 说明 |
+| --- | --- | --- |
+| `Boolean` | 真／假 | |
+| `Int32`、`Int64` | 整数 | `Int64` 用于主键、计数、大数 |
+| `Decimal` | 十进制小数 | 金额用它；字面量写 `0.01` |
+| `String` | 文本 | |
+| `Uuid` | 通用唯一标识 | 做不可猜测的令牌；存成文本 |
+| `Date` | 日期 | 对应 `LocalDate` |
+| `DateTime` | 时刻 | 对应 `Instant`（UTC） |
+| `Unit` | 没有值 | 能力没有返回内容时 |
+| `Optional<T>` | 可以没有 | 不能嵌套 `Optional<Optional<T>>`（`SIR-TYPE-003`） |
+| `List<T>` | 列表 | 能力输出写 `List<Ref<实体>>`（不分页的 `find` 的结果） |
+| `Page<T>` | 分页结果 | 只能做 `expose query` 的输出 |
+| `Ref<实体>` | 指向另一个实体的一行 | 存成那一行的主键 |
+
+自己声明的 `enum`、`entity`、`input`、`view` 也是类型，直接写名字。各种类型都用一遍：
+
+```sir-declarations
+entity Event persistent {
+  identity id: Int64 generated auto;
+  field title: String where notBlank;
+  field headcount: Int32 where min(0);
+  field budget: Decimal;
+  field open: Boolean;
+  field day: Date;
+  field startsAt: DateTime;
+  field note: Optional<String>;
+}
+view EventView from Event {
+  field id: Int64;
+  field title: String;
+  field budget: Decimal;
+  field day: Date;
+  field startsAt: DateTime;
+}
+capability OpenEvents {
+  output List<Ref<Event>>;
+  requires readonly;
+  expose query;
+  workflow {
+    find Event where item.open == true as events;
+    return events;
+  }
+}
+capability Ping {
+  output Unit;
+  requires readonly;
+  expose query;
+  workflow {
+    return unit;
+  }
+}
+```
+
+**整数字面量的宽度。** 字面量默认是 `Int32`；和 `Int64` 比较或相加减时，字面量按 `Int64` 理解（`item.qty > 0` 里 `qty` 是 `Int64` 也能写）。但 `Int32` 的字段不会自动变成 `Int64`。字面量必须放得进它的类型，`5000000000` 单独用在 `Int32` 上会被拒绝：
+
+```sir-error SIR-TYPE-001
+entity Gauge persistent {
+  identity id: Int64 generated auto;
+  field level: Int32;
+}
+input LevelInput {
+  field level: Int32;
+}
+error TooHigh;
+capability CheckLevel {
+  input LevelInput;
+  output Unit;
+  fails TooHigh;
+  requires readonly;
+  expose query;
+  workflow {
+    validate input.level < 5000000000 else TooHigh;
+    return unit;
+  }
+}
+```
+
+## 3. 声明
+
+### 3.1 枚举
+
+```sir-declarations
+enum Status { OPEN, CLOSED }
+entity Ticket persistent {
+  identity id: Int64 generated auto;
+  field status: Status;
+}
+```
+
+用的时候写 `Status.OPEN`。
+
+### 3.2 实体（`entity`）
+
+实体是会被存进数据库的东西。**每个实体必须有且只有一个 `identity`**，写在最前面：
+
+```
+identity 名字: 类型 generated auto;    // 类型是 Int64，数据库自增
+identity 名字: 类型 generated uuid;    // 类型是 Uuid，由应用生成
+```
+
+然后是若干 `field`。字段后面可以接修饰，**顺序固定**：约束（`where ...`）、`versioned`、`unique`、`secret`、`@id("...")`。
+
+```sir-declarations
+entity Account persistent {
+  identity id: Int64 generated auto;
+  field name: String where notBlank, length(1, 64) unique;
+  field email: Optional<String> where email;
+  field age: Int32 where min(0), max(150);
+  field passwordHash: String secret;
+  field version: Int64 versioned;
+}
+```
+
+**约束**（`where` 后面，逗号分隔）：`notBlank`（非空白，String）、`email`（邮箱格式，String）、`length(最小, 最大)`（String）、`min(值)`、`max(值)`（数字）。同一个约束不能重复，`min` 不能大于 `max`。
+
+**`versioned`**：这个整数字段是并发版本号，每个实体最多一个。带版本号的实体，更新时要用 `persist ... else 错误`（见 5.5）。
+
+**`unique`**：声明这个字段的值在所有行里不重复。它是一句**声明**，数据库里的唯一索引仍然要你自己建（SIR 不管建表）。有了它，才能 `load 实体 by 字段: 值`（见 5.2）。只能用在 `String`、`Int32`、`Int64`、`Uuid` 上，不能和 `versioned` 同用。
+
+**`secret`**：这个 `String` 字段存的是**摘要**，不是原文。它只能被写入，读取只有一种方式——`stored matches candidate`（见第 6 节）。不能同时 `unique`、`versioned`、带约束；不能出现在 `view` 里。例子见 7.1“登录”。
+
+**`@id("...")`**：给字段一个稳定的名字，改字段名时身份不变。普通写作不需要。
+
+#### 凭据实体（`credential`）
+
+把一个实体声明成“它的行就是持有者令牌”，写在实体的最后：
+
+```sir-declarations
+entity User persistent {
+  identity id: Int64 generated auto;
+  field name: String unique;
+}
+entity AccessToken persistent {
+  identity id: Uuid generated uuid;
+  field owner: Ref<User>;
+  field expiresAt: DateTime;
+  credential subject owner expires expiresAt;
+}
+```
+
+含义：请求头 `Authorization: Bearer <令牌>` 里的令牌就是 `AccessToken` 的主键；找到这一行并且 `expiresAt` 晚于现在，请求就以 `owner` 指向的 `User` 的身份运行（见 4.2 的 `actor`）。规则：主键必须是 `Uuid`（否则 `SIR-TYPE-001`）；`subject` 必须是 `Ref<实体>` 字段；`expires` 必须是 `DateTime` 字段；同一个主体只能有一种凭据实体（`SIR-VALID-009`）；一个软件里，“要求已认证”的能力要么全由凭据认证，要么全不是。作废令牌不需要新语法：把 `expiresAt` 更新成 `now()`。
+
+### 3.3 输入（`input`）
+
+输入描述一个能力接收的请求内容。输入（和视图）的字段只有名字、类型和可选的约束：`unique`、`secret`、`@id` 是实体字段才有的修饰，写在输入或视图里是语法错误。
+
+```sir-declarations
+input RegisterInput {
+  field name: String where notBlank, length(1, 64);
+  field note: Optional<String>;
+}
+```
+
+**局部更新输入**（`patch of 实体`）：客户端只传想改的字段，没传的不动。它必须声明实体的主键字段（恰好一次）和至少一个想让客户端改的字段；字段只写名字和类型，**约束以实体上的为准**，不能再写；不能包含 `versioned` 字段（版本号由框架处理）；这个实体必须有 `versioned` 字段；用它的能力必须是 `expose command` 并且对这个实体有写步骤。违反这些是 `SIR-VALID-003`：
+
+```sir-declarations
+entity Course persistent {
+  identity id: Int64 generated auto;
+  field name: String where notBlank;
+  field capacity: Int32 where min(1);
+  field version: Int64 versioned;
+}
+input UpdateCourseInput patch of Course {
+  field id: Int64;
+  field name: String;
+  field capacity: Int32;
+}
+view CourseView from Course {
+  field id: Int64;
+  field name: String;
+  field capacity: Int32;
+  field version: Int64;
+}
+error CourseNotFound http 404;
+error EmptyChange;
+error StaleVersion http 409;
+capability UpdateCourse {
+  input UpdateCourseInput;
+  output CourseView;
+  fails CourseNotFound;
+  fails EmptyChange;
+  fails StaleVersion;
+  requires atomic;
+  expose command;
+  workflow {
+    validate input.name.present or input.capacity.present else EmptyChange;
+    load Course by input.id as course else CourseNotFound;
+    update course {
+      name: input.name;
+      capacity: input.capacity;
+    }
+    persist course else StaleVersion;
+    return course;
+  }
+}
+```
+
+`input.字段.present` 问“客户端有没有传这个字段”。局部更新的每个字段都必须在 `update` 里绑定。
+
+### 3.4 视图（`view`）
+
+视图描述返回给客户端的内容，是某个实体的**投影**：`view 名字 from 实体 { field 同名字段: 类型; }`。字段名和类型必须和实体字段一致，**视图字段不能带约束**，也不能出现 `secret` 字段。一个视图字段还可以是关联实体的视图（嵌套）：
+
+```sir-declarations
+entity Author persistent {
+  identity id: Int64 generated auto;
+  field name: String;
+}
+entity Book persistent {
+  identity id: Int64 generated auto;
+  field title: String;
+  field author: Ref<Author>;
+}
+view AuthorSummary from Author {
+  field id: Int64;
+  field name: String;
+}
+view BookView from Book {
+  field id: Int64;
+  field title: String;
+  field author: AuthorSummary;
+}
+```
+
+### 3.5 错误（`error`）
+
+```
+error 名字;               // 状态码默认 400
+error 名字 http 404;      // 指定状态码
+```
+
+状态码只允许 **400、401、404、409**。错误的名字就是客户端看到的错误码（响应体 `{"code":"名字","message":"名字","fields":[]}`）。
+
+### 3.6 能力（`capability`）
+
+能力是软件对外提供的一件事，对应一个 HTTP 接口。第 4 节详述。
+
+## 4. 能力
+
+```sir-declarations
+entity Note persistent {
+  identity id: Int64 generated auto;
+  field text: String;
+}
+view NoteView from Note {
+  field id: Int64;
+  field text: String;
+}
+input NoteInput {
+  field text: String where notBlank;
+}
+capability PostNote {
+  input NoteInput;
+  output NoteView;
+  requires atomic;
+  expose command;
+  workflow {
+    create Note as note {
+      text: input.text;
+    }
+    persist note;
+    return note;
+  }
+}
+```
+
+能力里的子句**顺序固定**：`actor`（可选）→ `input`（可选）→ `output` → 若干 `fails` → 若干 `requires` → `expose` → `workflow`。
+
+### 4.1 `input`、`output`、`fails`
+
+- `input 输入名;` 声明请求内容；没有就不写。
+- `output 类型;` 声明返回内容：视图、`Ref<实体>`、`List<Ref<实体>>`、`Page<视图>`、`Unit`。
+- `fails 错误名;` 列出这个能力**可能**报的错误。工作流里用到的每个错误都必须在这里声明，**并且 `fails` 要按错误名字升序排**（`SIR-VALID-001`）：
+
+```sir-error SIR-VALID-001
+entity Item persistent {
+  identity id: Int64 generated auto;
+  field name: String;
+}
+view ItemView from Item {
+  field id: Int64;
+  field name: String;
+}
+input ItemRef {
+  field id: Int64;
+}
+error ItemGone http 404;
+error AccessDenied http 401;
+capability GetItem {
+  input ItemRef;
+  output ItemView;
+  fails ItemGone;
+  fails AccessDenied;
+  requires readonly;
+  expose query;
+  workflow {
+    load Item by input.id as found else ItemGone;
+    return found;
+  }
+}
+```
+
+（`AccessDenied` 排在 `ItemGone` 前面才对。）
+
+### 4.2 `actor` 与 `requires`
+
+`requires` 有三种，**必须按这个顺序写**：`authenticated`、`atomic`、`readonly`。
+
+- `requires atomic;`：这个能力的所有写入在一个事务里。**有两个及以上写步骤（create／update／persist）就必须写它**。
+- `requires readonly;`：只读。`expose query` 必须配 `readonly`；`atomic` 和 `readonly` 不能同时写；只读能力里不能有 `create`、`update`、`persist`（`SIR-FLOW-004`）。
+- `requires authenticated;`：要求请求已认证。它要配一个 `actor Ref<实体>;`，工作流里用 `actor` 表示发起请求的那一行。
+
+```sir-declarations
+entity User persistent {
+  identity id: Int64 generated auto;
+  field name: String;
+}
+entity Goods persistent {
+  identity id: Int64 generated auto;
+  field title: String;
+  field seller: Ref<User>;
+}
+view GoodsView from Goods {
+  field id: Int64;
+  field title: String;
+}
+input PublishInput {
+  field title: String where notBlank;
+}
+capability PublishGoods {
+  actor Ref<User>;
+  input PublishInput;
+  output GoodsView;
+  requires authenticated;
+  requires atomic;
+  expose command;
+  workflow {
+    create Goods as goods {
+      title: input.title;
+      seller: actor;
+    }
+    persist goods;
+    return goods;
+  }
+}
+```
+
+认证怎么来：如果软件里有 `credential` 实体（3.2），由它认证；否则运行时要有部署方提供的认证器，或本地调试的固定身份。没有身份的请求得到 `401`，不会走到工作流。
+
+### 4.3 `expose` 与 HTTP
+
+- `expose query;` → `GET /api/<能力名的短横线形式>`，输入字段作为查询参数。
+- `expose command;` → `POST`（输入是局部更新时是 `PATCH`），输入是 JSON 请求体。
+- 路由是能力名转短横线：`PublishGoods` → `/api/publish-goods`。
+- 成功的状态码：创建了新行是 `201`，其它是 `200`。
+
+## 5. 工作流（`workflow`）
+
+工作流是一串**步骤**，按顺序执行，**以且只以一个 `return` 结束**（`SIR-FLOW-002`）。变量由 `load`、`find`、`create` 的 `as 名字` 引入，之后才能用（`SIR-FLOW-001`）。
+
+### 5.1 `validate`
+
+```
+validate 条件 else 错误名;
+```
+
+条件为假就报这个错误并停止。条件是布尔表达式（第 6 节）。
+
+### 5.2 `load`
+
+按主键取一行，取不到就报错：
+
+```
+load 实体 by 主键值 as 变量 else 错误名;
+```
+
+也可以按**声明了 `unique` 的字段**取：
+
+```
+load 实体 by 字段名: 值 as 变量 else 错误名;
+```
+
+```sir-declarations
+entity Account persistent {
+  identity id: Int64 generated auto;
+  field name: String unique;
+}
+view AccountView from Account {
+  field id: Int64;
+  field name: String;
+}
+input ByName {
+  field name: String;
+}
+error AccountNotFound http 404;
+capability FindAccount {
+  input ByName;
+  output AccountView;
+  fails AccountNotFound;
+  requires readonly;
+  expose query;
+  workflow {
+    load Account by name: input.name as account else AccountNotFound;
+    return account;
+  }
+}
+```
+
+命中就返回这一行，未命中报声明的错误；如果数据库里违反了 `unique`、同一个值有两行，**请求以 500 失败，不会悄悄取其中一行**。对主键本身不要写字段名（`SIR-VALID-006`）。带 `versioned` 的实体按字段加载后再更新会被拒绝（`SIR-VALID-006`），因为更新要锁行，而锁是按主键取的：
+
+```sir-error SIR-VALID-006
+entity Course persistent {
+  identity id: Int64 generated auto;
+  field code: String unique;
+  field name: String;
+  field version: Int64 versioned;
+}
+view CourseView from Course {
+  field id: Int64;
+}
+input RenameCourse patch of Course {
+  field id: Int64;
+  field name: String;
+}
+error NoCourse http 404;
+error Stale http 409;
+capability Rename {
+  input RenameCourse;
+  output CourseView;
+  fails NoCourse;
+  fails Stale;
+  requires atomic;
+  expose command;
+  workflow {
+    load Course by code: input.name as course else NoCourse;
+    update course {
+      name: input.name;
+    }
+    persist course else Stale;
+    return course;
+  }
+}
+```
+
+
+### 5.3 `find`
+
+按条件取多行：
+
+```
+find 实体 where 谓词 [order by 字段 [ascending|descending], ...] [Page 页码, 页大小 else 错误] as 变量;
+```
+
+谓词里用 `item` 表示正在被检查的那一行。**比较的左边必须是 `item.字段`，右边必须是不读取 `item` 的值**（`SIR-VALID-001`）；对列做加减或时间平移也不行。
+
+```sir-declarations
+entity Ticket persistent {
+  identity id: Int64 generated auto;
+  field title: String;
+  field priority: Int32;
+  field expiresAt: DateTime;
+}
+view TicketView from Ticket {
+  field id: Int64;
+  field title: String;
+}
+input TicketQuery {
+  field minPriority: Int32;
+  field keyword: String;
+  field page: Int32;
+  field size: Int32;
+}
+error BadPage;
+capability LiveTickets {
+  input TicketQuery;
+  output Page<TicketView>;
+  fails BadPage;
+  requires readonly;
+  expose query;
+  workflow {
+    find Ticket
+      where item.priority >= input.minPriority
+        and item.title containsLiteral input.keyword
+        and item.expiresAt > now() + 5 minutes
+      order by priority descending, id ascending
+      Page input.page, input.size else BadPage
+    as live;
+    return live;
+  }
+}
+```
+
+不带 `Page` 的 `find` 得到 `List<Ref<实体>>`，带 `Page` 的得到 `Page<视图>`。`containsLiteral` 是**字面包含**（不是模式匹配，`%` 之类按字面处理）。输出是 `Page<视图>` 时必须带 `Page ...` 子句，且能力必须是 `expose query`。
+
+对错的写法（比较方向反了）：
+
+```sir-error SIR-VALID-001
+entity Ticket persistent {
+  identity id: Int64 generated auto;
+  field priority: Int32;
+}
+view TicketView from Ticket {
+  field id: Int64;
+}
+input Limit {
+  field floor: Int32;
+  field page: Int32;
+  field size: Int32;
+}
+error BadPage;
+capability Wrong {
+  input Limit;
+  output Page<TicketView>;
+  fails BadPage;
+  requires readonly;
+  expose query;
+  workflow {
+    find Ticket where input.floor < item.priority Page input.page, input.size else BadPage as found;
+    return found;
+  }
+}
+```
+
+对列做加减也不行，要把运算挪到右边：
+
+```sir-error SIR-VALID-001
+entity Ticket persistent {
+  identity id: Int64 generated auto;
+  field priority: Int32;
+}
+view TicketView from Ticket {
+  field id: Int64;
+}
+input Limit {
+  field floor: Int32;
+  field page: Int32;
+  field size: Int32;
+}
+error BadPage;
+capability Wrong {
+  input Limit;
+  output Page<TicketView>;
+  fails BadPage;
+  requires readonly;
+  expose query;
+  workflow {
+    find Ticket where item.priority + 1 > input.floor Page input.page, input.size else BadPage as found;
+    return found;
+  }
+}
+```
+
+**关联存在性：`any(实体, 条件)`。** 在 `find` 的谓词里问“有没有另一个实体的行指向我，并满足条件”：
+
+```sir-declarations
+entity Course persistent {
+  identity id: Int64 generated auto;
+  field code: String;
+}
+entity Enrollment persistent {
+  identity id: Int64 generated auto;
+  field course: Ref<Course>;
+  field active: Boolean;
+}
+view CourseView from Course {
+  field id: Int64;
+  field code: String;
+}
+input PageInput {
+  field page: Int32;
+  field size: Int32;
+}
+error InvalidPage;
+capability ActiveCourses {
+  input PageInput;
+  output Page<CourseView>;
+  fails InvalidPage;
+  requires readonly;
+  expose query;
+  workflow {
+    find Course
+      where any(Enrollment, course == item and active == true)
+      order by code ascending
+      Page input.page, input.size else InvalidPage
+    as courses;
+    return courses;
+  }
+}
+```
+
+`any` 只能出现在 `find` 的谓词里，不能嵌套，条件里必须有 `指向根实体的Ref字段 == item`。
+
+### 5.4 `create`
+
+```
+create 实体 as 变量 { 字段: 值; ... }
+```
+
+必须给出所有**必填**字段：除了主键（系统生成）、`versioned` 字段（框架初始化）和 `Optional<...>` 字段之外的每一个，漏了报 `SIR-FLOW-001`。不能绑定主键或 `versioned` 字段，同一个字段也不能绑两次。创建后要 `persist` 才会写入。
+
+### 5.5 `update` 与 `persist`
+
+```
+update 变量 { 字段: 值; ... }
+persist 变量;
+```
+
+`update` 只改内存里的这一行，`persist` 才写入。`update` 不能改主键，也不能改 `versioned` 字段（框架负责递增）。
+
+对**带 `versioned` 的实体**：更新它的能力必须用这个实体的局部更新输入（`patch of`，见 3.3），更新后的 `persist` 必须写 `else 错误名`，在别人先改过时报这个错误；对没有 `versioned` 的实体不能写 `else`。违反这几条都是 `SIR-VALID-004`。
+
+### 5.6 守卫更新：`update 变量 when 条件 else 错误 { ... }`
+
+“只在这一行**写入时**仍然满足条件才写，否则报错”，用来在并发下只让一个请求成功，例如刷新令牌只能用一次：
+
+```sir-declarations
+entity User persistent {
+  identity id: Int64 generated auto;
+  field name: String;
+}
+entity RefreshToken persistent {
+  identity id: Uuid generated uuid;
+  field owner: Ref<User>;
+  field used: Boolean;
+  field expiresAt: DateTime;
+}
+view RefreshView from RefreshToken {
+  field id: Uuid;
+  field expiresAt: DateTime;
+}
+input RefreshInput {
+  field token: Uuid;
+}
+error Expired;
+error Invalid http 409;
+capability Rotate {
+  input RefreshInput;
+  output RefreshView;
+  fails Expired;
+  fails Invalid;
+  requires atomic;
+  expose command;
+  workflow {
+    load RefreshToken by input.token as old else Invalid;
+    validate old.expiresAt > now() else Expired;
+    update old when old.used == false and old.expiresAt > now() else Invalid { used: true; }
+    create RefreshToken as fresh {
+      owner: old.owner;
+      used: false;
+      expiresAt: now() + 7 days;
+    }
+    persist old;
+    persist fresh;
+    return fresh;
+  }
+}
+```
+
+规则：守卫是布尔表达式，由“目标字段与值的比较”用 `and`／`or`／`not` 组合；目标必须是 `load` 出来的行；实体不能带 `versioned`；错误要在 `fails` 里声明；绑定的值**不能读目标自己的字段**（守卫只钉住它判断的那些字段，其它字段在内存里是旧的，读它们再写回会丢失更新），可以读 `input`、常量、`now()` 和别的变量（`SIR-VALID-007`）；带守卫的 `update` 后面要有对同一行的普通 `persist`。
+
+守卫在**一条 SQL 里**检查并写入，所以并发下只有一个请求成功。它依赖数据库驱动把“匹配的行数”当影响行数（MySQL Connector/J 的默认行为）；如果部署时在连接串上加了 `useAffectedRows=true`，“设成和原来一样的值”会被当成没有匹配而报守卫的错误。
+
+### 5.7 `return`
+
+```
+return 变量;
+```
+
+返回的类型必须和 `output` 一致（`SIR-TYPE-001`）。没有 `return` 或有多个都不行。
+
+## 6. 表达式
+
+| 写法 | 含义 |
+| --- | --- |
+| `true`、`false`、`42`、`0.01`、`"文本"`、`unit` | 字面量 |
+| `名字`、`input`、`actor`、`item` | 变量；`input` 是请求，`actor` 是发起人，`item` 只在 `find` 里 |
+| `a.b.c` | 取成员 |
+| `x.字段.present` | 局部更新里，客户端传了没有 |
+| `枚举.成员` | 枚举值，如 `Status.OPEN` |
+| `now()` | 现在（`DateTime`） |
+| `- x`、`not x` | 负号、非 |
+| `a + b`、`a - b` | 同类型的 `Int32`／`Int64`／`Decimal` 加减；整数溢出会抛错而不是回绕 |
+| `时刻 + N unit` | 时间平移，`unit` 是 `second(s)`、`minute(s)`、`hour(s)`、`day(s)` |
+| `a < b`、`<=`、`>`、`>=` | 比较，两边同类型 |
+| `a == b`、`a != b` | 相等 |
+| `a containsLiteral b` | 字面包含，只能用在 `find` 的谓词里 |
+| `存的 matches 候选` | 口令比对，见下 |
+| `a and b`、`a or b` | 逻辑 |
+| `( ... )` | 括号 |
+
+**优先级**（从紧到松）：一元（`-`、`not`）→ `+`／`-` → 比较（`<` 等）→ `containsLiteral`／`matches` → `==`／`!=` → `and` → `or`。
+
+**时间平移**：底必须是 `DateTime`，或者只按天的 `Date`；数量最大 2147483647；孤立的“15 minutes”不是表达式。“一天”按 24 小时算。`now() + 15 minutes`、`input.start + 3 days`。
+
+**`matches`**：左边必须是 `secret` 字段，右边是 `String`，结果是布尔。`secret` 字段只能放在它的左边读取；返回它、比较它、拿它做运算、放进 `find` 都会被拒绝（`SIR-VALID-008`）：
+
+```sir-error SIR-VALID-008
+entity Account persistent {
+  identity id: Int64 generated auto;
+  field name: String unique;
+  field passwordHash: String secret;
+}
+view AccountView from Account {
+  field id: Int64;
+  field name: String;
+}
+input LoginInput {
+  field name: String;
+  field password: String;
+}
+error BadLogin http 401;
+capability Login {
+  input LoginInput;
+  output AccountView;
+  fails BadLogin;
+  requires readonly;
+  expose command;
+  workflow {
+    load Account by name: input.name as account else BadLogin;
+    validate account.passwordHash == input.password else BadLogin;
+    return account;
+  }
+}
+```
+
+视图里放 `secret` 字段同样会被拒绝：
+
+```sir-error SIR-VALID-008
+entity Account persistent {
+  identity id: Int64 generated auto;
+  field passwordHash: String secret;
+}
+view AccountView from Account {
+  field id: Int64;
+  field passwordHash: String;
+}
+```
+
+## 7. 常见模式
+
+### 7.1 登录（口令只存摘要）
+
+```sir-declarations
+entity Account persistent {
+  identity id: Int64 generated auto;
+  field name: String unique;
+  field passwordHash: String secret;
+}
+view AccountView from Account {
+  field id: Int64;
+  field name: String;
+}
+input RegisterInput {
+  field name: String where notBlank, length(1, 64);
+  field password: String where length(8, 128);
+}
+input LoginInput {
+  field name: String;
+  field password: String;
+}
+error BadLogin http 401;
+capability Register {
+  input RegisterInput;
+  output AccountView;
+  requires atomic;
+  expose command;
+  workflow {
+    create Account as account {
+      name: input.name;
+      passwordHash: input.password;
+    }
+    persist account;
+    return account;
+  }
+}
+capability Login {
+  input LoginInput;
+  output AccountView;
+  fails BadLogin;
+  requires readonly;
+  expose command;
+  workflow {
+    load Account by name: input.name as account else BadLogin;
+    validate account.passwordHash matches input.password else BadLogin;
+    return account;
+  }
+}
+```
+
+要点：绑定到 `secret` 字段的值（`passwordHash: input.password`）由生成的服务做 PBKDF2-HMAC-SHA256 摘要后再存，每条记录有自己的盐；口令错误和账号不存在**用同一个错误**，响应体一样（但响应时间不同：账号不存在时不做摘要计算，口令强度、锁定、限流不在语言里）。
+
+### 7.2 双 Token 登录
+
+访问令牌认证请求，刷新令牌换新令牌且用过即废。完整骨架不用手写：
+
+```
+kcg scaffold dual-token --source-root ... --entry project.sir \
+  --account Account --name-field name --password-field passwordHash > scaffold.json
+kcg edit --source-root ... --entry project.sir --candidate-root ... < scaffold.json
+```
+
+它写出的就是普通 SIR（访问令牌是 `credential` 实体，刷新用守卫更新），见 [CLI 说明第 5 节](CLI_WORKFLOW.md)。
+
+## 8. 多文件工程
+
+入口文件的 `sources { source "路径"; }` 列出其它文件，其它文件开头写 `sir 0.2` 加 `imports { import 声明名 from "路径"; }` 和 `declarations { ... }`（没有 `software`、`metadata`、`target`）。**跨文件用到哪个声明，就要在用到它的文件里 import 它**，否则报 `SIR-SOURCE-VISIBILITY-001`。声明名在整个工程里不能重复。
+
+## 9. 诊断码与典型错误
+
+诊断消息本身是中文，带文件、行号和列号；修之前先看它说的位置。一次可能报出多条，先修最前面的——后面的常常是前面那条的连带结果（报了太多错之后会出现 `SIR-PARSE-999`，表示停止继续分析）。
+
+| 码 | 意思 |
+| --- | --- |
+| `SIR-LEX-*` | 词法错误：非法字符、字符串没闭合 |
+| `SIR-PARSE-001` | 语法错误（最常见）：缺分号、保留字当名字、子句顺序不对，都是这个码 |
+| `SIR-PARSE-002`／`003`／`004` | 语法错误的其它形式：缺少必要的部分／多余的内容／文件提前结束（括号没闭合） |
+| `SIR-VERSION-001` | 文档不是 `sir 0.2` |
+| `SIR-TARGET-001`、`SIR-LOWER-TARGET-001` | `target` 写了目前不支持的值 |
+| `SIR-SYMBOL-001` | 重复定义（实体、字段、变量、错误、能力重名） |
+| `SIR-SYMBOL-002` | 引用了不存在的名字或字段 |
+| `SIR-SYMBOL-003` | 视图嵌套另一个视图时，两个实体之间有不止一个 `Ref`，关联不唯一 |
+| `SIR-IDENTITY-001`／`002` | `@id` 的取值格式不对／重复 |
+| `SIR-TYPE-001` | 类型不一致：比较或加减两边类型不同、返回类型不匹配、字面量超出范围、状态码不在 400／401／404／409 里、`secret`／`unique` 用在不允许的类型上 |
+| `SIR-TYPE-002` | `Ref<...>` 的目标不是实体 |
+| `SIR-TYPE-003` | `Optional<Optional<T>>` |
+| `SIR-TYPE-004` | `any` 的条件里没有“指向根实体的 Ref 字段 `== item`” |
+| `SIR-VALID-001` | 通用规则：`fails` 没排序、`requires` 顺序不对、`query` 没有 `readonly`、多个写步骤没有 `atomic`、`find` 谓词的比较方向不对、视图字段带了约束等 |
+| `SIR-VALID-002` | `versioned` 的规则：每个实体最多一个、版本字段不能带约束或 `unique`、只能用在实体字段上 |
+| `SIR-VALID-003` | 局部更新输入（`patch of`）的规则 |
+| `SIR-VALID-004` | 带 `versioned` 实体的更新规则、`persist ... else` 的用法、局部更新的字段必须全部绑定 |
+| `SIR-VALID-005` | 视图嵌套太深（最多 2 层） |
+| `SIR-VALID-006` | `load` 按字段加载的规则 |
+| `SIR-VALID-007` | 守卫更新的规则 |
+| `SIR-VALID-008` | `secret` 字段的规则 |
+| `SIR-VALID-009` | 凭据实体的规则 |
+| `SIR-FLOW-001` | 用了未声明或还没声明的变量，或在 `find` 之外用了 `item` |
+| `SIR-FLOW-002` | `return` 的数量不对，或 `return` 后面还有步骤 |
+| `SIR-FLOW-003` | 用到的错误没有在 `fails` 里声明 |
+| `SIR-FLOW-004` | 只读能力里有 `create`／`update`／`persist` |
+| `SIR-FLOW-005`／`006` | `any` 出现在 `find` 的谓词之外／`any` 里面又嵌套了 `any` |
+| `SIR-SOURCE-*` | 多文件工程的问题：入口没列出文件、`import` 找不到声明、没 import 就用了别的文件的声明（`SIR-SOURCE-VISIBILITY-001`） |
+| `SIR-LOWER-*` | 软件本身合法，但目标（Java／Spring Boot／MySQL）暂不支持 |
+
+下面每一条都是真的会触发那个码的最小写法。
+
+```sir-error SIR-PARSE-001
+entity Note persistent {
+  identity id: Int64 generated auto;
+  field text: String
+}
+```
+
+```sir-error SIR-VERSION-001
+sir 0.1
+
+software Old {
+  metadata {
+    displayName "Old";
+    namespace "example.old";
+  }
+  target {
+    language java 21;
+    framework spring_boot;
+    persistence mybatis_plus;
+    database mysql;
+    build maven;
+    interface rest;
+  }
+  sources { }
+  imports { }
+  declarations { }
+}
+```
+
+```sir-error SIR-TARGET-001
+sir 0.2
+
+software Elsewhere {
+  metadata {
+    displayName "Elsewhere";
+    namespace "example.elsewhere";
+  }
+  target {
+    language java 21;
+    framework spring_boot;
+    persistence mybatis_plus;
+    database postgres;
+    build maven;
+    interface rest;
+  }
+  sources { }
+  imports { }
+  declarations { }
+}
+```
+
+```sir-error SIR-SYMBOL-001
+entity Note persistent {
+  identity id: Int64 generated auto;
+}
+entity Note persistent {
+  identity id: Int64 generated auto;
+}
+```
+
+```sir-error SIR-SYMBOL-002
+entity Note persistent {
+  identity id: Int64 generated auto;
+  field text: String;
+}
+view NoteView from Note {
+  field id: Int64;
+  field text: String;
+}
+input NoteRef {
+  field id: Int64;
+}
+error NoNote http 404;
+capability GetNote {
+  input NoteRef;
+  output NoteView;
+  fails NoNote;
+  requires readonly;
+  expose query;
+  workflow {
+    load Note by input.ident as note else NoNote;
+    return note;
+  }
+}
+```
+
+```sir-error SIR-SYMBOL-003
+entity Team persistent {
+  identity id: Int64 generated auto;
+  field name: String;
+}
+entity Match persistent {
+  identity id: Int64 generated auto;
+  field home: Ref<Team>;
+  field away: Ref<Team>;
+}
+view TeamView from Team {
+  field id: Int64;
+  field name: String;
+}
+view MatchView from Match {
+  field id: Int64;
+  field home: TeamView;
+}
+```
+
+```sir-error SIR-TYPE-001
+error Boom http 500;
+```
+
+```sir-error SIR-TYPE-002
+enum Level { LOW, HIGH }
+entity Task persistent {
+  identity id: Int64 generated auto;
+  field level: Ref<Level>;
+}
+```
+
+```sir-error SIR-TYPE-003
+entity Task persistent {
+  identity id: Int64 generated auto;
+  field note: Optional<Optional<String>>;
+}
+```
+
+```sir-error SIR-TYPE-004
+entity Course persistent {
+  identity id: Int64 generated auto;
+  field code: String;
+}
+entity Enrollment persistent {
+  identity id: Int64 generated auto;
+  field course: Ref<Course>;
+  field active: Boolean;
+}
+view CourseView from Course {
+  field id: Int64;
+}
+input PageInput {
+  field page: Int32;
+  field size: Int32;
+}
+error InvalidPage;
+capability ActiveCourses {
+  input PageInput;
+  output Page<CourseView>;
+  fails InvalidPage;
+  requires readonly;
+  expose query;
+  workflow {
+    find Course where any(Enrollment, active == true) Page input.page, input.size else InvalidPage as courses;
+    return courses;
+  }
+}
+```
+
+```sir-error SIR-VALID-001
+entity Note persistent {
+  identity id: Int64 generated auto;
+  field text: String;
+}
+view NoteView from Note {
+  field id: Int64;
+  field text: String;
+}
+input NoteInput {
+  field text: String where notBlank;
+}
+capability TwoWrites {
+  input NoteInput;
+  output NoteView;
+  expose command;
+  workflow {
+    create Note as first {
+      text: input.text;
+    }
+    create Note as second {
+      text: input.text;
+    }
+    persist first;
+    persist second;
+    return second;
+  }
+}
+```
+
+```sir-error SIR-VALID-002
+entity Counter persistent {
+  identity id: Int64 generated auto;
+  field a: Int64 versioned;
+  field b: Int64 versioned;
+}
+```
+
+```sir-error SIR-VALID-003
+entity Course persistent {
+  identity id: Int64 generated auto;
+  field name: String;
+  field version: Int64 versioned;
+}
+input RenameCourse patch of Course {
+  field name: String;
+}
+```
+
+```sir-error SIR-VALID-004
+entity Note persistent {
+  identity id: Int64 generated auto;
+  field text: String;
+}
+view NoteView from Note {
+  field id: Int64;
+  field text: String;
+}
+input NoteInput {
+  field text: String;
+}
+error Stale http 409;
+capability PostNote {
+  input NoteInput;
+  output NoteView;
+  fails Stale;
+  requires atomic;
+  expose command;
+  workflow {
+    create Note as note {
+      text: input.text;
+    }
+    persist note else Stale;
+    return note;
+  }
+}
+```
+
+```sir-error SIR-VALID-005
+entity A persistent {
+  identity id: Int64 generated auto;
+  field name: String;
+}
+entity B persistent {
+  identity id: Int64 generated auto;
+  field a: Ref<A>;
+}
+entity C persistent {
+  identity id: Int64 generated auto;
+  field b: Ref<B>;
+}
+entity D persistent {
+  identity id: Int64 generated auto;
+  field c: Ref<C>;
+}
+view AView from A {
+  field id: Int64;
+  field name: String;
+}
+view BView from B {
+  field id: Int64;
+  field a: AView;
+}
+view CView from C {
+  field id: Int64;
+  field b: BView;
+}
+view DView from D {
+  field id: Int64;
+  field c: CView;
+}
+```
+
+```sir-error SIR-VALID-006
+entity Account persistent {
+  identity id: Int64 generated auto;
+  field name: String;
+}
+view AccountView from Account {
+  field id: Int64;
+}
+input ByName {
+  field name: String;
+}
+error AccountNotFound http 404;
+capability FindAccount {
+  input ByName;
+  output AccountView;
+  fails AccountNotFound;
+  requires readonly;
+  expose query;
+  workflow {
+    load Account by name: input.name as account else AccountNotFound;
+    return account;
+  }
+}
+```
+
+```sir-error SIR-VALID-007
+entity Token persistent {
+  identity id: Uuid generated uuid;
+  field used: Boolean;
+  field uses: Int32;
+}
+view TokenView from Token {
+  field id: Uuid;
+}
+input TokenInput {
+  field token: Uuid;
+}
+error Gone http 409;
+capability Spend {
+  input TokenInput;
+  output TokenView;
+  fails Gone;
+  requires atomic;
+  expose command;
+  workflow {
+    load Token by input.token as token else Gone;
+    update token when token.used == false else Gone { uses: token.uses + 1; }
+    persist token;
+    return token;
+  }
+}
+```
+
+```sir-error SIR-VALID-009
+entity User persistent {
+  identity id: Int64 generated auto;
+}
+entity AccessToken persistent {
+  identity id: Uuid generated uuid;
+  field owner: Ref<User>;
+  field expiresAt: DateTime;
+  credential subject owner expires expiresAt;
+}
+entity ApiKey persistent {
+  identity id: Uuid generated uuid;
+  field owner: Ref<User>;
+  field expiresAt: DateTime;
+  credential subject owner expires expiresAt;
+}
+```
+
+```sir-error SIR-FLOW-001
+entity Note persistent {
+  identity id: Int64 generated auto;
+  field text: String;
+}
+view NoteView from Note {
+  field id: Int64;
+  field text: String;
+}
+capability Nothing {
+  output NoteView;
+  requires readonly;
+  expose query;
+  workflow {
+    return note;
+  }
+}
+```
+
+```sir-error SIR-FLOW-002
+entity Note persistent {
+  identity id: Int64 generated auto;
+  field text: String;
+}
+view NoteView from Note {
+  field id: Int64;
+}
+input NoteRef {
+  field id: Int64;
+}
+error NoNote http 404;
+capability GetNote {
+  input NoteRef;
+  output NoteView;
+  fails NoNote;
+  requires readonly;
+  expose query;
+  workflow {
+    load Note by input.id as note else NoNote;
+  }
+}
+```
+
+```sir-error SIR-FLOW-003
+entity Note persistent {
+  identity id: Int64 generated auto;
+  field text: String;
+}
+view NoteView from Note {
+  field id: Int64;
+}
+input NoteRef {
+  field id: Int64;
+}
+error NoNote http 404;
+capability GetNote {
+  input NoteRef;
+  output NoteView;
+  requires readonly;
+  expose query;
+  workflow {
+    load Note by input.id as note else NoNote;
+    return note;
+  }
+}
+```
+
+```sir-error SIR-FLOW-004
+entity Note persistent {
+  identity id: Int64 generated auto;
+  field text: String;
+}
+view NoteView from Note {
+  field id: Int64;
+}
+input NoteInput {
+  field text: String;
+}
+capability Wrong {
+  input NoteInput;
+  output NoteView;
+  requires readonly;
+  expose query;
+  workflow {
+    create Note as note {
+      text: input.text;
+    }
+    return note;
+  }
+}
+```
+
+```sir-error SIR-FLOW-005
+entity Course persistent {
+  identity id: Int64 generated auto;
+  field code: String;
+}
+entity Enrollment persistent {
+  identity id: Int64 generated auto;
+  field course: Ref<Course>;
+}
+view CourseView from Course {
+  field id: Int64;
+}
+input CourseRef {
+  field id: Int64;
+}
+error NoCourse http 404;
+capability Wrong {
+  input CourseRef;
+  output CourseView;
+  fails NoCourse;
+  requires readonly;
+  expose query;
+  workflow {
+    load Course by input.id as course else NoCourse;
+    validate any(Enrollment, course == course) else NoCourse;
+    return course;
+  }
+}
+```
+
+## 10. 还没有的东西
+
+- 删除（`delete`）步骤、路由模板（路径参数）、授权（角色与数据范围）。
+- 数据库建表和迁移：SIR 描述数据长什么样，**建表由部署方负责**（测试里的 DDL 只是夹具）。字段名在数据库里是下划线形式（`passwordHash` → `password_hash`，`Ref` 字段 `owner` → `owner_id`），`Uuid` 列用 `CHAR(36)`。
+- 口令强度、登录失败的锁定与限流、令牌的缓存。
+- 除上面的 target 之外的语言、框架、数据库。
