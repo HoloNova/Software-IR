@@ -1,6 +1,6 @@
-# 后端独立部署包 v1（步骤①②已验收）
+# 后端独立部署包 v1（步骤①②③已验收）
 
-步骤①已由[verify #94](https://github.com/HoloNova/Software-IR/actions/runs/39019809176)在`30f50bd`上验收：公开导出、冷构建、建库、HTTP调用、账号权限、重启/重复部署保留数据和丢失卷拒绝全部通过，见[报告第5节](DEPLOYMENT_DELIVERY_REPORT.md)。它是本样例在CI Linux x86_64上的证据，不是生产或全平台资格。步骤②的Swagger、随包合同测试（第7节）由[verify #95](https://github.com/HoloNova/Software-IR/actions/runs/39021298934)、独立业务验收包（第8节）由[verify #96](https://github.com/HoloNova/Software-IR/actions/runs/39021834946)在本样例上验收，见[报告第7节](DEPLOYMENT_DELIVERY_REPORT.md)；保留数据更新属于步骤③。
+步骤①已由[verify #94](https://github.com/HoloNova/Software-IR/actions/runs/39019809176)在`30f50bd`上验收：公开导出、冷构建、建库、HTTP调用、账号权限、重启/重复部署保留数据和丢失卷拒绝全部通过，见[报告第5节](DEPLOYMENT_DELIVERY_REPORT.md)。它是本样例在CI Linux x86_64上的证据，不是生产或全平台资格。步骤②的Swagger、随包合同测试（第7节）由[verify #95](https://github.com/HoloNova/Software-IR/actions/runs/39021298934)、独立业务验收包（第8节）由[verify #96](https://github.com/HoloNova/Software-IR/actions/runs/39021834946)在本样例上验收，见[报告第7节](DEPLOYMENT_DELIVERY_REPORT.md)；保留数据的同实例更新（第9节）由[verify #97](https://github.com/HoloNova/Software-IR/actions/runs/39025709647)、[verify #98](https://github.com/HoloNova/Software-IR/actions/runs/39026265442)验收，见[报告第8节](DEPLOYMENT_DELIVERY_REPORT.md)。
 
 ## 1. 导出与部署分开
 

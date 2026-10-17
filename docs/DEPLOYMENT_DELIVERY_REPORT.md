@@ -1,7 +1,7 @@
 # 独立部署交付：步骤①实现报告
 
 - 日期：2026-10-17；状态：**步骤① PASSED（verify #94）**。首轮CI #93的HTTP验收阻塞来自验收脚本，云端修复`30f50bd`后同SHA的[verify #94](https://github.com/HoloNova/Software-IR/actions/runs/39019809176)两个job全部success，见第5节。
-- 授权：负责人已允许开始实现已确认的[方案11](design/11-portable-deployment-and-http-acceptance.md)。步骤①②已验收（第5、7节）；步骤③保留数据更新尚未实施。
+- 授权：负责人已允许开始实现已确认的[方案11](design/11-portable-deployment-and-http-acceptance.md)。步骤①②已验收（第5、7节）；步骤③保留数据的同实例更新已验收（第8节）。
 - 基线：`cf44450`；实现提交：`a7cba11022c04e6a07cb47d5070bde39a06b0adf`（[verify #93](https://github.com/HoloNova/Software-IR/actions/runs/39002409782)）；验收提交：`30f50bdec6f7d4c485365b4a8b6ce5294d25b0c7`（[verify #94](https://github.com/HoloNova/Software-IR/actions/runs/39019809176)）。
 - 使用合同：[部署包v1](DEPLOYMENT_DELIVERY.md)。
 
@@ -117,3 +117,23 @@ Artifact：[deployment-evidence](https://github.com/HoloNova/Software-IR/actions
 Artifact：#95 [deployment-evidence](https://github.com/HoloNova/Software-IR/actions/runs/39021298934/artifacts/12097386345)、[backend-source-delivery](https://github.com/HoloNova/Software-IR/actions/runs/39021298934/artifacts/12096663436)；#96 [deployment-evidence](https://github.com/HoloNova/Software-IR/actions/runs/39021834946/artifacts/12097627477)（含`reports/contract`与`reports/acceptance`下的TSV及Surefire报告）、[backend-source-delivery](https://github.com/HoloNova/Software-IR/actions/runs/39021834946/artifacts/12097647208)、[standalone-cli](https://github.com/HoloNova/Software-IR/actions/runs/39021834946/artifacts/12096649319)、[surefire-reports](https://github.com/HoloNova/Software-IR/actions/runs/39021834946/artifacts/12096569618)、[conformance-evidence](https://github.com/HoloNova/Software-IR/actions/runs/39021834946/artifacts/12097377167)。
 
 步骤②完成门由此关闭：Swagger能发真实请求，合同测试与双Token业务/并发断言通过，报告分别记录部署、合同、业务及未验证项。证据仅覆盖本部署样例在CI Linux x86_64上的情形；合同通过不代表其他SIR的业务正确，业务正确仍依赖各自的验收包。
+
+## 8. 步骤③验收（verify #97、#98）
+
+合同见[方案11第13节](design/11-portable-deployment-and-http-acceptance.md)，分两片提交，各自取得同SHA CI，两个job均success；部署验收脚本仅在全部分项PASSED时以0退出。
+
+| 受测提交 | run | 新增分项 |
+| --- | --- | --- |
+| `bf14b8d0d6eda3105b3ec162298565f93296905e`（A片：`update`、迁移链判定、数据摘要） | [verify #97](https://github.com/HoloNova/Software-IR/actions/runs/39025709647) | `update` |
+| `656bb064b2839b0452bdaddbbff516efd35ca7d7`（B片：`--base-package`追加迁移） | [verify #98](https://github.com/HoloNova/Software-IR/actions/runs/39026265442) | 再加`dataUpdate`、`freshChain` |
+
+#98的report.json：`deployment`、`httpSmoke`、`persistence`、`privileges`、`swagger`、`contract`（13 / 0 / 7）、`missingVolume`、`business`（26 / 0）、`update`、`dataUpdate`、`freshChain`、`cleanup`全部PASSED；`notRunByContract`为`interruptedMigration`、`schemaDrift`。
+
+- `update`（schema不变）：同schema、不同字节的新包在业务验收实例上update，输出`applied=none`，五张业务表`CHECKSUM TABLE`前后一致，Flyway历史仍为1条，status显示已绑定新包；重复update为`KCG_UPDATE_CURRENT`；旧包`start`以`KCG_BLOCKED`拒绝；新应用上双Token业务验收再次通过。
+- `dataUpdate`（追加迁移）：以该包为基础导出的v2（新表`label`、可空列`note.title`）update后只应用V2..V3并输出`KCG_DATA_VERIFIED`；`user`与`note`原有行的主键、字段值和作者关系逐行不变，Flyway成功记录为3条，旧行的`title`全为NULL；新接口`/api/add-label`引用旧note返回201、引用不存在的note返回404 `NoteNotFound`；重复update为CURRENT；较旧的包update以AHEAD拒绝且旧应用保持就绪。
+- `freshChain`：新实例直接部署v2，从V1重放到V3，HTTP注册成功。
+- 导出侧：以v2为基础导出v1，公开CLI以`SIR-DEPLOY-UPDATE-UNSUPPORTED-001`拒绝（退出码3）且不留输出。
+
+Artifact（#98）：[deployment-evidence](https://github.com/HoloNova/Software-IR/actions/runs/39026265442/artifacts/12099382262)（含report.json、各次导出结果与脱敏日志）、[backend-source-delivery](https://github.com/HoloNova/Software-IR/actions/runs/39026265442/artifacts/12099227681)、[standalone-cli](https://github.com/HoloNova/Software-IR/actions/runs/39026265442/artifacts/12098998537)、[surefire-reports](https://github.com/HoloNova/Software-IR/actions/runs/39026265442/artifacts/12099018292)、[conformance-evidence](https://github.com/HoloNova/Software-IR/actions/runs/39026265442/artifacts/12098884143)。
+
+步骤③完成门由此关闭：同一实例从第一版升到第二版，旧主键、字段值与关系保持，重复执行可判定，不支持的迁移明确拒绝，没有清库路径。边界：本轮只支持schema不变、新表与普通可空新列；按负责人确认的取舍，更新前不备份，INTERRUPTED/DRIFT只有判定规则与代码，没有真实库证据；证据仅覆盖本样例在CI Linux x86_64上的情形。

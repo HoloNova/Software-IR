@@ -43,9 +43,9 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 
 命令行可以打成单文件 `kcg-cli/target/kcg.jar` 直接 `java -jar` 运行（`mvn -B -pl kcg-cli -am -Dmaven.test.skip=true package`）。整条链运行时只依赖 antlr4-runtime；包只重新打包已有类，不新增模块。本机已验证它与类路径启动的完整流程输出一致；CI 冒烟步骤已通过（[verify #73](https://github.com/HoloNova/Software-IR/actions/runs/38677243253)，`3ebe5f1`），见[阶段报告第4节](CLI_WORKFLOW_REPORT.md)。
 
-### 独立部署交付（步骤①②已验收，步骤③待推进）
+### 独立部署交付（步骤①②③已验收）
 
-`kcg package`只导出完整源码、物理schema/Flyway脚本、Docker/Compose配方和独立执行工具，不在导出时启动服务。随包入口负责目标机上的初始化、构建、启动和同包重启。26项本机轻量定向检查通过，没有本机部署/业务测试。实现提交`a7cba11`的CI [#93](https://github.com/HoloNova/Software-IR/actions/runs/39002409782)原全量门及业务IT全绿，新包实际构建、Flyway建库和应用启动成功，但HTTP烟测JSON解析异常。云端确认是验收脚本对空体401做JSON解析，修复`30f50bd`后同SHA的[verify #94](https://github.com/HoloNova/Software-IR/actions/runs/39019809176)全部success：部署、HTTP、账号权限、重启/重复部署保留数据、丢失卷拒绝和清理均PASSED，步骤①验收。首版拒绝无界唯一文本、未定义精度的Decimal及缺外部身份实现等情形；普通generate不变。使用与限制见[部署包v1](DEPLOYMENT_DELIVERY.md)，证据见[步骤①报告](DEPLOYMENT_DELIVERY_REPORT.md)。步骤②的Swagger、随包合同测试与独立业务验收包由CI #95/#96验收（合同13/0/7 NOT_VERIFIED，双Token业务26/0）；步骤③（合同见方案11第13节）的`update`动作与`--base-package`追加迁移已接入代码、待CI证据，不能标称完整部署产品已发布。
+`kcg package`只导出完整源码、物理schema/Flyway脚本、Docker/Compose配方和独立执行工具，不在导出时启动服务。随包入口负责目标机上的初始化、构建、启动和同包重启。26项本机轻量定向检查通过，没有本机部署/业务测试。实现提交`a7cba11`的CI [#93](https://github.com/HoloNova/Software-IR/actions/runs/39002409782)原全量门及业务IT全绿，新包实际构建、Flyway建库和应用启动成功，但HTTP烟测JSON解析异常。云端确认是验收脚本对空体401做JSON解析，修复`30f50bd`后同SHA的[verify #94](https://github.com/HoloNova/Software-IR/actions/runs/39019809176)全部success：部署、HTTP、账号权限、重启/重复部署保留数据、丢失卷拒绝和清理均PASSED，步骤①验收。首版拒绝无界唯一文本、未定义精度的Decimal及缺外部身份实现等情形；普通generate不变。使用与限制见[部署包v1](DEPLOYMENT_DELIVERY.md)，证据见[步骤①报告](DEPLOYMENT_DELIVERY_REPORT.md)。步骤②的Swagger、随包合同测试与独立业务验收包由CI #95/#96验收（合同13/0/7 NOT_VERIFIED，双Token业务26/0）；步骤③（合同见方案11第13节）的`update`动作与`--base-package`追加迁移由CI #97/#98在本样例上验收：schema不变更新、新表与可空新列的保留数据升级、较旧包拒绝及新实例全链重放均通过；只支持这三类变化，中断与漂移无真实库证据，不能标称完整部署产品已发布。
 
 ### 基于 Git 的版本变更（ADR-027）
 
@@ -93,7 +93,7 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 
 公开CLI流程已验收，不重开已完成R1–R5，不改变Git版本合同。
 
-**当前优先方向：**负责人已确认[可独立部署的后端交付包与真实HTTP验收方案](design/11-portable-deployment-and-http-acceptance.md)，按“首次自动部署 → Swagger与随包网络测试 → 保留数据更新”三步推进。负责人随后已授权进入实现；步骤①CI #93因验收脚本阻塞，云端修复后由CI #94验收；步骤②由CI #95/#96验收，步骤③尚未实施，详见[报告](DEPLOYMENT_DELIVERY_REPORT.md)。当前开发机不进行部署或业务测试，验收在CI或负责人后续指定的机器执行；不按当前开发机资源设定发布环境。既有SLM题目保留，但未启动模型评测；尚未通过的部署和测试输出不能记为已验收。
+**当前优先方向：**负责人已确认[可独立部署的后端交付包与真实HTTP验收方案](design/11-portable-deployment-and-http-acceptance.md)，按“首次自动部署 → Swagger与随包网络测试 → 保留数据更新”三步推进。负责人随后已授权进入实现；步骤①CI #93因验收脚本阻塞，云端修复后由CI #94验收；步骤②由CI #95/#96、步骤③由CI #97/#98验收，详见[报告](DEPLOYMENT_DELIVERY_REPORT.md)。当前开发机不进行部署或业务测试，验收在CI或负责人后续指定的机器执行；不按当前开发机资源设定发布环境。既有SLM题目保留，但未启动模型评测；尚未通过的部署和测试输出不能记为已验收。
 
 下面的 S1/S2 是负责人 2026-10-15 确认、随后完成的阶段划分与历史进展。
 

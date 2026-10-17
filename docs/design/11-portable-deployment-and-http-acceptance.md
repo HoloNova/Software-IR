@@ -1,7 +1,7 @@
 # 可独立部署的后端交付包与真实 HTTP 验收
 
 - 日期：2026-10-17。
-- 状态：**IN_PROGRESS / 步骤①② PASSED / 步骤③实施中**。负责人已确认方案并授权进入实现；步骤①由verify #94、步骤②（合同见第12节）由verify #95/#96验收；步骤③合同见第13节，A片（运行侧update）与B片（`--base-package`追加迁移）已接入代码、待CI。负责人随后已授权提交、推送并取得CI验收；镜像发布仍未授权。
+- 状态：**步骤①②③ PASSED**。负责人已确认方案并授权进入实现；步骤①由verify #94、步骤②（合同见第12节）由verify #95/#96验收；步骤③（合同见第13节）由verify #97/#98验收。负责人随后已授权提交、推送并取得CI验收；镜像发布仍未授权。
 - 实现起点：云端 `main` / `cf44450`。信任既有云端成果，不为规划重复执行验证。
 - 依据：[MAIN](../../MAIN.md)、[当前能力](../PROJECT_STATUS.md)、[ADR-026](../architecture/ADR-026-layered-semantic-command-architecture.md)、[ADR-027](../architecture/ADR-027-git-as-version-history.md)。
 - 方案文本不是已交付或通过证据；步骤①实现范围、26项定向结果、CI #93阻塞与#94验收见[报告](../DEPLOYMENT_DELIVERY_REPORT.md)。
@@ -231,3 +231,5 @@ update顺序及失败结果：加锁与前置检查（2/3）；卷与`initialize
 **取舍（负责人2026-10-17确认）。** 准入以活库谱系为准，不在包内记录base id：允许跨版本和在schema相同的包间切换，代价是无法识别来自其他项目但schema相同的包。`kcg.package`标签降为创建者。本轮矩阵仅上表三类。无DDL的业务规则收紧放行并标NOT_VERIFIED。更新前不备份，报告写明“未备份，恢复需人工”。CI不手工改SQL制造中断或漂移，INTERRUPTED/DRIFT门本轮记NOT_RUN，由单元测试覆盖判定规则。恢复动作、旧镜像与`artifacts/`清理不在步骤③。
 
 **完成门与CI。** 同包v1部署并经HTTP写入数据→导出schema不变的新包并`update`（无SQL，改绑）→导出含新表与新可空列的v2包并`update`（逐版本迁移，摘要一致，旧主键/字段/关系保持，新功能可经HTTP使用）→重复`update`为CURRENT→用较旧的包`update`被拒绝（AHEAD/3）→新实例直接部署v2包时从V1重放全链。原步骤①②门不回退。
+
+**验收记录。** A片`bf14b8d`的[verify #97](https://github.com/HoloNova/Software-IR/actions/runs/39025709647)与B片`656bb06`的[verify #98](https://github.com/HoloNova/Software-IR/actions/runs/39026265442)两个job均success；#98中`update`、`dataUpdate`、`freshChain`及步骤①②各分项PASSED，`interruptedMigration`、`schemaDrift`按取舍记NOT_RUN。本节完成门关闭，分项与artifact见[报告第8节](../DEPLOYMENT_DELIVERY_REPORT.md)。长期G阶段的完整迁移矩阵不因此关闭。
