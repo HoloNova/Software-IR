@@ -1,6 +1,6 @@
 # 生成、检查结构、指令编辑与应用
 
-本说明对应公开命令 `generate / inspect / edit / scaffold / check / version-plan / version-apply`。源码生成不等于构建或业务验证；这些命令不下载依赖、不启动数据库或Spring Boot。
+本说明对应公开命令 `generate / package / inspect / edit / scaffold / check / version-plan / version-apply`。源码生成不等于构建或业务验证；这些命令不下载依赖、不启动数据库或Spring Boot。
 
 ## 1. 启动CLI
 
@@ -144,3 +144,7 @@ kcg edit --source-root "$SOURCE" --entry project.sir --candidate-root "$CANDIDAT
 模式声明与你的软件一起经过同一个正式语义分析，所以不合适的情况在这里就被拒绝，消息是分析自己的：名字已被占用（`SIR-SYMBOL-001`，用`--prefix`避开）、账号实体缺字段或字段不对（`SIR-SYMBOL-002`、`SIR-VALID-006`、`SIR-VALID-008`）、同一个账号已经有凭据实体（`SIR-VALID-009`）、源本身不是合法软件。拒绝时stdout是一个`KCG-CLI-WORKFLOW-V1`文档（`outcome`为`REFUSED`，含`message`与`details`），没有批。
 
 退出码：0 批已写出；2 参数错误（缺选项、未知模式、选项重复、数字不合法）；3 拒绝或源不可读。生成的工程要这样运行：`kcg.actor-identity.mode=external`（生成的认证器取这个模式要求的bean名，见[设计10第26节](design/10-semantic-boundary-and-mechanisms.md)）。
+
+## 6. package：独立部署源码包（步骤①待CI）
+
+`kcg package --source-root … --entry … --output-root …`只导出新的源码/数据库/Docker交付目录，不启动Docker、不下载依赖、不Git。完整参数、物理支持边界及目标机器上的随包入口见[部署包v1](DEPLOYMENT_DELIVERY.md)。本轮26项轻量定向检查不等于部署资格，实际建库/启动/HTTP必须取得同SHA CI证据。原generate不变；部署包不是原version-plan/apply的开发工程目标，尚不支持不同包升级。

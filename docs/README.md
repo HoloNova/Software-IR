@@ -18,6 +18,9 @@
 | [`CLI阶段报告`](CLI_WORKFLOW_REPORT.md) | 实现、定向证据、CI 证据与单文件包 |
 | [`SIR 语言参考`](SIR_LANGUAGE_REFERENCE.md) | 用 SIR 写软件：能写什么、怎么写、写错了会得到哪个诊断码；示例由测试逐个检查 |
 | [`入口阶段方案`](design/09-public-cli-workflow.md) | 已验收（CI #72 通过）；范围及完成门 |
+| [`部署与HTTP验收方案`](design/11-portable-deployment-and-http-acceptance.md) | 进行中：步骤①代码/CI门已接入，步骤②③待推进；不在本机部署或业务测试 |
+| [`部署包v1`](DEPLOYMENT_DELIVERY.md) | package导出、目标机器的独立部署入口、物理支持矩阵；待CI验收 |
+| [`部署步骤①报告`](DEPLOYMENT_DELIVERY_REPORT.md) | 本轮26项定向检查，部署/真实HTTP等NOT_RUN门 |
 | [`机制与语义的边界（草稿）`](design/10-semantic-boundary-and-mechanisms.md) | 双 Token 这类机制怎样拆到语义层；探针读数、S2 各问答案与实现依赖顺序 |
 | [`CLAUDE_EXECUTION_POLICY.md`](CLAUDE_EXECUTION_POLICY.md) | 执行者是 Claude 时的提交、测试与资源约定 |
 | [`architecture/`](architecture/) | Accepted ADR：Resolve-once（001）、Application 所有权（003）、项目文档与源快照（021）、批量校验（025）、分层与指令修改（026）、Git 版本历史（027） |

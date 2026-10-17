@@ -30,6 +30,17 @@ final class WorkflowResultDocument {
         return finish(out, result.diagnostics());
     }
 
+    static String render(DeploymentPackageResult result) {
+        var out = start("package", result instanceof DeploymentPackageResult.Exported ? "PACKAGE_EXPORTED" : "FAILURE");
+        if (result instanceof DeploymentPackageResult.Exported exported) {
+            field(out, "packageId", exported.packageId());
+            field(out, "outputRoot", exported.manifest().outputRoot().toString());
+            sources(out, exported.sources());
+            field(out, "targetPlatform", "linux/amd64");
+        }
+        return finish(out, result.diagnostics());
+    }
+
     static String render(SourceInspectionResult result) {
         var out = start("inspect", result instanceof SourceInspectionResult.Success ? "INSPECTED" : "FAILURE");
         if (result instanceof SourceInspectionResult.Success success) {
@@ -129,10 +140,11 @@ final class WorkflowResultDocument {
         field(out, "command", command); field(out, "outcome", outcome); return out;
     }
     private static void field(StringBuilder out, String key, String value) { out.append(','); JsonFields.field(out, key, value); }
-    private static void sources(StringBuilder out, SourceSnapshot sources) {
+    private static void sources(StringBuilder out, SourceSnapshot sources) { sources(out, sources.manifest()); }
+    private static void sources(StringBuilder out, io.kcg.sir.source.SourceSetManifest sources) {
         field(out, "entry", sources.entry().value()); field(out, "sourceSetSha256", sources.sha256Hex());
         out.append(",\"sources\":["); boolean first = true;
-        for (var file : sources.manifest().files()) {
+        for (var file : sources.files()) {
             if (!first) out.append(','); first = false;
             out.append('{'); JsonFields.field(out, "path", file.sourceId().value());
             field(out, "sha256", file.sha256Hex()); out.append(','); JsonFields.field(out, "byteCount", file.byteCount()); out.append('}');

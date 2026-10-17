@@ -2,6 +2,8 @@
 
 > 目标设计，不代表已实现。文中凡涉及 Bundle、CURRENT、状态目录、事务日志与恢复、`context`/`plan` 命令、单文件 0.1 入口的描述，都是 2026-10-14 之前的方案：工程版本现在由磁盘上的 SIR 加 Git 承担（见 [ADR-027](../architecture/ADR-027-git-as-version-history.md)），语言只有 `sir 0.2` 一种文档形式。现有能力以 [项目状态](../PROJECT_STATUS.md) 为准。
 
+当前推进依据：[方案11：部署与HTTP验收](11-portable-deployment-and-http-acceptance.md)已由负责人确认，以CI的Linux x86_64及后续指定机器验收，不在当前开发机部署或跑业务测试；步骤①代码与CI门已接入、待验收，步骤②③尚未实施。本篇旧首轮Windows/状态模型不直接沿用。
+
 日期：2026-09-08。状态：推荐设计草案。使用[共享契约](00-shared-contracts.md)与[数据库执行规则](04-database-evolution.md)。下列路径、服务和命令入口是交付设计，不是已经生成的可执行工具。
 
 ## 1. 部署必须满足的条件

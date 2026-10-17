@@ -145,7 +145,7 @@ ANTLR4 语法（`sir 0.2` 根文档与声明片段两个入口）、严格 UTF-8
 
 ### `kcg-cli`
 
-公开命令是首次生成 `generate`、只读结构查询 `inspect`、只保存候选源的 `edit`，以及 `check`、只读的 `version-plan` 和会改已有工程的 `version-apply`（要求 git；协议 `KCG-CLI-VERSION-CHANGE-V1`）。`check` 从 stdin 接收 JSONL（每行一个 `sir 0.2` 文档），按请求阶段校验并输出 canonical 结果；使用与边界见 [SIR 批量校验](docs/SIR_BATCH_CHECK.md)。新三命令的结果协议为 `KCG-CLI-WORKFLOW-V1`，edit外部JSON为 `KCG-CLI-COMMANDS-V1` 包装核心 `sir-command/1`；说明见 [CLI流程](docs/CLI_WORKFLOW.md)。`register`、`apply`、`recover` 不是公开命令。
+公开命令是首次生成 `generate`、独立交付导出 `package`（步骤①待CI）、只读结构查询 `inspect`、只读指令脚手架 `scaffold`、只保存候选源的 `edit`，以及 `check`、只读的 `version-plan` 和会改已有工程的 `version-apply`（要求 git；协议 `KCG-CLI-VERSION-CHANGE-V1`）。`check` 从 stdin 接收 JSONL（每行一个 `sir 0.2` 文档），按请求阶段校验并输出 canonical 结果；使用与边界见 [SIR 批量校验](docs/SIR_BATCH_CHECK.md)。新三命令的结果协议为 `KCG-CLI-WORKFLOW-V1`，edit外部JSON为 `KCG-CLI-COMMANDS-V1` 包装核心 `sir-command/1`；说明见 [CLI流程](docs/CLI_WORKFLOW.md)。`register`、`apply`、`recover` 不是公开命令。
 
 ## 5. 修改与验收协议
 
@@ -179,11 +179,13 @@ mvn -Dmaven.repo.local=/root/.m2/repository -o clean verify     # Linux 参考�
 
 不在当前范围、未经负责人明确授权不得展开：Redis、第二 Target、Constraint VM、Java 反向解析、GUI/daemon、多用户、新的增量编译系统、数据库迁移、Docker 交付包、Web 平台。目标设计可以提前阅读，“可提前准备”不授权提前开工。
 
+负责人已授权按[设计11](docs/design/11-portable-deployment-and-http-acceptance.md)进入部署交付实现；步骤①的package导出与CI门已接入，仍待验收。本机仍不部署或业务测试；负责人随后已授权提交/推送及CI验收，镜像发布未授权；进展与边界见[报告](docs/DEPLOYMENT_DELIVERY_REPORT.md)。其他范围仍按上段约束。
+
 ## 7. 文档入口
 
 - 现状与已知限制：`docs/PROJECT_STATUS.md`；验证口径与证据：`docs/qualification/README.md`。
 - 总导航：`docs/README.md`；项目介绍：`README.md`；架构说明：`docs/KCG-Code_系统架构与实现指南.md`。
 - 架构裁决：`docs/architecture/`（ADR-001 Resolve-once、ADR-003 Application ownership、ADR-021 项目文档与源快照、ADR-025 批量校验、ADR-026 分层与指令修改、ADR-027 Git 版本历史）。
-- 目标设计：`docs/design/`。
+- 目标设计：`docs/design/`；当前部署/网络验收方案及分步进展见 [设计11](docs/design/11-portable-deployment-and-http-acceptance.md)，本机不执行部署或业务测试。
 - Claude 会话的执行约定：`docs/CLAUDE_EXECUTION_POLICY.md`。
 - 已完成或退役的材料：`docs/history/`。

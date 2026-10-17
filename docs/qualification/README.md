@@ -76,6 +76,10 @@
 
 `kcg-cli/target/kcg.jar` 与类路径启动的完整流程输出在本机对比一致（除含提交时间的 Git 提交 ID），见[阶段报告第4节](../CLI_WORKFLOW_REPORT.md)。`verify.yml` 新增的“Standalone CLI smoke”步骤在 [verify #73](https://github.com/HoloNova/Software-IR/actions/runs/38677243253)（同 SHA）success。
 
+### 独立部署交付步骤①（2026-10-17，待CI）
+
+新package导出、物理规划、配置逻辑及既有CLI/生成器边界的7类最新XML合计26 / 0 / 0 / 0，详见[步骤①报告](../DEPLOYMENT_DELIVERY_REPORT.md)。没有在本机拉镜像、构建或运行部署/业务；新CI `standalone-deployment` 尚未执行。镜像/依赖、真实MySQL初始化、HTTP、重启保留数据及丢失卷拒绝门全部NOT_RUN。#88不证明新增能力，不能混入旧830项或称部署已验收。
+
 ## 5. 未覆盖
 
 - Windows 平台证据（junction 相关用例只在 Windows 上执行）。

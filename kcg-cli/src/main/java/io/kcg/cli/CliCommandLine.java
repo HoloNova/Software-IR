@@ -22,7 +22,7 @@ public final class CliCommandLine {
          return (CliCommandLine.ParseResult)(switch (first) {
             case "--help", "-h", "help" -> new CliCommandLine.Help(null);
             case "--version", "-V", "version" -> new CliCommandLine.Version();
-            case "generate", "inspect", "edit" -> parseWorkflow(args, first);
+            case "generate", "package", "inspect", "edit" -> parseWorkflow(args, first);
             case "scaffold" -> parseScaffold(args);
             case "version-plan" -> parseVersion(args, "version-plan", false);
             case "version-apply" -> parseVersion(args, "version-apply", true);
@@ -40,7 +40,7 @@ public final class CliCommandLine {
       Map<String, String> opts = new LinkedHashMap<>();
       opts.put("--source-root", "sourceRoot");
       opts.put("--entry", "entry");
-      String destination = command.equals("generate") ? "--output-root" : command.equals("edit") ? "--candidate-root" : null;
+      String destination = (command.equals("generate") || command.equals("package")) ? "--output-root" : command.equals("edit") ? "--candidate-root" : null;
       if (destination != null) opts.put(destination, "destination");
       Object parsed = parseOptions(args, 1, opts, command);
       if (parsed instanceof UsageError error) return error;

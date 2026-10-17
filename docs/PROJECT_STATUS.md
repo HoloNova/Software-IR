@@ -1,6 +1,6 @@
 # KCG-Code 当前项目状态
 
-> 更新：2026-10-15。状态：正常开发中的工程，不宣称生产就绪。本文说明**现在能做什么**；验证口径与证据在[验证说明](qualification/README.md)；已完成或退役的材料在 [history](history/README.md)。
+> 更新：2026-10-17。状态：正常开发中的工程，不宣称生产就绪。本文说明**现在能做什么**；验证口径与证据在[验证说明](qualification/README.md)；已完成或退役的材料在 [history](history/README.md)。
 
 ## 1. 定位
 
@@ -19,8 +19,8 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 | `sir-generator-spring-boot` | 只消费降级模型的确定性内存文件生成 |
 | `sir-project-graph` | 来源图的构建、校验、canonical 序列化与加载 |
 | `sir-change` | 增删改指令（`Command`/`CommandBatch`）的编辑与写回（`SourceEditor`） |
-| `sir-toolchain-application` | 编译、首次生成、只读结构查询/候选源编辑、基于 Git 的版本规划与应用、独立验证、静态校验与 JSONL 批量 |
-| `kcg-cli` | `generate`、只读 `inspect`、候选 `edit`、`check`、只读 `version-plan`、`version-apply`，canonical JSON 输出 |
+| `sir-toolchain-application` | 编译、首次生成、只读结构查询/候选源编辑、独立交付包导出、基于 Git 的版本规划与应用、独立验证、静态校验与 JSONL 批量 |
+| `kcg-cli` | `generate`、候选交付 `package`（待CI）、只读 `inspect/scaffold`、候选 `edit`、`check`、只读 `version-plan`、`version-apply`，canonical JSON 输出 |
 
 ## 3. 当前能力
 
@@ -42,6 +42,10 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 公开入口已验收（2026-10-15，提交 `1c80c73`，CI [verify #72](https://github.com/HoloNova/Software-IR/actions/runs/38671123332) 通过）：`generate`调用原首次生成，`inspect`只读schema/draft与源集合摘要，`edit`读取JSON增删改批次并保存完整候选源目录，再接原version-plan/apply。原源与生成工程在edit期间不变；CLI不直接访问文件系统、不构建/启动。详见[CLI使用说明](CLI_WORKFLOW.md)。
 
 命令行可以打成单文件 `kcg-cli/target/kcg.jar` 直接 `java -jar` 运行（`mvn -B -pl kcg-cli -am -Dmaven.test.skip=true package`）。整条链运行时只依赖 antlr4-runtime；包只重新打包已有类，不新增模块。本机已验证它与类路径启动的完整流程输出一致；CI 冒烟步骤已通过（[verify #73](https://github.com/HoloNova/Software-IR/actions/runs/38677243253)，`3ebe5f1`），见[阶段报告第4节](CLI_WORKFLOW_REPORT.md)。
+
+### 独立部署交付（步骤①代码已接入，待CI）
+
+`kcg package`只导出完整源码、物理schema/Flyway脚本、Docker/Compose配方和独立执行工具，不在导出时启动服务。随包入口负责目标机上的初始化、构建、启动和同包重启。已完成26项本机轻量定向检查；没有本机部署/业务测试，镜像、真实SQL/HTTP及持久化均NOT_RUN。首版拒绝无界唯一文本、未定义精度的Decimal及缺外部身份实现等情形；普通generate不变。使用与限制见[部署包v1](DEPLOYMENT_DELIVERY.md)，证据见[步骤①报告](DEPLOYMENT_DELIVERY_REPORT.md)。Swagger/随包JUnit测试和不同包保留数据更新尚未实施，不能标称完整部署产品已发布。
 
 ### 基于 Git 的版本变更（ADR-027）
 
@@ -79,14 +83,18 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 ## 6. 尚未作为产品能力发布
 
 - 预构建的发行物与发布渠道、公开构建/运行入口（单文件包能由 `mvn package` 在本地产出，但没有版本化发布）；旧 `register`、`apply`、`recover` 命令不恢复，现有版本应用入口为version-apply。
-- 数据库初始化与迁移、Docker／Compose 交付、Web 平台、模块市场、跨项目缓存。
+- 数据库初始化和Docker／Compose交付的步骤①已有代码但未取得CI资格；保留数据迁移、Swagger/随包网络套件、Web平台、模块市场、跨项目缓存仍未发布。
 - Redis Extension、第二个目标、Constraint VM、Java 反向解析、GUI/daemon、多用户。
 - SLM 评测：总设计见 [SLM 评测计划](qualification/SLM_GENERATED_PROJECT_EVALUATION_PLAN.md)，尚未启动。
 - Windows 平台证据；生产、安全认证、性能、高可用资格均未声明。
 
-## 7. 当前阶段（2026-10-15）
+## 7. 当前阶段（2026-10-17）
 
-公开CLI流程已验收，不重开已完成R1–R5，不改变Git版本合同。下面的 S1/S2 是负责人 2026-10-15 确认的阶段划分。
+公开CLI流程已验收，不重开已完成R1–R5，不改变Git版本合同。
+
+**当前优先方向：**负责人已确认[可独立部署的后端交付包与真实HTTP验收方案](design/11-portable-deployment-and-http-acceptance.md)，按“首次自动部署 → Swagger与随包网络测试 → 保留数据更新”三步推进。负责人随后已授权进入实现；步骤①代码和CI门已接入，状态AWAITING_CI，负责人已授权提交/推送并取得CI证据。步骤②③尚未实施，详见[报告](DEPLOYMENT_DELIVERY_REPORT.md)。当前开发机不进行部署或业务测试，验收在CI或负责人后续指定的机器执行；不按当前开发机资源设定发布环境。既有SLM题目保留，但未启动模型评测；尚未通过的部署和测试输出不能记为已验收。
+
+下面的 S1/S2 是负责人 2026-10-15 确认、随后完成的阶段划分与历史进展。
 
 - S1（已完成，`3ebe5f1`，CI #73 通过）：把 #72 的证据写入文档，命令行打成可直接运行的单文件包。
 - S2（双Token扩展性探针，实现链全部完成）：用双 Token 作为对语言扩展性的探针。结论：缺口都是通用能力，逐个补上之后，双 Token 七条行为都能用语言本身写出，并在真实 MySQL 上验证——唯一字段与按唯一字段加载、时间平移与数值加减、守卫更新、错误状态码 401、`secret` 字段与 `matches`、`credential` 子句，最后是工具链里的脚手架 `kcg scaffold dual-token`（没有做成语言内的展开，理由见设计 10 第 27 节）。各步骤、实测改动面、CI 证据见[设计 10](design/10-semantic-boundary-and-mechanisms.md)第 16–27 节。第 5 问（小模型实验的接入）搁置：它依赖的 `STEP0_EXPERIMENT_HANDBOOK.md` 找不到，已改为起草一道提案题，见[SLM 第一道题提案](qualification/SLM_FIRST_TOPIC_DUAL_TOKEN_PROPOSAL.md)，负责人 2026-10-16 已采用这道题；模型与样本数未定，尚未评测任何模型。

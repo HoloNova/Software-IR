@@ -179,6 +179,13 @@ jobs:
           grep -q '"outcome":"GENERATED"' "$RUNNER_TEMP/standalone-smoke-generate.json"
           test -f "$OUTPUT/pom.xml"
 
+      - name: Upload standalone CLI for the delivery gate
+        uses: actions/upload-artifact@v4
+        with:
+          name: standalone-cli
+          path: kcg-cli/target/kcg.jar
+          if-no-files-found: error
+
       - name: Upload conformance evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -195,4 +202,51 @@ jobs:
         with:
           name: surefire-reports
           path: '**/target/surefire-reports/**'
+          if-no-files-found: warn
+
+  standalone-deployment:
+    needs: gates-and-business-it
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: actions/download-artifact@v4
+        with:
+          name: standalone-cli
+          path: ${{ runner.temp }}/delivery-cli
+      - name: Export a standalone delivery with the public CLI
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/deployment-evidence"
+          java -Xmx256m -jar "$RUNNER_TEMP/delivery-cli/kcg.jar" package \
+            --source-root "$GITHUB_WORKSPACE/sir-toolchain-application/src/test/resources/deployment/dual-token" \
+            --entry project.sir --output-root "$RUNNER_TEMP/backend-delivery" \
+            > "$RUNNER_TEMP/deployment-evidence/export.json"
+          python3 -c 'import json,sys; assert json.load(open(sys.argv[1]))["outcome"] == "PACKAGE_EXPORTED"' "$RUNNER_TEMP/deployment-evidence/export.json"
+          tar -czf "$RUNNER_TEMP/backend-delivery.tar.gz" -C "$RUNNER_TEMP/backend-delivery" .
+      - name: Cold deployment, actual HTTP and persistence acceptance
+        run: |
+          set -euo pipefail
+          python3 .github/scripts/deployment-smoke.py \
+            --package "$RUNNER_TEMP/backend-delivery" \
+            --state "$RUNNER_TEMP/deployment state" \
+            --evidence "$RUNNER_TEMP/deployment-evidence" \
+            --instance "kcg-delivery-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" --port 18080
+      - name: Upload delivery evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployment-evidence
+          path: ${{ runner.temp }}/deployment-evidence
+          if-no-files-found: warn
+      - name: Upload standalone source delivery (never runtime secrets)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-source-delivery
+          path: ${{ runner.temp }}/backend-delivery.tar.gz
           if-no-files-found: warn

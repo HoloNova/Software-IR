@@ -31,13 +31,14 @@ SIR 只有一种文档形式：`sir 0.2` 根文档（含 `metadata`、`target`�
 | `sir-project-graph` | 生成物的来源图（只读、可序列化） |
 | `sir-change` | 增删改指令对 SIR 的编辑与写回 |
 | `sir-toolchain-application` | 编排：编译、首次生成、基于 Git 的版本变更、独立验证 |
-| `kcg-cli` | 命令行：`generate`、`inspect`、`edit`、`check`、`version-plan`、`version-apply` |
+| `kcg-cli` | 命令行：`generate`、`package`（待CI）、`inspect`、`edit`、`scaffold`、`check`、`version-plan`、`version-apply` |
 
 ## 命令行
 
 | 命令 | 作用 |
 | --- | --- |
 | `kcg generate …` | 从SIR首次生成新工程，不改源、不构建、不调用Git |
+| `kcg package …` | 导出独立源码/数据库/Docker交付包；不启动服务，本轮待CI，见[部署说明](docs/DEPLOYMENT_DELIVERY.md) |
 | `kcg inspect …` | 只读软件结构、schema及编辑基线摘要 |
 | `kcg edit … < commands.json` | 接收固定增删改指令，只保存新候选SIR目录 |
 | `kcg check < samples.jsonl` | 批量静态校验 SIR 样本（stdin 为 JSONL），不建工程、不写文件 |
