@@ -3,6 +3,8 @@ package io.kcg.sir.generator.springboot.internal;
 import io.kcg.sir.generator.springboot.api.GeneratedFile;
 import io.kcg.sir.lowering.springboot.model.DeploymentPlan;
 import io.kcg.sir.lowering.springboot.model.DeploymentPlan.*;
+import io.kcg.sir.lowering.springboot.model.SchemaContract;
+import io.kcg.sir.lowering.springboot.model.SchemaEvolution;
 import java.util.*;
 
 /** Renders explicit target storage/recipe choices, without reading the original software. */
@@ -12,23 +14,13 @@ public final class DeploymentEngine {
         var pom = PomRenderer.render(plan.applicationProject());
         add(files, plan, "app/pom.xml", pom.content());
         StringBuilder sql = new StringBuilder("-- Delivery v1: initialize a new, dedicated MySQL 8.4 schema.\n");
-        StringBuilder contract = new StringBuilder();
         List<String> references = new ArrayList<>();
         int fk = 0;
         for (Table table : plan.tables()) {
             List<String> definitions = new ArrayList<>();
             for (Column column : table.columns()) {
-                String definition = "  " + quote(column.name()) + " " + sqlType(column) + (column.nullable() ? " NULL" : " NOT NULL");
-                if (column.autoIncrement()) definition += " AUTO_INCREMENT";
-                if (column.primary()) definition += " PRIMARY KEY";
-                if (column.unique()) definition += " UNIQUE";
-                definitions.add(definition);
+                definitions.add("  " + definition(column));
                 var ref = column.reference();
-                contract.append(table.name()).append('\t').append(column.name()).append('\t').append(metadataType(column))
-                    .append('\t').append(column.storage() == Storage.UUID ? 36 : column.length())
-                    .append('\t').append(column.nullable()).append('\t').append(column.primary()).append('\t').append(column.autoIncrement())
-                    .append('\t').append(column.unique()).append('\t').append(ref.map(ForeignKey::table).orElse(""))
-                    .append('\t').append(ref.map(ForeignKey::column).orElse("")).append('\n');
                 if (ref.isPresent()) {
                     var target = ref.get();
                     references.add("ALTER TABLE " + quote(table.name()) + " ADD CONSTRAINT " + quote("kcg_fk_" + fk++)
@@ -41,7 +33,7 @@ public final class DeploymentEngine {
         }
         references.forEach(r -> sql.append(r).append('\n'));
         add(files, plan, "deploy/migrations/V1__initialize.sql", sql.toString());
-        add(files, plan, "deploy/schema.tsv", contract.toString());
+        add(files, plan, "deploy/schema.tsv", SchemaContract.render(plan.tables()));
         add(files, plan, "app/src/main/resources/application-kcg-deploy.yml", """
             spring:
               config:
@@ -187,12 +179,49 @@ public final class DeploymentEngine {
         files.add(new GeneratedFile(path, content, plan.id(), Optional.empty()));
     }
     private static String quote(String identifier) { return "`" + identifier + "`"; }
-    private static String metadataType(Column column) {
-        return switch (column.storage()) {
-            case INT -> "int"; case BIGINT -> "bigint"; case BOOLEAN -> "tinyint";
-            case VARCHAR -> "varchar"; case LONGTEXT -> "longtext"; case UUID -> "char";
-            case DATE -> "date"; case DATETIME -> "datetime";
-        };
+
+    /** One column as V1 and every later version write it, so a column means the same DDL whichever version adds it. */
+    private static String definition(Column column) {
+        String definition = quote(column.name()) + " " + sqlType(column) + (column.nullable() ? " NULL" : " NOT NULL");
+        if (column.autoIncrement()) definition += " AUTO_INCREMENT";
+        if (column.primary()) definition += " PRIMARY KEY";
+        if (column.unique()) definition += " UNIQUE";
+        return definition;
+    }
+
+    /**
+     * The versions a delivery appends to the chain it inherits: one statement per file, and the contract after each
+     * version but the last (the last is schema.tsv). Contract V(base) is the inherited schema.tsv, copied by the caller.
+     */
+    public List<GeneratedFile> renderEvolution(DeploymentPlan plan, SchemaEvolution evolution, String baseContract) {
+        List<GeneratedFile> files = new ArrayList<>();
+        StringBuilder contract = new StringBuilder(baseContract);
+        for (var step : evolution.steps()) {
+            String header = "-- KCG delivery schema version " + step.version() + "; frozen once published.\n";
+            switch (step) {
+                case SchemaEvolution.CreateTable create -> {
+                    List<String> definitions = new ArrayList<>();
+                    create.table().columns().forEach(c -> definitions.add("  " + definition(c)));
+                    int fk = 0;
+                    for (Column column : create.table().columns()) {
+                        if (column.reference().isEmpty()) continue;
+                        var target = column.reference().get();
+                        definitions.add("  CONSTRAINT " + quote("kcg_v" + step.version() + "_fk_" + fk++) + " FOREIGN KEY (" + quote(column.name())
+                            + ") REFERENCES " + quote(target.table()) + " (" + quote(target.column()) + ") ON DELETE RESTRICT ON UPDATE RESTRICT");
+                    }
+                    add(files, plan, "deploy/migrations/V" + step.version() + "__create_table_" + create.table().name().toLowerCase(Locale.ROOT) + ".sql",
+                        header + "CREATE TABLE " + quote(create.table().name()) + " (\n" + String.join(",\n", definitions)
+                            + "\n) ENGINE=InnoDB DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_bin;\n");
+                }
+                case SchemaEvolution.AddNullableColumn column -> add(files, plan,
+                    "deploy/migrations/V" + step.version() + "__add_column_" + (column.table() + "_" + column.column().name()).toLowerCase(Locale.ROOT) + ".sql",
+                    header + "ALTER TABLE " + quote(column.table()) + " ADD COLUMN " + definition(column.column()) + ", ALGORITHM=INSTANT;\n");
+            }
+            step.addedRows().forEach(row -> contract.append(row).append('\n'));
+            if (step.version() < evolution.targetVersion())
+                add(files, plan, "deploy/contracts/V" + step.version() + ".tsv", contract.toString());
+        }
+        return List.copyOf(files);
     }
     private static String sqlType(Column column) {
         return switch (column.storage()) {

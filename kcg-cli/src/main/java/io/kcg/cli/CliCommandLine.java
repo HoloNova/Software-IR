@@ -43,7 +43,7 @@ public final class CliCommandLine {
       String destination = (command.equals("generate") || command.equals("package")) ? "--output-root" : command.equals("edit") ? "--candidate-root" : null;
       if (destination != null) opts.put(destination, "destination");
       // package may carry a separate business acceptance suite; it is copied, never compiled or interpreted.
-      Set<String> optional = command.equals("package") ? Set.of("--acceptance") : Set.of();
+      Set<String> optional = command.equals("package") ? Set.of("--acceptance", "--base-package") : Set.of();
       Object parsed = parseOptions(args, 1, opts, optional, command);
       if (parsed instanceof UsageError error) return error;
       OptionMap values = (OptionMap) parsed;
@@ -54,11 +54,17 @@ public final class CliCommandLine {
             if (acceptance == null || !acceptance.equals(acceptance.normalize()))
                return new UsageError("KCG-CLI-USAGE-003", "--acceptance must be an absolute normalized path");
          }
+         Path basePackage = null;
+         if (values.get("--base-package") != null) {
+            basePackage = requireAbsPath(values, "--base-package");
+            if (basePackage == null || !basePackage.equals(basePackage.normalize()))
+               return new UsageError("KCG-CLI-USAGE-003", "--base-package must be an absolute normalized path");
+         }
          Path source = requireAbsPath(values, "--source-root");
          Path target = destination == null ? null : requireAbsPath(values, destination);
          if (source == null || !source.equals(source.normalize()) || (destination != null && (target == null || !target.equals(target.normalize()))))
             return new UsageError("KCG-CLI-USAGE-003", "roots must be absolute normalized paths");
-         return new ParsedWorkflow(command, source, SourceId.of(values.get("--entry")), target, acceptance);
+         return new ParsedWorkflow(command, source, SourceId.of(values.get("--entry")), target, acceptance, basePackage);
       } catch (IllegalArgumentException e) {
          return new UsageError("KCG-CLI-USAGE-003", "invalid source entry or path");
       }
@@ -224,8 +230,8 @@ public final class CliCommandLine {
       }
    }
 
-   /** {@code acceptanceRoot} is only accepted by {@code package} and is null when absent. */
-   public record ParsedWorkflow(String command, Path sourceRoot, SourceId entry, Path destination, Path acceptanceRoot) implements ParseResult {
+   /** {@code acceptanceRoot} and {@code basePackage} are only accepted by {@code package} and are null when absent. */
+   public record ParsedWorkflow(String command, Path sourceRoot, SourceId entry, Path destination, Path acceptanceRoot, Path basePackage) implements ParseResult {
    }
 
    public sealed interface ParseResult

@@ -3,6 +3,8 @@ package io.kcg.sir.application.api;
 import io.kcg.sir.application.internal.*;
 import io.kcg.sir.generator.springboot.api.*;
 import io.kcg.sir.lowering.springboot.api.SpringBootDeploymentPlanner;
+import io.kcg.sir.lowering.springboot.api.SpringBootSchemaEvolutionPlanner;
+import io.kcg.sir.lowering.springboot.model.SchemaEvolution;
 import java.nio.ByteBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.CodingErrorAction;
@@ -27,6 +29,19 @@ public final class DeploymentPackageApplication {
             String refused = readAcceptance(request.acceptanceRoot().get(), source, output, acceptance);
             if (refused != null) return fail(diagnostics, ExecutionStage.PREFLIGHT, "SIR-APP-PACKAGE-ACCEPTANCE-001", refused);
         }
+        BaseDelivery base = null;
+        if (request.basePackage().isPresent()) {
+            Path root = request.basePackage().get();
+            if (!root.isAbsolute() || !root.equals(root.normalize()) || overlaps(root, source) || overlaps(root, output)
+                    || request.acceptanceRoot().map(x -> overlaps(root, x)).orElse(false))
+                return fail(diagnostics, ExecutionStage.PREFLIGHT, "SIR-APP-PACKAGE-BASE-001",
+                    "base package must be an absolute normalized path that does not overlap the source, output or acceptance root");
+            try {
+                base = BaseDelivery.read(root);
+            } catch (BaseDelivery.Refused refused) {
+                return fail(diagnostics, ExecutionStage.PREFLIGHT, refused.code, refused.getMessage());
+            }
+        }
         var loaded = ProjectSourceReader.read(source, request.entry(), diagnostics);
         if (loaded.isEmpty()) return new DeploymentPackageResult.Failure(diagnostics);
         var compiled = ProjectCompilation.compile(loaded.get(), model -> new SpringBootGenerator().generate(model), diagnostics);
@@ -44,6 +59,32 @@ public final class DeploymentPackageApplication {
             if (!file.relativePath().equals("app/pom.xml") && files.containsKey(file.relativePath()))
                 return fail(diagnostics, ExecutionStage.GENERATION, "SIR-APP-PACKAGE-PATH-001", "delivery artifact collides: " + file.relativePath());
             files.put(file.relativePath(), file);
+        }
+        Optional<DeploymentPackageResult.Continuation> continuation = Optional.empty();
+        if (base != null) {
+            SpringBootSchemaEvolutionPlanner.Outcome outcome;
+            try {
+                outcome = new SpringBootSchemaEvolutionPlanner().plan(base.schema().lines().toList(), base.version(), base.mysqlImage(), plan);
+            } catch (IllegalArgumentException invalid) {
+                return fail(diagnostics, ExecutionStage.PREFLIGHT, "SIR-APP-PACKAGE-BASE-003", "base schema contract is invalid: " + invalid.getMessage());
+            }
+            if (outcome.evolution().isEmpty()) {
+                for (String refusal : outcome.refusals()) diagnostics.add(ExecutionDiagnostic.error(refusal.startsWith("SELFCHECK ")
+                    ? "SIR-DEPLOY-UPDATE-SELFCHECK-001" : "SIR-DEPLOY-UPDATE-UNSUPPORTED-001", ExecutionStage.LOWERING, refusal));
+                return new DeploymentPackageResult.Failure(diagnostics);
+            }
+            SchemaEvolution evolution = outcome.evolution().get();
+            // The inherited chain is published as it was; this source's own rendering of V1 is not used.
+            files.keySet().removeIf(path -> path.startsWith("deploy/migrations/") || path.startsWith("deploy/contracts/"));
+            base.chain().forEach((path, content) -> files.put(path, new GeneratedFile(path, content, plan.id(), Optional.empty())));
+            if (!evolution.steps().isEmpty()) {
+                String path = "deploy/contracts/V" + base.version() + ".tsv";
+                files.put(path, new GeneratedFile(path, base.schema(), plan.id(), Optional.empty()));
+                for (var file : new SpringBootDeploymentGenerator().generateEvolution(plan, evolution, base.schema()))
+                    files.put(file.relativePath(), file);
+            }
+            continuation = Optional.of(new DeploymentPackageResult.Continuation(base.id(), evolution.targetVersion(),
+                evolution.steps().stream().map(SchemaEvolution.Step::describe).toList()));
         }
         for (var entry : acceptance.entrySet()) {
             String path = "acceptance/" + entry.getKey();
@@ -69,8 +110,90 @@ public final class DeploymentPackageApplication {
         var saved = (TransactionResult.Success) transaction;
         diagnostics.addAll(saved.warnings());
         return new DeploymentPackageResult.Exported(packageId, loaded.get().snapshot().manifest(),
-            new ExecutionManifest(output, saved.appliedFiles()), diagnostics);
+            new ExecutionManifest(output, saved.appliedFiles()), diagnostics, continuation);
     }
+    private static boolean overlaps(Path a, Path b) { return a.startsWith(b) || b.startsWith(a); }
+
+    /**
+     * The frozen schema side of the delivery an instance runs now, read under the same integrity rules its Bootstrap
+     * applies: package.id is the digest of package.sha256, every listed file matches, nothing is unlisted, no links.
+     */
+    record BaseDelivery(String id, int version, Map<String, String> chain, String schema, String mysqlImage) {
+        static final class Refused extends Exception {
+            final String code;
+            Refused(String code, String message) { super(message); this.code = code; }
+        }
+
+        static BaseDelivery read(Path root) throws Refused {
+            try {
+                for (Path p = root; p != null; p = p.getParent())
+                    if (Files.isSymbolicLink(p)) throw new Refused("SIR-APP-PACKAGE-BASE-001", "base package must not be or lie under a symbolic link");
+                if (!Files.isDirectory(root, LinkOption.NOFOLLOW_LINKS)) throw new Refused("SIR-APP-PACKAGE-BASE-001", "base package is not a directory");
+                byte[] manifest = Files.readAllBytes(root.resolve("package.sha256"));
+                String id = Files.readString(root.resolve("package.id")).strip();
+                if (!id.matches("[0-9a-f]{64}") || !hash(manifest).equals(id)) throw new Refused("SIR-APP-PACKAGE-BASE-002", "base package manifest does not match its package.id");
+                Map<String, String> listed = new TreeMap<>();
+                for (String line : text(manifest, "package.sha256").lines().toList()) {
+                    if (!line.matches("[0-9a-f]{64}  [A-Za-z0-9_][A-Za-z0-9._/-]*")) throw new Refused("SIR-APP-PACKAGE-BASE-002", "invalid base package manifest line");
+                    String path = line.substring(66);
+                    Path file = root.resolve(path).normalize();
+                    if (!file.startsWith(root) || listed.put(path, line.substring(0, 64)) != null) throw new Refused("SIR-APP-PACKAGE-BASE-002", "invalid base package path: " + path);
+                    if (!Files.isRegularFile(file, LinkOption.NOFOLLOW_LINKS) || !hash(Files.readAllBytes(file)).equals(line.substring(0, 64)))
+                        throw new Refused("SIR-APP-PACKAGE-BASE-002", "base package file does not match its manifest: " + path);
+                }
+                try (var walk = Files.walk(root)) {
+                    for (Path file : (Iterable<Path>) walk::iterator) {
+                        if (Files.isSymbolicLink(file)) throw new Refused("SIR-APP-PACKAGE-BASE-002", "base package contains a symbolic link");
+                        String path = root.relativize(file).toString().replace('\\', '/');
+                        if (!Files.isDirectory(file, LinkOption.NOFOLLOW_LINKS) && !path.equals("package.sha256") && !path.equals("package.id") && !listed.containsKey(path))
+                            throw new Refused("SIR-APP-PACKAGE-BASE-002", "base package contains an unlisted file: " + path);
+                    }
+                }
+                Map<String, String> chain = new TreeMap<>();
+                TreeMap<Integer, String> versions = new TreeMap<>();
+                for (String path : listed.keySet()) {
+                    if (path.startsWith("deploy/migrations/")) {
+                        String name = path.substring("deploy/migrations/".length());
+                        if (!name.matches("V[1-9][0-9]{0,5}__[a-z0-9_]+\\.sql") || versions.put(Integer.parseInt(name.substring(1, name.indexOf("__"))), name) != null)
+                            throw new Refused("SIR-APP-PACKAGE-BASE-003", "unexpected base migration: " + name);
+                        chain.put(path, text(Files.readAllBytes(root.resolve(path)), path));
+                    }
+                }
+                int version = versions.size();
+                if (version == 0 || versions.firstKey() != 1 || versions.lastKey() != version)
+                    throw new Refused("SIR-APP-PACKAGE-BASE-003", "base migrations are not V1..Vn without gaps");
+                for (String path : listed.keySet()) {
+                    if (!path.startsWith("deploy/contracts/")) continue;
+                    String name = path.substring("deploy/contracts/".length());
+                    if (!name.matches("V[1-9][0-9]{0,5}\\.tsv") || Integer.parseInt(name.substring(1, name.length() - 4)) >= version)
+                        throw new Refused("SIR-APP-PACKAGE-BASE-003", "unexpected base contract: " + name);
+                    chain.put(path, text(Files.readAllBytes(root.resolve(path)), path));
+                }
+                for (int i = 1; i < version; i++) if (!chain.containsKey("deploy/contracts/V" + i + ".tsv"))
+                    throw new Refused("SIR-APP-PACKAGE-BASE-003", "base contract V" + i + " is missing");
+                if (!listed.containsKey("deploy/schema.tsv") || !listed.containsKey("deploy/compose.yaml"))
+                    throw new Refused("SIR-APP-PACKAGE-BASE-003", "base package has no schema contract or compose file");
+                String schema = text(Files.readAllBytes(root.resolve("deploy/schema.tsv")), "deploy/schema.tsv");
+                // The database service is the first service of the delivery compose file.
+                String image = text(Files.readAllBytes(root.resolve("deploy/compose.yaml")), "deploy/compose.yaml").lines()
+                    .map(String::strip).filter(l -> l.startsWith("image: ")).findFirst()
+                    .map(l -> l.substring("image: ".length())).orElseThrow(() -> new Refused("SIR-APP-PACKAGE-BASE-003", "base compose file names no database image"));
+                return new BaseDelivery(id, version, chain, schema, image);
+            } catch (java.io.IOException | java.io.UncheckedIOException unreadable) {
+                throw new Refused("SIR-APP-PACKAGE-BASE-001", "base package cannot be read: " + unreadable.getClass().getSimpleName());
+            }
+        }
+
+        private static String text(byte[] bytes, String path) throws Refused {
+            try {
+                return StandardCharsets.UTF_8.newDecoder().onMalformedInput(CodingErrorAction.REPORT)
+                    .onUnmappableCharacter(CodingErrorAction.REPORT).decode(ByteBuffer.wrap(bytes)).toString();
+            } catch (CharacterCodingException binary) {
+                throw new Refused("SIR-APP-PACKAGE-BASE-003", "base package file is not UTF-8 text: " + path);
+            }
+        }
+    }
+
     private static final int ACCEPTANCE_FILES = 1000;
     private static final long ACCEPTANCE_FILE_BYTES = 1L << 20, ACCEPTANCE_TOTAL_BYTES = 8L << 20;
 

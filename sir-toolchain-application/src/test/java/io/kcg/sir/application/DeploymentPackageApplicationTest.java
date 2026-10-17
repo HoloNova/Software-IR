@@ -92,6 +92,34 @@ class DeploymentPackageApplicationTest {
         return process.exitValue();
     }
 
+    @Test void aContinuationInheritsTheBaseChainVerbatimAndAppendsOneStatementPerVersion() throws Exception {
+        Path source = source(true);
+        Path base = export(source, temp.resolve("base")).manifest().outputRoot();
+        String text = Files.readString(source.resolve("project.sir"));
+        Files.writeString(source.resolve("project.sir"), text.replace("      field author: Ref<User>;\n      field text: String;\n    }",
+            "      field author: Ref<User>;\n      field text: String;\n      field title: Optional<String> where length(0, 80);\n    }"));
+        var result = new DeploymentPackageApplication().export(new DeploymentPackageRequest(source, ENTRY, temp.resolve("next"), Optional.empty(), Optional.of(base)));
+        var exported = assertInstanceOf(DeploymentPackageResult.Exported.class, result, result.toString());
+        Path next = exported.manifest().outputRoot();
+        assertEquals(List.of("V2 ADD_NULLABLE_COLUMN note.title"), exported.continuation().orElseThrow().steps());
+        assertArrayEquals(Files.readAllBytes(base.resolve("deploy/migrations/V1__initialize.sql")), Files.readAllBytes(next.resolve("deploy/migrations/V1__initialize.sql")));
+        assertArrayEquals(Files.readAllBytes(base.resolve("deploy/schema.tsv")), Files.readAllBytes(next.resolve("deploy/contracts/V1.tsv")));
+        assertEquals("-- KCG delivery schema version 2; frozen once published.\nALTER TABLE `note` ADD COLUMN `title` VARCHAR(80) NULL, ALGORITHM=INSTANT;\n",
+            Files.readString(next.resolve("deploy/migrations/V2__add_column_note_title.sql")));
+        assertTrue(Files.readString(next.resolve("package.sha256")).contains("  deploy/contracts/V1.tsv\n"));
+
+        // Reverting to the base source on top of the continuation removes a column: refused, nothing written.
+        Files.writeString(source.resolve("project.sir"), text);
+        var back = new DeploymentPackageApplication().export(new DeploymentPackageRequest(source, ENTRY, temp.resolve("back"), Optional.empty(), Optional.of(next)));
+        assertTrue(back.diagnostics().stream().anyMatch(d -> d.code().equals("SIR-DEPLOY-UPDATE-UNSUPPORTED-001") && d.message().equals("COLUMN_REMOVED note.title")), back.toString());
+        assertFalse(Files.exists(temp.resolve("back")));
+
+        Files.writeString(next.resolve("deploy/migrations/V2__add_column_note_title.sql"), "DROP TABLE note;\n");
+        var tampered = new DeploymentPackageApplication().export(new DeploymentPackageRequest(source, ENTRY, temp.resolve("tampered"), Optional.empty(), Optional.of(next)));
+        assertTrue(tampered.diagnostics().stream().anyMatch(d -> d.code().equals("SIR-APP-PACKAGE-BASE-002")), tampered.toString());
+        assertFalse(Files.exists(temp.resolve("tampered")));
+    }
+
     @Test void unsupportedStorageAndExistingOutputsAreRefusedBeforePublication() throws Exception {
         Path source = source(false), output = temp.resolve("refused");
         var result = new DeploymentPackageApplication().export(new DeploymentPackageRequest(source, ENTRY, output));

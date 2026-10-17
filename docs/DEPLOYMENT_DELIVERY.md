@@ -109,11 +109,15 @@ sh deploy/deploy.sh acceptance-test --instance demo-acc --state-root /absolute/p
 
 ## 9. 保留数据的同实例更新（步骤③）
 
-合同见[方案11第13节](design/11-portable-deployment-and-http-acceptance.md)。本轮实现运行侧（A片）：
+合同见[方案11第13节](design/11-portable-deployment-and-http-acceptance.md)。先用实例当前运行的交付包作基础导出新包，再在目标机器上update：
 
 ```sh
-sh deploy/deploy.sh update --instance demo --state-root /absolute/path/to/demo-state
+kcg package --source-root /absolute/path/to/new-sir --entry project.sir \
+  --output-root /absolute/path/to/delivery-v2 --base-package /absolute/path/to/delivery-v1
+sh deploy/deploy.sh update --instance demo --state-root /absolute/path/to/demo-state   # 在delivery-v2目录中执行
 ```
+
+导出时，基础包按Bootstrap同样的规则校验摘要（`SIR-APP-PACKAGE-BASE-001/002/003`）；它的`deploy/migrations/V1..Vb`与`deploy/contracts/`逐字节继承，新SIR的物理计划与基础包的`schema.tsv`按精确物理名比较。本轮只支持三类：schema不变（不新增版本）、新表（外键只指向已有表、更早的新表或自身）、已有表上可空且非唯一、无引用的新列。每个新版本一个文件、一条DDL：先`V<v>__create_table_<表>.sql`，再`V<v>__add_column_<表>_<列>.sql`（`ALGORITHM=INSTANT`），并写入新版本前的合同`deploy/contracts/V<v>.tsv`。删表、删列（任何改名都表现为删列加新列，不猜测）、列属性变化（含加宽长度、可空性、唯一、引用）、新增必填/唯一/引用列、新表外键成环、仅大小写不同的名字、MySQL镜像变化，都逐条以`SIR-DEPLOY-UPDATE-UNSUPPORTED-001`列出并拒绝，不留输出。结果JSON含`basePackageId`、`schemaVersion`与`steps`。只收紧业务规则而无DDL的变更不对旧行核验：物理数据保留，旧行的业务规则兼容性NOT_VERIFIED。
 
 `update`用新交付包更新一个已初始化、正在使用的实例，并保留其数据。顺序：先构建镜像（失败退出4，数据库与旧应用都未动）；在旧应用仍提供服务时，迁移工具只读判定活库在本包合同链上的位置；停止旧应用；只应用缺失的版本，迁移前后对旧schema的全部表与列按主键做摘要比对，新列在旧行上须为NULL、新表须为空；原子改写`state/package.id`；启动新应用。已绑定本包时为`KCG_UPDATE_CURRENT`，不构建也不迁移。
 
@@ -127,4 +131,4 @@ sh deploy/deploy.sh update --instance demo --state-root /absolute/path/to/demo-s
 
 迁移工具对活库的判定按顺序：无history且无业务表为空库；有业务表而无history为UNMANAGED_SCHEMA；有失败记录为FAILED_MIGRATION（5）；已应用版本高于本包为AHEAD（3，较旧的包不能运行较新的库）；版本不连续或校验和不符为DIVERGED（3）；活库等于第k版合同为AT(k)；等于第k+1版合同而未记录为INTERRUPTED（5）；其余为DRIFT（3）。重复执行只由绑定、活库判定和包内合同链决定。schema不变的包在实例间切换不执行SQL。更新前不做备份，恢复需人工。
 
-导出侧的`--base-package`与追加迁移文件（B片）尚未实现；在它之前，只有与实例schema相同的包能完成update，schema不同的包重新渲染的V1校验和不符，会以DIVERGED拒绝。
+不以基础包导出、而是独立导出的包会重新渲染V1；只要schema不同，V1校验和就与实例历史不符，以DIVERGED拒绝。CI不手工改SQL制造中断或漂移，INTERRUPTED/DRIFT的运行侧判定只有规则与代码审阅，没有真实库证据（记NOT_RUN）。

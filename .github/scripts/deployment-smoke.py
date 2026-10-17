@@ -20,16 +20,25 @@ p.add_argument('--instance', required=True)
 p.add_argument('--port', type=int, default=18080)
 # Same schema, different bytes: the package a schema-unchanged update moves the instance to (step 3, slice A).
 p.add_argument('--next-package', required=True, type=Path)
+# Continues the next package's chain with a new table and a new nullable column (step 3, slice B).
+p.add_argument('--v2-package', required=True, type=Path)
 a = p.parse_args()
 a.evidence.mkdir(parents=True, exist_ok=True)
 report = {'commit': os.getenv('GITHUB_SHA'), 'runUrl': f"{os.getenv('GITHUB_SERVER_URL')}/{os.getenv('GITHUB_REPOSITORY')}/actions/runs/{os.getenv('GITHUB_RUN_ID')}",
           'packageId': (a.package / 'package.id').read_text().strip(),
           'deployment': 'NOT_RUN', 'httpSmoke': 'NOT_RUN', 'persistence': 'NOT_RUN', 'privileges': 'NOT_RUN',
-          'swagger': 'NOT_RUN', 'contract': 'NOT_RUN', 'missingVolume': 'NOT_RUN', 'business': 'NOT_RUN', 'update': 'NOT_RUN', 'cleanup': 'NOT_RUN',
-          'nextPackageId': (a.next_package / 'package.id').read_text().strip(), 'requests': []}
+          'swagger': 'NOT_RUN', 'contract': 'NOT_RUN', 'missingVolume': 'NOT_RUN', 'business': 'NOT_RUN', 'update': 'NOT_RUN', 'dataUpdate': 'NOT_RUN', 'freshChain': 'NOT_RUN',
+          'cleanup': 'NOT_RUN',
+          'notRunByContract': ['interruptedMigration', 'schemaDrift'],
+          'nextPackageId': (a.next_package / 'package.id').read_text().strip(),
+          'v2PackageId': (a.v2_package / 'package.id').read_text().strip(), 'requests': []}
 sequence = 0
 # Business acceptance writes data, so it gets its own disposable instance of the same package.
 acceptance_instance, acceptance_state, acceptance_port = a.instance + '-acc', a.state.with_name(a.state.name + ' acceptance'), a.port + 1
+# A new instance deployed straight from version 2 replays the whole chain V1..V3.
+fresh_instance, fresh_state, fresh_port = a.instance + '-v2', a.state.with_name(a.state.name + ' fresh'), a.port + 2
+INSTANCES = (a.instance, acceptance_instance, fresh_instance)
+STATES = (a.state, acceptance_state, fresh_state)
 
 
 def run(command, expected=0, timeout=1800):
@@ -171,9 +180,33 @@ try:
     deploy('acceptance-test', instance=acceptance_instance, state=acceptance_state, package=a.next_package,
            extra=('--confirm-disposable', acceptance_instance))
     report['update'] = 'PASSED'
+    # Step 3, slice B: version 2 adds a table and a nullable column; old keys, values and relations stay as they were.
+    keep = 'SELECT id, name, password_hash FROM `user` ORDER BY id; SELECT id, author_id, text FROM `note` ORDER BY id'
+    rows_before = sql(keep, instance=acceptance_instance)
+    updated = deploy('update', instance=acceptance_instance, state=acceptance_state, package=a.v2_package)
+    assert f"KCG_UPDATED {report['nextPackageId']}->{report['v2PackageId']}" in updated, 'the additive update did not complete'
+    assert 'applied=V2..V3' in updated and 'KCG_DATA_VERIFIED' in updated, 'the migration tool did not apply and verify V2..V3'
+    assert sql(keep, instance=acceptance_instance) == rows_before, 'old rows or values changed'
+    assert sql('SELECT COUNT(*) FROM flyway_schema_history WHERE success=1', instance=acceptance_instance).strip() == '3'
+    assert sql('SELECT COUNT(*) FROM `note` WHERE title IS NOT NULL', instance=acceptance_instance).strip() == '0'
+    note_id = int(sql('SELECT MIN(id) FROM `note`', instance=acceptance_instance).strip())
+    server = f'http://127.0.0.1:{acceptance_port}'
+    label = request('/api/add-label', {'noteId': note_id, 'name': 'kept'}, expected=201, base=server)
+    assert sql(f"SELECT note_id FROM `label` WHERE id={int(label['id'])}", instance=acceptance_instance).strip() == str(note_id)
+    assert request('/api/add-label', {'noteId': 999999999, 'name': 'none'}, expected=404, base=server)['code'] == 'NoteNotFound'
+    assert 'KCG_UPDATE_CURRENT' in deploy('update', instance=acceptance_instance, state=acceptance_state, package=a.v2_package)
+    older = deploy('update', expected=3, instance=acceptance_instance, state=acceptance_state, package=a.next_package)
+    assert 'AHEAD' in older and 'application=RUNNING' in older, 'an older package must be refused before the application stops'
+    assert request('/actuator/health/readiness', base=server)['status'] == 'UP'
+    report['dataUpdate'] = 'PASSED'
+    deploy('deploy', instance=fresh_instance, state=fresh_state, port=fresh_port, package=a.v2_package)
+    assert sql('SELECT COUNT(*) FROM flyway_schema_history WHERE success=1', instance=fresh_instance).strip() == '3'
+    assert request('/api/register', {'name': 'fresh-user', 'password': 'test-password'}, expected=201, base=f'http://127.0.0.1:{fresh_port}')
+    report['freshChain'] = 'PASSED'
 except Exception as error:
     # Gates run in this order, so the first one not yet passed is the one that failed; the rest stay NOT_RUN.
-    for gate in ('deployment', 'httpSmoke', 'privileges', 'swagger', 'contract', 'persistence', 'missingVolume', 'business', 'update'):
+    for gate in ('deployment', 'httpSmoke', 'privileges', 'swagger', 'contract', 'persistence', 'missingVolume', 'business', 'update',
+                 'dataUpdate', 'freshChain'):
         if report[gate] == 'NOT_RUN':
             report[gate] = 'FAILED'
             break
@@ -183,7 +216,7 @@ finally:
     # Test reports are the only part of a state directory that is evidence; secrets stay behind.
     def rows(file):
         return [line.split('\t') for line in file.read_text().splitlines()[1:] if line] if file.is_file() else None
-    for state in (a.state, acceptance_state):
+    for state in STATES:
         if (state / 'reports').is_dir():
             shutil.copytree(state / 'reports', a.evidence / 'reports', dirs_exist_ok=True)
     contract = rows(a.state / 'reports' / 'contract' / 'contract-report.tsv')
@@ -198,27 +231,25 @@ finally:
     # Collect only the owned CI instances. Never upload their state directories or secrets.
     try:
         ids = set()
-        for label in [f'{key}={name}' for name in (a.instance, acceptance_instance)
-                      for key in ('com.docker.compose.project', 'kcg.instance')]:
+        for label in [f'{key}={name}' for name in INSTANCES for key in ('com.docker.compose.project', 'kcg.instance')]:
             ids.update(subprocess.check_output(['docker', 'ps', '-aq', '--filter', 'label=' + label], text=True).split())
         for cid in ids:
             with (a.evidence / f'container-{cid}.log').open('w') as output:
                 subprocess.run(['docker', 'logs', cid], stdout=output, stderr=subprocess.STDOUT, timeout=20)
         if ids:
             run(['docker', 'rm', '-f', *sorted(ids)])
-        for volume in [name + suffix for name in (a.instance, acceptance_instance) for suffix in ('-db', '-maven')]:
+        for volume in [name + suffix for name in INSTANCES for suffix in ('-db', '-maven')]:
             present = subprocess.run(['docker', 'volume', 'inspect', volume], capture_output=True)
             if present.returncode == 0:
                 run(['docker', 'volume', 'rm', volume])
-        for label in [f'{key}={name}' for name in (a.instance, acceptance_instance)
-                      for key in ('com.docker.compose.project', 'kcg.instance')]:
+        for label in [f'{key}={name}' for name in INSTANCES for key in ('com.docker.compose.project', 'kcg.instance')]:
             assert not subprocess.check_output(['docker', 'ps', '-aq', '--filter', 'label=' + label], text=True).strip()
         report['cleanup'] = 'PASSED'
     except Exception as error:
         report['cleanup'] = 'FAILED'
         report['cleanupFailure'] = str(error)
     secrets = []
-    for state in (a.state, acceptance_state):
+    for state in STATES:
         for name in ('root-password', 'app-password', 'migrate-password'):
             file = state / name
             if file.is_file():
@@ -233,4 +264,5 @@ finally:
     (a.evidence / 'report.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n')
     print(json.dumps(report, ensure_ascii=False, indent=2))
 sys.exit(0 if all(report[key] == 'PASSED' for key in ('deployment', 'httpSmoke', 'persistence', 'privileges', 'swagger', 'contract',
-                                                     'missingVolume', 'business', 'update', 'cleanup')) else 1)
+                                                     'missingVolume', 'business', 'update', 'dataUpdate', 'freshChain',
+                                                     'cleanup')) else 1)

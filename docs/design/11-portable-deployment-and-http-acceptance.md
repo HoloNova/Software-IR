@@ -1,7 +1,7 @@
 # 可独立部署的后端交付包与真实 HTTP 验收
 
 - 日期：2026-10-17。
-- 状态：**IN_PROGRESS / 步骤①② PASSED / 步骤③实施中**。负责人已确认方案并授权进入实现；步骤①由verify #94、步骤②（合同见第12节）由verify #95/#96验收；步骤③合同见第13节，A片（运行侧update）已接入代码、待CI，B片尚未实施。负责人随后已授权提交、推送并取得CI验收；镜像发布仍未授权。
+- 状态：**IN_PROGRESS / 步骤①② PASSED / 步骤③实施中**。负责人已确认方案并授权进入实现；步骤①由verify #94、步骤②（合同见第12节）由verify #95/#96验收；步骤③合同见第13节，A片（运行侧update）与B片（`--base-package`追加迁移）已接入代码、待CI。负责人随后已授权提交、推送并取得CI验收；镜像发布仍未授权。
 - 实现起点：云端 `main` / `cf44450`。信任既有云端成果，不为规划重复执行验证。
 - 依据：[MAIN](../../MAIN.md)、[当前能力](../PROJECT_STATUS.md)、[ADR-026](../architecture/ADR-026-layered-semantic-command-architecture.md)、[ADR-027](../architecture/ADR-027-git-as-version-history.md)。
 - 方案文本不是已交付或通过证据；步骤①实现范围、26项定向结果、CI #93阻塞与#94验收见[报告](../DEPLOYMENT_DELIVERY_REPORT.md)。

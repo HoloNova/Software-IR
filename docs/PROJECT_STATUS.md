@@ -45,7 +45,7 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 
 ### 独立部署交付（步骤①②已验收，步骤③待推进）
 
-`kcg package`只导出完整源码、物理schema/Flyway脚本、Docker/Compose配方和独立执行工具，不在导出时启动服务。随包入口负责目标机上的初始化、构建、启动和同包重启。26项本机轻量定向检查通过，没有本机部署/业务测试。实现提交`a7cba11`的CI [#93](https://github.com/HoloNova/Software-IR/actions/runs/39002409782)原全量门及业务IT全绿，新包实际构建、Flyway建库和应用启动成功，但HTTP烟测JSON解析异常。云端确认是验收脚本对空体401做JSON解析，修复`30f50bd`后同SHA的[verify #94](https://github.com/HoloNova/Software-IR/actions/runs/39019809176)全部success：部署、HTTP、账号权限、重启/重复部署保留数据、丢失卷拒绝和清理均PASSED，步骤①验收。首版拒绝无界唯一文本、未定义精度的Decimal及缺外部身份实现等情形；普通generate不变。使用与限制见[部署包v1](DEPLOYMENT_DELIVERY.md)，证据见[步骤①报告](DEPLOYMENT_DELIVERY_REPORT.md)。步骤②的Swagger、随包合同测试与独立业务验收包由CI #95/#96验收（合同13/0/7 NOT_VERIFIED，双Token业务26/0）；步骤③（合同见方案11第13节）的运行侧`update`动作已接入代码、待CI证据，导出侧追加迁移尚未实施，不能标称完整部署产品已发布。
+`kcg package`只导出完整源码、物理schema/Flyway脚本、Docker/Compose配方和独立执行工具，不在导出时启动服务。随包入口负责目标机上的初始化、构建、启动和同包重启。26项本机轻量定向检查通过，没有本机部署/业务测试。实现提交`a7cba11`的CI [#93](https://github.com/HoloNova/Software-IR/actions/runs/39002409782)原全量门及业务IT全绿，新包实际构建、Flyway建库和应用启动成功，但HTTP烟测JSON解析异常。云端确认是验收脚本对空体401做JSON解析，修复`30f50bd`后同SHA的[verify #94](https://github.com/HoloNova/Software-IR/actions/runs/39019809176)全部success：部署、HTTP、账号权限、重启/重复部署保留数据、丢失卷拒绝和清理均PASSED，步骤①验收。首版拒绝无界唯一文本、未定义精度的Decimal及缺外部身份实现等情形；普通generate不变。使用与限制见[部署包v1](DEPLOYMENT_DELIVERY.md)，证据见[步骤①报告](DEPLOYMENT_DELIVERY_REPORT.md)。步骤②的Swagger、随包合同测试与独立业务验收包由CI #95/#96验收（合同13/0/7 NOT_VERIFIED，双Token业务26/0）；步骤③（合同见方案11第13节）的`update`动作与`--base-package`追加迁移已接入代码、待CI证据，不能标称完整部署产品已发布。
 
 ### 基于 Git 的版本变更（ADR-027）
 

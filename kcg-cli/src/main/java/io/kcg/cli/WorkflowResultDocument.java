@@ -37,6 +37,13 @@ final class WorkflowResultDocument {
             field(out, "outputRoot", exported.manifest().outputRoot().toString());
             sources(out, exported.sources());
             field(out, "targetPlatform", "linux/amd64");
+            exported.continuation().ifPresent(c -> {
+                field(out, "basePackageId", c.basePackageId());
+                out.append(','); JsonFields.field(out, "schemaVersion", c.schemaVersion());
+                out.append(",\"steps\":[");
+                for (int i = 0; i < c.steps().size(); i++) { if (i > 0) out.append(','); out.append('{'); JsonFields.field(out, "step", c.steps().get(i)); out.append('}'); }
+                out.append(']');
+            });
         }
         return finish(out, result.diagnostics());
     }
