@@ -14,7 +14,7 @@ kcg package --source-root /absolute/path/to/sir \
 
 package只写新的交付目录，不调用Docker、联网、构建、启动、Git；失败不留下半份交付包，已有输出根拒绝覆盖。成功结果是`KCG-CLI-WORKFLOW-V1 / PACKAGE_EXPORTED`，包括packageId、完整源摘要和目标平台。
 
-交付目录包含普通Maven应用`app/`、源快照`sir/`、部署配方和独立迁移工具源码`deploy/`、说明`docs/`及逐文件摘要。原generate的输出不变；package内的应用POM额外包含Actuator，运行profile提供健康检测和连接配置。**交付包的app不是原version-plan/apply的开发工程目标**；目前不支持对已部署实例更新，也不能把交付目录冒充普通generate输出进行应用。
+交付目录包含普通Maven应用`app/`、源快照`sir/`、部署配方和独立迁移工具源码`deploy/`、说明`docs/`及逐文件摘要。原generate的输出不变；package内的应用POM额外包含Actuator，运行profile提供健康检测和连接配置。**交付包的app不是原version-plan/apply的开发工程目标**；已部署实例只能用新交付包的`update`动作更新（第9节），不能把交付目录冒充普通generate输出进行应用。
 
 ## 2. 在CI或后续指定机器执行
 
@@ -43,9 +43,9 @@ sh deploy/deploy.sh start --instance demo --state-root /absolute/path/to/demo-st
 6. 迁移账户为应用授予业务表DML和Flyway history只读权限；应用不拿迁移密码或DDL权限。
 7. 启动应用，等真实HTTP readiness（包含数据库健康）通过；再显示地址。
 
-stop不删卷、配置、密码或镜像。start要求卷/镜像存在，验证已有schema后才启动应用，不重新建库。重复同包deploy复用配置、数据与Flyway V1，不注入演示数据或重置账号。
+stop不删卷、配置、密码或镜像。start要求卷/镜像存在，只核验已有schema等于本包合同链末版后启动应用，从不迁移或重新建库。重复同包deploy同样只核验，复用配置、数据与Flyway历史，不注入演示数据或重置账号。
 
-运行状态目录必须在包外；包含随机密码、环境身份和构建产物，不放Git或上传CI证据。不要删除状态后尝试接管旧卷；环境绑定不同会拒绝。改包后的更新、迁移中断自动修复、清库/repair不在v1路径。
+运行状态目录必须在包外；包含随机密码、环境身份和构建产物，不放Git或上传CI证据。不要删除状态后尝试接管旧卷；环境绑定不同会拒绝。除`update`外，所有动作都要求状态绑定的就是本包。迁移中断自动修复、清库/repair不在任何路径。
 
 ## 4. 物理支持边界
 
@@ -106,3 +106,25 @@ sh deploy/deploy.sh acceptance-test --instance demo-acc --state-root /absolute/p
 套件会写业务数据，所以必须在一次性实例上运行，并用`--confirm-disposable`重复实例名；不重复、名字不符或把该选项用于其他动作，都在任何Docker调用前以退出码2拒绝。包内没有验收包时输出`KCG_ACCEPTANCE_NOT_RUN`并以退出码4结束，不冒充通过。测试容器与`contract-test`同样受限、经Compose网络请求`http://app:8080`，只挂载`acceptance/`和该实例的数据库root口令文件。结果在`<state>/reports/acceptance/`（`acceptance-report.tsv`逐条需求及Surefire报告）；成功输出`KCG_ACCEPTANCE_PASSED`，失败以退出码5结束。
 
 仓库内的双Token套件位于`sir-toolchain-application/src/test/resources/deployment/dual-token-acceptance/`，由`DualTokenScaffoldBusinessConformanceIT`的D0–D7整理而来：成对令牌及有效期、错密码与未知账号同响应、访问令牌认证且刷新令牌不能认证、过期拒绝、刷新轮换、重放拒绝、6路并发刷新恰好一次成功、登出后刷新失效；每次状态变化经独立数据库连接核验。D3为模拟过期直接改写该令牌的过期时间，所用物理表名属于该需求夹具。账号名带随机后缀，可在同一实例重复运行。CI在同包的第二个实例上运行它，结果见`report.json`的`business`分项。
+
+## 9. 保留数据的同实例更新（步骤③）
+
+合同见[方案11第13节](design/11-portable-deployment-and-http-acceptance.md)。本轮实现运行侧（A片）：
+
+```sh
+sh deploy/deploy.sh update --instance demo --state-root /absolute/path/to/demo-state
+```
+
+`update`用新交付包更新一个已初始化、正在使用的实例，并保留其数据。顺序：先构建镜像（失败退出4，数据库与旧应用都未动）；在旧应用仍提供服务时，迁移工具只读判定活库在本包合同链上的位置；停止旧应用；只应用缺失的版本，迁移前后对旧schema的全部表与列按主键做摘要比对，新列在旧行上须为NULL、新表须为空；原子改写`state/package.id`；启动新应用。已绑定本包时为`KCG_UPDATE_CURRENT`，不构建也不迁移。
+
+| 退出码 | 含义 |
+| --- | --- |
+| 0 | `KCG_UPDATED <旧>-><新>`或`KCG_UPDATE_CURRENT` |
+| 3 | `KCG_BLOCKED`/`KCG_UPDATE_BLOCKED`：拒绝，数据库未改动；已停止的旧应用会被重新启动，并报告`application=RESTARTED|RESTART_FAILED` |
+| 4 | `KCG_UPDATE_BUILD_FAILED`：构建失败，数据库与旧应用未动 |
+| 5 | `KCG_DB_RECOVERY_REQUIRED`：数据库可能已变，需要人工；不clean、不repair、不回滚，应用保持停止，绑定仍为旧包 |
+| 6 | `KCG_APP_START_FAILED`：数据库已为本包版本、绑定已更新，新应用未就绪；可重试`start`或`update` |
+
+迁移工具对活库的判定按顺序：无history且无业务表为空库；有业务表而无history为UNMANAGED_SCHEMA；有失败记录为FAILED_MIGRATION（5）；已应用版本高于本包为AHEAD（3，较旧的包不能运行较新的库）；版本不连续或校验和不符为DIVERGED（3）；活库等于第k版合同为AT(k)；等于第k+1版合同而未记录为INTERRUPTED（5）；其余为DRIFT（3）。重复执行只由绑定、活库判定和包内合同链决定。schema不变的包在实例间切换不执行SQL。更新前不做备份，恢复需人工。
+
+导出侧的`--base-package`与追加迁移文件（B片）尚未实现；在它之前，只有与实例schema相同的包能完成update，schema不同的包重新渲染的V1校验和不符，会以DIVERGED拒绝。

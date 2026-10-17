@@ -101,9 +101,9 @@ public final class DeploymentEngine {
             deploy builds before starting the database, initializes an owned new volume through Flyway,
             verifies physical columns/keys/references, then waits for real HTTP + database readiness.
             The endpoint is http://127.0.0.1:<port>; business routes are those of your SIR.
-            start verifies the existing database; it does not create a missing volume.
+            start verifies the existing database; it never migrates and does not create a missing volume.
             stop preserves data, images, credentials and migration history. Reuse the same state directory.
-            A package with different bytes cannot take over this state: schema/application updates are not implemented yet.
+            Only update runs a different package on an existing instance (see "Update" below); other actions refuse it.
             An unfinished lock is not expired automatically. Inspect the named coordinator and logs before removing it.
             There is no automatic database clean/repair or arbitrary schema recovery.
 
@@ -142,7 +142,20 @@ public final class DeploymentEngine {
             The suite gets the application address and a verification connection to this instance's own database, never
             the application sources. Results: <state>/reports/acceptance/. Without acceptance/ the action prints
             KCG_ACCEPTANCE_NOT_RUN and exits 4; that is not a pass.
-            Data-preserving update is a subsequent step, not delivered here.
+
+            ## Update
+
+            ```sh
+            sh deploy/deploy.sh update --instance demo --state-root /absolute/path/to/demo-state
+            ```
+
+            update moves a running instance to this package and keeps its data. It builds first (exit 4, nothing touched),
+            checks the database read-only against this package's migration chain while the old application still serves,
+            stops the application, applies only the missing versions while digesting every old row and value, then binds
+            the instance to this package and starts it. Exit codes: 0 updated or already current; 3 refused, database
+            unchanged (the old application is restarted); 5 the database may have changed and needs a person (no clean,
+            repair or rollback; application stopped); 6 the database is at this package's version but the application did
+            not start (retry start or update). An older package cannot run a newer database. No backup is taken.
             """);
         return List.copyOf(files);
     }

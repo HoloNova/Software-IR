@@ -125,6 +125,32 @@ class DeploymentPackageApplicationTest {
         assertNotEquals(0, process(command, temp.resolve("bootstrap-tampered.log")));
     }
 
+    @Test void onlyUpdateMayRunAnotherPackageOnExistingStateAndItNeverCreatesOrRewritesState() throws Exception {
+        Path source = source(true);
+        Path first = export(source, temp.resolve("first")).manifest().outputRoot();
+        Files.writeString(source.resolve("project.sir"), Files.readString(source.resolve("project.sir")) + "\n// a later version\n");
+        Path second = export(source, temp.resolve("second")).manifest().outputRoot();
+        assertNotEquals(Files.readString(first.resolve("package.id")), Files.readString(second.resolve("package.id")));
+        Path classes = Files.createDirectory(temp.resolve("bootstrap-classes"));
+        assertEquals(0, ToolProvider.getSystemJavaCompiler().run(null, null, null, "-d", classes.toString(), second.resolve("deploy/Bootstrap.java").toString()));
+        Path state = temp.resolve("state");
+        assertEquals(0, bootstrap(classes, first, state, "deploy", "bound-first"));
+        String bound = Files.readString(state.resolve("package.id"));
+        for (String action : List.of("deploy", "start", "stop", "status"))
+            assertNotEquals(0, bootstrap(classes, second, state, action, "other-" + action), action + " must not run another package");
+        assertTrue(Files.readString(temp.resolve("other-start.log")).contains("use update"));
+        assertEquals(0, bootstrap(classes, second, state, "update", "update"));
+        assertEquals(bound, Files.readString(state.resolve("package.id")), "the bound package changes only after a completed update");
+        assertNotEquals(0, bootstrap(classes, second, temp.resolve("absent"), "update", "update-absent"));
+        assertFalse(Files.exists(temp.resolve("absent")), "update never creates an instance");
+    }
+
+    private int bootstrap(Path classes, Path root, Path state, String action, String name) throws Exception {
+        var command = List.of(Path.of(System.getProperty("java.home"), "bin/java").toString(), "-Xmx64m", "-XX:MaxMetaspaceSize=96m",
+            "-Dkcg.package.root=" + root, "-cp", classes.toString(), "Bootstrap", state.toString(), "demo", "18080", action);
+        return process(command, temp.resolve(name + ".log"));
+    }
+
     @Test void entryRejectsAStateAncestorSymlinkBeforeAnyDockerAcquisition() throws Exception {
         Path root = export(source(true), temp.resolve("delivery")).manifest().outputRoot();
         Path alias = temp.resolve("alias"); Files.createSymbolicLink(alias, root);

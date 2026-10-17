@@ -26,11 +26,11 @@ final class DeploymentTemplates {
         done
         case "$ACTION" in
           help|--help)
-            echo 'Usage: sh deploy/deploy.sh deploy|start|stop|status|logs|contract-test --instance <name> --state-root <absolute-new-or-owned-directory> [--port <1024-65535>]'
+            echo 'Usage: sh deploy/deploy.sh deploy|update|start|stop|status|logs|contract-test --instance <name> --state-root <absolute-new-or-owned-directory> [--port <1024-65535>]'
             echo '       sh deploy/deploy.sh acceptance-test --instance <name> --state-root <dir> --confirm-disposable <the same name>'
             exit 0 ;;
-          deploy|start|stop|status|logs|contract-test|acceptance-test) ;;
-          *) echo 'unsupported action; database/schema updates are not available in delivery v1' >&2; exit 2 ;;
+          deploy|update|start|stop|status|logs|contract-test|acceptance-test) ;;
+          *) echo 'unsupported action' >&2; exit 2 ;;
         esac
         printf '%s\\n' "$INSTANCE" | LC_ALL=C grep -Eq '^[a-z][a-z0-9_-]{0,39}$' || { echo 'invalid instance name' >&2; exit 2; }
         if [ "$ACTION" = acceptance-test ]; then
@@ -82,9 +82,12 @@ final class DeploymentTemplates {
           --mount "type=bind,src=$PACKAGE,dst=/package,readonly" \\
           --mount "type=bind,src=$PARENT,dst=/state-parent" \\
           @BUILDER@ java -Xmx128m -XX:MaxMetaspaceSize=128m /package/deploy/Bootstrap.java \\
-          "/state-parent/$LEAF" "$INSTANCE" "$PORT"
+          "/state-parent/$LEAF" "$INSTANCE" "$PORT" "$ACTION" || { echo 'KCG_BLOCKED: package or instance state verification failed' >&2; exit 3; }
         KCG_PACKAGE_ID=$(cat "$PACKAGE/package.id")
         KCG_ENVIRONMENT_ID=$(cat "$STATE/environment.id")
+        BOUND_PACKAGE_ID=$(cat "$STATE/package.id")
+        # The database container must not depend on any one package directory, so that an update never recreates it.
+        if [ ! -f "$STATE/accounts.sh" ]; then cp "$PACKAGE/deploy/accounts.sh" "$STATE/accounts.sh" && chmod 444 "$STATE/accounts.sh"; fi
         export KCG_PACKAGE="$PACKAGE" KCG_STATE="$STATE" KCG_INSTANCE="$INSTANCE" KCG_HTTP_PORT="$PORT" KCG_PACKAGE_ID KCG_ENVIRONMENT_ID
         COORDINATOR=$(docker container create --name "$INSTANCE-kcg-lock" --label "kcg.instance=$INSTANCE" --label "kcg.environment=$KCG_ENVIRONMENT_ID" @BUILDER@ true) || { echo 'another deployment owns this Docker instance name' >&2; exit 3; }
         compose() { docker compose --project-name "$INSTANCE" -f "$PACKAGE/deploy/compose.yaml" "$@"; }
@@ -92,45 +95,96 @@ final class DeploymentTemplates {
         check_volume() {
           volume_present || { echo 'TARGET_MISSING: database volume is absent; refusing to create an empty replacement' >&2; exit 3; }
           OWNER=$(docker volume inspect --format '{{index .Labels "kcg.instance"}}' "$INSTANCE-db")
-          BINDING=$(docker volume inspect --format '{{index .Labels "kcg.package"}}' "$INSTANCE-db")
           ENVIRONMENT=$(docker volume inspect --format '{{index .Labels "kcg.environment"}}' "$INSTANCE-db")
-          [ "$OWNER" = "$INSTANCE" ] && [ "$BINDING" = "$KCG_PACKAGE_ID" ] && [ "$ENVIRONMENT" = "$KCG_ENVIRONMENT_ID" ] || { echo 'database volume belongs to another delivery or environment' >&2; exit 3; }
+          # The environment label is this state's random UUID; which package the instance runs lives in state/package.id.
+          [ "$OWNER" = "$INSTANCE" ] && [ "$ENVIRONMENT" = "$KCG_ENVIRONMENT_ID" ] || { echo 'database volume belongs to another instance or environment' >&2; exit 3; }
+        }
+        build_images() {
+          mkdir -p "$STATE/artifacts"
+          docker run --rm --name "$INSTANCE-kcg-build" --label "kcg.instance=$INSTANCE" --memory="${KCG_BUILD_MEMORY:-1536m}" --cpus="${KCG_BUILD_CPUS:-1.5}" \\
+            --env 'MAVEN_OPTS=-Xmx512m -XX:MaxMetaspaceSize=256m' \\
+            --mount "type=bind,src=$PACKAGE,dst=/package,readonly" \\
+            --mount "type=bind,src=$STATE/artifacts,dst=/artifacts" \\
+            --mount "type=volume,src=$INSTANCE-maven,dst=/m2" \\
+            @BUILDER@ sh /package/deploy/build.sh &&
+          docker build --target migrate --tag "$INSTANCE-migrate:$KCG_PACKAGE_ID" --file "$PACKAGE/deploy/Dockerfile" "$STATE/artifacts" &&
+          docker build --target app --tag "$INSTANCE-app:$KCG_PACKAGE_ID" --file "$PACKAGE/deploy/Dockerfile" "$STATE/artifacts"
+        }
+        wait_healthy() {
+          WAITED=0
+          while [ "$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{end}}' "$1" 2>/dev/null)" != healthy ]; do
+            [ "$WAITED" -lt 180 ] || return 1
+            sleep 5; WAITED=$((WAITED + 5))
+          done
         }
         case "$ACTION" in
           deploy)
             # A build never needs a database. The only build process has explicit process-tree limits.
             if volume_present; then check_volume; elif [ -f "$STATE/initialized" ]; then echo 'TARGET_MISSING: initialized database volume was removed' >&2; exit 3; fi
-            mkdir -p "$STATE/artifacts"
-            docker run --rm --name "$INSTANCE-kcg-build" --label "kcg.instance=$INSTANCE" --memory="${KCG_BUILD_MEMORY:-1536m}" --cpus="${KCG_BUILD_CPUS:-1.5}" \\
-              --env 'MAVEN_OPTS=-Xmx512m -XX:MaxMetaspaceSize=256m' \\
-              --mount "type=bind,src=$PACKAGE,dst=/package,readonly" \\
-              --mount "type=bind,src=$STATE/artifacts,dst=/artifacts" \\
-              --mount "type=volume,src=$INSTANCE-maven,dst=/m2" \\
-              @BUILDER@ sh /package/deploy/build.sh
-            docker build --target migrate --tag "$INSTANCE-migrate:$KCG_PACKAGE_ID" --file "$PACKAGE/deploy/Dockerfile" "$STATE/artifacts"
-            docker build --target app --tag "$INSTANCE-app:$KCG_PACKAGE_ID" --file "$PACKAGE/deploy/Dockerfile" "$STATE/artifacts"
+            build_images
             if ! volume_present; then
               [ ! -f "$STATE/initialized" ] || { echo 'TARGET_MISSING: initialized database volume was removed' >&2; exit 3; }
               docker volume create --label "kcg.instance=$INSTANCE" --label "kcg.package=$KCG_PACKAGE_ID" --label "kcg.environment=$KCG_ENVIRONMENT_ID" "$INSTANCE-db" >/dev/null
             fi
             check_volume
             compose up -d --wait --wait-timeout 180 db
-            compose run --rm --no-deps migrate
+            # An initialized instance is only verified here; changing its schema is the update action's job.
+            if [ -f "$STATE/initialized" ]; then compose run --rm --no-deps migrate verify; else compose run --rm --no-deps migrate initialize; fi
             touch "$STATE/initialized"
             compose up -d --no-deps --wait --wait-timeout 180 app
             echo "KCG_DEPLOYED http://127.0.0.1:$PORT"
+            ;;
+          update)
+            check_volume
+            [ -f "$STATE/initialized" ] || { echo 'TARGET_MISSING: instance has not completed initialization; use deploy' >&2; exit 3; }
+            if [ "$BOUND_PACKAGE_ID" = "$KCG_PACKAGE_ID" ]; then
+              docker image inspect "$INSTANCE-app:$KCG_PACKAGE_ID" "$INSTANCE-migrate:$KCG_PACKAGE_ID" >/dev/null || { echo 'deployment images are missing; rerun deploy' >&2; exit 3; }
+              compose up -d --wait --wait-timeout 180 db
+              compose run --rm --no-deps migrate verify
+              compose up -d --no-deps --wait --wait-timeout 180 app || { echo 'KCG_APP_START_FAILED: the application did not become ready' >&2; exit 6; }
+              echo "KCG_UPDATE_CURRENT $KCG_PACKAGE_ID http://127.0.0.1:$PORT"; exit 0
+            fi
+            # Build first: a failed build touches neither the database nor the running application.
+            build_images || { echo 'KCG_UPDATE_BUILD_FAILED: database unchanged; application=UNTOUCHED' >&2; exit 4; }
+            # A running database is never recreated or restarted by an update.
+            [ -n "$(compose ps --status running --quiet db)" ] || compose up -d --wait --wait-timeout 180 db
+            STATUS=0; compose run --rm --no-deps migrate check || STATUS=$?
+            if [ "$STATUS" -ne 0 ]; then
+              [ "$STATUS" -eq 5 ] || STATUS=3
+              echo "KCG_UPDATE_BLOCKED: database check refused the update; database unchanged; application=RUNNING" >&2; exit "$STATUS"
+            fi
+            # Managed writes stop here: the instance's only writer is its application.
+            OLD_APP=$(compose ps --all --quiet app)
+            if [ -n "$OLD_APP" ]; then compose stop app; fi
+            STATUS=0; compose run --rm --no-deps migrate update || STATUS=$?
+            if [ "$STATUS" -eq 3 ]; then
+              APPLICATION=WAS_STOPPED
+              if [ -n "$OLD_APP" ]; then
+                if docker start "$OLD_APP" >/dev/null && wait_healthy "$OLD_APP"; then APPLICATION=RESTARTED; else APPLICATION=RESTART_FAILED; fi
+              fi
+              echo "KCG_UPDATE_BLOCKED: database unchanged; application=$APPLICATION" >&2; exit 3
+            elif [ "$STATUS" -ne 0 ]; then
+              echo "KCG_DB_RECOVERY_REQUIRED: the migration did not complete (exit $STATUS); no clean, repair or rollback was performed; application=STOPPED; still bound to $BOUND_PACKAGE_ID" >&2; exit 5
+            fi
+            printf '%s\\n' "$KCG_PACKAGE_ID" > "$STATE/package.id.next"
+            mv -f "$STATE/package.id.next" "$STATE/package.id"
+            compose up -d --no-deps --wait --wait-timeout 180 app || { echo "KCG_APP_START_FAILED: the database is at this package's version and the instance is bound to $KCG_PACKAGE_ID; nothing was reverted; retry start or update" >&2; exit 6; }
+            echo "KCG_UPDATED $BOUND_PACKAGE_ID->$KCG_PACKAGE_ID http://127.0.0.1:$PORT"
             ;;
           start)
             check_volume
             docker image inspect "$INSTANCE-app:$KCG_PACKAGE_ID" "$INSTANCE-migrate:$KCG_PACKAGE_ID" >/dev/null || { echo 'deployment images are missing; rerun deploy' >&2; exit 3; }
             [ -f "$STATE/initialized" ] || { echo 'instance has not completed initialization; rerun deploy' >&2; exit 3; }
             compose up -d --wait --wait-timeout 180 db
-            compose run --rm --no-deps migrate
+            compose run --rm --no-deps migrate verify
             compose up -d --no-deps --wait --wait-timeout 180 app
             echo "KCG_STARTED http://127.0.0.1:$PORT"
             ;;
           stop) check_volume; compose stop app db ;;
-          status) check_volume; compose ps --all ;;
+          status)
+            check_volume
+            echo "KCG_STATUS bound=$BOUND_PACKAGE_ID volume-created-by=$(docker volume inspect --format '{{index .Labels "kcg.package"}}' "$INSTANCE-db")"
+            compose ps --all ;;
           logs) check_volume; compose logs --no-color --tail 100 app db ;;
           contract-test)
             # Read-only: every request is refused before business code runs. It reaches the app over the Compose network.
@@ -185,7 +239,7 @@ final class DeploymentTemplates {
             volumes:
               - db-data:/var/lib/mysql
               - type: bind
-                source: ${KCG_PACKAGE}/deploy/accounts.sh
+                source: ${KCG_STATE}/accounts.sh
                 target: /docker-entrypoint-initdb.d/01-accounts.sh
                 read_only: true
             secrets: [root-password, migrate-password, app-password]
@@ -206,12 +260,8 @@ final class DeploymentTemplates {
             secrets: [migrate-password]
             volumes:
               - type: bind
-                source: ${KCG_PACKAGE}/deploy/migrations
-                target: /migrations
-                read_only: true
-              - type: bind
-                source: ${KCG_PACKAGE}/deploy/schema.tsv
-                target: /schema.tsv
+                source: ${KCG_PACKAGE}/deploy
+                target: /deploy
                 read_only: true
           app:
             image: ${KCG_INSTANCE}-app:${KCG_PACKAGE_ID}
@@ -343,6 +393,8 @@ final class DeploymentTemplates {
                         throw new IllegalStateException("unlisted package file");
                 }
                 Path state = Path.of(args[0]); String instance = args[1], port = args[2];
+                // update may run a different package on an existing instance; every other action needs the bound one.
+                String action = args.length > 3 ? args[3] : "deploy";
                 if (!state.isAbsolute() || !state.equals(state.normalize()) || state.startsWith(root)
                         || !instance.matches("[a-z][a-z0-9_-]{0,39}") || !port.matches("[0-9]{1,5}")
                         || Integer.parseInt(port) < 1024 || Integer.parseInt(port) > 65535) throw new IllegalArgumentException("invalid instance configuration");
@@ -350,9 +402,12 @@ final class DeploymentTemplates {
                     if (Files.isSymbolicLink(p)) throw new IllegalStateException("state symlink refused");
                 if (Files.exists(state, LinkOption.NOFOLLOW_LINKS)) {
                     if (!Files.isDirectory(state) || !Files.readString(state.resolve("instance")).equals(instance + "\\n")
-                            || !Files.readString(state.resolve("package.id")).equals(id + "\\n")
                             || !Files.readString(state.resolve("port")).equals(port + "\\n"))
-                        throw new IllegalStateException("existing state belongs to another instance, package or port");
+                        throw new IllegalStateException("existing state belongs to another instance or port");
+                    String bound = Files.readString(state.resolve("package.id"));
+                    if (!bound.matches("[0-9a-f]{64}\\n")) throw new IllegalStateException("invalid state metadata");
+                    if (!action.equals("update") && !bound.equals(id + "\\n"))
+                        throw new IllegalStateException("existing state is bound to another package; use update");
                     for (String name : List.of("instance", "package.id", "port", "environment.id"))
                         if (!Files.isRegularFile(state.resolve(name), LinkOption.NOFOLLOW_LINKS)) throw new IllegalStateException("invalid state metadata");
                     UUID.fromString(Files.readString(state.resolve("environment.id")).strip());
@@ -363,6 +418,7 @@ final class DeploymentTemplates {
                     }
                     return;
                 }
+                if (!action.equals("deploy")) throw new IllegalStateException("instance state is absent; use deploy");
                 Path stage = Files.createTempDirectory(state.getParent(), ".kcg-init-");
                 try {
                     Files.setPosixFilePermissions(stage, PosixFilePermissions.fromString("rwx------"));
@@ -418,45 +474,256 @@ final class DeploymentTemplates {
     static final String MIGRATE = """
         package kcg.delivery;
 
+        import java.nio.charset.StandardCharsets;
         import java.nio.file.*;
+        import java.security.MessageDigest;
         import java.sql.*;
         import java.util.*;
         import org.flywaydb.core.Flyway;
 
-        /** Owns schema privileges only for the deployment step; the business app has DML privileges. */
+        /**
+         * Owns schema privileges only for the deployment step; the business app has DML privileges.
+         *
+         * <p>The package carries a migration chain V1..Vn and the schema contract after each version (contracts/V<i>.tsv, and
+         * schema.tsv for Vn). The live database is classified against that chain before anything runs, so a rerun is decided
+         * from the database itself. Modes: initialize (new or partly initialized), verify (must already be at Vn), check
+         * (read-only report for an update), update (apply the missing versions of an initialized database).
+         */
         public final class Migrate {
+
+            /** Refused before anything changed. */
+            static final class Blocked extends IllegalStateException {
+                Blocked(String code, String detail) { super(code + ": " + detail); }
+            }
+
+            /** The database may have changed and needs a person: no clean, repair or rollback is attempted. */
+            static final class Recovery extends IllegalStateException {
+                Recovery(String code, String detail) { super(code + ": " + detail); }
+            }
+
+            private static final Set<String> MODES = Set.of("initialize", "verify", "check", "update");
+
+            private static boolean changing;
+
             public static void main(String[] args) {
+                String mode = args.length == 1 ? args[0] : "";
                 try {
+                    if (!MODES.contains(mode)) throw new Blocked("USAGE", "expected one of " + new TreeSet<>(MODES));
                     String url = System.getenv("KCG_JDBC_URL");
                     String password = Files.readString(Path.of("/run/secrets/migrate-password"));
-                    var flyway = Flyway.configure().dataSource(url, "kcg_migrate", password)
-                        .locations("filesystem:/migrations").baselineOnMigrate(false).cleanDisabled(true).load();
-                    List<String[]> expected = Files.readAllLines(Path.of("/schema.tsv")).stream().filter(s -> !s.isBlank()).map(s -> s.split("\\t", -1)).toList();
+                    Path deploy = Path.of("/deploy");
+                    int n = chainLength(deploy.resolve("migrations"));
+                    List<List<String[]>> contracts = new ArrayList<>();
+                    contracts.add(List.of());
+                    for (int version = 1; version < n; version++) contracts.add(contract(deploy.resolve("contracts/V" + version + ".tsv")));
+                    contracts.add(contract(deploy.resolve("schema.tsv")));
                     try (Connection db = DriverManager.getConnection(url, "kcg_migrate", password)) {
-                        Set<String> reserved = new HashSet<>();
-                        try (Statement words = db.createStatement(); ResultSet rs = words.executeQuery("SELECT WORD FROM information_schema.KEYWORDS WHERE RESERVED=1")) {
-                            while (rs.next()) reserved.add(rs.getString(1).toUpperCase(Locale.ROOT));
+                        reserved(db, contracts.get(n));
+                        int k = classify(db, url, password, contracts, n);
+                        if (k == 0 && !mode.equals("initialize")) throw new Blocked("NOT_INITIALIZED", "the database has no managed schema; use deploy");
+                        if (mode.equals("verify") && k < n) throw new Blocked("PENDING_UPDATE", "the database is at V" + k + ", this package at V" + n + "; use update");
+                        if (mode.equals("check")) {
+                            System.out.println("KCG_DB_STATE V" + k + " package=V" + n);
+                            return;
                         }
-                        for (String[] row : expected) if (reserved.contains(row[0].toUpperCase(Locale.ROOT)) || reserved.contains(row[1].toUpperCase(Locale.ROOT)))
-                            throw new IllegalStateException("reserved identifier is not supported by the unquoted Java mapping: " + row[0] + "." + row[1]);
-                        try (ResultSet tables = db.getMetaData().getTables("kcg", null, "flyway_schema_history", new String[]{"TABLE"})) {
-                            if (tables.next()) verify(db, expected);
-                        }
-                        flyway.migrate();
-                        verify(db, expected);
-                        try (Statement grants = db.createStatement()) {
-                            grants.execute("GRANT SELECT ON `kcg`.`flyway_schema_history` TO 'kcg_app'@'%'");
-                            Set<String> businessTables = new TreeSet<>();
-                            for (String[] row : expected) businessTables.add(row[0]);
-                            for (String table : businessTables) grants.execute("GRANT SELECT, INSERT, UPDATE, DELETE ON `kcg`.`" + table + "` TO 'kcg_app'@'%'");
-                        }
+                        if (k < n) apply(db, url, password, contracts, k, n, k > 0);
+                        grant(db, contracts.get(n));
+                        System.out.println("KCG_DATABASE_READY V" + n + " applied=" + (k < n ? "V" + (k + 1) + "..V" + n : "none"));
                     }
-                    System.out.println("KCG_DATABASE_READY");
+                } catch (Blocked blocked) {
+                    System.err.println("KCG_DB_BLOCKED: " + blocked.getMessage() + "; nothing was changed");
+                    System.exit(3);
+                } catch (Recovery recovery) {
+                    System.err.println("KCG_DB_RECOVERY_REQUIRED: " + recovery.getMessage() + "; no clean, repair or rollback was performed");
+                    System.exit(5);
                 } catch (Exception e) {
                     // Driver exceptions can echo connection information; only their category leaves this process.
                     String detail = e instanceof IllegalStateException ? ": " + e.getMessage() : "";
-                    System.err.println("KCG_DATABASE_NOT_READY: " + e.getClass().getSimpleName() + detail + "; preserve the database, inspect migration/schema state; no clean or repair was performed");
+                    if (changing) {
+                        System.err.println("KCG_DB_RECOVERY_REQUIRED: " + e.getClass().getSimpleName() + detail + "; no clean, repair or rollback was performed");
+                        System.exit(5);
+                    }
+                    System.err.println("KCG_DB_BLOCKED: " + e.getClass().getSimpleName() + detail + "; nothing was changed");
                     System.exit(3);
+                }
+            }
+
+            /** The number of versions, requiring exactly V1..Vn with one file each. */
+            private static int chainLength(Path migrations) throws Exception {
+                TreeMap<Integer, String> versions = new TreeMap<>();
+                try (var files = Files.list(migrations)) {
+                    for (Path file : files.toList()) {
+                        String name = file.getFileName().toString();
+                        if (!name.matches("V[1-9][0-9]{0,5}__[a-z0-9_]+\\\\.sql")) throw new IllegalStateException("unexpected migration file: " + name);
+                        if (versions.put(Integer.parseInt(name.substring(1, name.indexOf("__"))), name) != null)
+                            throw new IllegalStateException("duplicate migration version: " + name);
+                    }
+                }
+                if (versions.isEmpty() || versions.firstKey() != 1 || versions.lastKey() != versions.size())
+                    throw new IllegalStateException("the migration chain must be V1..Vn without gaps");
+                return versions.size();
+            }
+
+            private static List<String[]> contract(Path file) throws Exception {
+                List<String[]> rows = Files.readAllLines(file).stream().filter(s -> !s.isBlank()).map(s -> s.split("\\t", -1)).toList();
+                for (String[] row : rows) {
+                    if (row.length != 10 || !row[0].matches("[A-Za-z_][A-Za-z0-9_]{0,63}") || !row[1].matches("[A-Za-z_][A-Za-z0-9_]{0,63}"))
+                        throw new IllegalStateException("invalid schema contract: " + file.getFileName());
+                }
+                return rows;
+            }
+
+            private static void reserved(Connection db, List<String[]> expected) throws Exception {
+                Set<String> reserved = new HashSet<>();
+                try (Statement words = db.createStatement(); ResultSet rs = words.executeQuery("SELECT WORD FROM information_schema.KEYWORDS WHERE RESERVED=1")) {
+                    while (rs.next()) reserved.add(rs.getString(1).toUpperCase(Locale.ROOT));
+                }
+                for (String[] row : expected) if (reserved.contains(row[0].toUpperCase(Locale.ROOT)) || reserved.contains(row[1].toUpperCase(Locale.ROOT)))
+                    throw new Blocked("RESERVED_IDENTIFIER", "not supported by the unquoted Java mapping: " + row[0] + "." + row[1]);
+            }
+
+            /** The version the live database is at, or a refusal. Rules apply in order; the first that matches decides. */
+            private static int classify(Connection db, String url, String password, List<List<String[]>> contracts, int n) throws Exception {
+                boolean history;
+                try (ResultSet tables = db.getMetaData().getTables("kcg", null, "flyway_schema_history", new String[]{"TABLE"})) {
+                    history = tables.next();
+                }
+                if (!history) {
+                    try (Statement s = db.createStatement(); ResultSet rs = s.executeQuery("SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA='kcg'")) {
+                        rs.next();
+                        if (rs.getLong(1) != 0) throw new Blocked("UNMANAGED_SCHEMA", "tables exist without a migration history");
+                    }
+                    return 0;
+                }
+                TreeSet<Integer> applied = new TreeSet<>();
+                try (Statement s = db.createStatement(); ResultSet rs = s.executeQuery("SELECT version, success FROM flyway_schema_history WHERE version IS NOT NULL")) {
+                    while (rs.next()) {
+                        if (!rs.getBoolean(2)) throw new Recovery("FAILED_MIGRATION", "version " + rs.getString(1) + " is recorded as failed" + matching(db, contracts));
+                        applied.add(Integer.parseInt(rs.getString(1)));
+                    }
+                }
+                int k = applied.isEmpty() ? 0 : applied.last();
+                if (k > n) throw new Blocked("AHEAD", "the database is at V" + k + ", newer than this package's V" + n + "; an older package cannot run it");
+                if (applied.size() != k) throw new Blocked("DIVERGED", "the applied versions are not V1..V" + k);
+                if (k > 0 && !flyway(url, password, null).validateWithResult().validationSuccessful)
+                    throw new Blocked("DIVERGED", "the applied migrations differ from this package's V1..V" + k);
+                if (matches(db, contracts.get(k))) return k;
+                if (k < n && matches(db, contracts.get(k + 1)))
+                    throw new Recovery("INTERRUPTED", "V" + (k + 1) + " changed the schema but was not recorded");
+                throw new Blocked("DRIFT", "the live schema is not the V" + k + " contract");
+            }
+
+            private static String matching(Connection db, List<List<String[]>> contracts) {
+                for (int version = contracts.size() - 1; version >= 0; version--) {
+                    if (matches(db, contracts.get(version))) return "; the live schema equals the V" + version + " contract";
+                }
+                return "; the live schema matches no contract of this package";
+            }
+
+            private static boolean matches(Connection db, List<String[]> expected) {
+                try {
+                    verify(db, expected);
+                    return true;
+                } catch (Exception mismatch) {
+                    return false;
+                }
+            }
+
+            private static Flyway flyway(String url, String password, Integer target) {
+                var configuration = Flyway.configure().dataSource(url, "kcg_migrate", password)
+                    .locations("filesystem:/deploy/migrations").baselineOnMigrate(false).cleanDisabled(true)
+                    .initSql("SET SESSION lock_wait_timeout=60").ignoreMigrationPatterns("*:pending");
+                if (target != null) configuration.target(String.valueOf(target));
+                return configuration.load();
+            }
+
+            /**
+             * Applies V(k+1)..Vn one version at a time, verifying each contract. For an existing database it proves that the
+             * rows and values of every table and column of V(k) are unchanged, that added columns are null in every old row and
+             * that added tables are empty.
+             */
+            private static void apply(Connection db, String url, String password, List<List<String[]>> contracts, int k, int n, boolean preserve) throws Exception {
+                Map<String, String> before = preserve ? digest(db, contracts.get(k)) : Map.of();
+                for (int version = k + 1; version <= n; version++) {
+                    changing = true;
+                    try {
+                        flyway(url, password, version).migrate();
+                    } catch (Exception failed) {
+                        throw new Recovery("MIGRATION_FAILED", "V" + version + " did not complete (" + failed.getClass().getSimpleName() + ")" + matching(db, contracts));
+                    }
+                    try {
+                        verify(db, contracts.get(version));
+                    } catch (IllegalStateException mismatch) {
+                        throw new Recovery("CONTRACT_MISMATCH", "after V" + version + ": " + mismatch.getMessage());
+                    }
+                }
+                if (!preserve) return;
+                Map<String, String> after = digest(db, contracts.get(k));
+                if (!before.equals(after)) throw new Recovery("DATA_CHANGED", "rows or values of the previous schema changed during migration");
+                Set<String> oldColumns = new HashSet<>(), oldTables = new HashSet<>();
+                for (String[] row : contracts.get(k)) { oldTables.add(row[0]); oldColumns.add(row[0] + "." + row[1]); }
+                Set<String> newTables = new TreeSet<>();
+                for (String[] row : contracts.get(n)) {
+                    if (!oldTables.contains(row[0])) newTables.add(row[0]);
+                    else if (!oldColumns.contains(row[0] + "." + row[1]) && count(db, "SELECT COUNT(*) FROM `" + row[0] + "` WHERE `" + row[1] + "` IS NOT NULL") != 0)
+                        throw new Recovery("DATA_CHANGED", "added column " + row[0] + "." + row[1] + " is not null in an existing row");
+                }
+                for (String table : newTables) if (count(db, "SELECT COUNT(*) FROM `" + table + "`") != 0)
+                    throw new Recovery("DATA_CHANGED", "added table " + table + " is not empty");
+                long rows = 0;
+                for (String value : before.values()) rows += Long.parseLong(value.substring(0, value.indexOf(':')));
+                System.out.println("KCG_DATA_VERIFIED tables=" + before.size() + " rows=" + rows);
+            }
+
+            /** Per table "<rows>:<sha256>" over its contract columns in primary key order; NULL is encoded apart from any value. */
+            private static Map<String, String> digest(Connection db, List<String[]> contract) throws Exception {
+                Map<String, List<String>> columns = new TreeMap<>();
+                Map<String, String> keys = new HashMap<>();
+                for (String[] row : contract) {
+                    columns.computeIfAbsent(row[0], t -> new ArrayList<>()).add(row[1]);
+                    if (row[5].equals("true")) keys.put(row[0], row[1]);
+                }
+                Map<String, String> digests = new TreeMap<>();
+                for (var table : columns.entrySet()) {
+                    List<String> names = new ArrayList<>(table.getValue());
+                    Collections.sort(names);
+                    String key = Objects.requireNonNull(keys.get(table.getKey()), "primary key of " + table.getKey());
+                    StringBuilder select = new StringBuilder("SELECT ");
+                    for (int i = 0; i < names.size(); i++) select.append(i == 0 ? "" : ", ").append('`').append(names.get(i)).append('`');
+                    select.append(" FROM `").append(table.getKey()).append("` ORDER BY `").append(key).append('`');
+                    MessageDigest sha = MessageDigest.getInstance("SHA-256");
+                    long rows = 0;
+                    try (Statement s = db.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY)) {
+                        s.setFetchSize(Integer.MIN_VALUE);
+                        try (ResultSet rs = s.executeQuery(select.toString())) {
+                            while (rs.next()) {
+                                rows++;
+                                for (int i = 1; i <= names.size(); i++) {
+                                    String value = rs.getString(i);
+                                    sha.update(value == null ? "N;".getBytes(StandardCharsets.UTF_8)
+                                        : ("V" + value.length() + ":" + value + ";").getBytes(StandardCharsets.UTF_8));
+                                }
+                            }
+                        }
+                    }
+                    digests.put(table.getKey(), rows + ":" + HexFormat.of().formatHex(sha.digest()));
+                }
+                return digests;
+            }
+
+            private static long count(Connection db, String sql) throws Exception {
+                try (Statement s = db.createStatement(); ResultSet rs = s.executeQuery(sql)) {
+                    rs.next();
+                    return rs.getLong(1);
+                }
+            }
+
+            private static void grant(Connection db, List<String[]> expected) throws Exception {
+                try (Statement grants = db.createStatement()) {
+                    grants.execute("GRANT SELECT ON `kcg`.`flyway_schema_history` TO 'kcg_app'@'%'");
+                    Set<String> businessTables = new TreeSet<>();
+                    for (String[] row : expected) businessTables.add(row[0]);
+                    for (String table : businessTables) grants.execute("GRANT SELECT, INSERT, UPDATE, DELETE ON `kcg`.`" + table + "` TO 'kcg_app'@'%'");
                 }
             }
 

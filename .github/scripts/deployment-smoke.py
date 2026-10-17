@@ -18,13 +18,15 @@ p.add_argument('--state', required=True, type=Path)
 p.add_argument('--evidence', required=True, type=Path)
 p.add_argument('--instance', required=True)
 p.add_argument('--port', type=int, default=18080)
+# Same schema, different bytes: the package a schema-unchanged update moves the instance to (step 3, slice A).
+p.add_argument('--next-package', required=True, type=Path)
 a = p.parse_args()
 a.evidence.mkdir(parents=True, exist_ok=True)
 report = {'commit': os.getenv('GITHUB_SHA'), 'runUrl': f"{os.getenv('GITHUB_SERVER_URL')}/{os.getenv('GITHUB_REPOSITORY')}/actions/runs/{os.getenv('GITHUB_RUN_ID')}",
           'packageId': (a.package / 'package.id').read_text().strip(),
           'deployment': 'NOT_RUN', 'httpSmoke': 'NOT_RUN', 'persistence': 'NOT_RUN', 'privileges': 'NOT_RUN',
-          'swagger': 'NOT_RUN', 'contract': 'NOT_RUN', 'missingVolume': 'NOT_RUN', 'business': 'NOT_RUN', 'cleanup': 'NOT_RUN',
-          'requests': []}
+          'swagger': 'NOT_RUN', 'contract': 'NOT_RUN', 'missingVolume': 'NOT_RUN', 'business': 'NOT_RUN', 'update': 'NOT_RUN', 'cleanup': 'NOT_RUN',
+          'nextPackageId': (a.next_package / 'package.id').read_text().strip(), 'requests': []}
 sequence = 0
 # Business acceptance writes data, so it gets its own disposable instance of the same package.
 acceptance_instance, acceptance_state, acceptance_port = a.instance + '-acc', a.state.with_name(a.state.name + ' acceptance'), a.port + 1
@@ -43,8 +45,8 @@ def run(command, expected=0, timeout=1800):
     return log.read_text()
 
 
-def deploy(action, expected=0, instance=None, state=None, port=None, extra=()):
-    command = ['sh', str(a.package / 'deploy/deploy.sh'), action, '--instance', instance or a.instance,
+def deploy(action, expected=0, instance=None, state=None, port=None, extra=(), package=None):
+    command = ['sh', str((package or a.package) / 'deploy/deploy.sh'), action, '--instance', instance or a.instance,
                '--state-root', str(state or a.state)]
     if action in ('deploy', 'start'):
         command += ['--port', str(port or a.port)]
@@ -85,15 +87,15 @@ def status_only(path, body=None, token=None, expected=401):
     exchange(path, body, token, expected)
 
 
-def database_container():
-    return subprocess.check_output(['docker', 'ps', '-q', '--filter', f'label=com.docker.compose.project={a.instance}',
+def database_container(instance=None):
+    return subprocess.check_output(['docker', 'ps', '-q', '--filter', f'label=com.docker.compose.project={instance or a.instance}',
                                     '--filter', 'label=com.docker.compose.service=db'], text=True).strip()
 
 
-def sql(statement, app=False, expected=0):
+def sql(statement, app=False, expected=0, instance=None):
     role, secret = ('kcg_app', 'app-password') if app else ('root', 'root-password')
     command = f'MYSQL_PWD=$(cat /run/secrets/{secret}) mysql --protocol=socket -u{role} -Dkcg -N -B -e "$1"'
-    return run(['docker', 'exec', database_container(), 'sh', '-c', command, 'sh', statement], expected)
+    return run(['docker', 'exec', database_container(instance), 'sh', '-c', command, 'sh', statement], expected)
 
 
 try:
@@ -152,9 +154,26 @@ try:
     deploy('acceptance-test', instance=acceptance_instance, state=acceptance_state,
            extra=('--confirm-disposable', acceptance_instance))
     report['business'] = 'PASSED'
+    # Step 3, slice A: a package with the same schema takes over the instance and keeps every row and value.
+    tables = '`user`, `note`, `access_token`, `refresh_token`, `token_pair`'
+    before = sql('CHECKSUM TABLE ' + tables, instance=acceptance_instance)
+    updated = deploy('update', instance=acceptance_instance, state=acceptance_state, package=a.next_package)
+    assert f"KCG_UPDATED {report['packageId']}->{report['nextPackageId']}" in updated, 'schema-unchanged update did not complete'
+    assert 'applied=none' in updated, 'a schema-unchanged update must not run SQL migrations'
+    assert sql('CHECKSUM TABLE ' + tables, instance=acceptance_instance) == before, 'rows or values changed during the update'
+    assert sql('SELECT COUNT(*) FROM flyway_schema_history', instance=acceptance_instance).strip() == '1'
+    status = deploy('status', instance=acceptance_instance, state=acceptance_state, package=a.next_package)
+    assert f"bound={report['nextPackageId']}" in status, 'the instance is not bound to the new package'
+    assert 'KCG_UPDATE_CURRENT' in deploy('update', instance=acceptance_instance, state=acceptance_state, package=a.next_package)
+    refused = deploy('start', expected=3, instance=acceptance_instance, state=acceptance_state, port=acceptance_port)
+    assert 'KCG_BLOCKED' in refused, 'the previous package must not run an updated instance without update'
+    # The new application serves the old data: the requirement suite passes again on the updated instance.
+    deploy('acceptance-test', instance=acceptance_instance, state=acceptance_state, package=a.next_package,
+           extra=('--confirm-disposable', acceptance_instance))
+    report['update'] = 'PASSED'
 except Exception as error:
     # Gates run in this order, so the first one not yet passed is the one that failed; the rest stay NOT_RUN.
-    for gate in ('deployment', 'httpSmoke', 'privileges', 'swagger', 'contract', 'persistence', 'missingVolume', 'business'):
+    for gate in ('deployment', 'httpSmoke', 'privileges', 'swagger', 'contract', 'persistence', 'missingVolume', 'business', 'update'):
         if report[gate] == 'NOT_RUN':
             report[gate] = 'FAILED'
             break
@@ -214,4 +233,4 @@ finally:
     (a.evidence / 'report.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n')
     print(json.dumps(report, ensure_ascii=False, indent=2))
 sys.exit(0 if all(report[key] == 'PASSED' for key in ('deployment', 'httpSmoke', 'persistence', 'privileges', 'swagger', 'contract',
-                                                     'missingVolume', 'business', 'cleanup')) else 1)
+                                                     'missingVolume', 'business', 'update', 'cleanup')) else 1)

@@ -1,7 +1,7 @@
 # 可独立部署的后端交付包与真实 HTTP 验收
 
 - 日期：2026-10-17。
-- 状态：**IN_PROGRESS / 步骤①② PASSED / 步骤③待推进**。负责人已确认方案并授权进入实现；步骤①由verify #94、步骤②（合同见第12节）由verify #95/#96验收，步骤③尚未实施。负责人随后已授权提交、推送并取得CI验收；镜像发布仍未授权。
+- 状态：**IN_PROGRESS / 步骤①② PASSED / 步骤③实施中**。负责人已确认方案并授权进入实现；步骤①由verify #94、步骤②（合同见第12节）由verify #95/#96验收；步骤③合同见第13节，A片（运行侧update）已接入代码、待CI，B片尚未实施。负责人随后已授权提交、推送并取得CI验收；镜像发布仍未授权。
 - 实现起点：云端 `main` / `cf44450`。信任既有云端成果，不为规划重复执行验证。
 - 依据：[MAIN](../../MAIN.md)、[当前能力](../PROJECT_STATUS.md)、[ADR-026](../architecture/ADR-026-layered-semantic-command-architecture.md)、[ADR-027](../architecture/ADR-027-git-as-version-history.md)。
 - 方案文本不是已交付或通过证据；步骤①实现范围、26项定向结果、CI #93阻塞与#94验收见[报告](../DEPLOYMENT_DELIVERY_REPORT.md)。
@@ -202,3 +202,32 @@ Swagger负责接口展示和手动发真实HTTP请求；它本身不是自动业
 **CI证据。** CI导出时带上双Token验收包。`deployment-smoke.py`在第一实例的HTTP烟测与权限核验后做Swagger式真实请求并运行`contract-test`；第一实例的持久化与丢失卷门结束后，在同包的独立第二实例上部署并运行`acceptance-test`，最后清理两个实例。`report.json`新增`swagger`、`contract`、`business`分项、两类检查计数、`NOT_VERIFIED`与失败清单；某门异常时记为FAILED，其后的门保持NOT_RUN；Surefire报告随`deployment-evidence`上传。完成门仍是第8节步骤②：Swagger能发真实请求、合同与双Token业务/并发断言通过、报告分阶段记录。
 
 **验收记录。** `fee2a3b`的[verify #95](https://github.com/HoloNova/Software-IR/actions/runs/39021298934)与`ef324d6`的[verify #96](https://github.com/HoloNova/Software-IR/actions/runs/39021834946)两个job均success：`swagger`、`contract`、`business`及步骤①各分项PASSED，合同检查13 PASSED / 0 FAILED / 7 NOT_VERIFIED，双Token需求26 / 0。第8节步骤②完成门关闭，分项与artifact见[报告第7节](../DEPLOYMENT_DELIVERY_REPORT.md)。
+
+## 13. 步骤③合同：保留数据的同实例更新（2026-10-17冻结）
+
+由三份独立方案经评审综合而来（以“物理计划差异”为底，嫁接最小增量与安全优先方案的执行细节）。分两片实施：A片运行侧（`update`动作、迁移链判定、数据摘要），B片导出侧（`--base-package`、差异规划、追加迁移文件）。
+
+**依据。** 旧侧以旧交付包冻结的`deploy/migrations/*`、`deploy/contracts/*`、`deploy/schema.tsv`和MySQL镜像为准，不重新编译旧包`sir/`（包内未记录入口，且工具链升级后重渲染字节必然不同，违背ADR-027）。实例侧以活库的`flyway_schema_history`、`information_schema`和`state/package.id`为准。包不记录base id或谱系，不新增状态文件；Change、Git与SIR语法不变。差异键是精确物理名；物理名只由当前名字推导，改名一律表现为删除并拒绝，不猜测。
+
+**导出（B片）。** `kcg package … [--base-package <旧交付包>]`。无该选项时输出与现在逐字节相同。旧包须为绝对规范、不与源/输出/验收包重叠、无符号链接的目录，按Bootstrap规则校验摘要，迁移为连续的`V1..Vb`，`contracts/V<i>.tsv`对应`i<b`，`schema.tsv`为`Vb`合同。新SIR照常编译成DeploymentPlan，由纯函数比对旧合同与目标合同：
+
+| 类别 | 本轮 |
+| --- | --- |
+| UNCHANGED：表/列集合及全部属性相同 | 支持，不新增版本 |
+| CREATE_TABLE：新表名（外键只指向旧表、更早新表或自身） | 支持 |
+| ADD_NULLABLE_COLUMN：旧表上可空、非主键、非自增、非唯一、无引用的新列 | 支持 |
+| 删表、删列（含任何改名、Ref可空性翻转）、列属性变化（含加宽长度、可空性、唯一、引用、枚举成员变长、VARCHAR↔LONGTEXT）、新增必填/唯一/引用列、新表成环、名字仅大小写冲突、MySQL镜像变化 | 以`SIR-DEPLOY-UPDATE-UNSUPPORTED-001`逐条列出并拒绝，不留输出 |
+
+新增版本每个文件只含一条DDL：先按拓扑与目标顺序`V<v>__create_table_<t>.sql`（外键内联，命名`kcg_v<v>_fk_<i>`，与V1的`kcg_fk_<n>`不冲突），再按（表，列）顺序`V<v>__add_column_<t>_<c>.sql`（`ALTER TABLE … ADD COLUMN … NULL, ALGORITHM=INSTANT`）。旧包迁移与合同逐字节复制，`contracts/V<b>.tsv`取旧`schema.tsv`，每个新版本前的合同写入`contracts/`，`schema.tsv`为最终合同；合同链逐行合并须等于目标合同，否则`SIR-DEPLOY-UPDATE-SELFCHECK-001`。已发布的迁移只追加，不重渲染；新实例从V1重放全链。结果JSON增加`basePackageId`、`schemaVersion`与`steps`。只收紧业务规则而无DDL的变更（notBlank、长度下限等）不对旧行核验，报告写“物理数据保留；旧行的业务规则兼容性NOT_VERIFIED”。
+
+**迁移工具（A片）。** `migrate.jar initialize|verify|check|update`。合同链`S_0=∅`、`S_i`为`contracts/V<i>.tsv`、`S_n`为`schema.tsv`；按序判定（先中先得）：无history表且无业务表→EMPTY，有业务表→BLOCKED UNMANAGED_SCHEMA；存在失败记录→RECOVERY FAILED_MIGRATION；已应用最高版本>n→BLOCKED AHEAD；已应用集合不是`{1..k}`或校验和不符→BLOCKED DIVERGED；活库等于`S_k`→AT(k)；`k<n`且活库等于`S_{k+1}`→RECOVERY INTERRUPTED；否则BLOCKED DRIFT。`initialize`接受EMPTY或AT(k)并迁移；`verify`只接受AT(n)；`check`只读报告`KCG_DB_STATE V<k> package=V<n>`；`update`接受AT(k≥1)并迁移。迁移前按主键流式摘要`S_k`全部表与列（区分NULL）并计行数，逐版本`target=v`迁移并核验`S_v`，再摘要须相等，新增列在所有旧行上为NULL，新表为空，否则RECOVERY DATA_CHANGED。退出码3=`KCG_DB_BLOCKED`（未改动），5=`KCG_DB_RECOVERY_REQUIRED`；不打印数据值或摘要。
+
+**部署入口（A片）。** 新增`update --instance N --state-root S [--port P]`；`P`须等于状态中的端口。Bootstrap接收动作参数：`update`时状态须已存在且不写入，`package.id`可为任意合法id；其他动作仍要求同包，提示改用update；Bootstrap拒绝统一为退出码3 `KCG_BLOCKED`。`check_volume`只比对`kcg.instance`与随机的`kcg.environment`（绑定强度不变），不可改的`kcg.package`标签降为“创建者”并由status显示。migrate以只读方式挂载包的`deploy/`；db改为挂载状态目录中的`accounts.sh`（缺失时从包复制），使数据库容器不再依赖某个包目录。`deploy`在已初始化实例上只`verify`，`start`只`verify`，均不迁移。
+
+update顺序及失败结果：加锁与前置检查（2/3）；卷与`initialized`须存在（3）；已绑定本包→按start路径`KCG_UPDATE_CURRENT`（0，应用失败6）；构建与镜像（失败4，`KCG_UPDATE_BUILD_FAILED`，数据库与旧应用未动）；db未运行则启动，运行中的db不重建；`check`只读（失败3/5，旧应用仍运行）；记录并停止旧应用容器；`update`（3：未改动，重启旧容器并报告`application=RESTARTED|RESTART_FAILED`；其他非零：5 `KCG_DB_RECOVERY_REQUIRED`，应用保持停止，不clean/repair/回滚）；原子改写`state/package.id`；启动新应用（失败6 `KCG_APP_START_FAILED`，数据库已为`V<n>`，绑定已更新，可重试start或update）；成功输出`KCG_UPDATED <旧>-><新> … migrations=V<b+1>..V<n>|none`。
+
+**重复执行。** 只由（`state/package.id`，活库判定，包内合同链）决定：同包且AT(n)→CURRENT；异包且AT(n)→不执行SQL，改绑并启动（覆盖schema不变更新与改绑前崩溃）；AT(k<n)→只应用`V<k+1>..V<n>`；FAILED_MIGRATION/INTERRUPTED→每次（含start）均为5，恢复需人工；AHEAD（较旧的包）→3。
+
+**默认取舍（负责人可改）。** 准入以活库谱系为准，不在包内记录base id：允许跨版本和在schema相同的包间切换，代价是无法识别来自其他项目但schema相同的包。`kcg.package`标签降为创建者。本轮矩阵仅上表三类。无DDL的业务规则收紧放行并标NOT_VERIFIED。更新前不备份，报告写明“未备份，恢复需人工”。CI不手工改SQL制造中断或漂移，INTERRUPTED/DRIFT门本轮记NOT_RUN，由单元测试覆盖判定规则。恢复动作、旧镜像与`artifacts/`清理不在步骤③。
+
+**完成门与CI。** 同包v1部署并经HTTP写入数据→导出schema不变的新包并`update`（无SQL，改绑）→导出含新表与新可空列的v2包并`update`（逐版本迁移，摘要一致，旧主键/字段/关系保持，新功能可经HTTP使用）→重复`update`为CURRENT→用较旧的包`update`被拒绝（AHEAD/3）→新实例直接部署v2包时从V1重放全链。原步骤①②门不回退。

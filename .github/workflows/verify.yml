@@ -228,12 +228,21 @@ jobs:
             --acceptance "$GITHUB_WORKSPACE/sir-toolchain-application/src/test/resources/deployment/dual-token-acceptance" \
             > "$RUNNER_TEMP/deployment-evidence/export.json"
           python3 -c 'import json,sys; assert json.load(open(sys.argv[1]))["outcome"] == "PACKAGE_EXPORTED"' "$RUNNER_TEMP/deployment-evidence/export.json"
+          # The same software with one more comment line: different package bytes, same schema (schema-unchanged update).
+          cp -R "$GITHUB_WORKSPACE/sir-toolchain-application/src/test/resources/deployment/dual-token" "$RUNNER_TEMP/dual-token-next"
+          printf '\n// next delivery: same schema\n' >> "$RUNNER_TEMP/dual-token-next/project.sir"
+          java -Xmx256m -jar "$RUNNER_TEMP/delivery-cli/kcg.jar" package \
+            --source-root "$RUNNER_TEMP/dual-token-next" --entry project.sir --output-root "$RUNNER_TEMP/backend-delivery-next" \
+            --acceptance "$GITHUB_WORKSPACE/sir-toolchain-application/src/test/resources/deployment/dual-token-acceptance" \
+            > "$RUNNER_TEMP/deployment-evidence/export-next.json"
+          python3 -c 'import json,sys; assert json.load(open(sys.argv[1]))["outcome"] == "PACKAGE_EXPORTED"' "$RUNNER_TEMP/deployment-evidence/export-next.json"
           tar -czf "$RUNNER_TEMP/backend-delivery.tar.gz" -C "$RUNNER_TEMP/backend-delivery" .
       - name: Cold deployment, actual HTTP and persistence acceptance
         run: |
           set -euo pipefail
           python3 .github/scripts/deployment-smoke.py \
             --package "$RUNNER_TEMP/backend-delivery" \
+            --next-package "$RUNNER_TEMP/backend-delivery-next" \
             --state "$RUNNER_TEMP/deployment state" \
             --evidence "$RUNNER_TEMP/deployment-evidence" \
             --instance "kcg-delivery-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" --port 18080
