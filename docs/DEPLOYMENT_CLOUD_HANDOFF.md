@@ -65,4 +65,4 @@ gh run download 39002409782 -n deployment-evidence -D /tmp/kcg-deployment-93
 
 修复后的CI须完成并留存：HTTP注册/读取/登录/鉴权写入；应用账号可访问业务表但不能DDL；stop/start与同包deploy保留数据、密码和唯一Flyway V1；丢失卷后start拒绝；拥有资源全部清理。原主job也须通过。更新报告时给出受测SHA、run URL、artifact及分项结果。
 
-步骤①未关之前不展开Swagger/随包测试或不同包升级。步骤②③仍按方案11执行，不重开R1–R5，不给Change添加部署专用操作，不发布镜像。当前开发机仍禁止部署/业务测试；默认用CI，负责人明确切换的新机器才作部署环境，并遵守`AGENTS.md`资源约束。
+负责人2026-10-17改为不等步骤①的CI结果、并行推进步骤②（合同见[方案11第12节](design/11-portable-deployment-and-http-acceptance.md)）；步骤①仍单独以同SHA CI关闭，步骤②不抵扣它。不同包升级仍属步骤③。步骤②③按方案11执行，不重开R1–R5，不给Change添加部署专用操作，不发布镜像。当前开发机仍禁止部署/业务测试；默认用CI，负责人明确切换的新机器才作部署环境，并遵守`AGENTS.md`资源约束。

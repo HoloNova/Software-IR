@@ -63,7 +63,8 @@ CI Python脚本通过AST语法检查，workflow经本地已有PyYAML解析；没
 | DML账户无DDL权限、重启/重复部署保留数据配置 | NOT_RUN |
 | 丢失卷拒绝 | NOT_RUN |
 | CI拥有资源清理 | PASSED |
-| Swagger、随包JUnit网络套件、版本迁移 | 未实施（后续步骤） |
+| Swagger、随包合同测试 | 步骤②已接入代码与CI门（见[交付合同第7节](DEPLOYMENT_DELIVERY.md)），待CI证据 |
+| 独立业务验收包、版本迁移 | 未实施（步骤②其余部分与步骤③） |
 
 新job `standalone-deployment`消费同SHA主job的`standalone-cli`，使用独立MySQL实例，无测试夹具DDL；固定验收数据仅通过HTTP创建。产物`backend-source-delivery`与`deployment-evidence`不包含运行状态或密码。本run主job全绿，部署job失败，workflow总结果failure。[deployment-evidence](https://github.com/HoloNova/Software-IR/actions/runs/39002409782/artifacts/12090216090)含report.json、export.json、构建与容器日志；[backend-source-delivery](https://github.com/HoloNova/Software-IR/actions/runs/39002409782/artifacts/12090102304)保留实际源包，另有standalone-cli、surefire-reports与conformance-evidence。
 

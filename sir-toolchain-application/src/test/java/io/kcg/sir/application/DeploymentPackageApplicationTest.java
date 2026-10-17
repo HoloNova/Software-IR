@@ -30,7 +30,8 @@ class DeploymentPackageApplicationTest {
         assertTrue(sql.indexOf("ALTER TABLE") > sql.lastIndexOf("CREATE TABLE"));
         assertFalse(Files.readString(first.manifest().outputRoot().resolve("app/pom.xml")).contains("flyway"), "app must not get migration credentials/engine");
         assertTrue(Files.readString(first.manifest().outputRoot().resolve("app/pom.xml")).contains("starter-actuator"));
-        for (String script : List.of("deploy.sh", "build.sh", "accounts.sh"))
+        assertTrue(Files.readString(first.manifest().outputRoot().resolve("app/pom.xml")).contains("springdoc-openapi-starter-webmvc-ui"));
+        for (String script : List.of("deploy.sh", "build.sh", "accounts.sh", "contract-test.sh"))
             assertEquals(0, process(List.of("sh", "-n", first.manifest().outputRoot().resolve("deploy/" + script).toString()), temp.resolve(script + ".log")));
     }
 

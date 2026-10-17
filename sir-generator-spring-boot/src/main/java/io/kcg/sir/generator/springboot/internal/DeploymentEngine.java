@@ -61,11 +61,23 @@ public final class DeploymentEngine {
                   group:
                     readiness:
                       include: readinessState,db
-            """ + (plan.credentialAuthentication() ? "kcg:\n  actor-identity:\n    mode: external\n" : ""));
+            springdoc:
+              # Query inputs are bound from individual parameters; show them that way, not as one object.
+              default-flat-param-object: true
+            """ +(plan.credentialAuthentication() ? "kcg:\n  actor-identity:\n    mode: external\n" : ""));
+        var api = plan.api();
+        String packagePath = api.basePackage().replace('.', '/');
+        add(files, plan, "app/src/main/java/" + packagePath + "/KcgOpenApiConfiguration.java", DeploymentTemplates.OPENAPI
+            .replace("@PACKAGE@", api.basePackage()).replace("@VERSION@", StringEscape.javaString(api.version()))
+            .replace("@ENVELOPE@", api.errorEnvelopeClass()).replace("@ERRORS@", errors(api.endpoints()))
+            .replace("@TITLE@", StringEscape.javaString(api.title())));
+        add(files, plan, "app/src/test/java/" + packagePath + "/contract/HttpContractIT.java", DeploymentTemplates.CONTRACT_TEST
+            .replace("@PACKAGE@", api.basePackage()).replace("@ENDPOINTS@", endpoints(api.endpoints())));
         add(files, plan, "deploy/deploy.sh", substitute(DeploymentTemplates.ENTRY, plan));
         add(files, plan, "deploy/compose.yaml", substitute(DeploymentTemplates.COMPOSE, plan));
         add(files, plan, "deploy/Dockerfile", substitute(DeploymentTemplates.DOCKERFILE, plan));
         add(files, plan, "deploy/build.sh", DeploymentTemplates.BUILD);
+        add(files, plan, "deploy/contract-test.sh", DeploymentTemplates.CONTRACT);
         add(files, plan, "deploy/accounts.sh", DeploymentTemplates.ACCOUNTS);
         add(files, plan, "deploy/Bootstrap.java", DeploymentTemplates.BOOTSTRAP);
         add(files, plan, "deploy/tools/pom.xml", DeploymentTemplates.TOOLS_POM);
@@ -98,10 +110,47 @@ public final class DeploymentEngine {
             The app has only SELECT/INSERT/UPDATE/DELETE, not migration credentials or DDL privileges.
             No demo rows/accounts are injected. Business tests must use a separate deployment instance.
             Defaults are explicit budgets, adjustable via KCG_BUILD_MEMORY/CPUS, KCG_DB_MEMORY/CPUS,
-            KCG_APP_MEMORY/CPUS and KCG_MIGRATE_MEMORY; they are not production capacity claims.
-            Swagger, distributed HTTP test suites and data-preserving update are subsequent steps, not delivered here.
+            KCG_APP_MEMORY/CPUS, KCG_MIGRATE_MEMORY and KCG_TEST_MEMORY/CPUS; they are not production capacity claims.
+
+            ## Interface documentation and contract test
+
+            Swagger UI: http://127.0.0.1:<port>/swagger-ui/index.html (OpenAPI JSON: /v3/api-docs). It sends real
+            requests to the deployed instance; authenticated operations take the access token through "Authorize".
+            Documentation is generated from the running controllers; it does not decide whether a requirement is met.
+
+            ```sh
+            sh deploy/deploy.sh contract-test --instance demo --state-root /absolute/path/to/demo-state
+            ```
+
+            contract-test runs app/src/test/java/**/contract/HttpContractIT.java in a container against the running
+            instance over real HTTP. Its requests are all refused before business code runs, so it writes no data.
+            Results: <state>/reports/contract/contract-report.tsv (PASSED, FAILED, NOT_VERIFIED per check) and
+            surefire-reports/. NOT_VERIFIED marks what needs business data or an account; a passing contract test is
+            not a business acceptance. A plain `mvn test` of app/ does not select it and needs no running service.
+            Data-preserving update is a subsequent step, not delivered here.
             """);
         return List.copyOf(files);
+    }
+    /** The lowered interface as Java data of the contract test; every value was validated by the plan's records. */
+    private static String endpoints(List<Endpoint> endpoints) {
+        List<String> lines = new ArrayList<>();
+        for (Endpoint endpoint : endpoints) {
+            List<String> rules = new ArrayList<>();
+            for (TextRule rule : endpoint.textRules()) rules.add("new TextRule(" + StringEscape.javaString(rule.property()) + ", "
+                + rule.notBlank() + ", " + rule.minLength() + ", "
+                + (rule.maxLength().isPresent() ? "OptionalInt.of(" + rule.maxLength().getAsInt() + ")" : "OptionalInt.empty()") + ")");
+            lines.add("            new Endpoint(" + StringEscape.javaString(endpoint.method()) + ", " + StringEscape.javaString(endpoint.route())
+                + ", " + endpoint.authenticated() + ", " + StringEscape.javaString(endpoint.binding().name()) + ", List.of(" + String.join(", ", rules) + "), List.of("
+                + String.join(", ", endpoint.errors().stream().map(e -> StringEscape.javaString(e.status() + " " + e.code())).toList()) + "))");
+        }
+        return String.join(",\n", lines);
+    }
+    private static String errors(List<Endpoint> endpoints) {
+        List<String> lines = new ArrayList<>();
+        for (Endpoint endpoint : endpoints) for (DeclaredError error : endpoint.errors())
+            lines.add("            new String[] {" + StringEscape.javaString(endpoint.method() + " " + endpoint.route()) + ", \"" + error.status()
+                + "\", " + StringEscape.javaString(error.code()) + "}");
+        return String.join(",\n", lines);
     }
     private static String substitute(String text, DeploymentPlan plan) {
         return text.replace("@BUILDER@", plan.images().builder()).replace("@RUNTIME@", plan.images().runtime()).replace("@MYSQL@", plan.images().mysql());

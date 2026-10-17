@@ -174,3 +174,29 @@ Swagger负责接口展示和手动发真实HTTP请求；它本身不是自动业
 不做业务前端、Web平台、第二Target、Redis、多租户、Kubernetes、任意SQL扩展、任意迁移、全平台支持或完全离线镜像分发。对现有外部身份适配等必需依赖，部署前检查是否具备，不能为启动成功悄悄降级为固定身份。
 
 模型评测题目保留，但当前优先推进部署与网络验收；本方案确认不等于启动模型评测。后续资格和实现进度只更新PROJECT_STATUS与对应证据报告，不把计划改写成已实现事实。
+
+## 12. 步骤②接口合同（2026-10-17冻结）
+
+负责人要求不等CI #94结果、继续推进，故步骤②与步骤①的同SHA验收并行实施；步骤①仍以CI证据关闭，步骤②不抵扣它。以下冻结参数、产物与失败结果，只在第7节已确认边界内取舍。
+
+**接口文档。** 交付包应用POM额外加入`org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.9`（以Spring Boot 3.5.0构建，与目标3.5.x同线），只进交付源码，不进普通generate或工具链。OpenAPI JSON在`/v3/api-docs`，Swagger UI在`/swagger-ui/index.html`，均为springdoc默认路径，内容从实际Controller/DTO得到。生成的`KcgOpenApiConfiguration`只补充认证传输：声明名为`bearer`的HTTP Bearer方案，并对处理方法带`@RequestAttribute`身份参数的接口加安全要求和“401、空响应体”说明，同时从参数表隐去该内部属性。它按实际处理方法判定，不维护第二份路由表。
+
+**随包合同测试。** 生成`app/src/test/java/<基础包>/contract/HttpContractIT.java`：JUnit 5 + JDK HttpClient + Jackson，均来自既有`spring-boot-starter-test`/web依赖。类名以`IT`结尾，Surefire默认不选中，普通`mvn test`不需要服务；只在显式`-Dtest=HttpContractIT -Dkcg.baseUrl=…`时运行，缺少baseUrl即失败而不是跳过。用例由DeploymentPlan中的接口表（方法、路由、是否认证、输入绑定、文本规则）渲染，只发不写数据的请求：
+
+| 检查 | 适用 | 期望 |
+| --- | --- | --- |
+| Swagger UI | 全局 | 200，`text/html` |
+| OpenAPI清单 | 全局 | 文档中的“方法 路由”集合与接口表相等；认证接口且只有认证接口带`bearer`要求 |
+| 无凭据/畸形凭据/不存在的令牌 | 认证接口 | 401 |
+| 畸形JSON、未知属性 | 非认证的请求体接口 | 400，信封`code=INVALID_REQUEST`；未知属性出现在`fields[].path` |
+| `notBlank`、`length(min,max)` | 非认证、非PATCH请求体的String字段 | 400，`fields`含该字段及`NotBlank`/`Size`；长度上限超过4096不生成超长样例 |
+| 成功响应、声明错误、认证后的校验 | 每个接口 | 需要业务数据或账号，记为JUnit跳过，消息以`NOT_VERIFIED:`开头 |
+
+**独立业务验收包。** 形式为一个自带`pom.xml`的普通Maven工程，其`mvn test`即业务套件，接收`kcg.baseUrl`、`kcg.jdbcUrl`、`kcg.jdbcUser`、`kcg.jdbcPasswordFile`。`kcg package`新增可选`--acceptance <绝对目录>`，把该目录的普通UTF-8文本文件逐字节复制到交付包`acceptance/`并纳入摘要；不编译、不解释它，拒绝符号链接、非文本和缺少根`pom.xml`。双Token套件放在`sir-toolchain-application/src/test/resources/deployment/dual-token-acceptance/`，由`DualTokenScaffoldBusinessConformanceIT`的D0–D7断言整理而来；它只依据固定需求与物理表名核验，不读SIR或`app/`。
+
+**部署入口。** `deploy.sh`新增两个动作，都要求实例已部署且在运行，测试进程在受限Maven容器中经Compose网络访问`http://app:8080`，即跨容器真实HTTP：
+
+- `contract-test`：只读，可对任一实例运行，挂载`app/`，结果写入`<state>/reports/contract/`，成功输出`KCG_CONTRACT_PASSED`。
+- `acceptance-test --confirm-disposable <实例名>`：会写业务数据，必须重复输入实例名确认是一次性实例；只挂载`acceptance/`与数据库root口令文件，结果写入`<state>/reports/acceptance/`，成功输出`KCG_ACCEPTANCE_PASSED`。包内没有验收包时输出`KCG_ACCEPTANCE_NOT_RUN`并以退出码4结束，不冒充通过。
+
+**CI证据。** `deployment-smoke.py`在第一实例上于HTTP烟测后运行`contract-test`，再在同包的独立第二实例上运行`acceptance-test`，随后清理两个实例。`report.json`新增`swagger`、`contract`、`business`分项及Surefire计数和`NOT_VERIFIED`清单；Surefire报告随`deployment-evidence`上传。完成门仍是第8节步骤②：Swagger能发真实请求、合同与双Token业务/并发断言通过、报告分阶段记录。

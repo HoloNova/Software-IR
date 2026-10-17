@@ -5,6 +5,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import shutil
 import subprocess
 import sys
 import traceback
@@ -22,7 +23,7 @@ a.evidence.mkdir(parents=True, exist_ok=True)
 report = {'commit': os.getenv('GITHUB_SHA'), 'runUrl': f"{os.getenv('GITHUB_SERVER_URL')}/{os.getenv('GITHUB_REPOSITORY')}/actions/runs/{os.getenv('GITHUB_RUN_ID')}",
           'packageId': (a.package / 'package.id').read_text().strip(),
           'deployment': 'NOT_RUN', 'httpSmoke': 'NOT_RUN', 'persistence': 'NOT_RUN', 'privileges': 'NOT_RUN',
-          'missingVolume': 'NOT_RUN', 'cleanup': 'NOT_RUN', 'requests': []}
+          'swagger': 'NOT_RUN', 'contract': 'NOT_RUN', 'missingVolume': 'NOT_RUN', 'cleanup': 'NOT_RUN', 'requests': []}
 sequence = 0
 
 
@@ -44,28 +45,28 @@ def deploy(action, expected=0):
                 '--state-root', str(a.state), '--port', str(a.port)], expected)
 
 
-def exchange(path, body, token, expected):
+def exchange(path, body, token, expected, base=None):
     """Sends one request and records its shape (never tokens, passwords or response bodies) in the report."""
     headers = {'Content-Type': 'application/json'}
     if token:
         headers['Authorization'] = 'Bearer ' + token
-    req = urllib.request.Request(f'http://127.0.0.1:{a.port}' + path,
+    req = urllib.request.Request((base or f'http://127.0.0.1:{a.port}') + path,
                                  data=None if body is None else json.dumps(body).encode(), headers=headers)
     try:
         with urllib.request.urlopen(req, timeout=20) as response:
             status, content_type, data = response.status, response.headers.get('Content-Type'), response.read()
     except urllib.error.HTTPError as error:
         status, content_type, data = error.code, error.headers.get('Content-Type'), error.read()
-    report['requests'].append({'method': req.get_method(), 'path': path, 'authenticated': bool(token),
+    report['requests'].append({'method': req.get_method(), 'path': path, 'base': base, 'authenticated': bool(token),
                                'expected': expected, 'status': status, 'contentType': content_type,
                                'bodyBytes': len(data)})
     assert status == expected, f'{req.get_method()} {path} returned {status}, expected {expected}'
     return content_type, data
 
 
-def request(path, body=None, token=None, expected=200):
+def request(path, body=None, token=None, expected=200, base=None):
     """A call whose business result is asserted: the body must be JSON."""
-    content_type, data = exchange(path, body, token, expected)
+    content_type, data = exchange(path, body, token, expected, base)
     try:
         return json.loads(data)
     except ValueError as error:
@@ -108,6 +109,18 @@ try:
     assert '1142' in denied or '1044' in denied, 'DDL must fail because of privileges, not an unrelated SQL error'
     assert sql("SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA='kcg' AND TABLE_NAME='forbidden_app_ddl'").strip() == '0'
     report['privileges'] = 'PASSED'
+    # What Swagger UI's "Try it out" does: take the server and the operation from the served document, then call it.
+    docs = request('/v3/api-docs')
+    server = docs['servers'][0]['url'].rstrip('/')
+    assert server == f'http://127.0.0.1:{a.port}', f'documented server {server}'
+    assert 'post' in docs['paths']['/api/register'] and 'bearer' in str(docs['paths']['/api/post-note']['post'].get('security'))
+    assert int(request('/api/register', {'name': 'ci-swagger-user', 'password': 'test-password'}, expected=201, base=server)['id']) != uid
+    ui_type, _ = exchange('/swagger-ui/index.html', None, None, 200)
+    assert (ui_type or '').startswith('text/html'), f'Swagger UI content type {ui_type}'
+    report['swagger'] = 'PASSED'
+    # The generated declared-interface contract test, through the package's public entry, against this running instance.
+    deploy('contract-test')
+    report['contract'] = 'PASSED'
     secret_before = hashlib.sha256((a.state / 'app-password').read_bytes()).hexdigest()
     deploy('stop')
     deploy('start')
@@ -132,6 +145,16 @@ except Exception as error:
     report['failure'] = f'{type(error).__name__}: {error}'
     report['failureTrace'] = traceback.format_exc()
 finally:
+    # Test reports are the only part of the state directory that is evidence; secrets stay behind.
+    reports = a.state / 'reports'
+    if reports.is_dir():
+        shutil.copytree(reports, a.evidence / 'reports', dirs_exist_ok=True)
+        contract = reports / 'contract' / 'contract-report.tsv'
+        if contract.is_file():
+            rows = [line.split('\t') for line in contract.read_text().splitlines()[1:] if line]
+            report['contractChecks'] = {outcome: sum(1 for row in rows if row[0] == outcome) for outcome in ('PASSED', 'FAILED', 'NOT_VERIFIED')}
+            report['contractNotVerified'] = [f'{row[1]}: {row[2]}' for row in rows if row[0] == 'NOT_VERIFIED']
+            report['contractFailed'] = [f'{row[1]}: {row[2]}: {row[3] if len(row) > 3 else ""}' for row in rows if row[0] == 'FAILED']
     # Collect only the owned CI instance. Never upload its state directory or secrets.
     try:
         ids = set()
@@ -164,4 +187,5 @@ finally:
         file.write_text(text)
     (a.evidence / 'report.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n')
     print(json.dumps(report, ensure_ascii=False, indent=2))
-sys.exit(0 if all(report[key] == 'PASSED' for key in ('deployment', 'httpSmoke', 'persistence', 'privileges', 'missingVolume', 'cleanup')) else 1)
+sys.exit(0 if all(report[key] == 'PASSED' for key in ('deployment', 'httpSmoke', 'persistence', 'privileges', 'swagger', 'contract',
+                                                     'missingVolume', 'cleanup')) else 1)

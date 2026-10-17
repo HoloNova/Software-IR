@@ -25,6 +25,24 @@ class DeploymentPlannerTest {
         assertTrue(user.columns().stream().filter(c -> c.name().equals("name")).findFirst().orElseThrow().unique());
     }
 
+    @Test void interfaceTableCarriesAuthenticationRulesAndTheErrorCodesTheApplicationAnswers() {
+        var api = plan(bearer().replace("field name: String unique;", "field name: String where length(1, 64) unique;")
+            .replace("field text: String where notBlank;", "field text: String where notBlank, length(3, 280);")).api();
+        var byRoute = new java.util.HashMap<String, DeploymentPlan.Endpoint>();
+        api.endpoints().forEach(e -> byRoute.put(e.method() + " " + e.route(), e));
+        var note = byRoute.get("POST /api/post-note");
+        assertTrue(note.authenticated());
+        assertEquals(List.of(new DeploymentPlan.TextRule("text", true, 3, java.util.OptionalInt.of(280))), note.textRules());
+        // The code must be the SIR error name the generated exception passes, not the Java exception class name.
+        assertEquals(List.of(new DeploymentPlan.DeclaredError(400, "INVALID_REQUEST"), new DeploymentPlan.DeclaredError(401, "BadLogin")),
+            byRoute.get("POST /api/login").errors());
+        var query = byRoute.get("GET /api/get-user");
+        assertEquals(DeploymentPlan.Binding.QUERY, query.binding());
+        assertEquals(List.of(new DeploymentPlan.DeclaredError(404, "UserNotFound")), query.errors(), "query binding has no request envelope");
+        assertTrue(byRoute.values().stream().filter(e -> !e.route().equals("/api/post-note")).noneMatch(DeploymentPlan.Endpoint::authenticated));
+        assertTrue(api.errorEnvelopeClass().endsWith(".ApiErrorResponse"));
+    }
+
     @Test void refusesUnboundedUniqueTextInsteadOfCreatingAPrefixUniqueIndex() {
         assertTrue(assertThrows(IllegalArgumentException.class, () -> plan(bearer())).getMessage().contains("unique text"));
     }

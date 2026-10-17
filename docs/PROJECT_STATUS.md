@@ -84,7 +84,7 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 ## 6. 尚未作为产品能力发布
 
 - 预构建的发行物与发布渠道、公开构建/运行入口（单文件包能由 `mvn package` 在本地产出，但没有版本化发布）；旧 `register`、`apply`、`recover` 命令不恢复，现有版本应用入口为version-apply。
-- 数据库初始化和Docker／Compose交付的步骤①已有代码但未取得CI资格；保留数据迁移、Swagger/随包网络套件、Web平台、模块市场、跨项目缓存仍未发布。
+- 数据库初始化和Docker／Compose交付的步骤①已有代码但未取得CI资格；步骤②的Swagger与随包合同测试已接入代码，待CI证据；独立业务验收包、保留数据迁移、Web平台、模块市场、跨项目缓存仍未发布。
 - Redis Extension、第二个目标、Constraint VM、Java 反向解析、GUI/daemon、多用户。
 - SLM 评测：总设计见 [SLM 评测计划](qualification/SLM_GENERATED_PROJECT_EVALUATION_PLAN.md)，尚未启动。
 - Windows 平台证据；生产、安全认证、性能、高可用资格均未声明。

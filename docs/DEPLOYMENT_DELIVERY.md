@@ -1,6 +1,6 @@
-# 后端独立部署包 v1（步骤①，CI待修复）
+# 后端独立部署包 v1（步骤①待CI验收，步骤②实施中）
 
-实现已推送`a7cba11`，[CI #93](https://github.com/HoloNova/Software-IR/actions/runs/39002409782)已完成Docker构建、建库和启动，但HTTP验收JSON解析失败，后续门未运行。步骤①尚未验收，见[云端接手说明](DEPLOYMENT_CLOUD_HANDOFF.md)。不要把部分成功当成完整部署资格。Swagger和随包JUnit网络测试属于步骤②，保留数据更新属于步骤③。
+实现已推送`a7cba11`，[CI #93](https://github.com/HoloNova/Software-IR/actions/runs/39002409782)已完成Docker构建、建库和启动，但HTTP验收脚本对空体401做JSON解析而失败，后续门未运行。脚本修复`30f50bd`的同SHA CI尚待结果，步骤①尚未验收，见[云端接手说明](DEPLOYMENT_CLOUD_HANDOFF.md)。不要把部分成功当成完整部署资格。步骤②的Swagger与随包合同测试已接入（第7节），独立业务验收包仍在实施；保留数据更新属于步骤③。
 
 ## 1. 导出与部署分开
 
@@ -28,7 +28,7 @@ sh deploy/deploy.sh stop --instance demo --state-root /absolute/path/to/demo-sta
 sh deploy/deploy.sh start --instance demo --state-root /absolute/path/to/demo-state
 ```
 
-部署完成才显示`http://127.0.0.1:18080`；具体业务路由由SIR决定。没有Swagger地址或自动业务测试命令。端口仅发布到宿主回环地址，数据库不发布宿主端口。
+部署完成才显示`http://127.0.0.1:18080`；具体业务路由由SIR决定，接口文档见第7节。端口仅发布到宿主回环地址，数据库不发布宿主端口。
 
 当前开发机不得执行这些部署命令或业务测试；这里只运行轻量源导出/参数/边界/配置逻辑测试。部署与真实HTTP验收交给CI或负责人后续指定机器。
 
@@ -67,14 +67,26 @@ stop不删卷、配置、密码或镜像。start要求卷/镜像存在，验证�
 
 ## 5. 依赖与资源
 
-构建基底`maven:3.9.9-eclipse-temurin-21`，运行基底`eclipse-temurin:21.0.7_6-jre-jammy`，MySQL `8.4.5`；工具使用Flyway core/mysql `11.8.2`和Connector/J `9.3.0`。CI #93已在本部署样例中完成镜像取得、应用/工具构建、迁移与启动；不等于全部业务或生产支持矩阵，HTTP门仍有阻塞，也未锁定镜像摘要。新增Flyway/Actuator依赖只出现在交付源码，不加入工具链运行依赖。
+构建基底`maven:3.9.9-eclipse-temurin-21`，运行基底`eclipse-temurin:21.0.7_6-jre-jammy`，MySQL `8.4.5`；工具使用Flyway core/mysql `11.8.2`和Connector/J `9.3.0`。CI #93已在本部署样例中完成镜像取得、应用/工具构建、迁移与启动；不等于全部业务或生产支持矩阵，HTTP门仍有阻塞，也未锁定镜像摘要。新增Flyway/Actuator/springdoc依赖只出现在交付源码，不加入工具链运行依赖。
 
-默认构建容器1536 MiB/1.5 CPU，Maven堆512 MiB、元空间256 MiB；运行MySQL1024 MiB、应用768 MiB、一次性迁移384 MiB，分别设置CPU预算和JVM参数。构建、初始化、应用启动按顺序进行。部署入口支持`KCG_BUILD_MEMORY/CPUS`、`KCG_DB_MEMORY/CPUS`、`KCG_APP_MEMORY/CPUS`和`KCG_MIGRATE_MEMORY`，按CI/目标机预算调整，不按当前开发机余量承诺容量。
+默认构建容器与测试容器1536 MiB/1.5 CPU，Maven堆512 MiB、元空间256 MiB；运行MySQL1024 MiB、应用768 MiB、一次性迁移384 MiB，分别设置CPU预算和JVM参数。构建、初始化、应用启动按顺序进行。部署入口支持`KCG_BUILD_MEMORY/CPUS`、`KCG_DB_MEMORY/CPUS`、`KCG_APP_MEMORY/CPUS`、`KCG_MIGRATE_MEMORY`和`KCG_TEST_MEMORY/CPUS`，按CI/目标机预算调整，不按当前开发机余量承诺容量。
 
 ## 6. CI门
 
 verify新增`standalone-deployment` job，消费同SHA全量门产出的CLI，而不是在新job重复构建整个工具链。公开package导出后，CI只使用包中的部署入口准备数据库，没有手工夹具DDL。
 
-`.github/scripts/deployment-smoke.py`检查首次部署、真实注册/读取/登录/受保护写入、只读核验、应用不能DDL、停止/启动持久化、重复同包部署保持一份Flyway历史及原密码、丢失数据卷后start拒绝。它是CI第一步烟测，不是步骤②的随包业务套件，也不替代双Token完整需求判题。
+`.github/scripts/deployment-smoke.py`检查首次部署、真实注册/读取/登录/受保护写入、只读核验、应用不能DDL、按文档server与路径发出的Swagger式真实请求、经公开入口的`contract-test`、停止/启动持久化、重复同包部署保持一份Flyway历史及原密码、丢失数据卷后start拒绝。它与合同测试都不替代双Token完整需求判题。
 
-产物：`standalone-cli`、`backend-source-delivery`、`deployment-evidence`（export结果、commit/run绑定报告、脱敏日志）。不上传状态或数据卷。已授权并执行CI #93；总结果failure、分项与artifact见[报告](DEPLOYMENT_DELIVERY_REPORT.md)，云端须修复后补齐同SHA证据。
+产物：`standalone-cli`、`backend-source-delivery`、`deployment-evidence`（export结果、commit/run绑定报告、脱敏日志、`reports/contract`下的合同报告与Surefire报告）。`report.json`另记`swagger`、`contract`分项、合同检查计数及`NOT_VERIFIED`清单。不上传状态或数据卷。已授权并执行CI #93；总结果failure、分项与artifact见[报告](DEPLOYMENT_DELIVERY_REPORT.md)，云端须修复后补齐同SHA证据。
+
+## 7. 接口文档与合同测试（步骤②）
+
+交付应用带springdoc 2.8.9。部署后Swagger UI在`http://127.0.0.1:<port>/swagger-ui/index.html`，OpenAPI JSON在`/v3/api-docs`。文档从实际Controller/DTO得到；生成的`KcgOpenApiConfiguration`只补充两类Controller表达不了的信息：认证接口的Bearer要求（在“Authorize”中填访问令牌）及空体401，以及每个接口在导出时由目标模型声明的错误信封响应（请求体接口的400 `INVALID_REQUEST`与SIR声明错误）。Swagger可发真实请求，但它是手动调试工具，不是判题器。
+
+```sh
+sh deploy/deploy.sh contract-test --instance demo --state-root /absolute/path/to/demo-state
+```
+
+`contract-test`要求实例在运行；在受限Maven容器内经Compose网络请求`http://app:8080`，运行生成的`app/src/test/java/<基础包>/contract/HttpContractIT.java`。它只发出会在业务代码前被拒绝的请求，不写数据，可对任一实例运行：Swagger UI与OpenAPI可达、文档中的操作/认证/错误响应与导出时的接口表一致、认证接口对无凭据/畸形/未签发令牌回401、非认证请求体接口对畸形JSON/未知属性/`notBlank`/`length`违例回400错误信封。成功调用、声明业务错误和认证后的校验需要业务数据，记为`NOT_VERIFIED`，合同通过不等于业务验收。
+
+结果在`<state>/reports/contract/`：`contract-report.tsv`逐项给出PASSED/FAILED/NOT_VERIFIED及原因，另有Surefire报告。成功输出`KCG_CONTRACT_PASSED`，失败以退出码5结束。普通`mvn test`不选中该类，也不需要运行中的服务。

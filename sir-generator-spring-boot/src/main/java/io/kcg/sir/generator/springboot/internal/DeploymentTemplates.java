@@ -24,8 +24,8 @@ final class DeploymentTemplates {
           shift 2
         done
         case "$ACTION" in
-          help|--help) echo 'Usage: sh deploy/deploy.sh deploy|start|stop|status|logs --instance <name> --state-root <absolute-new-or-owned-directory> [--port <1024-65535>]'; exit 0 ;;
-          deploy|start|stop|status|logs) ;;
+          help|--help) echo 'Usage: sh deploy/deploy.sh deploy|start|stop|status|logs|contract-test --instance <name> --state-root <absolute-new-or-owned-directory> [--port <1024-65535>]'; exit 0 ;;
+          deploy|start|stop|status|logs|contract-test) ;;
           *) echo 'unsupported action; database/schema updates are not available in delivery v1' >&2; exit 2 ;;
         esac
         printf '%s\\n' "$INSTANCE" | LC_ALL=C grep -Eq '^[a-z][a-z0-9_-]{0,39}$' || { echo 'invalid instance name' >&2; exit 2; }
@@ -121,6 +121,24 @@ final class DeploymentTemplates {
           stop) check_volume; compose stop app db ;;
           status) check_volume; compose ps --all ;;
           logs) check_volume; compose logs --no-color --tail 100 app db ;;
+          contract-test)
+            # Read-only: every request is refused before business code runs. It reaches the app over the Compose network.
+            check_volume
+            [ -n "$(compose ps --status running --quiet app)" ] || { echo 'the application is not running; deploy or start it first' >&2; exit 3; }
+            mkdir -p "$STATE/reports/contract"
+            if docker run --rm --name "$INSTANCE-kcg-contract" --label "kcg.instance=$INSTANCE" --network "${INSTANCE}_default" \\
+                --memory="${KCG_TEST_MEMORY:-1536m}" --cpus="${KCG_TEST_CPUS:-1.5}" \\
+                --env 'MAVEN_OPTS=-Xmx512m -XX:MaxMetaspaceSize=256m' \\
+                --mount "type=bind,src=$PACKAGE/app,dst=/package/app,readonly" \\
+                --mount "type=bind,src=$PACKAGE/deploy/contract-test.sh,dst=/contract-test.sh,readonly" \\
+                --mount "type=bind,src=$STATE/reports/contract,dst=/reports" \\
+                --mount "type=volume,src=$INSTANCE-maven,dst=/m2" \\
+                @BUILDER@ sh /contract-test.sh; then
+              echo "KCG_CONTRACT_PASSED $STATE/reports/contract"
+            else
+              echo "KCG_CONTRACT_FAILED: see $STATE/reports/contract" >&2; exit 5
+            fi
+            ;;
         esac
         """;
     static final String COMPOSE = """
@@ -222,6 +240,21 @@ final class DeploymentTemplates {
         mvn -B -ntp -Dmaven.repo.local=/m2 -Dmaven.test.skip=true package
         cp target/deploy-tools.jar /artifacts/migrate.jar
         cp target/classes/kcg/delivery/Probe.class /artifacts/Probe.class
+        """;
+    static final String CONTRACT = """
+        #!/bin/sh
+        # Runs the generated declared-interface contract test against the instance's application; it writes no data.
+        set -eu
+        find /reports -mindepth 1 -delete
+        rm -rf /tmp/kcg-contract
+        mkdir -p /tmp/kcg-contract
+        cp -R /package/app /tmp/kcg-contract/app
+        cd /tmp/kcg-contract/app
+        STATUS=0
+        mvn -B -ntp -Dmaven.repo.local=/m2 -Dtest=HttpContractIT -Dsurefire.failIfNoSpecifiedTests=false -DargLine=-Xmx256m \\
+          -Dkcg.baseUrl=http://app:8080 -Dkcg.reportFile=/reports/contract-report.tsv test || STATUS=$?
+        if [ -d target/surefire-reports ]; then cp -R target/surefire-reports /reports/surefire-reports; fi
+        exit "$STATUS"
         """;
     static final String ACCOUNTS = """
         #!/bin/sh
@@ -454,6 +487,331 @@ final class DeploymentTemplates {
                 var request = HttpRequest.newBuilder(URI.create("http://127.0.0.1:8080/actuator/health/readiness"))
                     .timeout(Duration.ofSeconds(3)).GET().build();
                 if (client.send(request, HttpResponse.BodyHandlers.discarding()).statusCode() != 200) System.exit(1);
+            }
+        }
+        """;
+
+    static final String OPENAPI = """
+        package @PACKAGE@;
+
+        import io.swagger.v3.core.converter.AnnotatedType;
+        import io.swagger.v3.core.converter.ModelConverters;
+        import io.swagger.v3.core.converter.ResolvedSchema;
+        import io.swagger.v3.oas.models.Components;
+        import io.swagger.v3.oas.models.OpenAPI;
+        import io.swagger.v3.oas.models.Operation;
+        import io.swagger.v3.oas.models.PathItem;
+        import io.swagger.v3.oas.models.media.Content;
+        import io.swagger.v3.oas.models.media.MediaType;
+        import io.swagger.v3.oas.models.media.Schema;
+        import io.swagger.v3.oas.models.info.Info;
+        import io.swagger.v3.oas.models.responses.ApiResponse;
+        import io.swagger.v3.oas.models.responses.ApiResponses;
+        import io.swagger.v3.oas.models.security.SecurityRequirement;
+        import io.swagger.v3.oas.models.security.SecurityScheme;
+        import java.util.HashSet;
+        import java.util.LinkedHashMap;
+        import java.util.List;
+        import java.util.Map;
+        import java.util.Set;
+        import org.springdoc.core.customizers.OpenApiCustomizer;
+        import org.springdoc.core.customizers.OperationCustomizer;
+        import org.springframework.context.annotation.Bean;
+        import org.springframework.context.annotation.Configuration;
+        import org.springframework.core.MethodParameter;
+        import org.springframework.web.bind.annotation.RequestAttribute;
+
+        /**
+         * Delivery interface documentation. Operations, inputs and outputs come from the running controllers. This class adds
+         * what the controllers cannot show: how an authenticated operation receives its caller (an access token in an
+         * Authorization Bearer header, which the identity interceptor turns into a request attribute), and which error
+         * envelope responses each operation declares. The latter were taken from the same target model the controllers were
+         * generated from, when the package was exported.
+         */
+        @Configuration(proxyBeanMethods = false)
+        public class KcgOpenApiConfiguration {
+
+            /** Operation ("METHOD /route") to its error envelope responses: status and the codes answered with it. */
+            private static final List<String[]> DECLARED_ERRORS = List.of(
+        @ERRORS@);
+
+            @Bean
+            OpenAPI kcgOpenApi() {
+                return new OpenAPI()
+                        .info(new Info().title(@TITLE@).version(@VERSION@))
+                        .components(new Components().addSecuritySchemes("bearer", new SecurityScheme()
+                                .type(SecurityScheme.Type.HTTP).scheme("bearer").bearerFormat("UUID access token")));
+            }
+
+            @Bean
+            OpenApiCustomizer kcgDeclaredErrors() {
+                return openApi -> {
+                    ResolvedSchema envelope = ModelConverters.getInstance().resolveAsResolvedSchema(new AnnotatedType(@ENVELOPE@.class));
+                    envelope.referencedSchemas.forEach(openApi.getComponents()::addSchemas);
+                    Schema<?> reference = new Schema<>().$ref("#/components/schemas/" + envelope.schema.getName());
+                    if (openApi.getPaths() == null) {
+                        return;
+                    }
+                    openApi.getPaths().forEach((path, item) -> item.readOperationsMap().forEach((method, operation) -> {
+                        Map<String, List<String>> codes = new LinkedHashMap<>();
+                        for (String[] error : DECLARED_ERRORS) {
+                            if (error[0].equals(method.name() + " " + path)) {
+                                codes.computeIfAbsent(error[1], status -> new java.util.ArrayList<>()).add(error[2]);
+                            }
+                        }
+                        codes.forEach((status, names) -> operation.getResponses().addApiResponse(status, new ApiResponse()
+                                .description("Error envelope; code " + String.join(" or ", names))
+                                .content(new Content().addMediaType("application/json", new MediaType().schema(reference)))));
+                    }));
+                };
+            }
+
+            @Bean
+            OperationCustomizer kcgAuthenticatedOperations() {
+                return (operation, handler) -> {
+                    Set<String> attributes = new HashSet<>();
+                    for (MethodParameter parameter : handler.getMethodParameters()) {
+                        RequestAttribute attribute = parameter.getParameterAnnotation(RequestAttribute.class);
+                        if (attribute != null) {
+                            String name = attribute.name().isEmpty() ? attribute.value() : attribute.name();
+                            attributes.add(name.isEmpty() ? String.valueOf(parameter.getParameterName()) : name);
+                        }
+                    }
+                    if (attributes.isEmpty()) {
+                        return operation;
+                    }
+                    // The caller identity is resolved from the token; it is never a client-supplied parameter.
+                    if (operation.getParameters() != null) {
+                        operation.getParameters().removeIf(p -> attributes.contains(p.getName()));
+                    }
+                    if (operation.getResponses() == null) {
+                        operation.setResponses(new ApiResponses());
+                    }
+                    operation.getResponses().addApiResponse("401", new ApiResponse()
+                            .description("Missing, malformed, unknown or expired access token. The response body is empty."));
+                    return operation.addSecurityItem(new SecurityRequirement().addList("bearer"));
+                };
+            }
+        }
+        """;
+    static final String CONTRACT_TEST = """
+        package @PACKAGE@.contract;
+
+        import static org.junit.jupiter.api.Assertions.assertEquals;
+        import static org.junit.jupiter.api.Assertions.assertTrue;
+        import static org.junit.jupiter.api.DynamicContainer.dynamicContainer;
+        import static org.junit.jupiter.api.DynamicTest.dynamicTest;
+
+        import com.fasterxml.jackson.databind.JsonNode;
+        import com.fasterxml.jackson.databind.ObjectMapper;
+        import java.io.IOException;
+        import java.net.URI;
+        import java.net.http.HttpClient;
+        import java.net.http.HttpRequest;
+        import java.net.http.HttpResponse;
+        import java.nio.file.Files;
+        import java.nio.file.Path;
+        import java.time.Duration;
+        import java.util.ArrayList;
+        import java.util.Collections;
+        import java.util.Iterator;
+        import java.util.List;
+        import java.util.Map;
+        import java.util.OptionalInt;
+        import java.util.TreeSet;
+        import java.util.UUID;
+        import java.util.stream.Stream;
+        import org.junit.jupiter.api.AfterAll;
+        import org.junit.jupiter.api.Assumptions;
+        import org.junit.jupiter.api.DynamicNode;
+        import org.junit.jupiter.api.DynamicTest;
+        import org.junit.jupiter.api.TestFactory;
+        import org.junit.jupiter.api.function.Executable;
+        import org.opentest4j.TestAbortedException;
+
+        /**
+         * Declared-interface contract of a deployed instance, checked from outside the application over real HTTP.
+         *
+         * <p>Selected only explicitly: {@code mvn test -Dtest=HttpContractIT -Dkcg.baseUrl=http://host:port}. Every request is
+         * refused by the application before any business code runs, so the suite writes no data. What needs business data or an
+         * account (a successful call, a declared business error, validation behind authentication) is reported as skipped with a
+         * {@code NOT_VERIFIED:} message; it proves the interface shape, not that the requirement is met. Besides the Surefire
+         * report, every check is written with its operation, outcome and reason to {@code kcg.reportFile}
+         * (default {@code target/kcg-contract-report.tsv}).
+         */
+        class HttpContractIT {
+
+            record TextRule(String property, boolean notBlank, int minLength, OptionalInt maxLength) {}
+
+            record Endpoint(String method, String route, boolean authenticated, String binding, List<TextRule> textRules, List<String> errors) {}
+
+            /** The interface exactly as the target lowered it when this package was exported. */
+            static final List<Endpoint> ENDPOINTS = List.of(
+        @ENDPOINTS@);
+
+            /** Longer sample values would only test the server's request size limit, not the declared rule. */
+            private static final int LONGEST_SAMPLE = 4096;
+
+            private static final ObjectMapper JSON = new ObjectMapper();
+
+            private static final HttpClient HTTP = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build();
+
+            private static JsonNode documentation;
+
+            private static final List<String> REPORT = Collections.synchronizedList(new ArrayList<>());
+
+            @TestFactory
+            Stream<DynamicNode> declaredInterface() {
+                String base = System.getProperty("kcg.baseUrl", "");
+                assertTrue(base.matches("https?://[^/]+"), "set -Dkcg.baseUrl=http://host:port of the deployed instance");
+                List<DynamicNode> nodes = new ArrayList<>();
+                nodes.add(check("global", "Swagger UI is served", () -> {
+                    HttpResponse<String> ui = send(base, "GET", "/swagger-ui/index.html", null, null);
+                    assertEquals(200, ui.statusCode(), "status");
+                    assertTrue(ui.headers().firstValue("Content-Type").orElse("").startsWith("text/html"), "content type");
+                }));
+                nodes.add(check("global", "OpenAPI documents exactly the generated operations, their authentication and error responses", () -> {
+                    JsonNode paths = documentation(base).path("paths");
+                    TreeSet<String> documented = new TreeSet<>(), secured = new TreeSet<>(), expected = new TreeSet<>(), authenticated = new TreeSet<>();
+                    TreeSet<String> documentedErrors = new TreeSet<>(), declaredErrors = new TreeSet<>();
+                    for (Iterator<Map.Entry<String, JsonNode>> path = paths.fields(); path.hasNext(); ) {
+                        Map.Entry<String, JsonNode> entry = path.next();
+                        for (Iterator<Map.Entry<String, JsonNode>> operation = entry.getValue().fields(); operation.hasNext(); ) {
+                            Map.Entry<String, JsonNode> method = operation.next();
+                            String key = method.getKey().toUpperCase() + " " + entry.getKey();
+                            documented.add(key);
+                            if (method.getValue().path("security").toString().contains("\\"bearer\\"")) secured.add(key);
+                            for (Iterator<String> status = method.getValue().path("responses").fieldNames(); status.hasNext(); ) {
+                                String code = status.next();
+                                if (code.startsWith("4")) documentedErrors.add(key + " " + code);
+                            }
+                        }
+                    }
+                    for (Endpoint endpoint : ENDPOINTS) {
+                        expected.add(endpoint.method() + " " + endpoint.route());
+                        if (endpoint.authenticated()) {
+                            authenticated.add(endpoint.method() + " " + endpoint.route());
+                            declaredErrors.add(endpoint.method() + " " + endpoint.route() + " 401");
+                        }
+                        for (String error : endpoint.errors()) declaredErrors.add(endpoint.method() + " " + endpoint.route() + " " + error.split(" ")[0]);
+                    }
+                    assertEquals(expected, documented, "documented operations");
+                    assertEquals(authenticated, secured, "operations that declare the bearer requirement");
+                    assertEquals(declaredErrors, documentedErrors, "documented error envelope responses");
+                }));
+                for (Endpoint endpoint : ENDPOINTS) {
+                    nodes.add(dynamicContainer(endpoint.method() + " " + endpoint.route(), checks(base, endpoint)));
+                }
+                return nodes.stream();
+            }
+
+            private static List<DynamicNode> checks(String base, Endpoint endpoint) {
+                List<DynamicNode> checks = new ArrayList<>();
+                String scope = endpoint.method() + " " + endpoint.route();
+                String empty = endpoint.binding().equals("BODY") ? "{}" : null;
+                if (endpoint.authenticated()) {
+                    checks.add(check(scope, "refuses a request without credential with 401", () ->
+                            assertEquals(401, send(base, endpoint.method(), endpoint.route(), empty, null).statusCode())));
+                    checks.add(check(scope, "refuses a malformed bearer credential with 401", () ->
+                            assertEquals(401, send(base, endpoint.method(), endpoint.route(), empty, "Bearer not-a-token").statusCode())));
+                    checks.add(check(scope, "refuses a well-formed token that was never issued with 401", () ->
+                            assertEquals(401, send(base, endpoint.method(), endpoint.route(), empty, "Bearer " + UUID.randomUUID()).statusCode())));
+                }
+                if (endpoint.binding().equals("BODY") && !endpoint.authenticated()) {
+                    checks.add(check(scope, "answers a malformed JSON body with the 400 error envelope", () ->
+                            envelope(send(base, endpoint.method(), endpoint.route(), "{", null), null, null)));
+                    checks.add(check(scope, "answers an undeclared property with the 400 error envelope naming it", () ->
+                            envelope(send(base, endpoint.method(), endpoint.route(), "{\\"kcgUndeclaredProperty\\":true}", null),
+                                    "kcgUndeclaredProperty", null)));
+                    for (TextRule rule : endpoint.textRules()) {
+                        if (rule.notBlank()) {
+                            checks.add(check(scope, rule.property() + ": a blank value is refused as NotBlank", () ->
+                                    envelope(send(base, endpoint.method(), endpoint.route(), body(rule.property(), "   "), null), rule.property(), "NotBlank")));
+                        }
+                        if (rule.minLength() > 1) {
+                            checks.add(check(scope, rule.property() + ": " + (rule.minLength() - 1) + " characters are refused as Size", () ->
+                                    envelope(send(base, endpoint.method(), endpoint.route(), body(rule.property(), "x".repeat(rule.minLength() - 1)), null), rule.property(), "Size")));
+                        }
+                        if (rule.maxLength().isPresent() && rule.maxLength().getAsInt() < LONGEST_SAMPLE) {
+                            int length = rule.maxLength().getAsInt() + 1;
+                            checks.add(check(scope, rule.property() + ": " + length + " characters are refused as Size", () ->
+                                    envelope(send(base, endpoint.method(), endpoint.route(), body(rule.property(), "x".repeat(length)), null), rule.property(), "Size")));
+                        }
+                    }
+                }
+                if (endpoint.authenticated() && !endpoint.binding().equals("NONE")) {
+                    checks.add(notVerified(scope, "input validation behind authentication", "needs an account and an issued access token"));
+                }
+                checks.add(notVerified(scope, "a successful call and its declared business errors", "need business data; supply an acceptance package"));
+                return checks;
+            }
+
+            private static DynamicNode notVerified(String scope, String name, String reason) {
+                return check(scope, name, () -> Assumptions.abort("NOT_VERIFIED: " + name + " " + reason));
+            }
+
+            /** A named check whose outcome is also recorded for the report: PASSED, FAILED or NOT_VERIFIED. */
+            private static DynamicTest check(String scope, String name, Executable body) {
+                return dynamicTest(name, () -> {
+                    try {
+                        body.execute();
+                        REPORT.add(line("PASSED", scope, name, ""));
+                    } catch (TestAbortedException aborted) {
+                        REPORT.add(line("NOT_VERIFIED", scope, name, aborted.getMessage()));
+                        throw aborted;
+                    } catch (Throwable failure) {
+                        REPORT.add(line("FAILED", scope, name, failure.getMessage()));
+                        throw failure;
+                    }
+                });
+            }
+
+            private static String line(String outcome, String scope, String name, String detail) {
+                return String.join("\\t", outcome, scope, name, String.valueOf(detail).replaceAll("\\\\s+", " "));
+            }
+
+            @AfterAll
+            static void writeReport() throws IOException {
+                Path report = Path.of(System.getProperty("kcg.reportFile", "target/kcg-contract-report.tsv"));
+                if (report.getParent() != null) Files.createDirectories(report.getParent());
+                List<String> lines = new ArrayList<>(List.of("outcome\\toperation\\tcheck\\tdetail"));
+                synchronized (REPORT) { lines.addAll(REPORT); }
+                Files.write(report, lines);
+            }
+
+            private static void envelope(HttpResponse<String> response, String path, String code) throws Exception {
+                assertEquals(400, response.statusCode(), "status");
+                JsonNode body = JSON.readTree(response.body());
+                assertEquals("INVALID_REQUEST", body.path("code").asText(), "envelope code");
+                assertTrue(body.path("fields").isArray(), "envelope fields");
+                if (path != null) {
+                    boolean named = false;
+                    for (JsonNode field : body.path("fields")) {
+                        named |= field.path("path").asText().equals(path) && (code == null || field.path("code").asText().equals(code));
+                    }
+                    assertTrue(named, "fields name " + path + (code == null ? "" : " with " + code) + ": " + response.body());
+                }
+            }
+
+            private static String body(String property, String value) throws Exception {
+                return JSON.writeValueAsString(Map.of(property, value));
+            }
+
+            private static synchronized JsonNode documentation(String base) throws Exception {
+                if (documentation == null) {
+                    HttpResponse<String> docs = send(base, "GET", "/v3/api-docs", null, null);
+                    assertEquals(200, docs.statusCode(), "OpenAPI status");
+                    documentation = JSON.readTree(docs.body());
+                }
+                return documentation;
+            }
+
+            private static HttpResponse<String> send(String base, String method, String path, String body, String authorization) throws Exception {
+                HttpRequest.Builder request = HttpRequest.newBuilder(URI.create(base + path)).timeout(Duration.ofSeconds(20))
+                        .method(method, body == null ? HttpRequest.BodyPublishers.noBody() : HttpRequest.BodyPublishers.ofString(body));
+                if (body != null) request.header("Content-Type", "application/json");
+                if (authorization != null) request.header("Authorization", authorization);
+                return HTTP.send(request.build(), HttpResponse.BodyHandlers.ofString());
             }
         }
         """;
