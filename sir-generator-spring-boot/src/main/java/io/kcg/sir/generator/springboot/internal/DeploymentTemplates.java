@@ -12,23 +12,34 @@ final class DeploymentTemplates {
         PACKAGE=$(CDPATH= cd -P -- "$(dirname -- "$0")/.." && pwd)
         ACTION=${1:-help}
         [ "$#" -gt 0 ] && shift
-        INSTANCE= STATE= PORT=
+        INSTANCE= STATE= PORT= CONFIRM=
         while [ "$#" -gt 0 ]; do
           [ "$#" -ge 2 ] || { echo 'option requires a value' >&2; exit 2; }
           case "$1" in
             --instance) [ -z "$INSTANCE" ] || exit 2; INSTANCE=$2 ;;
             --state-root) [ -z "$STATE" ] || exit 2; STATE=$2 ;;
             --port) [ -z "$PORT" ] || exit 2; PORT=$2 ;;
+            --confirm-disposable) [ -z "$CONFIRM" ] || exit 2; CONFIRM=$2 ;;
             *) echo 'unknown deployment option' >&2; exit 2 ;;
           esac
           shift 2
         done
         case "$ACTION" in
-          help|--help) echo 'Usage: sh deploy/deploy.sh deploy|start|stop|status|logs|contract-test --instance <name> --state-root <absolute-new-or-owned-directory> [--port <1024-65535>]'; exit 0 ;;
-          deploy|start|stop|status|logs|contract-test) ;;
+          help|--help)
+            echo 'Usage: sh deploy/deploy.sh deploy|start|stop|status|logs|contract-test --instance <name> --state-root <absolute-new-or-owned-directory> [--port <1024-65535>]'
+            echo '       sh deploy/deploy.sh acceptance-test --instance <name> --state-root <dir> --confirm-disposable <the same name>'
+            exit 0 ;;
+          deploy|start|stop|status|logs|contract-test|acceptance-test) ;;
           *) echo 'unsupported action; database/schema updates are not available in delivery v1' >&2; exit 2 ;;
         esac
         printf '%s\\n' "$INSTANCE" | LC_ALL=C grep -Eq '^[a-z][a-z0-9_-]{0,39}$' || { echo 'invalid instance name' >&2; exit 2; }
+        if [ "$ACTION" = acceptance-test ]; then
+          # A business suite writes data: run it only where the caller names this instance as disposable.
+          [ "$CONFIRM" = "$INSTANCE" ] || { echo 'acceptance-test writes business data; on a disposable instance repeat its name with --confirm-disposable' >&2; exit 2; }
+          [ -f "$PACKAGE/acceptance/pom.xml" ] || { echo 'KCG_ACCEPTANCE_NOT_RUN: this package carries no acceptance suite'; exit 4; }
+        elif [ -n "$CONFIRM" ]; then
+          echo '--confirm-disposable only applies to acceptance-test' >&2; exit 2
+        fi
         case "$STATE" in
           /*) ;;
           *) echo 'state-root must be absolute' >&2; exit 2 ;;
@@ -137,6 +148,26 @@ final class DeploymentTemplates {
               echo "KCG_CONTRACT_PASSED $STATE/reports/contract"
             else
               echo "KCG_CONTRACT_FAILED: see $STATE/reports/contract" >&2; exit 5
+            fi
+            ;;
+          acceptance-test)
+            # The suite gets the application address and a verification connection to this instance's own database,
+            # nothing of the application sources.
+            check_volume
+            [ -n "$(compose ps --status running --quiet app)" ] || { echo 'the application is not running; deploy or start it first' >&2; exit 3; }
+            mkdir -p "$STATE/reports/acceptance"
+            if docker run --rm --name "$INSTANCE-kcg-acceptance" --label "kcg.instance=$INSTANCE" --network "${INSTANCE}_default" \\
+                --memory="${KCG_TEST_MEMORY:-1536m}" --cpus="${KCG_TEST_CPUS:-1.5}" \\
+                --env 'MAVEN_OPTS=-Xmx512m -XX:MaxMetaspaceSize=256m' \\
+                --mount "type=bind,src=$PACKAGE/acceptance,dst=/package/acceptance,readonly" \\
+                --mount "type=bind,src=$PACKAGE/deploy/acceptance-test.sh,dst=/acceptance-test.sh,readonly" \\
+                --mount "type=bind,src=$STATE/root-password,dst=/run/secrets/root-password,readonly" \\
+                --mount "type=bind,src=$STATE/reports/acceptance,dst=/reports" \\
+                --mount "type=volume,src=$INSTANCE-maven,dst=/m2" \\
+                @BUILDER@ sh /acceptance-test.sh; then
+              echo "KCG_ACCEPTANCE_PASSED $STATE/reports/acceptance"
+            else
+              echo "KCG_ACCEPTANCE_FAILED: see $STATE/reports/acceptance" >&2; exit 5
             fi
             ;;
         esac
@@ -253,6 +284,22 @@ final class DeploymentTemplates {
         STATUS=0
         mvn -B -ntp -Dmaven.repo.local=/m2 -Dtest=HttpContractIT -Dsurefire.failIfNoSpecifiedTests=false -DargLine=-Xmx256m \\
           -Dkcg.baseUrl=http://app:8080 -Dkcg.reportFile=/reports/contract-report.tsv test || STATUS=$?
+        if [ -d target/surefire-reports ]; then cp -R target/surefire-reports /reports/surefire-reports; fi
+        exit "$STATUS"
+        """;
+    static final String ACCEPTANCE = """
+        #!/bin/sh
+        # Runs the package's separate business acceptance suite against a disposable instance.
+        set -eu
+        find /reports -mindepth 1 -delete
+        rm -rf /tmp/kcg-acceptance
+        mkdir -p /tmp/kcg-acceptance
+        cp -R /package/acceptance /tmp/kcg-acceptance/suite
+        cd /tmp/kcg-acceptance/suite
+        STATUS=0
+        mvn -B -ntp -Dmaven.repo.local=/m2 -DargLine=-Xmx256m -Dkcg.baseUrl=http://app:8080 \\
+          '-Dkcg.jdbcUrl=jdbc:mysql://db:3306/kcg?connectionTimeZone=UTC&forceConnectionTimeZoneToSession=true' \\
+          -Dkcg.jdbcUser=root -Dkcg.jdbcPasswordFile=/run/secrets/root-password -Dkcg.reportDir=/reports test || STATUS=$?
         if [ -d target/surefire-reports ]; then cp -R target/surefire-reports /reports/surefire-reports; fi
         exit "$STATUS"
         """;

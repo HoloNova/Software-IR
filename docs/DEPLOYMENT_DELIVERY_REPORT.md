@@ -1,7 +1,7 @@
 # 独立部署交付：步骤①实现报告
 
 - 日期：2026-10-17；状态：**步骤① PASSED（verify #94）**。首轮CI #93的HTTP验收阻塞来自验收脚本，云端修复`30f50bd`后同SHA的[verify #94](https://github.com/HoloNova/Software-IR/actions/runs/39019809176)两个job全部success，见第5节。
-- 授权：负责人已允许开始实现已确认的[方案11](design/11-portable-deployment-and-http-acceptance.md)。步骤①已验收；步骤②按方案11第12节实施中，步骤③保留数据更新尚未实施。
+- 授权：负责人已允许开始实现已确认的[方案11](design/11-portable-deployment-and-http-acceptance.md)。步骤①已验收；步骤②（Swagger、合同测试、独立业务验收包）已按方案11第12节接入代码与CI门、待CI证据，步骤③保留数据更新尚未实施。
 - 基线：`cf44450`；实现提交：`a7cba11022c04e6a07cb47d5070bde39a06b0adf`（[verify #93](https://github.com/HoloNova/Software-IR/actions/runs/39002409782)）；验收提交：`30f50bdec6f7d4c485365b4a8b6ce5294d25b0c7`（[verify #94](https://github.com/HoloNova/Software-IR/actions/runs/39019809176)）。
 - 使用合同：[部署包v1](DEPLOYMENT_DELIVERY.md)。
 

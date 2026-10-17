@@ -1,6 +1,6 @@
 # 后端独立部署包 v1（步骤①已验收，步骤②实施中）
 
-步骤①已由[verify #94](https://github.com/HoloNova/Software-IR/actions/runs/39019809176)在`30f50bd`上验收：公开导出、冷构建、建库、HTTP调用、账号权限、重启/重复部署保留数据和丢失卷拒绝全部通过，见[报告第5节](DEPLOYMENT_DELIVERY_REPORT.md)。它是本样例在CI Linux x86_64上的证据，不是生产或全平台资格。步骤②的Swagger与随包合同测试已接入（第7节），独立业务验收包仍在实施；保留数据更新属于步骤③。
+步骤①已由[verify #94](https://github.com/HoloNova/Software-IR/actions/runs/39019809176)在`30f50bd`上验收：公开导出、冷构建、建库、HTTP调用、账号权限、重启/重复部署保留数据和丢失卷拒绝全部通过，见[报告第5节](DEPLOYMENT_DELIVERY_REPORT.md)。它是本样例在CI Linux x86_64上的证据，不是生产或全平台资格。步骤②的Swagger、随包合同测试（第7节）与独立业务验收包（第8节）已接入代码与CI门，待CI证据；保留数据更新属于步骤③。
 
 ## 1. 导出与部署分开
 
@@ -8,7 +8,8 @@
 
 ```sh
 kcg package --source-root /absolute/path/to/sir \
-  --entry project.sir --output-root /absolute/path/to/delivery
+  --entry project.sir --output-root /absolute/path/to/delivery \
+  [--acceptance /absolute/path/to/acceptance-suite]
 ```
 
 package只写新的交付目录，不调用Docker、联网、构建、启动、Git；失败不留下半份交付包，已有输出根拒绝覆盖。成功结果是`KCG-CLI-WORKFLOW-V1 / PACKAGE_EXPORTED`，包括packageId、完整源摘要和目标平台。
@@ -90,3 +91,18 @@ sh deploy/deploy.sh contract-test --instance demo --state-root /absolute/path/to
 `contract-test`要求实例在运行；在受限Maven容器内经Compose网络请求`http://app:8080`，运行生成的`app/src/test/java/<基础包>/contract/HttpContractIT.java`。它只发出会在业务代码前被拒绝的请求，不写数据，可对任一实例运行：Swagger UI与OpenAPI可达、文档中的操作/认证/错误响应与导出时的接口表一致、认证接口对无凭据/畸形/未签发令牌回401、非认证请求体接口对畸形JSON/未知属性/`notBlank`/`length`违例回400错误信封。成功调用、声明业务错误和认证后的校验需要业务数据，记为`NOT_VERIFIED`，合同通过不等于业务验收。
 
 结果在`<state>/reports/contract/`：`contract-report.tsv`逐项给出PASSED/FAILED/NOT_VERIFIED及原因，另有Surefire报告。成功输出`KCG_CONTRACT_PASSED`，失败以退出码5结束。普通`mvn test`不选中该类，也不需要运行中的服务。
+
+## 8. 独立业务验收包（步骤②）
+
+业务是否满足需求由独立验收包判定，不由合同测试或Swagger代替。验收包是一个普通Maven工程：根目录有`pom.xml`，`mvn test`即套件，接收系统属性`kcg.baseUrl`、`kcg.jdbcUrl`、`kcg.jdbcUser`、`kcg.jdbcPasswordFile`与报告目录`kcg.reportDir`。它只依据固定需求、服务地址和该实例自己的数据库核验，不读SIR或`app/`。
+
+`kcg package --acceptance <绝对目录>`把它逐字节复制到交付包`acceptance/`并列入摘要，不编译、不解释。只接受普通UTF-8文本文件：符号链接、构建产物等非文本、以点开头或含特殊字符的文件名、超过1000个文件/单文件1 MiB/总计8 MiB、缺少根`pom.xml`，以及与源或输出根重叠的目录，都以`SIR-APP-PACKAGE-ACCEPTANCE-001`在发布前拒绝。
+
+```sh
+sh deploy/deploy.sh acceptance-test --instance demo-acc --state-root /absolute/path/to/demo-acc-state \
+  --confirm-disposable demo-acc
+```
+
+套件会写业务数据，所以必须在一次性实例上运行，并用`--confirm-disposable`重复实例名；不重复、名字不符或把该选项用于其他动作，都在任何Docker调用前以退出码2拒绝。包内没有验收包时输出`KCG_ACCEPTANCE_NOT_RUN`并以退出码4结束，不冒充通过。测试容器与`contract-test`同样受限、经Compose网络请求`http://app:8080`，只挂载`acceptance/`和该实例的数据库root口令文件。结果在`<state>/reports/acceptance/`（`acceptance-report.tsv`逐条需求及Surefire报告）；成功输出`KCG_ACCEPTANCE_PASSED`，失败以退出码5结束。
+
+仓库内的双Token套件位于`sir-toolchain-application/src/test/resources/deployment/dual-token-acceptance/`，由`DualTokenScaffoldBusinessConformanceIT`的D0–D7整理而来：成对令牌及有效期、错密码与未知账号同响应、访问令牌认证且刷新令牌不能认证、过期拒绝、刷新轮换、重放拒绝、6路并发刷新恰好一次成功、登出后刷新失效；每次状态变化经独立数据库连接核验。D3为模拟过期直接改写该令牌的过期时间，所用物理表名属于该需求夹具。账号名带随机后缀，可在同一实例重复运行。CI在同包的第二个实例上运行它，结果见`report.json`的`business`分项。

@@ -31,8 +31,65 @@ class DeploymentPackageApplicationTest {
         assertFalse(Files.readString(first.manifest().outputRoot().resolve("app/pom.xml")).contains("flyway"), "app must not get migration credentials/engine");
         assertTrue(Files.readString(first.manifest().outputRoot().resolve("app/pom.xml")).contains("starter-actuator"));
         assertTrue(Files.readString(first.manifest().outputRoot().resolve("app/pom.xml")).contains("springdoc-openapi-starter-webmvc-ui"));
-        for (String script : List.of("deploy.sh", "build.sh", "accounts.sh", "contract-test.sh"))
+        for (String script : List.of("deploy.sh", "build.sh", "accounts.sh", "contract-test.sh", "acceptance-test.sh"))
             assertEquals(0, process(List.of("sh", "-n", first.manifest().outputRoot().resolve("deploy/" + script).toString()), temp.resolve(script + ".log")));
+    }
+
+    @Test void acceptanceSuiteIsCopiedVerbatimIntoTheManifestOrRefusedBeforePublication() throws Exception {
+        Path source = source(true);
+        Path suite = Files.createDirectories(temp.resolve("suite/src/test/java/a"));
+        Path pom = Files.writeString(temp.resolve("suite/pom.xml"), "<project>\u00e9</project>\n");
+        Files.writeString(suite.resolve("SuiteTest.java"), "class SuiteTest {}\n");
+        var exported = new DeploymentPackageApplication().export(new DeploymentPackageRequest(source, ENTRY, temp.resolve("with suite"), Optional.of(temp.resolve("suite"))));
+        Path root = assertInstanceOf(DeploymentPackageResult.Exported.class, exported, exported.toString()).manifest().outputRoot();
+        assertArrayEquals(Files.readAllBytes(pom), Files.readAllBytes(root.resolve("acceptance/pom.xml")));
+        String manifest = Files.readString(root.resolve("package.sha256"));
+        assertTrue(manifest.contains("  acceptance/pom.xml\n") && manifest.contains("  acceptance/src/test/java/a/SuiteTest.java\n"));
+
+        Files.write(suite.resolve("Built.class"), new byte[] {(byte) 0xCA, (byte) 0xFE, (byte) 0xBA, (byte) 0xBE});
+        assertAcceptanceRefused(source, "not UTF-8 text");
+        Files.delete(suite.resolve("Built.class"));
+        Files.createSymbolicLink(suite.resolve("Linked.java"), suite.resolve("SuiteTest.java"));
+        assertAcceptanceRefused(source, "symbolic link");
+        Files.delete(suite.resolve("Linked.java"));
+        Files.delete(pom);
+        assertAcceptanceRefused(source, "root pom.xml");
+    }
+
+    private void assertAcceptanceRefused(Path source, String reason) {
+        Path output = temp.resolve("refused " + UUID.randomUUID());
+        var result = new DeploymentPackageApplication().export(new DeploymentPackageRequest(source, ENTRY, output, Optional.of(temp.resolve("suite"))));
+        assertInstanceOf(DeploymentPackageResult.Failure.class, result);
+        assertTrue(result.diagnostics().stream().anyMatch(d -> d.code().equals("SIR-APP-PACKAGE-ACCEPTANCE-001") && d.message().contains(reason)), result.toString());
+        assertFalse(Files.exists(output), "nothing is published");
+    }
+
+    @Test void acceptanceTestNeedsTheRepeatedInstanceNameAndASuiteBeforeAnyDockerCall() throws Exception {
+        Path root = export(source(true), temp.resolve("delivery")).manifest().outputRoot();
+        Path bin = Files.createDirectory(temp.resolve("fake-bin"));
+        Path docker = bin.resolve("docker");
+        Files.writeString(docker, "#!/bin/sh\n: > \"$KCG_TEST_DOCKER_MARKER\"\nexit 90\n");
+        assertTrue(docker.toFile().setExecutable(true));
+        Path marker = temp.resolve("docker-was-invoked"), state = temp.resolve("state");
+        assertEquals(2, entry(root, bin, marker, "unconfirmed", "acceptance-test", "--instance", "demo", "--state-root", state.toString()));
+        assertEquals(2, entry(root, bin, marker, "other-name", "acceptance-test", "--instance", "demo", "--state-root", state.toString(), "--confirm-disposable", "prod"));
+        assertEquals(2, entry(root, bin, marker, "wrong-action", "start", "--instance", "demo", "--state-root", state.toString(), "--confirm-disposable", "demo"));
+        Path log = temp.resolve("no-suite.log");
+        assertEquals(4, entry(root, bin, marker, "no-suite", "acceptance-test", "--instance", "demo", "--state-root", state.toString(), "--confirm-disposable", "demo"));
+        assertTrue(Files.readString(log).contains("KCG_ACCEPTANCE_NOT_RUN"));
+        assertFalse(Files.exists(marker), "no Docker call before these refusals");
+        assertFalse(Files.exists(state));
+    }
+
+    private int entry(Path root, Path bin, Path marker, String name, String... args) throws Exception {
+        var command = new ArrayList<>(List.of("sh", root.resolve("deploy/deploy.sh").toString()));
+        command.addAll(List.of(args));
+        var builder = new ProcessBuilder(command);
+        builder.environment().put("PATH", bin + ":" + System.getenv("PATH"));
+        builder.environment().put("KCG_TEST_DOCKER_MARKER", marker.toString());
+        var process = builder.redirectErrorStream(true).redirectOutput(temp.resolve(name + ".log").toFile()).start();
+        assertTrue(process.waitFor(30, TimeUnit.SECONDS));
+        return process.exitValue();
     }
 
     @Test void unsupportedStorageAndExistingOutputsAreRefusedBeforePublication() throws Exception {

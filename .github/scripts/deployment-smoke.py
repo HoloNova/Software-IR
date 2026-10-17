@@ -23,8 +23,11 @@ a.evidence.mkdir(parents=True, exist_ok=True)
 report = {'commit': os.getenv('GITHUB_SHA'), 'runUrl': f"{os.getenv('GITHUB_SERVER_URL')}/{os.getenv('GITHUB_REPOSITORY')}/actions/runs/{os.getenv('GITHUB_RUN_ID')}",
           'packageId': (a.package / 'package.id').read_text().strip(),
           'deployment': 'NOT_RUN', 'httpSmoke': 'NOT_RUN', 'persistence': 'NOT_RUN', 'privileges': 'NOT_RUN',
-          'swagger': 'NOT_RUN', 'contract': 'NOT_RUN', 'missingVolume': 'NOT_RUN', 'cleanup': 'NOT_RUN', 'requests': []}
+          'swagger': 'NOT_RUN', 'contract': 'NOT_RUN', 'missingVolume': 'NOT_RUN', 'business': 'NOT_RUN', 'cleanup': 'NOT_RUN',
+          'requests': []}
 sequence = 0
+# Business acceptance writes data, so it gets its own disposable instance of the same package.
+acceptance_instance, acceptance_state, acceptance_port = a.instance + '-acc', a.state.with_name(a.state.name + ' acceptance'), a.port + 1
 
 
 def run(command, expected=0, timeout=1800):
@@ -40,9 +43,12 @@ def run(command, expected=0, timeout=1800):
     return log.read_text()
 
 
-def deploy(action, expected=0):
-    return run(['sh', str(a.package / 'deploy/deploy.sh'), action, '--instance', a.instance,
-                '--state-root', str(a.state), '--port', str(a.port)], expected)
+def deploy(action, expected=0, instance=None, state=None, port=None, extra=()):
+    command = ['sh', str(a.package / 'deploy/deploy.sh'), action, '--instance', instance or a.instance,
+               '--state-root', str(state or a.state)]
+    if action in ('deploy', 'start'):
+        command += ['--port', str(port or a.port)]
+    return run(command + list(extra), expected)
 
 
 def exchange(path, body, token, expected, base=None):
@@ -141,46 +147,66 @@ try:
     check = subprocess.run(['docker', 'volume', 'inspect', a.instance + '-db'], capture_output=True)
     assert check.returncode != 0, 'start recreated the missing data volume'
     report['missingVolume'] = 'PASSED'
+    # The package's separate dual-token suite, through the public entry, on a fresh disposable instance.
+    deploy('deploy', instance=acceptance_instance, state=acceptance_state, port=acceptance_port)
+    deploy('acceptance-test', instance=acceptance_instance, state=acceptance_state,
+           extra=('--confirm-disposable', acceptance_instance))
+    report['business'] = 'PASSED'
 except Exception as error:
+    # Gates run in this order, so the first one not yet passed is the one that failed; the rest stay NOT_RUN.
+    for gate in ('deployment', 'httpSmoke', 'privileges', 'swagger', 'contract', 'persistence', 'missingVolume', 'business'):
+        if report[gate] == 'NOT_RUN':
+            report[gate] = 'FAILED'
+            break
     report['failure'] = f'{type(error).__name__}: {error}'
     report['failureTrace'] = traceback.format_exc()
 finally:
-    # Test reports are the only part of the state directory that is evidence; secrets stay behind.
-    reports = a.state / 'reports'
-    if reports.is_dir():
-        shutil.copytree(reports, a.evidence / 'reports', dirs_exist_ok=True)
-        contract = reports / 'contract' / 'contract-report.tsv'
-        if contract.is_file():
-            rows = [line.split('\t') for line in contract.read_text().splitlines()[1:] if line]
-            report['contractChecks'] = {outcome: sum(1 for row in rows if row[0] == outcome) for outcome in ('PASSED', 'FAILED', 'NOT_VERIFIED')}
-            report['contractNotVerified'] = [f'{row[1]}: {row[2]}' for row in rows if row[0] == 'NOT_VERIFIED']
-            report['contractFailed'] = [f'{row[1]}: {row[2]}: {row[3] if len(row) > 3 else ""}' for row in rows if row[0] == 'FAILED']
-    # Collect only the owned CI instance. Never upload its state directory or secrets.
+    # Test reports are the only part of a state directory that is evidence; secrets stay behind.
+    def rows(file):
+        return [line.split('\t') for line in file.read_text().splitlines()[1:] if line] if file.is_file() else None
+    for state in (a.state, acceptance_state):
+        if (state / 'reports').is_dir():
+            shutil.copytree(state / 'reports', a.evidence / 'reports', dirs_exist_ok=True)
+    contract = rows(a.state / 'reports' / 'contract' / 'contract-report.tsv')
+    if contract is not None:
+        report['contractChecks'] = {outcome: sum(1 for row in contract if row[0] == outcome) for outcome in ('PASSED', 'FAILED', 'NOT_VERIFIED')}
+        report['contractNotVerified'] = [f'{row[1]}: {row[2]}' for row in contract if row[0] == 'NOT_VERIFIED']
+        report['contractFailed'] = [f'{row[1]}: {row[2]}: {row[3] if len(row) > 3 else ""}' for row in contract if row[0] == 'FAILED']
+    business = rows(acceptance_state / 'reports' / 'acceptance' / 'acceptance-report.tsv')
+    if business is not None:
+        report['businessChecks'] = {outcome: sum(1 for row in business if row[0] == outcome) for outcome in ('PASSED', 'FAILED')}
+        report['businessFailed'] = [f'{row[1]}: {row[2]}: {row[3] if len(row) > 3 else ""}' for row in business if row[0] == 'FAILED']
+    # Collect only the owned CI instances. Never upload their state directories or secrets.
     try:
         ids = set()
-        for label in (f'com.docker.compose.project={a.instance}', f'kcg.instance={a.instance}'):
+        for label in [f'{key}={name}' for name in (a.instance, acceptance_instance)
+                      for key in ('com.docker.compose.project', 'kcg.instance')]:
             ids.update(subprocess.check_output(['docker', 'ps', '-aq', '--filter', 'label=' + label], text=True).split())
         for cid in ids:
             with (a.evidence / f'container-{cid}.log').open('w') as output:
                 subprocess.run(['docker', 'logs', cid], stdout=output, stderr=subprocess.STDOUT, timeout=20)
         if ids:
             run(['docker', 'rm', '-f', *sorted(ids)])
-        for volume in (a.instance + '-db', a.instance + '-maven'):
+        for volume in [name + suffix for name in (a.instance, acceptance_instance) for suffix in ('-db', '-maven')]:
             present = subprocess.run(['docker', 'volume', 'inspect', volume], capture_output=True)
             if present.returncode == 0:
                 run(['docker', 'volume', 'rm', volume])
-        for label in (f'com.docker.compose.project={a.instance}', f'kcg.instance={a.instance}'):
+        for label in [f'{key}={name}' for name in (a.instance, acceptance_instance)
+                      for key in ('com.docker.compose.project', 'kcg.instance')]:
             assert not subprocess.check_output(['docker', 'ps', '-aq', '--filter', 'label=' + label], text=True).strip()
         report['cleanup'] = 'PASSED'
     except Exception as error:
         report['cleanup'] = 'FAILED'
         report['cleanupFailure'] = str(error)
     secrets = []
-    for name in ('root-password', 'app-password', 'migrate-password'):
-        file = a.state / name
-        if file.is_file():
-            secrets.append(file.read_text())
-    for file in a.evidence.glob('*.log'):
+    for state in (a.state, acceptance_state):
+        for name in ('root-password', 'app-password', 'migrate-password'):
+            file = state / name
+            if file.is_file():
+                secrets.append(file.read_text())
+    for file in [*a.evidence.glob('*.log'), *a.evidence.glob('reports/**/*.*')]:
+        if not file.is_file():
+            continue
         text = file.read_text(errors='replace')
         for secret in secrets:
             text = text.replace(secret, '[REDACTED]')
@@ -188,4 +214,4 @@ finally:
     (a.evidence / 'report.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n')
     print(json.dumps(report, ensure_ascii=False, indent=2))
 sys.exit(0 if all(report[key] == 'PASSED' for key in ('deployment', 'httpSmoke', 'persistence', 'privileges', 'swagger', 'contract',
-                                                     'missingVolume', 'cleanup')) else 1)
+                                                     'missingVolume', 'business', 'cleanup')) else 1)

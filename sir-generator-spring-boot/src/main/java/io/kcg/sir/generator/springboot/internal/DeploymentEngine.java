@@ -78,6 +78,7 @@ public final class DeploymentEngine {
         add(files, plan, "deploy/Dockerfile", substitute(DeploymentTemplates.DOCKERFILE, plan));
         add(files, plan, "deploy/build.sh", DeploymentTemplates.BUILD);
         add(files, plan, "deploy/contract-test.sh", DeploymentTemplates.CONTRACT);
+        add(files, plan, "deploy/acceptance-test.sh", DeploymentTemplates.ACCEPTANCE);
         add(files, plan, "deploy/accounts.sh", DeploymentTemplates.ACCOUNTS);
         add(files, plan, "deploy/Bootstrap.java", DeploymentTemplates.BOOTSTRAP);
         add(files, plan, "deploy/tools/pom.xml", DeploymentTemplates.TOOLS_POM);
@@ -127,6 +128,20 @@ public final class DeploymentEngine {
             Results: <state>/reports/contract/contract-report.tsv (PASSED, FAILED, NOT_VERIFIED per check) and
             surefire-reports/. NOT_VERIFIED marks what needs business data or an account; a passing contract test is
             not a business acceptance. A plain `mvn test` of app/ does not select it and needs no running service.
+
+            ## Business acceptance
+
+            If this package carries acceptance/ (a separate Maven suite of the requirement), run it on a disposable
+            instance only; it writes business data. Repeat the instance name to confirm:
+
+            ```sh
+            sh deploy/deploy.sh acceptance-test --instance demo-acc --state-root /absolute/path/to/demo-acc-state \\
+              --confirm-disposable demo-acc
+            ```
+
+            The suite gets the application address and a verification connection to this instance's own database, never
+            the application sources. Results: <state>/reports/acceptance/. Without acceptance/ the action prints
+            KCG_ACCEPTANCE_NOT_RUN and exits 4; that is not a pass.
             Data-preserving update is a subsequent step, not delivered here.
             """);
         return List.copyOf(files);

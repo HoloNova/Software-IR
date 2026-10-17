@@ -192,11 +192,11 @@ Swagger负责接口展示和手动发真实HTTP请求；它本身不是自动业
 | `notBlank`、`length(min,max)` | 非认证、非PATCH请求体的String字段 | 400，`fields`含该字段及`NotBlank`/`Size`；长度上限超过4096不生成超长样例 |
 | 成功响应、声明错误、认证后的校验 | 每个接口 | 需要业务数据或账号，记为JUnit跳过，消息以`NOT_VERIFIED:`开头 |
 
-**独立业务验收包。** 形式为一个自带`pom.xml`的普通Maven工程，其`mvn test`即业务套件，接收`kcg.baseUrl`、`kcg.jdbcUrl`、`kcg.jdbcUser`、`kcg.jdbcPasswordFile`。`kcg package`新增可选`--acceptance <绝对目录>`，把该目录的普通UTF-8文本文件逐字节复制到交付包`acceptance/`并纳入摘要；不编译、不解释它，拒绝符号链接、非文本和缺少根`pom.xml`。双Token套件放在`sir-toolchain-application/src/test/resources/deployment/dual-token-acceptance/`，由`DualTokenScaffoldBusinessConformanceIT`的D0–D7断言整理而来；它只依据固定需求与物理表名核验，不读SIR或`app/`。
+**独立业务验收包。** 形式为一个自带`pom.xml`的普通Maven工程，其`mvn test`即业务套件，接收`kcg.baseUrl`、`kcg.jdbcUrl`、`kcg.jdbcUser`、`kcg.jdbcPasswordFile`和报告目录`kcg.reportDir`。`kcg package`新增可选`--acceptance <绝对目录>`，把该目录的普通UTF-8文本文件逐字节复制到交付包`acceptance/`并纳入摘要；不编译、不解释它，拒绝符号链接、非文本（如构建产物）、以点开头或含特殊字符的文件名、超过1000个文件/单文件1 MiB/总计8 MiB，以及缺少根`pom.xml`；拒绝发生在发布前，不留半份交付包。双Token套件放在`sir-toolchain-application/src/test/resources/deployment/dual-token-acceptance/`，由`DualTokenScaffoldBusinessConformanceIT`的D0–D7断言整理而来；它只依据固定需求与物理表名核验，不读SIR或`app/`。
 
 **部署入口。** `deploy.sh`新增两个动作，都要求实例已部署且在运行，测试进程在受限Maven容器中经Compose网络访问`http://app:8080`，即跨容器真实HTTP：
 
 - `contract-test`：只读，可对任一实例运行，挂载`app/`，结果写入`<state>/reports/contract/`，成功输出`KCG_CONTRACT_PASSED`。
 - `acceptance-test --confirm-disposable <实例名>`：会写业务数据，必须重复输入实例名确认是一次性实例；只挂载`acceptance/`与数据库root口令文件，结果写入`<state>/reports/acceptance/`，成功输出`KCG_ACCEPTANCE_PASSED`。包内没有验收包时输出`KCG_ACCEPTANCE_NOT_RUN`并以退出码4结束，不冒充通过。
 
-**CI证据。** `deployment-smoke.py`在第一实例上于HTTP烟测后运行`contract-test`，再在同包的独立第二实例上运行`acceptance-test`，随后清理两个实例。`report.json`新增`swagger`、`contract`、`business`分项及Surefire计数和`NOT_VERIFIED`清单；Surefire报告随`deployment-evidence`上传。完成门仍是第8节步骤②：Swagger能发真实请求、合同与双Token业务/并发断言通过、报告分阶段记录。
+**CI证据。** CI导出时带上双Token验收包。`deployment-smoke.py`在第一实例的HTTP烟测与权限核验后做Swagger式真实请求并运行`contract-test`；第一实例的持久化与丢失卷门结束后，在同包的独立第二实例上部署并运行`acceptance-test`，最后清理两个实例。`report.json`新增`swagger`、`contract`、`business`分项、两类检查计数、`NOT_VERIFIED`与失败清单；某门异常时记为FAILED，其后的门保持NOT_RUN；Surefire报告随`deployment-evidence`上传。完成门仍是第8节步骤②：Swagger能发真实请求、合同与双Token业务/并发断言通过、报告分阶段记录。
