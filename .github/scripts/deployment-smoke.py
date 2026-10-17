@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 import subprocess
 import sys
+import traceback
 import urllib.error
 import urllib.request
 
@@ -21,7 +22,7 @@ a.evidence.mkdir(parents=True, exist_ok=True)
 report = {'commit': os.getenv('GITHUB_SHA'), 'runUrl': f"{os.getenv('GITHUB_SERVER_URL')}/{os.getenv('GITHUB_REPOSITORY')}/actions/runs/{os.getenv('GITHUB_RUN_ID')}",
           'packageId': (a.package / 'package.id').read_text().strip(),
           'deployment': 'NOT_RUN', 'httpSmoke': 'NOT_RUN', 'persistence': 'NOT_RUN', 'privileges': 'NOT_RUN',
-          'missingVolume': 'NOT_RUN', 'cleanup': 'NOT_RUN'}
+          'missingVolume': 'NOT_RUN', 'cleanup': 'NOT_RUN', 'requests': []}
 sequence = 0
 
 
@@ -43,7 +44,8 @@ def deploy(action, expected=0):
                 '--state-root', str(a.state), '--port', str(a.port)], expected)
 
 
-def request(path, body=None, token=None, expected=200):
+def exchange(path, body, token, expected):
+    """Sends one request and records its shape (never tokens, passwords or response bodies) in the report."""
     headers = {'Content-Type': 'application/json'}
     if token:
         headers['Authorization'] = 'Bearer ' + token
@@ -51,11 +53,29 @@ def request(path, body=None, token=None, expected=200):
                                  data=None if body is None else json.dumps(body).encode(), headers=headers)
     try:
         with urllib.request.urlopen(req, timeout=20) as response:
-            status, data = response.status, response.read()
+            status, content_type, data = response.status, response.headers.get('Content-Type'), response.read()
     except urllib.error.HTTPError as error:
-        status, data = error.code, error.read()
-    assert status == expected, f'{path} returned {status}, expected {expected}'
-    return json.loads(data)
+        status, content_type, data = error.code, error.headers.get('Content-Type'), error.read()
+    report['requests'].append({'method': req.get_method(), 'path': path, 'authenticated': bool(token),
+                               'expected': expected, 'status': status, 'contentType': content_type,
+                               'bodyBytes': len(data)})
+    assert status == expected, f'{req.get_method()} {path} returned {status}, expected {expected}'
+    return content_type, data
+
+
+def request(path, body=None, token=None, expected=200):
+    """A call whose business result is asserted: the body must be JSON."""
+    content_type, data = exchange(path, body, token, expected)
+    try:
+        return json.loads(data)
+    except ValueError as error:
+        raise AssertionError(f'{path} returned {expected} with a non-JSON body '
+                             f'(Content-Type {content_type}, {len(data)} bytes): {error}') from error
+
+
+def status_only(path, body=None, token=None, expected=401):
+    """A call that only proves a rejection; HTTP allows the body to be empty, so it is not parsed."""
+    exchange(path, body, token, expected)
 
 
 def database_container():
@@ -79,7 +99,7 @@ try:
     assert request('/api/get-user?id=' + str(uid))['name'] == 'ci-deploy-user'
     pair = request('/api/login', {'name': 'ci-deploy-user', 'password': 'test-password'}, expected=201)
     assert pair['accessToken'] != pair['refreshToken']
-    request('/api/post-note', {'text': 'network smoke'}, expected=401)
+    status_only('/api/post-note', {'text': 'network smoke'}, expected=401)
     request('/api/post-note', {'text': 'network smoke'}, token=pair['accessToken'], expected=201)
     assert sql("SELECT COUNT(*) FROM `note` WHERE text='network smoke'").strip() == '1'
     report['httpSmoke'] = 'PASSED'
@@ -109,7 +129,8 @@ try:
     assert check.returncode != 0, 'start recreated the missing data volume'
     report['missingVolume'] = 'PASSED'
 except Exception as error:
-    report['failure'] = str(error)
+    report['failure'] = f'{type(error).__name__}: {error}'
+    report['failureTrace'] = traceback.format_exc()
 finally:
     # Collect only the owned CI instance. Never upload its state directory or secrets.
     try:
