@@ -18,7 +18,7 @@
 | [`CLI阶段报告`](CLI_WORKFLOW_REPORT.md) | 实现、定向证据、CI 证据与单文件包 |
 | [`SIR 语言参考`](SIR_LANGUAGE_REFERENCE.md) | 用 SIR 写软件：能写什么、怎么写、写错了会得到哪个诊断码；示例由测试逐个检查 |
 | [`入口阶段方案`](design/09-public-cli-workflow.md) | 已验收（CI #72 通过）；范围及完成门 |
-| [`部署与HTTP验收方案`](design/11-portable-deployment-and-http-acceptance.md) | 进行中：步骤①已验收，步骤②实施中，步骤③待推进；不在本机部署或业务测试 |
+| [`部署与HTTP验收方案`](design/11-portable-deployment-and-http-acceptance.md) | 进行中：步骤①②已验收，步骤③待推进；不在本机部署或业务测试 |
 | [`部署包v1`](DEPLOYMENT_DELIVERY.md) | package导出、目标机器独立部署、物理支持矩阵、Swagger与合同测试 |
 | [`部署步骤①报告`](DEPLOYMENT_DELIVERY_REPORT.md) | 26项定向检查、CI #93阻塞及#94步骤①验收 |
 | [`云端接手说明`](DEPLOYMENT_CLOUD_HANDOFF.md) | 步骤①交接记录与接手结果（已关闭） |

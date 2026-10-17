@@ -1,7 +1,7 @@
 # 独立部署交付：步骤①实现报告
 
 - 日期：2026-10-17；状态：**步骤① PASSED（verify #94）**。首轮CI #93的HTTP验收阻塞来自验收脚本，云端修复`30f50bd`后同SHA的[verify #94](https://github.com/HoloNova/Software-IR/actions/runs/39019809176)两个job全部success，见第5节。
-- 授权：负责人已允许开始实现已确认的[方案11](design/11-portable-deployment-and-http-acceptance.md)。步骤①已验收；步骤②（Swagger、合同测试、独立业务验收包）已按方案11第12节接入代码与CI门、待CI证据，步骤③保留数据更新尚未实施。
+- 授权：负责人已允许开始实现已确认的[方案11](design/11-portable-deployment-and-http-acceptance.md)。步骤①②已验收（第5、7节）；步骤③保留数据更新尚未实施。
 - 基线：`cf44450`；实现提交：`a7cba11022c04e6a07cb47d5070bde39a06b0adf`（[verify #93](https://github.com/HoloNova/Software-IR/actions/runs/39002409782)）；验收提交：`30f50bdec6f7d4c485365b4a8b6ce5294d25b0c7`（[verify #94](https://github.com/HoloNova/Software-IR/actions/runs/39019809176)）。
 - 使用合同：[部署包v1](DEPLOYMENT_DELIVERY.md)。
 
@@ -98,3 +98,22 @@ Artifact：[deployment-evidence](https://github.com/HoloNova/Software-IR/actions
 仅Linux x86_64同机Docker daemon；需要公共依赖网络；无源包恶意篡改签名认证、生产安全/容量资格或全平台资格。唯一文本要明确长度且≤768；Decimal精度/scale未解决；外部actor无credential实现拒绝；物理标识符、行预算和实际服务器保留字有明确限制。
 
 数据卷/配置丢失、未知绑定、结构漂移、DDL部分失败保留现场，不自动清库或repair。数据库迁移不是可随Git回滚的文件变更。当前仅同包重复部署及重启，不允许不同包升级；长期G阶段未因此全部关闭。
+
+## 7. 步骤②验收（verify #95、#96）
+
+步骤②按[方案11第12节](design/11-portable-deployment-and-http-acceptance.md)分两次提交，各自取得同SHA CI，两个job均success；部署验收脚本仅在全部分项PASSED时以0退出。
+
+| 受测提交 | run | 新增分项 | 结果 |
+| --- | --- | --- | --- |
+| `fee2a3bb5c279d801d609c8a3d9734fa87e4efb1`（Swagger、合同测试） | [verify #95](https://github.com/HoloNova/Software-IR/actions/runs/39021298934) | `swagger`、`contract` | PASSED；合同检查13 PASSED / 0 FAILED / 7 NOT_VERIFIED |
+| `ef324d67ad49be852e62cc8c44a0ca795705b37b`（独立业务验收包） | [verify #96](https://github.com/HoloNova/Software-IR/actions/runs/39021834946) | 再加`business` | PASSED；双Token需求26 PASSED / 0 FAILED；合同仍13 / 0 / 7 |
+
+两次run中步骤①的部署、HTTP、权限、持久化、丢失卷与清理分项也全部PASSED，原主job（两条全量门、业务IT、独立验证IT、CLI烟测）success。
+
+- Swagger：`/v3/api-docs`按真实Controller生成；按文档中的server（`http://127.0.0.1:18080`）与`/api/register`路径发出的请求返回201，`/swagger-ui/index.html`返回`text/html`。
+- 合同测试：经公开入口`contract-test`运行。7项NOT_VERIFIED是每个接口的“成功调用与声明业务错误”及“认证后的输入校验”，需要业务数据或账号，按设计不计通过。本机无数据库时失败的“未签发令牌回401”在CI真实库上通过。
+- 业务验收：同包第二个一次性实例经`acceptance-test --confirm-disposable`运行，覆盖D0–D7（成对令牌及有效期、错密码与未知账号同响应、访问/刷新令牌认证边界、过期、轮换、重放、6路并发恰好一次、登出），每次状态变化经独立数据库连接核验。
+
+Artifact：#95 [deployment-evidence](https://github.com/HoloNova/Software-IR/actions/runs/39021298934/artifacts/12097386345)、[backend-source-delivery](https://github.com/HoloNova/Software-IR/actions/runs/39021298934/artifacts/12096663436)；#96 [deployment-evidence](https://github.com/HoloNova/Software-IR/actions/runs/39021834946/artifacts/12097627477)（含`reports/contract`与`reports/acceptance`下的TSV及Surefire报告）、[backend-source-delivery](https://github.com/HoloNova/Software-IR/actions/runs/39021834946/artifacts/12097647208)、[standalone-cli](https://github.com/HoloNova/Software-IR/actions/runs/39021834946/artifacts/12096649319)、[surefire-reports](https://github.com/HoloNova/Software-IR/actions/runs/39021834946/artifacts/12096569618)、[conformance-evidence](https://github.com/HoloNova/Software-IR/actions/runs/39021834946/artifacts/12097377167)。
+
+步骤②完成门由此关闭：Swagger能发真实请求，合同测试与双Token业务/并发断言通过，报告分别记录部署、合同、业务及未验证项。证据仅覆盖本部署样例在CI Linux x86_64上的情形；合同通过不代表其他SIR的业务正确，业务正确仍依赖各自的验收包。

@@ -1,7 +1,7 @@
 # 可独立部署的后端交付包与真实 HTTP 验收
 
 - 日期：2026-10-17。
-- 状态：**IN_PROGRESS / 步骤① PASSED / 步骤②实施中**。负责人已确认方案并授权进入实现；步骤①由verify #94验收，步骤②合同见第12节，步骤③尚未实施。负责人随后已授权提交、推送并取得CI验收；镜像发布仍未授权。
+- 状态：**IN_PROGRESS / 步骤①② PASSED / 步骤③待推进**。负责人已确认方案并授权进入实现；步骤①由verify #94、步骤②（合同见第12节）由verify #95/#96验收，步骤③尚未实施。负责人随后已授权提交、推送并取得CI验收；镜像发布仍未授权。
 - 实现起点：云端 `main` / `cf44450`。信任既有云端成果，不为规划重复执行验证。
 - 依据：[MAIN](../../MAIN.md)、[当前能力](../PROJECT_STATUS.md)、[ADR-026](../architecture/ADR-026-layered-semantic-command-architecture.md)、[ADR-027](../architecture/ADR-027-git-as-version-history.md)。
 - 方案文本不是已交付或通过证据；步骤①实现范围、26项定向结果、CI #93阻塞与#94验收见[报告](../DEPLOYMENT_DELIVERY_REPORT.md)。
@@ -200,3 +200,5 @@ Swagger负责接口展示和手动发真实HTTP请求；它本身不是自动业
 - `acceptance-test --confirm-disposable <实例名>`：会写业务数据，必须重复输入实例名确认是一次性实例；只挂载`acceptance/`与数据库root口令文件，结果写入`<state>/reports/acceptance/`，成功输出`KCG_ACCEPTANCE_PASSED`。包内没有验收包时输出`KCG_ACCEPTANCE_NOT_RUN`并以退出码4结束，不冒充通过。
 
 **CI证据。** CI导出时带上双Token验收包。`deployment-smoke.py`在第一实例的HTTP烟测与权限核验后做Swagger式真实请求并运行`contract-test`；第一实例的持久化与丢失卷门结束后，在同包的独立第二实例上部署并运行`acceptance-test`，最后清理两个实例。`report.json`新增`swagger`、`contract`、`business`分项、两类检查计数、`NOT_VERIFIED`与失败清单；某门异常时记为FAILED，其后的门保持NOT_RUN；Surefire报告随`deployment-evidence`上传。完成门仍是第8节步骤②：Swagger能发真实请求、合同与双Token业务/并发断言通过、报告分阶段记录。
+
+**验收记录。** `fee2a3b`的[verify #95](https://github.com/HoloNova/Software-IR/actions/runs/39021298934)与`ef324d6`的[verify #96](https://github.com/HoloNova/Software-IR/actions/runs/39021834946)两个job均success：`swagger`、`contract`、`business`及步骤①各分项PASSED，合同检查13 PASSED / 0 FAILED / 7 NOT_VERIFIED，双Token需求26 / 0。第8节步骤②完成门关闭，分项与artifact见[报告第7节](../DEPLOYMENT_DELIVERY_REPORT.md)。

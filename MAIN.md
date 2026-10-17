@@ -179,7 +179,7 @@ mvn -Dmaven.repo.local=/root/.m2/repository -o clean verify     # Linux 参考�
 
 不在当前范围、未经负责人明确授权不得展开：Redis、第二 Target、Constraint VM、Java 反向解析、GUI/daemon、多用户、新的增量编译系统、数据库迁移、Docker 交付包、Web 平台。目标设计可以提前阅读，“可提前准备”不授权提前开工。
 
-负责人已授权按[设计11](docs/design/11-portable-deployment-and-http-acceptance.md)进入部署交付实现；步骤①的package导出已由CI #94验收，步骤②实施中。本机仍不部署或业务测试；负责人随后已授权提交/推送及CI验收，镜像发布未授权；进展与边界见[报告](docs/DEPLOYMENT_DELIVERY_REPORT.md)。其他范围仍按上段约束。
+负责人已授权按[设计11](docs/design/11-portable-deployment-and-http-acceptance.md)进入部署交付实现；步骤①的package导出已由CI #94验收，步骤②的Swagger、合同测试与业务验收包已由CI #95/#96验收。本机仍不部署或业务测试；负责人随后已授权提交/推送及CI验收，镜像发布未授权；进展与边界见[报告](docs/DEPLOYMENT_DELIVERY_REPORT.md)。其他范围仍按上段约束。
 
 ## 7. 文档入口
 
