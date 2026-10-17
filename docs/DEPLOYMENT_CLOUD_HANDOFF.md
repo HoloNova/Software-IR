@@ -1,6 +1,7 @@
 # 独立部署步骤①：云端接手说明
 
 - 日期：2026-10-17；收尾节点：**实现已推送、CI首轮结果已归档，步骤①未验收，交云端继续排障**。
+- 接手结果（同日）：第2节判断属实，云端只修验收脚本（`30f50bd`），同SHA的[verify #94](https://github.com/HoloNova/Software-IR/actions/runs/39019809176)全部success，**步骤①已关闭**；分项与artifact见[报告第5节](DEPLOYMENT_DELIVERY_REPORT.md)。以下保留交接时的原文作为记录。
 - 实现提交：`a7cba11022c04e6a07cb47d5070bde39a06b0adf`，已在`origin/main`。本次交接提交只改文档，不改变受测代码，使用`[skip ci]`避免重复重型验证。
 - 接手依据：[方案11](design/11-portable-deployment-and-http-acceptance.md)、[交付合同](DEPLOYMENT_DELIVERY.md)、[实现与证据报告](DEPLOYMENT_DELIVERY_REPORT.md)。负责人要求转交云端，本机不继续修代码或展开步骤②③。
 

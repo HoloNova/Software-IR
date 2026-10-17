@@ -145,6 +145,6 @@ kcg edit --source-root "$SOURCE" --entry project.sir --candidate-root "$CANDIDAT
 
 退出码：0 批已写出；2 参数错误（缺选项、未知模式、选项重复、数字不合法）；3 拒绝或源不可读。生成的工程要这样运行：`kcg.actor-identity.mode=external`（生成的认证器取这个模式要求的bean名，见[设计10第26节](design/10-semantic-boundary-and-mechanisms.md)）。
 
-## 6. package：独立部署源码包（步骤①CI待修复）
+## 6. package：独立部署源码包
 
-`kcg package --source-root … --entry … --output-root …`只导出新的源码/数据库/Docker交付目录，不启动Docker、不下载依赖、不Git。完整参数、物理支持边界及目标机器上的随包入口见[部署包v1](DEPLOYMENT_DELIVERY.md)。本轮26项轻量定向检查不等于部署资格，CI #93已取得同SHA构建/建库/启动证据，但HTTP验收JSON解析失败，后续门未完成；见[云端接手说明](DEPLOYMENT_CLOUD_HANDOFF.md)。原generate不变；部署包不是原version-plan/apply的开发工程目标，尚不支持不同包升级。
+`kcg package --source-root … --entry … --output-root …`只导出新的源码/数据库/Docker交付目录，不启动Docker、不下载依赖、不Git。完整参数、物理支持边界及目标机器上的随包入口见[部署包v1](DEPLOYMENT_DELIVERY.md)。步骤①已由CI #94在本样例上验收（构建、建库、HTTP、权限、持久化、丢失卷拒绝），见[报告](DEPLOYMENT_DELIVERY_REPORT.md)；这不是生产或全平台资格。原generate不变；部署包不是原version-plan/apply的开发工程目标，尚不支持不同包升级。

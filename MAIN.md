@@ -145,7 +145,7 @@ ANTLR4 语法（`sir 0.2` 根文档与声明片段两个入口）、严格 UTF-8
 
 ### `kcg-cli`
 
-公开命令是首次生成 `generate`、独立交付导出 `package`（步骤①CI待修复，[云端接手](docs/DEPLOYMENT_CLOUD_HANDOFF.md)）、只读结构查询 `inspect`、只读指令脚手架 `scaffold`、只保存候选源的 `edit`，以及 `check`、只读的 `version-plan` 和会改已有工程的 `version-apply`（要求 git；协议 `KCG-CLI-VERSION-CHANGE-V1`）。`check` 从 stdin 接收 JSONL（每行一个 `sir 0.2` 文档），按请求阶段校验并输出 canonical 结果；使用与边界见 [SIR 批量校验](docs/SIR_BATCH_CHECK.md)。新三命令的结果协议为 `KCG-CLI-WORKFLOW-V1`，edit外部JSON为 `KCG-CLI-COMMANDS-V1` 包装核心 `sir-command/1`；说明见 [CLI流程](docs/CLI_WORKFLOW.md)。`register`、`apply`、`recover` 不是公开命令。
+公开命令是首次生成 `generate`、独立交付导出 `package`（步骤①已由CI #94验收，见[部署包v1](docs/DEPLOYMENT_DELIVERY.md)）、只读结构查询 `inspect`、只读指令脚手架 `scaffold`、只保存候选源的 `edit`，以及 `check`、只读的 `version-plan` 和会改已有工程的 `version-apply`（要求 git；协议 `KCG-CLI-VERSION-CHANGE-V1`）。`check` 从 stdin 接收 JSONL（每行一个 `sir 0.2` 文档），按请求阶段校验并输出 canonical 结果；使用与边界见 [SIR 批量校验](docs/SIR_BATCH_CHECK.md)。新三命令的结果协议为 `KCG-CLI-WORKFLOW-V1`，edit外部JSON为 `KCG-CLI-COMMANDS-V1` 包装核心 `sir-command/1`；说明见 [CLI流程](docs/CLI_WORKFLOW.md)。`register`、`apply`、`recover` 不是公开命令。
 
 ## 5. 修改与验收协议
 
@@ -179,7 +179,7 @@ mvn -Dmaven.repo.local=/root/.m2/repository -o clean verify     # Linux 参考�
 
 不在当前范围、未经负责人明确授权不得展开：Redis、第二 Target、Constraint VM、Java 反向解析、GUI/daemon、多用户、新的增量编译系统、数据库迁移、Docker 交付包、Web 平台。目标设计可以提前阅读，“可提前准备”不授权提前开工。
 
-负责人已授权按[设计11](docs/design/11-portable-deployment-and-http-acceptance.md)进入部署交付实现；步骤①的package导出与CI门已接入，仍待验收。本机仍不部署或业务测试；负责人随后已授权提交/推送及CI验收，镜像发布未授权；进展与边界见[报告](docs/DEPLOYMENT_DELIVERY_REPORT.md)。其他范围仍按上段约束。
+负责人已授权按[设计11](docs/design/11-portable-deployment-and-http-acceptance.md)进入部署交付实现；步骤①的package导出已由CI #94验收，步骤②实施中。本机仍不部署或业务测试；负责人随后已授权提交/推送及CI验收，镜像发布未授权；进展与边界见[报告](docs/DEPLOYMENT_DELIVERY_REPORT.md)。其他范围仍按上段约束。
 
 ## 7. 文档入口
 

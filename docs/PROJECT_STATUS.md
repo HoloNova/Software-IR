@@ -20,7 +20,7 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 | `sir-project-graph` | 来源图的构建、校验、canonical 序列化与加载 |
 | `sir-change` | 增删改指令（`Command`/`CommandBatch`）的编辑与写回（`SourceEditor`） |
 | `sir-toolchain-application` | 编译、首次生成、只读结构查询/候选源编辑、独立交付包导出、基于 Git 的版本规划与应用、独立验证、静态校验与 JSONL 批量 |
-| `kcg-cli` | `generate`、候选交付 `package`（CI待修复）、只读 `inspect/scaffold`、候选 `edit`、`check`、只读 `version-plan`、`version-apply`，canonical JSON 输出 |
+| `kcg-cli` | `generate`、交付导出 `package`（步骤①已由CI #94验收）、只读 `inspect/scaffold`、候选 `edit`、`check`、只读 `version-plan`、`version-apply`，canonical JSON 输出 |
 
 ## 3. 当前能力
 
@@ -43,9 +43,9 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 
 命令行可以打成单文件 `kcg-cli/target/kcg.jar` 直接 `java -jar` 运行（`mvn -B -pl kcg-cli -am -Dmaven.test.skip=true package`）。整条链运行时只依赖 antlr4-runtime；包只重新打包已有类，不新增模块。本机已验证它与类路径启动的完整流程输出一致；CI 冒烟步骤已通过（[verify #73](https://github.com/HoloNova/Software-IR/actions/runs/38677243253)，`3ebe5f1`），见[阶段报告第4节](CLI_WORKFLOW_REPORT.md)。
 
-### 独立部署交付（步骤①已推送，CI阻塞，交云端接手）
+### 独立部署交付（步骤①已验收，步骤②实施中）
 
-`kcg package`只导出完整源码、物理schema/Flyway脚本、Docker/Compose配方和独立执行工具，不在导出时启动服务。随包入口负责目标机上的初始化、构建、启动和同包重启。26项本机轻量定向检查通过，没有本机部署/业务测试。实现提交`a7cba11`的CI [#93](https://github.com/HoloNova/Software-IR/actions/runs/39002409782)原全量门及业务IT全绿，新包实际构建、Flyway建库和应用启动成功，但HTTP烟测JSON解析异常，后续权限、持久化及丢失卷门NOT_RUN。步骤①未验收，云端接手排障，见[交接说明](DEPLOYMENT_CLOUD_HANDOFF.md)。首版拒绝无界唯一文本、未定义精度的Decimal及缺外部身份实现等情形；普通generate不变。使用与限制见[部署包v1](DEPLOYMENT_DELIVERY.md)，证据见[步骤①报告](DEPLOYMENT_DELIVERY_REPORT.md)。Swagger/随包JUnit测试和不同包保留数据更新尚未实施，不能标称完整部署产品已发布。
+`kcg package`只导出完整源码、物理schema/Flyway脚本、Docker/Compose配方和独立执行工具，不在导出时启动服务。随包入口负责目标机上的初始化、构建、启动和同包重启。26项本机轻量定向检查通过，没有本机部署/业务测试。实现提交`a7cba11`的CI [#93](https://github.com/HoloNova/Software-IR/actions/runs/39002409782)原全量门及业务IT全绿，新包实际构建、Flyway建库和应用启动成功，但HTTP烟测JSON解析异常。云端确认是验收脚本对空体401做JSON解析，修复`30f50bd`后同SHA的[verify #94](https://github.com/HoloNova/Software-IR/actions/runs/39019809176)全部success：部署、HTTP、账号权限、重启/重复部署保留数据、丢失卷拒绝和清理均PASSED，步骤①验收。首版拒绝无界唯一文本、未定义精度的Decimal及缺外部身份实现等情形；普通generate不变。使用与限制见[部署包v1](DEPLOYMENT_DELIVERY.md)，证据见[步骤①报告](DEPLOYMENT_DELIVERY_REPORT.md)。步骤②的Swagger与随包合同测试已接入、待CI证据，独立业务验收包实施中；不同包保留数据更新尚未实施，不能标称完整部署产品已发布。
 
 ### 基于 Git 的版本变更（ADR-027）
 
@@ -84,7 +84,7 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 ## 6. 尚未作为产品能力发布
 
 - 预构建的发行物与发布渠道、公开构建/运行入口（单文件包能由 `mvn package` 在本地产出，但没有版本化发布）；旧 `register`、`apply`、`recover` 命令不恢复，现有版本应用入口为version-apply。
-- 数据库初始化和Docker／Compose交付的步骤①已有代码但未取得CI资格；步骤②的Swagger与随包合同测试已接入代码，待CI证据；独立业务验收包、保留数据迁移、Web平台、模块市场、跨项目缓存仍未发布。
+- 数据库初始化和Docker／Compose交付的步骤①已由CI #94在本样例上验收；步骤②的Swagger与随包合同测试已接入代码，待CI证据；独立业务验收包、保留数据迁移、Web平台、模块市场、跨项目缓存仍未发布。
 - Redis Extension、第二个目标、Constraint VM、Java 反向解析、GUI/daemon、多用户。
 - SLM 评测：总设计见 [SLM 评测计划](qualification/SLM_GENERATED_PROJECT_EVALUATION_PLAN.md)，尚未启动。
 - Windows 平台证据；生产、安全认证、性能、高可用资格均未声明。
@@ -93,7 +93,7 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 
 公开CLI流程已验收，不重开已完成R1–R5，不改变Git版本合同。
 
-**当前优先方向：**负责人已确认[可独立部署的后端交付包与真实HTTP验收方案](design/11-portable-deployment-and-http-acceptance.md)，按“首次自动部署 → Swagger与随包网络测试 → 保留数据更新”三步推进。负责人随后已授权进入实现；步骤①已推送`a7cba11`并执行CI #93，状态BLOCKED_CI / HANDOFF_READY：构建、建库和启动成功，HTTP验收阻塞；负责人要求在此节点转交云端继续，下一动作见[交接说明](DEPLOYMENT_CLOUD_HANDOFF.md)。步骤②③尚未实施，详见[报告](DEPLOYMENT_DELIVERY_REPORT.md)。当前开发机不进行部署或业务测试，验收在CI或负责人后续指定的机器执行；不按当前开发机资源设定发布环境。既有SLM题目保留，但未启动模型评测；尚未通过的部署和测试输出不能记为已验收。
+**当前优先方向：**负责人已确认[可独立部署的后端交付包与真实HTTP验收方案](design/11-portable-deployment-and-http-acceptance.md)，按“首次自动部署 → Swagger与随包网络测试 → 保留数据更新”三步推进。负责人随后已授权进入实现；步骤①CI #93因验收脚本阻塞，云端修复后由CI #94验收；步骤②按方案11第12节实施中，步骤③尚未实施，详见[报告](DEPLOYMENT_DELIVERY_REPORT.md)。当前开发机不进行部署或业务测试，验收在CI或负责人后续指定的机器执行；不按当前开发机资源设定发布环境。既有SLM题目保留，但未启动模型评测；尚未通过的部署和测试输出不能记为已验收。
 
 下面的 S1/S2 是负责人 2026-10-15 确认、随后完成的阶段划分与历史进展。
 

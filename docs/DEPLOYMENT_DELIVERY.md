@@ -1,6 +1,6 @@
-# 后端独立部署包 v1（步骤①待CI验收，步骤②实施中）
+# 后端独立部署包 v1（步骤①已验收，步骤②实施中）
 
-实现已推送`a7cba11`，[CI #93](https://github.com/HoloNova/Software-IR/actions/runs/39002409782)已完成Docker构建、建库和启动，但HTTP验收脚本对空体401做JSON解析而失败，后续门未运行。脚本修复`30f50bd`的同SHA CI尚待结果，步骤①尚未验收，见[云端接手说明](DEPLOYMENT_CLOUD_HANDOFF.md)。不要把部分成功当成完整部署资格。步骤②的Swagger与随包合同测试已接入（第7节），独立业务验收包仍在实施；保留数据更新属于步骤③。
+步骤①已由[verify #94](https://github.com/HoloNova/Software-IR/actions/runs/39019809176)在`30f50bd`上验收：公开导出、冷构建、建库、HTTP调用、账号权限、重启/重复部署保留数据和丢失卷拒绝全部通过，见[报告第5节](DEPLOYMENT_DELIVERY_REPORT.md)。它是本样例在CI Linux x86_64上的证据，不是生产或全平台资格。步骤②的Swagger与随包合同测试已接入（第7节），独立业务验收包仍在实施；保留数据更新属于步骤③。
 
 ## 1. 导出与部署分开
 
@@ -67,7 +67,7 @@ stop不删卷、配置、密码或镜像。start要求卷/镜像存在，验证�
 
 ## 5. 依赖与资源
 
-构建基底`maven:3.9.9-eclipse-temurin-21`，运行基底`eclipse-temurin:21.0.7_6-jre-jammy`，MySQL `8.4.5`；工具使用Flyway core/mysql `11.8.2`和Connector/J `9.3.0`。CI #93已在本部署样例中完成镜像取得、应用/工具构建、迁移与启动；不等于全部业务或生产支持矩阵，HTTP门仍有阻塞，也未锁定镜像摘要。新增Flyway/Actuator/springdoc依赖只出现在交付源码，不加入工具链运行依赖。
+构建基底`maven:3.9.9-eclipse-temurin-21`，运行基底`eclipse-temurin:21.0.7_6-jre-jammy`，MySQL `8.4.5`；工具使用Flyway core/mysql `11.8.2`和Connector/J `9.3.0`。CI #94已在本部署样例中完成镜像取得、应用/工具构建、迁移、启动与第6节全部门；不等于全部业务或生产支持矩阵，也未锁定镜像摘要。新增Flyway/Actuator/springdoc依赖只出现在交付源码，不加入工具链运行依赖。
 
 默认构建容器与测试容器1536 MiB/1.5 CPU，Maven堆512 MiB、元空间256 MiB；运行MySQL1024 MiB、应用768 MiB、一次性迁移384 MiB，分别设置CPU预算和JVM参数。构建、初始化、应用启动按顺序进行。部署入口支持`KCG_BUILD_MEMORY/CPUS`、`KCG_DB_MEMORY/CPUS`、`KCG_APP_MEMORY/CPUS`、`KCG_MIGRATE_MEMORY`和`KCG_TEST_MEMORY/CPUS`，按CI/目标机预算调整，不按当前开发机余量承诺容量。
 
@@ -77,7 +77,7 @@ verify新增`standalone-deployment` job，消费同SHA全量门产出的CLI，�
 
 `.github/scripts/deployment-smoke.py`检查首次部署、真实注册/读取/登录/受保护写入、只读核验、应用不能DDL、按文档server与路径发出的Swagger式真实请求、经公开入口的`contract-test`、停止/启动持久化、重复同包部署保持一份Flyway历史及原密码、丢失数据卷后start拒绝。它与合同测试都不替代双Token完整需求判题。
 
-产物：`standalone-cli`、`backend-source-delivery`、`deployment-evidence`（export结果、commit/run绑定报告、脱敏日志、`reports/contract`下的合同报告与Surefire报告）。`report.json`另记`swagger`、`contract`分项、合同检查计数及`NOT_VERIFIED`清单。不上传状态或数据卷。已授权并执行CI #93；总结果failure、分项与artifact见[报告](DEPLOYMENT_DELIVERY_REPORT.md)，云端须修复后补齐同SHA证据。
+产物：`standalone-cli`、`backend-source-delivery`、`deployment-evidence`（export结果、commit/run绑定报告、脱敏日志、`reports/contract`下的合同报告与Surefire报告）。`report.json`另记`swagger`、`contract`分项、合同检查计数及`NOT_VERIFIED`清单。不上传状态或数据卷。CI #93因验收脚本对空体401解析JSON而失败；修复后的#94全部通过，分项与artifact见[报告](DEPLOYMENT_DELIVERY_REPORT.md)。
 
 ## 7. 接口文档与合同测试（步骤②）
 

@@ -1,10 +1,10 @@
 # 可独立部署的后端交付包与真实 HTTP 验收
 
 - 日期：2026-10-17。
-- 状态：**IN_PROGRESS / 步骤① BLOCKED_CI / HANDOFF_READY**。负责人已确认方案并授权进入实现；步骤①代码和CI门已接入，步骤②③尚未实施。负责人随后已授权提交、推送并取得CI验收；镜像发布仍未授权。
+- 状态：**IN_PROGRESS / 步骤① PASSED / 步骤②实施中**。负责人已确认方案并授权进入实现；步骤①由verify #94验收，步骤②合同见第12节，步骤③尚未实施。负责人随后已授权提交、推送并取得CI验收；镜像发布仍未授权。
 - 实现起点：云端 `main` / `cf44450`。信任既有云端成果，不为规划重复执行验证。
 - 依据：[MAIN](../../MAIN.md)、[当前能力](../PROJECT_STATUS.md)、[ADR-026](../architecture/ADR-026-layered-semantic-command-architecture.md)、[ADR-027](../architecture/ADR-027-git-as-version-history.md)。
-- 方案文本不是已交付或通过证据；步骤①实现范围、26项定向结果及CI #93分项见[报告](../DEPLOYMENT_DELIVERY_REPORT.md)；负责人要求转交云端，先按[接手说明](../DEPLOYMENT_CLOUD_HANDOFF.md)处理HTTP验收阻塞。
+- 方案文本不是已交付或通过证据；步骤①实现范围、26项定向结果、CI #93阻塞与#94验收见[报告](../DEPLOYMENT_DELIVERY_REPORT.md)。
 
 ## 1. 目标与用户流程
 
@@ -165,7 +165,7 @@ Swagger负责接口展示和手动发真实HTTP请求；它本身不是自动业
 
 步骤①代码已接入：独立package导出、显式物理schema、Flyway初始化工具、Docker/Compose配方、随包部署入口及独立CI烟测。原generate和Change/Git合同未改。新增入口合同与首轮支持限制见[部署包v1](../DEPLOYMENT_DELIVERY.md)。
 
-本机26项定向检查通过，没有执行Docker/数据库/业务应用。随后获授权提交/推送`a7cba11`并执行CI #93：原主job全绿，公开导出、容器构建、Flyway和应用启动通过；HTTP烟测在JSON解析处失败，数据持久化/权限/丢失卷验收未到达。步骤①及长期G门不能关闭。负责人要求在此节点交云端继续，下一动作是确认并修复HTTP阻塞、取得修复提交同SHA完整证据，见[接手说明](../DEPLOYMENT_CLOUD_HANDOFF.md)。
+本机26项定向检查通过，没有执行Docker/数据库/业务应用。随后获授权提交/推送`a7cba11`并执行CI #93：原主job全绿，公开导出、容器构建、Flyway和应用启动通过；HTTP烟测在JSON解析处失败，数据持久化/权限/丢失卷验收未到达。步骤①及长期G门不能关闭。负责人要求在此节点交云端继续（[接手说明](../DEPLOYMENT_CLOUD_HANDOFF.md)）。云端确认阻塞来自验收脚本对空体401的JSON解析，修复`30f50bd`后同SHA的[verify #94](https://github.com/HoloNova/Software-IR/actions/runs/39019809176)两个job全部success，第8节步骤①完成门关闭；长期G门不因此关闭。
 
 ## 11. 范围与旧文档关系
 

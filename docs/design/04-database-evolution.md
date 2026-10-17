@@ -2,7 +2,7 @@
 
 > 目标设计，不代表已实现。文中凡涉及 Bundle、CURRENT、状态目录、事务日志与恢复、`context`/`plan` 命令、单文件 0.1 入口的描述，都是 2026-10-14 之前的方案：工程版本现在由磁盘上的 SIR 加 Git 承担（见 [ADR-027](../architecture/ADR-027-git-as-version-history.md)），语言只有 `sir 0.2` 一种文档形式。现有能力以 [项目状态](../PROJECT_STATUS.md) 为准。
 
-当前推进依据：[方案11：部署与HTTP验收](11-portable-deployment-and-http-acceptance.md)已由负责人确认，先首建后受限兼容更新，步骤①代码待CI、保留数据更新尚未实施；本篇旧状态/发布模型不作为现成实现合同。
+当前推进依据：[方案11：部署与HTTP验收](11-portable-deployment-and-http-acceptance.md)已由负责人确认，先首建后受限兼容更新，步骤①已由CI #94验收、保留数据更新尚未实施；本篇旧状态/发布模型不作为现成实现合同。
 
 日期：2026-09-08。状态：推荐设计草案。依赖[共享契约](00-shared-contracts.md)与[编译模型](03-compiler-and-generated-backend.md)，由[本地部署设计](05-source-package-and-docker-deployment.md)调用。
 
