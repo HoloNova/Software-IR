@@ -20,7 +20,7 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 | `sir-project-graph` | 来源图的构建、校验、canonical 序列化与加载 |
 | `sir-change` | 增删改指令（`Command`/`CommandBatch`）的编辑与写回（`SourceEditor`） |
 | `sir-toolchain-application` | 编译、首次生成、只读结构查询/候选源编辑、独立交付包导出、基于 Git 的版本规划与应用、独立验证、静态校验与 JSONL 批量 |
-| `kcg-cli` | `generate`、候选交付 `package`（待CI）、只读 `inspect/scaffold`、候选 `edit`、`check`、只读 `version-plan`、`version-apply`，canonical JSON 输出 |
+| `kcg-cli` | `generate`、候选交付 `package`（CI待修复）、只读 `inspect/scaffold`、候选 `edit`、`check`、只读 `version-plan`、`version-apply`，canonical JSON 输出 |
 
 ## 3. 当前能力
 
@@ -43,9 +43,9 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 
 命令行可以打成单文件 `kcg-cli/target/kcg.jar` 直接 `java -jar` 运行（`mvn -B -pl kcg-cli -am -Dmaven.test.skip=true package`）。整条链运行时只依赖 antlr4-runtime；包只重新打包已有类，不新增模块。本机已验证它与类路径启动的完整流程输出一致；CI 冒烟步骤已通过（[verify #73](https://github.com/HoloNova/Software-IR/actions/runs/38677243253)，`3ebe5f1`），见[阶段报告第4节](CLI_WORKFLOW_REPORT.md)。
 
-### 独立部署交付（步骤①代码已接入，待CI）
+### 独立部署交付（步骤①已推送，CI阻塞，交云端接手）
 
-`kcg package`只导出完整源码、物理schema/Flyway脚本、Docker/Compose配方和独立执行工具，不在导出时启动服务。随包入口负责目标机上的初始化、构建、启动和同包重启。已完成26项本机轻量定向检查；没有本机部署/业务测试，镜像、真实SQL/HTTP及持久化均NOT_RUN。首版拒绝无界唯一文本、未定义精度的Decimal及缺外部身份实现等情形；普通generate不变。使用与限制见[部署包v1](DEPLOYMENT_DELIVERY.md)，证据见[步骤①报告](DEPLOYMENT_DELIVERY_REPORT.md)。Swagger/随包JUnit测试和不同包保留数据更新尚未实施，不能标称完整部署产品已发布。
+`kcg package`只导出完整源码、物理schema/Flyway脚本、Docker/Compose配方和独立执行工具，不在导出时启动服务。随包入口负责目标机上的初始化、构建、启动和同包重启。26项本机轻量定向检查通过，没有本机部署/业务测试。实现提交`a7cba11`的CI [#93](https://github.com/HoloNova/Software-IR/actions/runs/39002409782)原全量门及业务IT全绿，新包实际构建、Flyway建库和应用启动成功，但HTTP烟测JSON解析异常，后续权限、持久化及丢失卷门NOT_RUN。步骤①未验收，云端接手排障，见[交接说明](DEPLOYMENT_CLOUD_HANDOFF.md)。首版拒绝无界唯一文本、未定义精度的Decimal及缺外部身份实现等情形；普通generate不变。使用与限制见[部署包v1](DEPLOYMENT_DELIVERY.md)，证据见[步骤①报告](DEPLOYMENT_DELIVERY_REPORT.md)。Swagger/随包JUnit测试和不同包保留数据更新尚未实施，不能标称完整部署产品已发布。
 
 ### 基于 Git 的版本变更（ADR-027）
 
@@ -64,7 +64,8 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 
 ## 4. 验证状态
 
-- 最近核验的 CI：`verify` [#88](https://github.com/HoloNova/Software-IR/actions/runs/38901782044)（`fe40836`，`kcg scaffold dual-token`，`main`）通过，日志确认双 Token 脚手架 IT 全部 PASS；此前 [#85](https://github.com/HoloNova/Software-IR/actions/runs/38897336941)（`70dc6cc`，Bearer 凭据认证，`main`）通过，日志确认新 IT 的认证场景全部 PASS；此前 [#82](https://github.com/HoloNova/Software-IR/actions/runs/38890915687)（`de563f6`，`secret` 字段与 `matches`，`main`）通过，日志确认注册／登录场景通过；此前 #81（401 状态码）、[#79](https://github.com/HoloNova/Software-IR/actions/runs/38884618786)（`6f244fa`，真实库核验的修复与 `TokenDeskBusinessConformanceIT`，`main`）通过，日志确认新 IT 运行并通过；此前 [#78](https://github.com/HoloNova/Software-IR/actions/runs/38715357765)（`aa1ad70`，守卫更新）、[#77](https://github.com/HoloNova/Software-IR/actions/runs/38712747591)（`1f947db`，时间平移与数值加减）通过：冻结与完成两条全量闸门、业务场景 IT、独立验证 IT、单文件包冒烟均 success，见[验证说明](qualification/README.md)。此前 [#76](https://github.com/HoloNova/Software-IR/actions/runs/38710339131)（`058c9d6`）、[#73](https://github.com/HoloNova/Software-IR/actions/runs/38677243253)、[#72](https://github.com/HoloNova/Software-IR/actions/runs/38671123332) 同样通过。核对时只读了运行与步骤状态。
+- 最新核验：`a7cba11`的[verify #93](https://github.com/HoloNova/Software-IR/actions/runs/39002409782)总结果failure；原主job全绿，新部署job建库/启动成功后在HTTP响应JSON解析处失败。分项和artifact见[部署报告](DEPLOYMENT_DELIVERY_REPORT.md)，不是部署已验收。
+- 此前业务能力 CI：`verify` [#88](https://github.com/HoloNova/Software-IR/actions/runs/38901782044)（`fe40836`，`kcg scaffold dual-token`，`main`）通过，日志确认双 Token 脚手架 IT 全部 PASS；此前 [#85](https://github.com/HoloNova/Software-IR/actions/runs/38897336941)（`70dc6cc`，Bearer 凭据认证，`main`）通过，日志确认新 IT 的认证场景全部 PASS；此前 [#82](https://github.com/HoloNova/Software-IR/actions/runs/38890915687)（`de563f6`，`secret` 字段与 `matches`，`main`）通过，日志确认注册／登录场景通过；此前 #81（401 状态码）、[#79](https://github.com/HoloNova/Software-IR/actions/runs/38884618786)（`6f244fa`，真实库核验的修复与 `TokenDeskBusinessConformanceIT`，`main`）通过，日志确认新 IT 运行并通过；此前 [#78](https://github.com/HoloNova/Software-IR/actions/runs/38715357765)（`aa1ad70`，守卫更新）、[#77](https://github.com/HoloNova/Software-IR/actions/runs/38712747591)（`1f947db`，时间平移与数值加减）通过：冻结与完成两条全量闸门、业务场景 IT、独立验证 IT、单文件包冒烟均 success，见[验证说明](qualification/README.md)。此前 [#76](https://github.com/HoloNova/Software-IR/actions/runs/38710339131)（`058c9d6`）、[#73](https://github.com/HoloNova/Software-IR/actions/runs/38677243253)、[#72](https://github.com/HoloNova/Software-IR/actions/runs/38671123332) 同样通过。核对时只读了运行与步骤状态。
 - 清理后工作树的本机定向单元测试共 830 项、0 失败（各模块数字见[验证说明](qualification/README.md)）；不含需要 MySQL 的 IT，也不是全量闸门。
 - 公开CLI入口的本机定向验证（提交前）：29项、0失败/错误/跳过，来自7个类各自最新Surefire XML；新命令用真实CLI子进程及临时Git工程串起多源编辑/应用，结果与候选从零生成逐字节相同，详见[阶段报告](CLI_WORKFLOW_REPORT.md)。#72 的测试数字未在此抄录，需要时以该运行页面的报告和 artifact 为准。
 - 单文件包：本机对比 `java -jar` 与类路径启动的完整流程，除 Git 提交 ID（含提交时间）外逐字节一致；CI 冒烟步骤在 #73 通过，见[阶段报告第4节](CLI_WORKFLOW_REPORT.md)。
@@ -92,7 +93,7 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 
 公开CLI流程已验收，不重开已完成R1–R5，不改变Git版本合同。
 
-**当前优先方向：**负责人已确认[可独立部署的后端交付包与真实HTTP验收方案](design/11-portable-deployment-and-http-acceptance.md)，按“首次自动部署 → Swagger与随包网络测试 → 保留数据更新”三步推进。负责人随后已授权进入实现；步骤①代码和CI门已接入，状态AWAITING_CI，负责人已授权提交/推送并取得CI证据。步骤②③尚未实施，详见[报告](DEPLOYMENT_DELIVERY_REPORT.md)。当前开发机不进行部署或业务测试，验收在CI或负责人后续指定的机器执行；不按当前开发机资源设定发布环境。既有SLM题目保留，但未启动模型评测；尚未通过的部署和测试输出不能记为已验收。
+**当前优先方向：**负责人已确认[可独立部署的后端交付包与真实HTTP验收方案](design/11-portable-deployment-and-http-acceptance.md)，按“首次自动部署 → Swagger与随包网络测试 → 保留数据更新”三步推进。负责人随后已授权进入实现；步骤①已推送`a7cba11`并执行CI #93，状态BLOCKED_CI / HANDOFF_READY：构建、建库和启动成功，HTTP验收阻塞；负责人要求在此节点转交云端继续，下一动作见[交接说明](DEPLOYMENT_CLOUD_HANDOFF.md)。步骤②③尚未实施，详见[报告](DEPLOYMENT_DELIVERY_REPORT.md)。当前开发机不进行部署或业务测试，验收在CI或负责人后续指定的机器执行；不按当前开发机资源设定发布环境。既有SLM题目保留，但未启动模型评测；尚未通过的部署和测试输出不能记为已验收。
 
 下面的 S1/S2 是负责人 2026-10-15 确认、随后完成的阶段划分与历史进展。
 

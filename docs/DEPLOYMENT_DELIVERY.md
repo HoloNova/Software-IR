@@ -1,6 +1,6 @@
-# 后端独立部署包 v1（步骤①，待CI验收）
+# 后端独立部署包 v1（步骤①，CI待修复）
 
-代码入口已实现，已授权提交/推送，待同SHA CI验收；Docker构建、建库、启动和真实HTTP门均为 **NOT_RUN**。不要把本文命令当成已经在CI或目标机器通过的资格。Swagger和随包JUnit网络测试属于步骤②，保留数据更新属于步骤③。
+实现已推送`a7cba11`，[CI #93](https://github.com/HoloNova/Software-IR/actions/runs/39002409782)已完成Docker构建、建库和启动，但HTTP验收JSON解析失败，后续门未运行。步骤①尚未验收，见[云端接手说明](DEPLOYMENT_CLOUD_HANDOFF.md)。不要把部分成功当成完整部署资格。Swagger和随包JUnit网络测试属于步骤②，保留数据更新属于步骤③。
 
 ## 1. 导出与部署分开
 
@@ -67,7 +67,7 @@ stop不删卷、配置、密码或镜像。start要求卷/镜像存在，验证�
 
 ## 5. 依赖与资源
 
-构建基底`maven:3.9.9-eclipse-temurin-21`，运行基底`eclipse-temurin:21.0.7_6-jre-jammy`，MySQL `8.4.5`；工具使用Flyway core/mysql `11.8.2`和Connector/J `9.3.0`。这些是待CI验证的选择，不是已验证的镜像摘要或支持矩阵。新增Flyway/Actuator依赖只出现在交付源码，不加入工具链运行依赖。
+构建基底`maven:3.9.9-eclipse-temurin-21`，运行基底`eclipse-temurin:21.0.7_6-jre-jammy`，MySQL `8.4.5`；工具使用Flyway core/mysql `11.8.2`和Connector/J `9.3.0`。CI #93已在本部署样例中完成镜像取得、应用/工具构建、迁移与启动；不等于全部业务或生产支持矩阵，HTTP门仍有阻塞，也未锁定镜像摘要。新增Flyway/Actuator依赖只出现在交付源码，不加入工具链运行依赖。
 
 默认构建容器1536 MiB/1.5 CPU，Maven堆512 MiB、元空间256 MiB；运行MySQL1024 MiB、应用768 MiB、一次性迁移384 MiB，分别设置CPU预算和JVM参数。构建、初始化、应用启动按顺序进行。部署入口支持`KCG_BUILD_MEMORY/CPUS`、`KCG_DB_MEMORY/CPUS`、`KCG_APP_MEMORY/CPUS`和`KCG_MIGRATE_MEMORY`，按CI/目标机预算调整，不按当前开发机余量承诺容量。
 
@@ -77,4 +77,4 @@ verify新增`standalone-deployment` job，消费同SHA全量门产出的CLI，�
 
 `.github/scripts/deployment-smoke.py`检查首次部署、真实注册/读取/登录/受保护写入、只读核验、应用不能DDL、停止/启动持久化、重复同包部署保持一份Flyway历史及原密码、丢失数据卷后start拒绝。它是CI第一步烟测，不是步骤②的随包业务套件，也不替代双Token完整需求判题。
 
-产物：`standalone-cli`、`backend-source-delivery`、`deployment-evidence`（export结果、commit/run绑定报告、脱敏日志）。不上传状态或数据卷。全套仅在提交/推送获授权之后由CI运行，本轮未触发。
+产物：`standalone-cli`、`backend-source-delivery`、`deployment-evidence`（export结果、commit/run绑定报告、脱敏日志）。不上传状态或数据卷。已授权并执行CI #93；总结果failure、分项与artifact见[报告](DEPLOYMENT_DELIVERY_REPORT.md)，云端须修复后补齐同SHA证据。

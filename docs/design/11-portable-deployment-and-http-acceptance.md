@@ -1,10 +1,10 @@
 # 可独立部署的后端交付包与真实 HTTP 验收
 
 - 日期：2026-10-17。
-- 状态：**IN_PROGRESS / 步骤① AWAITING_CI**。负责人已确认方案并授权进入实现；步骤①代码和CI门已接入，步骤②③尚未实施。负责人随后已授权提交、推送并取得CI验收；镜像发布仍未授权。
+- 状态：**IN_PROGRESS / 步骤① BLOCKED_CI / HANDOFF_READY**。负责人已确认方案并授权进入实现；步骤①代码和CI门已接入，步骤②③尚未实施。负责人随后已授权提交、推送并取得CI验收；镜像发布仍未授权。
 - 实现起点：云端 `main` / `cf44450`。信任既有云端成果，不为规划重复执行验证。
 - 依据：[MAIN](../../MAIN.md)、[当前能力](../PROJECT_STATUS.md)、[ADR-026](../architecture/ADR-026-layered-semantic-command-architecture.md)、[ADR-027](../architecture/ADR-027-git-as-version-history.md)。
-- 方案文本不是已交付或通过证据；步骤①实现范围、26项定向结果及NOT_RUN门见[报告](../DEPLOYMENT_DELIVERY_REPORT.md)。
+- 方案文本不是已交付或通过证据；步骤①实现范围、26项定向结果及CI #93分项见[报告](../DEPLOYMENT_DELIVERY_REPORT.md)；负责人要求转交云端，先按[接手说明](../DEPLOYMENT_CLOUD_HANDOFF.md)处理HTTP验收阻塞。
 
 ## 1. 目标与用户流程
 
@@ -159,13 +159,13 @@ Swagger负责接口展示和手动发真实HTTP请求；它本身不是自动业
 - 串行执行重活，分别约束构建、MySQL、应用和测试进程，结束核对资源释放；不复用或清理不属于本次测试的卷/容器。
 - CI应测试真实导出包与公开入口，而不是绕过产品链路的测试专用部署脚本。冷构建、失败路径、重复启动、数据持久化和版本更新分别留证据。
 - 报告绑定commit SHA、CI run URL及上传artifact，记录包/目标、各阶段结果、脱敏日志与请求断言；未运行记NOT_RUN。
-- 本文没有运行测试；既有#88只证明此前双Token实现，不覆盖本计划新增部署能力。
+- 方案确认时没有运行新增测试；后续CI #93已覆盖步骤①部分链路并发现HTTP验收阻塞，分项见报告。既有#88只证明此前双Token实现，不覆盖新增部署能力。
 
 ## 10. 实施记录（2026-10-17）
 
 步骤①代码已接入：独立package导出、显式物理schema、Flyway初始化工具、Docker/Compose配方、随包部署入口及独立CI烟测。原generate和Change/Git合同未改。新增入口合同与首轮支持限制见[部署包v1](../DEPLOYMENT_DELIVERY.md)。
 
-本机26项定向检查通过，没有执行Docker/数据库/业务应用。部署、镜像与依赖兼容、真实HTTP及数据持久化验收仍NOT_RUN，不能关闭步骤①或长期G门。下一动作是授权提交/推送之后取得同SHA CI证据；没有为触发CI自行提交。
+本机26项定向检查通过，没有执行Docker/数据库/业务应用。随后获授权提交/推送`a7cba11`并执行CI #93：原主job全绿，公开导出、容器构建、Flyway和应用启动通过；HTTP烟测在JSON解析处失败，数据持久化/权限/丢失卷验收未到达。步骤①及长期G门不能关闭。负责人要求在此节点交云端继续，下一动作是确认并修复HTTP阻塞、取得修复提交同SHA完整证据，见[接手说明](../DEPLOYMENT_CLOUD_HANDOFF.md)。
 
 ## 11. 范围与旧文档关系
 
