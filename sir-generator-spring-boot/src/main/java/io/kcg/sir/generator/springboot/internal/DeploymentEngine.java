@@ -193,12 +193,24 @@ public final class DeploymentEngine {
      * The versions a delivery appends to the chain it inherits: one statement per file, and the contract after each
      * version but the last (the last is schema.tsv). Contract V(base) is the inherited schema.tsv, copied by the caller.
      */
-    public List<GeneratedFile> renderEvolution(DeploymentPlan plan, SchemaEvolution evolution, String baseContract) {
+    /**
+     * The appended versions: one SQL file each, the contract before each later version, and deploy/renames.tsv, which
+     * tells the migration tool under which name each renamed column holds the values it had before (version, table, old
+     * name, new name per line; the base delivery's lines first).
+     */
+    public List<GeneratedFile> renderEvolution(DeploymentPlan plan, SchemaEvolution evolution, String baseContract, String baseRenames) {
         List<GeneratedFile> files = new ArrayList<>();
-        StringBuilder contract = new StringBuilder(baseContract);
+        List<String> contract = new ArrayList<>(baseContract.lines().toList());
+        StringBuilder renames = new StringBuilder(baseRenames);
         for (var step : evolution.steps()) {
             String header = "-- KCG delivery schema version " + step.version() + "; frozen once published.\n";
             switch (step) {
+                case SchemaEvolution.RenameColumn rename -> {
+                    add(files, plan, "deploy/migrations/V" + step.version() + "__rename_column_" + (rename.table() + "_" + rename.from().name()).toLowerCase(Locale.ROOT) + ".sql",
+                        header + "ALTER TABLE " + quote(rename.table()) + " RENAME COLUMN " + quote(rename.from().name()) + " TO " + quote(rename.to().name()) + ";\n");
+                    renames.append(step.version()).append('\t').append(rename.table()).append('\t').append(rename.from().name())
+                        .append('\t').append(rename.to().name()).append('\n');
+                }
                 case SchemaEvolution.CreateTable create -> {
                     List<String> definitions = new ArrayList<>();
                     create.table().columns().forEach(c -> definitions.add("  " + definition(c)));
@@ -217,10 +229,12 @@ public final class DeploymentEngine {
                     "deploy/migrations/V" + step.version() + "__add_column_" + (column.table() + "_" + column.column().name()).toLowerCase(Locale.ROOT) + ".sql",
                     header + "ALTER TABLE " + quote(column.table()) + " ADD COLUMN " + definition(column.column()) + ", ALGORITHM=INSTANT;\n");
             }
-            step.addedRows().forEach(row -> contract.append(row).append('\n'));
+            for (String row : step.removedRows()) if (!contract.remove(row)) throw new IllegalStateException("contract row not found: " + row);
+            contract.addAll(step.addedRows());
             if (step.version() < evolution.targetVersion())
-                add(files, plan, "deploy/contracts/V" + step.version() + ".tsv", contract.toString());
+                add(files, plan, "deploy/contracts/V" + step.version() + ".tsv", String.join("\n", contract) + "\n");
         }
+        if (!renames.isEmpty()) add(files, plan, "deploy/renames.tsv", renames.toString());
         return List.copyOf(files);
     }
     private static String sqlType(Column column) {

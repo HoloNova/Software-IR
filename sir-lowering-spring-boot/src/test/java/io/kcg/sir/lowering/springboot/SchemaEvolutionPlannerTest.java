@@ -53,10 +53,23 @@ class SchemaEvolutionPlannerTest {
         assertEquals(4, kinds.size());
     }
 
-    @Test void aFieldThatKeepsItsDeclaredIdentityIsRecognisedAsRenamed() {
+    @Test void aFieldThatKeepsItsDeclaredIdentityRenamesItsColumnFirst() {
         String before = base().replace(NOTE, NOTE + "\n    entity Archive persistent { identity id: Int64 generated auto; field text: String @id(\"archive-text\"); }");
-        String after = before.replace("field text: String @id(", "field body: String @id(");
-        assertEquals(List.of("COLUMN_RENAMED archive.text -> body"), continueFrom(before, after).refusals());
+        String after = before.replace("field text: String @id(", "field body: String @id(")
+            .replace(NOTE, "      field author: Ref<User>;\n      field text: String;\n      field title: Optional<String>;\n    }");
+        var steps = continueFrom(before, after).evolution().orElseThrow().steps();
+        assertEquals(List.of("V2 RENAME_COLUMN archive.text -> body", "V3 ADD_NULLABLE_COLUMN note.title"),
+            steps.stream().map(SchemaEvolution.Step::describe).toList());
+    }
+
+    @Test void aRenamedKeyOrARenameThatAlsoChangesTheColumnIsRefused() {
+        String before = base().replace(NOTE, NOTE + "\n    entity Archive persistent { identity id: Int64 generated auto; field text: String @id(\"archive-text\"); }");
+        // The identity keeps its identity under any name, but other tables refer to the key column by name.
+        String key = before.replace("entity Archive persistent { identity id:", "entity Archive persistent { identity archiveId:");
+        assertEquals(List.of("PRIMARY_COLUMN_RENAMED archive.id -> archive_id"), continueFrom(before, key).refusals());
+        String retyped = before.replace("field text: String @id(", "field body: Int64 @id(");
+        assertTrue(continueFrom(before, retyped).refusals().stream().anyMatch(r -> r.startsWith("COLUMN_CHANGED archive.text")),
+            continueFrom(before, retyped).refusals().toString());
     }
 
     @Test void removedTablesNewTableCyclesAndAnotherDatabaseEngineAreRefused() {

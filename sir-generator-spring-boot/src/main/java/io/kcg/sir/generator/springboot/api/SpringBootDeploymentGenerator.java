@@ -10,7 +10,8 @@ public final class SpringBootDeploymentGenerator {
     public List<GeneratedFile> generate(DeploymentPlan plan) { return new DeploymentEngine().render(plan); }
 
     /** The migration files and intermediate contracts a delivery appends to an inherited chain; see SchemaEvolution. */
-    public List<GeneratedFile> generateEvolution(DeploymentPlan plan, SchemaEvolution evolution, String baseContract) {
-        return new DeploymentEngine().renderEvolution(plan, evolution, baseContract);
+    /** {@code baseRenames} is the base delivery's deploy/renames.tsv, empty when it has none. */
+    public List<GeneratedFile> generateEvolution(DeploymentPlan plan, SchemaEvolution evolution, String baseContract, String baseRenames) {
+        return new DeploymentEngine().renderEvolution(plan, evolution, baseContract, baseRenames);
     }
 }

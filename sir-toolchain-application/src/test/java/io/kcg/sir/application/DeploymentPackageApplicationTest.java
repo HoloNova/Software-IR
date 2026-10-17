@@ -138,6 +138,37 @@ class DeploymentPackageApplicationTest {
         assertFalse(Files.exists(temp.resolve("tampered")));
     }
 
+    @Test void aFieldRenamedUnderItsDeclaredIdentityRenamesTheColumnAndRecordsItForTheMigrationTool() throws Exception {
+        Path source = source(true);
+        String declared = Files.readString(source.resolve("project.sir")).replace(
+            "      field author: Ref<User>;\n      field text: String;\n    }", "      field author: Ref<User>;\n      field text: String @id(\"note-text\");\n    }");
+        Files.writeString(source.resolve("project.sir"), declared);
+        Path base = export(source, temp.resolve("base")).manifest().outputRoot();
+        String renamed = declared
+            .replace("field text: String @id(\"note-text\");", "field body: String @id(\"note-text\");")
+            .replace("    view NoteView from Note {\n      field id: Int64;\n      field text: String;", "    view NoteView from Note {\n      field id: Int64;\n      field body: String;")
+            .replace("          text: input.text;", "          body: input.text;");
+        Files.writeString(source.resolve("project.sir"), renamed);
+        var result = new DeploymentPackageApplication().export(new DeploymentPackageRequest(source, ENTRY, temp.resolve("renamed"), Optional.empty(), Optional.of(base)));
+        var exported = assertInstanceOf(DeploymentPackageResult.Exported.class, result, result.toString());
+        Path next = exported.manifest().outputRoot();
+        assertEquals(List.of("V2 RENAME_COLUMN note.text -> body"), exported.continuation().orElseThrow().steps());
+        assertEquals("-- KCG delivery schema version 2; frozen once published.\nALTER TABLE `note` RENAME COLUMN `text` TO `body`;\n",
+            Files.readString(next.resolve("deploy/migrations/V2__rename_column_note_text.sql")));
+        assertEquals("2\tnote\ttext\tbody\n", Files.readString(next.resolve("deploy/renames.tsv")));
+        assertArrayEquals(Files.readAllBytes(base.resolve("deploy/schema.tsv")), Files.readAllBytes(next.resolve("deploy/contracts/V1.tsv")));
+        assertTrue(Files.readString(next.resolve("deploy/schema.tsv")).contains("note\tbody\t"));
+        assertFalse(Files.readString(next.resolve("deploy/schema.tsv")).contains("note\ttext\t"));
+
+        // A later version inherits the record, so an instance two versions behind still reads the column correctly.
+        Files.writeString(source.resolve("project.sir"), renamed.replace("      field body: String @id(\"note-text\");\n    }",
+            "      field body: String @id(\"note-text\");\n      field title: Optional<String> where length(0, 80);\n    }"));
+        var third = new DeploymentPackageApplication().export(new DeploymentPackageRequest(source, ENTRY, temp.resolve("third"), Optional.empty(), Optional.of(next)));
+        var continued = assertInstanceOf(DeploymentPackageResult.Exported.class, third, third.toString());
+        assertEquals(List.of("V3 ADD_NULLABLE_COLUMN note.title"), continued.continuation().orElseThrow().steps());
+        assertEquals("2\tnote\ttext\tbody\n", Files.readString(continued.manifest().outputRoot().resolve("deploy/renames.tsv")));
+    }
+
     private static Path copy(Path from, Path to) throws Exception {
         try (var walk = Files.walk(from)) {
             for (Path file : (Iterable<Path>) walk::iterator) {

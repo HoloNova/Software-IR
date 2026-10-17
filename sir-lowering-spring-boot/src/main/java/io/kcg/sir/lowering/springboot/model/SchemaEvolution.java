@@ -19,11 +19,29 @@ public record SchemaEvolution(int baseVersion, List<Step> steps) {
 
     public int targetVersion() { return baseVersion + steps.size(); }
 
-    public sealed interface Step permits CreateTable, AddNullableColumn {
+    public sealed interface Step permits RenameColumn, CreateTable, AddNullableColumn {
         int version();
         /** The contract rows this version adds. */
         List<String> addedRows();
+        /** The contract rows this version takes away; the rows it adds replace them. */
+        default List<String> removedRows() { return List.of(); }
         String describe();
+    }
+
+    /**
+     * A field that kept its declared identity under a new name: the column follows the name and keeps its values. Only
+     * the name may differ; the primary key is never renamed, since other tables refer to it.
+     */
+    public record RenameColumn(int version, String table, Column from, Column to) implements Step {
+        public RenameColumn {
+            Objects.requireNonNull(table); Objects.requireNonNull(from); Objects.requireNonNull(to);
+            if (from.primary() || from.name().equals(to.name()) || !from.symbol().equals(to.symbol())
+                    || !SchemaContract.row(table, from).replaceFirst("^[^\\t]*\\t[^\\t]*", "").equals(SchemaContract.row(table, to).replaceFirst("^[^\\t]*\\t[^\\t]*", "")))
+                throw new IllegalArgumentException("only the name of a non-key column with the same identity can change");
+        }
+        public List<String> addedRows() { return List.of(SchemaContract.row(table, to)); }
+        public List<String> removedRows() { return List.of(SchemaContract.row(table, from)); }
+        public String describe() { return "V" + version + " RENAME_COLUMN " + table + "." + from.name() + " -> " + to.name(); }
     }
 
     public record CreateTable(int version, Table table) implements Step {

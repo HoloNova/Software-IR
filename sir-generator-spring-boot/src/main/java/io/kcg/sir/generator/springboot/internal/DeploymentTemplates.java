@@ -517,6 +517,7 @@ final class DeploymentTemplates {
                     contracts.add(List.of());
                     for (int version = 1; version < n; version++) contracts.add(contract(deploy.resolve("contracts/V" + version + ".tsv")));
                     contracts.add(contract(deploy.resolve("schema.tsv")));
+                    List<String[]> renames = renames(deploy.resolve("renames.tsv"), n);
                     try (Connection db = DriverManager.getConnection(url, "kcg_migrate", password)) {
                         reserved(db, contracts.get(n));
                         int k = classify(db, url, password, contracts, n);
@@ -526,7 +527,7 @@ final class DeploymentTemplates {
                             System.out.println("KCG_DB_STATE V" + k + " package=V" + n);
                             return;
                         }
-                        if (k < n) apply(db, url, password, contracts, k, n, k > 0);
+                        if (k < n) apply(db, url, password, contracts, renames, k, n, k > 0);
                         grant(db, contracts.get(n));
                         System.out.println("KCG_DATABASE_READY V" + n + " applied=" + (k < n ? "V" + (k + 1) + "..V" + n : "none"));
                     }
@@ -569,6 +570,21 @@ final class DeploymentTemplates {
                 for (String[] row : rows) {
                     if (row.length != 10 || !row[0].matches("[A-Za-z_][A-Za-z0-9_]{0,63}") || !row[1].matches("[A-Za-z_][A-Za-z0-9_]{0,63}"))
                         throw new IllegalStateException("invalid schema contract: " + file.getFileName());
+                }
+                return rows;
+            }
+
+            /** deploy/renames.tsv: version, table, old name and new name of each column a version renamed, in version order. */
+            private static List<String[]> renames(Path file, int n) throws Exception {
+                if (!Files.exists(file)) return List.of();
+                List<String[]> rows = Files.readAllLines(file).stream().filter(s -> !s.isBlank()).map(s -> s.split("\\t", -1)).toList();
+                int last = 0;
+                for (String[] row : rows) {
+                    if (row.length != 4 || !row[0].matches("[1-9][0-9]{0,5}") || Integer.parseInt(row[0]) > n || Integer.parseInt(row[0]) < last
+                            || !row[1].matches("[A-Za-z_][A-Za-z0-9_]{0,63}") || !row[2].matches("[A-Za-z_][A-Za-z0-9_]{0,63}")
+                            || !row[3].matches("[A-Za-z_][A-Za-z0-9_]{0,63}"))
+                        throw new IllegalStateException("invalid renames.tsv");
+                    last = Integer.parseInt(row[0]);
                 }
                 return rows;
             }
@@ -639,11 +655,24 @@ final class DeploymentTemplates {
 
             /**
              * Applies V(k+1)..Vn one version at a time, verifying each contract. For an existing database it proves that the
-             * rows and values of every table and column of V(k) are unchanged, that added columns are null in every old row and
-             * that added tables are empty.
+             * rows and values of every table and column of V(k) are unchanged (a column those versions renamed is read under
+             * its new name), that added columns are null in every old row and that added tables are empty.
              */
-            private static void apply(Connection db, String url, String password, List<List<String[]>> contracts, int k, int n, boolean preserve) throws Exception {
-                Map<String, String> before = preserve ? digest(db, contracts.get(k)) : Map.of();
+            private static void apply(Connection db, String url, String password, List<List<String[]>> contracts, List<String[]> renames,
+                    int k, int n, boolean preserve) throws Exception {
+                // Under which name each column of V(k) holds its values once V(k+1)..Vn have run.
+                Map<String, String> moved = new HashMap<>();
+                for (String[] row : contracts.get(k)) moved.put(row[0] + "." + row[1], row[1]);
+                for (String[] rename : renames) {
+                    int version = Integer.parseInt(rename[0]);
+                    if (!preserve || version <= k) continue;
+                    String key = null;
+                    for (var entry : moved.entrySet())
+                        if (entry.getKey().startsWith(rename[1] + ".") && entry.getValue().equals(rename[2])) key = entry.getKey();
+                    if (key == null) throw new IllegalStateException("renames.tsv renames a column V" + k + " does not have: " + rename[1] + "." + rename[2]);
+                    moved.put(key, rename[3]);
+                }
+                Map<String, String> before = preserve ? digest(db, contracts.get(k), Map.of()) : Map.of();
                 for (int version = k + 1; version <= n; version++) {
                     changing = true;
                     try {
@@ -658,10 +687,11 @@ final class DeploymentTemplates {
                     }
                 }
                 if (!preserve) return;
-                Map<String, String> after = digest(db, contracts.get(k));
+                Map<String, String> after = digest(db, contracts.get(k), moved);
                 if (!before.equals(after)) throw new Recovery("DATA_CHANGED", "rows or values of the previous schema changed during migration");
                 Set<String> oldColumns = new HashSet<>(), oldTables = new HashSet<>();
-                for (String[] row : contracts.get(k)) { oldTables.add(row[0]); oldColumns.add(row[0] + "." + row[1]); }
+                for (String[] row : contracts.get(k)) oldTables.add(row[0]);
+                moved.forEach((column, name) -> oldColumns.add(column.substring(0, column.indexOf('.') + 1) + name));
                 Set<String> newTables = new TreeSet<>();
                 for (String[] row : contracts.get(n)) {
                     if (!oldTables.contains(row[0])) newTables.add(row[0]);
@@ -676,7 +706,7 @@ final class DeploymentTemplates {
             }
 
             /** Per table "<rows>:<sha256>" over its contract columns in primary key order; NULL is encoded apart from any value. */
-            private static Map<String, String> digest(Connection db, List<String[]> contract) throws Exception {
+            private static Map<String, String> digest(Connection db, List<String[]> contract, Map<String, String> moved) throws Exception {
                 Map<String, List<String>> columns = new TreeMap<>();
                 Map<String, String> keys = new HashMap<>();
                 for (String[] row : contract) {
@@ -689,8 +719,9 @@ final class DeploymentTemplates {
                     Collections.sort(names);
                     String key = Objects.requireNonNull(keys.get(table.getKey()), "primary key of " + table.getKey());
                     StringBuilder select = new StringBuilder("SELECT ");
-                    for (int i = 0; i < names.size(); i++) select.append(i == 0 ? "" : ", ").append('`').append(names.get(i)).append('`');
-                    select.append(" FROM `").append(table.getKey()).append("` ORDER BY `").append(key).append('`');
+                    for (int i = 0; i < names.size(); i++)
+                        select.append(i == 0 ? "" : ", ").append('`').append(moved.getOrDefault(table.getKey() + "." + names.get(i), names.get(i))).append('`');
+                    select.append(" FROM `").append(table.getKey()).append("` ORDER BY `").append(moved.getOrDefault(table.getKey() + "." + key, key)).append('`');
                     MessageDigest sha = MessageDigest.getInstance("SHA-256");
                     long rows = 0;
                     try (Statement s = db.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY)) {

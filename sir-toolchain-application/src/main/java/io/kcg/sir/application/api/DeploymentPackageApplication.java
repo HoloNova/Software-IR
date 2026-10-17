@@ -101,7 +101,8 @@ public final class DeploymentPackageApplication {
             if (!evolution.steps().isEmpty()) {
                 String path = "deploy/contracts/V" + base.version() + ".tsv";
                 files.put(path, new GeneratedFile(path, base.schema(), plan.id(), Optional.empty()));
-                for (var file : new SpringBootDeploymentGenerator().generateEvolution(plan, evolution, base.schema()))
+                for (var file : new SpringBootDeploymentGenerator().generateEvolution(plan, evolution, base.schema(),
+                        base.chain().getOrDefault(RENAMES, "")))
                     files.put(file.relativePath(), file);
             }
             continuation = Optional.of(new DeploymentPackageResult.Continuation(base.id(), evolution.targetVersion(),
@@ -136,7 +137,7 @@ public final class DeploymentPackageApplication {
         return new DeploymentPackageResult.Exported(packageId, loaded.get().snapshot().manifest(),
             new ExecutionManifest(output, saved.appliedFiles()), diagnostics, continuation);
     }
-    private static final String SIR_ENTRY = "sir-entry";
+    private static final String SIR_ENTRY = "sir-entry", RENAMES = "deploy/renames.tsv";
 
     private static boolean overlaps(Path a, Path b) { return a.startsWith(b) || b.startsWith(a); }
 
@@ -195,6 +196,8 @@ public final class DeploymentPackageApplication {
                         throw new Refused("SIR-APP-PACKAGE-BASE-003", "unexpected base contract: " + name);
                     chain.put(path, text(Files.readAllBytes(root.resolve(path)), path));
                 }
+                // Which columns earlier versions renamed: inherited with the chain, read by the migration tool.
+                if (listed.containsKey(RENAMES)) chain.put(RENAMES, text(Files.readAllBytes(root.resolve(RENAMES)), RENAMES));
                 for (int i = 1; i < version; i++) if (!chain.containsKey("deploy/contracts/V" + i + ".tsv"))
                     throw new Refused("SIR-APP-PACKAGE-BASE-003", "base contract V" + i + " is missing");
                 if (!listed.containsKey("deploy/schema.tsv") || !listed.containsKey("deploy/compose.yaml"))

@@ -14,8 +14,9 @@ import java.util.*;
  * <p>The change layer decides what changed ({@link SemanticDelta}); this class only maps those changes onto tables and
  * columns, matched by semantic identity rather than by name, and decides which of them the target can apply. An entity
  * or field the delta adds becomes a table or column to create; one it deletes is refused. A column kept under the same
- * identity is compared physically: a different name is a rename, any other difference a change, and both are refused
- * in round 1, which supports an unchanged schema, new tables and new plain nullable columns only.
+ * identity is compared physically: when only its name differs (a field renamed under a declared {@code @id}) the column
+ * is renamed with it and keeps its values; any other difference is refused. Round 1 thus supports an unchanged schema,
+ * renamed non-key columns, new tables and new plain nullable columns.
  *
  * <p>A table or column that appears or disappears without the delta adding or deleting it means the two inputs
  * disagree. That, and a chain that does not end at the target contract, are faults of the toolchain (SELFCHECK), never
@@ -46,6 +47,7 @@ public final class SpringBootSchemaEvolutionPlanner {
         Map<String, Table> targetTables = new LinkedHashMap<>();
         target.tables().forEach(t -> targetTables.put(t.symbol(), t));
         Set<String> baseTableSymbols = new HashSet<>(), baseTableNamesLower = new HashSet<>();
+        List<SchemaEvolution.RenameColumn> renames = new ArrayList<>();
         for (Table old : base.tables()) {
             baseTableSymbols.add(old.symbol());
             baseTableNamesLower.add(old.name().toLowerCase(Locale.ROOT));
@@ -66,8 +68,14 @@ public final class SpringBootSchemaEvolutionPlanner {
                 }
                 String before = SchemaContract.row(old.name(), column), after = SchemaContract.row(now.name(), current);
                 if (before.equals(after)) continue;
-                if (!column.name().equals(current.name()) && attributes(before).equals(attributes(after)))
-                    refusals.add("COLUMN_RENAMED " + old.name() + "." + column.name() + " -> " + current.name());
+                if (!column.name().equals(current.name()) && attributes(before).equals(attributes(after))) {
+                    String subject = old.name() + "." + column.name() + " -> " + current.name();
+                    boolean taken = old.columns().stream().anyMatch(c -> !c.symbol().equals(column.symbol())
+                        && c.name().equalsIgnoreCase(current.name()));
+                    if (column.primary()) refusals.add("PRIMARY_COLUMN_RENAMED " + subject);
+                    else if (taken) refusals.add("NAME_CASE_CONFLICT " + subject);
+                    else renames.add(new SchemaEvolution.RenameColumn(0, old.name(), column, current));
+                }
                 else refusals.add("COLUMN_CHANGED " + old.name() + "." + column.name() + ": " + attributes(before) + " -> " + attributes(after));
             }
         }
@@ -98,12 +106,14 @@ public final class SpringBootSchemaEvolutionPlanner {
         if (!refusals.isEmpty()) return new Outcome(Optional.empty(), refusals);
         List<SchemaEvolution.Step> steps = new ArrayList<>();
         int version = baseVersion;
+        // Renames first, so every later version is written against the final column names.
+        for (var rename : renames) steps.add(new SchemaEvolution.RenameColumn(++version, rename.table(), rename.from(), rename.to()));
         for (Table table : ordered) steps.add(new SchemaEvolution.CreateTable(++version, table));
         for (var column : columnsToAdd) steps.add(new SchemaEvolution.AddNullableColumn(++version, column.table(), column.column()));
         var evolution = new SchemaEvolution(baseVersion, steps);
         // The chain must end exactly at the target contract; anything else is a fault of this planner, not of the input.
         Set<String> reached = new HashSet<>(SchemaContract.render(base.tables()).lines().toList());
-        steps.forEach(step -> reached.addAll(step.addedRows()));
+        for (var step : steps) { step.removedRows().forEach(reached::remove); reached.addAll(step.addedRows()); }
         Set<String> expected = new HashSet<>(SchemaContract.render(target.tables()).lines().toList());
         if (!reached.equals(expected)) return new Outcome(Optional.empty(), List.of("SELFCHECK the planned chain does not end at the target contract"));
         return new Outcome(Optional.of(evolution), List.of());
