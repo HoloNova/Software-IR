@@ -57,8 +57,9 @@ public final class Features {
             Objects.requireNonNull(template);
         }
 
-        public Feature(String name, List<Parameter> parameters, String templateResource) {
-            this(name, parameters, () -> Features.loadTemplate(templateResource), true);
+        /** A built-in feature whose template is the given resources, one after the other. */
+        public Feature(String name, List<Parameter> parameters, String... templateResources) {
+            this(name, parameters, () -> java.util.Arrays.stream(templateResources).map(Features::loadTemplate).collect(java.util.stream.Collectors.joining()), true);
         }
 
         public Optional<Parameter> parameter(String name) {
@@ -81,17 +82,30 @@ public final class Features {
 
     /**
      * Account-and-password login that issues an access token and a refresh token: login, refresh (which rotates the
-     * refresh token and refuses a replayed one) and logout. The account entity must already declare a unique name
-     * field and a secret password field.
+     * refresh token and refuses a replayed one) and logout. The feature also gives the account entity the two fields a
+     * login needs, a unique name and a secret password, under the names {@code name} and {@code password}: the account
+     * declares neither, and the rest of the software uses them like its own fields.
      */
     public static final Feature DUAL_TOKEN_LOGIN = new Feature("DualTokenLogin", List.of(
         new Parameter("account", Kind.NAME, Optional.empty(), NAME, 0, 0, "account must name the entity that logs in"),
-        new Parameter("name", Kind.NAME, Optional.empty(), NAME, 0, 0, "name must name the account's unique name field"),
-        new Parameter("password", Kind.NAME, Optional.empty(), NAME, 0, 0, "password must name the account's secret password field"),
+        new Parameter("name", Kind.NAME, Optional.of("loginName"), NAME, 0, 0, "name must be a field name for the account's login name"),
+        new Parameter("password", Kind.NAME, Optional.of("password"), NAME, 0, 0, "password must be a field name for the account's password"),
         new Parameter("access", Kind.DURATION, Optional.of("15 minutes"), NAME, 60, 86_400, "access must be between 1 minute and 1 day"),
         new Parameter("refresh", Kind.DURATION, Optional.of("7 days"), NAME, 86_400, 31_536_000, "refresh must be between 1 day and 365 days"),
         new Parameter("prefix", Kind.NAME, Optional.of(""), Pattern.compile("([A-Z][A-Za-z0-9]{0,31})?"), 0, 0,
             "prefix must start with an upper-case letter")),
+        "/io/kcg/sir/semantic/feature/dual-token-account.sir", "/io/kcg/sir/semantic/feature/dual-token-login.sir");
+
+    /**
+     * The same login for an account that already declares its unique name field and its secret password field, named by
+     * {@code name} and {@code password}: what the scaffold writes into an existing software. It is not usable as
+     * {@code use}; a use always brings the fields.
+     */
+    public static final Feature DUAL_TOKEN_LOGIN_FOR_EXISTING_ACCOUNT = new Feature("DualTokenLogin", List.of(
+        new Parameter("account", Kind.NAME, Optional.empty(), NAME, 0, 0, "account must name the entity that logs in"),
+        new Parameter("name", Kind.NAME, Optional.empty(), NAME, 0, 0, "name must name the account's unique name field"),
+        new Parameter("password", Kind.NAME, Optional.empty(), NAME, 0, 0, "password must name the account's secret password field"),
+        DUAL_TOKEN_LOGIN.parameter("access").orElseThrow(), DUAL_TOKEN_LOGIN.parameter("refresh").orElseThrow(), DUAL_TOKEN_LOGIN.parameter("prefix").orElseThrow()),
         "/io/kcg/sir/semantic/feature/dual-token-login.sir");
 
     private static final Map<String, Feature> ALL = Map.of(DUAL_TOKEN_LOGIN.name(), DUAL_TOKEN_LOGIN);

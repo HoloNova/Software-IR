@@ -18,7 +18,7 @@ software DualTokenDesk {
   declarations {
     entity User persistent {
       identity id: Id generated auto;
-      field name: Text unique;
+      field name: Name unique;
       field passwordHash: Secret;
     }
     entity Note persistent {
@@ -101,7 +101,6 @@ software DualTokenDesk {
         }
         create RefreshToken as refresh {
           owner: holder;
-          used: false;
           expiresAt: now() + 7 days;
         }
         persist access;
@@ -150,7 +149,6 @@ software DualTokenDesk {
         }
         create RefreshToken as refresh {
           owner: old.owner;
-          used: false;
           expiresAt: now() + 7 days;
         }
         persist old;
@@ -175,7 +173,7 @@ software DualTokenDesk {
     entity RefreshToken persistent {
       identity id: Token generated uuid;
       field owner: Ref<User>;
-      field used: Flag;
+      field used: Flag default false;
       field expiresAt: Moment;
     }
     entity TokenPair persistent {

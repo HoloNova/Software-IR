@@ -63,7 +63,7 @@ class FeatureUseTest {
         assertTrue(model.isWritten(declaration(model, "User")));
         assertTrue(model.isWritten(use));
         assertFalse(model.isWritten(declaration(model, "Login")));
-        assertEquals(13, model.declarations().stream().filter(d -> !model.isWritten(d)).count());
+        assertEquals(14, model.declarations().stream().filter(d -> !model.isWritten(d)).count());
         // Every expanded declaration is located at the use declaration.
         assertTrue(model.declarations().stream().filter(d -> !model.isWritten(d)).allMatch(d -> d.span().equals(use.span())));
     }
@@ -71,7 +71,7 @@ class FeatureUseTest {
     @Test void parametersAreCheckedBeforeAnythingIsExpanded() throws IOException {
         String base = resource("/valid/dual-token-feature.sir");
         assertEquals(List.of("SIR-FEATURE-001"), errors(base.replace("use DualTokenLogin {", "use SingleTokenLogin {")));
-        assertEquals(List.of("SIR-FEATURE-002"), errors(base.replace("      password: passwordHash;\n", "")));
+        assertEquals(List.of("SIR-FEATURE-002"), errors(base.replace("      account: User;\n", "")));
         assertEquals(List.of("SIR-FEATURE-002"), errors(base.replace("      access: 15 minutes;\n", "      access: 15 minutes;\n      colour: blue;\n")));
         assertEquals(List.of("SIR-FEATURE-003"), errors(base.replace("access: 15 minutes;", "access: 2 days;")));
         assertEquals(List.of("SIR-FEATURE-003"), errors(base.replace("account: User;", "account: 15 minutes;")));
@@ -80,10 +80,10 @@ class FeatureUseTest {
         assertEquals(files(compile(base)), files(compile(defaults)));
         // What the arguments name is checked by the ordinary analysis of the expansion, and reported at the use declaration.
         int useLine = (int) base.substring(0, base.indexOf("    use DualTokenLogin")).lines().count() + 1;
-        for (String wrong : List.of(base.replace("password: passwordHash;", "password: name;"), base.replace("account: User;", "account: Note;"))) {
+        // (The author's own declarations that use the fields the feature adds are then refused where they are written.)
+        for (String wrong : List.of(base.replace("password: passwordHash;", "password: name;"), base.replace("name: name;", "name: id;"))) {
             List<ExecutionDiagnostic> refused = refusal(wrong);
-            assertFalse(refused.isEmpty());
-            assertTrue(refused.stream().allMatch(d -> d.sourceSpan().orElseThrow().start().line() == useLine), refused.toString());
+            assertTrue(refused.stream().anyMatch(d -> d.code().equals("SIR-SYMBOL-001") && d.sourceSpan().orElseThrow().start().line() == useLine), refused.toString());
         }
         String twice = base.replace("    use DualTokenLogin {", "    use DualTokenLogin { account: User; name: name; password: passwordHash; prefix: Second; }\n    use DualTokenLogin {");
         assertTrue(errors(twice).contains("SIR-FEATURE-005"), errors(twice).toString());
@@ -107,8 +107,13 @@ class FeatureUseTest {
         var deleteExpanded = (EditResult.Refused) edit(base, new Command.Delete(Selector.root().named("declarations", "Logout")));
         assertTrue(deleteExpanded.message().contains("expanded from"), deleteExpanded.message());
 
-        // Removing the use declaration removes its text, and with it everything it expanded into.
-        var removed = (EditResult.Edited) edit(base, new Command.Delete(Selector.root().named("declarations", "DualTokenLogin")));
+        // The software's own Register writes the fields the feature adds to User, so the feature cannot simply go.
+        var stillUsed = (EditResult.Refused) edit(base, new Command.Delete(Selector.root().named("declarations", "DualTokenLogin")));
+        assertTrue(stillUsed.details().stream().anyMatch(d -> d.contains("passwordHash")), stillUsed.toString());
+        // Where nothing else relies on them, removing the use declaration removes its text and everything it expanded into.
+        String standalone = base.replace("      field id: Id;\n      field name: Text;\n", "      field id: Id;\n")
+            .replace(base.substring(base.indexOf("    capability Register {"), base.indexOf("    capability PostNote {")), "");
+        var removed = (EditResult.Edited) edit(standalone, new Command.Delete(Selector.root().named("declarations", "DualTokenLogin")));
         String withoutLogin = text(removed);
         assertFalse(withoutLogin.contains("use DualTokenLogin"));
         assertTrue(withoutLogin.contains("capability PostNote {"));

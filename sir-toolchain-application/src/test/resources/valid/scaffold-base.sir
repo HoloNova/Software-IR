@@ -18,7 +18,7 @@ software DualTokenDesk {
   declarations {
     entity User persistent {
       identity id: Id generated auto;
-      field name: Text unique;
+      field name: Name unique;
       field passwordHash: Secret;
     }
     entity Note persistent {

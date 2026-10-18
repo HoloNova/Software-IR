@@ -44,7 +44,6 @@ class EntityExtensionSemanticsTest {
     void anExtensionIsRefusedWhereItCannotAddAField() {
         Map<String, String> refusals = Map.of(
             "SIR-EXTEND-001 not an entity", ENTITY + "extend Missing {\n  field visits: Count;\n}\n",
-            "SIR-EXTEND-002 twice", ENTITY + "extend Account {\n  field a: Count;\n}\nextend Account {\n  field b: Count;\n}\n",
             "SIR-SYMBOL-001 same name", ENTITY + "extend Account {\n  field name: Name;\n}\n");
         refusals.forEach((label, source) -> {
             SemanticAnalysis result = TestSources.analyze(TestSources.sir(source));

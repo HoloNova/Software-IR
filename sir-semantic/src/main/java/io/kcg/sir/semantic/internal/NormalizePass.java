@@ -197,12 +197,14 @@ final class NormalizePass {
          }
       }
       for (io.kcg.sir.ast.AstEntityExtensionDecl extension : this.extensions.stream()
-            .sorted(java.util.Comparator.comparing((io.kcg.sir.ast.AstEntityExtensionDecl e) -> e.entity().text()).thenComparing(e -> e.span().source().value())).toList()) {
+            .sorted(java.util.Comparator.comparing((io.kcg.sir.ast.AstEntityExtensionDecl e) -> e.entity().text()).thenComparing(e -> e.id().value())).toList()) {
          SymbolId entity = entityIds.get(extension.entity().text());
          if (entity == null) {
             continue;
          }
-         SymbolId id = SymbolIdFactory.declaration(this.softwareName, "extend", extension.entity().text() + "@" + extension.span().source().value());
+         // An entity can be extended several times (by the author and by features), so each extension is told apart by
+         // where it is written.
+         SymbolId id = SymbolIdFactory.declaration(this.softwareName, "extend", extension.id().value());
          declarations.add(new io.kcg.sir.semantic.model.NormalizedEntityExtension(id, extension.entity().text(), extension.span(), extension.id(), entity,
             extension.fields().stream().map(f -> added.get(f.id())).filter(java.util.Objects::nonNull).toList()));
          FeatureExpander.Expansion expansion = this.expanded.get(extension.id());

@@ -13,7 +13,8 @@ import java.util.Objects;
 /**
  * Writes the dual-token pattern for an existing software, as declarations the ordinary edit can add.
  *
- * <p>The pattern is the text the language feature {@code use DualTokenLogin} expands into, with the account entity, its
+ * <p>The pattern is the text the language feature {@code use DualTokenLogin} expands into, less the two fields the
+ * feature adds to the account (an existing software's account already has them), with the account entity, those
  * two fields, the tokens' lifetimes and an optional name prefix filled in. The scaffold writes it out as the author's
  * own source (detaching it from the feature, for a login that must differ from the standard one). The
  * declarations are checked by the same formal analysis as any edit (so a name that is taken or an account that lacks
@@ -35,7 +36,7 @@ public final class ScaffoldApplication {
     }
 
     static String render(ScaffoldRequest request) {
-        return Features.DUAL_TOKEN_LOGIN.expand(Map.of(
+        return Features.DUAL_TOKEN_LOGIN_FOR_EXISTING_ACCOUNT.expand(Map.of(
             "prefix", request.prefix(),
             "account", request.account(),
             "name", request.nameField(),

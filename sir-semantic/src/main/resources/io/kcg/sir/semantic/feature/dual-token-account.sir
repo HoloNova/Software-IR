@@ -1,0 +1,4 @@
+    extend ${account} {
+      field ${name}: Name unique;
+      field ${password}: Secret;
+    }

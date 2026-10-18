@@ -52,16 +52,10 @@ final class EntityExtensions {
 
       Map<String, List<AstField>> added = new LinkedHashMap<>();
       Set<AstNodeId> addedFields = new HashSet<>();
-      Set<String> extendedHere = new HashSet<>();
       for (var entry : extensionsBySource.entrySet()) {
          SourceId source = entry.getKey();
-         extendedHere.clear();
          for (AstEntityExtensionDecl extension : entry.getValue()) {
             String target = extension.entity().text();
-            if (!extendedHere.add(target)) {
-               diagnostics.add(DiagnosticBuilder.error("SIR-EXTEND-002", "同一文件中对 " + target + " 只能有一个 extend", extension.entity().span()));
-               continue;
-            }
             if (!entities.containsKey(target)) {
                diagnostics.add(DiagnosticBuilder.error("SIR-EXTEND-001", "extend 的目标必须是实体: " + target, extension.entity().span()));
                continue;

@@ -7,7 +7,7 @@
     entity ${prefix}RefreshToken persistent {
       identity id: Token generated uuid;
       field owner: Ref<${account}>;
-      field used: Flag;
+      field used: Flag default false;
       field expiresAt: Moment;
     }
     entity ${prefix}TokenPair persistent {
@@ -52,7 +52,6 @@
         }
         create ${prefix}RefreshToken as refresh {
           owner: holder;
-          used: false;
           expiresAt: now() + ${refresh};
         }
         persist access;
@@ -84,7 +83,6 @@
         }
         create ${prefix}RefreshToken as refresh {
           owner: old.owner;
-          used: false;
           expiresAt: now() + ${refresh};
         }
         persist old;
