@@ -630,14 +630,18 @@ final class ResolvePass {
    }
 
    /**
-   * A default names at most an enum member, which may be declared after the entity, so defaults are resolved once
-   * every declaration's members are known. A default runs in no workflow: it sees no variable, only the project.
+   * A default names at most an enum member, which may be declared after the entity, so defaults and scopes are
+   * resolved once every declaration's members are known. Neither runs in a workflow: they see no variable, only the
+   * project. Inside a scope a bare name is a field of the entity, bound as inside an existence test's conditions,
+   * because a scope is exactly such a condition on the entity's rows.
    */
    private void resolveFieldDefaults() {
       for (AstDeclaration decl : this.software.declarations()) {
          if (decl instanceof AstEntityDecl entity) {
             entity.fields().forEach(field -> field.defaultValue().ifPresent(value ->
                this.resolveExpression(value, null, this.projectScopeId, Set.of(), null, null)));
+            entity.scope().ifPresent(scope ->
+               this.resolveExpression(scope, null, this.projectScopeId, Set.of(), null, entity.name().text()));
          }
       }
    }

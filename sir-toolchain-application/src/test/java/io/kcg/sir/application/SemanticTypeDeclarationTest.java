@@ -51,6 +51,14 @@ class SemanticTypeDeclarationTest {
         }
     }
 
+    @Test void aScopedEntityIsFilteredInEveryLoadAndFind() throws IOException {
+        var compiled = compile(Map.of(ENTRY, resource("/valid/entity-scope.sir")));
+        String show = file(compiled, "ShowNoteService.java"), list = file(compiled, "ListNotesService.java");
+        assertTrue(show.contains("getRemoved()"), show);
+        assertTrue(file(compiled, "RemoveNoteService.java").contains("getRemoved()"));
+        assertTrue(list.contains("Note::getRemoved"), list);
+    }
+
     @Test void anEditRewritingAFieldDoesNotRepeatWhatItsTypeBrings() throws IOException {
         String text = resource("/valid/semantic-types.sir");
         var snapshot = new SourceSnapshot(ENTRY, Map.of(ENTRY, text.getBytes(StandardCharsets.UTF_8)));

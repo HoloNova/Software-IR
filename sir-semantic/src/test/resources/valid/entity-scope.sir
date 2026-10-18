@@ -1,0 +1,67 @@
+sir 0.3
+
+software ScopeDesk {
+  metadata {
+    displayName "Scope Desk";
+    namespace "example.scope";
+  }
+  target {
+    language java 21;
+    framework spring_boot;
+    persistence mybatis_plus;
+    database mysql;
+    build maven;
+    interface rest;
+  }
+  sources { }
+  imports { }
+  declarations {
+    entity Note persistent {
+      identity id: Id generated auto;
+      field text: Text;
+      field removed: Flag default false;
+      scope removed == false;
+    }
+    view NoteView from Note {
+      field id: Id;
+      field text: Text;
+    }
+    input NoteRef {
+      field id: Id;
+    }
+    error NoteMissing http 404;
+    capability ShowNote {
+      input NoteRef;
+      output NoteView;
+      fails NoteMissing;
+      requires readonly;
+      expose query;
+      workflow {
+        load Note by input.id as row else NoteMissing;
+        return row;
+      }
+    }
+    capability ListNotes {
+      output List<Ref<Note>>;
+      requires readonly;
+      expose query;
+      workflow {
+        find Note where item.text != "" as notes;
+        return notes;
+      }
+    }
+    capability RemoveNote {
+      input NoteRef;
+      output Unit;
+      fails NoteMissing;
+      requires atomic;
+      expose command;
+      workflow {
+        load Note by input.id as row else NoteMissing;
+        update row { removed: true; }
+        persist row;
+        return unit;
+      }
+    }
+  }
+}

@@ -149,6 +149,12 @@ final class TypePass {
                this.typeEntityUniqueField(entity);
                this.typeEntitySecretField(entity);
                this.typeEntityDefaults(entity, declarationId);
+               entity.scope().ifPresent(scope -> {
+                  SirType scopeType = this.typeExpression(scope, declarationId, Set.of());
+                  if (scopeType != null && !TypeRules.isBoolean(scopeType)) {
+                     this.diagnostics.add(DiagnosticBuilder.error("SIR-TYPE-001", "scope 条件必须是 Boolean: " + entity.name().text(), scope.span()));
+                  }
+               });
                this.typeEntityCredential(entity);
             }
             case AstInputDecl input -> {

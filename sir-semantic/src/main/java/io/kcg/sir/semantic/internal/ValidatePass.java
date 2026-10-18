@@ -199,6 +199,7 @@ final class ValidatePass {
                this.validateEntityUniqueField(entityDecl);
                this.validateEntitySecretField(entityDecl);
                this.validateEntityDefaultField(entityDecl);
+               this.validateEntityScope(entityDecl);
             } else if (decl instanceof AstInputDecl inputDecl) {
                this.validateInputConstraints(inputDecl);
                this.validatePatchPayload(inputDecl);
@@ -530,6 +531,7 @@ final class ValidatePass {
 
    private static final String SECRET_CODE = "SIR-VALID-008";
    private static final String DEFAULT_CODE = "SIR-VALID-010";
+   private static final String SCOPE_CODE = "SIR-VALID-011";
    private static final String CREDENTIAL_CODE = "SIR-VALID-009";
 
    /**
@@ -597,6 +599,34 @@ final class ValidatePass {
    * against something it never describes; a unique secret could be looked up, which is a lookup by
    * digest that no caller can form; and the version field is the concurrency token, not a credential.
    */
+   /**
+   * A scope is added to every find, existence test and load of the entity, so it may say only what all of them can
+   * check about one row: no existence test of its own, no presence test of a request field, and a secret only the
+   * way a find may read one.
+   */
+   private void validateEntityScope(AstEntityDecl entityDecl) {
+      entityDecl.scope().ifPresent(scope -> {
+         this.checkSecretReads(scope, true);
+         this.walkScope(scope, entityDecl.name().text());
+      });
+   }
+
+   private void walkScope(AstExpression expression, String entity) {
+      switch (expression) {
+         case AstAnyExpression e -> this.diagnostics.add(DiagnosticBuilder.error(SCOPE_CODE, "scope 中不能使用 any(): " + entity, e.span()));
+         case AstPresentExpression e -> this.diagnostics.add(DiagnosticBuilder.error(SCOPE_CODE, "scope 中不能使用 .present: " + entity, e.span()));
+         case AstGroupedExpression e -> this.walkScope(e.inner(), entity);
+         case AstUnaryExpression e -> this.walkScope(e.operand(), entity);
+         case AstTimeShiftExpression e -> this.walkScope(e.base(), entity);
+         case AstBinaryExpression e -> {
+            this.walkScope(e.left(), entity);
+            this.walkScope(e.right(), entity);
+         }
+         default -> {
+         }
+      }
+   }
+
    private void validateEntityDefaultField(AstEntityDecl entityDecl) {
       for (AstField field : entityDecl.fields()) {
          if (field.defaultValue().isEmpty()) {

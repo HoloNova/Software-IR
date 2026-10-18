@@ -254,7 +254,8 @@ final class NormalizePass {
          List.copyOf(fields),
          Optional.ofNullable(versionFieldId),
          decl.credential().map(clause -> new NormalizedCredential(
-            clause.id(), clause.span(), this.siteTargetOrUnknown(clause.subject().id()), this.siteTargetOrUnknown(clause.expires().id())))
+            clause.id(), clause.span(), this.siteTargetOrUnknown(clause.subject().id()), this.siteTargetOrUnknown(clause.expires().id()))),
+         decl.scope().map(this::normalizeExpression)
       );
    }
 

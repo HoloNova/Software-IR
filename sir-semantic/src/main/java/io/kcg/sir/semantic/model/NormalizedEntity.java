@@ -11,11 +11,16 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+/**
+ * A persistent entity. {@code scope} is the condition a row must meet to exist for the software: every load, find
+ * and existence test of the entity sees only rows it holds for; inside it a bare name is a field of the entity.
+ */
 public record NormalizedEntity(
-   @Identity SymbolId id, @Fact String name, @Source SourceSpan span, @Source AstNodeId sourceNodeId, @Fact boolean persistent, @Fact NormalizedIdentity identity, @Fact List<NormalizedField> fields, @Derived Optional<SymbolId> versionField, @Fact Optional<NormalizedCredential> credential
+   @Identity SymbolId id, @Fact String name, @Source SourceSpan span, @Source AstNodeId sourceNodeId, @Fact boolean persistent, @Fact NormalizedIdentity identity, @Fact List<NormalizedField> fields, @Derived Optional<SymbolId> versionField, @Fact Optional<NormalizedCredential> credential,
+   @Fact Optional<NormalizedExpression> scope
 ) implements NormalizedDeclaration {
    public NormalizedEntity(SymbolId id, String name, SourceSpan span, AstNodeId sourceNodeId, boolean persistent, NormalizedIdentity identity, List<NormalizedField> fields, Optional<SymbolId> versionField) {
-      this(id, name, span, sourceNodeId, persistent, identity, fields, versionField, Optional.empty());
+      this(id, name, span, sourceNodeId, persistent, identity, fields, versionField, Optional.empty(), Optional.empty());
    }
 
    public NormalizedEntity {
@@ -27,5 +32,6 @@ public record NormalizedEntity(
       fields = List.copyOf(Objects.requireNonNull(fields, "fields"));
       Objects.requireNonNull(versionField, "versionField");
       Objects.requireNonNull(credential, "credential");
+      Objects.requireNonNull(scope, "scope");
    }
 }

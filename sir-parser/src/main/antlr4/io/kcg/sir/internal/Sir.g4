@@ -110,6 +110,7 @@ entityDecl
         identityDecl
         entityMemberDecl*
         credentialClause?
+        scopeClause?
       RBRACE
     ;
 
@@ -148,6 +149,13 @@ credentialClause
     : {_input.LT(1).getText().equals("credential")}? IDENT
       {_input.LT(1).getText().equals("subject")}? IDENT subject=IDENT
       {_input.LT(1).getText().equals("expires")}? IDENT expires=IDENT SEMI
+    ;
+
+// "scope removed == false;" names the rows of the entity that exist for the software: every load, find and any()
+// of the entity sees only rows the condition holds for. Inside it a bare name is a field of the entity, as inside
+// any(). "scope" is contextual, so every identifier spelled scope stays legal.
+scopeClause
+    : {_input.LT(1).getText().equals("scope")}? IDENT expression SEMI
     ;
 
 // "unique" is a contextual word, like sources and imports above: it is only a modifier here, after

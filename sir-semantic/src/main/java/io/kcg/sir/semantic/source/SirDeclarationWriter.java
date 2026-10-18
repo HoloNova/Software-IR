@@ -179,6 +179,7 @@ public final class SirDeclarationWriter {
 
       optionalChild(node, "credential").ifPresent(credential ->
          out.line(1, "credential subject " + text(credential, "subjectField") + " expires " + text(credential, "expiryField") + ";"));
+      optionalChild(node, "scope").ifPresent(scope -> out.line(1, "scope " + expression(scope, 0) + ";"));
       out.line(0, "}");
    }
 

@@ -201,7 +201,9 @@ final class SirAstBuilder {
         AstIdentity identity = identity(context.identityDecl(), path);
         List<AstField> fields = context.entityMemberDecl().stream().map(value -> entityField(value, path)).toList();
         Optional<AstCredentialClause> credential = Optional.ofNullable(context.credentialClause()).map(value -> credentialClause(value, path));
-        return new AstEntityDecl(ids.id(path), source.span(context), name, identity, fields, credential);
+        Optional<AstExpression> scope = Optional.ofNullable(context.scopeClause())
+                .map(value -> expression(value.expression(), ids.fixed(path, "scope")));
+        return new AstEntityDecl(ids.id(path), source.span(context), name, identity, fields, credential, scope);
     }
 
     private AstInputDecl inputDeclaration(SirParser.InputDeclContext context, String parent) {
