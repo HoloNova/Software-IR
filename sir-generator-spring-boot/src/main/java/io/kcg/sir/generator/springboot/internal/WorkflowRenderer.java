@@ -990,6 +990,10 @@ final class WorkflowRenderer {
             String nestedName = nextWrapperName(counter);
          String nested = renderPredicateNode(ctx, unary.operand(), itemVariable, entity, stringMatches, variableNames, imports, currentPackage, nestedName, counter);
             return wrapperName + ".not(" + nestedName + " -> " + nested + ")";
+         case SpringExpression.BooleanLiteral literal:
+            // "where true" is every row (a list of everything, narrowed only by the entity's scope); a wrapper has no
+            // empty condition, so the constant is written as one.
+            return wrapperName + ".apply(" + StringEscape.javaString(literal.value() ? "1 = 1" : "1 = 0") + ")";
          case SpringExpression.ExistsPredicate exists:
             // The correlated subquery is decided before rendering: this only quotes its text and
             // binds the values the plan declares, in the order it declares them.

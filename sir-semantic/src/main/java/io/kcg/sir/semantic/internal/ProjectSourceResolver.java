@@ -39,13 +39,16 @@ public final class ProjectSourceResolver {
         for (var unit : units.values())
             unit.declarations().stream().filter(AstFeatureDefinitionDecl.class::isInstance).map(AstFeatureDefinitionDecl.class::cast).forEach(definitions::add);
         var featureDefinitions = FeatureDefinitions.build(definitions, diagnostics);
+        // First the uses whose feature reads no entity; they may add fields to entities and declare types.
         Map<SourceId, List<AstDeclaration>> featured = new HashMap<>();
         List<AstFeatureUseDecl> uses = new ArrayList<>();
+        Map<AstNodeId, String> useKeys = new HashMap<>();
         Map<AstNodeId, FeatureExpander.Expansion> expanded = new HashMap<>();
         for (var unit : units.values()) {
-            var result = FeatureExpander.expand(unit.declarations(), featureDefinitions.features(), diagnostics);
+            var result = FeatureExpander.expand(unit.declarations(), featureDefinitions, Optional.empty(), diagnostics);
             featured.put(unit.span().source(), result.declarations());
             uses.addAll(result.uses());
+            useKeys.putAll(result.keys());
             expanded.putAll(result.expanded());
         }
         // The semantic types the software declares are known to every file, like the language's own; the fields of every
@@ -54,6 +57,15 @@ public final class ProjectSourceResolver {
         for (var unit : units.values())
             featured.get(unit.span().source()).stream().filter(AstSemanticTypeDecl.class::isInstance).map(AstSemanticTypeDecl.class::cast).forEach(typeDeclarations::add);
         var semanticTypes = SemanticTypeDeclarations.build(typeDeclarations, diagnostics);
+        // Then the uses whose feature goes through an entity's fields, with the entities as the first run left them.
+        var entities = FeatureEntities.of(units.values().stream().map(u -> featured.get(u.span().source())).toList(), semanticTypes.types());
+        for (var unit : units.values()) {
+            var result = FeatureExpander.expand(featured.get(unit.span().source()), featureDefinitions, Optional.of(entities), diagnostics);
+            featured.put(unit.span().source(), result.declarations());
+            uses.addAll(result.uses());
+            useKeys.putAll(result.keys());
+            expanded.putAll(result.expanded());
+        }
         Map<SourceId, List<AstDeclaration>> effective = new HashMap<>();
         for (var unit : units.values())
             effective.put(unit.span().source(), SemanticTypeExpander.expand(featured.get(unit.span().source()).stream()
@@ -61,10 +73,12 @@ public final class ProjectSourceResolver {
         // Every entity gets the fields extend declarations add to it; from here on they are its own fields.
         var extensions = EntityExtensions.merge(units, effective, diagnostics);
         effective.putAll(extensions.declarations());
+        // A feature can be used again for other values, never twice for the same ones.
         Map<String, AstFeatureUseDecl> usedFeatures = new HashMap<>();
         for (AstFeatureUseDecl use : uses) {
-            AstFeatureUseDecl first = usedFeatures.putIfAbsent(use.name().text(), use);
-            if (first != null) diagnostics.add(DiagnosticBuilder.errorWithRelated("SIR-FEATURE-005", "feature used twice: " + use.name().text(),
+            String key = useKeys.get(use.id());
+            AstFeatureUseDecl first = usedFeatures.putIfAbsent(key, use);
+            if (first != null) diagnostics.add(DiagnosticBuilder.errorWithRelated("SIR-FEATURE-005", "feature used twice for the same values: " + key,
                     use.span(), new io.kcg.sir.api.RelatedLocation("首次使用在此处", first.span())));
         }
         Map<SourceId, Map<String, AstDeclaration>> declarations = new HashMap<>();
@@ -150,7 +164,7 @@ public final class ProjectSourceResolver {
         // No second Resolve, no fallback lookup in Type/Validate/Normalize.
         var typed = new TypePass(software, resolved).run();
         var validated = new ValidatePass(software, typed).run();
-        return new NormalizePass(software, validated, uses, expanded, semanticTypes.types(), semanticTypes.declarations(), featureDefinitions.definitions(),
+        return new NormalizePass(software, validated, uses, useKeys, expanded, semanticTypes.types(), semanticTypes.declarations(), featureDefinitions.definitions(),
                 extensions.extensions(), extensions.addedFields()).run();
     }
 

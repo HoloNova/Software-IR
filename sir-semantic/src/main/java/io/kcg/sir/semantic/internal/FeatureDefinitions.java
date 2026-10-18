@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -21,24 +20,26 @@ import java.util.regex.Pattern;
  *
  * <p>A definition is checked here, whether or not anything uses it: the name must be free, every parameter must have a
  * kind of value the language knows and a default of that kind, and the text may only mention parameters the definition
- * declares. What the text expands into is checked when a {@code use} expands it, by the ordinary analysis.
+ * declares, and its loops and conditions must be well formed and read only an entity a name parameter names. What
+ * the text expands into is checked when a {@code use} expands it, by the ordinary analysis.
  */
 final class FeatureDefinitions {
    private FeatureDefinitions() {
    }
 
-   private static final Pattern PLACEHOLDER = Pattern.compile("\\$\\{([^}]*)}");
    private static final Pattern NAME = Pattern.compile("[A-Za-z][A-Za-z0-9]{0,63}");
    private static final Pattern NAME_OR_EMPTY = Pattern.compile("([A-Za-z][A-Za-z0-9]{0,63})?");
    private static final long LONGEST_SECONDS = 3650L * 86_400;
 
-   record Result(Map<String, Features.Feature> features, List<AstFeatureDefinitionDecl> definitions) {
+   /** @param refused the names of the definitions that were refused, whose uses have nothing more to report */
+   record Result(Map<String, Features.Feature> features, List<AstFeatureDefinitionDecl> definitions, Set<String> refused) {
    }
 
    static Result build(List<AstFeatureDefinitionDecl> definitions, List<Diagnostic> diagnostics) {
       Map<String, Features.Feature> features = new LinkedHashMap<>();
       Map<String, AstFeatureDefinitionDecl> first = new LinkedHashMap<>();
       List<AstFeatureDefinitionDecl> kept = new ArrayList<>();
+      Set<String> refused = new HashSet<>();
       for (AstFeatureDefinitionDecl definition : definitions) {
          String name = definition.name().text();
          if (Features.named(name).isPresent()) {
@@ -49,11 +50,11 @@ final class FeatureDefinitions {
          } else {
             first.put(name, definition);
             kept.add(definition);
-            feature(definition, diagnostics).ifPresent(f -> features.put(name, f));
+            feature(definition, diagnostics).ifPresentOrElse(f -> features.put(name, f), () -> refused.add(name));
          }
       }
 
-      return new Result(features, kept);
+      return new Result(features, kept, refused);
    }
 
    private static Optional<Features.Feature> feature(AstFeatureDefinitionDecl definition, List<Diagnostic> diagnostics) {
@@ -76,12 +77,17 @@ final class FeatureDefinitions {
          }
       }
 
-      Matcher placeholder = PLACEHOLDER.matcher(definition.template());
-      while (placeholder.find()) {
-         if (!names.contains(placeholder.group(1))) {
-            diagnostics.add(DiagnosticBuilder.error("SIR-FEATURE-006", "模板里的 ${" + placeholder.group(1) + "} 不是这个功能的参数", definition.templateSpan()));
+      // The template is read now, so a mistake in it is reported where the feature is defined, used or not.
+      try {
+         Set<String> entityParameters = new HashSet<>();
+         parameters.stream().filter(p -> p.kind() == Features.Kind.NAME).forEach(p -> entityParameters.add(p.name()));
+         for (String problem : io.kcg.sir.semantic.feature.FeatureTemplate.parse(definition.template()).problems(names, entityParameters)) {
+            diagnostics.add(DiagnosticBuilder.error("SIR-FEATURE-006", "模板有误: " + problem, definition.templateSpan()));
             valid = false;
          }
+      } catch (io.kcg.sir.semantic.feature.FeatureTemplate.Problem problem) {
+         diagnostics.add(DiagnosticBuilder.error("SIR-FEATURE-006", "模板有误: " + problem.getMessage(), definition.templateSpan()));
+         valid = false;
       }
 
       if (!valid) {

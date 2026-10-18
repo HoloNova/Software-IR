@@ -53,7 +53,7 @@ class FeatureUseTest {
 
     @Test void theModelSaysWhichDeclarationsAFeatureExpandedInto() throws IOException {
         NormalizedSemanticModel model = compile(resource("/valid/dual-token-feature.sir")).semanticModel();
-        SymbolId feature = new SymbolId("sir://DualTokenDesk/feature/DualTokenLogin");
+        SymbolId feature = new SymbolId("sir://DualTokenDesk/feature/DualTokenLogin/User");
         NormalizedFeatureUse use = (NormalizedFeatureUse) declaration(model, "DualTokenLogin");
         assertEquals(feature, use.id());
         assertEquals(List.of("account=User", "name=name", "password=passwordHash", "access=15 minutes", "refresh=7 days"),

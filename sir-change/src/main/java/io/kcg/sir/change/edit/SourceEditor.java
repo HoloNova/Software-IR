@@ -297,8 +297,9 @@ public final class SourceEditor {
    }
 
    private static Failed expandedRefusal(NormalizedSemanticModel model, NormalizedDeclaration declaration) {
-      String feature = model.expandedFrom(declaration.id()).orElseThrow().feature().value();
-      String use = feature.substring(feature.lastIndexOf('/') + 1);
+      var feature = model.expandedFrom(declaration.id()).orElseThrow().feature();
+      String use = model.declarations().stream().filter(d -> d.id().equals(feature)).map(NormalizedDeclaration::name).findFirst()
+         .orElse(feature.value());
       return new Failed(Reason.COMMAND_REJECTED, "'" + declaration.name() + "' is expanded from 'use " + use
          + "'; change the arguments of the use declaration instead, or detach it with kcg scaffold", List.of(), null);
    }

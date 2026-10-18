@@ -707,7 +707,8 @@ final class TypePass {
    /**
      * An order key must name a field the database can order by. Nullable comparable columns are
      * allowed because SQL orders NULLs deterministically; everything else is rejected here rather
-     * than left for the target to guess.
+     * than left for the target to guess. A uuid has no meaningful order, but it has a stable one, and a page of rows
+     * whose only unique key is a uuid needs a stable order; so a uuid may be an order key though it cannot be compared.
      */
    private void typeOrderKey(AstFindOrderKey key) {
        SirType fieldType = this.boundFieldType(key.field().id());
@@ -716,7 +717,7 @@ final class TypePass {
        }
 
        SirType ordered = fieldType instanceof OptionalType optional ? optional.element() : fieldType;
-       if (!TypeRules.isComparable(ordered)) {
+       if (!TypeRules.isComparable(ordered) && ordered != PrimitiveType.UUID) {
           this.diagnostics.add(DiagnosticBuilder.error(
              "SIR-TYPE-001", "排序字段类型不可比较: " + key.field().text() + " (" + fieldType + ")", key.field().span()));
        }

@@ -196,6 +196,27 @@ class GeneratedProjectOfflineCompilationTest {
         }
     }
 
+    /**
+     * One use of Crud per entity writes every service of a create, show, list, change and delete, including a list of
+     * every row ordered by a uuid and a patch of a versioned entity; only a compiler can vouch for them.
+     */
+    @Test
+    void crudFeatureProjectCompilesWithFrozenDependenciesOffline(@TempDir Path tempDir)
+            throws Exception {
+        Path projectRoot = tempDir.resolve("generated-project");
+        List<GeneratedFile> files = GeneratorTestSupport.generateSuccess("valid/crud-feature.sir");
+        materialize(files, projectRoot);
+        compileOffline(projectRoot, tempDir);
+
+        for (String classFile : List.of(
+                "example/crud/application/ListItemService.class",
+                "example/crud/application/UpdateNoteService.class",
+                "example/crud/application/DeleteUserService.class")) {
+            assertTrue(Files.isRegularFile(projectRoot.resolve("target/classes").resolve(classFile)),
+                    () -> "offline Maven compile did not create representative class: " + classFile);
+        }
+    }
+
     private static void compileOffline(Path projectRoot, Path tempDir) throws Exception {
         Path maven = locateMavenExecutable();
         Path localRepository = frozenLocalRepository();

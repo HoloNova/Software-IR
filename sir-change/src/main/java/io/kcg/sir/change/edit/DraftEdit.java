@@ -227,10 +227,14 @@ public final class DraftEdit {
       this.requireNameFree(elements, added, -1, where);
    }
 
-   /** A new or replaced element may not take a name another element of the collection already has. */
+   /**
+    * A new or replaced element may not take a name another element of the collection already has. A {@code use} is the
+    * exception: one feature can be used for several entities, and whether two uses are the same one is decided by the
+    * analysis from their values.
+    */
    private void requireNameFree(List<StructValue> elements, StructValue candidate, int ignoring, Selector where) {
       Optional<String> name = nameOf(candidate);
-      if (name.isEmpty()) {
+      if (name.isEmpty() || candidate instanceof StructValue.Child child && child.node().kind().equals("NormalizedFeatureUse")) {
          return;
       }
 

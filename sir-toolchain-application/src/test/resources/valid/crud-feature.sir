@@ -1,0 +1,52 @@
+sir 0.3
+
+software CrudDesk {
+  metadata {
+    displayName "Crud Desk";
+    namespace "example.crud";
+  }
+  target {
+    language java 21;
+    framework spring_boot;
+    persistence mybatis_plus;
+    database mysql;
+    build maven;
+    interface rest;
+  }
+  sources { }
+  imports { }
+  declarations {
+    enum Level {
+      LOW,
+      HIGH
+    }
+    entity Owner persistent {
+      identity id: Token generated uuid;
+      field name: Name;
+    }
+    entity Note persistent {
+      identity id: Id generated auto;
+      field title: Name unique;
+      field body: Optional<Remark>;
+      field level: Level default Level.LOW;
+      field owner: Ref<Owner>;
+      field pin: Secret;
+      field code: Code where length(1, 8);
+      field version: Version;
+    }
+    entity Item persistent {
+      identity id: Token generated uuid;
+      field title: Name;
+      field removed: Flag default false;
+      scope removed == false;
+    }
+    entity User persistent {
+      identity id: Id generated auto;
+      field nick: Optional<Name>;
+    }
+    use Crud { entity: Note; }
+    use Crud { entity: Item; }
+    use Crud { entity: User; }
+    use DualTokenLogin { account: User; }
+  }
+}

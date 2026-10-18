@@ -438,7 +438,7 @@ view AccountView from Account {
 
 ### 3.8 功能（`use` 与 `feature`）
 
-一个功能是一组声明的名字：`use 功能 { 参数: 值; }` 在编译时展开成它代表的声明，展开出来的东西和手写的一样被检查、生成、部署，但不写进源码，编辑时也只改 `use` 这一处。语言自带 `DualTokenLogin`（见 7.2）。
+一个功能是一组声明的名字：`use 功能 { 参数: 值; }` 在编译时展开成它代表的声明，展开出来的东西和手写的一样被检查、生成、部署，但不写进源码，编辑时也只改 `use` 这一处。语言自带 `DualTokenLogin`（双 Token 登录，见 7.2）和 `Crud`（增删改查，见 7.3）。
 
 自己的功能用 `feature` 定义：参数有两种——`name`（一个名字，默认值可以是空的 `""`）和 `duration`（一段时长，如 `7 days`）——可以有默认值；模板是三个反引号括起来的 SIR 声明，用 `${参数}` 引用参数：
 
@@ -466,7 +466,46 @@ use Tagging {
 }
 ```
 
-参数和模板在定义时就检查（参数重复、默认值不合种类、模板里用了没声明的参数都是 `SIR-FEATURE-006`）；`use` 时检查实参（不认识的功能 `SIR-FEATURE-001`，缺参数或多参数 `SIR-FEATURE-002`，值不合种类或范围 `SIR-FEATURE-003`）；展开后的声明按普通规则检查，错误报在 `use` 这一行。同一个功能只能 `use` 一次（`SIR-FEATURE-005`）。
+参数和模板在定义时就检查（参数重复、默认值不合种类、模板里用了没声明的参数都是 `SIR-FEATURE-006`）；`use` 时检查实参（不认识的功能 `SIR-FEATURE-001`，缺参数或多参数 `SIR-FEATURE-002`，值不合种类或范围 `SIR-FEATURE-003`）；展开后的声明按普通规则检查，错误报在 `use` 这一行。
+
+一个功能可以 `use` 多次，只要没有默认值的参数取值不同：`use Crud { entity: Note; }` 和 `use Crud { entity: Tag; }` 是两次不同的使用；对同一组取值用两次是 `SIR-FEATURE-005`。
+
+#### 按实体的字段展开
+
+`name` 参数指向一个实体时，模板可以逐个走它的字段，也可以按它是否带版本号选择不同的文本，这样一个功能就能用于任何实体：
+
+```sir-declarations
+entity Note persistent {
+  identity id: Id generated auto;
+  field title: Name;
+  field body: Optional<Remark>;
+  field pin: Secret;
+}
+feature Summary {
+  parameter entity: name;
+  template ```
+    view ${entity}Summary from ${entity} {
+      field ${entity.identity.name}: ${entity.identity.type};
+  ${for f in entity.fields except secret}
+      field ${f.name}: ${f.type};
+  ${end}
+    }
+  ```;
+}
+use Summary {
+  entity: Note;
+}
+```
+
+写法：
+
+- `${for f in 参数.fields}` … `${end}`：对实体的每个字段重复中间的文本，字段顺序是实体里写的顺序，`extend` 加的字段（包括别的功能加的）排在后面。后面可以跟 `except secret, versioned, defaulted`，跳过口令字段、版本号字段、有默认值的字段。
+- 循环里：`${f.name}` 是字段名，`${f.type}` 是实体里写的类型（如 `Optional<Remark>`、`Ref<Owner>`），`${f.rules}` 是字段上写的规则（如 ` where length(1, 8)`，没有就是空），`${f.base}` 是去掉语义类型规则后的类型（`Name` 写成 `Text`，用在不允许带规则的地方，比如 `patch` 输入）。
+- `${参数.identity.name}`、`${参数.identity.type}`：实体主键的名字和类型。
+- `${if 参数.versioned}` … `${else}` … `${end}`：实体有版本号字段时取前一段，否则取后一段（`${else}` 可省略；`not 参数.versioned` 反过来）。
+- 只有一个 `${for}`／`${if}`／`${else}`／`${end}` 的行，整行不进入展开结果。
+
+循环或条件写错（走的不是 `name` 参数、字段没有这个属性、少了 `${end}`）在定义处报 `SIR-FEATURE-006`；`use` 时参数指向的不是实体报 `SIR-FEATURE-003`。这类功能在其它功能展开之后再展开（所以能看到别的功能用 `extend` 加的字段），也因此不能声明 `type`（`SIR-FEATURE-004`）。
 
 ## 4. 能力
 
@@ -723,7 +762,7 @@ capability LiveTickets {
 }
 ```
 
-不带 `Page` 的 `find` 得到 `List<Ref<实体>>`，带 `Page` 的得到 `Page<视图>`。`containsLiteral` 是**字面包含**（不是模式匹配，`%` 之类按字面处理）。输出是 `Page<视图>` 时必须带 `Page ...` 子句，且能力必须是 `expose query`。
+不带 `Page` 的 `find` 得到 `List<Ref<实体>>`，带 `Page` 的得到 `Page<视图>`。`containsLiteral` 是**字面包含**（不是模式匹配，`%` 之类按字面处理）。输出是 `Page<视图>` 时必须带 `Page ...` 子句，且能力必须是 `expose query`。`where true` 取所有行（实体有 `scope` 时仍只取范围内的行）。排序字段要能比较大小；`Token` 主键也可以排序，它没有有意义的大小，但顺序是稳定的，分页需要这一点。
 
 对错的写法（比较方向反了）：
 
@@ -1078,6 +1117,45 @@ kcg edit --source-root ... --entry project.sir --candidate-root ... < scaffold.j
 
 它写出的就是普通 SIR（访问令牌是 `credential` 实体，刷新用守卫更新），见 [CLI 说明第 5 节](CLI_WORKFLOW.md)。
 
+### 7.3 增删改查
+
+一个实体的创建、按主键查看、分页列表、修改、删除，一句话：
+
+```sir-declarations
+entity Owner persistent {
+  identity id: Token generated uuid;
+  field name: Name;
+}
+entity Note persistent {
+  identity id: Id generated auto;
+  field title: Name unique;
+  field body: Optional<Remark>;
+  field owner: Ref<Owner>;
+  field pinned: Flag default false;
+  field version: Version;
+}
+use Crud {
+  entity: Note;
+}
+use Crud {
+  entity: Owner;
+}
+```
+
+`use Crud { entity: Note; }` 展开成视图 `NoteView`、输入 `CreateNoteInput`／`NoteIdInput`／`ListNoteInput`／`UpdateNoteInput`、错误 `NoteNotFound`（404）／`InvalidNotePage`，以及五个能力：
+
+| 能力 | 做什么 |
+| --- | --- |
+| `CreateNote` | 按输入创建一行；输入是除有默认值的字段和版本号以外的所有字段，带默认值的字段取默认值 |
+| `GetNote` | 按主键读一行，没有时 `NoteNotFound` |
+| `ListNote` | 按主键升序分页列出所有行，页码或页大小不对时 `InvalidNotePage` |
+| `UpdateNote` | 按主键读一行再改；输入是主键和除口令、版本号以外的所有字段 |
+| `DeleteNote` | 按主键删除一行，没有时 `NoteNotFound` |
+
+规则都从实体来：视图显示除口令字段以外的所有字段；带版本号的实体，修改用 `patch` 输入（只改请求里带了的字段），版本不对时报 `StaleNote`（409）；不带版本号的实体，修改时要给出全部可改字段。实体有 `scope`（比如软删除）时，查看、列表、修改、删除都看不到范围外的行。账号实体同时 `use DualTokenLogin` 时，它的增删改查也包括登录名和口令（口令只能写，不会出现在视图里）。
+
+需要不同的规则时，就不用 `Crud`，自己写这几个能力（或者用 `feature` 定义自己的版本）。
+
 ## 8. 多文件工程
 
 入口文件的 `sources { source "路径"; }` 列出其它文件，其它文件开头写 `sir 0.3` 加 `imports { import 声明名 from "路径"; }` 和 `declarations { ... }`（没有 `software`、`metadata`、`target`）。**跨文件用到哪个声明，就要在用到它的文件里 import 它**，否则报 `SIR-SOURCE-VISIBILITY-001`。声明名在整个工程里不能重复。
@@ -1115,7 +1193,7 @@ kcg edit --source-root ... --entry project.sir --candidate-root ... < scaffold.j
 | `SIR-VALID-012` | `delete` 的规则：只能删 `load` 出来的行，删后不能再用 |
 | `SIR-TYPE-005` | `type` 声明的问题：名字被语言占用、基类型成环 |
 | `SIR-EXTEND-001` | `extend` 的目标不是实体 |
-| `SIR-FEATURE-001`…`006` | 功能的问题：不认识的功能、参数缺失或多余、参数值不对、展开失败、重复 `use`、`feature` 定义本身有错 |
+| `SIR-FEATURE-001`…`006` | 功能的问题：不认识的功能、参数缺失或多余、参数值不对（包括该指向实体却没有）、展开失败、对同一组值重复 `use`、`feature` 定义本身有错（包括模板里的循环和条件） |
 | `SIR-FLOW-001` | 用了未声明或还没声明的变量，或在 `find` 之外用了 `item` |
 | `SIR-FLOW-002` | `return` 的数量不对，或 `return` 后面还有步骤 |
 | `SIR-FLOW-003` | 用到的错误没有在 `fails` 里声明 |
@@ -1591,7 +1669,6 @@ capability Wrong {
 ## 10. 还没有的东西
 
 - 路由模板（路径参数）、授权（角色与数据范围）。
-- 功能模板里的循环：功能还不能“对实体的每个字段做一遍”，所以按实体自动生成增删改查这类功能写不出来。
 - 已上线系统的部分结构变更：删表删列、改列的类型或默认值、给已有表加引用或唯一列，会在打交付包时被拒绝。数据库里字段名是下划线形式（`passwordHash` → `password_hash`，`Ref` 字段 `owner` → `owner_id`），`Token` 列用 `CHAR(36)`。
 - 口令强度、登录失败的锁定与限流、令牌的缓存。
 - 除上面的 target 之外的语言、框架、数据库。

@@ -154,7 +154,7 @@ final class SirAstBuilder {
                 defaultValue = java.util.Optional.of(new AstFeatureArgument.Word(name(parameter.defaultWord)));
             }
             boolean empty = parameter.defaultEmpty != null && SirStringDecoder.decode(parameter.defaultEmpty.getText()).isEmpty();
-            return new AstFeatureDefinitionDecl.Parameter(source.span(parameter), name(parameter.parameterName), name(parameter.parameterKind), defaultValue, empty);
+            return new AstFeatureDefinitionDecl.Parameter(source.span(parameter), name(parameter.parameterName.start), name(parameter.parameterKind), defaultValue, empty);
         }).toList();
         TerminalNode raw = context.featureTemplate().RAW_BLOCK();
         String text = raw.getText();
@@ -184,7 +184,7 @@ final class SirAstBuilder {
             } else {
                 value = new AstFeatureArgument.Word(name(argument.value));
             }
-            return new AstFeatureArgument(source.span(argument), name(argument.parameter), value);
+            return new AstFeatureArgument(source.span(argument), name(argument.parameter.start), value);
         }).toList();
         return new AstFeatureUseDecl(ids.id(path), source.span(context), name, arguments);
     }

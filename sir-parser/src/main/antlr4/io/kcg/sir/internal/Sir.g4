@@ -74,7 +74,7 @@ featureDefinitionDecl
     ;
 
 featureParameterDecl
-    : {_input.LT(1).getText().equals("parameter")}? IDENT parameterName=IDENT COLON parameterKind=IDENT
+    : {_input.LT(1).getText().equals("parameter")}? IDENT parameterName=featureParameterName COLON parameterKind=IDENT
       (ASSIGN (durationOperand | defaultWord=IDENT | defaultEmpty=STRING))? SEMI
     ;
 
@@ -104,7 +104,13 @@ featureUseDecl
     ;
 
 featureArgument
-    : parameter=IDENT COLON (durationOperand | value=IDENT) SEMI
+    : parameter=featureParameterName COLON (durationOperand | value=IDENT) SEMI
+    ;
+
+// A parameter may be called entity: "use Crud { entity: Note; }" reads as what it means, though entity is a keyword.
+featureParameterName
+    : IDENT
+    | ENTITY
     ;
 
 enumDecl

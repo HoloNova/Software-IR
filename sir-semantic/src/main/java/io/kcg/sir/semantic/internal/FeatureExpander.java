@@ -6,6 +6,7 @@ import io.kcg.sir.ast.AstDeclaration;
 import io.kcg.sir.ast.AstFeatureArgument;
 import io.kcg.sir.ast.AstFeatureUseDecl;
 import io.kcg.sir.ast.AstNodeId;
+import io.kcg.sir.semantic.feature.FeatureTemplate;
 import io.kcg.sir.semantic.feature.Features;
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -13,6 +14,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 
 /**
  * Replaces each {@code use} declaration of one source unit by the declarations its feature expands into.
@@ -21,19 +23,37 @@ import java.util.Optional;
  * {@code use} declaration's span and get ids under the {@code use} declaration's id, so imports, visibility and every
  * later pass treat them exactly like declarations the author wrote in that file. Only the parameters' shape is checked
  * here; whether the named entity and fields exist and fit is the ordinary analysis of the expanded declarations.
+ *
+ * <p>A feature whose template goes through an entity's fields needs the entities first, and an entity's fields
+ * include the ones other features add. So the expansion runs twice: first every use whose template reads no entity,
+ * then, with the entities as they now are, the others. A feature of the second kind cannot declare types (the types
+ * are known by then) and its own added fields are not seen by other features of its kind.
+ *
+ * <p>A software can use a feature more than once, for different values: a use is told apart by the feature's name and
+ * the values of the parameters that have no default ({@code Crud} for {@code Note} and {@code Crud} for {@code Tag}).
  */
 final class FeatureExpander {
     private FeatureExpander() {}
 
-    /** Where an expanded top-level declaration came from: the {@code use} declaration, and its own name in the feature. */
-    record Expansion(AstFeatureUseDecl use, String role) {}
+    /**
+     * Where an expanded top-level declaration came from: the {@code use} declaration, what tells that use apart, and the
+     * declaration's own name in the feature.
+     */
+    record Expansion(AstFeatureUseDecl use, String key, String role) {}
 
-    record Result(List<AstDeclaration> declarations, List<AstFeatureUseDecl> uses, Map<AstNodeId, Expansion> expanded) {}
+    /** @param keys what tells each use apart, by the use declaration's id */
+    record Result(List<AstDeclaration> declarations, List<AstFeatureUseDecl> uses, Map<AstNodeId, String> keys, Map<AstNodeId, Expansion> expanded) {}
 
-    /** @param defined the features the software defines itself, by name; the language's own are always available */
-    static Result expand(List<AstDeclaration> written, Map<String, Features.Feature> defined, List<Diagnostic> diagnostics) {
+    /**
+     * @param defined the features the software defines itself; the language's own are always available
+     * @param entities empty for the first run, which leaves the uses whose template reads an entity in place; the
+     *     entities for the second run, which expands those
+     */
+    static Result expand(List<AstDeclaration> written, FeatureDefinitions.Result defined,
+            Optional<Function<String, Optional<FeatureTemplate.Entity>>> entities, List<Diagnostic> diagnostics) {
         List<AstDeclaration> declarations = new ArrayList<>();
         List<AstFeatureUseDecl> uses = new ArrayList<>();
+        Map<AstNodeId, String> keys = new LinkedHashMap<>();
         Map<AstNodeId, Expansion> expanded = new LinkedHashMap<>();
         for (AstDeclaration declaration : written) {
             if (declaration instanceof io.kcg.sir.ast.AstFeatureDefinitionDecl) {
@@ -44,15 +64,34 @@ final class FeatureExpander {
                 declarations.add(declaration);
                 continue;
             }
+            Optional<Features.Feature> feature = Optional.ofNullable(defined.features().get(use.name().text())).or(() -> Features.named(use.name().text()));
+            if (feature.isPresent() && entities.isEmpty() && feature.get().parsed().readsEntities()) {
+                declarations.add(use); // expanded by the second run, once the entities are known
+                continue;
+            }
             uses.add(use);
-            Optional<Features.Feature> feature = Optional.ofNullable(defined.get(use.name().text())).or(() -> Features.named(use.name().text()));
+            keys.put(use.id(), use.name().text());
             if (feature.isEmpty()) {
-                diagnostics.add(DiagnosticBuilder.error("SIR-FEATURE-001", "unknown feature: " + use.name().text(), use.name().span()));
+                // A definition that was refused has said what is wrong with it; its uses add nothing to that.
+                if (!defined.refused().contains(use.name().text())) {
+                    diagnostics.add(DiagnosticBuilder.error("SIR-FEATURE-001", "unknown feature: " + use.name().text(), use.name().span()));
+                }
                 continue;
             }
             Optional<Map<String, String>> values = values(use, feature.get(), diagnostics);
             if (values.isEmpty()) continue;
-            var parsed = SirParser.create().parseExpansion(feature.get().expand(values.get()), use.id(), use.span());
+            String key = key(feature.get(), values.get());
+            keys.put(use.id(), key);
+            String text;
+            try {
+                text = feature.get().expand(values.get(), entities.orElse(name -> Optional.empty()));
+            } catch (FeatureTemplate.Problem problem) {
+                var at = problem.parameter().flatMap(p -> use.arguments().stream().filter(a -> a.parameter().text().equals(p)).findFirst())
+                    .map(a -> a.value().span()).orElse(use.span());
+                diagnostics.add(DiagnosticBuilder.error("SIR-FEATURE-003", problem.getMessage(), at));
+                continue;
+            }
+            var parsed = SirParser.create().parseExpansion(text, use.id(), use.span());
             if (parsed.declarations().isEmpty()) {
                 String why = parsed.diagnostics().stream().filter(Diagnostic::isError).findFirst().map(d -> ": " + d.message()).orElse("");
                 diagnostics.add(DiagnosticBuilder.error("SIR-FEATURE-004", "feature " + use.name().text() + " could not be expanded" + why, use.span()));
@@ -63,14 +102,28 @@ final class FeatureExpander {
                     "feature " + use.name().text() + " expands into a use or a feature declaration; a feature's text declares only types, entities, inputs, views, errors and capabilities", use.span()));
                 continue;
             }
+            if (entities.isPresent() && parsed.declarations().get().stream().anyMatch(io.kcg.sir.ast.AstSemanticTypeDecl.class::isInstance)) {
+                diagnostics.add(DiagnosticBuilder.error("SIR-FEATURE-004",
+                    "feature " + use.name().text() + " goes through an entity's fields, so it cannot declare types: the types are known before it expands", use.span()));
+                continue;
+            }
             String prefix = values.get().getOrDefault("prefix", "");
             for (AstDeclaration produced : parsed.declarations().get()) {
                 declarations.add(produced);
                 String name = ProjectSourceResolver.name(produced);
-                expanded.put(produced.id(), new Expansion(use, name.startsWith(prefix) ? name.substring(prefix.length()) : name));
+                expanded.put(produced.id(), new Expansion(use, key, name.startsWith(prefix) ? name.substring(prefix.length()) : name));
             }
         }
-        return new Result(List.copyOf(declarations), List.copyOf(uses), expanded);
+        return new Result(List.copyOf(declarations), List.copyOf(uses), keys, expanded);
+    }
+
+    /** The feature's name and, in order, the values of its parameters that have no default. */
+    private static String key(Features.Feature feature, Map<String, String> values) {
+        StringBuilder key = new StringBuilder(feature.name());
+        for (Features.Parameter parameter : feature.parameters()) {
+            if (parameter.defaultValue().isEmpty()) key.append('/').append(values.get(parameter.name()));
+        }
+        return key.toString();
     }
 
     /** Every parameter's text with defaults applied, or empty after reporting why not. */

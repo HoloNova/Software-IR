@@ -83,6 +83,7 @@ final class NormalizePass {
    private final String softwareName;
    private final ValidatedContext validated;
    private final List<io.kcg.sir.ast.AstFeatureUseDecl> uses;
+   private final java.util.Map<AstNodeId, String> useKeys;
    private final java.util.Map<AstNodeId, FeatureExpander.Expansion> expanded;
 
    private final io.kcg.sir.semantic.feature.SemanticTypes semanticTypes;
@@ -92,11 +93,11 @@ final class NormalizePass {
    private final Set<AstNodeId> addedFields;
 
    NormalizePass(AstSoftware software, ValidatedContext validated) {
-      this(software, validated, List.of(), java.util.Map.of(), io.kcg.sir.semantic.feature.SemanticTypes.builtin(), List.of(), List.of(), List.of(), Set.of());
+      this(software, validated, List.of(), java.util.Map.of(), java.util.Map.of(), io.kcg.sir.semantic.feature.SemanticTypes.builtin(), List.of(), List.of(), List.of(), Set.of());
    }
 
    NormalizePass(AstSoftware software, ValidatedContext validated, List<io.kcg.sir.ast.AstFeatureUseDecl> uses,
-         java.util.Map<AstNodeId, FeatureExpander.Expansion> expanded, io.kcg.sir.semantic.feature.SemanticTypes semanticTypes,
+         java.util.Map<AstNodeId, String> useKeys, java.util.Map<AstNodeId, FeatureExpander.Expansion> expanded, io.kcg.sir.semantic.feature.SemanticTypes semanticTypes,
          List<io.kcg.sir.ast.AstSemanticTypeDecl> typeDeclarations, List<io.kcg.sir.ast.AstFeatureDefinitionDecl> featureDefinitions,
          List<io.kcg.sir.ast.AstEntityExtensionDecl> extensions, Set<AstNodeId> addedFields) {
       this.featureDefinitions = List.copyOf(featureDefinitions);
@@ -108,6 +109,7 @@ final class NormalizePass {
       this.softwareName = software.name().text();
       this.validated = validated;
       this.uses = List.copyOf(uses);
+      this.useKeys = java.util.Map.copyOf(useKeys);
       this.expanded = java.util.Map.copyOf(expanded);
    }
 
@@ -127,8 +129,8 @@ final class NormalizePass {
       // The use declarations themselves, after every declaration they expanded into, in name order like the others.
       java.util.Map<SymbolId, io.kcg.sir.semantic.api.FeatureOrigin> expansions = new java.util.LinkedHashMap<>();
       this.separateExtensions(declarations, expansions);
-      for (io.kcg.sir.ast.AstFeatureUseDecl use : this.uses.stream().sorted(java.util.Comparator.comparing(u -> u.name().text())).toList()) {
-         SymbolId feature = SymbolIdFactory.declaration(this.softwareName, "feature", use.name().text());
+      for (io.kcg.sir.ast.AstFeatureUseDecl use : this.uses.stream().sorted(java.util.Comparator.comparing(u -> this.useKeys.get(u.id()))).toList()) {
+         SymbolId feature = this.featureUse(this.useKeys.get(use.id()));
          declarations.add(new io.kcg.sir.semantic.model.NormalizedFeatureUse(feature, use.name().text(), use.span(), use.id(),
             use.arguments().stream().map(a -> new io.kcg.sir.semantic.model.NormalizedFeatureArgument(a.parameter().text(), a.value().text())).toList()));
       }
@@ -149,7 +151,7 @@ final class NormalizePass {
          SymbolId id = this.validated.declarationBindings().get(decl.id());
          if (expansion != null && id != null) {
             expansions.put(id, new io.kcg.sir.semantic.api.FeatureOrigin(
-               SymbolIdFactory.declaration(this.softwareName, "feature", expansion.use().name().text()), expansion.role()));
+               this.featureUse(expansion.key()), expansion.role()));
          }
       }
 
@@ -210,9 +212,20 @@ final class NormalizePass {
          FeatureExpander.Expansion expansion = this.expanded.get(extension.id());
          if (expansion != null) {
             expansions.put(id, new io.kcg.sir.semantic.api.FeatureOrigin(
-               SymbolIdFactory.declaration(this.softwareName, "feature", expansion.use().name().text()), expansion.role()));
+               this.featureUse(expansion.key()), expansion.role()));
          }
       }
+   }
+
+   /**
+    * The identity of a use: the feature's name, then the values that tell its uses apart, each a segment
+    * ({@code feature/Crud/Note}).
+    */
+   private SymbolId featureUse(String key) {
+      String[] parts = key.split("/");
+      StringBuilder id = new StringBuilder(SymbolIdFactory.declaration(this.softwareName, "feature", parts[0]).value());
+      for (int i = 1; i < parts.length; i++) id.append('/').append(SymbolIdFactory.encode(parts[i]));
+      return new SymbolId(id.toString());
    }
 
    private List<Diagnostic> sortDiagnostics(List<Diagnostic> diagnostics) {

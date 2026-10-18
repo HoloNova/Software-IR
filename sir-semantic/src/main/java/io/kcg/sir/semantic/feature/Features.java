@@ -47,7 +47,7 @@ public final class Features {
     }
 
     /**
-     * A feature: its parameters and the text it expands into. The language has one built in; a software can define its
+     * A feature: its parameters and the text it expands into. The language has some built in; a software can define its
      * own ({@code feature Tagging { ... }}), whose text is the one written in the definition.
      */
     public record Feature(String name, List<Parameter> parameters, Supplier<String> template, boolean builtin) {
@@ -66,15 +66,24 @@ public final class Features {
             return parameters.stream().filter(p -> p.name().equals(name)).findFirst();
         }
 
-        /** The declarations, given the text of every parameter (defaults already applied). */
+        /** The template, read. */
+        public FeatureTemplate parsed() {
+            return FeatureTemplate.parse(this.template.get());
+        }
+
+        /** The declarations, given the text of every parameter (defaults already applied), for a template that reads no entity. */
         public String expand(Map<String, String> values) {
-            String text = this.template.get();
-            for (Parameter parameter : parameters) {
-                String value = Objects.requireNonNull(values.get(parameter.name()), parameter.name());
-                text = text.replace("${" + parameter.name() + "}", value);
-            }
-            if (text.contains("${")) throw new IllegalStateException("feature template " + name + " has an unfilled placeholder");
-            return text;
+            return expand(values, entity -> Optional.empty());
+        }
+
+        /**
+         * The declarations, given the text of every parameter (defaults already applied) and the entity a name names.
+         *
+         * @throws FeatureTemplate.Problem when a value the template reads as an entity names none
+         */
+        public String expand(Map<String, String> values, java.util.function.Function<String, Optional<FeatureTemplate.Entity>> entities) {
+            for (Parameter parameter : parameters) Objects.requireNonNull(values.get(parameter.name()), parameter.name());
+            return parsed().render(values, entities);
         }
     }
 
@@ -108,7 +117,24 @@ public final class Features {
         DUAL_TOKEN_LOGIN.parameter("access").orElseThrow(), DUAL_TOKEN_LOGIN.parameter("refresh").orElseThrow(), DUAL_TOKEN_LOGIN.parameter("prefix").orElseThrow()),
         "/io/kcg/sir/semantic/feature/dual-token-login.sir");
 
-    private static final Map<String, Feature> ALL = Map.of(DUAL_TOKEN_LOGIN.name(), DUAL_TOKEN_LOGIN);
+    /**
+     * Create, show, list a page of, change and delete the rows of an entity: one {@code use Crud { entity: Note; }}
+     * gives the five capabilities with their inputs, their view and their errors. Everything comes from the entity:
+     *
+     * <ul>
+     *   <li>creating takes every field but a defaulted one (it gets its default) and the version;</li>
+     *   <li>the view shows every field but a secret one;</li>
+     *   <li>changing takes the identity and every field but a secret one and the version. A versioned entity is changed
+     *       by a patch, only the fields the request carries, and refuses a stale version; any other entity is changed
+     *       by giving all those fields;</li>
+     *   <li>a row outside the entity's scope is not found, as for every load and find.</li>
+     * </ul>
+     */
+    public static final Feature CRUD = new Feature("Crud", List.of(
+        new Parameter("entity", Kind.NAME, Optional.empty(), NAME, 0, 0, "entity must name the entity whose rows are managed")),
+        "/io/kcg/sir/semantic/feature/crud.sir");
+
+    private static final Map<String, Feature> ALL = Map.of(DUAL_TOKEN_LOGIN.name(), DUAL_TOKEN_LOGIN, CRUD.name(), CRUD);
 
     public static Optional<Feature> named(String name) {
         return Optional.ofNullable(ALL.get(name));

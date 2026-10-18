@@ -34,7 +34,8 @@ public final class DraftOrder {
          case StructValue.Seq seq -> {
             List<StructValue> elements = new ArrayList<>(seq.elements().stream().map(e -> value(e, false, schema)).toList());
             if (keyed) {
-               elements.sort(Comparator.comparing(DraftOrder::sortKey));
+               // Elements of one name (the uses of one feature, the extensions of one entity) are told apart by what they say.
+               elements.sort(Comparator.comparing(DraftOrder::sortKey).thenComparing(String::valueOf));
             }
 
             yield new StructValue.Seq(elements);
