@@ -46,7 +46,9 @@ class SemanticTypeDeclarationTest {
     @Test void aCreateThatLeavesAFieldUnboundGetsItsDefault() throws IOException {
         var compiled = compile(Map.of(ENTRY, resource("/valid/default-value.sir")));
         String service = file(compiled, "OpenTicketService.java");
-        assertTrue(service.contains("setState(\"open\")") && service.contains("setUrgent(false)") && service.contains("setWeight(1)"), service);
+        for (String set : List.of("setLabel(\"open\")", "setState(TicketState.OPEN)", "setUrgent(false)", "setWeight(1)", "setOffset(-(1))", "setOpenedAt(java.time.Instant.now())")) {
+            assertTrue(service.contains(set), set + " in\n" + service);
+        }
     }
 
     @Test void anEditRewritingAFieldDoesNotRepeatWhatItsTypeBrings() throws IOException {

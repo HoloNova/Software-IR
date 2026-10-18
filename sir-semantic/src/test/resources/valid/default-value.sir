@@ -19,10 +19,14 @@ software DefaultDesk {
     entity Ticket persistent {
       identity id: Id generated auto;
       field title: Text;
-      field state: Text default "open";
+      field label: Text default "open";
+      field state: TicketState default TicketState.OPEN;
       field urgent: Flag default false;
       field weight: Count default 1;
+      field offset: Count default -1;
+      field openedAt: Moment default now();
     }
+    enum TicketState { OPEN, CLOSED }
     input TicketDraft {
       field title: Text;
     }

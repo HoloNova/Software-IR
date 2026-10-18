@@ -661,7 +661,9 @@ final class TypePass {
       }
 
       if (found instanceof Symbol.TypeSymbol ts && ts.kind() == SymbolKind.ENUM) {
-         return this.declaredTypesBySymbolId.get(ts.id());
+         // An enum is a type of its own even where no type reference names it, so a member of an enum no field
+         // declares is still told apart from every other enum's.
+         return this.declaredTypesBySymbolId.computeIfAbsent(ts.id(), id -> new DeclaredType(DeclaredType.DeclaredKind.ENUM, ts.name(), id));
       }
 
       // A bare name can also be a field of the entity an existence predicate refers to; that is the

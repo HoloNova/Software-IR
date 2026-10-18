@@ -143,6 +143,7 @@ final class ResolvePass {
       this.resolveMembersAndTypes();
       if (this.hasIdentityCollision()) return this.identityFailureContext();
       this.resolvePatchPayloadBindings();
+      this.resolveFieldDefaults();
       this.resolveCapabilities();
       SymbolTable table = this.buildSymbolTable();
       return new ResolvedContext(
@@ -626,6 +627,19 @@ final class ResolvePass {
       }
 
       throw new IllegalStateException("view field not found: " + name);
+   }
+
+   /**
+   * A default names at most an enum member, which may be declared after the entity, so defaults are resolved once
+   * every declaration's members are known. A default runs in no workflow: it sees no variable, only the project.
+   */
+   private void resolveFieldDefaults() {
+      for (AstDeclaration decl : this.software.declarations()) {
+         if (decl instanceof AstEntityDecl entity) {
+            entity.fields().forEach(field -> field.defaultValue().ifPresent(value ->
+               this.resolveExpression(value, null, this.projectScopeId, Set.of(), null, null)));
+         }
+      }
    }
 
    private void resolveCapabilities() {

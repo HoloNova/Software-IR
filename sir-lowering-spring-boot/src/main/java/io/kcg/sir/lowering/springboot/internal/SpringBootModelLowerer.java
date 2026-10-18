@@ -995,18 +995,28 @@ public final class SpringBootModelLowerer {
             if (field.defaultValue().isEmpty() || bound.contains(field.id())) {
                 continue;
             }
-            NormalizedExpression constant = field.defaultValue().get();
-            AstNodeId id = new AstNodeId(step.sourceNodeId().value() + "/default/" + field.name());
-            NormalizedExpression copy = switch (constant) {
-                case NormalizedExpression.BooleanLiteral v -> new NormalizedExpression.BooleanLiteral(id, step.span(), v.type(), v.value());
-                case NormalizedExpression.IntegerLiteral v -> new NormalizedExpression.IntegerLiteral(id, step.span(), v.type(), v.value());
-                case NormalizedExpression.DecimalLiteral v -> new NormalizedExpression.DecimalLiteral(id, step.span(), v.type(), v.value());
-                case NormalizedExpression.StringLiteral v -> new NormalizedExpression.StringLiteral(id, step.span(), v.type(), v.value());
-                default -> throw new IllegalStateException("a default must be a constant: " + field.name());
-            };
+            NormalizedExpression copy = reidentified(field.defaultValue().get(), step.sourceNodeId().value() + "/default/" + field.name(), step.span());
             bindings.add(lowerBinding(new NormalizedBinding(field.name(), field.id(), copy), owner, actorSymbol));
         }
         return List.copyOf(bindings);
+    }
+
+    /** {@code value} under ids below {@code base}, placed at {@code span}; a default holds only the shapes the grammar allows. */
+    private static NormalizedExpression reidentified(NormalizedExpression value, String base, SourceSpan span) {
+        AstNodeId id = new AstNodeId(base);
+        return switch (value) {
+            case NormalizedExpression.BooleanLiteral v -> new NormalizedExpression.BooleanLiteral(id, span, v.type(), v.value());
+            case NormalizedExpression.IntegerLiteral v -> new NormalizedExpression.IntegerLiteral(id, span, v.type(), v.value());
+            case NormalizedExpression.DecimalLiteral v -> new NormalizedExpression.DecimalLiteral(id, span, v.type(), v.value());
+            case NormalizedExpression.StringLiteral v -> new NormalizedExpression.StringLiteral(id, span, v.type(), v.value());
+            case NormalizedExpression.NowExpression v -> new NormalizedExpression.NowExpression(id, span, v.type());
+            case NormalizedExpression.NameExpression v -> new NormalizedExpression.NameExpression(id, span, v.type(), v.name(), v.resolvedSymbol());
+            case NormalizedExpression.UnaryExpression v -> new NormalizedExpression.UnaryExpression(
+                    id, span, v.type(), v.operator(), reidentified(v.operand(), base + "/operand", span));
+            case NormalizedExpression.MemberExpression v -> new NormalizedExpression.MemberExpression(
+                    id, span, v.type(), reidentified(v.receiver(), base + "/receiver", span), v.member(), v.resolvedMember());
+            default -> throw new IllegalStateException("not a default value: " + value);
+        };
     }
 
     private SpringBootWorkflow.Binding lowerBinding(NormalizedBinding binding, SymbolId owner, Optional<SymbolId> actorSymbol) {

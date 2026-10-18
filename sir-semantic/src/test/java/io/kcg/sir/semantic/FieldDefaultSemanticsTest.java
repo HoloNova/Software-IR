@@ -23,6 +23,13 @@ class FieldDefaultSemanticsTest {
     }
 
     @Test
+    void anEnumMemberDeclaredLaterAndTheMomentOfCreationAreDefaultsToo() {
+        SemanticAnalysis result = TestSources.analyze(TestSources.sir(software(
+            "field state: Phase default Phase.OPEN;\n  field at: Moment default now();", "") + "enum Phase { OPEN, DONE }\n"));
+        assertTrue(result.isSuccess(), () -> result.diagnostics().toString());
+    }
+
+    @Test
     void aFieldWithoutOneStillNeedsIt() {
         SemanticAnalysis result = TestSources.analyze(TestSources.sir(software("field state: Text;", "")));
         assertFalse(result.isSuccess());
@@ -40,7 +47,9 @@ class FieldDefaultSemanticsTest {
         Map<String, String> refusals = Map.of(
             "SIR-TYPE-001 wrong type", software("field state: Text default 3;", ""),
             "SIR-VALID-010 unique", software("field state: Text unique default \"a\";", ""),
-            "SIR-VALID-010 secret", software("field state: Text secret default \"a\";", ""));
+            "SIR-VALID-010 secret", software("field state: Text secret default \"a\";", ""),
+            "SIR-SYMBOL-002 unknown member", software("field state: Phase default Phase.GONE;", "") + "enum Phase { OPEN }\n",
+            "SIR-TYPE-001 other enum", software("field state: Phase default Other.OPEN;", "") + "enum Phase { OPEN }\nenum Other { OPEN }\n");
         refusals.forEach((label, source) -> {
             SemanticAnalysis result = TestSources.analyze(TestSources.sir(source));
             assertFalse(result.isSuccess(), label);

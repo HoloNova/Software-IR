@@ -291,9 +291,23 @@ final class SirAstBuilder {
         return new AstField(
                 ids.id(path), source.span(context), name, type(context.typeRef(), path), constraints,
                 context.VERSIONED() != null, context.uniqueModifier() != null, context.secretModifier() != null,
-                context.defaultModifier() == null ? Optional.empty()
-                        : Optional.of(constant(context.defaultModifier().constantArgument(), path)),
+                context.defaultModifier() == null ? Optional.empty() : Optional.of(defaultValue(context.defaultModifier(), path)),
                 declaredId);
+    }
+
+    private AstExpression defaultValue(SirParser.DefaultModifierContext context, String parent) {
+        if (context.constantArgument() != null) {
+            return constant(context.constantArgument(), parent);
+        }
+        String path = ids.indexed(parent, "default");
+        if (context.NOW() != null) {
+            return new AstNowExpression(ids.id(path), source.span(context.NOW().getSymbol()));
+        }
+        String receiverPath = ids.indexed(path, "expression");
+        AstExpression receiver = new AstNameExpression(
+                ids.id(receiverPath), source.span(context.enumName), nameRef(context.enumName, receiverPath, "name"));
+        return new AstMemberExpression(
+                ids.id(path), combine(receiver.span(), source.span(context.member)), receiver, nameRef(context.member, path, "member"));
     }
 
     private Optional<String> declaredId(SirParser.IdAnnotationContext context) {

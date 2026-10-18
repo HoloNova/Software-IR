@@ -165,9 +165,11 @@ secretModifier
     ;
 
 // "default 0;" is what a create step gives the field when it does not bind it. Like "unique" and "secret" the word
-// is contextual, so every identifier spelled default stays legal; only a constant can be a default.
+// is contextual, so every identifier spelled default stays legal. A default is a value the field has without any
+// request: a constant, an enum member, or the moment of creation.
 defaultModifier
-    : {_input.LT(1).getText().equals("default")}? IDENT constantArgument
+    : {_input.LT(1).getText().equals("default")}? IDENT
+      (constantArgument | enumName=IDENT DOT member=IDENT | NOW LPAREN RPAREN)
     ;
 
 idAnnotation
