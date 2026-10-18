@@ -44,6 +44,16 @@ class CredentialLoweringTest {
                 .noneMatch(ProjectArtifact.CredentialIdentityAdapter.class::isInstance));
     }
 
+    /** Login alone, before any capability asks who is calling: nothing would use an authenticator yet. */
+    @Test
+    void aCredentialEntityWithoutACapabilityThatHasAnActorGetsNoAuthenticator() {
+        String source = LoweringTestSupport.source(SOURCE);
+        String withoutActor = source.substring(0, source.indexOf("    capability PostNote {")) + "  }\n}\n";
+        SpringBootLoweredModel model = LoweringTestSupport.lowerSourceSuccess(withoutActor);
+        assertTrue(model.projectArtifacts().stream().noneMatch(ProjectArtifact.CredentialIdentityAdapter.class::isInstance));
+        assertTrue(new io.kcg.sir.lowering.springboot.api.SpringBootLoweredIrValidator().validate(model).isEmpty());
+    }
+
     @Test
     void aReferenceBoundFromARowStoresTheRowsIdentityButTheActorIsKeptAsIs() {
         SpringBootLoweredModel model = LoweringTestSupport.lowerSuccess(SOURCE);

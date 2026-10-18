@@ -152,7 +152,11 @@ public final class SpringBootModelLowerer {
         if (!this.secretFields.isEmpty()) {
             projectArtifacts.add(this.secretDigestArtifact());
         }
-        this.credentialIdentityAdapterArtifact().ifPresent(projectArtifacts::add);
+        // The authenticator answers who the actor of a request is; with no capability that has an actor nothing asks,
+        // and the actor plumbing it plugs into is not generated.
+        if (transportPlan.isPresent()) {
+            this.credentialIdentityAdapterArtifact().ifPresent(projectArtifacts::add);
+        }
         if (this.hasPagedFind(declarations)) {
             projectArtifacts.add(this.pageResponseArtifact());
         }
