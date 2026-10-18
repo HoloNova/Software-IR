@@ -1,0 +1,51 @@
+sir 0.3
+
+software UnsupportedAnySample {
+  metadata {
+    displayName "Unsupported Any Sample";
+    namespace "example.actormember";
+  }
+  target {
+    language java 21;
+    framework spring_boot;
+    persistence mybatis_plus;
+    database mysql;
+    build maven;
+    interface rest;
+  }
+  sources { }
+  imports { }
+  declarations {
+    entity Course persistent {
+      identity id: Id generated auto;
+      field code: Code;
+    }
+    entity Enrollment persistent {
+      identity id: Id generated auto;
+      field course: Ref<Course>;
+      field note: Text;
+    }
+    view CourseView from Course {
+      field id: Id;
+      field code: Code;
+    }
+    input SearchInput {
+      field note: Text;
+      field page: PageNo;
+      field size: PageSize;
+    }
+    error BadPage;
+    capability SearchCourses {
+      input SearchInput;
+      output Page<CourseView>;
+      fails BadPage;
+      requires readonly;
+      expose query;
+      workflow {
+        find Course where any(Enrollment, course == item and note == input.note)
+          order by id ascending Page input.page, input.size else BadPage as rows;
+        return rows;
+      }
+    }
+  }
+}

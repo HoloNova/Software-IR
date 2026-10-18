@@ -52,12 +52,12 @@ class SirValidationApplicationTest {
             var result = app.check(new SirValidationRequest("opaque", sir, stop)); assertTrue(result.ok()); assertEquals(stop, result.stage());
             if (stop != ValidationStopAfter.GENERATION) { assertEquals(0, result.fileCount()); assertNull(result.digest()); }
         }
-        String invalid = SampleCorpusTest.resource("invalid/actor-non-identity.sir");
+        String invalid = SampleCorpusTest.resource("invalid/lowering-unsupported-any.sir");
         assertTrue(app.check(new SirValidationRequest("early", invalid, ValidationStopAfter.SEMANTIC)).ok());
         assertFalse(app.check(new SirValidationRequest("late", invalid, ValidationStopAfter.LOWERING)).ok());
     }
     @Test void originalDiagnosticCodesMessagesAndPositionsRemainExact() throws Exception {
-        for (String fixture : List.of("semantic-unresolved-name.sir", "actor-non-identity.sir")) {
+        for (String fixture : List.of("semantic-unresolved-name.sir", "lowering-unsupported-any.sir")) {
             String sir = SampleCorpusTest.resource("invalid/" + fixture); var legacy = new ArrayList<ExecutionDiagnostic>();
             ProjectCompilation.compile(ProjectTestSupport.oneFile("sample.sir", sir), new SpringBootGenerator()::generate, legacy);
             var checked = app.check(new SirValidationRequest(fixture, sir)); assertFalse(checked.ok());

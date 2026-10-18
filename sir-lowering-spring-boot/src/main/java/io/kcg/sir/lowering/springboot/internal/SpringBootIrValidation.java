@@ -989,6 +989,14 @@ public final class SpringBootIrValidation {
             this.requireDeclaration(value.errorSymbol(), SpringBootDeclaration.ErrorDeclaration.class, owner);
             value.keyField().ifPresent(key -> this.validateLoadKey(value, key, owner));
             break;
+         case SpringBootWorkflow.LoadActorStep value:
+            this.requireDeclaration(value.entitySymbol(), SpringBootDeclaration.EntityDeclaration.class, owner);
+            this.validateExpression(value.idExpression(), owner);
+            this.requireKnown(value.result().symbol(), owner, "actor row variable");
+            if (owner.actor().isEmpty()) {
+               this.error(owner, "only a capability with an actor can read the actor's row");
+            }
+            break;
          case SpringBootWorkflow.FindStep value:
             this.requireDeclaration(value.entitySymbol(), SpringBootDeclaration.EntityDeclaration.class, owner);
             this.validateExpression(value.predicate(), owner);

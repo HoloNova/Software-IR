@@ -81,6 +81,9 @@ final class WorkflowRenderer {
          case LoadStep load:
             renderLoad(ctx, capability, load, variableNames, imports, currentPackage, lines, mappers);
             break;
+         case SpringBootWorkflow.LoadActorStep load:
+            renderLoadActor(ctx, load, variableNames, imports, currentPackage, lines, mappers);
+            break;
          case FindStep find:
          renderFind(ctx, find, inputName, variableNames, imports, currentPackage, lines, mappers, stringMatches);
             break;
@@ -150,6 +153,30 @@ final class WorkflowRenderer {
       lines.add("            throw new " + errorName + "();");
       lines.add("        }");
       renderVersionGuard(ctx, capability, step, entity, resultName, imports, currentPackage, lines);
+   }
+
+   /** The authenticated actor's row; when it is gone the request is not authenticated any more. */
+   private static void renderLoadActor(
+      GenerationContext ctx,
+      SpringBootWorkflow.LoadActorStep step,
+      Map<SymbolId, String> variableNames,
+      ImportSorter imports,
+      String currentPackage,
+      List<String> lines,
+      Map<SymbolId, WorkflowRenderer.MapperReference> mappers
+   ) {
+      EntityDeclaration entity = ctx.entity(step.entitySymbol());
+      registerEntityImport(ctx, entity, imports, currentPackage);
+      WorkflowRenderer.MapperReference mapper = ensureMapper(ctx, step.entitySymbol(), entity.javaName(), mappers);
+      String idExpr = ExpressionRenderer.renderExpression(step.idExpression(), variableNames);
+      String exception = WriteSupport.of(ctx.model()).exceptionBaseFqn();
+      imports.add(exception);
+      imports.add("org.springframework.http.HttpStatus");
+      String resultName = step.result().targetName();
+      lines.add("        var " + resultName + " = " + mapper.mapperFieldName() + ".selectById(" + idExpr + ");");
+      lines.add("        if (" + resultName + " == null) {");
+      lines.add("            throw new " + exception.substring(exception.lastIndexOf('.') + 1) + "(\"Unauthenticated\", HttpStatus.UNAUTHORIZED);");
+      lines.add("        }");
    }
 
    /**

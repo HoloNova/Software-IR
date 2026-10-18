@@ -627,18 +627,6 @@ public final class SpringBootInputValidator {
          case MemberExpression value:
             this.validateExpression(value.receiver(), owner, actorAccess);
             this.validateBound(value.resolvedMember(), value.span(), value.sourceNodeId(), null);
-            if (actorAccess != null
-               && value.receiver() instanceof NameExpression receiver
-               && receiver.resolvedSymbol().equals(actorAccess.actorSymbol())
-               && !value.resolvedMember().equals(actorAccess.identitySymbol())) {
-               this.error(
-                  "SIR-LOWER-FEATURE-001",
-                  "actor identity transport cannot access non-identity member: " + value.resolvedMember(),
-                  value.span(),
-                  owner,
-                  value.sourceNodeId()
-               );
-            }
             break;
          case UnaryExpression value:
             this.validateExpression(value.operand(), owner, actorAccess);

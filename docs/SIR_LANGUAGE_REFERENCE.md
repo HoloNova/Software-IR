@@ -666,6 +666,47 @@ capability RenameGoods {
 
 只看自己的数据，把条件写进 `find`：`find Goods where item.seller == actor ...`。
 
+按角色限制，直接读当前用户的字段：
+
+```sir-declarations
+enum Role {
+  MEMBER,
+  ADMIN
+}
+entity User persistent {
+  identity id: Id generated auto;
+  field name: Text;
+  field role: Role default Role.MEMBER;
+}
+entity Goods persistent {
+  identity id: Id generated auto;
+  field title: Text;
+}
+input GoodsRef {
+  field id: Id;
+}
+error Forbidden http 403;
+error GoodsNotFound http 404;
+capability RemoveGoods {
+  actor Ref<User>;
+  input GoodsRef;
+  output Unit;
+  fails Forbidden;
+  fails GoodsNotFound;
+  requires authenticated;
+  requires atomic;
+  expose command;
+  workflow {
+    validate actor.role == Role.ADMIN else Forbidden;
+    load Goods by input.id as goods else GoodsNotFound;
+    delete goods;
+    return unit;
+  }
+}
+```
+
+读 `actor` 主键以外的字段时，生成的代码先按主键读出当前用户这一行（每次请求一次）；这一行不存在时请求按未认证处理（401），不用为它声明错误。只把 `actor` 当引用用（`seller: actor`、`goods.seller == actor`）不会多读这一行。
+
 ### 4.3 `expose` 与 HTTP
 
 - `expose query;` → `GET /api/<能力名的短横线形式>`，输入字段作为查询参数。

@@ -1,0 +1,98 @@
+sir 0.3
+
+software RoleDesk {
+  metadata {
+    displayName "Role Desk";
+    namespace "example.roles";
+  }
+  target {
+    language java 21;
+    framework spring_boot;
+    persistence mybatis_plus;
+    database mysql;
+    build maven;
+    interface rest;
+  }
+  sources { }
+  imports { }
+  declarations {
+    enum Role {
+      MEMBER,
+      ADMIN
+    }
+    entity User persistent {
+      identity id: Id generated auto;
+      field name: Name;
+      field role: Role default Role.MEMBER;
+    }
+    entity Goods persistent {
+      identity id: Id generated auto;
+      field title: Name;
+      field seller: Ref<User>;
+    }
+    view GoodsView from Goods {
+      field id: Id;
+      field title: Name;
+    }
+    input GoodsRef {
+      field id: Id;
+    }
+    input RenameInput {
+      field id: Id;
+      field title: Name;
+    }
+    error GoodsNotFound http 404;
+    error Forbidden http 403;
+    capability RemoveGoods {
+      actor Ref<User>;
+      input GoodsRef;
+      output Unit;
+      fails Forbidden;
+      fails GoodsNotFound;
+      requires authenticated;
+      requires atomic;
+      expose command;
+      workflow {
+        validate actor.role == Role.ADMIN else Forbidden;
+        load Goods by input.id as goods else GoodsNotFound;
+        delete goods;
+        return unit;
+      }
+    }
+    capability RenameGoods {
+      actor Ref<User>;
+      input RenameInput;
+      output GoodsView;
+      fails Forbidden;
+      fails GoodsNotFound;
+      requires authenticated;
+      requires atomic;
+      expose command;
+      workflow {
+        load Goods by input.id as goods else GoodsNotFound;
+        validate goods.seller == actor or actor.role == Role.ADMIN else Forbidden;
+        update goods {
+          title: input.title;
+        }
+        persist goods;
+        return goods;
+      }
+    }
+    capability PostGoods {
+      actor Ref<User>;
+      input RenameInput;
+      output GoodsView;
+      requires authenticated;
+      requires atomic;
+      expose command;
+      workflow {
+        create Goods as goods {
+          title: input.title;
+          seller: actor;
+        }
+        persist goods;
+        return goods;
+      }
+    }
+  }
+}

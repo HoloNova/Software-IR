@@ -37,7 +37,7 @@ class SampleCorpusTest {
         }
     }
     @Test void existingInvalidStagesArePinned() throws Exception {
-        for (var item : List.of("semantic-unresolved-name.sir:SEMANTIC", "actor-non-identity.sir:LOWERING")) {
+        for (var item : List.of("semantic-unresolved-name.sir:SEMANTIC", "lowering-unsupported-any.sir:LOWERING")) {
             var parts = item.split(":"); var diagnostics = new ArrayList<ExecutionDiagnostic>();
             assertTrue(ProjectCompilation.compile(ProjectTestSupport.oneFile("sample.sir", resource("invalid/" + parts[0])),
                 new SpringBootGenerator()::generate, diagnostics).isEmpty());

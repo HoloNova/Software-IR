@@ -708,6 +708,8 @@ public final class SpringBootModelLowerer {
             provenance.put((SymbolId)capability.inputSymbol().get(), Provenance.EXISTING);
         }
         ArrayList<SpringBootWorkflow.Step> steps = new ArrayList<SpringBootWorkflow.Step>();
+        this.actorRow = capability.actorSymbol().map(actor -> this.actorRow(capability, actor)).orElse(null);
+        this.readsActorRow = false;
         for (NormalizedStep step : capability.workflow().steps()) {
             SpringBootWorkflow.Step lowered = this.lowerStep(step, capability.id(), provenance, capability.actorSymbol());
             steps.add(lowered);
@@ -725,7 +727,43 @@ public final class SpringBootModelLowerer {
             NormalizedStep.PersistStep persistStep = (NormalizedStep.PersistStep)step;
             provenance.put(persistStep.targetVariable(), Provenance.EXISTING);
         }
+        if (this.readsActorRow) {
+            // A field of the actor other than its identity was read: the actor's row is read first, once.
+            ActorRow row = this.actorRow;
+            LoweredOrigin origin = this.origin(capability.id(), capability.workflow().sourceNodeId(), capability.workflow().span());
+            steps.add(0, new SpringBootWorkflow.LoadActorStep(this.nodeId(capability.workflow().sourceNodeId().value(), "actor-row"), origin,
+                    row.entity(), new SpringExpression.NameExpression(this.nodeId(capability.workflow().sourceNodeId().value(), "actor-row-identity"),
+                            origin, this.lowerType(row.actorType()), row.actor(), this.source.symbols().byId(row.actor()).orElseThrow().name()),
+                    row.variable()));
+            variables = new ArrayList<>(variables);
+            variables.add(row.variable());
+            variables = List.copyOf(variables);
+        }
+        this.actorRow = null;
         return new SpringBootWorkflow(this.nodeId(capability.workflow().sourceNodeId().value(), "workflow"), this.origin(capability.id(), capability.workflow().sourceNodeId(), capability.workflow().span()), variables, List.copyOf(steps));
+    }
+
+    /**
+     * The actor's row as the workflow being lowered can read it. The Java variable is called {@code actor}, which no
+     * variable of a workflow can be called, since actor is a keyword of the language.
+     */
+    private record ActorRow(SymbolId actor, SirType actorType, SymbolId entity, SymbolId identity, SpringBootWorkflow.Variable variable) {}
+
+    /** Set while a workflow with an actor is lowered; {@link #readsActorRow} records whether it read more than the identity. */
+    private ActorRow actorRow;
+    private boolean readsActorRow;
+
+    private ActorRow actorRow(NormalizedCapability capability, SymbolId actor) {
+        SirType type = ((Symbol.VariableSymbol) this.source.symbols().byId(actor).orElseThrow()).type();
+        SymbolId entityId = switch (type) {
+            case RefType ref -> ref.entityId();
+            case DeclaredType declared -> declared.symbolId();
+            default -> throw new IllegalStateException("actor must be an entity ref, got: " + type);
+        };
+        NormalizedEntity entity = this.entities.get(entityId);
+        SymbolId rowSymbol = new SymbolId(capability.id().value() + "/actor-row");
+        return new ActorRow(actor, type, entityId, entity.identity().id(),
+                new SpringBootWorkflow.Variable(rowSymbol, "actor", this.lowerVariableType(type, true)));
     }
 
     private SpringBootWorkflow.Step lowerStep(NormalizedStep step, SymbolId owner, Map<SymbolId, Provenance> provenance, Optional<SymbolId> actorSymbol) {
@@ -1110,6 +1148,21 @@ public final class SpringBootModelLowerer {
                     id, origin, type, value.resolvedSymbol(),
                     source.symbols().byId(value.resolvedSymbol()).orElseThrow().name());
             case NormalizedExpression.MemberExpression value -> {
+                if (actorSymbol.isPresent()
+                        && value.receiver() instanceof NormalizedExpression.NameExpression receiver
+                        && receiver.resolvedSymbol().equals(actorSymbol.get())
+                        && this.actorRow != null && !value.resolvedMember().equals(this.actorRow.identity())) {
+                    // Any other field of the actor is read from the actor's row.
+                    this.readsActorRow = true;
+                    yield new SpringExpression.MemberExpression(
+                            id, origin, type,
+                            new SpringExpression.NameExpression(this.nodeId(value.receiver().sourceNodeId().value(), "expression"),
+                                    origin, this.actorRow.variable().type(), this.actorRow.variable().symbol(), "actor"),
+                            value.resolvedMember(),
+                            targetMemberNames.getOrDefault(
+                                    value.resolvedMember(),
+                                    source.symbols().byId(value.resolvedMember()).orElseThrow().name()));
+                }
                 if (actorSymbol.isPresent()
                         && value.receiver() instanceof NormalizedExpression.NameExpression receiver
                         && receiver.resolvedSymbol().equals(actorSymbol.get())) {

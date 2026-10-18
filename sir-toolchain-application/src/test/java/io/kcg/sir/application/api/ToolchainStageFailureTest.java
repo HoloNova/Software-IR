@@ -45,7 +45,7 @@ class ToolchainStageFailureTest {
     @Test
     void loweringFailureIsStructuredAndCreatesNoOutput() throws Exception {
         assertStageFailure(new ToolchainApplication(),
-                "/invalid/actor-non-identity.sir", ExecutionStage.LOWERING);
+                "/invalid/lowering-unsupported-any.sir", ExecutionStage.LOWERING);
     }
 
     @Test

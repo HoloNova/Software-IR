@@ -154,6 +154,26 @@ public record SpringBootWorkflow(LoweredNodeId id, LoweredOrigin origin, List<Sp
    }
 
    /**
+   * Reads the row of the authenticated actor, first in a workflow that reads more of the actor than its identity
+   * ({@code actor.role}). The actor was authenticated, so its row is expected; when it is gone the request is answered
+   * as unauthenticated (401), like a failed authentication, and the author declares no error for it.
+   */
+   public record LoadActorStep(
+      LoweredNodeId id,
+      LoweredOrigin origin,
+      SymbolId entitySymbol,
+      SpringExpression idExpression,
+      SpringBootWorkflow.Variable result
+   ) implements SpringBootWorkflow.Step {
+      public LoadActorStep {
+         SpringBootWorkflow.requireStep(id, origin);
+         Objects.requireNonNull(entitySymbol, "entitySymbol");
+         Objects.requireNonNull(idExpression, "idExpression");
+         Objects.requireNonNull(result, "result");
+      }
+   }
+
+   /**
    * Loads one row. {@code idExpression} is the value to look it up by: the identity when
    * {@code keyField} is empty, otherwise the value of the unique entity field {@code keyField} names.
    * A load by a field is never a load for update, because the row lock is taken by identity.
@@ -223,6 +243,7 @@ public record SpringBootWorkflow(LoweredNodeId id, LoweredOrigin origin, List<Sp
    public sealed interface Step
       permits SpringBootWorkflow.ValidateStep,
       SpringBootWorkflow.LoadStep,
+      SpringBootWorkflow.LoadActorStep,
       SpringBootWorkflow.FindStep,
       SpringBootWorkflow.CreateStep,
       SpringBootWorkflow.UpdateStep,
