@@ -63,6 +63,7 @@ declaration
     | featureUseDecl
     | semanticTypeDecl
     | featureDefinitionDecl
+    | entityExtensionDecl
     ;
 
 // A feature of the author's own: its parameters, and the declarations it expands into written as text between
@@ -84,6 +85,13 @@ featureTemplate
 // "type Percent = Count where min(0), max(100);" names a meaning of the author's own: the kind of value and the
 // rules of an existing semantic type, with the rules written here replacing the ones of the same name. "type" is
 // contextual, like use.
+// "extend Account { field lastLogin: Optional<Moment>; }" adds fields to an entity declared elsewhere, so a feature
+// (or another file) can bring the fields it needs without the author repeating them in the entity. "extend" is
+// contextual, so every identifier spelled extend stays legal.
+entityExtensionDecl
+    : {_input.LT(1).getText().equals("extend")}? IDENT entity=IDENT LBRACE entityMemberDecl* RBRACE
+    ;
+
 semanticTypeDecl
     : {_input.LT(1).getText().equals("type")}? IDENT typeName=IDENT ASSIGN baseName=IDENT constraintList? SEMI
     ;

@@ -649,6 +649,7 @@ class TypedReferenceSiteContractTest {
                 case io.kcg.sir.ast.AstFeatureUseDecl e -> { /* arguments are words, not name references; the expansion holds those */ }
                 case io.kcg.sir.ast.AstSemanticTypeDecl e -> { /* the base is a type name, not a reference site */ }
                 case io.kcg.sir.ast.AstFeatureDefinitionDecl e -> { /* parameters and text are not reference sites */ }
+                case io.kcg.sir.ast.AstEntityExtensionDecl e -> e.fields().forEach(f -> collectTypeRef(f.type(), sink)); // the entity is merged by name
                 case AstCapabilityDecl e -> {
                     e.actor().ifPresent(c -> collectTypeRef(c.type(), sink));
                     e.input().ifPresent(c -> collectTypeRef(c.type(), sink));

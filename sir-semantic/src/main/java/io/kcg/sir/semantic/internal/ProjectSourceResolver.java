@@ -58,6 +58,9 @@ public final class ProjectSourceResolver {
         for (var unit : units.values())
             effective.put(unit.span().source(), SemanticTypeExpander.expand(featured.get(unit.span().source()).stream()
                 .filter(d -> !(d instanceof AstSemanticTypeDecl)).toList(), semanticTypes.types()));
+        // Every entity gets the fields extend declarations add to it; from here on they are its own fields.
+        var extensions = EntityExtensions.merge(units, effective, diagnostics);
+        effective.putAll(extensions.declarations());
         Map<String, AstFeatureUseDecl> usedFeatures = new HashMap<>();
         for (AstFeatureUseDecl use : uses) {
             AstFeatureUseDecl first = usedFeatures.putIfAbsent(use.name().text(), use);
@@ -147,7 +150,8 @@ public final class ProjectSourceResolver {
         // No second Resolve, no fallback lookup in Type/Validate/Normalize.
         var typed = new TypePass(software, resolved).run();
         var validated = new ValidatePass(software, typed).run();
-        return new NormalizePass(software, validated, uses, expanded, semanticTypes.types(), semanticTypes.declarations(), featureDefinitions.definitions()).run();
+        return new NormalizePass(software, validated, uses, expanded, semanticTypes.types(), semanticTypes.declarations(), featureDefinitions.definitions(),
+                extensions.extensions(), extensions.addedFields()).run();
     }
 
     private static void cycles(SourceId source, Map<SourceId, AstSourceUnit> units,
@@ -176,6 +180,7 @@ public final class ProjectSourceResolver {
             case AstFeatureUseDecl d -> 6;
             case AstSemanticTypeDecl d -> 7;
             case AstFeatureDefinitionDecl d -> 8;
+            case AstEntityExtensionDecl d -> 9;
         };
     }
     static String name(AstDeclaration declaration) {
@@ -185,6 +190,7 @@ public final class ProjectSourceResolver {
             case AstFeatureUseDecl d -> d.name().text();
             case AstSemanticTypeDecl d -> d.name().text();
             case AstFeatureDefinitionDecl d -> d.name().text();
+            case AstEntityExtensionDecl d -> d.entity().text();
         };
     }
 }

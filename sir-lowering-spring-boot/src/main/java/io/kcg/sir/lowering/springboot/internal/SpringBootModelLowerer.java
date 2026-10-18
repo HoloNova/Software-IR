@@ -376,6 +376,8 @@ public final class SpringBootModelLowerer {
                 throw new IllegalStateException("a use declaration is lowered through the declarations it expanded into: " + value.name());
             case io.kcg.sir.semantic.model.NormalizedSemanticTypeDeclaration value ->
                 throw new IllegalStateException("a type declaration is lowered through the fields that use it: " + value.name());
+            case io.kcg.sir.semantic.model.NormalizedEntityExtension value ->
+                throw new IllegalStateException("an extend declaration is lowered through the entity it adds fields to: " + value.name());
             case io.kcg.sir.semantic.model.NormalizedFeatureDefinition value ->
                 throw new IllegalStateException("a feature definition is lowered through the declarations a use of it expanded into: " + value.name());
         };

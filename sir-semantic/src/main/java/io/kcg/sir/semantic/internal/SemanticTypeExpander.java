@@ -3,6 +3,7 @@ package io.kcg.sir.semantic.internal;
 import io.kcg.sir.ast.AstConstraint;
 import io.kcg.sir.ast.AstDeclaration;
 import io.kcg.sir.ast.AstEntityDecl;
+import io.kcg.sir.ast.AstEntityExtensionDecl;
 import io.kcg.sir.ast.AstExpression;
 import io.kcg.sir.ast.AstField;
 import io.kcg.sir.ast.AstInputDecl;
@@ -38,6 +39,8 @@ final class SemanticTypeExpander {
                entity.fields().stream().map(f -> field(f, types)).toList(), entity.credential(), entity.scope());
             case AstInputDecl input -> new AstInputDecl(input.id(), input.span(), input.name(), input.patchSourceEntity(),
                input.fields().stream().map(f -> field(f, types)).toList());
+            case AstEntityExtensionDecl extension -> new AstEntityExtensionDecl(extension.id(), extension.span(), extension.entity(),
+               extension.fields().stream().map(f -> field(f, types)).toList());
             default -> declaration;
          });
       }

@@ -1,0 +1,47 @@
+sir 0.3
+
+software ExtendDesk {
+  metadata {
+    displayName "Extend Desk";
+    namespace "example.extend";
+  }
+  target {
+    language java 21;
+    framework spring_boot;
+    persistence mybatis_plus;
+    database mysql;
+    build maven;
+    interface rest;
+  }
+  sources { }
+  imports { }
+  declarations {
+    entity Account persistent {
+      identity id: Id generated auto;
+      field name: Name;
+    }
+    extend Account {
+      field visits: Count default 0;
+      field lastSeen: Optional<Moment>;
+    }
+    view AccountView from Account {
+      field id: Id;
+      field name: Name;
+      field visits: Count;
+    }
+    input NewAccount {
+      field name: Name;
+    }
+    capability OpenAccount {
+      input NewAccount;
+      output AccountView;
+      requires atomic;
+      expose command;
+      workflow {
+        create Account as made { name: input.name; }
+        persist made;
+        return made;
+      }
+    }
+  }
+}

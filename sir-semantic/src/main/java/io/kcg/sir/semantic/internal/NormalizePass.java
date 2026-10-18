@@ -88,15 +88,20 @@ final class NormalizePass {
    private final io.kcg.sir.semantic.feature.SemanticTypes semanticTypes;
    private final List<io.kcg.sir.ast.AstSemanticTypeDecl> typeDeclarations;
    private final List<io.kcg.sir.ast.AstFeatureDefinitionDecl> featureDefinitions;
+   private final List<io.kcg.sir.ast.AstEntityExtensionDecl> extensions;
+   private final Set<AstNodeId> addedFields;
 
    NormalizePass(AstSoftware software, ValidatedContext validated) {
-      this(software, validated, List.of(), java.util.Map.of(), io.kcg.sir.semantic.feature.SemanticTypes.builtin(), List.of(), List.of());
+      this(software, validated, List.of(), java.util.Map.of(), io.kcg.sir.semantic.feature.SemanticTypes.builtin(), List.of(), List.of(), List.of(), Set.of());
    }
 
    NormalizePass(AstSoftware software, ValidatedContext validated, List<io.kcg.sir.ast.AstFeatureUseDecl> uses,
          java.util.Map<AstNodeId, FeatureExpander.Expansion> expanded, io.kcg.sir.semantic.feature.SemanticTypes semanticTypes,
-         List<io.kcg.sir.ast.AstSemanticTypeDecl> typeDeclarations, List<io.kcg.sir.ast.AstFeatureDefinitionDecl> featureDefinitions) {
+         List<io.kcg.sir.ast.AstSemanticTypeDecl> typeDeclarations, List<io.kcg.sir.ast.AstFeatureDefinitionDecl> featureDefinitions,
+         List<io.kcg.sir.ast.AstEntityExtensionDecl> extensions, Set<AstNodeId> addedFields) {
       this.featureDefinitions = List.copyOf(featureDefinitions);
+      this.extensions = List.copyOf(extensions);
+      this.addedFields = Set.copyOf(addedFields);
       this.semanticTypes = semanticTypes;
       this.typeDeclarations = List.copyOf(typeDeclarations);
       this.software = software;
@@ -121,6 +126,7 @@ final class NormalizePass {
 
       // The use declarations themselves, after every declaration they expanded into, in name order like the others.
       java.util.Map<SymbolId, io.kcg.sir.semantic.api.FeatureOrigin> expansions = new java.util.LinkedHashMap<>();
+      this.separateExtensions(declarations, expansions);
       for (io.kcg.sir.ast.AstFeatureUseDecl use : this.uses.stream().sorted(java.util.Comparator.comparing(u -> u.name().text())).toList()) {
          SymbolId feature = SymbolIdFactory.declaration(this.softwareName, "feature", use.name().text());
          declarations.add(new io.kcg.sir.semantic.model.NormalizedFeatureUse(feature, use.name().text(), use.span(), use.id(),
@@ -165,6 +171,46 @@ final class NormalizePass {
          expansions
       );
       return new SemanticAnalysis.Success(model, sortedDiagnostics);
+   }
+
+   /**
+    * Moves every field an extend declaration added out of its entity and into a declaration of its own, where the author
+    * wrote it. Resolution and the checks saw the entity whole; the model shows each field in the declaration it is
+    * written in, and {@code implementable()} puts them back together.
+    */
+   private void separateExtensions(List<NormalizedDeclaration> declarations, java.util.Map<SymbolId, io.kcg.sir.semantic.api.FeatureOrigin> expansions) {
+      if (this.extensions.isEmpty()) {
+         return;
+      }
+      java.util.Map<AstNodeId, NormalizedField> added = new java.util.HashMap<>();
+      java.util.Map<String, SymbolId> entityIds = new java.util.HashMap<>();
+      for (int i = 0; i < declarations.size(); i++) {
+         if (declarations.get(i) instanceof NormalizedEntity entity) {
+            entityIds.put(entity.name(), entity.id());
+            List<NormalizedField> own = new ArrayList<>();
+            for (NormalizedField field : entity.fields()) {
+               if (this.addedFields.contains(field.sourceNodeId())) added.put(field.sourceNodeId(), field);
+               else own.add(field);
+            }
+            declarations.set(i, new NormalizedEntity(entity.id(), entity.name(), entity.span(), entity.sourceNodeId(), entity.persistent(),
+               entity.identity(), own, entity.versionField(), entity.credential(), entity.scope()));
+         }
+      }
+      for (io.kcg.sir.ast.AstEntityExtensionDecl extension : this.extensions.stream()
+            .sorted(java.util.Comparator.comparing((io.kcg.sir.ast.AstEntityExtensionDecl e) -> e.entity().text()).thenComparing(e -> e.span().source().value())).toList()) {
+         SymbolId entity = entityIds.get(extension.entity().text());
+         if (entity == null) {
+            continue;
+         }
+         SymbolId id = SymbolIdFactory.declaration(this.softwareName, "extend", extension.entity().text() + "@" + extension.span().source().value());
+         declarations.add(new io.kcg.sir.semantic.model.NormalizedEntityExtension(id, extension.entity().text(), extension.span(), extension.id(), entity,
+            extension.fields().stream().map(f -> added.get(f.id())).filter(java.util.Objects::nonNull).toList()));
+         FeatureExpander.Expansion expansion = this.expanded.get(extension.id());
+         if (expansion != null) {
+            expansions.put(id, new io.kcg.sir.semantic.api.FeatureOrigin(
+               SymbolIdFactory.declaration(this.softwareName, "feature", expansion.use().name().text()), expansion.role()));
+         }
+      }
    }
 
    private List<Diagnostic> sortDiagnostics(List<Diagnostic> diagnostics) {

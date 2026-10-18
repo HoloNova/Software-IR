@@ -9,5 +9,6 @@ public sealed interface AstDeclaration extends AstNode permits
         AstCapabilityDecl,
         AstFeatureUseDecl,
         AstSemanticTypeDecl,
-        AstFeatureDefinitionDecl {
+        AstFeatureDefinitionDecl,
+        AstEntityExtensionDecl {
 }

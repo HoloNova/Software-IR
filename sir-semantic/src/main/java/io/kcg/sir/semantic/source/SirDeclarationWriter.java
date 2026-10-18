@@ -146,6 +146,7 @@ public final class SirDeclarationWriter {
          case "NormalizedFeatureUse" -> this.writeFeatureUse(declaration, out);
          case "NormalizedSemanticTypeDeclaration" -> this.writeSemanticType(declaration, out);
          case "NormalizedFeatureDefinition" -> this.writeFeatureDefinition(declaration, out);
+         case "NormalizedEntityExtension" -> this.writeExtension(declaration, out);
          default -> throw new IllegalArgumentException("not a declaration kind: " + declaration.kind());
       }
 
@@ -215,6 +216,15 @@ public final class SirDeclarationWriter {
 
       // The text is kept exactly as written, so what a use expands into does not change when the definition is rewritten.
       out.line(1, "template ```" + text(node, "template") + "```;");
+      out.line(0, "}");
+   }
+
+   private void writeExtension(StructNode node, Lines out) {
+      out.line(0, "extend " + text(node, "entity") + " {");
+      for (StructNode field : nodes(node, "fields")) {
+         out.line(1, this.field(field, true));
+      }
+
       out.line(0, "}");
    }
 

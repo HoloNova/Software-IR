@@ -25,7 +25,7 @@ import org.junit.jupiter.api.Test;
  */
 class SirDeclarationWriterRoundTripTest {
     private static final List<String> RESOURCES = List.of(
-        "valid/all-workflow-steps.sir", "valid/campus-market.sir", "valid/course-admin.sir", "valid/course-enrollment.sir", "valid/bearer-credential.sir", "valid/dual-token-feature.sir", "valid/semantic-types.sir", "valid/user-feature.sir", "valid/delete-step.sir", "valid/default-value.sir", "valid/entity-scope.sir", "valid/guarded-update.sir", "valid/secret-field.sir", "valid/time-arithmetic.sir", "valid/unique-lookup.sir", "valid/unit-capability.sir"
+        "valid/all-workflow-steps.sir", "valid/campus-market.sir", "valid/course-admin.sir", "valid/course-enrollment.sir", "valid/bearer-credential.sir", "valid/dual-token-feature.sir", "valid/semantic-types.sir", "valid/user-feature.sir", "valid/delete-step.sir", "valid/default-value.sir", "valid/entity-scope.sir", "valid/entity-extension.sir", "valid/guarded-update.sir", "valid/secret-field.sir", "valid/time-arithmetic.sir", "valid/unique-lookup.sir", "valid/unit-capability.sir"
     );
 
     @Test

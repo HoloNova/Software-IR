@@ -59,6 +59,13 @@ class SemanticTypeDeclarationTest {
         assertTrue(list.contains("Note::getRemoved"), list);
     }
 
+    @Test void anExtendedEntityIsGeneratedWithTheFieldsItsExtensionAdds() throws IOException {
+        var compiled = compile(Map.of(ENTRY, resource("/valid/entity-extension.sir")));
+        String entity = file(compiled, "Account.java");
+        assertTrue(entity.contains("visits") && entity.contains("lastSeen"), entity);
+        assertTrue(file(compiled, "OpenAccountService.java").contains("setVisits(0)"));
+    }
+
     @Test void anEditRewritingAFieldDoesNotRepeatWhatItsTypeBrings() throws IOException {
         String text = resource("/valid/semantic-types.sir");
         var snapshot = new SourceSnapshot(ENTRY, Map.of(ENTRY, text.getBytes(StandardCharsets.UTF_8)));

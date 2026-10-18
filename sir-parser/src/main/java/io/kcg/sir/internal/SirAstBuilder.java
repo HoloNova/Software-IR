@@ -125,6 +125,13 @@ final class SirAstBuilder {
         if (context.featureUseDecl() != null) {
             return featureUseDeclaration(context.featureUseDecl(), parent);
         }
+        if (context.entityExtensionDecl() != null) {
+            var value = context.entityExtensionDecl();
+            String path = ids.named(parent, "extend", value.entity.getText());
+            AstNameRef entity = new AstNameRef(ids.id(ids.fixed(path, "entity")), source.span(value.entity), value.entity.getText());
+            return new AstEntityExtensionDecl(ids.id(path), source.span(value), entity,
+                    value.entityMemberDecl().stream().map(field -> entityField(field, path)).toList());
+        }
         if (context.semanticTypeDecl() != null) {
             return semanticTypeDeclaration(context.semanticTypeDecl(), parent);
         }

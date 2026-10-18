@@ -320,7 +320,11 @@ public final class DraftEdit {
    private static Optional<String> nameOf(StructValue value) {
       if (value instanceof StructValue.Child child) {
          Optional<String> own = child.node().find("name").map(StructNode.Slot::value).filter(v -> v instanceof StructValue.Text).map(v -> ((StructValue.Text)v).value());
-         return child.node().kind().equals("NormalizedFeatureDefinition") ? own.map(n -> "feature " + n) : own;
+         return switch (child.node().kind()) {
+            case "NormalizedFeatureDefinition" -> own.map(n -> "feature " + n);
+            case "NormalizedEntityExtension" -> own.map(n -> "extend " + n);
+            default -> own;
+         };
       }
 
       return Optional.empty();

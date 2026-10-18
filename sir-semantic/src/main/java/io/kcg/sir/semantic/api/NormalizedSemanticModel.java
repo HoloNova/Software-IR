@@ -70,15 +70,38 @@ public record NormalizedSemanticModel(
     * (a target implements the declarations a feature expanded into, which are already in the model), {@code feature}
     * definitions (what a use expands by) and {@code type} declarations (the fields that use a type carry its rules and
     * its kind of value). Every entity's {@code scope} is applied to the workflows here, so what a target implements
-    * already filters out rows outside it.
+    * already filters out rows outside it. The fields {@code extend} declarations add are put back into their entities,
+    * after the entity's own, and the extend declarations go.
     */
    public NormalizedSemanticModel implementable() {
       return new NormalizedSemanticModel(this.softwareName, this.metadata, this.target, this.symbols, this.referenceBindings,
          this.findItemBindings, this.expressionTypes,
-         EntityScopes.apply(this.symbols, this.declarations.stream().filter(d -> !(d instanceof io.kcg.sir.semantic.model.NormalizedFeatureUse)
+         EntityScopes.apply(this.symbols, withExtensions(this.declarations).stream().filter(d -> !(d instanceof io.kcg.sir.semantic.model.NormalizedFeatureUse)
             && !(d instanceof io.kcg.sir.semantic.model.NormalizedSemanticTypeDeclaration)
             && !(d instanceof io.kcg.sir.semantic.model.NormalizedFeatureDefinition)).toList()),
          this.diagnostics, this.referenceSiteBindings, this.expansions);
+   }
+
+   private static List<NormalizedDeclaration> withExtensions(List<NormalizedDeclaration> declarations) {
+      Map<SymbolId, List<io.kcg.sir.semantic.model.NormalizedField>> added = new LinkedHashMap<>();
+      for (NormalizedDeclaration d : declarations) {
+         if (d instanceof io.kcg.sir.semantic.model.NormalizedEntityExtension extension) {
+            added.computeIfAbsent(extension.entity(), e -> new java.util.ArrayList<>()).addAll(extension.fields());
+         }
+      }
+      return declarations.stream().<NormalizedDeclaration>mapMulti((d, out) -> {
+         if (d instanceof io.kcg.sir.semantic.model.NormalizedEntityExtension) {
+            return;
+         }
+         if (d instanceof io.kcg.sir.semantic.model.NormalizedEntity e && added.containsKey(e.id())) {
+            List<io.kcg.sir.semantic.model.NormalizedField> fields = new java.util.ArrayList<>(e.fields());
+            fields.addAll(added.get(e.id()));
+            out.accept(new io.kcg.sir.semantic.model.NormalizedEntity(e.id(), e.name(), e.span(), e.sourceNodeId(), e.persistent(), e.identity(),
+               fields, e.versionField(), e.credential(), e.scope()));
+         } else {
+            out.accept(d);
+         }
+      }).toList();
    }
 
    /** Whether the author wrote this declaration as source text (a {@code use} declaration counts; what it expands into does not). */
