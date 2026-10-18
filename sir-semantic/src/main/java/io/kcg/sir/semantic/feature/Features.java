@@ -129,9 +129,15 @@ public final class Features {
      *       by giving all those fields;</li>
      *   <li>a row outside the entity's scope is not found, as for every load and find.</li>
      * </ul>
+     *
+     * <p>With {@code owner: seller}, the rows belong to accounts: every capability requires an authenticated actor of the
+     * type {@code seller} refers to, creating sets {@code seller} to the actor, and showing, listing, changing and
+     * deleting see only the actor's own rows. Another account's row is not found (404), so its existence is not told.
      */
     public static final Feature CRUD = new Feature("Crud", List.of(
-        new Parameter("entity", Kind.NAME, Optional.empty(), NAME, 0, 0, "entity must name the entity whose rows are managed")),
+        new Parameter("entity", Kind.NAME, Optional.empty(), NAME, 0, 0, "entity must name the entity whose rows are managed"),
+        new Parameter("owner", Kind.NAME, Optional.of(""), Pattern.compile("([A-Za-z][A-Za-z0-9]{0,63})?"), 0, 0,
+            "owner must name the entity's reference field to the account that owns a row")),
         "/io/kcg/sir/semantic/feature/crud.sir");
 
     private static final Map<String, Feature> ALL = Map.of(DUAL_TOKEN_LOGIN.name(), DUAL_TOKEN_LOGIN, CRUD.name(), CRUD);

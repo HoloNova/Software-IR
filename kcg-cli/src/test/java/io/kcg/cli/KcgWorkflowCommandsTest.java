@@ -145,9 +145,9 @@ class KcgWorkflowCommandsTest {
             "arguments", Map.of("account", "User"), "role", "User")), expanded.toString());
         // Written declarations are not listed: the entities, and the uses themselves.
         assertTrue(expanded.stream().map(e -> obj(e).get("name")).noneMatch(n -> n.equals("Note") || n.equals("Crud")), expanded.toString());
-        // Each Crud use: 5 capabilities, a view, 4 inputs and 2 errors, one more (the stale version) for the versioned Note.
-        // The login: 3 entities, 2 views, 2 inputs, 3 errors, 3 capabilities and the extension of User.
-        assertEquals(3 * 12 + 1 + 14, expanded.size(), expanded.toString());
+        // Each of the four Crud uses: 5 capabilities, a view, 4 inputs and 2 errors, one more (the stale version) for the
+        // versioned Note. The login: 3 entities, 2 views, 2 inputs, 3 errors, 3 capabilities and the extension of User.
+        assertEquals(4 * 12 + 1 + 14, expanded.size(), expanded.toString());
     }
 
     @Test void commodityUsesTheSameProtocolAndErrorsNeverTouchSources() throws Exception {

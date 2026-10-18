@@ -44,6 +44,11 @@ software CrudDesk {
       identity id: Id generated auto;
       field nick: Optional<Name>;
     }
+    entity Post persistent {
+      identity id: Id generated auto;
+      field author: Ref<User>;
+      field text: Text;
+    }
     view NoteView from Note {
       field id: Id;
       field title: Name;
@@ -319,6 +324,103 @@ software CrudDesk {
       expose command;
       workflow {
         load User by input.id as row else UserNotFound;
+        delete row;
+        return unit;
+      }
+    }
+    view PostView from Post {
+      field id: Id;
+      field author: Ref<User>;
+      field text: Text;
+    }
+    input CreatePostInput {
+      field text: Text;
+    }
+    input PostIdInput {
+      field id: Id;
+    }
+    input ListPostInput {
+      field page: PageNo;
+      field size: PageSize;
+    }
+    input UpdatePostInput {
+      field id: Id;
+      field text: Text;
+    }
+    error PostNotFound http 404;
+    error InvalidPostPage;
+    capability CreatePost {
+      actor Ref<User>;
+      input CreatePostInput;
+      output PostView;
+      requires authenticated;
+      requires atomic;
+      expose command;
+      workflow {
+        create Post as row {
+          text: input.text;
+          author: actor;
+        }
+        persist row;
+        return row;
+      }
+    }
+    capability GetPost {
+      actor Ref<User>;
+      input PostIdInput;
+      output PostView;
+      fails PostNotFound;
+      requires authenticated;
+      requires readonly;
+      expose query;
+      workflow {
+        load Post by input.id as row else PostNotFound;
+        validate row.author == actor else PostNotFound;
+        return row;
+      }
+    }
+    capability ListPost {
+      actor Ref<User>;
+      input ListPostInput;
+      output Page<PostView>;
+      fails InvalidPostPage;
+      requires authenticated;
+      requires readonly;
+      expose query;
+      workflow {
+        find Post where item.author == actor order by id ascending Page input.page, input.size else InvalidPostPage as rows;
+        return rows;
+      }
+    }
+    capability UpdatePost {
+      actor Ref<User>;
+      input UpdatePostInput;
+      output PostView;
+      fails PostNotFound;
+      requires authenticated;
+      requires atomic;
+      expose command;
+      workflow {
+        load Post by input.id as row else PostNotFound;
+        validate row.author == actor else PostNotFound;
+        update row {
+          text: input.text;
+        }
+        persist row;
+        return row;
+      }
+    }
+    capability DeletePost {
+      actor Ref<User>;
+      input PostIdInput;
+      output Unit;
+      fails PostNotFound;
+      requires authenticated;
+      requires atomic;
+      expose command;
+      workflow {
+        load Post by input.id as row else PostNotFound;
+        validate row.author == actor else PostNotFound;
         delete row;
         return unit;
       }

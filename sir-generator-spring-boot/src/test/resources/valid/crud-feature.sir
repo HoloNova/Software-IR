@@ -44,9 +44,15 @@ software CrudDesk {
       identity id: Id generated auto;
       field nick: Optional<Name>;
     }
+    entity Post persistent {
+      identity id: Id generated auto;
+      field author: Ref<User>;
+      field text: Text;
+    }
     use Crud { entity: Note; }
     use Crud { entity: Item; }
     use Crud { entity: User; }
+    use Crud { entity: Post; owner: author; }
     use DualTokenLogin { account: User; }
   }
 }

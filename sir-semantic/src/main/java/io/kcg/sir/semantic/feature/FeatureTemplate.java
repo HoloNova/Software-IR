@@ -34,6 +34,9 @@ import java.util.function.Function;
  * rules. {@code ${entity.identity.name}} and {@code ${entity.identity.type}} are the entity's identity. A line holding
  * only a {@code for}, {@code if}, {@code else} or {@code end} is left out of the result entirely.
  *
+ * <p>A parameter can name one of the fields: {@code only owner} goes through just that field, {@code except owner}
+ * leaves it out, and {@code ${if owner}} keeps its text only when the use gave the parameter a value.
+ *
  * <p>This is text substitution and nothing more: what the result means is decided by the ordinary analysis of the
  * declarations it reads as, like declarations the author wrote.
  */
@@ -101,9 +104,17 @@ public final class FeatureTemplate {
     /** {@code ${root}} or {@code ${root.member...}}. */
     private record Value(String root, List<String> members) implements Node {}
 
-    private record ForEach(String variable, String parameter, Set<Exclusion> except, List<Node> body) implements Node {}
+    /**
+     * A loop over the fields of the entity {@code parameter} names: all but the {@code except} kinds and the fields named
+     * by the {@code exceptNamed} parameters, or, with {@code onlyNamed}, just the field that parameter names.
+     */
+    private record ForEach(String variable, String parameter, Set<Exclusion> except, Set<String> exceptNamed, Optional<String> onlyNamed,
+            List<Node> body) implements Node {}
 
-    private record When(String parameter, boolean negated, List<Node> then, List<Node> otherwise) implements Node {}
+    /** What a condition asks: whether the entity is versioned, or whether the parameter was given a value. */
+    private enum Condition { VERSIONED, GIVEN }
+
+    private record When(String parameter, Condition condition, boolean negated, List<Node> then, List<Node> otherwise) implements Node {}
 
     private static final java.util.regex.Pattern WORD = java.util.regex.Pattern.compile("[A-Za-z][A-Za-z0-9]*");
     private static final Set<String> FIELD_MEMBERS = Set.of("name", "type", "base", "rules");
@@ -175,15 +186,21 @@ public final class FeatureTemplate {
                     if (parameters.contains(loop.variable()) || loops.containsKey(loop.variable())) {
                         problems.add("for " + loop.variable() + ": the name is already taken by a parameter or an enclosing loop");
                     }
+                    for (String named : names(loop)) {
+                        if (!entityParameters.contains(named)) {
+                            problems.add("for " + loop.variable() + ": " + named + " is not a name parameter, so it cannot name a field");
+                        }
+                    }
                     Map<String, String> inner = new LinkedHashMap<>(loops);
                     inner.put(loop.variable(), loop.parameter());
                     check(loop.body(), parameters, entityParameters, inner, problems);
                 }
                 case When when -> {
+                    String head = "if " + when.parameter() + (when.condition() == Condition.VERSIONED ? ".versioned" : "");
                     if (!parameters.contains(when.parameter())) {
-                        problems.add("if " + when.parameter() + ".versioned: " + when.parameter() + " is not a parameter of this feature");
-                    } else if (!entityParameters.contains(when.parameter())) {
-                        problems.add("if " + when.parameter() + ".versioned: " + when.parameter() + " is not a name, so it cannot name an entity");
+                        problems.add(head + ": " + when.parameter() + " is not a parameter of this feature");
+                    } else if (when.condition() == Condition.VERSIONED && !entityParameters.contains(when.parameter())) {
+                        problems.add(head + ": " + when.parameter() + " is not a name, so it cannot name an entity");
                     }
                     check(when.then(), parameters, entityParameters, loops, problems);
                     check(when.otherwise(), parameters, entityParameters, loops, problems);
@@ -198,11 +215,17 @@ public final class FeatureTemplate {
                 case Text text -> false;
                 case Value value -> !value.members().isEmpty();
                 case ForEach loop -> true;
-                case When when -> true;
+                case When when -> when.condition() == Condition.VERSIONED || reads(when.then()) || reads(when.otherwise());
             };
             if (reads) return true;
         }
         return false;
+    }
+
+    private static Set<String> names(ForEach loop) {
+        Set<String> names = new java.util.LinkedHashSet<>(loop.exceptNamed());
+        loop.onlyNamed().ifPresent(names::add);
+        return names;
     }
 
     private static void render(List<Node> nodes, Map<String, String> values, Function<String, Optional<Entity>> entities,
@@ -212,15 +235,27 @@ public final class FeatureTemplate {
                 case Text text -> out.append(text.text());
                 case Value value -> out.append(value(value, values, entities, loops));
                 case ForEach loop -> {
-                    for (Field field : entity(loop.parameter(), values, entities).fields()) {
+                    Entity entity = entity(loop.parameter(), values, entities);
+                    // A field named by a parameter must be a field of the entity, unless the parameter was left empty.
+                    for (String named : names(loop)) {
+                        String field = values.get(named);
+                        if (!field.isEmpty() && entity.fields().stream().noneMatch(f -> f.name().equals(field))) {
+                            throw new Problem(named + " must name a field of " + entity.name() + ", and " + field + " is none", named);
+                        }
+                    }
+                    for (Field field : entity.fields()) {
                         if (field.excludedBy(loop.except())) continue;
+                        if (loop.exceptNamed().stream().anyMatch(named -> values.get(named).equals(field.name()))) continue;
+                        if (loop.onlyNamed().isPresent() && !values.get(loop.onlyNamed().get()).equals(field.name())) continue;
                         Map<String, Field> inner = new LinkedHashMap<>(loops);
                         inner.put(loop.variable(), field);
                         render(loop.body(), values, entities, inner, out);
                     }
                 }
                 case When when -> {
-                    boolean holds = entity(when.parameter(), values, entities).versioned() != when.negated();
+                    boolean holds = (when.condition() == Condition.VERSIONED
+                        ? entity(when.parameter(), values, entities).versioned()
+                        : !values.get(when.parameter()).isEmpty()) != when.negated();
                     render(holds ? when.then() : when.otherwise(), values, entities, loops, out);
                 }
             }
@@ -336,30 +371,43 @@ public final class FeatureTemplate {
                 String condition = open.head.substring(3).trim();
                 boolean negated = condition.startsWith("not ");
                 if (negated) condition = condition.substring(4).trim();
+                List<Node> otherwise = open.second == null ? List.of() : List.copyOf(open.second);
+                if (WORD.matcher(condition).matches()) return new When(condition, Condition.GIVEN, negated, List.copyOf(open.first), otherwise);
                 if (!condition.endsWith(".versioned") || !WORD.matcher(condition.substring(0, condition.length() - ".versioned".length())).matches()) {
-                    throw new Problem("${" + open.head + "}: a condition is written <parameter>.versioned or not <parameter>.versioned");
+                    throw new Problem("${" + open.head + "}: a condition is written [not] <parameter> or [not] <parameter>.versioned");
                 }
-                return new When(condition.substring(0, condition.length() - ".versioned".length()), negated, List.copyOf(open.first),
-                    open.second == null ? List.of() : List.copyOf(open.second));
+                return new When(condition.substring(0, condition.length() - ".versioned".length()), Condition.VERSIONED, negated,
+                    List.copyOf(open.first), otherwise);
             }
-            // for <variable> in <parameter>.fields [except <exclusion>, ...]
+            // for <variable> in <parameter>.fields [only <parameter>] [except <exclusion or parameter>, ...]
             String rest = open.head.substring(4).trim();
             String[] words = rest.split("\\s+", 4);
             if (words.length < 3 || !words[1].equals("in") || !words[2].endsWith(".fields") || !WORD.matcher(words[0]).matches()
                 || !WORD.matcher(words[2].substring(0, words[2].length() - ".fields".length())).matches()) {
-                throw new Problem("${" + open.head + "}: a loop is written for <name> in <parameter>.fields, optionally followed by except ...");
+                throw new Problem("${" + open.head + "}: a loop is written for <name> in <parameter>.fields, optionally followed by only ... and except ...");
+            }
+            String tail = words.length == 4 ? words[3].trim() : "";
+            Optional<String> only = Optional.empty();
+            if (tail.startsWith("only ")) {
+                String[] parts = tail.substring(5).trim().split("\\s+", 2);
+                if (!WORD.matcher(parts[0]).matches()) throw new Problem("${" + open.head + "}: only is followed by a parameter that names a field");
+                only = Optional.of(parts[0]);
+                tail = parts.length == 2 ? parts[1].trim() : "";
             }
             Set<Exclusion> except = EnumSet.noneOf(Exclusion.class);
-            if (words.length == 4) {
-                if (!words[3].startsWith("except ")) throw new Problem("${" + open.head + "}: only except may follow the fields");
-                for (String word : words[3].substring(7).split(",")) {
+            Set<String> exceptNamed = new java.util.LinkedHashSet<>();
+            if (!tail.isEmpty()) {
+                if (!tail.startsWith("except ")) throw new Problem("${" + open.head + "}: only only and except may follow the fields");
+                for (String word : tail.substring(7).split(",")) {
                     String trimmed = word.trim();
-                    Exclusion exclusion = java.util.Arrays.stream(Exclusion.values()).filter(e -> e.word().equals(trimmed)).findFirst()
-                        .orElseThrow(() -> new Problem("${" + open.head + "}: a loop can leave out secret, versioned and defaulted fields, not " + trimmed));
-                    except.add(exclusion);
+                    Optional<Exclusion> exclusion = java.util.Arrays.stream(Exclusion.values()).filter(e -> e.word().equals(trimmed)).findFirst();
+                    if (exclusion.isPresent()) except.add(exclusion.get());
+                    else if (WORD.matcher(trimmed).matches()) exceptNamed.add(trimmed);
+                    else throw new Problem("${" + open.head + "}: a loop can leave out secret, versioned and defaulted fields and fields named by a parameter, not " + trimmed);
                 }
             }
-            return new ForEach(words[0], words[2].substring(0, words[2].length() - ".fields".length()), except, List.copyOf(open.first));
+            return new ForEach(words[0], words[2].substring(0, words[2].length() - ".fields".length()), except, Set.copyOf(exceptNamed), only,
+                List.copyOf(open.first));
         }
     }
 }

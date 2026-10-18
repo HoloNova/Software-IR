@@ -503,6 +503,8 @@ use Summary {
 - 循环里：`${f.name}` 是字段名，`${f.type}` 是实体里写的类型（如 `Optional<Remark>`、`Ref<Owner>`），`${f.rules}` 是字段上写的规则（如 ` where length(1, 8)`，没有就是空），`${f.base}` 是去掉语义类型规则后的类型（`Name` 写成 `Text`，用在不允许带规则的地方，比如 `patch` 输入）。
 - `${参数.identity.name}`、`${参数.identity.type}`：实体主键的名字和类型。
 - `${if 参数.versioned}` … `${else}` … `${end}`：实体有版本号字段时取前一段，否则取后一段（`${else}` 可省略；`not 参数.versioned` 反过来）。
+- `${if 参数}`：这次 `use` 给了参数值（不是空的 `""`）时才取中间的文本。
+- 参数可以指向实体的一个字段：循环写 `only 参数` 只走这个字段，`except` 后面写参数名则跳过这个字段（如 `except secret, owner`）。参数为空时 `only` 一个字段也不走，`except` 不跳过任何字段；参数不是实体的字段时，`use` 处报 `SIR-FEATURE-003`。
 - 只有一个 `${for}`／`${if}`／`${else}`／`${end}` 的行，整行不进入展开结果。
 
 循环或条件写错（走的不是 `name` 参数、字段没有这个属性、少了 `${end}`）在定义处报 `SIR-FEATURE-006`；`use` 时参数指向的不是实体报 `SIR-FEATURE-003`。这类功能在其它功能展开之后再展开（所以能看到别的功能用 `extend` 加的字段），也因此不能声明 `type`（`SIR-FEATURE-004`）。
@@ -1241,6 +1243,24 @@ use Crud {
 | `DeleteNote` | 按主键删除一行，没有时 `NoteNotFound` |
 
 规则都从实体来：视图显示除口令字段以外的所有字段；带版本号的实体，修改用 `patch` 输入（只改请求里带了的字段），版本不对时报 `StaleNote`（409）；不带版本号的实体，修改时要给出全部可改字段。实体有 `scope`（比如软删除）时，查看、列表、修改、删除都看不到范围外的行。账号实体同时 `use DualTokenLogin` 时，它的增删改查也包括登录名和口令（口令只能写，不会出现在视图里）。
+
+**归属**：`use Crud { entity: Note; owner: author; }` 让每一行属于一个账号（`author` 必须是 `Ref<账号>` 字段）。五个能力都要求已认证（`actor` 是 `author` 指向的账号）；创建时 `author` 自动设为当前用户，输入里没有它，修改也不改它；查看、列表、修改、删除都只能操作自己的行，别人的行按 `NoteNotFound`（404）处理，不暴露它存在。
+
+```sir-declarations
+entity User persistent {
+  identity id: Id generated auto;
+  field name: Name;
+}
+entity Post persistent {
+  identity id: Id generated auto;
+  field author: Ref<User>;
+  field text: Text;
+}
+use Crud {
+  entity: Post;
+  owner: author;
+}
+```
 
 需要不同的规则时，就不用 `Crud`，自己写这几个能力（或者用 `feature` 定义自己的版本）。
 

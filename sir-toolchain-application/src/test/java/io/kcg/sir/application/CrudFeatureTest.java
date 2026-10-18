@@ -36,8 +36,8 @@ import org.junit.jupiter.api.Test;
 /**
  * {@code use Crud { entity: Note; }} is the create, show, list, change and delete of an entity, read from the entity
  * itself. The decisive claim is the same as for every feature: it means exactly the declarations written out in
- * crud-written.sir (a versioned entity with every kind of field, a uuid entity with a scope, and an account whose
- * login fields another feature adds), down to the generated project.
+ * crud-written.sir (a versioned entity with every kind of field, a uuid entity with a scope, an account whose login
+ * fields another feature adds, and posts owned by their author), down to the generated project.
  */
 class CrudFeatureTest {
     private static final SourceId ENTRY = SourceId.of("project.sir");
@@ -51,7 +51,8 @@ class CrudFeatureTest {
 
     @Test void eachEntityHasItsOwnUseOfTheFeature() throws IOException {
         NormalizedSemanticModel model = compile(resource("/valid/crud-feature.sir")).semanticModel();
-        assertEquals(List.of("sir://CrudDesk/feature/Crud/Item", "sir://CrudDesk/feature/Crud/Note", "sir://CrudDesk/feature/Crud/User",
+        assertEquals(List.of("sir://CrudDesk/feature/Crud/Item", "sir://CrudDesk/feature/Crud/Note", "sir://CrudDesk/feature/Crud/Post",
+                "sir://CrudDesk/feature/Crud/User",
                 "sir://CrudDesk/feature/DualTokenLogin/User"),
             model.declarations().stream().filter(NormalizedFeatureUse.class::isInstance).map(d -> d.id().value()).toList());
         var view = model.declarations().stream().filter(d -> d.name().equals("UserView")).findFirst().orElseThrow();
@@ -65,6 +66,8 @@ class CrudFeatureTest {
         assertEquals(List.of("SIR-FEATURE-003"), errors(base.replace("use Crud { entity: Item; }", "use Crud { entity: Level; }")));
         assertEquals(List.of("SIR-FEATURE-005"), errors(base.replace("use Crud { entity: Item; }", "use Crud { entity: Note; }")));
         assertEquals(List.of("SIR-FEATURE-002"), errors(base.replace("use Crud { entity: Item; }", "use Crud { }")));
+        // The owner must be a field of the entity.
+        assertEquals(List.of("SIR-FEATURE-003"), errors(base.replace("owner: author;", "owner: writer;")));
     }
 
     @Test void anAuthorsFeatureCanGoThroughAnEntitysFieldsToo() throws IOException {
