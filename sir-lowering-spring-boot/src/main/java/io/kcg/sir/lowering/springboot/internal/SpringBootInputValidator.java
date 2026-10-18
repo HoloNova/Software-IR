@@ -522,6 +522,9 @@ public final class SpringBootInputValidator {
          case PersistStep value:
             this.validateVariable(value.targetVariable(), capability);
             break;
+         case NormalizedStep.DeleteStep value:
+            this.validateVariable(value.targetVariable(), capability);
+            break;
          case ReturnStep value:
             this.validateExpression(value.value(), capability.id(), actorAccess);
             break;

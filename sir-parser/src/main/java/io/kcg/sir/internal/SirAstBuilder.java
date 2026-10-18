@@ -490,6 +490,10 @@ final class SirAstBuilder {
                             ? Optional.of(nameRef(value.IDENT().get(1), path, "failure"))
                             : Optional.empty());
         }
+        if (context.deleteStep() != null) {
+            var value = context.deleteStep();
+            return new AstDeleteStep(ids.id(path), source.span(value), nameRef(value.target, path, "target"));
+        }
         if (context.returnStep() != null) {
             var value = context.returnStep();
             return new AstReturnStep(ids.id(path), source.span(value), expression(value.expression(), path));

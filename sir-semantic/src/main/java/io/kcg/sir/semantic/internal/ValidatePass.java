@@ -231,6 +231,7 @@ final class ValidatePass {
          this.diagnostics.add(DiagnosticBuilder.error("SIR-VALID-001", "多个写步骤需要 requires atomic", capDecl.span()));
       }
 
+      this.validateDeletes(capDecl);
       this.validateReturnPlacement(capDecl);
       this.validatePageUsage(capDecl, isQuery);
       this.validateWriteWorkflow(capDecl, failsSet);
@@ -281,6 +282,12 @@ final class ValidatePass {
                   this.validateUpdateGuard(s, capDecl, failsSet);
                }
                break;
+            case io.kcg.sir.ast.AstDeleteStep s:
+               if (isReadonly || isQuery) {
+                  this.diagnostics.add(DiagnosticBuilder.error("SIR-FLOW-004", "query/readonly 不允许 delete 步骤", s.span()));
+               }
+
+               continue;
             case AstPersistStep s:
                if (isReadonly || isQuery) {
                   this.diagnostics.add(DiagnosticBuilder.error("SIR-FLOW-004", "query/readonly 不允许 persist 步骤", s.span()));
@@ -1305,7 +1312,8 @@ final class ValidatePass {
    }
 
    private boolean isWriteStep(AstStep step) {
-      return step instanceof AstCreateStep || step instanceof AstUpdateStep || step instanceof AstPersistStep;
+      return step instanceof AstCreateStep || step instanceof AstUpdateStep || step instanceof AstPersistStep
+         || step instanceof io.kcg.sir.ast.AstDeleteStep;
    }
 
    private void validateCreateStep(AstCreateStep step) {
@@ -1382,6 +1390,31 @@ final class ValidatePass {
                   }
                }
             }
+         }
+      }
+   }
+
+   /**
+    * A delete removes a row that this workflow read: the variable must be the result of an earlier load, and once the
+    * row is deleted nothing may change or delete it again (a returned value is still the row as it was read).
+    */
+   private void validateDeletes(AstCapabilityDecl capDecl) {
+      Set<String> loaded = new LinkedHashSet<>();
+      Set<String> deleted = new LinkedHashSet<>();
+      for (AstStep step : capDecl.workflow().steps()) {
+         if (step instanceof io.kcg.sir.ast.AstLoadStep load) {
+            loaded.add(load.result().text());
+         } else if (step instanceof io.kcg.sir.ast.AstDeleteStep delete) {
+            String name = delete.target().text();
+            if (!loaded.contains(name)) {
+               this.diagnostics.add(DiagnosticBuilder.error("SIR-VALID-005", "delete 只能删除 load 读出的记录: " + name, delete.target().span()));
+            } else if (!deleted.add(name)) {
+               this.diagnostics.add(DiagnosticBuilder.error("SIR-VALID-005", "记录已被删除: " + name, delete.target().span()));
+            }
+         } else if (step instanceof AstUpdateStep update && deleted.contains(update.target().text())) {
+            this.diagnostics.add(DiagnosticBuilder.error("SIR-VALID-005", "记录删除之后不能再 update: " + update.target().text(), update.target().span()));
+         } else if (step instanceof AstPersistStep persist && deleted.contains(persist.target().text())) {
+            this.diagnostics.add(DiagnosticBuilder.error("SIR-VALID-005", "记录删除之后不能再 persist: " + persist.target().text(), persist.target().span()));
          }
       }
    }

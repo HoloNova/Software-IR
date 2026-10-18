@@ -234,6 +234,7 @@ workflowStep
     | createStep
     | updateStep
     | persistStep
+    | deleteStep
     | returnStep
     ;
 
@@ -281,6 +282,12 @@ guardClause
 
 persistStep
     : PERSIST IDENT (ELSE IDENT)? SEMI
+    ;
+
+// "delete row;" removes the stored row a load read. "delete" is a contextual word, like use and type, so it stays a
+// legal name everywhere else.
+deleteStep
+    : {_input.LT(1).getText().equals("delete")}? IDENT target=IDENT SEMI
     ;
 
 returnStep

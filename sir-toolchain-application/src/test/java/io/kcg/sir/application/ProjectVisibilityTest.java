@@ -34,7 +34,7 @@ class ProjectVisibilityTest {
         var expected = EnumSet.allOf(ReferenceRole.class);
         // Local by construction: a workflow variable lives in its own workflow, and the credential clause names fields
         // of the entity it sits in, so neither can refer to a declaration in another file.
-        expected.removeAll(EnumSet.of(ReferenceRole.UPDATE_TARGET, ReferenceRole.PERSIST_TARGET,
+        expected.removeAll(EnumSet.of(ReferenceRole.UPDATE_TARGET, ReferenceRole.PERSIST_TARGET, ReferenceRole.DELETE_TARGET,
                 ReferenceRole.CREDENTIAL_SUBJECT_FIELD, ReferenceRole.CREDENTIAL_EXPIRY_FIELD));
         assertEquals(expected, examples.keySet(), "every public role is either exercised cross-file or explicitly local by construction");
         var before = tree(temp);

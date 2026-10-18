@@ -19,6 +19,7 @@ public enum ReferenceRole {
    CREATE_ENTITY(SymbolKind.ENTITY),
    UPDATE_TARGET(SymbolKind.VARIABLE),
    PERSIST_TARGET(SymbolKind.VARIABLE),
+   DELETE_TARGET(SymbolKind.VARIABLE),
    BINDING_FIELD(SymbolKind.FIELD),
    EXPRESSION_NAME(SymbolKind.VARIABLE, SymbolKind.ENUM),
    MEMBER_ACCESS(SymbolKind.FIELD, SymbolKind.ENUM_MEMBER),

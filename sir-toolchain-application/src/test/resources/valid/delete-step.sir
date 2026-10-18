@@ -1,0 +1,56 @@
+sir 0.3
+
+software DualTokenDesk {
+  metadata {
+    displayName "Dual Token Desk";
+    namespace "example.dualtoken";
+  }
+  target {
+    language java 21;
+    framework spring_boot;
+    persistence mybatis_plus;
+    database mysql;
+    build maven;
+    interface rest;
+  }
+  sources { }
+  imports { }
+  declarations {
+    entity Note persistent {
+      identity id: Id generated auto;
+      field text: Text;
+    }
+    view NoteView from Note {
+      field id: Id;
+      field text: Text;
+    }
+    input NoteRef {
+      field id: Id;
+    }
+    error NoteMissing http 404;
+    capability RemoveNote {
+      input NoteRef;
+      output Unit;
+      fails NoteMissing;
+      requires atomic;
+      expose command;
+      workflow {
+        load Note by input.id as row else NoteMissing;
+        delete row;
+        return unit;
+      }
+    }
+    capability RemoveAndShowNote {
+      input NoteRef;
+      output NoteView;
+      fails NoteMissing;
+      requires atomic;
+      expose command;
+      workflow {
+        load Note by input.id as row else NoteMissing;
+        delete row;
+        return row;
+      }
+    }
+  }
+}

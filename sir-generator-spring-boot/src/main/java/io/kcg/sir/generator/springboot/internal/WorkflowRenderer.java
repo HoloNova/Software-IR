@@ -561,6 +561,12 @@ final class WorkflowRenderer {
       WorkflowRenderer.MapperReference mapper = ensureMapper(ctx, declared.symbolId(), declared.javaName(), mappers);
       String targetName = target.targetName();
       EntityDeclaration entity = ctx.entity(declared.symbolId());
+      if (step.action() == PersistenceAction.DELETE) {
+         // The row was read by a load of this workflow; nothing is written, so there is nothing to check.
+         lines.add("        " + mapper.mapperFieldName() + ".deleteById(" + targetName + "." + getterName(entity.identity().javaName()) + "());");
+         return;
+      }
+
       renderCandidateChecks(ctx, capability, step, entity, targetName, imports, currentPackage, lines);
       UpdateStep guarded = guardedUpdateOf(workflow, step);
       if (guarded != null) {

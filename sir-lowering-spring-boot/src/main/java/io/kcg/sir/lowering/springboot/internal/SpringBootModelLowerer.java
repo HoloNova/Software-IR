@@ -759,6 +759,7 @@ public final class SpringBootModelLowerer {
                         : Optional.empty();
                 yield new SpringBootWorkflow.PersistStep(id, origin, value.targetVariable(), action, value.failure(), conditional);
             }
+            case NormalizedStep.DeleteStep value -> new SpringBootWorkflow.PersistStep(id, origin, value.targetVariable(), PersistenceAction.DELETE);
             case NormalizedStep.ReturnStep value -> new SpringBootWorkflow.ReturnStep(
                     id, origin, lowerExpression(value.value(), owner, actorSymbol));
         };

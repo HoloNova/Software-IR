@@ -119,6 +119,7 @@ class TypedReferenceSiteContractTest {
                 create User as created { state: Status.INACTIVE; }
                 update user { state: Status.ACTIVE; }
                 persist user;
+                delete user;
                 find User where item.id == input.id as users;
                 return users;
               }
@@ -708,6 +709,7 @@ class TypedReferenceSiteContractTest {
                     collectExpressionRefs(b.value(), sink);
                 }
             }
+            case io.kcg.sir.ast.AstDeleteStep s -> sink.put(s.target().id(), s.target().text());
             case AstPersistStep s -> {
                 sink.put(s.target().id(), s.target().text());
                 s.failure().ifPresent(failure -> sink.put(failure.id(), failure.text()));

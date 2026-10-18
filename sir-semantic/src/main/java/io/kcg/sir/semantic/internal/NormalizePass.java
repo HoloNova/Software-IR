@@ -516,6 +516,7 @@ final class NormalizePass {
             Optional<SymbolId> failure = s.failure().flatMap(ref -> this.validated.referenceSiteBindings().targetFor(ref.id()));
             yield new NormalizedStep.PersistStep(s.id(), s.span(), targetVar, failure);
          }
+         case io.kcg.sir.ast.AstDeleteStep s -> new NormalizedStep.DeleteStep(s.id(), s.span(), this.siteTargetOrUnknown(s.target().id()));
          case AstReturnStep s -> {
             NormalizedExpression value = this.normalizeExpression(s.value());
             yield new NormalizedStep.ReturnStep(s.id(), s.span(), value != null ? value : this.unitExpr(s.span()));

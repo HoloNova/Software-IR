@@ -546,6 +546,8 @@ final class TypePass {
                continue;
             case AstPersistStep s:
                break;
+            case io.kcg.sir.ast.AstDeleteStep s:
+               break;
             case AstReturnStep var37:
                AstReturnStep s = (AstReturnStep)var7;
                SirType valueType = this.typeExpression(s.value(), capScopeId, visibleVars);

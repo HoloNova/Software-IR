@@ -2,5 +2,7 @@ package io.kcg.sir.lowering.springboot.model;
 
 public enum PersistenceAction {
    INSERT,
-   UPDATE;
+   UPDATE,
+   /** Removes the stored row of the target variable. */
+   DELETE;
 }

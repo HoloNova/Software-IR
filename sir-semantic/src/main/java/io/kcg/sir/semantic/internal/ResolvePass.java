@@ -783,6 +783,9 @@ final class ResolvePass {
                   this.resolveBindingField(binding, entityName);
                }
                break;
+            case io.kcg.sir.ast.AstDeleteStep s:
+               this.resolveVarTarget(s.target(), capName, capScopeId, visibleVars, ReferenceRole.DELETE_TARGET);
+               break;
             case AstPersistStep s:
                this.resolveVarTarget(s.target(), capName, capScopeId, visibleVars, ReferenceRole.PERSIST_TARGET);
                s.failure().ifPresent(failure -> this.resolveErrorRef(failure, capName, ReferenceRole.PERSIST_FAILURE));

@@ -36,6 +36,13 @@ class SemanticTypeDeclarationTest {
         assertTrue(input.contains("@DecimalMin(\"0\")") && input.contains("@DecimalMax(\"100\")"), input);   // the rules Percent brings
     }
 
+    @Test void aDeleteStepBecomesADeleteByTheLoadedRowsIdentity() throws IOException {
+        var compiled = compile(Map.of(ENTRY, resource("/valid/delete-step.sir")));
+        String service = file(compiled, "RemoveNoteService.java");
+        assertTrue(service.contains("noteMapper.deleteById(row.getId());"), service);
+        assertTrue(file(compiled, "RemoveAndShowNoteService.java").contains("noteMapper.deleteById(row.getId());"));
+    }
+
     @Test void anEditRewritingAFieldDoesNotRepeatWhatItsTypeBrings() throws IOException {
         String text = resource("/valid/semantic-types.sir");
         var snapshot = new SourceSnapshot(ENTRY, Map.of(ENTRY, text.getBytes(StandardCharsets.UTF_8)));

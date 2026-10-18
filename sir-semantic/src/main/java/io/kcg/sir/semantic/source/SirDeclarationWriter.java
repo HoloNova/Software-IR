@@ -322,6 +322,7 @@ public final class SirDeclarationWriter {
             this.bindings(step, out);
             out.line(2, "}");
          }
+         case "DeleteStep" -> out.line(2, "delete " + text(step, "targetVariable") + ";");
          case "PersistStep" ->
             out.line(2, "persist " + text(step, "targetVariable") + optionalText(step, "failure").map(f -> " else " + f).orElse("") + ";");
          case "ReturnStep" -> out.line(2, "return " + expression(child(step, "value"), 0) + ";");

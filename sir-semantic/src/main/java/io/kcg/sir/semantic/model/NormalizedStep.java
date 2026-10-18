@@ -18,6 +18,7 @@ public sealed interface NormalizedStep
    NormalizedStep.CreateStep,
    NormalizedStep.UpdateStep,
    NormalizedStep.PersistStep,
+   NormalizedStep.DeleteStep,
    NormalizedStep.ReturnStep {
    AstNodeId sourceNodeId();
 
@@ -112,6 +113,15 @@ public sealed interface NormalizedStep
 
       public PersistStep(AstNodeId sourceNodeId, SourceSpan span, SymbolId targetVariable) {
          this(sourceNodeId, span, targetVariable, Optional.empty());
+      }
+   }
+
+   /** Removes the stored row of {@code targetVariable}, which an earlier load read. */
+   record DeleteStep(@Source AstNodeId sourceNodeId, @Source SourceSpan span, @Reference SymbolId targetVariable) implements NormalizedStep {
+      public DeleteStep {
+         Objects.requireNonNull(sourceNodeId, "sourceNodeId");
+         Objects.requireNonNull(span, "span");
+         Objects.requireNonNull(targetVariable, "targetVariable");
       }
    }
 

@@ -7,5 +7,6 @@ public sealed interface AstStep extends AstNode permits
         AstCreateStep,
         AstUpdateStep,
         AstPersistStep,
+        AstDeleteStep,
         AstReturnStep {
 }
