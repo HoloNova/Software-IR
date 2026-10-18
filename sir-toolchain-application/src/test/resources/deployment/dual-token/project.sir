@@ -23,6 +23,7 @@ software DualTokenDesk {
       identity id: Id generated auto;
       field author: Ref<User>;
       field text: Text @id("note-text");
+      field pinned: Flag default false;
     }
     view NoteView from Note {
       field id: Id;

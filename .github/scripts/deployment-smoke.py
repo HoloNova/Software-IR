@@ -180,21 +180,26 @@ try:
     deploy('acceptance-test', instance=acceptance_instance, state=acceptance_state, package=a.next_package,
            extra=('--confirm-disposable', acceptance_instance))
     report['update'] = 'PASSED'
-    # Step 3, slice B: version 2 renames note.text to body (the field kept its declared identity), adds a table and a
-    # nullable column; old keys, values and relations stay as they were, the renamed column under its new name.
+    # Step 3, slice B: version 2 renames note.text to body (the field kept its declared identity), changes the default of
+    # note.pinned, adds a table and two columns; old keys, values and relations stay as they were, the renamed column under
+    # its new name.
     keep = 'SELECT id, name, password_hash FROM `user` ORDER BY id; SELECT id, author_id, {} FROM `note` ORDER BY id'
     rows_before = sql(keep.format('text'), instance=acceptance_instance)
     updated = deploy('update', instance=acceptance_instance, state=acceptance_state, package=a.v2_package)
     assert f"KCG_UPDATED {report['nextPackageId']}->{report['v2PackageId']}" in updated, 'the additive update did not complete'
-    assert 'applied=V2..V5' in updated and 'KCG_DATA_VERIFIED' in updated, 'the migration tool did not apply and verify V2..V5'
+    assert 'applied=V2..V6' in updated and 'KCG_DATA_VERIFIED' in updated, 'the migration tool did not apply and verify V2..V6'
     assert sql(keep.format('body'), instance=acceptance_instance) == rows_before, 'old rows or values changed'
     assert sql("SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='kcg' AND TABLE_NAME='note' AND COLUMN_NAME='text'",
                instance=acceptance_instance).strip() == '0', 'the renamed column still exists under its old name'
-    assert sql('SELECT COUNT(*) FROM flyway_schema_history WHERE success=1', instance=acceptance_instance).strip() == '5'
+    assert sql('SELECT COUNT(*) FROM flyway_schema_history WHERE success=1', instance=acceptance_instance).strip() == '6'
     assert sql('SELECT COUNT(*) FROM `note` WHERE title IS NOT NULL', instance=acceptance_instance).strip() == '0'
     # The required column added with a default: every row that was already there has the default.
     assert int(sql('SELECT COUNT(*) FROM `note`', instance=acceptance_instance).strip()) > 0
     assert sql("SELECT COUNT(*) FROM `note` WHERE state <> 'open'", instance=acceptance_instance).strip() == '0', 'existing rows lack the default'
+    # The changed default: the column now defaults to true, and every row already there kept false.
+    assert sql("SELECT COLUMN_DEFAULT FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='kcg' AND TABLE_NAME='note' AND COLUMN_NAME='pinned'",
+               instance=acceptance_instance).strip() == '1', 'the default of note.pinned did not change'
+    assert sql('SELECT COUNT(*) FROM `note` WHERE pinned <> 0', instance=acceptance_instance).strip() == '0', 'existing rows changed with the default'
     note_id = int(sql('SELECT MIN(id) FROM `note`', instance=acceptance_instance).strip())
     server = f'http://127.0.0.1:{acceptance_port}'
     label = request('/api/add-label', {'noteId': note_id, 'name': 'kept'}, expected=201, base=server)
@@ -217,7 +222,7 @@ try:
     assert request('/actuator/health/readiness', base=server)['status'] == 'UP'
     report['dataUpdate'] = 'PASSED'
     deploy('deploy', instance=fresh_instance, state=fresh_state, port=fresh_port, package=a.v2_package)
-    assert sql('SELECT COUNT(*) FROM flyway_schema_history WHERE success=1', instance=fresh_instance).strip() == '5'
+    assert sql('SELECT COUNT(*) FROM flyway_schema_history WHERE success=1', instance=fresh_instance).strip() == '6'
     assert request('/api/register', {'name': 'fresh-user', 'password': 'test-password'}, expected=201, base=f'http://127.0.0.1:{fresh_port}')
     report['freshChain'] = 'PASSED'
 except Exception as error:

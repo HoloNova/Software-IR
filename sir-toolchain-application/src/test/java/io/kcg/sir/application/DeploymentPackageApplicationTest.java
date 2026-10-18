@@ -107,6 +107,24 @@ class DeploymentPackageApplicationTest {
         assertTrue(Files.readString(next.resolve("deploy/schema.tsv")).contains("note\tstate\tvarchar\t16\tfalse\tfalse\tfalse\tfalse\t\t\t=it%27s\n"));
     }
 
+    @Test void aChangedDefaultIsAppliedToTheRunningColumnAndTheRowsKeepTheirValues() throws Exception {
+        Path source = source(true);
+        String text = Files.readString(source.resolve("project.sir"));
+        String withState = text.replace("      field author: Ref<User>;\n      field text: Text;\n    }",
+            "      field author: Ref<User>;\n      field text: Text;\n      field state: Text where length(1, 16) default \"open\";\n    }");
+        Files.writeString(source.resolve("project.sir"), withState);
+        Path base = export(source, temp.resolve("base")).manifest().outputRoot();
+        Files.writeString(source.resolve("project.sir"), withState.replace("default \"open\"", "default \"closed\""));
+        var result = new DeploymentPackageApplication().export(new DeploymentPackageRequest(source, ENTRY, temp.resolve("next"), Optional.empty(), Optional.of(base)));
+        var exported = assertInstanceOf(DeploymentPackageResult.Exported.class, result, result.toString());
+        Path next = exported.manifest().outputRoot();
+        assertEquals(List.of("V2 CHANGE_COLUMN_DEFAULT note.state"), exported.continuation().orElseThrow().steps());
+        assertEquals("-- KCG delivery schema version 2; frozen once published.\nALTER TABLE `note` ALTER COLUMN `state` SET DEFAULT 'closed', ALGORITHM=INSTANT;\n",
+            Files.readString(next.resolve("deploy/migrations/V2__change_default_note_state.sql")));
+        assertTrue(Files.readString(next.resolve("deploy/schema.tsv")).contains("note\tstate\tvarchar\t16\tfalse\tfalse\tfalse\tfalse\t\t\t=closed\n"));
+        assertTrue(Files.readString(next.resolve("deploy/contracts/V1.tsv")).contains("note\tstate\tvarchar\t16\tfalse\tfalse\tfalse\tfalse\t\t\t=open\n"));
+    }
+
     @Test void aContinuationInheritsTheBaseChainVerbatimAndAppendsOneStatementPerVersion() throws Exception {
         Path source = source(true);
         Path base = export(source, temp.resolve("base")).manifest().outputRoot();

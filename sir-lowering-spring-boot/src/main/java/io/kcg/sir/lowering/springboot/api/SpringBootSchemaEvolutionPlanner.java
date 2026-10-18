@@ -15,9 +15,10 @@ import java.util.*;
  * columns, matched by semantic identity rather than by name, and decides which of them the target can apply. An entity
  * or field the delta adds becomes a table or column to create; one it deletes is refused. A column kept under the same
  * identity is compared physically: when only its name differs (a field renamed under a declared {@code @id}) the column
- * is renamed with it and keeps its values; any other difference is refused. Round 1 thus supports an unchanged schema,
- * renamed non-key columns, new tables, new plain nullable columns and new plain required columns that have a database
- * default (existing rows get the default).
+ * is renamed with it and keeps its values; when its database default differs, the default is changed and the rows keep
+ * their values; any other difference is refused. Round 1 thus supports an unchanged schema, renamed non-key columns,
+ * changed defaults, new tables, new plain nullable columns and new plain required columns that have a database default
+ * (existing rows get the default).
  *
  * <p>A table or column that appears or disappears without the delta adding or deleting it means the two inputs
  * disagree. That, and a chain that does not end at the target contract, are faults of the toolchain (SELFCHECK), never
@@ -49,6 +50,7 @@ public final class SpringBootSchemaEvolutionPlanner {
         target.tables().forEach(t -> targetTables.put(t.symbol(), t));
         Set<String> baseTableSymbols = new HashSet<>(), baseTableNamesLower = new HashSet<>();
         List<SchemaEvolution.RenameColumn> renames = new ArrayList<>();
+        List<SchemaEvolution.ChangeColumnDefault> defaults = new ArrayList<>();
         for (Table old : base.tables()) {
             baseTableSymbols.add(old.symbol());
             baseTableNamesLower.add(old.name().toLowerCase(Locale.ROOT));
@@ -69,13 +71,24 @@ public final class SpringBootSchemaEvolutionPlanner {
                 }
                 String before = SchemaContract.row(old.name(), column), after = SchemaContract.row(now.name(), current);
                 if (before.equals(after)) continue;
+                // A changed default is a change of the column's definition only; under a new name the column is renamed
+                // first, keeping its old default, and the default changes after.
+                Column renamed = current;
+                if (!column.primary() && !column.defaultValue().equals(current.defaultValue())
+                        && attributes(SchemaEvolution.ChangeColumnDefault.withoutDefault(before) + "\t")
+                            .equals(attributes(SchemaEvolution.ChangeColumnDefault.withoutDefault(after) + "\t"))) {
+                    renamed = withDefault(current, column.defaultValue());
+                    defaults.add(new SchemaEvolution.ChangeColumnDefault(0, now.name(), renamed, current));
+                    after = SchemaContract.row(now.name(), renamed);
+                    if (before.equals(after)) continue;
+                }
                 if (!column.name().equals(current.name()) && attributes(before).equals(attributes(after))) {
                     String subject = old.name() + "." + column.name() + " -> " + current.name();
                     boolean taken = old.columns().stream().anyMatch(c -> !c.symbol().equals(column.symbol())
                         && c.name().equalsIgnoreCase(current.name()));
                     if (column.primary()) refusals.add("PRIMARY_COLUMN_RENAMED " + subject);
                     else if (taken) refusals.add("NAME_CASE_CONFLICT " + subject);
-                    else renames.add(new SchemaEvolution.RenameColumn(0, old.name(), column, current));
+                    else renames.add(new SchemaEvolution.RenameColumn(0, old.name(), column, renamed));
                 }
                 else refusals.add("COLUMN_CHANGED " + old.name() + "." + column.name() + ": " + attributes(before) + " -> " + attributes(after));
             }
@@ -110,6 +123,7 @@ public final class SpringBootSchemaEvolutionPlanner {
         int version = baseVersion;
         // Renames first, so every later version is written against the final column names.
         for (var rename : renames) steps.add(new SchemaEvolution.RenameColumn(++version, rename.table(), rename.from(), rename.to()));
+        for (var change : defaults) steps.add(new SchemaEvolution.ChangeColumnDefault(++version, change.table(), change.from(), change.to()));
         for (Table table : ordered) steps.add(new SchemaEvolution.CreateTable(++version, table));
         for (var column : columnsToAdd) steps.add(switch (column) {
             case SchemaEvolution.AddNullableColumn c -> new SchemaEvolution.AddNullableColumn(++version, c.table(), c.column());
@@ -142,6 +156,11 @@ public final class SpringBootSchemaEvolutionPlanner {
         }
         if (!pending.isEmpty()) refusals.add("NEW_TABLE_CYCLE " + String.join(", ", pending));
         return ordered;
+    }
+
+    private static Column withDefault(Column column, Optional<String> defaultValue) {
+        return new Column(column.symbol(), column.name(), column.storage(), column.length(), column.nullable(), column.primary(),
+            column.autoIncrement(), column.unique(), column.reference(), defaultValue);
     }
 
     /** Everything a contract row says about a column except where it is (table and column name). */

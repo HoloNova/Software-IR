@@ -19,7 +19,7 @@ public record SchemaEvolution(int baseVersion, List<Step> steps) {
 
     public int targetVersion() { return baseVersion + steps.size(); }
 
-    public sealed interface Step permits RenameColumn, CreateTable, AddNullableColumn, AddDefaultedColumn {
+    public sealed interface Step permits RenameColumn, ChangeColumnDefault, CreateTable, AddNullableColumn, AddDefaultedColumn {
         int version();
         /** The contract rows this version adds. */
         List<String> addedRows();
@@ -42,6 +42,25 @@ public record SchemaEvolution(int baseVersion, List<Step> steps) {
         public List<String> addedRows() { return List.of(SchemaContract.row(table, to)); }
         public List<String> removedRows() { return List.of(SchemaContract.row(table, from)); }
         public String describe() { return "V" + version + " RENAME_COLUMN " + table + "." + from.name() + " -> " + to.name(); }
+    }
+
+    /**
+     * A column whose database default changed and nothing else: only what the database fills in for a row written
+     * without the column changes, and the rows already there keep their values. An empty {@code to} default drops it.
+     */
+    public record ChangeColumnDefault(int version, String table, Column from, Column to) implements Step {
+        public ChangeColumnDefault {
+            Objects.requireNonNull(table); Objects.requireNonNull(from); Objects.requireNonNull(to);
+            if (from.primary() || !from.symbol().equals(to.symbol()) || from.defaultValue().equals(to.defaultValue())
+                    || !withoutDefault(SchemaContract.row(table, from)).equals(withoutDefault(SchemaContract.row(table, to))))
+                throw new IllegalArgumentException("only the default of a non-key column with the same identity and name can change");
+        }
+        public List<String> addedRows() { return List.of(SchemaContract.row(table, to)); }
+        public List<String> removedRows() { return List.of(SchemaContract.row(table, from)); }
+        public String describe() { return "V" + version + " CHANGE_COLUMN_DEFAULT " + table + "." + to.name(); }
+
+        /** A contract row without its last field, the default. */
+        public static String withoutDefault(String row) { return row.substring(0, row.lastIndexOf('\t')); }
     }
 
     public record CreateTable(int version, Table table) implements Step {

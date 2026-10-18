@@ -240,7 +240,7 @@ entity Account persistent {
 
 **`secret`**：这个文本字段（通常直接写 `Secret` 类型）存的是**摘要**，不是原文。它只能被写入，读取只有一种方式——`stored matches candidate`（见第 6 节）。不能同时 `unique`、`versioned`、带约束；不能出现在 `view` 里。例子见 7.1“登录”。
 
-**`default 值`**：`create` 没有写这个字段时取的值，可以是常量（`default 0`、`default "open"`、`default false`）、枚举成员（`default Status.OPEN`）或创建时刻（`default now()`）。写了 `default` 的字段在 `create` 里可以不写，写了就以写的为准。常量和枚举成员也会成为数据库列的默认值，所以给已上线的表加一个带默认值的必填字段时，老数据取这个默认值（`now()` 和不限长的 `Text` 没有数据库默认值）。`unique`、`secret`、`versioned` 字段不能有默认值（`SIR-VALID-010`），默认值的类型要和字段一致（`SIR-TYPE-001`）。
+**`default 值`**：`create` 没有写这个字段时取的值，可以是常量（`default 0`、`default "open"`、`default false`）、枚举成员（`default Status.OPEN`）或创建时刻（`default now()`）。写了 `default` 的字段在 `create` 里可以不写，写了就以写的为准。常量和枚举成员也会成为数据库列的默认值，所以给已上线的表加一个带默认值的必填字段时，老数据取这个默认值（`now()` 和不限长的 `Text` 没有数据库默认值）；已上线的字段改默认值时，只改列的默认值，已有的行保持原值。`unique`、`secret`、`versioned` 字段不能有默认值（`SIR-VALID-010`），默认值的类型要和字段一致（`SIR-TYPE-001`）。
 
 ```sir-declarations
 enum TicketState { OPEN, CLOSED }
@@ -1669,6 +1669,6 @@ capability Wrong {
 ## 10. 还没有的东西
 
 - 路由模板（路径参数）、授权（角色与数据范围）。
-- 已上线系统的部分结构变更：删表删列、改列的类型或默认值、给已有表加引用或唯一列，会在打交付包时被拒绝。数据库里字段名是下划线形式（`passwordHash` → `password_hash`，`Ref` 字段 `owner` → `owner_id`），`Token` 列用 `CHAR(36)`。
+- 已上线系统的部分结构变更：删表删列、改列的类型、给已有表加引用或唯一列，会在打交付包时被拒绝（改列的默认值可以，已有的行保持原值）。数据库里字段名是下划线形式（`passwordHash` → `password_hash`，`Ref` 字段 `owner` → `owner_id`），`Token` 列用 `CHAR(36)`。
 - 口令强度、登录失败的锁定与限流、令牌的缓存。
 - 除上面的 target 之外的语言、框架、数据库。

@@ -212,6 +212,10 @@ public final class DeploymentEngine {
                     renames.append(step.version()).append('\t').append(rename.table()).append('\t').append(rename.from().name())
                         .append('\t').append(rename.to().name()).append('\n');
                 }
+                case SchemaEvolution.ChangeColumnDefault change -> add(files, plan,
+                    "deploy/migrations/V" + step.version() + "__change_default_" + (change.table() + "_" + change.to().name()).toLowerCase(Locale.ROOT) + ".sql",
+                    header + "ALTER TABLE " + quote(change.table()) + " ALTER COLUMN " + quote(change.to().name())
+                        + (change.to().defaultValue().isPresent() ? " SET DEFAULT " + defaultLiteral(change.to()) : " DROP DEFAULT") + ", ALGORITHM=INSTANT;\n");
                 case SchemaEvolution.CreateTable create -> {
                     List<String> definitions = new ArrayList<>();
                     create.table().columns().forEach(c -> definitions.add("  " + definition(c)));

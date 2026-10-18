@@ -47,6 +47,23 @@ class SchemaEvolutionPlannerTest {
         assertTrue(steps.get(1).addedRows().getFirst().endsWith("\t=open"), steps.get(1).addedRows().toString());
     }
 
+    @Test void aChangedDefaultChangesOnlyTheColumnsDefaultAfterAnyRename() {
+        String before = base().replace(NOTE, "      field author: Ref<User>;\n      field text: Text;\n      field visits: Count default 0;\n"
+            + "      field label: Text where length(1, 16) default \"open\" @id(\"note-label\");\n    }");
+        String after = before.replace("field visits: Count default 0;", "field visits: Count default 3;")
+            .replace("field label: Text where length(1, 16) default \"open\"", "field tag: Text where length(1, 16) default \"new\"");
+        var steps = continueFrom(before, after).evolution().orElseThrow().steps();
+        assertEquals(List.of("V2 RENAME_COLUMN note.label -> tag", "V3 CHANGE_COLUMN_DEFAULT note.visits", "V4 CHANGE_COLUMN_DEFAULT note.tag"),
+            steps.stream().map(SchemaEvolution.Step::describe).toList());
+        // The rename keeps the old default; the default changes after it, under the new name.
+        assertTrue(steps.get(0).addedRows().getFirst().endsWith("\t=open"), steps.get(0).addedRows().toString());
+        assertTrue(steps.get(1).addedRows().getFirst().endsWith("\t=3"), steps.get(1).addedRows().toString());
+        assertTrue(steps.get(2).addedRows().getFirst().endsWith("\t=new"), steps.get(2).addedRows().toString());
+        // A default that changes together with anything else is still a changed column.
+        var widened = continueFrom(before, before.replace("field visits: Count default 0;", "field visits: Optional<Count> default 1;"));
+        assertTrue(widened.refusals().stream().anyMatch(r -> r.startsWith("COLUMN_CHANGED note.visits")), widened.refusals().toString());
+    }
+
     @Test void aDefaultTheDatabaseCannotHoldStillLeavesARequiredColumnRefused() {
         // The moment of creation would give existing rows the migration's time; unbounded text holds no plain default.
         String target = base().replace(NOTE, "      field author: Ref<User>;\n      field text: Text;\n      field openedAt: Moment default now();\n"

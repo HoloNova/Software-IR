@@ -23,6 +23,7 @@ software DualTokenDesk {
       identity id: Id generated auto;
       field author: Ref<User>;
       field body: Text @id("note-text");
+      field pinned: Flag default true;
       field title: Optional<Text> where length(0, 120);
       field state: Text where length(1, 16) default "open";
     }
