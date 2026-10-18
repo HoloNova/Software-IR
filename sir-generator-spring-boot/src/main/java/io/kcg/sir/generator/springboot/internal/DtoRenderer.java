@@ -188,7 +188,8 @@ final class DtoRenderer {
    * <p>A nullable field is held as an {@code Optional}, which no constraint validator accepts directly:
    * a constraint on such a field belongs on the optional's element, where Bean Validation expects a
    * container element constraint. Without this a declared length would turn every request into a 500
-   * instead of a rejection.
+   * instead of a rejection. It starts empty, so a request that leaves the member out means "no value", as a
+   * JSON null does, instead of leaving the workflow a null where it expects an Optional.
    */
    private static void renderField(StringBuilder out, Property field) {
       if (field.type() instanceof io.kcg.sir.lowering.springboot.model.LoweredJavaType.OptionalValue optional) {
@@ -198,7 +199,7 @@ final class DtoRenderer {
          }
 
          out.append(TypeRenderer.renderBoxedType(optional.elementType())).append("> ")
-            .append(field.javaName()).append(";\n\n");
+            .append(field.javaName()).append(" = java.util.Optional.empty();\n\n");
          return;
       }
 

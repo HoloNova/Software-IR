@@ -138,7 +138,8 @@ class GeneratorEntityDtoContractTest {
                 new JavaField("externalKey", "java.util.UUID"),
                 new JavaField("openedOn", "java.time.LocalDate"),
                 new JavaField("updatedAt", "java.time.Instant"),
-                new JavaField("nickname", "java.util.Optional<String>"),
+                // An optional member a request leaves out is empty, never null.
+                new JavaField("nickname", "java.util.Optional<String>", " = java.util.Optional.empty()"),
                 new JavaField("tags", "java.util.List<String>"),
                 new JavaField("state", "AccountState"));
         assertFieldsAndAccessors(source, fields);
@@ -237,7 +238,7 @@ class GeneratorEntityDtoContractTest {
 
     private static void assertFieldsAndAccessors(String source, List<JavaField> fields) {
         assertOrdered(source, fields.stream()
-                .map(field -> "private " + field.type() + " " + field.name() + ";")
+                .map(field -> "private " + field.type() + " " + field.name() + field.initializer() + ";")
                 .toList());
         fields.forEach(field -> assertAccessor(source, field.type(), field.name()));
     }
@@ -294,6 +295,9 @@ class GeneratorEntityDtoContractTest {
         return out.toString();
     }
 
-    private record JavaField(String name, String type) {
+    private record JavaField(String name, String type, String initializer) {
+        JavaField(String name, String type) {
+            this(name, type, "");
+        }
     }
 }

@@ -106,7 +106,7 @@ class GeneratorWriteSliceContractTest {
         // Validator throw instead of rejecting, so the constraint belongs on the element.
         String payload = content(API + "CreateCourseInput.java");
 
-        assertTrue(payload.contains("private java.util.Optional<@Size(min = 0, max = 500) String> description;"), payload);
+        assertTrue(payload.contains("private java.util.Optional<@Size(min = 0, max = 500) String> description = java.util.Optional.empty();"), payload);
     }
 
     @Test
