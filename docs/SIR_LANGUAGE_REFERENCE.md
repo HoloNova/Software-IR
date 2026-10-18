@@ -173,6 +173,29 @@ capability CheckLevel {
 }
 ```
 
+### 2.1 自己的语义类型（`type`）
+
+一个业务里反复出现的“某种值”可以起个名字，以已有的语义类型为底：
+
+```sir-declarations
+type Percent = Count where min(0), max(100);
+type ShortName = Name where length(1, 20);
+type Pin = Secret;
+entity Account persistent {
+  identity id: Id generated auto;
+  field rate: Percent;
+  field label: ShortName;
+  field pin: Pin;
+  field tight: Percent where max(10);
+}
+```
+
+新类型继承底类型的底层值、规则和标记（`Pin` 和 `Secret` 一样只存摘要）；自己写的规则替换底类型的同名规则（`ShortName` 仍然非空白，最长 20）。字段上还可以再写规则，以字段上的为准。`type` 在整个工程里都可见，不用 import；底类型可以是另一个 `type`，但不能成环，名字不能和语言自带的类型重名（`SIR-TYPE-005`）：
+
+```sir-error SIR-TYPE-005
+type Money = Count;
+```
+
 ## 3. 声明
 
 ### 3.1 枚举
@@ -196,7 +219,7 @@ identity 名字: 类型 generated auto;    // 类型是 Id，数据库自增
 identity 名字: 类型 generated uuid;    // 类型是 Token，由应用生成
 ```
 
-然后是若干 `field`。字段后面可以接修饰，**顺序固定**：约束（`where ...`）、`versioned`、`unique`、`secret`、`@id("...")`。
+然后是若干 `field`。字段后面可以接修饰，**顺序固定**：约束（`where ...`）、`versioned`、`unique`、`secret`、`default ...`、`@id("...")`。最后可以有 `credential ...;`（见下）和 `scope ...;`（见下）。
 
 ```sir-declarations
 entity Account persistent {
@@ -213,11 +236,70 @@ entity Account persistent {
 
 **`versioned`**：这个整数字段是并发版本号，每个实体最多一个。带版本号的实体，更新时要用 `persist ... else 错误`（见 5.5）。
 
-**`unique`**：声明这个字段的值在所有行里不重复。它是一句**声明**，数据库里的唯一索引仍然要你自己建（SIR 不管建表）。有了它，才能 `load 实体 by 字段: 值`（见 5.2）。只能用在文本、整数（32 位或 64 位）和 `Token` 上，不能和 `versioned` 同用。
+**`unique`**：声明这个字段的值在所有行里不重复，交付包建表时给它建唯一索引。有了它，才能 `load 实体 by 字段: 值`（见 5.2）。只能用在文本、整数（32 位或 64 位）和 `Token` 上，不能和 `versioned` 同用。
 
 **`secret`**：这个文本字段（通常直接写 `Secret` 类型）存的是**摘要**，不是原文。它只能被写入，读取只有一种方式——`stored matches candidate`（见第 6 节）。不能同时 `unique`、`versioned`、带约束；不能出现在 `view` 里。例子见 7.1“登录”。
 
-**`@id("...")`**：给字段一个稳定的名字，改字段名时身份不变。普通写作不需要。
+**`default 值`**：`create` 没有写这个字段时取的值，可以是常量（`default 0`、`default "open"`、`default false`）、枚举成员（`default Status.OPEN`）或创建时刻（`default now()`）。写了 `default` 的字段在 `create` 里可以不写，写了就以写的为准。常量和枚举成员也会成为数据库列的默认值，所以给已上线的表加一个带默认值的必填字段时，老数据取这个默认值（`now()` 和不限长的 `Text` 没有数据库默认值）。`unique`、`secret`、`versioned` 字段不能有默认值（`SIR-VALID-010`），默认值的类型要和字段一致（`SIR-TYPE-001`）。
+
+```sir-declarations
+enum TicketState { OPEN, CLOSED }
+entity Ticket persistent {
+  identity id: Id generated auto;
+  field title: Text;
+  field state: TicketState default TicketState.OPEN;
+  field urgent: Flag default false;
+  field openedAt: Moment default now();
+}
+input TicketDraft {
+  field title: Text;
+}
+capability OpenTicket {
+  input TicketDraft;
+  output Unit;
+  requires atomic;
+  expose command;
+  workflow {
+    create Ticket as made { title: input.title; }
+    persist made;
+    return unit;
+  }
+}
+```
+
+**`@id("...")`**：给字段一个稳定的名字，改字段名时身份不变（已上线的表里，这一列跟着改名并保留数据）。普通写作不需要。
+
+#### 默认查询范围（`scope`）
+
+`scope 条件;` 写在实体最后，说明哪些行对软件来说“存在”。这个实体的每个 `load`、`find` 和 `any(...)` 都只看满足条件的行：`find` 自动加上这个条件，`load` 到范围外的行时按 `load` 自己的错误失败。条件里直接写本实体的字段名（和 `any` 的条件一样）。典型用法是软删除：
+
+```sir-declarations
+entity Note persistent {
+  identity id: Id generated auto;
+  field text: Text;
+  field removed: Flag default false;
+  scope removed == false;
+}
+input NoteRef {
+  field id: Id;
+}
+error NoteMissing http 404;
+capability RemoveNote {
+  input NoteRef;
+  output Unit;
+  fails NoteMissing;
+  requires atomic;
+  expose command;
+  workflow {
+    load Note by input.id as row else NoteMissing;
+    update row { removed: true; }
+    persist row;
+    return unit;
+  }
+}
+```
+
+条件必须是布尔值，只能说这一行自己的事：不能用 `any(...)` 或 `.present`（`SIR-VALID-011`）。
 
 #### 凭据实体（`credential`）
 
@@ -236,7 +318,7 @@ entity AccessToken persistent {
 }
 ```
 
-含义：请求头 `Authorization: Bearer <令牌>` 里的令牌就是 `AccessToken` 的主键；找到这一行并且 `expiresAt` 晚于现在，请求就以 `owner` 指向的 `User` 的身份运行（见 4.2 的 `actor`）。规则：主键必须是 `Token`（否则 `SIR-TYPE-001`）；`subject` 必须是 `Ref<实体>` 字段；`expires` 必须是 `DateTime` 字段；同一个主体只能有一种凭据实体（`SIR-VALID-009`）；一个软件里，“要求已认证”的能力要么全由凭据认证，要么全不是。作废令牌不需要新语法：把 `expiresAt` 更新成 `now()`。
+含义：请求头 `Authorization: Bearer <令牌>` 里的令牌就是 `AccessToken` 的主键；找到这一行并且 `expiresAt` 晚于现在，请求就以 `owner` 指向的 `User` 的身份运行（见 4.2 的 `actor`）。规则：主键必须是 `Token`（否则 `SIR-TYPE-001`）；`subject` 必须是 `Ref<实体>` 字段；`expires` 必须是 `Moment` 字段；同一个主体只能有一种凭据实体（`SIR-VALID-009`）；一个软件里，“要求已认证”的能力要么全由凭据认证，要么全不是。作废令牌不需要新语法：把 `expiresAt` 更新成 `now()`。
 
 ### 3.3 输入（`input`）
 
@@ -332,6 +414,59 @@ error 名字 http 404;      // 指定状态码
 ### 3.6 能力（`capability`）
 
 能力是软件对外提供的一件事，对应一个 HTTP 接口。第 4 节详述。
+
+### 3.7 给实体加字段（`extend`）
+
+`extend 实体 { 字段... }` 给一个在别处声明的实体加字段，写法和实体里的字段一样。加进去的字段和实体自己的字段完全相同：可以被视图投影、被 `create` 绑定、建进同一张表。它主要给功能用（功能借它带上自己需要的字段），作者也可以用它把一个实体的字段分开写：
+
+```sir-declarations
+entity Account persistent {
+  identity id: Id generated auto;
+  field name: Name;
+}
+extend Account {
+  field visits: Count default 0;
+  field lastSeen: Optional<Moment>;
+}
+view AccountView from Account {
+  field id: Id;
+  field visits: Count;
+}
+```
+
+目标必须是实体（`SIR-EXTEND-001`），在同一个文件里或已经 import；加的字段不能和已有字段重名（`SIR-SYMBOL-001`）。一个实体可以被 extend 多次。
+
+### 3.8 功能（`use` 与 `feature`）
+
+一个功能是一组声明的名字：`use 功能 { 参数: 值; }` 在编译时展开成它代表的声明，展开出来的东西和手写的一样被检查、生成、部署，但不写进源码，编辑时也只改 `use` 这一处。语言自带 `DualTokenLogin`（见 7.2）。
+
+自己的功能用 `feature` 定义：参数有两种——`name`（一个名字，默认值可以是空的 `""`）和 `duration`（一段时长，如 `7 days`）——可以有默认值；模板是三个反引号括起来的 SIR 声明，用 `${参数}` 引用参数：
+
+```sir-declarations
+entity Note persistent {
+  identity id: Id generated auto;
+  field text: Text;
+}
+feature Tagging {
+  parameter owner: name;
+  parameter prefix: name = "";
+  template ```
+    entity ${prefix}Tag persistent {
+      identity id: Id generated auto;
+      field owner: Ref<${owner}>;
+      field label: Name;
+    }
+    extend ${owner} {
+      field tagCount: Count default 0;
+    }
+  ```;
+}
+use Tagging {
+  owner: Note;
+}
+```
+
+参数和模板在定义时就检查（参数重复、默认值不合种类、模板里用了没声明的参数都是 `SIR-FEATURE-006`）；`use` 时检查实参（不认识的功能 `SIR-FEATURE-001`，缺参数或多参数 `SIR-FEATURE-002`，值不合种类或范围 `SIR-FEATURE-003`）；展开后的声明按普通规则检查，错误报在 `use` 这一行。同一个功能只能 `use` 一次（`SIR-FEATURE-005`）。
 
 ## 4. 能力
 
@@ -694,7 +829,7 @@ capability ActiveCourses {
 create 实体 as 变量 { 字段: 值; ... }
 ```
 
-必须给出所有**必填**字段：除了主键（系统生成）、`versioned` 字段（框架初始化）和 `Optional<...>` 字段之外的每一个，漏了报 `SIR-FLOW-001`。不能绑定主键或 `versioned` 字段，同一个字段也不能绑两次。创建后要 `persist` 才会写入。
+必须给出所有**必填**字段：除了主键（系统生成）、`versioned` 字段（框架初始化）、`Optional<...>` 字段和带 `default` 的字段之外的每一个，漏了报 `SIR-FLOW-001`。不能绑定主键或 `versioned` 字段，同一个字段也不能绑两次。创建后要 `persist` 才会写入。
 
 ### 5.5 `update` 与 `persist`
 
@@ -758,7 +893,38 @@ capability Rotate {
 
 守卫在**一条 SQL 里**检查并写入，所以并发下只有一个请求成功。它依赖数据库驱动把“匹配的行数”当影响行数（MySQL Connector/J 的默认行为）；如果部署时在连接串上加了 `useAffectedRows=true`，“设成和原来一样的值”会被当成没有匹配而报守卫的错误。
 
-### 5.7 `return`
+### 5.7 `delete`
+
+```
+delete 变量;
+```
+
+删除 `load` 读出来的这一行。只能删 `load` 出来的变量（不能删刚 `create` 的），删除后不能再 `update`、`persist` 或再次 `delete` 它（`SIR-VALID-012`）；只读能力里不能有（`SIR-FLOW-004`）。
+
+```sir-declarations
+entity Memo persistent {
+  identity id: Id generated auto;
+  field text: Text;
+}
+input MemoRef {
+  field id: Id;
+}
+error MemoMissing http 404;
+capability RemoveMemo {
+  input MemoRef;
+  output Unit;
+  fails MemoMissing;
+  requires atomic;
+  expose command;
+  workflow {
+    load Memo by input.id as row else MemoMissing;
+    delete row;
+    return unit;
+  }
+}
+```
+
+### 5.8 `return`
 
 ```
 return 变量;
@@ -889,7 +1055,20 @@ capability Login {
 
 ### 7.2 双 Token 登录
 
-访问令牌认证请求，刷新令牌换新令牌且用过即废。完整骨架不用手写：
+访问令牌认证请求，刷新令牌换新令牌且用过即废。一句话：
+
+```sir-declarations
+entity User persistent {
+  identity id: Id generated auto;
+}
+use DualTokenLogin {
+  account: User;
+}
+```
+
+它展开成访问令牌（`credential` 实体）、刷新令牌（守卫更新，用过即废）、`Login`／`Refresh`／`Logout` 三个能力和它们的输入、视图与 401 错误，并给 `User` 加上唯一登录名 `loginName`（`Name`）和口令 `password`（`Secret`）两个字段——注册等其它能力照常使用它们。可选参数：`name`、`password`（两个字段叫什么）、`access`（访问令牌时长，默认 `15 minutes`）、`refresh`（默认 `7 days`）、`prefix`（加在它声明的每个名字前，避免重名）。
+
+已有账号字段的旧软件，可以用脚手架把同一模式（不含两个账号字段）写成普通 SIR，以便自己修改：
 
 ```
 kcg scaffold dual-token --source-root ... --entry project.sir \
@@ -931,10 +1110,16 @@ kcg edit --source-root ... --entry project.sir --candidate-root ... < scaffold.j
 | `SIR-VALID-007` | 守卫更新的规则 |
 | `SIR-VALID-008` | `secret` 字段的规则 |
 | `SIR-VALID-009` | 凭据实体的规则 |
+| `SIR-VALID-010` | `default` 的规则：`unique`、`secret`、`versioned` 字段不能有默认值 |
+| `SIR-VALID-011` | `scope` 的规则：不能用 `any(...)` 或 `.present` |
+| `SIR-VALID-012` | `delete` 的规则：只能删 `load` 出来的行，删后不能再用 |
+| `SIR-TYPE-005` | `type` 声明的问题：名字被语言占用、基类型成环 |
+| `SIR-EXTEND-001` | `extend` 的目标不是实体 |
+| `SIR-FEATURE-001`…`006` | 功能的问题：不认识的功能、参数缺失或多余、参数值不对、展开失败、重复 `use`、`feature` 定义本身有错 |
 | `SIR-FLOW-001` | 用了未声明或还没声明的变量，或在 `find` 之外用了 `item` |
 | `SIR-FLOW-002` | `return` 的数量不对，或 `return` 后面还有步骤 |
 | `SIR-FLOW-003` | 用到的错误没有在 `fails` 里声明 |
-| `SIR-FLOW-004` | 只读能力里有 `create`／`update`／`persist` |
+| `SIR-FLOW-004` | 只读能力里有 `create`／`update`／`persist`／`delete` |
 | `SIR-FLOW-005`／`006` | `any` 出现在 `find` 的谓词之外／`any` 里面又嵌套了 `any` |
 | `SIR-SOURCE-*` | 多文件工程的问题：入口没列出文件、`import` 找不到声明、没 import 就用了别的文件的声明（`SIR-SOURCE-VISIBILITY-001`） |
 | `SIR-LOWER-*` | 软件本身合法，但目标（Java／Spring Boot／MySQL）暂不支持 |
@@ -1405,7 +1590,8 @@ capability Wrong {
 
 ## 10. 还没有的东西
 
-- 删除（`delete`）步骤、路由模板（路径参数）、授权（角色与数据范围）。
-- 数据库建表和迁移：SIR 描述数据长什么样，**建表由部署方负责**（测试里的 DDL 只是夹具）。字段名在数据库里是下划线形式（`passwordHash` → `password_hash`，`Ref` 字段 `owner` → `owner_id`），`Token` 列用 `CHAR(36)`。
+- 路由模板（路径参数）、授权（角色与数据范围）。
+- 功能模板里的循环：功能还不能“对实体的每个字段做一遍”，所以按实体自动生成增删改查这类功能写不出来。
+- 已上线系统的部分结构变更：删表删列、改列的类型或默认值、给已有表加引用或唯一列，会在打交付包时被拒绝。数据库里字段名是下划线形式（`passwordHash` → `password_hash`，`Ref` 字段 `owner` → `owner_id`），`Token` 列用 `CHAR(36)`。
 - 口令强度、登录失败的锁定与限流、令牌的缓存。
 - 除上面的 target 之外的语言、框架、数据库。
