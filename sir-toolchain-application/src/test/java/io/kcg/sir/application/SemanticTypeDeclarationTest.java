@@ -43,6 +43,12 @@ class SemanticTypeDeclarationTest {
         assertTrue(file(compiled, "RemoveAndShowNoteService.java").contains("noteMapper.deleteById(row.getId());"));
     }
 
+    @Test void aCreateThatLeavesAFieldUnboundGetsItsDefault() throws IOException {
+        var compiled = compile(Map.of(ENTRY, resource("/valid/default-value.sir")));
+        String service = file(compiled, "OpenTicketService.java");
+        assertTrue(service.contains("setState(\"open\")") && service.contains("setUrgent(false)") && service.contains("setWeight(1)"), service);
+    }
+
     @Test void anEditRewritingAFieldDoesNotRepeatWhatItsTypeBrings() throws IOException {
         String text = resource("/valid/semantic-types.sir");
         var snapshot = new SourceSnapshot(ENTRY, Map.of(ENTRY, text.getBytes(StandardCharsets.UTF_8)));

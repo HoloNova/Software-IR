@@ -234,6 +234,10 @@ final class NormalizePass {
                   field = field.withSecret(true);
                }
 
+               if (f.defaultValue().isPresent()) {
+                  field = field.withDefault(this.normalizeExpression(f.defaultValue().get()));
+               }
+
                fields.add(field);
             }
          }

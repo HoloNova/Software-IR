@@ -85,6 +85,9 @@ final class ValidatePass {
    private final Set<SymbolId> uniqueFields = new LinkedHashSet<>();
    /** Entity field symbols the author declared secret: stored as a digest, readable only through matches. */
    private final Set<SymbolId> secretFields = new LinkedHashSet<>();
+
+   /** Entity field symbols that declare a default: a create step that does not bind one is still complete. */
+   private final Set<SymbolId> defaultedFields = new LinkedHashSet<>();
    /** Patch payload symbol -> the entity it changes. */
    private final Map<SymbolId, SymbolId> patchInputSourceEntities = new LinkedHashMap<>();
    /** AST input declarations by symbol, for the payload-shape rules. */
@@ -124,6 +127,10 @@ final class ValidatePass {
 
                      if (f.secret() && fieldSymId != null) {
                         this.secretFields.add(fieldSymId);
+                     }
+
+                     if (f.defaultValue().isPresent() && fieldSymId != null) {
+                        this.defaultedFields.add(fieldSymId);
                      }
                   }
 
@@ -191,6 +198,7 @@ final class ValidatePass {
                this.validateEntityVersionField(entityDecl);
                this.validateEntityUniqueField(entityDecl);
                this.validateEntitySecretField(entityDecl);
+               this.validateEntityDefaultField(entityDecl);
             } else if (decl instanceof AstInputDecl inputDecl) {
                this.validateInputConstraints(inputDecl);
                this.validatePatchPayload(inputDecl);
@@ -521,6 +529,7 @@ final class ValidatePass {
    }
 
    private static final String SECRET_CODE = "SIR-VALID-008";
+   private static final String DEFAULT_CODE = "SIR-VALID-010";
    private static final String CREDENTIAL_CODE = "SIR-VALID-009";
 
    /**
@@ -588,6 +597,21 @@ final class ValidatePass {
    * against something it never describes; a unique secret could be looked up, which is a lookup by
    * digest that no caller can form; and the version field is the concurrency token, not a credential.
    */
+   private void validateEntityDefaultField(AstEntityDecl entityDecl) {
+      for (AstField field : entityDecl.fields()) {
+         if (field.defaultValue().isEmpty()) {
+            continue;
+         }
+
+         String name = entityDecl.name().text() + "." + field.name().text();
+         // A default is the same value in every row it fills; a field that must differ per row, hide its value or
+         // be set by the framework cannot have one.
+         if (field.unique() || field.secret() || field.versioned()) {
+            this.diagnostics.add(DiagnosticBuilder.error(DEFAULT_CODE, "unique、secret、version 字段不能声明 default: " + name, field.defaultValue().get().span()));
+         }
+      }
+   }
+
    private void validateEntitySecretField(AstEntityDecl entityDecl) {
       for (AstField field : entityDecl.fields()) {
          if (!field.secret()) {
@@ -1350,7 +1374,7 @@ final class ValidatePass {
                      this.diagnostics.add(DiagnosticBuilder.error(
                         "SIR-VALID-004", "create 不能绑定 version 字段（由框架初始化）: " + this.displayName(fieldSymId, "version"), step.span()));
                   }
-               } else if (!(fieldType instanceof OptionalType) && !boundFieldIds.contains(fieldSymId)) {
+               } else if (!(fieldType instanceof OptionalType) && !this.defaultedFields.contains(fieldSymId) && !boundFieldIds.contains(fieldSymId)) {
                   String displayName = this.displayName(fieldSymId, "unknown");
                   this.diagnostics.add(DiagnosticBuilder.error("SIR-FLOW-001", "create 未绑定必填字段: " + displayName, step.span()));
                }

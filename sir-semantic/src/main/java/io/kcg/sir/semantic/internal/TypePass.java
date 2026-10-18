@@ -148,6 +148,7 @@ final class TypePass {
                this.typeEntityVersionField(entity);
                this.typeEntityUniqueField(entity);
                this.typeEntitySecretField(entity);
+               this.typeEntityDefaults(entity, declarationId);
                this.typeEntityCredential(entity);
             }
             case AstInputDecl input -> {
@@ -344,6 +345,21 @@ final class TypePass {
    * A secret is kept as a digest of a text the author never sees again, so only text can be one.
    * Whether its other declarations make sense (unique, constraints) is the validator's business.
    */
+   private void typeEntityDefaults(AstEntityDecl entity, SymbolId scopeId) {
+      for (AstField field : entity.fields()) {
+         if (field.defaultValue().isEmpty()) {
+            continue;
+         }
+
+         SirType valueType = this.typeExpression(field.defaultValue().get(), scopeId, Set.of());
+         SirType declaredType = this.resolved.typeRefTypes().get(field.type().id());
+         if (valueType != null && declaredType != null && !TypeRules.isAssignable(valueType, declaredType)) {
+            this.diagnostics.add(DiagnosticBuilder.error(
+               "SIR-TYPE-001", "default 类型不匹配: " + entity.name().text() + "." + field.name().text(), field.defaultValue().get().span()));
+         }
+      }
+   }
+
    private void typeEntitySecretField(AstEntityDecl entity) {
       for (AstField field : entity.fields()) {
          if (!field.secret()) {

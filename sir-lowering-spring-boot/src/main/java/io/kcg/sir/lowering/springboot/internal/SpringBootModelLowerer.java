@@ -738,7 +738,7 @@ public final class SpringBootModelLowerer {
                     variable(value.resultVariable()), variable(value.itemVariable()));
             case NormalizedStep.CreateStep value -> new SpringBootWorkflow.CreateStep(
                     id, origin, value.entitySymbol(), variable(value.resultVariable()),
-                    value.bindings().stream().map(binding -> lowerBinding(binding, owner, actorSymbol)).toList());
+                    withDefaults(value, owner, actorSymbol));
             case NormalizedStep.UpdateStep value -> new SpringBootWorkflow.UpdateStep(
                     id, origin, value.targetVariable(),
                     value.bindings().stream().map(binding -> lowerBinding(binding, owner, actorSymbol)).toList(),
@@ -974,6 +974,39 @@ public final class SpringBootModelLowerer {
         }
 
         return Optional.empty();
+    }
+
+    /**
+     * What a create step binds: its own bindings, then the default of every field it left unbound.
+     *
+     * <p>A default is written once, on the field; each create step that relies on it gets its own copy of the
+     * constant, under an id of that step, because a lowered node id may appear only once.
+     */
+    private List<SpringBootWorkflow.Binding> withDefaults(NormalizedStep.CreateStep step, SymbolId owner, Optional<SymbolId> actorSymbol) {
+        List<SpringBootWorkflow.Binding> bindings = new ArrayList<>(
+                step.bindings().stream().map(binding -> lowerBinding(binding, owner, actorSymbol)).toList());
+        NormalizedEntity entity = this.entities.get(step.entitySymbol());
+        if (entity == null) {
+            return List.copyOf(bindings);
+        }
+        Set<SymbolId> bound = new LinkedHashSet<>();
+        step.bindings().forEach(binding -> bound.add(binding.fieldSymbol()));
+        for (NormalizedField field : entity.fields()) {
+            if (field.defaultValue().isEmpty() || bound.contains(field.id())) {
+                continue;
+            }
+            NormalizedExpression constant = field.defaultValue().get();
+            AstNodeId id = new AstNodeId(step.sourceNodeId().value() + "/default/" + field.name());
+            NormalizedExpression copy = switch (constant) {
+                case NormalizedExpression.BooleanLiteral v -> new NormalizedExpression.BooleanLiteral(id, step.span(), v.type(), v.value());
+                case NormalizedExpression.IntegerLiteral v -> new NormalizedExpression.IntegerLiteral(id, step.span(), v.type(), v.value());
+                case NormalizedExpression.DecimalLiteral v -> new NormalizedExpression.DecimalLiteral(id, step.span(), v.type(), v.value());
+                case NormalizedExpression.StringLiteral v -> new NormalizedExpression.StringLiteral(id, step.span(), v.type(), v.value());
+                default -> throw new IllegalStateException("a default must be a constant: " + field.name());
+            };
+            bindings.add(lowerBinding(new NormalizedBinding(field.name(), field.id(), copy), owner, actorSymbol));
+        }
+        return List.copyOf(bindings);
     }
 
     private SpringBootWorkflow.Binding lowerBinding(NormalizedBinding binding, SymbolId owner, Optional<SymbolId> actorSymbol) {

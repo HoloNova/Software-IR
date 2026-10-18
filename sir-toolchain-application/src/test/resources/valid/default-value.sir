@@ -1,0 +1,41 @@
+sir 0.3
+
+software DefaultDesk {
+  metadata {
+    displayName "Default Desk";
+    namespace "example.defaults";
+  }
+  target {
+    language java 21;
+    framework spring_boot;
+    persistence mybatis_plus;
+    database mysql;
+    build maven;
+    interface rest;
+  }
+  sources { }
+  imports { }
+  declarations {
+    entity Ticket persistent {
+      identity id: Id generated auto;
+      field title: Text;
+      field state: Text default "open";
+      field urgent: Flag default false;
+      field weight: Count default 1;
+    }
+    input TicketDraft {
+      field title: Text;
+    }
+    capability OpenTicket {
+      input TicketDraft;
+      output Unit;
+      requires atomic;
+      expose command;
+      workflow {
+        create Ticket as made { title: input.title; }
+        persist made;
+        return unit;
+      }
+    }
+  }
+}

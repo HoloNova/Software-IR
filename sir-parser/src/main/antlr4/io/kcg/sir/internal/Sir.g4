@@ -138,7 +138,7 @@ fieldDecl
 // input/view fields deliberately keep the plain fieldDecl rule: a stray @id there is a parse
 // error rather than a silently ignored annotation.
 entityMemberDecl
-    : FIELD IDENT COLON typeRef constraintList? VERSIONED? uniqueModifier? secretModifier? idAnnotation? SEMI
+    : FIELD IDENT COLON typeRef constraintList? VERSIONED? uniqueModifier? secretModifier? defaultModifier? idAnnotation? SEMI
     ;
 
 // "credential subject owner expires expiresAt;" closes an entity whose rows are bearer credentials. Its three
@@ -162,6 +162,12 @@ uniqueModifier
 // and unique, and every identifier spelled secret stays legal.
 secretModifier
     : {_input.LT(1).getText().equals("secret")}? IDENT
+    ;
+
+// "default 0;" is what a create step gives the field when it does not bind it. Like "unique" and "secret" the word
+// is contextual, so every identifier spelled default stays legal; only a constant can be a default.
+defaultModifier
+    : {_input.LT(1).getText().equals("default")}? IDENT constantArgument
     ;
 
 idAnnotation

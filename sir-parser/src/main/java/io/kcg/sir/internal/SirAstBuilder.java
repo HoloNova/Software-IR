@@ -290,7 +290,10 @@ final class SirAstBuilder {
                         .toList();
         return new AstField(
                 ids.id(path), source.span(context), name, type(context.typeRef(), path), constraints,
-                context.VERSIONED() != null, context.uniqueModifier() != null, context.secretModifier() != null, declaredId);
+                context.VERSIONED() != null, context.uniqueModifier() != null, context.secretModifier() != null,
+                context.defaultModifier() == null ? Optional.empty()
+                        : Optional.of(constant(context.defaultModifier().constantArgument(), path)),
+                declaredId);
     }
 
     private Optional<String> declaredId(SirParser.IdAnnotationContext context) {

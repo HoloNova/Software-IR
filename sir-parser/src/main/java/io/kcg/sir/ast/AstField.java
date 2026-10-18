@@ -20,6 +20,8 @@ import java.util.Optional;
  * <p>{@code secret} is the author's statement that the field holds a credential the system must never
  * keep or show as written: what is stored is a digest of the value, and the only way to read it is to ask
  * whether a candidate matches.
+ *
+ * <p>{@code default} is the constant a create step gives the field when it does not bind it.
  */
 public record AstField(
         AstNodeId id,
@@ -30,6 +32,7 @@ public record AstField(
         boolean versioned,
         boolean unique,
         boolean secret,
+        Optional<AstExpression> defaultValue,
         Optional<String> declaredId) implements AstNode {
 
     public AstField(
@@ -39,7 +42,7 @@ public record AstField(
             AstTypeRef type,
             List<AstConstraint> constraints,
             boolean versioned) {
-        this(id, span, name, type, constraints, versioned, false, false, Optional.empty());
+        this(id, span, name, type, constraints, versioned, false, false, Optional.empty(), Optional.empty());
     }
 
     public AstField(
@@ -48,7 +51,7 @@ public record AstField(
             AstName name,
             AstTypeRef type,
             List<AstConstraint> constraints) {
-        this(id, span, name, type, constraints, false, false, false, Optional.empty());
+        this(id, span, name, type, constraints, false, false, false, Optional.empty(), Optional.empty());
     }
 
     public AstField {
@@ -57,6 +60,7 @@ public record AstField(
         Objects.requireNonNull(name, "name");
         Objects.requireNonNull(type, "type");
         constraints = List.copyOf(Objects.requireNonNull(constraints, "constraints"));
+        Objects.requireNonNull(defaultValue, "defaultValue");
         Objects.requireNonNull(declaredId, "declaredId");
     }
 }

@@ -295,6 +295,10 @@ public final class SirDeclarationWriter {
       }
 
       if (entityField) {
+         optionalChild(field, "defaultValue").ifPresent(value -> line.append(" default ").append(expression(value, 0)));
+      }
+
+      if (entityField) {
          DeclaredIds.of(field).ifPresent(id -> line.append(" @id(").append(string(id)).append(")"));
       }
 

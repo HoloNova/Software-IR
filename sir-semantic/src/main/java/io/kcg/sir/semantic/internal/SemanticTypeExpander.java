@@ -61,7 +61,7 @@ final class SemanticTypeExpander {
 
       constraints.addAll(field.constraints());
       return new AstField(field.id(), field.span(), field.name(), field.type(), constraints, field.versioned() || entry.versioned(),
-         field.unique(), field.secret() || entry.secret(), field.declaredId());
+         field.unique(), field.secret() || entry.secret(), field.defaultValue(), field.declaredId());
    }
 
    private static Optional<SemanticTypes.Entry> semanticTypeOf(AstTypeRef type, SemanticTypes types) {

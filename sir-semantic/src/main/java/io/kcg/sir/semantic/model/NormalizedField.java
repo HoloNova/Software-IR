@@ -23,6 +23,7 @@ public record NormalizedField(
    @Fact boolean versioned,
    @Fact boolean unique,
    @Fact boolean secret,
+   @Fact Optional<NormalizedExpression> defaultValue,
    @Derived Optional<SymbolId> patchSourceField
 ) {
    public NormalizedField {
@@ -34,18 +35,19 @@ public record NormalizedField(
       constraints = List.copyOf(Objects.requireNonNull(constraints, "constraints"));
       Objects.requireNonNull(directNamedTypeReferenceSiteId, "directNamedTypeReferenceSiteId");
       Objects.requireNonNull(patchSourceField, "patchSourceField");
+      Objects.requireNonNull(defaultValue, "defaultValue");
    }
 
    public NormalizedField(SymbolId id, String name, SourceSpan span, AstNodeId sourceNodeId, SirType type, List<NormalizedConstraint> constraints, Optional<AstNodeId> directNamedTypeReferenceSiteId, boolean versioned, Optional<SymbolId> patchSourceField) {
-      this(id, name, span, sourceNodeId, type, constraints, directNamedTypeReferenceSiteId, versioned, false, false, patchSourceField);
+      this(id, name, span, sourceNodeId, type, constraints, directNamedTypeReferenceSiteId, versioned, false, false, Optional.empty(), patchSourceField);
    }
 
    public NormalizedField(SymbolId id, String name, SourceSpan span, AstNodeId sourceNodeId, SirType type, List<NormalizedConstraint> constraints, Optional<AstNodeId> directNamedTypeReferenceSiteId) {
-      this(id, name, span, sourceNodeId, type, constraints, directNamedTypeReferenceSiteId, false, false, false, Optional.empty());
+      this(id, name, span, sourceNodeId, type, constraints, directNamedTypeReferenceSiteId, false, false, false, Optional.empty(), Optional.empty());
    }
 
    public NormalizedField(SymbolId id, String name, SourceSpan span, AstNodeId sourceNodeId, SirType type, List<NormalizedConstraint> constraints) {
-      this(id, name, span, sourceNodeId, type, constraints, Optional.empty(), false, false, false, Optional.empty());
+      this(id, name, span, sourceNodeId, type, constraints, Optional.empty(), false, false, false, Optional.empty(), Optional.empty());
    }
 
    /**
@@ -55,20 +57,25 @@ public record NormalizedField(
    * be applied to an entity without ever matching it by name again.
    */
    public NormalizedField withPatchSourceField(SymbolId sourceField) {
-      return new NormalizedField(this.id, this.name, this.span, this.sourceNodeId, this.type, this.constraints, this.directNamedTypeReferenceSiteId, this.versioned, this.unique, this.secret, Optional.of(sourceField));
+      return new NormalizedField(this.id, this.name, this.span, this.sourceNodeId, this.type, this.constraints, this.directNamedTypeReferenceSiteId, this.versioned, this.unique, this.secret, this.defaultValue, Optional.of(sourceField));
    }
 
    public NormalizedField withVersioned(boolean marked) {
-      return new NormalizedField(this.id, this.name, this.span, this.sourceNodeId, this.type, this.constraints, this.directNamedTypeReferenceSiteId, marked, this.unique, this.secret, this.patchSourceField);
+      return new NormalizedField(this.id, this.name, this.span, this.sourceNodeId, this.type, this.constraints, this.directNamedTypeReferenceSiteId, marked, this.unique, this.secret, this.defaultValue, this.patchSourceField);
    }
 
    /** A copy of this field marked as one whose value no two rows share. */
    public NormalizedField withUnique(boolean marked) {
-      return new NormalizedField(this.id, this.name, this.span, this.sourceNodeId, this.type, this.constraints, this.directNamedTypeReferenceSiteId, this.versioned, marked, this.secret, this.patchSourceField);
+      return new NormalizedField(this.id, this.name, this.span, this.sourceNodeId, this.type, this.constraints, this.directNamedTypeReferenceSiteId, this.versioned, marked, this.secret, this.defaultValue, this.patchSourceField);
+   }
+
+   /** A copy of this field carrying the constant a create step gives it when it does not bind it. */
+   public NormalizedField withDefault(NormalizedExpression value) {
+      return new NormalizedField(this.id, this.name, this.span, this.sourceNodeId, this.type, this.constraints, this.directNamedTypeReferenceSiteId, this.versioned, this.unique, this.secret, Optional.of(value), this.patchSourceField);
    }
 
    /** A copy of this field marked as one whose value is stored only as a digest. */
    public NormalizedField withSecret(boolean marked) {
-      return new NormalizedField(this.id, this.name, this.span, this.sourceNodeId, this.type, this.constraints, this.directNamedTypeReferenceSiteId, this.versioned, this.unique, marked, this.patchSourceField);
+      return new NormalizedField(this.id, this.name, this.span, this.sourceNodeId, this.type, this.constraints, this.directNamedTypeReferenceSiteId, this.versioned, this.unique, marked, this.defaultValue, this.patchSourceField);
    }
 }
