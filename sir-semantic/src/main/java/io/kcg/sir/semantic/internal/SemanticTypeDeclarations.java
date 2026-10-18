@@ -44,7 +44,7 @@ final class SemanticTypeDeclarations {
       for (AstSemanticTypeDecl declaration : declarations) {
          String name = declaration.name().text();
          if (builtin.named(name).isPresent()) {
-            diagnostics.add(DiagnosticBuilder.error("SIR-TYPE-004", "语义类型名已被语言占用: " + name, declaration.name().span()));
+            diagnostics.add(DiagnosticBuilder.error("SIR-TYPE-005", "语义类型名已被语言占用: " + name, declaration.name().span()));
          } else if (declared.containsKey(name)) {
             diagnostics.add(DiagnosticBuilder.errorWithRelated("SIR-SYMBOL-001", "重复定义: " + name, declaration.name().span(),
                new RelatedLocation("首次声明在此处", declared.get(name).span())));
@@ -77,7 +77,7 @@ final class SemanticTypeDeclarations {
       }
 
       if (path.contains(name)) {
-         diagnostics.add(DiagnosticBuilder.error("SIR-TYPE-004", "语义类型的基类型形成环: " + String.join(" -> ", path) + " -> " + name, declaration.base().span()));
+         diagnostics.add(DiagnosticBuilder.error("SIR-TYPE-005", "语义类型的基类型形成环: " + String.join(" -> ", path) + " -> " + name, declaration.base().span()));
          failed.add(name);
          return Optional.empty();
       }

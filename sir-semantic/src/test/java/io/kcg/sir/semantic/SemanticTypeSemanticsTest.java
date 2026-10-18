@@ -157,8 +157,8 @@ class SemanticTypeSemanticsTest {
     @Test
     void aDeclarationThatCannotBeATypeIsRefusedWhetherOrNotAnythingUsesIt() {
         for (var refusal : List.of(
-                java.util.Map.entry("type Money = Count;", "SIR-TYPE-004"),                        // the language's own name
-                java.util.Map.entry("type A = B;\ntype B = A;", "SIR-TYPE-004"),                  // a cycle
+                java.util.Map.entry("type Money = Count;", "SIR-TYPE-005"),                        // the language's own name
+                java.util.Map.entry("type A = B;\ntype B = A;", "SIR-TYPE-005"),                  // a cycle
                 java.util.Map.entry("type A = Unknown;", "SIR-SYMBOL-002"),                        // no such base
                 java.util.Map.entry("type A = Count;\ntype A = Text;", "SIR-SYMBOL-001"),         // declared twice
                 java.util.Map.entry("type A = Count where notBlank;", "SIR-TYPE-001"),             // a text rule on a number
