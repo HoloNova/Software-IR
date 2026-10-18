@@ -108,7 +108,7 @@ kcg version-apply --repository-root "$WORK" --source-root "$SOURCE" \
 
 上面各行分别是值形状，并非一个JSONL请求。child必须提供该种类的所有FACT/REFERENCE槽位；OPTIONAL用none，MANY用seq。节点角色由schema分配，不能传id、span、binding或派生type；不能加载任意Java类。新节点请复制inspect中的同类模板或查看schema的slots、valueType、unions、enumValues，再修改 authored 值，不另造业务专用操作。
 
-`expectedOld`若提供，先核验旧值；JSON null不是省略或none。未知/重复字段、缺失必需字段、未知节点/槽位均拒绝。机械形状与最终业务合法性不同：例如现有错误状态码只允许400/401/404/409，由原语义层检查，不在JSON codec复制该规则。
+`expectedOld`若提供，先核验旧值；JSON null不是省略或none。未知/重复字段、缺失必需字段、未知节点/槽位均拒绝。机械形状与最终业务合法性不同：例如现有错误状态码只允许400/401/403/404/409，由原语义层检查，不在JSON codec复制该规则。
 
 ## 4. 结果、预算与副作用
 

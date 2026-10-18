@@ -412,11 +412,13 @@ class WriteSliceSemanticsTest {
     }
 
     @Test
-    void unauthorizedIsASupportedErrorStatusButForbiddenIsNot() {
-        String source = replaceBlock(ERRORS, replaceLine(ERRORS, "error StaleVersion http 409;", "error StaleVersion http 401;"));
-        assertTrue(analyze(source).isSuccess(), () -> analyze(source).diagnostics().toString());
+    void unauthorizedAndForbiddenAreSupportedErrorStatusesButAServerErrorIsNot() {
+        for (String status : java.util.List.of("401", "403")) {
+            String source = replaceBlock(ERRORS, replaceLine(ERRORS, "error StaleVersion http 409;", "error StaleVersion http " + status + ";"));
+            assertTrue(analyze(source).isSuccess(), () -> analyze(source).diagnostics().toString());
+        }
         assertRejectedWith(
-                replaceBlock(ERRORS, replaceLine(ERRORS, "error StaleVersion http 409;", "error StaleVersion http 403;")),
+                replaceBlock(ERRORS, replaceLine(ERRORS, "error StaleVersion http 409;", "error StaleVersion http 500;")),
                 "SIR-TYPE-001", 1);
     }
 

@@ -409,7 +409,7 @@ error 名字;               // 状态码默认 400
 error 名字 http 404;      // 指定状态码
 ```
 
-状态码只允许 **400、401、404、409**。错误的名字就是客户端看到的错误码（响应体 `{"code":"名字","message":"名字","fields":[]}`）。
+状态码只允许 **400、401、403、404、409**。401 是“没登录或凭据无效”，客户端会去重新登录；已登录但无权做这件事用 403（见 4.2）。错误的名字就是客户端看到的错误码（响应体 `{"code":"名字","message":"名字","fields":[]}`）。
 
 ### 3.6 能力（`capability`）
 
@@ -618,6 +618,53 @@ capability PublishGoods {
 ```
 
 认证怎么来：如果软件里有 `credential` 实体（3.2），由它认证；否则运行时要有部署方提供的认证器，或本地调试的固定身份。没有身份的请求得到 `401`，不会走到工作流。
+
+#### 授权：谁可以做这件事
+
+授权就是工作流里的普通检查，比较的一边是 `actor`。只允许本人修改自己的商品，别人改得到 `403`：
+
+```sir-declarations
+entity User persistent {
+  identity id: Id generated auto;
+  field name: Text;
+}
+entity Goods persistent {
+  identity id: Id generated auto;
+  field title: Text;
+  field seller: Ref<User>;
+}
+view GoodsView from Goods {
+  field id: Id;
+  field title: Text;
+}
+input RenameInput {
+  field id: Id;
+  field title: Text where notBlank;
+}
+error GoodsNotFound http 404;
+error NotSeller http 403;
+capability RenameGoods {
+  actor Ref<User>;
+  input RenameInput;
+  output GoodsView;
+  fails GoodsNotFound;
+  fails NotSeller;
+  requires authenticated;
+  requires atomic;
+  expose command;
+  workflow {
+    load Goods by input.id as goods else GoodsNotFound;
+    validate goods.seller == actor else NotSeller;
+    update goods {
+      title: input.title;
+    }
+    persist goods;
+    return goods;
+  }
+}
+```
+
+只看自己的数据，把条件写进 `find`：`find Goods where item.seller == actor ...`。
 
 ### 4.3 `expose` 与 HTTP
 
@@ -1175,7 +1222,7 @@ use Crud {
 | `SIR-SYMBOL-002` | 引用了不存在的名字或字段 |
 | `SIR-SYMBOL-003` | 视图嵌套另一个视图时，两个实体之间有不止一个 `Ref`，关联不唯一 |
 | `SIR-IDENTITY-001`／`002` | `@id` 的取值格式不对／重复 |
-| `SIR-TYPE-001` | 类型不一致：比较或加减两边类型不同、返回类型不匹配、字面量超出范围、状态码不在 400／401／404／409 里、`secret`／`unique` 用在不允许的类型上 |
+| `SIR-TYPE-001` | 类型不一致：比较或加减两边类型不同、返回类型不匹配、字面量超出范围、状态码不在 400／401／403／404／409 里、`secret`／`unique` 用在不允许的类型上 |
 | `SIR-TYPE-002` | `Ref<...>` 的目标不是实体 |
 | `SIR-TYPE-003` | `Optional<Optional<T>>` |
 | `SIR-TYPE-004` | `any` 的条件里没有“指向根实体的 Ref 字段 `== item`” |

@@ -187,6 +187,7 @@ public sealed interface SpringBootDeclaration
    enum HttpStatus {
       BAD_REQUEST,
       UNAUTHORIZED,
+      FORBIDDEN,
       NOT_FOUND,
       CONFLICT;
    }

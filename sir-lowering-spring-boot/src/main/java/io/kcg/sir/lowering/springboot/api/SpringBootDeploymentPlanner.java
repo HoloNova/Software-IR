@@ -124,7 +124,7 @@ public final class SpringBootDeploymentPlanner {
                 for (SymbolId failure : capability.failures()) {
                     var error = Objects.requireNonNull(declaredErrors.get(failure), "declared failure");
                     errors.add(new DeclaredError(switch (error.httpStatus()) {
-                        case BAD_REQUEST -> 400; case UNAUTHORIZED -> 401; case NOT_FOUND -> 404; case CONFLICT -> 409;
+                        case BAD_REQUEST -> 400; case UNAUTHORIZED -> 401; case FORBIDDEN -> 403; case NOT_FOUND -> 404; case CONFLICT -> 409;
                     }, errorCode(error)));
                 }
                 endpoints.add(new Endpoint(capability.httpMethod().name(), capability.route(), capability.authenticated(), binding, rules, errors));
