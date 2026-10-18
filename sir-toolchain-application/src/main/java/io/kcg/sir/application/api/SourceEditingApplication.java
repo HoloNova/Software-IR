@@ -28,8 +28,27 @@ public final class SourceEditingApplication {
             model -> { throw new IllegalStateException("inspection must stop before generation"); },
             diagnostics, stage -> {}, new ArrayList<>());
         if (!result.success()) return new SourceInspectionResult.Failure(diagnostics);
+        var model = result.semanticModel();
         return new SourceInspectionResult.Success(loaded.get().snapshot(), SoftwareSchema.normalizedModel(),
-            SoftwareDraft.of(result.semanticModel()), diagnostics);
+            SoftwareDraft.of(model), expanded(model), diagnostics);
+    }
+
+    /** The declarations a use expanded into, in the model's order, each with the use it came from. */
+    private static List<SourceInspectionResult.Expanded> expanded(io.kcg.sir.semantic.api.NormalizedSemanticModel model) {
+        var uses = new java.util.HashMap<io.kcg.sir.semantic.symbol.SymbolId, io.kcg.sir.semantic.model.NormalizedFeatureUse>();
+        model.declarations().stream().filter(io.kcg.sir.semantic.model.NormalizedFeatureUse.class::isInstance)
+            .map(io.kcg.sir.semantic.model.NormalizedFeatureUse.class::cast).forEach(use -> uses.put(use.id(), use));
+        var expanded = new ArrayList<SourceInspectionResult.Expanded>();
+        for (var declaration : model.declarations()) {
+            var origin = model.expandedFrom(declaration.id());
+            if (origin.isEmpty()) continue;
+            var use = uses.get(origin.get().feature());
+            var arguments = new java.util.TreeMap<String, String>();
+            if (use != null) use.arguments().forEach(a -> arguments.put(a.name(), a.value()));
+            expanded.add(new SourceInspectionResult.Expanded(declaration.getClass().getSimpleName(), declaration.name(),
+                use == null ? origin.get().feature().value() : use.name(), arguments, origin.get().role()));
+        }
+        return expanded;
     }
 
     public SourceEditResult edit(SourceEditRequest request) {

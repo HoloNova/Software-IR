@@ -30,7 +30,7 @@ kcg generate --source-root "$SOURCE" --entry project.sir --output-root "$OUTPUT"
 kcg inspect --source-root "$SOURCE" --entry project.sir > inspection.json
 ```
 
-`generate`只创建新源码工程，不改SIR、不调用Git。`inspect`只读，运行到正式语义分析，不生成Java；结果包含软件名、**整个源集合**的`baselineSha256`、schema和结构化draft。`draft`可作为命令值模板，不含身份、源位置或派生绑定。schema的`editable`说明机械草稿槽位，实际源编辑范围由`editingScope: DECLARATIONS_ONLY`限制；header、imports等不因此变为可编辑。
+`generate`只创建新源码工程，不改SIR、不调用Git。`inspect`只读，运行到正式语义分析，不生成Java；结果包含软件名、**整个源集合**的`baselineSha256`、schema和结构化draft。`draft`可作为命令值模板，不含身份、源位置或派生绑定。schema的`editable`说明机械草稿槽位，实际源编辑范围由`editingScope: DECLARATIONS_ONLY`限制；header、imports等不因此变为可编辑。`draft`里也有`use`展开出来的声明，它们不在源码里；`expandedDeclarations`逐条列出这些声明的种类、名字、来自哪个功能及该`use`写的参数、在功能里的角色。要改它们，改对应的`use`（或用脚手架把它写成普通SIR）。
 
 以下示例把课程代码长度上限从32改为40，分别改实体与创建输入，仍使用同一种update：
 

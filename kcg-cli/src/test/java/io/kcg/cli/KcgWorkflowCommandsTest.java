@@ -133,6 +133,23 @@ class KcgWorkflowCommandsTest {
         assertTrue(Files.isDirectory(repo.resolve(".git")));
     }
 
+    /** The draft holds what uses expand into; inspect says which declarations those are and which use they come from. */
+    @Test void inspectNamesTheDeclarationsAUseExpandedInto() throws Exception {
+        Path source = Files.createDirectory(temp.resolve("sir"));
+        Files.writeString(source.resolve("project.sir"), resource("crud-feature.sir"));
+        var inspected = run("", sourceArgs("inspect", source)); assertEquals(0, inspected.exit(), inspected.stdout());
+        var expanded = (List<?>) obj(StrictJson.parse(inspected.stdout())).get("expandedDeclarations");
+        assertTrue(expanded.contains(Map.of("kind", "NormalizedCapability", "name", "CreateNote", "feature", "Crud",
+            "arguments", Map.of("entity", "Note"), "role", "CreateNote")), expanded.toString());
+        assertTrue(expanded.contains(Map.of("kind", "NormalizedEntityExtension", "name", "User", "feature", "DualTokenLogin",
+            "arguments", Map.of("account", "User"), "role", "User")), expanded.toString());
+        // Written declarations are not listed: the entities, and the uses themselves.
+        assertTrue(expanded.stream().map(e -> obj(e).get("name")).noneMatch(n -> n.equals("Note") || n.equals("Crud")), expanded.toString());
+        // Each Crud use: 5 capabilities, a view, 4 inputs and 2 errors, one more (the stale version) for the versioned Note.
+        // The login: 3 entities, 2 views, 2 inputs, 3 errors, 3 capabilities and the extension of User.
+        assertEquals(3 * 12 + 1 + 14, expanded.size(), expanded.toString());
+    }
+
     @Test void commodityUsesTheSameProtocolAndErrorsNeverTouchSources() throws Exception {
         Path source = Files.createDirectory(temp.resolve("sir"));
         Files.writeString(source.resolve("project.sir"), resource("campus-market.sir"));

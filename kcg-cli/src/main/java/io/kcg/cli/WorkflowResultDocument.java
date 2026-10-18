@@ -91,6 +91,22 @@ final class WorkflowResultDocument {
                 out.append(']');
             }
             out.append("}},\"draft\":"); CommandJson.writeValue(out, new StructValue.Child(success.draft().root()));
+            // Declarations of the draft that are not in the source: a use expanded into them, and an edit changes the use.
+            out.append(",\"expandedDeclarations\":[");
+            for (int i = 0; i < success.expanded().size(); i++) {
+                if (i != 0) out.append(',');
+                var expanded = success.expanded().get(i);
+                out.append('{'); JsonFields.field(out, "kind", expanded.kind());
+                field(out, "name", expanded.name()); field(out, "feature", expanded.feature());
+                out.append(",\"arguments\":{");
+                boolean firstArgument = true;
+                for (var argument : new java.util.TreeMap<>(expanded.arguments()).entrySet()) {
+                    if (!firstArgument) out.append(','); firstArgument = false;
+                    out.append(JsonStringEncoder.encode(argument.getKey())).append(':').append(JsonStringEncoder.encode(argument.getValue()));
+                }
+                out.append('}'); field(out, "role", expanded.role()); out.append('}');
+            }
+            out.append(']');
         }
         return finish(out, result.diagnostics());
     }
