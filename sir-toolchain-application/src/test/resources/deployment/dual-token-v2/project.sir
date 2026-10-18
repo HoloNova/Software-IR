@@ -39,7 +39,6 @@ software DualTokenDesk {
       field noteId: Id;
       field name: Name where length(1, 64);
     }
-    error NoteNotFound http 404;
     capability AddLabel {
       input LabelInput;
       output LabelView;
@@ -56,9 +55,29 @@ software DualTokenDesk {
         return label;
       }
     }
-    view NoteView from Note {
-      field id: Id;
-      field body: Text;
+    use Crud {
+      entity: Note;
+      owner: author;
+    }
+    error NotAuthor http 403;
+    capability PinNote {
+      actor Ref<User>;
+      input NoteIdInput;
+      output NoteView;
+      fails NotAuthor;
+      fails NoteNotFound;
+      requires authenticated;
+      requires atomic;
+      expose command;
+      workflow {
+        load Note by input.id as note else NoteNotFound;
+        validate note.author == actor else NotAuthor;
+        update note {
+          pinned: true;
+        }
+        persist note;
+        return note;
+      }
     }
     input NoteInput {
       field text: Text where notBlank;

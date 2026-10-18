@@ -216,6 +216,29 @@ try:
     exchange('/api/delete-label', {'id': made['id']}, None, 200, base=server)
     assert request(f"/api/get-label?id={made['id']}", expected=404, base=server)['code'] == 'LabelNotFound'
     assert sql(f"SELECT COUNT(*) FROM `label` WHERE id={int(made['id'])}", instance=acceptance_instance).strip() == '0'
+    # Notes belong to their author (`use Crud { entity: Note; owner: author; }`): another account does not find them,
+    # and the hand-written PinNote answers it 403.
+    tokens = {}
+    for who in ('v2-owner-a', 'v2-owner-b'):
+        request('/api/register', {'name': who, 'password': 'test-password'}, expected=201, base=server)
+        tokens[who] = request('/api/login', {'name': who, 'password': 'test-password'}, expected=201, base=server)['accessToken']
+    owner, other = tokens['v2-owner-a'], tokens['v2-owner-b']
+    mine = request('/api/create-note', {'body': 'owned'}, token=owner, expected=201, base=server)
+    assert mine['body'] == 'owned' and mine['pinned'] is True and mine['state'] == 'open', mine
+    path = f"/api/get-note?id={mine['id']}"
+    assert request(path, token=owner, base=server)['body'] == 'owned'
+    assert request(path, token=other, expected=404, base=server)['code'] == 'NoteNotFound'
+    exchange(path, None, None, 401, base=server)
+    change = {'id': mine['id'], 'body': 'changed', 'pinned': False, 'state': 'open', 'title': None}
+    assert request('/api/update-note', change, token=other, expected=404, base=server)['code'] == 'NoteNotFound'
+    assert request('/api/delete-note', {'id': mine['id']}, token=other, expected=404, base=server)['code'] == 'NoteNotFound'
+    assert request('/api/pin-note', {'id': mine['id']}, token=other, expected=403, base=server)['code'] == 'NotAuthor'
+    assert mine['id'] in [row['id'] for row in request('/api/list-note?page=1&size=100', token=owner, base=server)['records']]
+    assert mine['id'] not in [row['id'] for row in request('/api/list-note?page=1&size=100', token=other, base=server)['records']]
+    assert request('/api/update-note', change, token=owner, base=server)['body'] == 'changed'
+    assert request('/api/pin-note', {'id': mine['id']}, token=owner, base=server)['pinned'] is True
+    exchange('/api/delete-note', {'id': mine['id']}, owner, 200, base=server)
+    assert sql(f"SELECT COUNT(*) FROM `note` WHERE id={int(mine['id'])}", instance=acceptance_instance).strip() == '0'
     assert 'KCG_UPDATE_CURRENT' in deploy('update', instance=acceptance_instance, state=acceptance_state, package=a.v2_package)
     older = deploy('update', expected=3, instance=acceptance_instance, state=acceptance_state, package=a.next_package)
     assert 'AHEAD' in older and 'application=RUNNING' in older, 'an older package must be refused before the application stops'
