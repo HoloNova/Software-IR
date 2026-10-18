@@ -1461,14 +1461,14 @@ final class ValidatePass {
          } else if (step instanceof io.kcg.sir.ast.AstDeleteStep delete) {
             String name = delete.target().text();
             if (!loaded.contains(name)) {
-               this.diagnostics.add(DiagnosticBuilder.error("SIR-VALID-005", "delete 只能删除 load 读出的记录: " + name, delete.target().span()));
+               this.diagnostics.add(DiagnosticBuilder.error("SIR-VALID-012", "delete 只能删除 load 读出的记录: " + name, delete.target().span()));
             } else if (!deleted.add(name)) {
-               this.diagnostics.add(DiagnosticBuilder.error("SIR-VALID-005", "记录已被删除: " + name, delete.target().span()));
+               this.diagnostics.add(DiagnosticBuilder.error("SIR-VALID-012", "记录已被删除: " + name, delete.target().span()));
             }
          } else if (step instanceof AstUpdateStep update && deleted.contains(update.target().text())) {
-            this.diagnostics.add(DiagnosticBuilder.error("SIR-VALID-005", "记录删除之后不能再 update: " + update.target().text(), update.target().span()));
+            this.diagnostics.add(DiagnosticBuilder.error("SIR-VALID-012", "记录删除之后不能再 update: " + update.target().text(), update.target().span()));
          } else if (step instanceof AstPersistStep persist && deleted.contains(persist.target().text())) {
-            this.diagnostics.add(DiagnosticBuilder.error("SIR-VALID-005", "记录删除之后不能再 persist: " + persist.target().text(), persist.target().span()));
+            this.diagnostics.add(DiagnosticBuilder.error("SIR-VALID-012", "记录删除之后不能再 persist: " + persist.target().text(), persist.target().span()));
          }
       }
    }

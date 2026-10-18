@@ -42,10 +42,10 @@ class DeleteStepSemanticsTest {
     @Test
     void deleteIsRefusedWhereItDoesNotMakeSense() {
         Map<String, String> refusals = Map.of(
-            "SIR-VALID-005 created", capability("command", "requires atomic;", "    create Note as made { text: \"x\"; }\n    delete made;"),
-            "SIR-VALID-005 twice", capability("command", "requires atomic;", LOAD + "    delete row;\n    delete row;"),
-            "SIR-VALID-005 update after", capability("command", "requires atomic;", LOAD + "    delete row;\n    update row { text: \"y\"; }"),
-            "SIR-VALID-005 persist after", capability("command", "requires atomic;", LOAD + "    delete row;\n    persist row;"),
+            "SIR-VALID-012 created", capability("command", "requires atomic;", "    create Note as made { text: \"x\"; }\n    delete made;"),
+            "SIR-VALID-012 twice", capability("command", "requires atomic;", LOAD + "    delete row;\n    delete row;"),
+            "SIR-VALID-012 update after", capability("command", "requires atomic;", LOAD + "    delete row;\n    update row { text: \"y\"; }"),
+            "SIR-VALID-012 persist after", capability("command", "requires atomic;", LOAD + "    delete row;\n    persist row;"),
             "SIR-FLOW-004 readonly", capability("query", "requires readonly;", LOAD + "    delete row;"));
         refusals.forEach((label, source) -> {
             String code = label.split(" ")[0];
@@ -65,6 +65,6 @@ class DeleteStepSemanticsTest {
     void anUnknownVariableIsRefusedLikeAnyOtherStep() {
         SemanticAnalysis result = TestSources.analyze(TestSources.sir(capability("command", "requires atomic;", LOAD + "    delete missing;")));
         assertFalse(result.isSuccess());
-        assertTrue(List.of("SIR-SYMBOL-002", "SIR-SYMBOL-003", "SIR-FLOW-001", "SIR-VALID-005").stream().anyMatch(code -> TestSources.hasError(result, code)), result.diagnostics().toString());
+        assertTrue(List.of("SIR-SYMBOL-002", "SIR-SYMBOL-003", "SIR-FLOW-001", "SIR-VALID-012").stream().anyMatch(code -> TestSources.hasError(result, code)), result.diagnostics().toString());
     }
 }
