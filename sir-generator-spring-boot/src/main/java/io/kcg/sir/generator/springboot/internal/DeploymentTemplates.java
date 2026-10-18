@@ -695,8 +695,15 @@ final class DeploymentTemplates {
                 Set<String> newTables = new TreeSet<>();
                 for (String[] row : contracts.get(n)) {
                     if (!oldTables.contains(row[0])) newTables.add(row[0]);
-                    else if (!oldColumns.contains(row[0] + "." + row[1]) && count(db, "SELECT COUNT(*) FROM `" + row[0] + "` WHERE `" + row[1] + "` IS NOT NULL") != 0)
-                        throw new Recovery("DATA_CHANGED", "added column " + row[0] + "." + row[1] + " is not null in an existing row");
+                    else if (!oldColumns.contains(row[0] + "." + row[1])) {
+                        // A column added to an existing table holds, in every row already there, its database default:
+                        // that default when it declares one, otherwise nothing.
+                        if (row[10].isEmpty()) {
+                            if (count(db, "SELECT COUNT(*) FROM `" + row[0] + "` WHERE `" + row[1] + "` IS NOT NULL") != 0)
+                                throw new Recovery("DATA_CHANGED", "added column " + row[0] + "." + row[1] + " is not null in an existing row");
+                        } else if (differFromDefault(db, row[0], row[1], java.net.URLDecoder.decode(row[10].substring(1), StandardCharsets.UTF_8)) != 0)
+                            throw new Recovery("DATA_CHANGED", "added column " + row[0] + "." + row[1] + " does not hold its default in an existing row");
+                    }
                 }
                 for (String table : newTables) if (count(db, "SELECT COUNT(*) FROM `" + table + "`") != 0)
                     throw new Recovery("DATA_CHANGED", "added table " + table + " is not empty");
@@ -740,6 +747,16 @@ final class DeploymentTemplates {
                     digests.put(table.getKey(), rows + ":" + HexFormat.of().formatHex(sha.digest()));
                 }
                 return digests;
+            }
+
+            private static long differFromDefault(Connection db, String table, String column, String value) throws Exception {
+                try (PreparedStatement q = db.prepareStatement("SELECT COUNT(*) FROM `" + table + "` WHERE NOT (`" + column + "` <=> ?)")) {
+                    q.setString(1, value);
+                    try (ResultSet rs = q.executeQuery()) {
+                        rs.next();
+                        return rs.getLong(1);
+                    }
+                }
             }
 
             private static long count(Connection db, String sql) throws Exception {
