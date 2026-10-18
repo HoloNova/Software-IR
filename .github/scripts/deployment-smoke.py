@@ -200,6 +200,17 @@ try:
     label = request('/api/add-label', {'noteId': note_id, 'name': 'kept'}, expected=201, base=server)
     assert sql(f"SELECT note_id FROM `label` WHERE id={int(label['id'])}", instance=acceptance_instance).strip() == str(note_id)
     assert request('/api/add-label', {'noteId': 999999999, 'name': 'none'}, expected=404, base=server)['code'] == 'NoteNotFound'
+    # Version 2 also has the create, show, list, change and delete of labels, from one `use Crud { entity: Label; }`.
+    made = request('/api/create-label', {'noteId': note_id, 'name': 'crud'}, expected=201, base=server)
+    assert made['note'] == note_id and made['name'] == 'crud', made
+    assert request(f"/api/get-label?id={made['id']}", base=server)['name'] == 'crud'
+    listed = request('/api/list-label?page=1&size=100', base=server)
+    assert made['id'] in [row['id'] for row in listed['records']] and listed['total'] >= 2, listed
+    assert request('/api/update-label', {'id': made['id'], 'noteId': note_id, 'name': 'renamed'}, base=server)['name'] == 'renamed'
+    assert sql(f"SELECT name FROM `label` WHERE id={int(made['id'])}", instance=acceptance_instance).strip() == 'renamed'
+    exchange('/api/delete-label', {'id': made['id']}, None, 200, base=server)
+    assert request(f"/api/get-label?id={made['id']}", expected=404, base=server)['code'] == 'LabelNotFound'
+    assert sql(f"SELECT COUNT(*) FROM `label` WHERE id={int(made['id'])}", instance=acceptance_instance).strip() == '0'
     assert 'KCG_UPDATE_CURRENT' in deploy('update', instance=acceptance_instance, state=acceptance_state, package=a.v2_package)
     older = deploy('update', expected=3, instance=acceptance_instance, state=acceptance_state, package=a.next_package)
     assert 'AHEAD' in older and 'application=RUNNING' in older, 'an older package must be refused before the application stops'

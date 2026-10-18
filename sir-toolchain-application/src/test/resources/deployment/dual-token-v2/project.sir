@@ -31,9 +31,8 @@ software DualTokenDesk {
       field note: Ref<Note>;
       field name: Text where length(1, 64);
     }
-    view LabelView from Label {
-      field id: Id;
-      field name: Text;
+    use Crud {
+      entity: Label;
     }
     input LabelInput {
       field noteId: Id;
