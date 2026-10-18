@@ -51,16 +51,18 @@ stop不删卷、配置、密码或镜像。start要求卷/镜像存在，只核�
 
 表/列/主键和引用目标从现有Lowered模型及正式SymbolId取得，不按Java源码猜测。选择以DeploymentPlan显式表达，再由Generator纯渲染。
 
-| SIR存储类型 | v1物理选择 |
+| SIR语义类型 | v1物理选择 |
 | --- | --- |
-| Int32 / Int64 / Boolean | INT / BIGINT / BOOLEAN |
-| Uuid | CHAR(36)，匹配现有UUID处理器 |
-| Date / DateTime | DATE / DATETIME(6)，连接与会话UTC |
-| 普通String | 有上限且不超过768时VARCHAR，否则LONGTEXT；业务约束仍由原生成代码检查 |
-| secret String | VARCHAR(255)，存摘要，不套用输入明文长度 |
+| Count、Quantity、PageNo、PageSize / Id、Serial、Version / Flag | INT / BIGINT / BOOLEAN |
+| Token | CHAR(36)，匹配现有UUID处理器 |
+| Day / Moment | DATE / DATETIME(6)，连接与会话UTC |
+| Text、Name、Code、Remark、Email | 有长度上限且不超过768时VARCHAR，否则LONGTEXT；业务约束仍由原生成代码检查 |
+| Secret | VARCHAR(255)，存摘要，不套用输入明文长度 |
+| Money | 暂不支持（没有精度与小数位的物理合同） |
 | 枚举 | 按目标枚举成员长度规划VARCHAR |
 | Ref | 目标主键的实际存储类型，外键RESTRICT |
 | 可空字段 | 保留NULL；非空字段NOT NULL |
+| 字段 `default` | 常量与枚举成员写成列的 DEFAULT（记入合同第 11 列，迁移时按 information_schema 核对）；`now()` 与 LONGTEXT 列没有数据库默认值 |
 
 表为InnoDB，文本使用`utf8mb4_0900_bin`完整值比较。unique只建立完整值唯一键，不建前缀唯一索引。唯一文本缺少不超过768的明确长度、Decimal缺少精度/scale契约、外部actor未提供credential实现、超出标识符/行预算等情况在导出时返回`SIR-DEPLOY-UNSUPPORTED-001`。普通generate仍遵循原合同。
 

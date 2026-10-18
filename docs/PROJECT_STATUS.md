@@ -12,7 +12,7 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 
 | 模块 | 当前职责 |
 | --- | --- |
-| `sir-parser` | `sir 0.2` 根文档与声明片段两个入口、不可变 AST、SourceSpan、稳定 AstNodeId、解析诊断 |
+| `sir-parser` | `sir 0.3` 根文档与声明片段两个入口、不可变 AST、SourceSpan、稳定 AstNodeId、解析诊断 |
 | `sir-semantic` | Resolve/Type/Validate/Normalize、typed reference-site binding、Normalized model；`schema` 包为类型化软件结构 |
 | `sir-lowering-api` | 目标无关的降级契约、来源、版本、诊断和 Validator |
 | `sir-lowering-spring-boot` | Java 21/Spring Boot/MyBatis-Plus/MySQL/Maven/REST 降级模型与校验 |
@@ -26,10 +26,11 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 
 ### 语言与编译
 
-- 只有一种文档形式：`sir 0.2` 根文档（`metadata`、`target`、`sources { }`、`imports { }`、`declarations { }`）加可选的声明片段文件。一个软件写在一个文件里，就是没有片段的根文档。最多 128 个文件、每个 1 MiB、合计 8 MiB。
+- 只有一种文档形式：`sir 0.3` 根文档（`metadata`、`target`、`sources { }`、`imports { }`、`declarations { }`）加可选的声明片段文件。一个软件写在一个文件里，就是没有片段的根文档。最多 128 个文件、每个 1 MiB、合计 8 MiB。
 - 编译阶段：Parser → Resolve（名称只解析一次）→ Type → Validate → Normalize → Spring Boot 降级 → 确定性生成。名称解析出错后分析仍会继续，类型与校验错误一并报告（只有身份冲突会提前停止）。
 - 声明按（种类，名称）排序，生成的文件顺序因此是规范的，同一输入总得到逐字节相同的输出。
-- 业务语言已覆盖：查询切片（`view` 响应投影、`Page<T>` 分页、显式 `order by`、字面匹配 `containsLiteral`）、唯一字段与按唯一字段加载（`unique`、`load … by 字段:`，CI [#76](https://github.com/HoloNova/Software-IR/actions/runs/38710339131) 通过）、时间平移与数值加减（`now() + 15 minutes`、`a - 1`，CI [#77](https://github.com/HoloNova/Software-IR/actions/runs/38712747591) 通过）、带守卫的状态流转（`update … when … else …`，CI [#78](https://github.com/HoloNova/Software-IR/actions/runs/38715357765) 通过，含真实 MySQL 并发 IT）、写入切片（`versioned` 并发字段、声明式错误状态码、`persist … else` 条件持久化、`input … patch of` 局部更新、`.present` 存在性、结构化错误信封）、关系切片（关联存在性过滤与批量关联读取）。这些在真实 MySQL 8.4 + HTTP 的场景 IT 中验证过（见验证说明）。产品侧 DELETE、路由模板仍未实现。
+- 业务语言已覆盖：查询切片（`view` 响应投影、`Page<T>` 分页、显式 `order by`、字面匹配 `containsLiteral`）、唯一字段与按唯一字段加载（`unique`、`load … by 字段:`，CI [#76](https://github.com/HoloNova/Software-IR/actions/runs/38710339131) 通过）、时间平移与数值加减（`now() + 15 minutes`、`a - 1`，CI [#77](https://github.com/HoloNova/Software-IR/actions/runs/38712747591) 通过）、带守卫的状态流转（`update … when … else …`，CI [#78](https://github.com/HoloNova/Software-IR/actions/runs/38715357765) 通过，含真实 MySQL 并发 IT）、写入切片（`versioned` 并发字段、声明式错误状态码、`persist … else` 条件持久化、`input … patch of` 局部更新、`.present` 存在性、结构化错误信封）、关系切片（关联存在性过滤与批量关联读取）。这些在真实 MySQL 8.4 + HTTP 的场景 IT 中验证过（见验证说明）。路由模板仍未实现。
+- 语言升级（2026-10-18，[设计 12](design/12-feature-semantics-and-semantic-types.md) 第 13 节）：字段只写语义类型（`Name`、`Count`、`Moment`、`Secret` 等，自带规则），由目标决定 Java 类型和数据库列；`type` 自定义语义类型；`use 功能 { 参数 }` 一句展开成一组声明（自带 `DualTokenLogin`），`feature` 自定义功能；`delete` 步骤；字段 `default`（同时是数据库列默认值）；实体 `scope`（默认查询范围，如软删除）；`extend` 给已有实体加字段（功能借它带上所需字段）。写法见[语言参考](SIR_LANGUAGE_REFERENCE.md)。
 
 ### 首次生成
 
@@ -60,7 +61,7 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 
 ### 批量静态校验
 
-`kcg check < samples.jsonl` 与 `SirValidationApplication`：单 JVM 串行校验 JSONL 样本（每个是一个 `sir 0.2` 文档），可指定停在 PARSE／SEMANTIC／LOWERING／GENERATION，保留原始诊断，纯内存、不写文件。通过只说明所请求阶段通过，见 [SIR 批量校验](SIR_BATCH_CHECK.md)。
+`kcg check < samples.jsonl` 与 `SirValidationApplication`：单 JVM 串行校验 JSONL 样本（每个是一个 `sir 0.3` 文档），可指定停在 PARSE／SEMANTIC／LOWERING／GENERATION，保留原始诊断，纯内存、不写文件。通过只说明所请求阶段通过，见 [SIR 批量校验](SIR_BATCH_CHECK.md)。
 
 ## 4. 验证状态
 
@@ -89,7 +90,11 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 - SLM 评测：总设计见 [SLM 评测计划](qualification/SLM_GENERATED_PROJECT_EVALUATION_PLAN.md)，尚未启动。
 - Windows 平台证据；生产、安全认证、性能、高可用资格均未声明。
 
-## 7. 当前阶段（2026-10-17）
+## 7. 当前阶段（2026-10-18）
+
+**语言升级已实施：**负责人 2026-10-17 确认把 SIR 做成 Java 之上的更高层语言——一句声明给出一个功能，作者写语义而不写机器类型，用户可以定义自己的类型和功能，数据库迁移由变更层驱动。[设计 12](design/12-feature-semantics-and-semantic-types.md) 第 9 节的五步已全部实施，结果与留到下一阶段的事项见其第 13 节。迁移由变更层驱动之后，已上线的表支持列改名（带 `@id`）、加可空列、加带默认值的必填列和新建表，这些都由 CI 部署冒烟在真实 MySQL 上核对。
+
+## 7.1 上一阶段（2026-10-17）
 
 公开CLI流程已验收，不重开已完成R1–R5，不改变Git版本合同。
 

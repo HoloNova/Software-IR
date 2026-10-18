@@ -117,7 +117,7 @@ Semantic 拥有唯一的类型化软件结构定义（`SoftwareSchema`）；Chan
 
 ### `sir-parser`
 
-ANTLR4 语法（`sir 0.2` 根文档与声明片段两个入口）、严格 UTF-8、不可变 AST、SourceSpan、稳定 AstNodeId 和解析诊断。
+ANTLR4 语法（`sir 0.3` 根文档与声明片段两个入口）、严格 UTF-8、不可变 AST、SourceSpan、稳定 AstNodeId 和解析诊断。
 
 ### `sir-semantic`
 

@@ -25,7 +25,7 @@ java -XX:-UsePerfData -Xmx256m -XX:MaxMetaspaceSize=128m \
 一行一个对象，例如：
 
 ```json
-{"id":"A1-1","sir":"sir 0.2\nsoftware Example {}","stopAfter":"SEMANTIC"}
+{"id":"A1-1","sir":"sir 0.3\nsoftware Example {}","stopAfter":"SEMANTIC"}
 ```
 
 此例仅演示传输格式，不声称该软件满足语义或生成目标。id/sir必须是字符串；id允许空或重复、原值回传，不参与身份或缓存。stopAfter省略默认GENERATION；四值PARSE、SEMANTIC、LOWERING、GENERATION是真实停止点。每个样本是一份完整的`sir 0.2`软件文档（`sources {}`与`imports {}`块可为空）；`sir 0.1`头会得到SIR-VERSION-001。一个样本只有一个文档，样本里列出的其他源文件不会被读取。
@@ -55,6 +55,6 @@ java -XX:-UsePerfData -Xmx256m -XX:MaxMetaspaceSize=128m \
 
 ## 证据与边界
 
-资格以[验证说明](qualification/README.md)为准；早期的资格记录见[历史报告](history/qualification/CURRENT_QUALIFICATION.md)。当前验证涉及现有20个合法fixture（`sir 0.2`单文档）、既有非法阶段、逐文件旧生成一致、混批与预算、独立JVM/Locale确定性、目录指纹、原CLI回归及1000条规模。规模时间/RSS只反映该fixture/机器，不推导任意业务吞吐。
+资格以[验证说明](qualification/README.md)为准；早期的资格记录见[历史报告](history/qualification/CURRENT_QUALIFICATION.md)。当前验证涉及现有20个合法fixture（`sir 0.3`单文档）、既有非法阶段、逐文件旧生成一致、混批与预算、独立JVM/Locale确定性、目录指纹、原CLI回归及1000条规模。规模时间/RSS只反映该fixture/机器，不推导任意业务吞吐。
 
 无新第三方依赖，无HTTP/daemon/数据库评测，无生产FixHint增强。STEP0_EXPERIMENT_HANDBOOK.md未取得，不能声称已完成手册对接；接口ok/stage/diagnostics[].code与四stage保持需求约定。
