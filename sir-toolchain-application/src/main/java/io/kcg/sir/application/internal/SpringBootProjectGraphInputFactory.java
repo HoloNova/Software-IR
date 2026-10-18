@@ -58,7 +58,8 @@ public final class SpringBootProjectGraphInputFactory {
       List<EdgeBinding> edges = new ArrayList<>();
       ProjectNodeId projectId = ProjectNodeId.INSTANCE;
 
-      for (NormalizedDeclaration decl : semanticModel.declarations()) {
+      // A use declaration lowers to nothing of its own; the declarations it expanded into are the graph's nodes.
+      for (NormalizedDeclaration decl : semanticModel.withoutFeatureUses().declarations()) {
          SymbolKind kind = symbolKindOf(decl);
          semanticDeclarations.add(new SemanticDeclarationInput(decl.id(), kind, decl.name(), decl.sourceNodeId(), decl.span()));
          edges.add(new EdgeBinding(GraphEdgeKind.DECLARES, projectId, new Semantic(decl.id())));

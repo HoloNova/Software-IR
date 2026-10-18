@@ -11,6 +11,13 @@ public interface SirParser {
 
     SourceUnitParseResult parseFragment(SirSource source);
 
+    /**
+     * Parses the declarations a feature expands into. The text has no source of its own: every node gets an id under
+     * {@code under} (the {@code use} declaration's id) and the span {@code at} (the {@code use} declaration's span), so
+     * the expansion is identified and located by the declaration that asked for it.
+     */
+    ExpansionParseResult parseExpansion(String declarations, io.kcg.sir.ast.AstNodeId under, io.kcg.sir.source.SourceSpan at);
+
     static SirParser create() {
         return new DefaultSirParser();
     }

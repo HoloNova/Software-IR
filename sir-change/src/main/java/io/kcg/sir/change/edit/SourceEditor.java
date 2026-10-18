@@ -143,7 +143,10 @@ public final class SourceEditor {
          present.add(SoftwareDraft.identityOf(node).orElseThrow());
       }
 
+      Set<String> written = new java.util.HashSet<>();
+      candidate.model.declarations().stream().filter(candidate.model::isWritten).forEach(d -> written.add(d.id().value()));
       List<StructNode> added = SoftwareDraft.of(candidate.model).declarations().stream()
+         .filter(node -> written.contains(SoftwareDraft.identityOf(node).orElseThrow()))
          .filter(node -> !present.contains(SoftwareDraft.identityOf(node).orElseThrow()))
          .map(SourceEditor::authored)
          .toList();
@@ -274,7 +277,30 @@ public final class SourceEditor {
       }
 
       List<NormalizedDeclaration> removed = baseline.entrySet().stream().filter(e -> !kept.contains(e.getKey())).map(Map.Entry::getValue).toList();
-      return new Plan(removed, changed, added, null);
+      // What a use declaration expanded into is not source text: it changes only through the use declaration.
+      for (NormalizedDeclaration declaration : changed.keySet()) {
+         if (!model.isWritten(declaration)) {
+            return new Plan(List.of(), Map.of(), List.of(), expandedRefusal(model, declaration));
+         }
+      }
+
+      Set<String> removedIds = new java.util.HashSet<>();
+      removed.forEach(d -> removedIds.add(d.id().value()));
+      for (NormalizedDeclaration declaration : removed) {
+         var origin = model.expandedFrom(declaration.id());
+         if (origin.isPresent() && !removedIds.contains(origin.get().feature().value())) {
+            return new Plan(List.of(), Map.of(), List.of(), expandedRefusal(model, declaration));
+         }
+      }
+
+      return new Plan(removed.stream().filter(model::isWritten).toList(), changed, added, null);
+   }
+
+   private static Failed expandedRefusal(NormalizedSemanticModel model, NormalizedDeclaration declaration) {
+      String feature = model.expandedFrom(declaration.id()).orElseThrow().feature().value();
+      String use = feature.substring(feature.lastIndexOf('/') + 1);
+      return new Failed(Reason.COMMAND_REJECTED, "'" + declaration.name() + "' is expanded from 'use " + use
+         + "'; change the arguments of the use declaration instead, or detach it with kcg scaffold", List.of(), null);
    }
 
    // ----- writing it back ----------------------------------------------------------------------
@@ -364,8 +390,9 @@ public final class SourceEditor {
       }
 
       SoftwareDraft after = SoftwareDraft.of(analyzed.model);
-      StructNode expected = DraftOrder.canonical(edited.root().without(Set.of(SlotKind.IDENTITY)), this.schema);
-      StructNode actual = DraftOrder.canonical(after.root().without(Set.of(SlotKind.IDENTITY)), this.schema);
+      // Expanded declarations are re-derived from the use declarations, so only what the author writes is compared.
+      StructNode expected = DraftOrder.canonical(writtenOnly(edited, model).without(Set.of(SlotKind.IDENTITY)), this.schema);
+      StructNode actual = DraftOrder.canonical(writtenOnly(after, analyzed.model).without(Set.of(SlotKind.IDENTITY)), this.schema);
       if (!expected.equals(actual)) {
          SemanticDelta difference = SemanticDelta.between(new SoftwareDraft(expected), new SoftwareDraft(actual), this.schema);
          return new Failed(Reason.ROUND_TRIP_MISMATCH, "the written source does not read back as the edited draft", difference.changes().stream().map(Object::toString).toList(), candidate);
@@ -373,6 +400,24 @@ public final class SourceEditor {
 
       report.sort(Comparator.comparing((LocatedChange c) -> c.change().type().ordinal()).thenComparing(c -> c.change().declaration()));
       return new Done(candidate, SemanticDelta.between(before, after, this.schema), report);
+   }
+
+   /** The draft's root with the declarations {@code model} says a use declaration expanded into left out. */
+   private static StructNode writtenOnly(SoftwareDraft draft, NormalizedSemanticModel model) {
+      Set<String> expanded = new java.util.HashSet<>();
+      model.expansions().keySet().forEach(id -> expanded.add(id.value()));
+      List<StructNode.Slot> slots = new ArrayList<>();
+      for (StructNode.Slot slot : draft.root().slots()) {
+         if (slot.key().equals(SoftwareDraft.DECLARATIONS) && slot.value() instanceof StructValue.Seq seq) {
+            slots.add(new StructNode.Slot(slot.key(), slot.kind(), new StructValue.Seq(seq.elements().stream()
+               .filter(e -> !(e instanceof StructValue.Child child) || SoftwareDraft.identityOf(child.node()).map(i -> !expanded.contains(i)).orElse(true))
+               .toList())));
+         } else {
+            slots.add(slot);
+         }
+      }
+
+      return new StructNode(draft.root().kind(), slots);
    }
 
    /** The source file a declaration was read from. */
@@ -389,7 +434,8 @@ public final class SourceEditor {
     * when the entry file has none, in the first other file that has one.
     */
    private static Optional<NormalizedDeclaration> anchorFor(Documents documents, NormalizedSemanticModel model, Plan plan) {
-      List<NormalizedDeclaration> staying = model.declarations().stream().filter(d -> plan.removed.stream().noneMatch(r -> r.id().equals(d.id()))).toList();
+      List<NormalizedDeclaration> staying = model.declarations().stream().filter(model::isWritten)
+         .filter(d -> plan.removed.stream().noneMatch(r -> r.id().equals(d.id()))).toList();
       Optional<NormalizedDeclaration> inEntry = staying.stream().filter(d -> sourceOf(documents, d).equals(documents.entry()))
          .max(Comparator.comparingInt(d -> d.span().end().codePointOffset()));
       if (inEntry.isPresent()) {
@@ -516,7 +562,7 @@ public final class SourceEditor {
    }
 
    private static boolean blankLineBetweenDeclarations(Documents documents, NormalizedSemanticModel model, SourceId file, int[] text) {
-      List<NormalizedDeclaration> ordered = model.declarations().stream().filter(d -> sourceOf(documents, d).equals(file))
+      List<NormalizedDeclaration> ordered = model.declarations().stream().filter(model::isWritten).filter(d -> sourceOf(documents, d).equals(file))
          .sorted(Comparator.comparingInt(d -> d.span().start().codePointOffset())).toList();
       for (int i = 0; i + 1 < ordered.size(); i++) {
          String between = slice(text, ordered.get(i).span().end().codePointOffset(), ordered.get(i + 1).span().start().codePointOffset());

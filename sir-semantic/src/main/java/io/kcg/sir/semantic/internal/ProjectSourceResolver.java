@@ -32,10 +32,27 @@ public final class ProjectSourceResolver {
         }
         if (!declaredSources.equals(units.keySet()))
             diagnostics.add(DiagnosticBuilder.error("SIR-SOURCE-SET-001", "parsed units do not exactly cover the sources list", root.span()));
+        // Each use declaration becomes, in its own unit, the declarations its feature expands into; from here on every
+        // check sees the expanded declarations as if the author had written them in that file.
+        Map<SourceId, List<AstDeclaration>> effective = new HashMap<>();
+        List<AstFeatureUseDecl> uses = new ArrayList<>();
+        Map<AstNodeId, FeatureExpander.Expansion> expanded = new HashMap<>();
+        for (var unit : units.values()) {
+            var result = FeatureExpander.expand(unit.declarations(), diagnostics);
+            effective.put(unit.span().source(), result.declarations());
+            uses.addAll(result.uses());
+            expanded.putAll(result.expanded());
+        }
+        Map<String, AstFeatureUseDecl> usedFeatures = new HashMap<>();
+        for (AstFeatureUseDecl use : uses) {
+            AstFeatureUseDecl first = usedFeatures.putIfAbsent(use.name().text(), use);
+            if (first != null) diagnostics.add(DiagnosticBuilder.errorWithRelated("SIR-FEATURE-005", "feature used twice: " + use.name().text(),
+                    use.span(), new io.kcg.sir.api.RelatedLocation("首次使用在此处", first.span())));
+        }
         Map<SourceId, Map<String, AstDeclaration>> declarations = new HashMap<>();
         for (var unit : units.values()) {
             Map<String, AstDeclaration> local = new HashMap<>();
-            for (AstDeclaration declaration : unit.declarations()) {
+            for (AstDeclaration declaration : effective.get(unit.span().source())) {
                 local.putIfAbsent(name(declaration), declaration); // the existing Symbol pass diagnoses duplicate declarations
                 if (!declaration.span().source().equals(unit.span().source()))
                     diagnostics.add(DiagnosticBuilder.error("SIR-SOURCE-SET-001", "declaration location belongs to a different source unit", declaration.span()));
@@ -76,7 +93,7 @@ public final class ProjectSourceResolver {
         for (SourceId source : units.keySet()) cycles(source, units, visiting, done, diagnostics);
         if (!diagnostics.isEmpty()) return failure(diagnostics);
         // Canonical category order gives entity members to the existing relation resolver before views.
-        List<AstDeclaration> ordered = units.values().stream().flatMap(u -> u.declarations().stream())
+        List<AstDeclaration> ordered = units.values().stream().flatMap(u -> effective.get(u.span().source()).stream())
                 .sorted(Comparator.comparingInt(ProjectSourceResolver::category).thenComparing(ProjectSourceResolver::name)).toList();
         var original = root.document().software();
         var software = new AstSoftware(original.id(), original.span(), original.name(), original.metadata(), original.target(), ordered);
@@ -115,7 +132,7 @@ public final class ProjectSourceResolver {
         // No second Resolve, no fallback lookup in Type/Validate/Normalize.
         var typed = new TypePass(software, resolved).run();
         var validated = new ValidatePass(software, typed).run();
-        return new NormalizePass(software, validated).run();
+        return new NormalizePass(software, validated, uses, expanded).run();
     }
 
     private static void cycles(SourceId source, Map<SourceId, AstSourceUnit> units,
@@ -141,12 +158,14 @@ public final class ProjectSourceResolver {
         return switch (declaration) {
             case AstEnumDecl d -> 0; case AstEntityDecl d -> 1; case AstInputDecl d -> 2;
             case AstViewDecl d -> 3; case AstErrorDecl d -> 4; case AstCapabilityDecl d -> 5;
+            case AstFeatureUseDecl d -> 6;
         };
     }
-    private static String name(AstDeclaration declaration) {
+    static String name(AstDeclaration declaration) {
         return switch (declaration) {
             case AstEnumDecl d -> d.name().text(); case AstEntityDecl d -> d.name().text(); case AstInputDecl d -> d.name().text();
             case AstViewDecl d -> d.name().text(); case AstErrorDecl d -> d.name().text(); case AstCapabilityDecl d -> d.name().text();
+            case AstFeatureUseDecl d -> d.name().text();
         };
     }
 }

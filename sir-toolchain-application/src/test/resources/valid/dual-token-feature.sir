@@ -1,0 +1,97 @@
+sir 0.2
+
+software DualTokenDesk {
+  metadata {
+    displayName "Dual Token Desk";
+    namespace "example.dualtoken";
+  }
+  target {
+    language java 21;
+    framework spring_boot;
+    persistence mybatis_plus;
+    database mysql;
+    build maven;
+    interface rest;
+  }
+  sources { }
+  imports { }
+  declarations {
+    entity User persistent {
+      identity id: Int64 generated auto;
+      field name: String unique;
+      field passwordHash: String secret;
+    }
+    entity Note persistent {
+      identity id: Int64 generated auto;
+      field author: Ref<User>;
+      field text: String;
+    }
+    view NoteView from Note {
+      field id: Int64;
+      field text: String;
+    }
+    input NoteInput {
+      field text: String where notBlank;
+    }
+    view UserView from User {
+      field id: Int64;
+      field name: String;
+    }
+    input UserRef {
+      field id: Int64;
+    }
+    error UserNotFound http 404;
+    input RegisterInput {
+      field name: String;
+      field password: String;
+    }
+    capability GetUser {
+      input UserRef;
+      output UserView;
+      fails UserNotFound;
+      requires readonly;
+      expose query;
+      workflow {
+        load User by input.id as user else UserNotFound;
+        return user;
+      }
+    }
+    capability Register {
+      input RegisterInput;
+      output UserView;
+      requires atomic;
+      expose command;
+      workflow {
+        create User as user {
+          name: input.name;
+          passwordHash: input.password;
+        }
+        persist user;
+        return user;
+      }
+    }
+    capability PostNote {
+      actor Ref<User>;
+      input NoteInput;
+      output NoteView;
+      requires authenticated;
+      requires atomic;
+      expose command;
+      workflow {
+        create Note as note {
+          author: actor;
+          text: input.text;
+        }
+        persist note;
+        return note;
+      }
+    }
+    use DualTokenLogin {
+      account: User;
+      name: name;
+      password: passwordHash;
+      access: 15 minutes;
+      refresh: 7 days;
+    }
+  }
+}

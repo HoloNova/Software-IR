@@ -13,8 +13,15 @@ final class SourceText {
     private final int[] codePoints;
     private final int[] lines;
     private final int[] columns;
+    /** When present, every span is this one: text expanded from a feature is located at the feature's declaration. */
+    private final SourceSpan borrowed;
 
     SourceText(SourceId sourceId, String content) {
+        this(sourceId, content, null);
+    }
+
+    SourceText(SourceId sourceId, String content, SourceSpan borrowed) {
+        this.borrowed = borrowed;
         this.sourceId = Objects.requireNonNull(sourceId, "sourceId");
         this.content = Objects.requireNonNull(content, "content");
         this.codePoints = content.codePoints().toArray();
@@ -24,7 +31,7 @@ final class SourceText {
     }
 
     SourceId sourceId() {
-        return sourceId;
+        return borrowed != null ? borrowed.source() : sourceId;
     }
 
     String content() {
@@ -51,6 +58,9 @@ final class SourceText {
     }
 
     SourceSpan span(Token token) {
+        if (borrowed != null) {
+            return borrowed;
+        }
         if (token == null) {
             SourcePosition eof = position(codePoints.length);
             return new SourceSpan(sourceId, eof, eof);
@@ -61,6 +71,9 @@ final class SourceText {
     }
 
     SourceSpan zeroSpan(Token token) {
+        if (borrowed != null) {
+            return borrowed;
+        }
         SourcePosition at = token == null
                 ? position(codePoints.length)
                 : position(Math.max(0, token.getStartIndex()));
@@ -68,6 +81,9 @@ final class SourceText {
     }
 
     SourceSpan insertionSpanAfter(Token token) {
+        if (borrowed != null) {
+            return borrowed;
+        }
         if (token == null) {
             return zeroSpan(null);
         }
@@ -80,6 +96,9 @@ final class SourceText {
 
     SourceSpan span(ParserRuleContext context) {
         Objects.requireNonNull(context, "context");
+        if (borrowed != null) {
+            return borrowed;
+        }
         Token startToken = context.getStart();
         Token stopToken = context.getStop();
         int start = startToken == null || startToken.getStartIndex() < 0

@@ -66,6 +66,7 @@ public final class SirDeclarationWriter {
          case "NormalizedView" -> this.writeView(declaration, out);
          case "NormalizedError" -> this.writeError(declaration, out);
          case "NormalizedCapability" -> this.writeCapability(declaration, out);
+         case "NormalizedFeatureUse" -> this.writeFeatureUse(declaration, out);
          default -> throw new IllegalArgumentException("not a declaration kind: " + declaration.kind());
       }
 
@@ -116,6 +117,15 @@ public final class SirDeclarationWriter {
       out.line(0, "view " + text(node, "name") + " from " + text(node, "sourceEntity") + " {");
       for (StructNode field : nodes(node, "fields")) {
          out.line(1, "field " + text(field, "name") + ": " + type(child(field, "type")) + ";");
+      }
+
+      out.line(0, "}");
+   }
+
+   private void writeFeatureUse(StructNode node, Lines out) {
+      out.line(0, "use " + text(node, "name") + " {");
+      for (StructNode argument : nodes(node, "arguments")) {
+         out.line(1, text(argument, "name") + ": " + text(argument, "value") + ";");
       }
 
       out.line(0, "}");

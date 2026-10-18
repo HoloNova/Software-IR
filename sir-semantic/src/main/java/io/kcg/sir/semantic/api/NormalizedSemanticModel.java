@@ -27,7 +27,8 @@ public record NormalizedSemanticModel(
    @Derived Map<AstNodeId, SirType> expressionTypes,
    @Fact @Keyed List<NormalizedDeclaration> declarations,
    @Derived List<Diagnostic> diagnostics,
-   @Derived ReferenceSiteBindings referenceSiteBindings
+   @Derived ReferenceSiteBindings referenceSiteBindings,
+   @Derived Map<SymbolId, FeatureOrigin> expansions
 ) {
    public NormalizedSemanticModel {
       Objects.requireNonNull(softwareName, "softwareName");
@@ -40,6 +41,44 @@ public record NormalizedSemanticModel(
       declarations = List.copyOf(Objects.requireNonNull(declarations, "declarations"));
       diagnostics = List.copyOf(Objects.requireNonNull(diagnostics, "diagnostics"));
       Objects.requireNonNull(referenceSiteBindings, "referenceSiteBindings");
+      expansions = Collections.unmodifiableMap(new LinkedHashMap<>(Objects.requireNonNull(expansions, "expansions")));
+   }
+
+   public NormalizedSemanticModel(
+      String softwareName,
+      AstMetadata metadata,
+      AstTarget target,
+      SymbolTable symbols,
+      Map<AstNodeId, SymbolId> referenceBindings,
+      Map<AstNodeId, SymbolId> findItemBindings,
+      Map<AstNodeId, SirType> expressionTypes,
+      List<NormalizedDeclaration> declarations,
+      List<Diagnostic> diagnostics,
+      ReferenceSiteBindings referenceSiteBindings
+   ) {
+      this(softwareName, metadata, target, symbols, referenceBindings, findItemBindings, expressionTypes, declarations, diagnostics,
+         referenceSiteBindings, Map.of());
+   }
+
+   /** The {@code use} declaration a declaration was expanded from, or empty for a declaration the author wrote. */
+   public java.util.Optional<FeatureOrigin> expandedFrom(SymbolId declaration) {
+      return java.util.Optional.ofNullable(this.expansions.get(declaration));
+   }
+
+   /**
+    * The same model without its {@code use} declarations. A target implements the declarations a feature expanded
+    * into, which are already in the model; the {@code use} declaration itself has nothing left to implement.
+    */
+   public NormalizedSemanticModel withoutFeatureUses() {
+      return new NormalizedSemanticModel(this.softwareName, this.metadata, this.target, this.symbols, this.referenceBindings,
+         this.findItemBindings, this.expressionTypes,
+         this.declarations.stream().filter(d -> !(d instanceof io.kcg.sir.semantic.model.NormalizedFeatureUse)).toList(),
+         this.diagnostics, this.referenceSiteBindings, this.expansions);
+   }
+
+   /** Whether the author wrote this declaration as source text (a {@code use} declaration counts; what it expands into does not). */
+   public boolean isWritten(NormalizedDeclaration declaration) {
+      return !this.expansions.containsKey(declaration.id());
    }
 
    public NormalizedSemanticModel(

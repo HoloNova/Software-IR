@@ -25,7 +25,7 @@ import org.junit.jupiter.api.Test;
  */
 class SirDeclarationWriterRoundTripTest {
     private static final List<String> RESOURCES = List.of(
-        "valid/all-workflow-steps.sir", "valid/campus-market.sir", "valid/course-admin.sir", "valid/course-enrollment.sir", "valid/bearer-credential.sir", "valid/guarded-update.sir", "valid/secret-field.sir", "valid/time-arithmetic.sir", "valid/unique-lookup.sir", "valid/unit-capability.sir"
+        "valid/all-workflow-steps.sir", "valid/campus-market.sir", "valid/course-admin.sir", "valid/course-enrollment.sir", "valid/bearer-credential.sir", "valid/dual-token-feature.sir", "valid/guarded-update.sir", "valid/secret-field.sir", "valid/time-arithmetic.sir", "valid/unique-lookup.sir", "valid/unit-capability.sir"
     );
 
     @Test
@@ -62,7 +62,8 @@ class SirDeclarationWriterRoundTripTest {
 
     private static String rewriteAll(String source, NormalizedSemanticModel model) {
         SoftwareDraft draft = SoftwareDraft.of(model);
-        List<NormalizedDeclaration> byPosition = new ArrayList<>(model.declarations());
+        // Only what the author wrote is source text; what a use declaration expanded into shares its span.
+        List<NormalizedDeclaration> byPosition = new ArrayList<>(model.declarations().stream().filter(model::isWritten).toList());
         byPosition.sort(Comparator.comparingInt((NormalizedDeclaration d) -> d.span().start().codePointOffset()).reversed());
 
         // work from the back so earlier offsets stay valid; offsets count code points

@@ -6,5 +6,6 @@ public sealed interface AstDeclaration extends AstNode permits
         AstInputDecl,
         AstViewDecl,
         AstErrorDecl,
-        AstCapabilityDecl {
+        AstCapabilityDecl,
+        AstFeatureUseDecl {
 }

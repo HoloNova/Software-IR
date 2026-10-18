@@ -20,6 +20,17 @@ final class SirAstBuilder {
         this.ids = new AstIdFactory(source.sourceId());
     }
 
+    SirAstBuilder(SourceText source, AstNodeId under) {
+        this.source = source;
+        this.ids = new AstIdFactory(under);
+    }
+
+    /** The declarations of a fragment, built under the id root this builder was given. */
+    List<AstDeclaration> buildDeclarations(SirParser.SourceFragmentContext context) {
+        String path = ids.rootPath();
+        return context.declarationsBlock().declaration().stream().map(d -> declaration(d, path)).toList();
+    }
+
     AstSourceUnit.Root buildProject(SirParser.ProjectDocumentContext context) {
         String parent = ids.rootPath();
         AstName softwareName = name(context.IDENT());
@@ -111,7 +122,27 @@ final class SirAstBuilder {
         if (context.capabilityDecl() != null) {
             return capabilityDeclaration(context.capabilityDecl(), parent);
         }
+        if (context.featureUseDecl() != null) {
+            return featureUseDeclaration(context.featureUseDecl(), parent);
+        }
         throw new IllegalStateException("unknown declaration parse tree");
+    }
+
+    private AstFeatureUseDecl featureUseDeclaration(SirParser.FeatureUseDeclContext context, String parent) {
+        AstName name = name(context.featureName);
+        String path = ids.named(parent, "feature", name.text());
+        List<AstFeatureArgument> arguments = context.featureArgument().stream().map(argument -> {
+            AstFeatureArgument.Value value;
+            if (argument.durationOperand() != null) {
+                SirParser.DurationOperandContext duration = argument.durationOperand();
+                value = new AstFeatureArgument.Duration(source.span(duration), new BigInteger(duration.INT().getText()),
+                        timeUnit(duration.durationUnit().IDENT().getText()));
+            } else {
+                value = new AstFeatureArgument.Word(name(argument.value));
+            }
+            return new AstFeatureArgument(source.span(argument), name(argument.parameter), value);
+        }).toList();
+        return new AstFeatureUseDecl(ids.id(path), source.span(context), name, arguments);
     }
 
     private AstEnumDecl enumDeclaration(SirParser.EnumDeclContext context, String parent) {

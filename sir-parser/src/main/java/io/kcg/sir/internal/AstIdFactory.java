@@ -15,6 +15,11 @@ final class AstIdFactory {
         this.root = "ast://" + encode(sourceId.value()) + "#document";
     }
 
+    /** Ids rooted under an existing node, for declarations a feature expands into. */
+    AstIdFactory(AstNodeId under) {
+        this.root = under.value() + "/expansion";
+    }
+
     String rootPath() {
         return root;
     }

@@ -1,0 +1,117 @@
+    entity ${prefix}AccessToken persistent {
+      identity id: Uuid generated uuid;
+      field owner: Ref<${account}>;
+      field expiresAt: DateTime;
+      credential subject owner expires expiresAt;
+    }
+    entity ${prefix}RefreshToken persistent {
+      identity id: Uuid generated uuid;
+      field owner: Ref<${account}>;
+      field used: Boolean;
+      field expiresAt: DateTime;
+    }
+    entity ${prefix}TokenPair persistent {
+      identity id: Int64 generated auto;
+      field accessToken: Uuid;
+      field accessExpiresAt: DateTime;
+      field refreshToken: Uuid;
+      field refreshExpiresAt: DateTime;
+    }
+    view ${prefix}TokenPairView from ${prefix}TokenPair {
+      field accessToken: Uuid;
+      field accessExpiresAt: DateTime;
+      field refreshToken: Uuid;
+      field refreshExpiresAt: DateTime;
+    }
+    view ${prefix}LoggedOutView from ${prefix}RefreshToken {
+      field id: Uuid;
+      field used: Boolean;
+    }
+    input ${prefix}LoginInput {
+      field name: String;
+      field password: String;
+    }
+    input ${prefix}RefreshInput {
+      field refreshToken: Uuid;
+    }
+    error ${prefix}BadLogin http 401;
+    error ${prefix}ExpiredRefreshToken http 401;
+    error ${prefix}InvalidRefreshToken http 401;
+    capability ${prefix}Login {
+      input ${prefix}LoginInput;
+      output ${prefix}TokenPairView;
+      fails ${prefix}BadLogin;
+      requires atomic;
+      expose command;
+      workflow {
+        load ${account} by ${name}: input.name as holder else ${prefix}BadLogin;
+        validate holder.${password} matches input.password else ${prefix}BadLogin;
+        create ${prefix}AccessToken as access {
+          owner: holder;
+          expiresAt: now() + ${access};
+        }
+        create ${prefix}RefreshToken as refresh {
+          owner: holder;
+          used: false;
+          expiresAt: now() + ${refresh};
+        }
+        persist access;
+        persist refresh;
+        create ${prefix}TokenPair as pair {
+          accessToken: access.id;
+          accessExpiresAt: access.expiresAt;
+          refreshToken: refresh.id;
+          refreshExpiresAt: refresh.expiresAt;
+        }
+        persist pair;
+        return pair;
+      }
+    }
+    capability ${prefix}Refresh {
+      input ${prefix}RefreshInput;
+      output ${prefix}TokenPairView;
+      fails ${prefix}ExpiredRefreshToken;
+      fails ${prefix}InvalidRefreshToken;
+      requires atomic;
+      expose command;
+      workflow {
+        load ${prefix}RefreshToken by input.refreshToken as old else ${prefix}InvalidRefreshToken;
+        validate old.expiresAt > now() else ${prefix}ExpiredRefreshToken;
+        update old when old.used == false and old.expiresAt > now() else ${prefix}InvalidRefreshToken { used: true; }
+        create ${prefix}AccessToken as access {
+          owner: old.owner;
+          expiresAt: now() + ${access};
+        }
+        create ${prefix}RefreshToken as refresh {
+          owner: old.owner;
+          used: false;
+          expiresAt: now() + ${refresh};
+        }
+        persist old;
+        persist access;
+        persist refresh;
+        create ${prefix}TokenPair as pair {
+          accessToken: access.id;
+          accessExpiresAt: access.expiresAt;
+          refreshToken: refresh.id;
+          refreshExpiresAt: refresh.expiresAt;
+        }
+        persist pair;
+        return pair;
+      }
+    }
+    capability ${prefix}Logout {
+      input ${prefix}RefreshInput;
+      output ${prefix}LoggedOutView;
+      fails ${prefix}InvalidRefreshToken;
+      requires atomic;
+      expose command;
+      workflow {
+        load ${prefix}RefreshToken by input.refreshToken as token else ${prefix}InvalidRefreshToken;
+        update token {
+          used: true;
+        }
+        persist token;
+        return token;
+      }
+    }

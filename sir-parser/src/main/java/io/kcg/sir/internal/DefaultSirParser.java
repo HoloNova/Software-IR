@@ -21,6 +21,38 @@ public final class DefaultSirParser implements SirParser {
         return parseSourceUnit(source, false);
     }
 
+    @Override
+    public io.kcg.sir.api.ExpansionParseResult parseExpansion(String declarations, io.kcg.sir.ast.AstNodeId under,
+            io.kcg.sir.source.SourceSpan at) {
+        Objects.requireNonNull(declarations, "declarations");
+        Objects.requireNonNull(under, "under");
+        Objects.requireNonNull(at, "at");
+        String text = "sir 0.2\nimports { }\ndeclarations {\n" + declarations + "\n}\n";
+        SourceText source = new SourceText(io.kcg.sir.source.SourceId.of("feature-expansion.sir"), text, at);
+        DiagnosticCollector diagnostics = new DiagnosticCollector();
+        try {
+            SirLexer lexer = new SirLexer(CharStreams.fromString(text, "feature-expansion.sir"));
+            lexer.removeErrorListeners();
+            lexer.addErrorListener(new LexerDiagnosticListener(source, diagnostics));
+            CommonTokenStream tokens = new CommonTokenStream(lexer);
+            tokens.fill();
+            collectLexicalTokenDiagnostics(tokens, source, diagnostics);
+            if (diagnostics.hasErrors()) return new io.kcg.sir.api.ExpansionParseResult(java.util.Optional.empty(), diagnostics.diagnostics());
+            tokens.seek(0);
+            io.kcg.sir.internal.SirParser parser = new io.kcg.sir.internal.SirParser(tokens);
+            parser.removeErrorListeners();
+            parser.addErrorListener(new ParserDiagnosticListener(source, diagnostics));
+            var tree = parser.sourceFragment();
+            if (diagnostics.hasErrors()) return new io.kcg.sir.api.ExpansionParseResult(java.util.Optional.empty(), diagnostics.diagnostics());
+            return new io.kcg.sir.api.ExpansionParseResult(
+                    java.util.Optional.of(new SirAstBuilder(source, under).buildDeclarations(tree)), diagnostics.diagnostics());
+        } catch (VirtualMachineError fatal) { throw fatal; }
+        catch (RuntimeException e) {
+            diagnostics.error("SIR-INTERNAL-001", "功能展开文本解析失败", at);
+            return new io.kcg.sir.api.ExpansionParseResult(java.util.Optional.empty(), diagnostics.diagnostics());
+        }
+    }
+
     private io.kcg.sir.api.SourceUnitParseResult parseSourceUnit(SirSource input, boolean root) {
         Objects.requireNonNull(input, "source");
         SourceText source = new SourceText(input.id(), stripBom(input.content()));

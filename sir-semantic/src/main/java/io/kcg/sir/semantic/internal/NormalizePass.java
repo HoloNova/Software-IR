@@ -82,11 +82,20 @@ final class NormalizePass {
    private final AstSoftware software;
    private final String softwareName;
    private final ValidatedContext validated;
+   private final List<io.kcg.sir.ast.AstFeatureUseDecl> uses;
+   private final java.util.Map<AstNodeId, FeatureExpander.Expansion> expanded;
 
    NormalizePass(AstSoftware software, ValidatedContext validated) {
+      this(software, validated, List.of(), java.util.Map.of());
+   }
+
+   NormalizePass(AstSoftware software, ValidatedContext validated, List<io.kcg.sir.ast.AstFeatureUseDecl> uses,
+         java.util.Map<AstNodeId, FeatureExpander.Expansion> expanded) {
       this.software = software;
       this.softwareName = software.name().text();
       this.validated = validated;
+      this.uses = List.copyOf(uses);
+      this.expanded = java.util.Map.copyOf(expanded);
    }
 
    SemanticAnalysis run() {
@@ -99,6 +108,22 @@ final class NormalizePass {
             if (normalized != null) {
                declarations.add(normalized);
             }
+         }
+      }
+
+      // The use declarations themselves, after every declaration they expanded into, in name order like the others.
+      java.util.Map<SymbolId, io.kcg.sir.semantic.api.FeatureOrigin> expansions = new java.util.LinkedHashMap<>();
+      for (io.kcg.sir.ast.AstFeatureUseDecl use : this.uses.stream().sorted(java.util.Comparator.comparing(u -> u.name().text())).toList()) {
+         SymbolId feature = SymbolIdFactory.declaration(this.softwareName, "feature", use.name().text());
+         declarations.add(new io.kcg.sir.semantic.model.NormalizedFeatureUse(feature, use.name().text(), use.span(), use.id(),
+            use.arguments().stream().map(a -> new io.kcg.sir.semantic.model.NormalizedFeatureArgument(a.parameter().text(), a.value().text())).toList()));
+      }
+      for (AstDeclaration decl : this.software.declarations()) {
+         FeatureExpander.Expansion expansion = this.expanded.get(decl.id());
+         SymbolId id = this.validated.declarationBindings().get(decl.id());
+         if (expansion != null && id != null) {
+            expansions.put(id, new io.kcg.sir.semantic.api.FeatureOrigin(
+               SymbolIdFactory.declaration(this.softwareName, "feature", expansion.use().name().text()), expansion.role()));
          }
       }
 
@@ -116,7 +141,8 @@ final class NormalizePass {
          this.validated.expressionTypes(),
          List.copyOf(declarations),
          sortedDiagnostics,
-         this.validated.referenceSiteBindings()
+         this.validated.referenceSiteBindings(),
+         expansions
       );
       return new SemanticAnalysis.Success(model, sortedDiagnostics);
    }

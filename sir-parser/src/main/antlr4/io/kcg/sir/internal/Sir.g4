@@ -60,6 +60,18 @@ declaration
     | viewDecl
     | errorDecl
     | capabilityDecl
+    | featureUseDecl
+    ;
+
+// "use DualTokenLogin { account: User; access: 15 minutes; }" asks for a language feature by name; the analysis
+// expands it into ordinary declarations. "use" is contextual, like credential: no other declaration starts with an
+// identifier, so every name spelled use stays legal. A value is a name (an entity, a field) or a duration.
+featureUseDecl
+    : {_input.LT(1).getText().equals("use")}? IDENT featureName=IDENT LBRACE featureArgument* RBRACE
+    ;
+
+featureArgument
+    : parameter=IDENT COLON (durationOperand | value=IDENT) SEMI
     ;
 
 enumDecl

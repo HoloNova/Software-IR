@@ -645,6 +645,7 @@ class TypedReferenceSiteContractTest {
                     }
                 }
                 case io.kcg.sir.ast.AstErrorDecl e -> { /* no AstNameRef references */ }
+                case io.kcg.sir.ast.AstFeatureUseDecl e -> { /* arguments are words, not name references; the expansion holds those */ }
                 case AstCapabilityDecl e -> {
                     e.actor().ifPresent(c -> collectTypeRef(c.type(), sink));
                     e.input().ifPresent(c -> collectTypeRef(c.type(), sink));

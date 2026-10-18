@@ -16,6 +16,8 @@ public final class SpringBootTargetLowering implements TargetLowering<SpringBoot
    @Override
    public LoweringAnalysis<SpringBootLoweredModel> lower(NormalizedSemanticModel model) {
       Objects.requireNonNull(model, "model");
+      // A use declaration is implemented by the declarations it expanded into, which the model already holds.
+      model = model.withoutFeatureUses();
       List<LoweringDiagnostic> inputDiagnostics = new SpringBootInputValidator(model).validate();
       if (this.hasErrors(inputDiagnostics)) {
          return new Failure<>(inputDiagnostics);
