@@ -83,9 +83,11 @@ class ExpressionVariantCoverageTest {
         check(problems, kinds, LOWERING + "SpringBootIrValidation.java", LOWERED_LEAVES);
         // an existence predicate is rendered as a query condition by the workflow renderer, never as a Java value
         check(problems, kinds, GENERATOR + "ExpressionRenderer.java", Set.of("ExistsPredicate"));
-        // collects imports: the leaves and the presence test name nothing to import
+        // collects imports: the leaves and the presence test name nothing to import. A boolean literal is mentioned all the
+        // same, because "where true" is rendered as a query condition of its own.
         Set<String> collectorLeaves = new LinkedHashSet<>(LOWERED_LEAVES);
         collectorLeaves.add("PayloadPresence");
+        collectorLeaves.remove("BooleanLiteral");
         check(problems, kinds, GENERATOR + "WorkflowRenderer.java", collectorLeaves);
 
         assertTrue(problems.isEmpty(), () -> String.join("\n", problems));
