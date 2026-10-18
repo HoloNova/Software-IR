@@ -30,17 +30,22 @@ final class FeatureExpander {
 
     record Result(List<AstDeclaration> declarations, List<AstFeatureUseDecl> uses, Map<AstNodeId, Expansion> expanded) {}
 
-    static Result expand(List<AstDeclaration> written, List<Diagnostic> diagnostics) {
+    /** @param defined the features the software defines itself, by name; the language's own are always available */
+    static Result expand(List<AstDeclaration> written, Map<String, Features.Feature> defined, List<Diagnostic> diagnostics) {
         List<AstDeclaration> declarations = new ArrayList<>();
         List<AstFeatureUseDecl> uses = new ArrayList<>();
         Map<AstNodeId, Expansion> expanded = new LinkedHashMap<>();
         for (AstDeclaration declaration : written) {
+            if (declaration instanceof io.kcg.sir.ast.AstFeatureDefinitionDecl) {
+                continue; // a definition is not something to implement; it is what a use expands by
+            }
+
             if (!(declaration instanceof AstFeatureUseDecl use)) {
                 declarations.add(declaration);
                 continue;
             }
             uses.add(use);
-            Optional<Features.Feature> feature = Features.named(use.name().text());
+            Optional<Features.Feature> feature = Optional.ofNullable(defined.get(use.name().text())).or(() -> Features.named(use.name().text()));
             if (feature.isEmpty()) {
                 diagnostics.add(DiagnosticBuilder.error("SIR-FEATURE-001", "unknown feature: " + use.name().text(), use.name().span()));
                 continue;
@@ -49,7 +54,13 @@ final class FeatureExpander {
             if (values.isEmpty()) continue;
             var parsed = SirParser.create().parseExpansion(feature.get().expand(values.get()), use.id(), use.span());
             if (parsed.declarations().isEmpty()) {
-                diagnostics.add(DiagnosticBuilder.error("SIR-FEATURE-004", "feature " + use.name().text() + " could not be expanded", use.span()));
+                String why = parsed.diagnostics().stream().filter(Diagnostic::isError).findFirst().map(d -> ": " + d.message()).orElse("");
+                diagnostics.add(DiagnosticBuilder.error("SIR-FEATURE-004", "feature " + use.name().text() + " could not be expanded" + why, use.span()));
+                continue;
+            }
+            if (parsed.declarations().get().stream().anyMatch(d -> d instanceof AstFeatureUseDecl || d instanceof io.kcg.sir.ast.AstFeatureDefinitionDecl)) {
+                diagnostics.add(DiagnosticBuilder.error("SIR-FEATURE-004",
+                    "feature " + use.name().text() + " expands into a use or a feature declaration; a feature's text declares only types, entities, inputs, views, errors and capabilities", use.span()));
                 continue;
             }
             String prefix = values.get().getOrDefault("prefix", "");

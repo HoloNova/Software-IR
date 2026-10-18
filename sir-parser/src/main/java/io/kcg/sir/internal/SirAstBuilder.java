@@ -125,7 +125,44 @@ final class SirAstBuilder {
         if (context.featureUseDecl() != null) {
             return featureUseDeclaration(context.featureUseDecl(), parent);
         }
+        if (context.semanticTypeDecl() != null) {
+            return semanticTypeDeclaration(context.semanticTypeDecl(), parent);
+        }
+        if (context.featureDefinitionDecl() != null) {
+            return featureDefinitionDeclaration(context.featureDefinitionDecl(), parent);
+        }
         throw new IllegalStateException("unknown declaration parse tree");
+    }
+
+    private AstFeatureDefinitionDecl featureDefinitionDeclaration(SirParser.FeatureDefinitionDeclContext context, String parent) {
+        AstName name = name(context.featureName);
+        String path = ids.named(parent, "feature-definition", name.text());
+        List<AstFeatureDefinitionDecl.Parameter> parameters = context.featureParameterDecl().stream().map(parameter -> {
+            java.util.Optional<AstFeatureArgument.Value> defaultValue = java.util.Optional.empty();
+            if (parameter.durationOperand() != null) {
+                SirParser.DurationOperandContext duration = parameter.durationOperand();
+                defaultValue = java.util.Optional.of(new AstFeatureArgument.Duration(source.span(duration), new BigInteger(duration.INT().getText()),
+                        timeUnit(duration.durationUnit().IDENT().getText())));
+            } else if (parameter.defaultWord != null) {
+                defaultValue = java.util.Optional.of(new AstFeatureArgument.Word(name(parameter.defaultWord)));
+            }
+            boolean empty = parameter.defaultEmpty != null && SirStringDecoder.decode(parameter.defaultEmpty.getText()).isEmpty();
+            return new AstFeatureDefinitionDecl.Parameter(source.span(parameter), name(parameter.parameterName), name(parameter.parameterKind), defaultValue, empty);
+        }).toList();
+        TerminalNode raw = context.featureTemplate().RAW_BLOCK();
+        String text = raw.getText();
+        return new AstFeatureDefinitionDecl(ids.id(path), source.span(context), name, parameters, source.span(raw.getSymbol()),
+                text.substring(3, text.length() - 3));
+    }
+
+    private AstSemanticTypeDecl semanticTypeDeclaration(SirParser.SemanticTypeDeclContext context, String parent) {
+        AstName name = name(context.typeName);
+        String path = ids.named(parent, "type", name.text());
+        List<AstConstraint> constraints = context.constraintList() == null
+                ? List.of()
+                : context.constraintList().constraintCall().stream().map(value -> constraint(value, path)).toList();
+        AstNameRef base = new AstNameRef(ids.id(ids.fixed(path, "base")), source.span(context.baseName), context.baseName.getText());
+        return new AstSemanticTypeDecl(ids.id(path), source.span(context), name, base, constraints);
     }
 
     private AstFeatureUseDecl featureUseDeclaration(SirParser.FeatureUseDeclContext context, String parent) {

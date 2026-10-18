@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
 /**
@@ -45,11 +46,19 @@ public final class Features {
         }
     }
 
-    public record Feature(String name, List<Parameter> parameters, String templateResource) {
+    /**
+     * A feature: its parameters and the text it expands into. The language has one built in; a software can define its
+     * own ({@code feature Tagging { ... }}), whose text is the one written in the definition.
+     */
+    public record Feature(String name, List<Parameter> parameters, Supplier<String> template, boolean builtin) {
         public Feature {
             Objects.requireNonNull(name);
             parameters = List.copyOf(parameters);
-            Objects.requireNonNull(templateResource);
+            Objects.requireNonNull(template);
+        }
+
+        public Feature(String name, List<Parameter> parameters, String templateResource) {
+            this(name, parameters, () -> Features.loadTemplate(templateResource), true);
         }
 
         public Optional<Parameter> parameter(String name) {
@@ -58,7 +67,7 @@ public final class Features {
 
         /** The declarations, given the text of every parameter (defaults already applied). */
         public String expand(Map<String, String> values) {
-            String text = template(templateResource);
+            String text = this.template.get();
             for (Parameter parameter : parameters) {
                 String value = Objects.requireNonNull(values.get(parameter.name()), parameter.name());
                 text = text.replace("${" + parameter.name() + "}", value);
@@ -91,7 +100,7 @@ public final class Features {
         return Optional.ofNullable(ALL.get(name));
     }
 
-    private static String template(String resource) {
+    private static String loadTemplate(String resource) {
         try (InputStream in = Features.class.getResourceAsStream(resource)) {
             if (in == null) throw new IllegalStateException("missing feature template " + resource);
             return new String(in.readAllBytes(), StandardCharsets.UTF_8);

@@ -313,9 +313,14 @@ public final class DraftEdit {
       return new StructNode(node.kind(), ordered);
    }
 
+   /**
+    * The name an element is picked by. A feature definition shares its name with the {@code use} of the feature, so it
+    * is picked as {@code feature Tagging}; every other element is picked by its own name.
+    */
    private static Optional<String> nameOf(StructValue value) {
       if (value instanceof StructValue.Child child) {
-         return child.node().find("name").map(StructNode.Slot::value).filter(v -> v instanceof StructValue.Text).map(v -> ((StructValue.Text)v).value());
+         Optional<String> own = child.node().find("name").map(StructNode.Slot::value).filter(v -> v instanceof StructValue.Text).map(v -> ((StructValue.Text)v).value());
+         return child.node().kind().equals("NormalizedFeatureDefinition") ? own.map(n -> "feature " + n) : own;
       }
 
       return Optional.empty();

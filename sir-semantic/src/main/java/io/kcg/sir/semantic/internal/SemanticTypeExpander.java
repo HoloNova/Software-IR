@@ -30,14 +30,14 @@ final class SemanticTypeExpander {
    private SemanticTypeExpander() {
    }
 
-   static List<AstDeclaration> expand(List<AstDeclaration> declarations) {
+   static List<AstDeclaration> expand(List<AstDeclaration> declarations, SemanticTypes types) {
       List<AstDeclaration> out = new ArrayList<>();
       for (AstDeclaration declaration : declarations) {
          out.add(switch (declaration) {
             case AstEntityDecl entity -> new AstEntityDecl(entity.id(), entity.span(), entity.name(), entity.identity(),
-               entity.fields().stream().map(SemanticTypeExpander::field).toList(), entity.credential());
+               entity.fields().stream().map(f -> field(f, types)).toList(), entity.credential());
             case AstInputDecl input -> new AstInputDecl(input.id(), input.span(), input.name(), input.patchSourceEntity(),
-               input.fields().stream().map(SemanticTypeExpander::field).toList());
+               input.fields().stream().map(f -> field(f, types)).toList());
             default -> declaration;
          });
       }
@@ -45,8 +45,8 @@ final class SemanticTypeExpander {
       return List.copyOf(out);
    }
 
-   private static AstField field(AstField field) {
-      Optional<SemanticTypes.Entry> type = semanticTypeOf(field.type());
+   private static AstField field(AstField field, SemanticTypes types) {
+      Optional<SemanticTypes.Entry> type = semanticTypeOf(field.type(), types);
       if (type.isEmpty()) {
          return field;
       }
@@ -64,19 +64,31 @@ final class SemanticTypeExpander {
          field.unique(), field.secret() || entry.secret(), field.declaredId());
    }
 
-   private static Optional<SemanticTypes.Entry> semanticTypeOf(AstTypeRef type) {
+   private static Optional<SemanticTypes.Entry> semanticTypeOf(AstTypeRef type, SemanticTypes types) {
       return switch (type) {
-         case AstNamedTypeRef named -> SemanticTypes.named(named.name().text());
-         case AstOptionalTypeRef optional -> semanticTypeOf(optional.elementType());
+         case AstNamedTypeRef named -> types.named(named.name().text());
+         case AstOptionalTypeRef optional -> semanticTypeOf(optional.elementType(), types);
          default -> Optional.empty();
       };
+   }
+
+   /** A numeric constant of a rule as the parser would have built it: a literal, under a negation when it is negative. */
+   private static AstExpression argument(String path, io.kcg.sir.source.SourceSpan span, String text) {
+      if (text.startsWith("-")) {
+         return new io.kcg.sir.ast.AstUnaryExpression(new AstNodeId(path), span, io.kcg.sir.ast.AstUnaryOperator.NEGATE,
+            argument(path + "/expression/0001", span, text.substring(1)));
+      }
+
+      return text.matches("[0-9]+")
+         ? new AstIntegerLiteral(new AstNodeId(path), span, new BigInteger(text))
+         : new io.kcg.sir.ast.AstDecimalLiteral(new AstNodeId(path), span, new java.math.BigDecimal(text));
    }
 
    private static AstConstraint constraint(AstField field, SemanticTypes.Rule rule) {
       String path = field.id().value() + "/type-rule/" + rule.name();
       List<AstExpression> arguments = new ArrayList<>();
       for (int i = 0; i < rule.arguments().size(); i++) {
-         arguments.add(new AstIntegerLiteral(new AstNodeId(path + "/argument/" + i), field.type().span(), BigInteger.valueOf(rule.arguments().get(i))));
+         arguments.add(argument(path + "/argument/" + i, field.type().span(), rule.arguments().get(i)));
       }
 
       return new AstConstraint(new AstNodeId(path), field.type().span(), new AstNameRef(new AstNodeId(path + "/name"), field.type().span(), rule.name()), arguments);

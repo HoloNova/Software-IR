@@ -119,7 +119,17 @@ final class ResolvePass {
    /** Patch payload input field symbol -> the entity member it changes. */
    private final Map<SymbolId, SymbolId> patchFieldBindings = new LinkedHashMap<>();
 
+   private final io.kcg.sir.semantic.feature.SemanticTypes semanticTypes;
+   /** Where each type the author declared was written; the language's own types have no place. */
+   private final Map<String, SourceSpan> semanticTypeSpans;
+
    ResolvePass(AstSoftware software) {
+      this(software, io.kcg.sir.semantic.feature.SemanticTypes.builtin(), Map.of());
+   }
+
+   ResolvePass(AstSoftware software, io.kcg.sir.semantic.feature.SemanticTypes semanticTypes, Map<String, SourceSpan> semanticTypeSpans) {
+      this.semanticTypes = semanticTypes;
+      this.semanticTypeSpans = Map.copyOf(semanticTypeSpans);
       this.software = software;
       this.softwareName = software.name().text();
       this.projectScopeId = SymbolIdFactory.projectScope(this.softwareName);
@@ -166,11 +176,11 @@ final class ResolvePass {
    private void registerPrimitives() {
       Map<String, PrimitiveType> names = new java.util.LinkedHashMap<>();
       names.put(PrimitiveType.UNIT.sirName(), PrimitiveType.UNIT);
-      io.kcg.sir.semantic.feature.SemanticTypes.all().forEach(entry -> names.put(entry.name(), entry.kind()));
+      this.semanticTypes.all().forEach(entry -> names.put(entry.name(), entry.kind()));
       for (Map.Entry<String, PrimitiveType> entry : names.entrySet()) {
          String sirName = entry.getKey();
          SymbolId id = SymbolIdFactory.primitive(sirName);
-         Symbol.TypeSymbol sym = new Symbol.TypeSymbol(id, sirName, this.zeroSpan(), SymbolKind.PRIMITIVE, null);
+         Symbol.TypeSymbol sym = new Symbol.TypeSymbol(id, sirName, this.semanticTypeSpans.getOrDefault(sirName, this.zeroSpan()), SymbolKind.PRIMITIVE, null);
          this.addSymbol(sym, this.projectScopeId);
          this.typeByName.put(sirName, entry.getValue());
          this.declarationKinds.put(sirName, SymbolKind.PRIMITIVE);

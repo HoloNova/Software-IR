@@ -61,6 +61,31 @@ declaration
     | errorDecl
     | capabilityDecl
     | featureUseDecl
+    | semanticTypeDecl
+    | featureDefinitionDecl
+    ;
+
+// A feature of the author's own: its parameters, and the declarations it expands into written as text between
+// triple backticks with ${parameter} where a parameter's value goes. "feature", "parameter" and "template" are
+// contextual words, like use and type.
+featureDefinitionDecl
+    : {_input.LT(1).getText().equals("feature")}? IDENT featureName=IDENT LBRACE featureParameterDecl* featureTemplate RBRACE
+    ;
+
+featureParameterDecl
+    : {_input.LT(1).getText().equals("parameter")}? IDENT parameterName=IDENT COLON parameterKind=IDENT
+      (ASSIGN (durationOperand | defaultWord=IDENT | defaultEmpty=STRING))? SEMI
+    ;
+
+featureTemplate
+    : {_input.LT(1).getText().equals("template")}? IDENT RAW_BLOCK SEMI
+    ;
+
+// "type Percent = Count where min(0), max(100);" names a meaning of the author's own: the kind of value and the
+// rules of an existing semantic type, with the rules written here replacing the ones of the same name. "type" is
+// contextual, like use.
+semanticTypeDecl
+    : {_input.LT(1).getText().equals("type")}? IDENT typeName=IDENT ASSIGN baseName=IDENT constraintList? SEMI
     ;
 
 // "use DualTokenLogin { account: User; access: 15 minutes; }" asks for a language feature by name; the analysis
@@ -445,6 +470,8 @@ NOW             : 'now';
 UNIT            : 'unit';
 
 EQ              : '==';
+ASSIGN          : '=';
+RAW_BLOCK       : '```' .*? '```';
 NE              : '!=';
 GE              : '>=';
 LE              : '<=';

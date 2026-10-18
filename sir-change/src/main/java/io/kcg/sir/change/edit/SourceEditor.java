@@ -312,6 +312,8 @@ public final class SourceEditor {
    private Outcome write(Documents documents, NormalizedSemanticModel model, SoftwareDraft before, SoftwareDraft edited, Plan plan) {
       Map<SourceId, int[]> texts = new LinkedHashMap<>();
       documents.files().forEach((id, text) -> texts.put(id, text.codePoints().toArray()));
+      // The types the edited software has, so a field is written without repeating what its type already brings.
+      Map<String, SirDeclarationWriter.Brought> types = SirDeclarationWriter.typesOf(edited.declarations());
 
       Failed comment = this.commentGuard(documents, plan);
       if (comment != null) {
@@ -328,7 +330,7 @@ public final class SourceEditor {
             SourceSpan span = entry.getKey().span();
             int start = span.start().codePointOffset();
             int end = span.end().codePointOffset();
-            String written = new SirDeclarationWriter(indentOf(text, start).orElse("")).write(entry.getValue()).replace("\n", newline);
+            String written = new SirDeclarationWriter(indentOf(text, start).orElse(""), types).write(entry.getValue()).replace("\n", newline);
             splices.computeIfAbsent(id, k -> new ArrayList<>()).add(new Splice(start, end, written));
             report.add(new LocatedChange(id, new SourceChange(SourceChange.Type.REWRITE, nameOfDeclaration(entry.getValue()), slice(text, start, end), written)));
          }
@@ -362,7 +364,7 @@ public final class SourceEditor {
          StringBuilder inserted = new StringBuilder();
          try {
             for (StructNode node : plan.added) {
-               String written = new SirDeclarationWriter(indent).write(node).replace("\n", newline);
+               String written = new SirDeclarationWriter(indent, types).write(node).replace("\n", newline);
                inserted.append(gap).append(indent).append(written);
                report.add(new LocatedChange(id, new SourceChange(SourceChange.Type.INSERT, nameOfDeclaration(node), "", written)));
             }

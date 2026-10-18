@@ -66,13 +66,17 @@ public record NormalizedSemanticModel(
    }
 
    /**
-    * The same model without its {@code use} declarations. A target implements the declarations a feature expanded
-    * into, which are already in the model; the {@code use} declaration itself has nothing left to implement.
+    * The same model without the declarations that only say how the software is written: {@code use} declarations
+    * (a target implements the declarations a feature expanded into, which are already in the model), {@code feature}
+    * definitions (what a use expands by) and {@code type} declarations (the fields that use a type carry its rules and
+    * its kind of value).
     */
-   public NormalizedSemanticModel withoutFeatureUses() {
+   public NormalizedSemanticModel implementable() {
       return new NormalizedSemanticModel(this.softwareName, this.metadata, this.target, this.symbols, this.referenceBindings,
          this.findItemBindings, this.expressionTypes,
-         this.declarations.stream().filter(d -> !(d instanceof io.kcg.sir.semantic.model.NormalizedFeatureUse)).toList(),
+         this.declarations.stream().filter(d -> !(d instanceof io.kcg.sir.semantic.model.NormalizedFeatureUse)
+            && !(d instanceof io.kcg.sir.semantic.model.NormalizedSemanticTypeDeclaration)
+            && !(d instanceof io.kcg.sir.semantic.model.NormalizedFeatureDefinition)).toList(),
          this.diagnostics, this.referenceSiteBindings, this.expansions);
    }
 

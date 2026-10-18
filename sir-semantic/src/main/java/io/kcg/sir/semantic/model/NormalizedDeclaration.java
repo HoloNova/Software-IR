@@ -5,7 +5,7 @@ import io.kcg.sir.semantic.symbol.SymbolId;
 import io.kcg.sir.source.SourceSpan;
 
 public sealed interface NormalizedDeclaration permits NormalizedEnum, NormalizedEntity, NormalizedInput, NormalizedView, NormalizedError, NormalizedCapability,
-      NormalizedFeatureUse {
+      NormalizedFeatureUse, NormalizedSemanticTypeDeclaration, NormalizedFeatureDefinition {
    SymbolId id();
 
    String name();

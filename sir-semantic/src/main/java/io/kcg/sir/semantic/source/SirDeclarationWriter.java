@@ -50,10 +50,87 @@ public final class SirDeclarationWriter {
    private static final List<String> REQUIREMENT_ORDER = List.of("AUTHENTICATED", "ATOMIC", "READONLY");
 
    private final String base;
+   private final Map<String, Brought> types;
+
+   /** What a semantic type brings to a field that uses it: rules (as written) and flags. */
+   public record Brought(List<String> rules, boolean versioned, boolean secret) {
+      public Brought {
+         rules = List.copyOf(rules);
+      }
+   }
 
    /** @param baseIndent the indentation the declaration's first line already has in the file */
    public SirDeclarationWriter(String baseIndent) {
+      this(baseIndent, builtinTypes());
+   }
+
+   /**
+    * @param baseIndent the indentation the declaration's first line already has in the file
+    * @param types      what each semantic type brings, so a field is written without repeating it ({@link #typesOf})
+    */
+   public SirDeclarationWriter(String baseIndent, Map<String, Brought> types) {
       this.base = baseIndent;
+      this.types = Map.copyOf(types);
+   }
+
+   private static Map<String, Brought> builtinTypes() {
+      Map<String, Brought> out = new java.util.HashMap<>();
+      io.kcg.sir.semantic.feature.SemanticTypes.builtin().all()
+         .forEach(e -> out.put(e.name(), new Brought(e.ruleTexts(), e.versioned(), e.secret())));
+      return out;
+   }
+
+   /**
+    * What every semantic type of a software brings: the language's own and those the {@code type} declarations among
+    * {@code declarations} add (a declared type has its base's rules, with its own replacing those of the same name).
+    */
+   public static Map<String, Brought> typesOf(List<StructNode> declarations) {
+      Map<String, Brought> out = builtinTypes();
+      Map<String, StructNode> declared = new java.util.LinkedHashMap<>();
+      for (StructNode node : declarations) {
+         if (node.kind().equals("NormalizedSemanticTypeDeclaration")) {
+            declared.put(text(node, "name"), node);
+         }
+      }
+
+      for (String name : declared.keySet()) {
+         resolveType(name, declared, out, new java.util.HashSet<>());
+      }
+
+      return out;
+   }
+
+   private static Brought resolveType(String name, Map<String, StructNode> declared, Map<String, Brought> out, java.util.Set<String> visiting) {
+      Brought known = out.get(name);
+      if (known != null || !declared.containsKey(name) || !visiting.add(name)) {
+         return known;
+      }
+
+      StructNode node = declared.get(name);
+      Brought base = resolveType(text(node, "base"), declared, out, visiting);
+      Map<String, String> rules = new java.util.LinkedHashMap<>();
+      if (base != null) {
+         base.rules().forEach(rule -> rules.put(ruleName(rule), rule));
+      }
+
+      for (StructNode constraint : nodes(node, "constraints")) {
+         String written = constraintText(constraint);
+         rules.put(ruleName(written), written);
+      }
+
+      Brought result = new Brought(new ArrayList<>(rules.values()), base != null && base.versioned(), base != null && base.secret());
+      out.put(name, result);
+      return result;
+   }
+
+   private static String ruleName(String written) {
+      int paren = written.indexOf('(');
+      return paren < 0 ? written : written.substring(0, paren);
+   }
+
+   private static String constraintText(StructNode constraint) {
+      List<StructNode> args = nodes(constraint, "arguments");
+      return args.isEmpty() ? text(constraint, "name") : text(constraint, "name") + "(" + join(args.stream().map(a -> expression(a, 0)).toList()) + ")";
    }
 
    /** The declaration text; the first line has no leading indentation, later lines carry the base. */
@@ -67,6 +144,8 @@ public final class SirDeclarationWriter {
          case "NormalizedError" -> this.writeError(declaration, out);
          case "NormalizedCapability" -> this.writeCapability(declaration, out);
          case "NormalizedFeatureUse" -> this.writeFeatureUse(declaration, out);
+         case "NormalizedSemanticTypeDeclaration" -> this.writeSemanticType(declaration, out);
+         case "NormalizedFeatureDefinition" -> this.writeFeatureDefinition(declaration, out);
          default -> throw new IllegalArgumentException("not a declaration kind: " + declaration.kind());
       }
 
@@ -122,6 +201,27 @@ public final class SirDeclarationWriter {
       out.line(0, "}");
    }
 
+   private void writeFeatureDefinition(StructNode node, Lines out) {
+      out.line(0, "feature " + text(node, "name") + " {");
+      for (StructNode parameter : nodes(node, "parameters")) {
+         String kind = text(parameter, "kind");
+         String defaultText = optionalText(parameter, "defaultValue").map(value -> {
+            // An empty default can only be a name; it is written as an empty string.
+            return " = " + (value.isEmpty() ? "\"\"" : value);
+         }).orElse("");
+         out.line(1, "parameter " + text(parameter, "name") + ": " + kind + defaultText + ";");
+      }
+
+      // The text is kept exactly as written, so what a use expands into does not change when the definition is rewritten.
+      out.line(1, "template ```" + text(node, "template") + "```;");
+      out.line(0, "}");
+   }
+
+   private void writeSemanticType(StructNode node, Lines out) {
+      List<String> rules = nodes(node, "constraints").stream().map(SirDeclarationWriter::constraintText).toList();
+      out.line(0, "type " + text(node, "name") + " = " + text(node, "base") + (rules.isEmpty() ? "" : " where " + String.join(", ", rules)) + ";");
+   }
+
    private void writeFeatureUse(StructNode node, Lines out) {
       out.line(0, "use " + text(node, "name") + " {");
       for (StructNode argument : nodes(node, "arguments")) {
@@ -167,13 +267,12 @@ public final class SirDeclarationWriter {
    private String field(StructNode field, boolean entityField) {
       StringBuilder line = new StringBuilder("field ").append(text(field, "name")).append(": ").append(type(child(field, "type")));
       // What the type already brings is part of its meaning, so it is not written again.
-      Optional<io.kcg.sir.semantic.feature.SemanticTypes.Entry> brought = semanticTypeOf(child(field, "type"));
-      List<String> brings = brought.map(e -> e.rules().stream().map(io.kcg.sir.semantic.feature.SemanticTypes.Rule::text).toList()).orElse(List.of());
+      Optional<Brought> brought = semanticTypeOf(child(field, "type")).map(this.types::get);
+      List<String> brings = brought.map(Brought::rules).orElse(List.of());
       List<StructNode> constraints = nodes(field, "constraints");
       List<String> parts = new ArrayList<>();
       for (StructNode constraint : constraints) {
-         List<StructNode> args = nodes(constraint, "arguments");
-         String written = args.isEmpty() ? text(constraint, "name") : text(constraint, "name") + "(" + join(args.stream().map(a -> expression(a, 0)).toList()) + ")";
+         String written = constraintText(constraint);
          if (!brings.contains(written)) {
             parts.add(written);
          }
@@ -183,7 +282,7 @@ public final class SirDeclarationWriter {
          line.append(" where ").append(String.join(", ", parts));
       }
 
-      if (text(field, "versioned").equals("true") && !brought.map(io.kcg.sir.semantic.feature.SemanticTypes.Entry::versioned).orElse(false)) {
+      if (text(field, "versioned").equals("true") && !brought.map(Brought::versioned).orElse(false)) {
          line.append(" versioned");
       }
 
@@ -191,7 +290,7 @@ public final class SirDeclarationWriter {
          line.append(" unique");
       }
 
-      if (entityField && text(field, "secret").equals("true") && !brought.map(io.kcg.sir.semantic.feature.SemanticTypes.Entry::secret).orElse(false)) {
+      if (entityField && text(field, "secret").equals("true") && !brought.map(Brought::secret).orElse(false)) {
          line.append(" secret");
       }
 
@@ -251,9 +350,9 @@ public final class SirDeclarationWriter {
    // ----- types --------------------------------------------------------------------------------
 
    /** The semantic type a field is declared with, looking through {@code Optional}. */
-   private static Optional<io.kcg.sir.semantic.feature.SemanticTypes.Entry> semanticTypeOf(StructNode type) {
+   private static Optional<String> semanticTypeOf(StructNode type) {
       return switch (type.kind()) {
-         case "SemanticType" -> io.kcg.sir.semantic.feature.SemanticTypes.named(text(type, "name"));
+         case "SemanticType" -> Optional.of(text(type, "name"));
          case "OptionalType" -> semanticTypeOf(child(type, "element"));
          default -> Optional.empty();
       };

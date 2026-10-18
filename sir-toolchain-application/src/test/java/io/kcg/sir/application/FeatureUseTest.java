@@ -159,7 +159,7 @@ class FeatureUseTest {
     /** The model as the author's facts, without identities (step variables are identified by where they are written). */
     private static StructNode authored(NormalizedSemanticModel model) {
         SoftwareSchema schema = SoftwareSchema.normalizedModel();
-        StructNode root = SoftwareDraft.of(model.withoutFeatureUses()).root().without(Set.of(SlotKind.IDENTITY));
+        StructNode root = SoftwareDraft.of(model.implementable()).root().without(Set.of(SlotKind.IDENTITY));
         return DraftOrder.canonical(root, schema);
     }
 

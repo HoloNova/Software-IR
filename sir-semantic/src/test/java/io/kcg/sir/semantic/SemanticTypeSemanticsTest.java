@@ -45,9 +45,9 @@ class SemanticTypeSemanticsTest {
     @Test
     void aTypeBringsItsRulesAndFlagsAndTheModelKeepsTheTypeTheAuthorNamed() {
         NormalizedEntity entity = account(ENTITY);
-        assertEquals(new SemanticType("Name"), field(entity, "name").type());
+        assertEquals(io.kcg.sir.semantic.feature.SemanticTypes.builtin().type("Name"), field(entity, "name").type());
         assertEquals(List.of("notBlank0", "length2"), rules(field(entity, "name")));
-        assertEquals(new OptionalType(new SemanticType("Remark")), field(entity, "nickname").type());
+        assertEquals(new OptionalType(io.kcg.sir.semantic.feature.SemanticTypes.builtin().type("Remark")), field(entity, "nickname").type());
         assertEquals(List.of("length2"), rules(field(entity, "nickname")));
         assertTrue(field(entity, "passwordHash").secret());
         assertTrue(field(entity, "version").versioned());
@@ -102,5 +102,80 @@ class SemanticTypeSemanticsTest {
         assertTrue(TestSources.hasError(result, "SIR-TYPE-001"));
         // The identity of an entity is a number or a token.
         assertFalse(TestSources.analyze(TestSources.sir("entity E persistent {\n identity id: Text generated auto;\n}\n")).isSuccess());
+    }
+
+    // ----- types the author declares ---------------------------------------------------------------
+
+    private static final String DECLARED = """
+            type Percent = Count where min(0), max(100);
+            type ShortName = Name where length(1, 20);
+            type Handle = ShortName;
+            type Pin = Secret;
+            entity Account persistent {
+              identity id: Id generated auto;
+              field rate: Percent;
+              field label: Handle;
+              field pin: Pin;
+              field tight: Percent where max(10);
+            }
+            """;
+
+    @Test
+    void aDeclaredTypeIsItsBasesKindWithItsBasesRulesAndItsOwnReplacingThoseOfTheSameName() {
+        NormalizedEntity entity = account(DECLARED);
+        assertEquals("Percent", ((SemanticType) field(entity, "rate").type()).name());
+        assertEquals(io.kcg.sir.semantic.type.PrimitiveType.INT32, ((SemanticType) field(entity, "rate").type()).kind());
+        assertEquals(List.of("min1", "max1"), rules(field(entity, "rate")));
+        // Handle is ShortName is Name: still not blank, now at most 20 characters.
+        assertEquals(List.of("notBlank0", "length2"), rules(field(entity, "label")));
+        var length = field(entity, "label").constraints().stream().filter(c -> c.name().equals("length")).findFirst().orElseThrow();
+        assertEquals("20", ((io.kcg.sir.semantic.model.NormalizedExpression.IntegerLiteral) length.arguments().get(1)).value().toString());
+        assertTrue(field(entity, "pin").secret());
+        // A rule on the field replaces the one the declared type brings.
+        var max = field(entity, "tight").constraints().stream().filter(c -> c.name().equals("max")).findFirst().orElseThrow();
+        assertEquals("10", ((io.kcg.sir.semantic.model.NormalizedExpression.IntegerLiteral) max.arguments().get(0)).value().toString());
+    }
+
+    @Test
+    void theModelKeepsTheDeclarationsAndTheWriterRepeatsNothingATypeBrings() {
+        var model = TestSources.analyze(TestSources.sir(DECLARED)).model().orElseThrow();
+        var declarations = SoftwareDraft.of(model).declarations();
+        var types = SirDeclarationWriter.typesOf(declarations);
+        assertEquals(List.of("min(0)", "max(100)"), types.get("Percent").rules());
+        assertEquals(List.of("notBlank", "length(1, 20)"), types.get("Handle").rules());
+        assertTrue(types.get("Pin").secret());
+        var writer = new SirDeclarationWriter("", types);
+        String entity = declarations.stream().filter(d -> d.kind().equals("NormalizedEntity")).map(writer::write).findFirst().orElseThrow();
+        assertTrue(entity.contains("field rate: Percent;"), entity);
+        assertTrue(entity.contains("field label: Handle;"), entity);
+        assertTrue(entity.contains("field pin: Pin;"), entity);
+        assertTrue(entity.contains("field tight: Percent where max(10);"), entity);
+        String type = declarations.stream().filter(d -> SoftwareDraft.nameOf(d).equals("Percent")).map(writer::write).findFirst().orElseThrow();
+        assertEquals("type Percent = Count where min(0), max(100);", type);
+    }
+
+    @Test
+    void aDeclarationThatCannotBeATypeIsRefusedWhetherOrNotAnythingUsesIt() {
+        for (var refusal : List.of(
+                java.util.Map.entry("type Money = Count;", "SIR-TYPE-004"),                        // the language's own name
+                java.util.Map.entry("type A = B;\ntype B = A;", "SIR-TYPE-004"),                  // a cycle
+                java.util.Map.entry("type A = Unknown;", "SIR-SYMBOL-002"),                        // no such base
+                java.util.Map.entry("type A = Count;\ntype A = Text;", "SIR-SYMBOL-001"),         // declared twice
+                java.util.Map.entry("type A = Count where notBlank;", "SIR-TYPE-001"),             // a text rule on a number
+                java.util.Map.entry("type A = Text where min(1);", "SIR-TYPE-001"),               // a number rule on text
+                java.util.Map.entry("type A = Text where length(5, 2);", "SIR-TYPE-001"),         // an empty range
+                java.util.Map.entry("type A = Text where frobnicate;", "SIR-SYMBOL-002"),          // no such rule
+                java.util.Map.entry("type A = Count where min(1), min(2);", "SIR-SYMBOL-001"))) {  // the same rule twice
+            SemanticAnalysis result = TestSources.analyze(TestSources.sir(refusal.getKey()));
+            assertFalse(result.isSuccess(), refusal.getKey());
+            assertTrue(TestSources.hasError(result, refusal.getValue()), refusal.getKey() + " -> " + result.diagnostics());
+        }
+    }
+
+    @Test
+    void aTypeAndAnotherDeclarationCannotShareAName() {
+        SemanticAnalysis result = TestSources.analyze(TestSources.sir("type Rate = Count;\nentity Rate persistent {\n identity id: Id generated auto;\n}\n"));
+        assertFalse(result.isSuccess());
+        assertTrue(TestSources.hasError(result, "SIR-SYMBOL-001"), result.diagnostics().toString());
     }
 }

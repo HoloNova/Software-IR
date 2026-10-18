@@ -107,7 +107,7 @@ class QuerySliceSemanticsTest {
         NormalizedView view = view(model);
 
         assertEquals(
-                List.of(new io.kcg.sir.semantic.type.SemanticType("Text"), new io.kcg.sir.semantic.type.SemanticType("Text"), new io.kcg.sir.semantic.type.SemanticType("Count")),
+                List.of(io.kcg.sir.semantic.feature.SemanticTypes.builtin().type("Text"), io.kcg.sir.semantic.feature.SemanticTypes.builtin().type("Text"), io.kcg.sir.semantic.feature.SemanticTypes.builtin().type("Count")),
                 view.fields().stream().map(NormalizedViewField::type).toList());
     }
 

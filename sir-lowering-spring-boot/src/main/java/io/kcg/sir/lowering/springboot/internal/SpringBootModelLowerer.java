@@ -374,6 +374,10 @@ public final class SpringBootModelLowerer {
             case NormalizedCapability value -> lowerCapability(value);
             case io.kcg.sir.semantic.model.NormalizedFeatureUse value ->
                 throw new IllegalStateException("a use declaration is lowered through the declarations it expanded into: " + value.name());
+            case io.kcg.sir.semantic.model.NormalizedSemanticTypeDeclaration value ->
+                throw new IllegalStateException("a type declaration is lowered through the fields that use it: " + value.name());
+            case io.kcg.sir.semantic.model.NormalizedFeatureDefinition value ->
+                throw new IllegalStateException("a feature definition is lowered through the declarations a use of it expanded into: " + value.name());
         };
     }
 

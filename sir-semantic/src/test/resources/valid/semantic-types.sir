@@ -1,0 +1,39 @@
+sir 0.3
+
+software DualTokenDesk {
+  metadata {
+    displayName "Dual Token Desk";
+    namespace "example.dualtoken";
+  }
+  target {
+    language java 21;
+    framework spring_boot;
+    persistence mybatis_plus;
+    database mysql;
+    build maven;
+    interface rest;
+  }
+  sources { }
+  imports { }
+  declarations {
+    type Percent = Count where min(0), max(100);
+    type ShortName = Name where length(1, 20);
+    type Handle = ShortName;
+    type Pin = Secret;
+    entity Account persistent {
+      identity id: Id generated auto;
+      field rate: Percent;
+      field label: Handle;
+      field pin: Pin;
+      field tight: Percent where max(10);
+    }
+    view AccountView from Account {
+      field id: Id;
+      field rate: Percent;
+      field label: Handle;
+    }
+    input RateInput {
+      field rate: Percent;
+    }
+  }
+}

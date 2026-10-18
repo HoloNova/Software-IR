@@ -85,12 +85,20 @@ final class NormalizePass {
    private final List<io.kcg.sir.ast.AstFeatureUseDecl> uses;
    private final java.util.Map<AstNodeId, FeatureExpander.Expansion> expanded;
 
+   private final io.kcg.sir.semantic.feature.SemanticTypes semanticTypes;
+   private final List<io.kcg.sir.ast.AstSemanticTypeDecl> typeDeclarations;
+   private final List<io.kcg.sir.ast.AstFeatureDefinitionDecl> featureDefinitions;
+
    NormalizePass(AstSoftware software, ValidatedContext validated) {
-      this(software, validated, List.of(), java.util.Map.of());
+      this(software, validated, List.of(), java.util.Map.of(), io.kcg.sir.semantic.feature.SemanticTypes.builtin(), List.of(), List.of());
    }
 
    NormalizePass(AstSoftware software, ValidatedContext validated, List<io.kcg.sir.ast.AstFeatureUseDecl> uses,
-         java.util.Map<AstNodeId, FeatureExpander.Expansion> expanded) {
+         java.util.Map<AstNodeId, FeatureExpander.Expansion> expanded, io.kcg.sir.semantic.feature.SemanticTypes semanticTypes,
+         List<io.kcg.sir.ast.AstSemanticTypeDecl> typeDeclarations, List<io.kcg.sir.ast.AstFeatureDefinitionDecl> featureDefinitions) {
+      this.featureDefinitions = List.copyOf(featureDefinitions);
+      this.semanticTypes = semanticTypes;
+      this.typeDeclarations = List.copyOf(typeDeclarations);
       this.software = software;
       this.softwareName = software.name().text();
       this.validated = validated;
@@ -117,6 +125,18 @@ final class NormalizePass {
          SymbolId feature = SymbolIdFactory.declaration(this.softwareName, "feature", use.name().text());
          declarations.add(new io.kcg.sir.semantic.model.NormalizedFeatureUse(feature, use.name().text(), use.span(), use.id(),
             use.arguments().stream().map(a -> new io.kcg.sir.semantic.model.NormalizedFeatureArgument(a.parameter().text(), a.value().text())).toList()));
+      }
+      for (io.kcg.sir.ast.AstFeatureDefinitionDecl definition : this.featureDefinitions.stream().sorted(java.util.Comparator.comparing(d -> d.name().text())).toList()) {
+         declarations.add(new io.kcg.sir.semantic.model.NormalizedFeatureDefinition(
+            SymbolIdFactory.declaration(this.softwareName, "feature-definition", definition.name().text()), definition.name().text(), definition.span(), definition.id(),
+            definition.parameters().stream().map(p -> new io.kcg.sir.semantic.model.NormalizedFeatureParameter(p.name().text(), p.kind().text(),
+               p.emptyDefault() ? java.util.Optional.of("") : p.defaultValue().map(io.kcg.sir.ast.AstFeatureArgument.Value::text))).toList(),
+            definition.template()));
+      }
+      for (io.kcg.sir.ast.AstSemanticTypeDecl type : this.typeDeclarations.stream().sorted(java.util.Comparator.comparing(t -> t.name().text())).toList()) {
+         declarations.add(new io.kcg.sir.semantic.model.NormalizedSemanticTypeDeclaration(
+            SymbolIdFactory.declaration(this.softwareName, "type", type.name().text()), type.name().text(), type.span(), type.id(),
+            type.base().text(), type.constraints().stream().map(this::normalizeConstraint).toList()));
       }
       for (AstDeclaration decl : this.software.declarations()) {
          FeatureExpander.Expansion expansion = this.expanded.get(decl.id());
@@ -322,8 +342,8 @@ final class NormalizePass {
       }
 
       return switch (ref) {
-         case io.kcg.sir.ast.AstNamedTypeRef named when io.kcg.sir.semantic.feature.SemanticTypes.named(named.name().text()).isPresent() ->
-            new io.kcg.sir.semantic.type.SemanticType(named.name().text());
+         case io.kcg.sir.ast.AstNamedTypeRef named when this.semanticTypes.named(named.name().text()).isPresent() ->
+            this.semanticTypes.type(named.name().text());
          case io.kcg.sir.ast.AstOptionalTypeRef optional when resolved instanceof io.kcg.sir.semantic.type.OptionalType o ->
             new io.kcg.sir.semantic.type.OptionalType(this.semantic(optional.elementType(), o.element()));
          case io.kcg.sir.ast.AstListTypeRef list when resolved instanceof io.kcg.sir.semantic.type.ListType o ->

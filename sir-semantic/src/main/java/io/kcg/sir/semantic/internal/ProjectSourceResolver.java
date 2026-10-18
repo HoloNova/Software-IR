@@ -34,15 +34,30 @@ public final class ProjectSourceResolver {
             diagnostics.add(DiagnosticBuilder.error("SIR-SOURCE-SET-001", "parsed units do not exactly cover the sources list", root.span()));
         // Each use declaration becomes, in its own unit, the declarations its feature expands into; from here on every
         // check sees the expanded declarations as if the author had written them in that file.
-        Map<SourceId, List<AstDeclaration>> effective = new HashMap<>();
+        // The features the software defines are known to every file, like the language's own.
+        List<AstFeatureDefinitionDecl> definitions = new ArrayList<>();
+        for (var unit : units.values())
+            unit.declarations().stream().filter(AstFeatureDefinitionDecl.class::isInstance).map(AstFeatureDefinitionDecl.class::cast).forEach(definitions::add);
+        var featureDefinitions = FeatureDefinitions.build(definitions, diagnostics);
+        Map<SourceId, List<AstDeclaration>> featured = new HashMap<>();
         List<AstFeatureUseDecl> uses = new ArrayList<>();
         Map<AstNodeId, FeatureExpander.Expansion> expanded = new HashMap<>();
         for (var unit : units.values()) {
-            var result = FeatureExpander.expand(unit.declarations(), diagnostics);
-            effective.put(unit.span().source(), SemanticTypeExpander.expand(result.declarations()));
+            var result = FeatureExpander.expand(unit.declarations(), featureDefinitions.features(), diagnostics);
+            featured.put(unit.span().source(), result.declarations());
             uses.addAll(result.uses());
             expanded.putAll(result.expanded());
         }
+        // The semantic types the software declares are known to every file, like the language's own; the fields of every
+        // file (an expanded feature's too) then get the rules their type brings.
+        List<AstSemanticTypeDecl> typeDeclarations = new ArrayList<>();
+        for (var unit : units.values())
+            featured.get(unit.span().source()).stream().filter(AstSemanticTypeDecl.class::isInstance).map(AstSemanticTypeDecl.class::cast).forEach(typeDeclarations::add);
+        var semanticTypes = SemanticTypeDeclarations.build(typeDeclarations, diagnostics);
+        Map<SourceId, List<AstDeclaration>> effective = new HashMap<>();
+        for (var unit : units.values())
+            effective.put(unit.span().source(), SemanticTypeExpander.expand(featured.get(unit.span().source()).stream()
+                .filter(d -> !(d instanceof AstSemanticTypeDecl)).toList(), semanticTypes.types()));
         Map<String, AstFeatureUseDecl> usedFeatures = new HashMap<>();
         for (AstFeatureUseDecl use : uses) {
             AstFeatureUseDecl first = usedFeatures.putIfAbsent(use.name().text(), use);
@@ -97,7 +112,7 @@ public final class ProjectSourceResolver {
                 .sorted(Comparator.comparingInt(ProjectSourceResolver::category).thenComparing(ProjectSourceResolver::name)).toList();
         var original = root.document().software();
         var software = new AstSoftware(original.id(), original.span(), original.name(), original.metadata(), original.target(), ordered);
-        var resolved = new ResolvePass(software).run();
+        var resolved = new ResolvePass(software, semanticTypes.types(), semanticTypes.spans()).run();
         // Resolution reports what it can and the later passes still run, so one check shows the type and validation errors
         // as well. Only a broken identity stops here: nothing after it can trust the symbols.
         if (resolved.diagnostics().stream().anyMatch(d -> d.code().value().equals("SIR-IDENTITY-002"))) return failure(resolved.diagnostics());
@@ -132,7 +147,7 @@ public final class ProjectSourceResolver {
         // No second Resolve, no fallback lookup in Type/Validate/Normalize.
         var typed = new TypePass(software, resolved).run();
         var validated = new ValidatePass(software, typed).run();
-        return new NormalizePass(software, validated, uses, expanded).run();
+        return new NormalizePass(software, validated, uses, expanded, semanticTypes.types(), semanticTypes.declarations(), featureDefinitions.definitions()).run();
     }
 
     private static void cycles(SourceId source, Map<SourceId, AstSourceUnit> units,
@@ -159,6 +174,8 @@ public final class ProjectSourceResolver {
             case AstEnumDecl d -> 0; case AstEntityDecl d -> 1; case AstInputDecl d -> 2;
             case AstViewDecl d -> 3; case AstErrorDecl d -> 4; case AstCapabilityDecl d -> 5;
             case AstFeatureUseDecl d -> 6;
+            case AstSemanticTypeDecl d -> 7;
+            case AstFeatureDefinitionDecl d -> 8;
         };
     }
     static String name(AstDeclaration declaration) {
@@ -166,6 +183,8 @@ public final class ProjectSourceResolver {
             case AstEnumDecl d -> d.name().text(); case AstEntityDecl d -> d.name().text(); case AstInputDecl d -> d.name().text();
             case AstViewDecl d -> d.name().text(); case AstErrorDecl d -> d.name().text(); case AstCapabilityDecl d -> d.name().text();
             case AstFeatureUseDecl d -> d.name().text();
+            case AstSemanticTypeDecl d -> d.name().text();
+            case AstFeatureDefinitionDecl d -> d.name().text();
         };
     }
 }

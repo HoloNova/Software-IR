@@ -1,0 +1,67 @@
+sir 0.3
+
+software DualTokenDesk {
+  metadata {
+    displayName "Dual Token Desk";
+    namespace "example.dualtoken";
+  }
+  target {
+    language java 21;
+    framework spring_boot;
+    persistence mybatis_plus;
+    database mysql;
+    build maven;
+    interface rest;
+  }
+  sources { }
+  imports { }
+  declarations {
+    entity Note persistent {
+      identity id: Id generated auto;
+      field text: Text;
+    }
+    feature Tagging {
+      parameter owner: name;
+      parameter prefix: name = "";
+      parameter limit: duration = 7 days;
+      template ```
+    entity ${prefix}Tag persistent {
+      identity id: Id generated auto;
+      field owner: Ref<${owner}>;
+      field label: Name;
+      field expiresAt: Moment;
+    }
+    input ${prefix}TagInput {
+      field ownerId: Id;
+      field label: Name;
+    }
+    view ${prefix}TagView from ${prefix}Tag {
+      field id: Id;
+      field label: Name;
+    }
+    error ${prefix}TagOwnerMissing http 404;
+    capability ${prefix}AddTag {
+      input ${prefix}TagInput;
+      output ${prefix}TagView;
+      fails ${prefix}TagOwnerMissing;
+      requires atomic;
+      expose command;
+      workflow {
+        load ${owner} by input.ownerId as holder else ${prefix}TagOwnerMissing;
+        create ${prefix}Tag as tag {
+          owner: holder;
+          label: input.label;
+          expiresAt: now() + ${limit};
+        }
+        persist tag;
+        return tag;
+      }
+    }
+    ```;
+    }
+    use Tagging {
+      owner: Note;
+      limit: 3 days;
+    }
+  }
+}
