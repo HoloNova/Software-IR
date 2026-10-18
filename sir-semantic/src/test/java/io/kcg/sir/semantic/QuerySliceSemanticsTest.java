@@ -39,21 +39,21 @@ class QuerySliceSemanticsTest {
 
     private static final String BASE = """
             entity Course persistent {
-              identity id: Int64 generated auto;
-              field code: String where notBlank, length(1, 32);
-              field name: String where notBlank, length(1, 100);
-              field description: Optional<String> where length(0, 500);
-              field capacity: Int32 where min(1);
+              identity id: Id generated auto;
+              field code: Code;
+              field name: Name;
+              field description: Optional<Remark>;
+              field capacity: Quantity;
             }
             view CourseSummary from Course {
-              field code: String;
-              field name: String;
-              field capacity: Int32;
+              field code: Text;
+              field name: Text;
+              field capacity: Count;
             }
             input SearchCoursesInput {
-              field keyword: String where notBlank, length(1, 50);
-              field page: Int32;
-              field size: Int32;
+              field keyword: Name where length(1, 50);
+              field page: PageNo;
+              field size: PageSize;
             }
             error InvalidPageParam;
             capability SearchCourses {
@@ -107,7 +107,7 @@ class QuerySliceSemanticsTest {
         NormalizedView view = view(model);
 
         assertEquals(
-                List.of(PrimitiveType.STRING, PrimitiveType.STRING, PrimitiveType.INT32),
+                List.of(new io.kcg.sir.semantic.type.SemanticType("Text"), new io.kcg.sir.semantic.type.SemanticType("Text"), new io.kcg.sir.semantic.type.SemanticType("Count")),
                 view.fields().stream().map(NormalizedViewField::type).toList());
     }
 
@@ -208,25 +208,25 @@ class QuerySliceSemanticsTest {
     @Test
     void viewFieldMustExistOnTheSourceEntity() {
         assertRejected(
-                BASE.replace("field capacity: Int32;\n}", "field capacity: Int32;\n  field missing: String;\n}"),
+                BASE.replace("field capacity: Count;\n}", "field capacity: Count;\n  field missing: Text;\n}"),
                 "SIR-SYMBOL-002",
-                "missing: String",
+                "missing: Text",
                 1);
     }
 
     @Test
     void viewFieldTypeMustMatchTheEntityFieldType() {
         assertRejected(
-                BASE.replace("field capacity: Int32;\n}", "field capacity: Int64;\n}"),
+                BASE.replace("field capacity: Count;\n}", "field capacity: Serial;\n}"),
                 "SIR-TYPE-001",
-                "Int64;\n}",
+                "Serial;\n}",
                 1);
     }
 
     @Test
     void viewFieldConstraintsAreRejectedBecauseResponsesAreNotValidated() {
         assertRejected(
-                BASE.replace("field name: String;\n  field capacity", "field name: String where notBlank;\n  field capacity"),
+                BASE.replace("field name: Text;\n  field capacity", "field name: Text where notBlank;\n  field capacity"),
                 "SIR-VALID-001",
                 "notBlank;\n  field capacity",
                 1);
@@ -235,9 +235,9 @@ class QuerySliceSemanticsTest {
     @Test
     void viewFieldNamesMustBeUnique() {
         assertRejected(
-                BASE.replace("field code: String;\n  field name", "field code: String;\n  field code: String;\n  field name"),
+                BASE.replace("field code: Text;\n  field name", "field code: Text;\n  field code: Text;\n  field name"),
                 "SIR-SYMBOL-001",
-                "field code: String;\n  field name",
+                "field code: Text;\n  field name",
                 1);
     }
 
@@ -268,8 +268,8 @@ class QuerySliceSemanticsTest {
     void orderFieldMustBeComparable() {
         assertRejected(
                 BASE.replace(
-                                "field capacity: Int32 where min(1);",
-                                "field capacity: Int32 where min(1);\n  field level: CourseLevel;")
+                                "field capacity: Quantity;",
+                                "field capacity: Quantity;\n  field level: CourseLevel;")
                         .replace("entity Course persistent {", "enum CourseLevel { BASIC, ADVANCED }\nentity Course persistent {")
                         .replace("order by code ascending", "order by level ascending"),
                 "SIR-TYPE-001",
@@ -289,7 +289,7 @@ class QuerySliceSemanticsTest {
     @Test
     void pageSourcesMustBeInt32() {
         assertRejected(
-                BASE.replace("field page: Int32;", "field page: Int64;"),
+                BASE.replace("field page: PageNo;", "field page: Serial;"),
                 "SIR-TYPE-001",
                 "input.page, input.size",
                 1);
@@ -318,7 +318,7 @@ class QuerySliceSemanticsTest {
         assertRejected(
                 BASE.replace(
                                 "entity Course persistent {",
-                                "entity Maker persistent {\n  identity id: Int64 generated auto;\n  field code: String;\n  field name: String;\n  field capacity: Int32;\n}\nentity Course persistent {")
+                                "entity Maker persistent {\n  identity id: Id generated auto;\n  field code: Text;\n  field name: Text;\n  field capacity: Count;\n}\nentity Course persistent {")
                         .replace("view CourseSummary from Course", "view CourseSummary from Maker"),
                 "SIR-VALID-001",
                 "view CourseSummary from Maker",

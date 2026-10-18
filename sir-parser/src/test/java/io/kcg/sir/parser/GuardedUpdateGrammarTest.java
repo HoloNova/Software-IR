@@ -59,11 +59,11 @@ class GuardedUpdateGrammarTest {
     void whenIsStillAnOrdinaryNameWhereItIsNotTheGuardWord() {
         SourceUnitParseResult result = parse("""
                 entity Event persistent {
-                  identity id: Int64 generated auto;
-                  field when: String;
+                  identity id: Id generated auto;
+                  field when: Text;
                 }
                 error Invalid;
-                input In { field when: String; }
+                input In { field when: Text; }
                 capability Rename {
                   input In;
                   output Unit;
@@ -114,11 +114,11 @@ class GuardedUpdateGrammarTest {
     private static String wrap(String step) {
         return """
                 entity Credential persistent {
-                  identity id: Int64 generated auto;
-                  field used: Boolean;
+                  identity id: Id generated auto;
+                  field used: Flag;
                 }
                 error Invalid;
-                input In { field id: Int64; }
+                input In { field id: Id; }
                 capability Use {
                   input In;
                   output Unit;
@@ -137,7 +137,7 @@ class GuardedUpdateGrammarTest {
 
     private SourceUnitParseResult parse(String declarations) {
         return parser.parseProject(new SirSource(SourceId.of("tests/guard.sir"), """
-                sir 0.2
+                sir 0.3
                 software GuardGrammar {
                   metadata {
                     displayName "Guard Grammar";

@@ -39,7 +39,7 @@ public final class ProjectSourceResolver {
         Map<AstNodeId, FeatureExpander.Expansion> expanded = new HashMap<>();
         for (var unit : units.values()) {
             var result = FeatureExpander.expand(unit.declarations(), diagnostics);
-            effective.put(unit.span().source(), result.declarations());
+            effective.put(unit.span().source(), SemanticTypeExpander.expand(result.declarations()));
             uses.addAll(result.uses());
             expanded.putAll(result.expanded());
         }

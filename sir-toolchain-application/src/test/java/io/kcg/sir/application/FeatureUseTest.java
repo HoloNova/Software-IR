@@ -128,7 +128,7 @@ class FeatureUseTest {
         String use = single.substring(single.indexOf("    use DualTokenLogin {"), single.indexOf("    }\n", single.indexOf("    use DualTokenLogin {")) + 6);
         String root = single.replace(use, "").replace("  sources { }", "  sources {\n    source \"auth.sir\";\n  }");
         SourceId auth = SourceId.of("auth.sir");
-        String fragment = "sir 0.2\nimports {\n  import User from \"project.sir\";\n}\ndeclarations {\n" + use + "}\n";
+        String fragment = "sir 0.3\nimports {\n  import User from \"project.sir\";\n}\ndeclarations {\n" + use + "}\n";
         List<ExecutionDiagnostic> diagnostics = new ArrayList<>();
         var split = ProjectCompilation.compile(new SourceSnapshot(ENTRY, Map.of(ENTRY, root.getBytes(StandardCharsets.UTF_8),
             auth, fragment.getBytes(StandardCharsets.UTF_8))), model -> new SpringBootGenerator().generate(model), diagnostics);

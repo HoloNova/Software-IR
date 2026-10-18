@@ -85,7 +85,7 @@ class ProjectGenerationTest {
         root = root.replace("sources {", "sources { source \"modules/search.sir\";");
         Files.writeString(source.resolve("project.sir"), root);
         Files.writeString(source.resolve("modules/search.sir"), """
-                sir 0.2
+                sir 0.3
                 imports {
                   import Course from "modules/course.sir";
                   import Enrollment from "modules/enrollment.sir";

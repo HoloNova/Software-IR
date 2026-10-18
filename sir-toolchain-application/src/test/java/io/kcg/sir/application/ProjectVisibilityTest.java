@@ -102,8 +102,8 @@ class ProjectVisibilityTest {
         String root = Files.readString(source.resolve("project.sir"));
         root = root.substring(0, root.indexOf("  sources {")) + """
                 sources {} imports {} declarations {
-                  entity A persistent { identity id: Int64 generated auto; field b: Ref<B>; }
-                  entity B persistent { identity id: Int64 generated auto; field a: Ref<A>; }
+                  entity A persistent { identity id: Id generated auto; field b: Ref<B>; }
+                  entity B persistent { identity id: Id generated auto; field a: Ref<A>; }
                 } }
                 """;
         Files.writeString(source.resolve("project.sir"), root);
@@ -112,7 +112,7 @@ class ProjectVisibilityTest {
 
     @Test void crossFileDuplicateNamesAndIdsKeepBothDeclarationLocations() throws Exception {
         Path source = fixture(temp), student = source.resolve("modules/student.sir");
-        Files.writeString(student, Files.readString(student).replace("declarations {", "declarations { input GetCourseInput { field id: Int64; }"));
+        Files.writeString(student, Files.readString(student).replace("declarations {", "declarations { input GetCourseInput { field id: Id; }"));
         var parsed = parsedSources(source);
         var semantic = new SirSemanticAnalyzer().analyzeProject(parsed);
         assertFalse(semantic.isSuccess());
@@ -121,8 +121,8 @@ class ProjectVisibilityTest {
         assertEquals(Set.of(ENTRY, SourceId.of("modules/student.sir")), Set.of(duplicate.primarySpan().source(), duplicate.related().getFirst().span().source()));
         var before = tree(temp); assertPublicPair(refusal(source, temp.resolve("duplicate-name"))); assertEquals(before, tree(temp));
         Files.writeString(student, """
-                sir 0.2 imports {} declarations {
-                  entity Student persistent { identity id: Int64 generated auto; field studentNo: String; field name: String; }
+                sir 0.3 imports {} declarations {
+                  entity Student persistent { identity id: Id generated auto; field studentNo: Text; field name: Text; }
                   capability AnotherSearch @id("search-course-enrollments") { output Unit; requires readonly; expose query; workflow { return unit; } }
                 }
                 """);
@@ -163,12 +163,12 @@ class ProjectVisibilityTest {
     private static void addKeyedLookup(Path source) throws Exception {
         Path course = source.resolve("modules/course.sir"), root = source.resolve("project.sir");
         String entity = Files.readString(course), project = Files.readString(root);
-        String code = "field code: String where notBlank, length(1, 32);";
-        String input = "input GetCourseInput { field id: Int64; }";
+        String code = "field code: Code;";
+        String input = "input GetCourseInput { field id: Id; }";
         String anchor = "    capability CreateCourse {";
         assertTrue(entity.contains(code) && project.contains(input) && project.contains(anchor), "the fixture changed under this test");
         Files.writeString(course, entity.replace(code, code.substring(0, code.length() - 1) + " unique;"));
-        Files.writeString(root, project.replace(input, input + "\n    input FindCourseByCodeInput { field code: String; }")
+        Files.writeString(root, project.replace(input, input + "\n    input FindCourseByCodeInput { field code: Text; }")
                 .replace(anchor, "    capability GetCourseByCode {\n"
                         + "      input FindCourseByCodeInput;\n      output CourseDetail;\n      fails CourseNotFound;\n"
                         + "      requires readonly;\n      expose query;\n"
@@ -183,10 +183,10 @@ class ProjectVisibilityTest {
     private static void addGuardedUpdate(Path source) throws Exception {
         Path root = source.resolve("project.sir");
         String project = Files.readString(root);
-        String input = "input GetCourseInput { field id: Int64; }";
+        String input = "input GetCourseInput { field id: Id; }";
         String anchor = "    capability CreateCourse {";
         assertTrue(project.contains(input) && project.contains(anchor), "the fixture changed under this test");
-        Files.writeString(root, project.replace(input, input + "\n    input RenameStudentInput { field id: Int64; field name: String; }")
+        Files.writeString(root, project.replace(input, input + "\n    input RenameStudentInput { field id: Id; field name: Text; }")
                 .replace(anchor, "    capability RenameStudent {\n"
                         + "      input RenameStudentInput;\n      output StudentSummary;\n      fails CourseNotFound;\n"
                         + "      requires atomic;\n      expose command;\n"
@@ -214,7 +214,7 @@ class ProjectVisibilityTest {
         }
         root = root.replace("sources {", "sources { source \"modules/contracts.sir\";").replace("imports {", "imports {\n" + imports);
         Files.writeString(file, root);
-        Files.writeString(source.resolve("modules/contracts.sir"), "sir 0.2 imports { import Course from \"modules/course.sir\"; } declarations {\n" + snippets + "}");
+        Files.writeString(source.resolve("modules/contracts.sir"), "sir 0.3 imports { import Course from \"modules/course.sir\"; } declarations {\n" + snippets + "}");
     }
     private record Mutation(String from, String name, String code) {}
 }

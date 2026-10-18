@@ -1,38 +1,38 @@
     entity ${prefix}AccessToken persistent {
-      identity id: Uuid generated uuid;
+      identity id: Token generated uuid;
       field owner: Ref<${account}>;
-      field expiresAt: DateTime;
+      field expiresAt: Moment;
       credential subject owner expires expiresAt;
     }
     entity ${prefix}RefreshToken persistent {
-      identity id: Uuid generated uuid;
+      identity id: Token generated uuid;
       field owner: Ref<${account}>;
-      field used: Boolean;
-      field expiresAt: DateTime;
+      field used: Flag;
+      field expiresAt: Moment;
     }
     entity ${prefix}TokenPair persistent {
-      identity id: Int64 generated auto;
-      field accessToken: Uuid;
-      field accessExpiresAt: DateTime;
-      field refreshToken: Uuid;
-      field refreshExpiresAt: DateTime;
+      identity id: Id generated auto;
+      field accessToken: Token;
+      field accessExpiresAt: Moment;
+      field refreshToken: Token;
+      field refreshExpiresAt: Moment;
     }
     view ${prefix}TokenPairView from ${prefix}TokenPair {
-      field accessToken: Uuid;
-      field accessExpiresAt: DateTime;
-      field refreshToken: Uuid;
-      field refreshExpiresAt: DateTime;
+      field accessToken: Token;
+      field accessExpiresAt: Moment;
+      field refreshToken: Token;
+      field refreshExpiresAt: Moment;
     }
     view ${prefix}LoggedOutView from ${prefix}RefreshToken {
-      field id: Uuid;
-      field used: Boolean;
+      field id: Token;
+      field used: Flag;
     }
     input ${prefix}LoginInput {
-      field name: String;
-      field password: String;
+      field name: Text;
+      field password: Text;
     }
     input ${prefix}RefreshInput {
-      field refreshToken: Uuid;
+      field refreshToken: Token;
     }
     error ${prefix}BadLogin http 401;
     error ${prefix}ExpiredRefreshToken http 401;

@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class DeploymentPlannerTest {
     @Test void physicalStorageSharesTargetNamesAndBoundIdentityTypes() {
-        var plan = plan(bearer().replace("field name: String unique;", "field name: String where length(1, 64) unique;"));
+        var plan = plan(bearer().replace("field name: Text unique;", "field name: Text where length(1, 64) unique;"));
         assertTrue(plan.credentialAuthentication());
         var token = plan.tables().stream().filter(t -> t.name().equals("access_token")).findFirst().orElseThrow();
         assertEquals(DeploymentPlan.Storage.UUID, token.columns().getFirst().storage());
@@ -26,8 +26,8 @@ class DeploymentPlannerTest {
     }
 
     @Test void interfaceTableCarriesAuthenticationRulesAndTheErrorCodesTheApplicationAnswers() {
-        var api = plan(bearer().replace("field name: String unique;", "field name: String where length(1, 64) unique;")
-            .replace("field text: String where notBlank;", "field text: String where notBlank, length(3, 280);")).api();
+        var api = plan(bearer().replace("field name: Text unique;", "field name: Text where length(1, 64) unique;")
+            .replace("field text: Text where notBlank;", "field text: Text where notBlank, length(3, 280);")).api();
         var byRoute = new java.util.HashMap<String, DeploymentPlan.Endpoint>();
         api.endpoints().forEach(e -> byRoute.put(e.method() + " " + e.route(), e));
         var note = byRoute.get("POST /api/post-note");
@@ -53,8 +53,8 @@ class DeploymentPlannerTest {
     }
 
     @Test void refusesDecimalRatherThanSilentlyChoosingALossyScale() {
-        String text = bearer().replace("field name: String unique;", "field name: String where length(1, 64) unique;")
-            .replace("entity Note persistent {", "entity Price persistent { identity id: Int64 generated auto; field value: Decimal; } entity Note persistent {");
+        String text = bearer().replace("field name: Text unique;", "field name: Text where length(1, 64) unique;")
+            .replace("entity Note persistent {", "entity Price persistent { identity id: Id generated auto; field value: Money; } entity Note persistent {");
         assertTrue(assertThrows(IllegalArgumentException.class, () -> plan(text)).getMessage().contains("precision/scale"));
     }
 

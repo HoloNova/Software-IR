@@ -32,7 +32,7 @@ class CredentialSemanticsTest {
 
     @Test
     void theTokenIsTheKeySoItMustBeAnUnguessableUuid() {
-        SemanticAnalysis result = TestSources.analyze(replace("identity id: Uuid generated uuid;\n      field owner", "identity id: Int64 generated auto;\n      field owner"));
+        SemanticAnalysis result = TestSources.analyze(replace("identity id: Token generated uuid;\n      field owner", "identity id: Id generated auto;\n      field owner"));
 
         assertTrue(TestSources.hasError(result, "SIR-TYPE-001"), () -> result.diagnostics().toString());
     }
@@ -41,8 +41,8 @@ class CredentialSemanticsTest {
     void theSubjectIsAReferenceAndTheExpiryADateTime() {
         // the fixture's own bindings stop fitting the changed field too, so these assert the rule, not the count
         for (String source : List.of(
-                replace("field owner: Ref<User>;\n      field expiresAt", "field owner: String;\n      field expiresAt"),
-                replace("field expiresAt: DateTime;\n      credential", "field expiresAt: Date;\n      credential"))) {
+                replace("field owner: Ref<User>;\n      field expiresAt", "field owner: Text;\n      field expiresAt"),
+                replace("field expiresAt: Moment;\n      credential", "field expiresAt: Day;\n      credential"))) {
             SemanticAnalysis result = TestSources.analyze(source);
             assertTrue(result.diagnostics().stream().anyMatch(d -> d.message().contains("subject") || d.message().contains("expires")),
                     () -> result.diagnostics().toString());
@@ -65,7 +65,7 @@ class CredentialSemanticsTest {
     @Test
     void aSubjectIsKnownByOneKindOfTokenOnly() {
         SemanticAnalysis result = TestSources.analyze(replace("    entity Note persistent {",
-                "    entity SecondToken persistent {\n      identity id: Uuid generated uuid;\n      field owner: Ref<User>;\n      field expiresAt: DateTime;\n      "
+                "    entity SecondToken persistent {\n      identity id: Token generated uuid;\n      field owner: Ref<User>;\n      field expiresAt: Moment;\n      "
                         + CLAUSE + "\n    }\n    entity Note persistent {"));
 
         assertTrue(TestSources.hasError(result, "SIR-VALID-009"), () -> result.diagnostics().toString());
@@ -73,7 +73,7 @@ class CredentialSemanticsTest {
 
     @Test
     void authenticatedCapabilitiesAreAllBackedByCredentialsOrNoneIs() {
-        String mixed = replace("    entity Note persistent {", "    entity Admin persistent {\n      identity id: Int64 generated auto;\n      field name: String;\n    }\n    entity Note persistent {")
+        String mixed = replace("    entity Note persistent {", "    entity Admin persistent {\n      identity id: Id generated auto;\n      field name: Text;\n    }\n    entity Note persistent {")
                 .replace("    input LoginInput {", "    capability AdminOnly {\n      actor Ref<Admin>;\n      input LoginInput;\n      output NoteView;\n      requires authenticated;\n      expose query;\n      workflow {\n        load Note by 1 as note else BadLogin;\n        return note;\n      }\n    }\n    input LoginInput {");
         SemanticAnalysis result = TestSources.analyze(mixed);
 

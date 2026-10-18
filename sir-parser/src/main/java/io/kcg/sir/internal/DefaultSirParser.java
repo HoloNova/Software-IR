@@ -27,7 +27,7 @@ public final class DefaultSirParser implements SirParser {
         Objects.requireNonNull(declarations, "declarations");
         Objects.requireNonNull(under, "under");
         Objects.requireNonNull(at, "at");
-        String text = "sir 0.2\nimports { }\ndeclarations {\n" + declarations + "\n}\n";
+        String text = "sir 0.3\nimports { }\ndeclarations {\n" + declarations + "\n}\n";
         SourceText source = new SourceText(io.kcg.sir.source.SourceId.of("feature-expansion.sir"), text, at);
         DiagnosticCollector diagnostics = new DiagnosticCollector();
         try {
@@ -72,8 +72,8 @@ public final class DefaultSirParser implements SirParser {
             if (root) {
                 var tree = parser.projectDocument();
                 if (diagnostics.hasErrors()) return unitFailure(diagnostics);
-                if (!tree.versionLiteral().getText().equals("0.2")) {
-                    diagnostics.error("SIR-VERSION-001", "项目输入只支持 SIR 0.2", source.span(tree.versionLiteral()));
+                if (!tree.versionLiteral().getText().equals("0.3")) {
+                    diagnostics.error("SIR-VERSION-001", "项目输入只支持 SIR 0.3（0.2 及更早的写法不再接受）", source.span(tree.versionLiteral()));
                     return unitFailure(diagnostics);
                 }
                 if (!new HeaderCompatibilityCheck().validateTarget(tree.targetBlock(), source, diagnostics)) return unitFailure(diagnostics);
@@ -81,8 +81,8 @@ public final class DefaultSirParser implements SirParser {
             }
             var tree = parser.sourceFragment();
             if (diagnostics.hasErrors()) return unitFailure(diagnostics);
-            if (!tree.versionLiteral().getText().equals("0.2")) {
-                diagnostics.error("SIR-VERSION-001", "源片段只支持 SIR 0.2", source.span(tree.versionLiteral()));
+            if (!tree.versionLiteral().getText().equals("0.3")) {
+                diagnostics.error("SIR-VERSION-001", "源片段只支持 SIR 0.3（0.2 及更早的写法不再接受）", source.span(tree.versionLiteral()));
                 return unitFailure(diagnostics);
             }
             return new io.kcg.sir.api.SourceUnitParseResult(java.util.Optional.of(new SirAstBuilder(source).buildFragment(tree)), diagnostics.diagnostics());

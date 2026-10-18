@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class SchemaEvolutionPlannerTest {
     /** The end of entity Note only (view NoteView also ends with a text field). */
-    private static final String NOTE = "      field author: Ref<User>;\n      field text: String;\n    }";
+    private static final String NOTE = "      field author: Ref<User>;\n      field text: Text;\n    }";
 
     @Test void anUnchangedSchemaAppendsNoVersion() {
         var outcome = continueFrom(base(), base());
@@ -30,20 +30,20 @@ class SchemaEvolutionPlannerTest {
 
     @Test void newTablesComeAfterTheTablesTheyReferenceAndNewNullableColumnsLast() {
         // Tag refers to Topic, which is declared after it: Topic must still be created first.
-        String target = base().replace(NOTE, "      field author: Ref<User>;\n      field text: String;\n      field title: Optional<String> where length(0, 80);\n    }\n"
-            + "    entity Tag persistent { identity id: Int64 generated auto; field topic: Ref<Topic>; field parent: Optional<Ref<Tag>>; }\n"
-            + "    entity Topic persistent { identity id: Int64 generated auto; field note: Ref<Note>; }");
+        String target = base().replace(NOTE, "      field author: Ref<User>;\n      field text: Text;\n      field title: Optional<Text> where length(0, 80);\n    }\n"
+            + "    entity Tag persistent { identity id: Id generated auto; field topic: Ref<Topic>; field parent: Optional<Ref<Tag>>; }\n"
+            + "    entity Topic persistent { identity id: Id generated auto; field note: Ref<Note>; }");
         var steps = continueFrom(base(), target).evolution().orElseThrow().steps();
         assertEquals(List.of("V2 CREATE_TABLE topic", "V3 CREATE_TABLE tag", "V4 ADD_NULLABLE_COLUMN note.title"),
             steps.stream().map(SchemaEvolution.Step::describe).toList());
     }
 
     @Test void everyUnsupportedChangeIsListedAndNothingIsPlanned() {
-        String archive = "\n    entity Archive persistent { identity id: Int64 generated auto; field text: String; }";
+        String archive = "\n    entity Archive persistent { identity id: Id generated auto; field text: Text; }";
         String before = base().replace(NOTE, NOTE + archive);
         String after = base()
-            .replace("field name: String where length(1, 64) unique;", "field name: String where length(1, 128) unique;")
-            .replace(NOTE, "      field author: Ref<User>;\n      field text: String;\n      field editor: Optional<Ref<User>>;\n    }" + archive.replace("field text", "field body"));
+            .replace("field name: Text where length(1, 64) unique;", "field name: Text where length(1, 128) unique;")
+            .replace(NOTE, "      field author: Ref<User>;\n      field text: Text;\n      field editor: Optional<Ref<User>>;\n    }" + archive.replace("field text", "field body"));
         var outcome = continueFrom(before, after);
         assertTrue(outcome.evolution().isEmpty());
         var kinds = outcome.refusals().stream().map(r -> r.split(" ")[0] + " " + r.split(" ")[1].replace(":", "")).toList();
@@ -54,29 +54,29 @@ class SchemaEvolutionPlannerTest {
     }
 
     @Test void aFieldThatKeepsItsDeclaredIdentityRenamesItsColumnFirst() {
-        String before = base().replace(NOTE, NOTE + "\n    entity Archive persistent { identity id: Int64 generated auto; field text: String @id(\"archive-text\"); }");
-        String after = before.replace("field text: String @id(", "field body: String @id(")
-            .replace(NOTE, "      field author: Ref<User>;\n      field text: String;\n      field title: Optional<String>;\n    }");
+        String before = base().replace(NOTE, NOTE + "\n    entity Archive persistent { identity id: Id generated auto; field text: Text @id(\"archive-text\"); }");
+        String after = before.replace("field text: Text @id(", "field body: Text @id(")
+            .replace(NOTE, "      field author: Ref<User>;\n      field text: Text;\n      field title: Optional<Text>;\n    }");
         var steps = continueFrom(before, after).evolution().orElseThrow().steps();
         assertEquals(List.of("V2 RENAME_COLUMN archive.text -> body", "V3 ADD_NULLABLE_COLUMN note.title"),
             steps.stream().map(SchemaEvolution.Step::describe).toList());
     }
 
     @Test void aRenamedKeyOrARenameThatAlsoChangesTheColumnIsRefused() {
-        String before = base().replace(NOTE, NOTE + "\n    entity Archive persistent { identity id: Int64 generated auto; field text: String @id(\"archive-text\"); }");
+        String before = base().replace(NOTE, NOTE + "\n    entity Archive persistent { identity id: Id generated auto; field text: Text @id(\"archive-text\"); }");
         // The identity keeps its identity under any name, but other tables refer to the key column by name.
         String key = before.replace("entity Archive persistent { identity id:", "entity Archive persistent { identity archiveId:");
         assertEquals(List.of("PRIMARY_COLUMN_RENAMED archive.id -> archive_id"), continueFrom(before, key).refusals());
-        String retyped = before.replace("field text: String @id(", "field body: Int64 @id(");
+        String retyped = before.replace("field text: Text @id(", "field body: Serial @id(");
         assertTrue(continueFrom(before, retyped).refusals().stream().anyMatch(r -> r.startsWith("COLUMN_CHANGED archive.text")),
             continueFrom(before, retyped).refusals().toString());
     }
 
     @Test void removedTablesNewTableCyclesAndAnotherDatabaseEngineAreRefused() {
-        String withArchive = base().replace(NOTE, NOTE + "\n    entity Archive persistent { identity id: Int64 generated auto; field text: String; }");
+        String withArchive = base().replace(NOTE, NOTE + "\n    entity Archive persistent { identity id: Id generated auto; field text: Text; }");
         assertEquals(List.of("TABLE_REMOVED archive"), continueFrom(withArchive, base()).refusals());
-        String cycle = base().replace(NOTE, NOTE + "\n    entity Left persistent { identity id: Int64 generated auto; field right: Ref<Right>; }\n"
-            + "    entity Right persistent { identity id: Int64 generated auto; field left: Ref<Left>; }");
+        String cycle = base().replace(NOTE, NOTE + "\n    entity Left persistent { identity id: Id generated auto; field right: Ref<Right>; }\n"
+            + "    entity Right persistent { identity id: Id generated auto; field left: Ref<Left>; }");
         var cycleRefusals = continueFrom(base(), cycle).refusals();
         assertTrue(cycleRefusals.stream().anyMatch(r -> r.startsWith("NEW_TABLE_CYCLE")), cycleRefusals.toString());
         var compiled = compile(base());
@@ -85,7 +85,7 @@ class SchemaEvolutionPlannerTest {
     }
 
     @Test void aSchemaDifferenceTheChangeLayerDidNotReportIsAToolchainFault() {
-        String target = base().replace(NOTE, NOTE + "\n    entity Archive persistent { identity id: Int64 generated auto; field text: String; }");
+        String target = base().replace(NOTE, NOTE + "\n    entity Archive persistent { identity id: Id generated auto; field text: Text; }");
         var outcome = new SpringBootSchemaEvolutionPlanner().plan(compile(base()).plan(), "mysql:8.4.5", 1, new SemanticDelta(List.of()), compile(target).plan());
         assertEquals(List.of("SELFCHECK table archive is new but the change layer added no entity for it"), outcome.refusals());
     }
@@ -99,7 +99,7 @@ class SchemaEvolutionPlannerTest {
     }
 
     private static String base() {
-        return LoweringTestSupport.source("valid/bearer-credential.sir").replace("field name: String unique;", "field name: String where length(1, 64) unique;");
+        return LoweringTestSupport.source("valid/bearer-credential.sir").replace("field name: Text unique;", "field name: Text where length(1, 64) unique;");
     }
 
     private static Compiled compile(String source) {

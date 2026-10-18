@@ -158,13 +158,21 @@ final class ResolvePass {
          Map.of(), Map.of(), Map.of(), Map.of(), ReferenceSiteBindings.of(List.of()), Map.of(), List.copyOf(this.diagnostics));
    }
 
+   /**
+    * The type names the language has: the semantic types an author writes for a field, and {@code Unit} for "no
+    * value". A semantic type is typed as the kind of value it stands for; what it means is kept by the declaration
+    * (NormalizePass) and decided on by the target.
+    */
    private void registerPrimitives() {
-      for (PrimitiveType pt : PrimitiveType.values()) {
-         String sirName = pt.sirName();
+      Map<String, PrimitiveType> names = new java.util.LinkedHashMap<>();
+      names.put(PrimitiveType.UNIT.sirName(), PrimitiveType.UNIT);
+      io.kcg.sir.semantic.feature.SemanticTypes.all().forEach(entry -> names.put(entry.name(), entry.kind()));
+      for (Map.Entry<String, PrimitiveType> entry : names.entrySet()) {
+         String sirName = entry.getKey();
          SymbolId id = SymbolIdFactory.primitive(sirName);
          Symbol.TypeSymbol sym = new Symbol.TypeSymbol(id, sirName, this.zeroSpan(), SymbolKind.PRIMITIVE, null);
          this.addSymbol(sym, this.projectScopeId);
-         this.typeByName.put(sirName, pt);
+         this.typeByName.put(sirName, entry.getValue());
          this.declarationKinds.put(sirName, SymbolKind.PRIMITIVE);
          this.projectNames.put(sirName, sym);
       }

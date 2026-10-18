@@ -111,7 +111,7 @@ class CompilationServiceTest {
     void aParseFailureStopsTheStageAtTheFirstBadFile() throws Exception {
         Map<SourceId, byte[]> inputs = new LinkedHashMap<>();
         for (String file : ProjectTestSupport.FILES) {
-            String text = file.equals("modules/course.sir") ? "sir 0.2\nentity {" : ProjectTestSupport.resource("valid/multi-course/" + file);
+            String text = file.equals("modules/course.sir") ? "sir 0.3\nentity {" : ProjectTestSupport.resource("valid/multi-course/" + file);
             inputs.put(SourceId.of(file), text.getBytes(StandardCharsets.UTF_8));
         }
 

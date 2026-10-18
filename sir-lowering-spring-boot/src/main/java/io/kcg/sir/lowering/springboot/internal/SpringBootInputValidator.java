@@ -233,7 +233,8 @@ public final class SpringBootInputValidator {
 
             this.validateBound(value.identity().id(), value.identity().span(), value.identity().sourceNodeId(), FieldSymbol.class);
             this.validateType(value.identity().type(), value.identity().span(), value.id(), value.identity().sourceNodeId());
-            if (value.identity().type() != PrimitiveType.INT64 && value.identity().type() != PrimitiveType.UUID) {
+            if (io.kcg.sir.semantic.feature.SemanticTypes.kind(value.identity().type()) != PrimitiveType.INT64
+               && io.kcg.sir.semantic.feature.SemanticTypes.kind(value.identity().type()) != PrimitiveType.UUID) {
                this.error(
                   "SIR-LOWER-TYPE-001", "entity identity must lower to Long or UUID", value.identity().span(), value.id(), value.identity().sourceNodeId()
                );
@@ -287,7 +288,7 @@ public final class SpringBootInputValidator {
                field.id(),
                field.sourceNodeId()
          );
-         } else if (!sourceType.equals(field.type())) {
+         } else if (!io.kcg.sir.semantic.feature.SemanticTypes.kind(sourceType).equals(io.kcg.sir.semantic.feature.SemanticTypes.kind(field.type()))) {
          this.error(
                "SIR-LOWER-TYPE-001",
                "projected field type does not match its source entity field: " + field.name(),
@@ -756,6 +757,8 @@ public final class SpringBootInputValidator {
    private void validateType(SirType type, SourceSpan span, SymbolId owner, AstNodeId nodeId) {
       switch (type) {
          case PrimitiveType ignored:
+            break;
+         case io.kcg.sir.semantic.type.SemanticType ignored:
             break;
          case OptionalType value:
             this.validateType(value.element(), span, owner, nodeId);

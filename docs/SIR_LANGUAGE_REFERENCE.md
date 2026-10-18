@@ -1,4 +1,4 @@
-# SIR 语言参考（`sir 0.2`）
+# SIR 语言参考（`sir 0.3`）
 
 这份文档写给**用 SIR 写软件的人**（包括让模型写 SIR 的人）。它回答“能写什么、怎么写、写错了会怎样”，不讲编译器内部。想知道为什么这样设计，看[设计 02](design/02-sir-language-and-modules.md) 和[设计 10](design/10-semantic-boundary-and-mechanisms.md)；想知道命令行怎么用，看 [CLI 说明](CLI_WORKFLOW.md)。
 
@@ -15,7 +15,7 @@
 一个 SIR 文档描述一个**软件**：它有什么数据（实体）、对外露出什么（视图、输入）、能做什么（能力）。下面是一个只能按编号查一本书的软件：
 
 ```sir
-sir 0.2
+sir 0.3
 
 software Library {
   metadata {
@@ -34,15 +34,15 @@ software Library {
   imports { }
   declarations {
     entity Book persistent {
-      identity id: Int64 generated auto;
-      field title: String where notBlank, length(1, 200);
+      identity id: Id generated auto;
+      field title: Name where length(1, 200);
     }
     view BookView from Book {
-      field id: Int64;
-      field title: String;
+      field id: Id;
+      field title: Text;
     }
     input GetBookInput {
-      field id: Int64;
+      field id: Id;
     }
     error BookNotFound http 404;
     capability GetBook {
@@ -60,7 +60,7 @@ software Library {
 }
 ```
 
-**文档的骨架是固定的：** 版本行 `sir 0.2`、`software 名字 { ... }`，里面依次是 `metadata`、`target`、`sources`、`imports`、`declarations`。
+**文档的骨架是固定的：** 版本行 `sir 0.3`、`software 名字 { ... }`，里面依次是 `metadata`、`target`、`sources`、`imports`、`declarations`。
 
 - `metadata`：`displayName`（给人看的名字）和 `namespace`（生成的 Java 包名，必须是合法的 Java 包名）。
 - `target`：目前只接受这一组值（Java 21、Spring Boot、MyBatis-Plus、MySQL、Maven、REST），写别的会被拒绝（`SIR-LOWER-TARGET-001`）。
@@ -76,47 +76,59 @@ software Library {
 
 ```sir-error SIR-PARSE-001
 entity Booking persistent {
-  identity id: Int64 generated auto;
-  field order: Int32;
+  identity id: Id generated auto;
+  field order: Count;
 }
 ```
 
 ## 2. 类型
 
-| 类型 | 含义 | 说明 |
-| --- | --- | --- |
-| `Boolean` | 真／假 | |
-| `Int32`、`Int64` | 整数 | `Int64` 用于主键、计数、大数 |
-| `Decimal` | 十进制小数 | 金额用它；字面量写 `0.01` |
-| `String` | 文本 | |
-| `Uuid` | 通用唯一标识 | 做不可猜测的令牌；存成文本 |
-| `Date` | 日期 | 对应 `LocalDate` |
-| `DateTime` | 时刻 | 对应 `Instant`（UTC） |
+| 类型 | 含义 | 自带的规则 | 底层 |
+| --- | --- | --- | --- |
+| `Id` | 记录的编号 | | 64 位整数 |
+| `Serial` | 不做主键的长编号、大数 | | 64 位整数 |
+| `Version` | 并发版本号 | 等于 `versioned` | 64 位整数 |
+| `Count` | 个数、次数 | | 32 位整数 |
+| `Quantity` | 至少为 1 的数量 | `min(1)` | 32 位整数 |
+| `PageNo`、`PageSize` | 页码、页大小 | | 32 位整数 |
+| `Money` | 金额、十进制小数 | | 十进制 |
+| `Text` | 普通文本 | | 文本 |
+| `Name` | 名称 | `notBlank`、`length(1, 100)` | 文本 |
+| `Code` | 短编码 | `notBlank`、`length(1, 32)` | 文本 |
+| `Remark` | 备注、说明 | `length(0, 500)` | 文本 |
+| `Email` | 邮箱 | `email` | 文本 |
+| `Secret` | 口令（只存摘要） | 等于 `secret` | 文本 |
+| `Token` | 不可猜测的标识、令牌 | | UUID |
+| `Moment` | 时刻 | | `Instant`（UTC） |
+| `Day` | 日期 | | `LocalDate` |
+| `Flag` | 是／否 | | 布尔 |
 | `Unit` | 没有值 | 能力没有返回内容时 |
 | `Optional<T>` | 可以没有 | 不能嵌套 `Optional<Optional<T>>`（`SIR-TYPE-003`） |
 | `List<T>` | 列表 | 能力输出写 `List<Ref<实体>>`（不分页的 `find` 的结果） |
 | `Page<T>` | 分页结果 | 只能做 `expose query` 的输出 |
 | `Ref<实体>` | 指向另一个实体的一行 | 存成那一行的主键 |
 
-自己声明的 `enum`、`entity`、`input`、`view` 也是类型，直接写名字。各种类型都用一遍：
+写字段时只写语义类型，不写机器类型；底层用什么（Java 类型、数据库列）由目标决定。类型自带的规则不用再写，字段上写同名规则时以字段上的为准：`Name where length(1, 64)` 是最长 64 个字符的名称，仍然非空白。同一种底层的类型之间可以互相比较和运算（`Count` 和 `Quantity` 都是 32 位整数），视图字段可以用另一个同底层的类型投影实体字段。
+
+自己声明的 `enum`、`entity`、`input`、`view` 也是类型，直接写名字（不能与上面的类型重名）。各种类型都用一遍：
 
 ```sir-declarations
 entity Event persistent {
-  identity id: Int64 generated auto;
-  field title: String where notBlank;
-  field headcount: Int32 where min(0);
-  field budget: Decimal;
-  field open: Boolean;
-  field day: Date;
-  field startsAt: DateTime;
-  field note: Optional<String>;
+  identity id: Id generated auto;
+  field title: Text where notBlank;
+  field headcount: Count where min(0);
+  field budget: Money;
+  field open: Flag;
+  field day: Day;
+  field startsAt: Moment;
+  field note: Optional<Text>;
 }
 view EventView from Event {
-  field id: Int64;
-  field title: String;
-  field budget: Decimal;
-  field day: Date;
-  field startsAt: DateTime;
+  field id: Id;
+  field title: Text;
+  field budget: Money;
+  field day: Day;
+  field startsAt: Moment;
 }
 capability OpenEvents {
   output List<Ref<Event>>;
@@ -137,15 +149,15 @@ capability Ping {
 }
 ```
 
-**整数字面量的宽度。** 字面量默认是 `Int32`；和 `Int64` 比较或相加减时，字面量按 `Int64` 理解（`item.qty > 0` 里 `qty` 是 `Int64` 也能写）。但 `Int32` 的字段不会自动变成 `Int64`。字面量必须放得进它的类型，`5000000000` 单独用在 `Int32` 上会被拒绝：
+**整数字面量的宽度。** 字面量默认是 32 位整数；和 64 位整数（`Id`、`Serial`、`Version`）比较或相加减时，字面量按 64 位理解（`item.qty > 0` 里 `qty` 是 `Serial` 也能写）。但 32 位的字段不会自动变成 64 位。字面量必须放得进它的类型，`5000000000` 单独用在 32 位整数上会被拒绝：
 
 ```sir-error SIR-TYPE-001
 entity Gauge persistent {
-  identity id: Int64 generated auto;
-  field level: Int32;
+  identity id: Id generated auto;
+  field level: Count;
 }
 input LevelInput {
-  field level: Int32;
+  field level: Count;
 }
 error TooHigh;
 capability CheckLevel {
@@ -168,7 +180,7 @@ capability CheckLevel {
 ```sir-declarations
 enum Status { OPEN, CLOSED }
 entity Ticket persistent {
-  identity id: Int64 generated auto;
+  identity id: Id generated auto;
   field status: Status;
 }
 ```
@@ -180,30 +192,30 @@ entity Ticket persistent {
 实体是会被存进数据库的东西。**每个实体必须有且只有一个 `identity`**，写在最前面：
 
 ```
-identity 名字: 类型 generated auto;    // 类型是 Int64，数据库自增
-identity 名字: 类型 generated uuid;    // 类型是 Uuid，由应用生成
+identity 名字: 类型 generated auto;    // 类型是 Id，数据库自增
+identity 名字: 类型 generated uuid;    // 类型是 Token，由应用生成
 ```
 
 然后是若干 `field`。字段后面可以接修饰，**顺序固定**：约束（`where ...`）、`versioned`、`unique`、`secret`、`@id("...")`。
 
 ```sir-declarations
 entity Account persistent {
-  identity id: Int64 generated auto;
-  field name: String where notBlank, length(1, 64) unique;
-  field email: Optional<String> where email;
-  field age: Int32 where min(0), max(150);
-  field passwordHash: String secret;
-  field version: Int64 versioned;
+  identity id: Id generated auto;
+  field name: Name where length(1, 64) unique;
+  field email: Optional<Email>;
+  field age: Count where min(0), max(150);
+  field passwordHash: Secret;
+  field version: Version;
 }
 ```
 
-**约束**（`where` 后面，逗号分隔）：`notBlank`（非空白，String）、`email`（邮箱格式，String）、`length(最小, 最大)`（String）、`min(值)`、`max(值)`（数字）。同一个约束不能重复，`min` 不能大于 `max`。
+**约束**（`where` 后面，逗号分隔）：`notBlank`（非空白，文本）、`email`（邮箱格式，文本）、`length(最小, 最大)`（文本）、`min(值)`、`max(值)`（数字）。同一个约束不能重复，`min` 不能大于 `max`。
 
 **`versioned`**：这个整数字段是并发版本号，每个实体最多一个。带版本号的实体，更新时要用 `persist ... else 错误`（见 5.5）。
 
-**`unique`**：声明这个字段的值在所有行里不重复。它是一句**声明**，数据库里的唯一索引仍然要你自己建（SIR 不管建表）。有了它，才能 `load 实体 by 字段: 值`（见 5.2）。只能用在 `String`、`Int32`、`Int64`、`Uuid` 上，不能和 `versioned` 同用。
+**`unique`**：声明这个字段的值在所有行里不重复。它是一句**声明**，数据库里的唯一索引仍然要你自己建（SIR 不管建表）。有了它，才能 `load 实体 by 字段: 值`（见 5.2）。只能用在文本、整数（32 位或 64 位）和 `Token` 上，不能和 `versioned` 同用。
 
-**`secret`**：这个 `String` 字段存的是**摘要**，不是原文。它只能被写入，读取只有一种方式——`stored matches candidate`（见第 6 节）。不能同时 `unique`、`versioned`、带约束；不能出现在 `view` 里。例子见 7.1“登录”。
+**`secret`**：这个文本字段（通常直接写 `Secret` 类型）存的是**摘要**，不是原文。它只能被写入，读取只有一种方式——`stored matches candidate`（见第 6 节）。不能同时 `unique`、`versioned`、带约束；不能出现在 `view` 里。例子见 7.1“登录”。
 
 **`@id("...")`**：给字段一个稳定的名字，改字段名时身份不变。普通写作不需要。
 
@@ -213,18 +225,18 @@ entity Account persistent {
 
 ```sir-declarations
 entity User persistent {
-  identity id: Int64 generated auto;
-  field name: String unique;
+  identity id: Id generated auto;
+  field name: Text unique;
 }
 entity AccessToken persistent {
-  identity id: Uuid generated uuid;
+  identity id: Token generated uuid;
   field owner: Ref<User>;
-  field expiresAt: DateTime;
+  field expiresAt: Moment;
   credential subject owner expires expiresAt;
 }
 ```
 
-含义：请求头 `Authorization: Bearer <令牌>` 里的令牌就是 `AccessToken` 的主键；找到这一行并且 `expiresAt` 晚于现在，请求就以 `owner` 指向的 `User` 的身份运行（见 4.2 的 `actor`）。规则：主键必须是 `Uuid`（否则 `SIR-TYPE-001`）；`subject` 必须是 `Ref<实体>` 字段；`expires` 必须是 `DateTime` 字段；同一个主体只能有一种凭据实体（`SIR-VALID-009`）；一个软件里，“要求已认证”的能力要么全由凭据认证，要么全不是。作废令牌不需要新语法：把 `expiresAt` 更新成 `now()`。
+含义：请求头 `Authorization: Bearer <令牌>` 里的令牌就是 `AccessToken` 的主键；找到这一行并且 `expiresAt` 晚于现在，请求就以 `owner` 指向的 `User` 的身份运行（见 4.2 的 `actor`）。规则：主键必须是 `Token`（否则 `SIR-TYPE-001`）；`subject` 必须是 `Ref<实体>` 字段；`expires` 必须是 `DateTime` 字段；同一个主体只能有一种凭据实体（`SIR-VALID-009`）；一个软件里，“要求已认证”的能力要么全由凭据认证，要么全不是。作废令牌不需要新语法：把 `expiresAt` 更新成 `now()`。
 
 ### 3.3 输入（`input`）
 
@@ -232,8 +244,8 @@ entity AccessToken persistent {
 
 ```sir-declarations
 input RegisterInput {
-  field name: String where notBlank, length(1, 64);
-  field note: Optional<String>;
+  field name: Name where length(1, 64);
+  field note: Optional<Text>;
 }
 ```
 
@@ -241,21 +253,21 @@ input RegisterInput {
 
 ```sir-declarations
 entity Course persistent {
-  identity id: Int64 generated auto;
-  field name: String where notBlank;
-  field capacity: Int32 where min(1);
-  field version: Int64 versioned;
+  identity id: Id generated auto;
+  field name: Text where notBlank;
+  field capacity: Quantity;
+  field version: Version;
 }
 input UpdateCourseInput patch of Course {
-  field id: Int64;
-  field name: String;
-  field capacity: Int32;
+  field id: Id;
+  field name: Text;
+  field capacity: Count;
 }
 view CourseView from Course {
-  field id: Int64;
-  field name: String;
-  field capacity: Int32;
-  field version: Int64;
+  field id: Id;
+  field name: Text;
+  field capacity: Count;
+  field version: Serial;
 }
 error CourseNotFound http 404;
 error EmptyChange;
@@ -289,21 +301,21 @@ capability UpdateCourse {
 
 ```sir-declarations
 entity Author persistent {
-  identity id: Int64 generated auto;
-  field name: String;
+  identity id: Id generated auto;
+  field name: Text;
 }
 entity Book persistent {
-  identity id: Int64 generated auto;
-  field title: String;
+  identity id: Id generated auto;
+  field title: Text;
   field author: Ref<Author>;
 }
 view AuthorSummary from Author {
-  field id: Int64;
-  field name: String;
+  field id: Id;
+  field name: Text;
 }
 view BookView from Book {
-  field id: Int64;
-  field title: String;
+  field id: Id;
+  field title: Text;
   field author: AuthorSummary;
 }
 ```
@@ -325,15 +337,15 @@ error 名字 http 404;      // 指定状态码
 
 ```sir-declarations
 entity Note persistent {
-  identity id: Int64 generated auto;
-  field text: String;
+  identity id: Id generated auto;
+  field text: Text;
 }
 view NoteView from Note {
-  field id: Int64;
-  field text: String;
+  field id: Id;
+  field text: Text;
 }
 input NoteInput {
-  field text: String where notBlank;
+  field text: Text where notBlank;
 }
 capability PostNote {
   input NoteInput;
@@ -360,15 +372,15 @@ capability PostNote {
 
 ```sir-error SIR-VALID-001
 entity Item persistent {
-  identity id: Int64 generated auto;
-  field name: String;
+  identity id: Id generated auto;
+  field name: Text;
 }
 view ItemView from Item {
-  field id: Int64;
-  field name: String;
+  field id: Id;
+  field name: Text;
 }
 input ItemRef {
-  field id: Int64;
+  field id: Id;
 }
 error ItemGone http 404;
 error AccessDenied http 401;
@@ -398,20 +410,20 @@ capability GetItem {
 
 ```sir-declarations
 entity User persistent {
-  identity id: Int64 generated auto;
-  field name: String;
+  identity id: Id generated auto;
+  field name: Text;
 }
 entity Goods persistent {
-  identity id: Int64 generated auto;
-  field title: String;
+  identity id: Id generated auto;
+  field title: Text;
   field seller: Ref<User>;
 }
 view GoodsView from Goods {
-  field id: Int64;
-  field title: String;
+  field id: Id;
+  field title: Text;
 }
 input PublishInput {
-  field title: String where notBlank;
+  field title: Text where notBlank;
 }
 capability PublishGoods {
   actor Ref<User>;
@@ -468,15 +480,15 @@ load 实体 by 字段名: 值 as 变量 else 错误名;
 
 ```sir-declarations
 entity Account persistent {
-  identity id: Int64 generated auto;
-  field name: String unique;
+  identity id: Id generated auto;
+  field name: Text unique;
 }
 view AccountView from Account {
-  field id: Int64;
-  field name: String;
+  field id: Id;
+  field name: Text;
 }
 input ByName {
-  field name: String;
+  field name: Text;
 }
 error AccountNotFound http 404;
 capability FindAccount {
@@ -496,17 +508,17 @@ capability FindAccount {
 
 ```sir-error SIR-VALID-006
 entity Course persistent {
-  identity id: Int64 generated auto;
-  field code: String unique;
-  field name: String;
-  field version: Int64 versioned;
+  identity id: Id generated auto;
+  field code: Text unique;
+  field name: Text;
+  field version: Version;
 }
 view CourseView from Course {
-  field id: Int64;
+  field id: Id;
 }
 input RenameCourse patch of Course {
-  field id: Int64;
-  field name: String;
+  field id: Id;
+  field name: Text;
 }
 error NoCourse http 404;
 error Stale http 409;
@@ -541,20 +553,20 @@ find 实体 where 谓词 [order by 字段 [ascending|descending], ...] [Page 页
 
 ```sir-declarations
 entity Ticket persistent {
-  identity id: Int64 generated auto;
-  field title: String;
-  field priority: Int32;
-  field expiresAt: DateTime;
+  identity id: Id generated auto;
+  field title: Text;
+  field priority: Count;
+  field expiresAt: Moment;
 }
 view TicketView from Ticket {
-  field id: Int64;
-  field title: String;
+  field id: Id;
+  field title: Text;
 }
 input TicketQuery {
-  field minPriority: Int32;
-  field keyword: String;
-  field page: Int32;
-  field size: Int32;
+  field minPriority: Count;
+  field keyword: Text;
+  field page: PageNo;
+  field size: PageSize;
 }
 error BadPage;
 capability LiveTickets {
@@ -582,16 +594,16 @@ capability LiveTickets {
 
 ```sir-error SIR-VALID-001
 entity Ticket persistent {
-  identity id: Int64 generated auto;
-  field priority: Int32;
+  identity id: Id generated auto;
+  field priority: Count;
 }
 view TicketView from Ticket {
-  field id: Int64;
+  field id: Id;
 }
 input Limit {
-  field floor: Int32;
-  field page: Int32;
-  field size: Int32;
+  field floor: Count;
+  field page: PageNo;
+  field size: PageSize;
 }
 error BadPage;
 capability Wrong {
@@ -611,16 +623,16 @@ capability Wrong {
 
 ```sir-error SIR-VALID-001
 entity Ticket persistent {
-  identity id: Int64 generated auto;
-  field priority: Int32;
+  identity id: Id generated auto;
+  field priority: Count;
 }
 view TicketView from Ticket {
-  field id: Int64;
+  field id: Id;
 }
 input Limit {
-  field floor: Int32;
-  field page: Int32;
-  field size: Int32;
+  field floor: Count;
+  field page: PageNo;
+  field size: PageSize;
 }
 error BadPage;
 capability Wrong {
@@ -640,21 +652,21 @@ capability Wrong {
 
 ```sir-declarations
 entity Course persistent {
-  identity id: Int64 generated auto;
-  field code: String;
+  identity id: Id generated auto;
+  field code: Text;
 }
 entity Enrollment persistent {
-  identity id: Int64 generated auto;
+  identity id: Id generated auto;
   field course: Ref<Course>;
-  field active: Boolean;
+  field active: Flag;
 }
 view CourseView from Course {
-  field id: Int64;
-  field code: String;
+  field id: Id;
+  field code: Text;
 }
 input PageInput {
-  field page: Int32;
-  field size: Int32;
+  field page: PageNo;
+  field size: PageSize;
 }
 error InvalidPage;
 capability ActiveCourses {
@@ -701,21 +713,21 @@ persist 变量;
 
 ```sir-declarations
 entity User persistent {
-  identity id: Int64 generated auto;
-  field name: String;
+  identity id: Id generated auto;
+  field name: Text;
 }
 entity RefreshToken persistent {
-  identity id: Uuid generated uuid;
+  identity id: Token generated uuid;
   field owner: Ref<User>;
-  field used: Boolean;
-  field expiresAt: DateTime;
+  field used: Flag;
+  field expiresAt: Moment;
 }
 view RefreshView from RefreshToken {
-  field id: Uuid;
-  field expiresAt: DateTime;
+  field id: Token;
+  field expiresAt: Moment;
 }
 input RefreshInput {
-  field token: Uuid;
+  field token: Token;
 }
 error Expired;
 error Invalid http 409;
@@ -763,9 +775,9 @@ return 变量;
 | `a.b.c` | 取成员 |
 | `x.字段.present` | 局部更新里，客户端传了没有 |
 | `枚举.成员` | 枚举值，如 `Status.OPEN` |
-| `now()` | 现在（`DateTime`） |
+| `now()` | 现在（`Moment`） |
 | `- x`、`not x` | 负号、非 |
-| `a + b`、`a - b` | 同类型的 `Int32`／`Int64`／`Decimal` 加减；整数溢出会抛错而不是回绕 |
+| `a + b`、`a - b` | 同底层的整数（32 位或 64 位）或 `Money` 加减；整数溢出会抛错而不是回绕 |
 | `时刻 + N unit` | 时间平移，`unit` 是 `second(s)`、`minute(s)`、`hour(s)`、`day(s)` |
 | `a < b`、`<=`、`>`、`>=` | 比较，两边同类型 |
 | `a == b`、`a != b` | 相等 |
@@ -776,23 +788,23 @@ return 变量;
 
 **优先级**（从紧到松）：一元（`-`、`not`）→ `+`／`-` → 比较（`<` 等）→ `containsLiteral`／`matches` → `==`／`!=` → `and` → `or`。
 
-**时间平移**：底必须是 `DateTime`，或者只按天的 `Date`；数量最大 2147483647；孤立的“15 minutes”不是表达式。“一天”按 24 小时算。`now() + 15 minutes`、`input.start + 3 days`。
+**时间平移**：底必须是 `Moment`，或者只按天的 `Day`；数量最大 2147483647；孤立的“15 minutes”不是表达式。“一天”按 24 小时算。`now() + 15 minutes`、`input.start + 3 days`。
 
-**`matches`**：左边必须是 `secret` 字段，右边是 `String`，结果是布尔。`secret` 字段只能放在它的左边读取；返回它、比较它、拿它做运算、放进 `find` 都会被拒绝（`SIR-VALID-008`）：
+**`matches`**：左边必须是 `secret` 字段，右边是文本，结果是布尔。`secret` 字段只能放在它的左边读取；返回它、比较它、拿它做运算、放进 `find` 都会被拒绝（`SIR-VALID-008`）：
 
 ```sir-error SIR-VALID-008
 entity Account persistent {
-  identity id: Int64 generated auto;
-  field name: String unique;
-  field passwordHash: String secret;
+  identity id: Id generated auto;
+  field name: Text unique;
+  field passwordHash: Secret;
 }
 view AccountView from Account {
-  field id: Int64;
-  field name: String;
+  field id: Id;
+  field name: Text;
 }
 input LoginInput {
-  field name: String;
-  field password: String;
+  field name: Text;
+  field password: Text;
 }
 error BadLogin http 401;
 capability Login {
@@ -813,12 +825,12 @@ capability Login {
 
 ```sir-error SIR-VALID-008
 entity Account persistent {
-  identity id: Int64 generated auto;
-  field passwordHash: String secret;
+  identity id: Id generated auto;
+  field passwordHash: Secret;
 }
 view AccountView from Account {
-  field id: Int64;
-  field passwordHash: String;
+  field id: Id;
+  field passwordHash: Text;
 }
 ```
 
@@ -828,21 +840,21 @@ view AccountView from Account {
 
 ```sir-declarations
 entity Account persistent {
-  identity id: Int64 generated auto;
-  field name: String unique;
-  field passwordHash: String secret;
+  identity id: Id generated auto;
+  field name: Text unique;
+  field passwordHash: Secret;
 }
 view AccountView from Account {
-  field id: Int64;
-  field name: String;
+  field id: Id;
+  field name: Text;
 }
 input RegisterInput {
-  field name: String where notBlank, length(1, 64);
-  field password: String where length(8, 128);
+  field name: Name where length(1, 64);
+  field password: Text where length(8, 128);
 }
 input LoginInput {
-  field name: String;
-  field password: String;
+  field name: Text;
+  field password: Text;
 }
 error BadLogin http 401;
 capability Register {
@@ -889,7 +901,7 @@ kcg edit --source-root ... --entry project.sir --candidate-root ... < scaffold.j
 
 ## 8. 多文件工程
 
-入口文件的 `sources { source "路径"; }` 列出其它文件，其它文件开头写 `sir 0.2` 加 `imports { import 声明名 from "路径"; }` 和 `declarations { ... }`（没有 `software`、`metadata`、`target`）。**跨文件用到哪个声明，就要在用到它的文件里 import 它**，否则报 `SIR-SOURCE-VISIBILITY-001`。声明名在整个工程里不能重复。
+入口文件的 `sources { source "路径"; }` 列出其它文件，其它文件开头写 `sir 0.3` 加 `imports { import 声明名 from "路径"; }` 和 `declarations { ... }`（没有 `software`、`metadata`、`target`）。**跨文件用到哪个声明，就要在用到它的文件里 import 它**，否则报 `SIR-SOURCE-VISIBILITY-001`。声明名在整个工程里不能重复。
 
 ## 9. 诊断码与典型错误
 
@@ -900,7 +912,7 @@ kcg edit --source-root ... --entry project.sir --candidate-root ... < scaffold.j
 | `SIR-LEX-*` | 词法错误：非法字符、字符串没闭合 |
 | `SIR-PARSE-001` | 语法错误（最常见）：缺分号、保留字当名字、子句顺序不对，都是这个码 |
 | `SIR-PARSE-002`／`003`／`004` | 语法错误的其它形式：缺少必要的部分／多余的内容／文件提前结束（括号没闭合） |
-| `SIR-VERSION-001` | 文档不是 `sir 0.2` |
+| `SIR-VERSION-001` | 文档不是 `sir 0.3` |
 | `SIR-TARGET-001`、`SIR-LOWER-TARGET-001` | `target` 写了目前不支持的值 |
 | `SIR-SYMBOL-001` | 重复定义（实体、字段、变量、错误、能力重名） |
 | `SIR-SYMBOL-002` | 引用了不存在的名字或字段 |
@@ -931,8 +943,8 @@ kcg edit --source-root ... --entry project.sir --candidate-root ... < scaffold.j
 
 ```sir-error SIR-PARSE-001
 entity Note persistent {
-  identity id: Int64 generated auto;
-  field text: String
+  identity id: Id generated auto;
+  field text: Text
 }
 ```
 
@@ -959,7 +971,7 @@ software Old {
 ```
 
 ```sir-error SIR-TARGET-001
-sir 0.2
+sir 0.3
 
 software Elsewhere {
   metadata {
@@ -982,24 +994,24 @@ software Elsewhere {
 
 ```sir-error SIR-SYMBOL-001
 entity Note persistent {
-  identity id: Int64 generated auto;
+  identity id: Id generated auto;
 }
 entity Note persistent {
-  identity id: Int64 generated auto;
+  identity id: Id generated auto;
 }
 ```
 
 ```sir-error SIR-SYMBOL-002
 entity Note persistent {
-  identity id: Int64 generated auto;
-  field text: String;
+  identity id: Id generated auto;
+  field text: Text;
 }
 view NoteView from Note {
-  field id: Int64;
-  field text: String;
+  field id: Id;
+  field text: Text;
 }
 input NoteRef {
-  field id: Int64;
+  field id: Id;
 }
 error NoNote http 404;
 capability GetNote {
@@ -1017,20 +1029,20 @@ capability GetNote {
 
 ```sir-error SIR-SYMBOL-003
 entity Team persistent {
-  identity id: Int64 generated auto;
-  field name: String;
+  identity id: Id generated auto;
+  field name: Text;
 }
 entity Match persistent {
-  identity id: Int64 generated auto;
+  identity id: Id generated auto;
   field home: Ref<Team>;
   field away: Ref<Team>;
 }
 view TeamView from Team {
-  field id: Int64;
-  field name: String;
+  field id: Id;
+  field name: Text;
 }
 view MatchView from Match {
-  field id: Int64;
+  field id: Id;
   field home: TeamView;
 }
 ```
@@ -1042,34 +1054,34 @@ error Boom http 500;
 ```sir-error SIR-TYPE-002
 enum Level { LOW, HIGH }
 entity Task persistent {
-  identity id: Int64 generated auto;
+  identity id: Id generated auto;
   field level: Ref<Level>;
 }
 ```
 
 ```sir-error SIR-TYPE-003
 entity Task persistent {
-  identity id: Int64 generated auto;
-  field note: Optional<Optional<String>>;
+  identity id: Id generated auto;
+  field note: Optional<Optional<Text>>;
 }
 ```
 
 ```sir-error SIR-TYPE-004
 entity Course persistent {
-  identity id: Int64 generated auto;
-  field code: String;
+  identity id: Id generated auto;
+  field code: Text;
 }
 entity Enrollment persistent {
-  identity id: Int64 generated auto;
+  identity id: Id generated auto;
   field course: Ref<Course>;
-  field active: Boolean;
+  field active: Flag;
 }
 view CourseView from Course {
-  field id: Int64;
+  field id: Id;
 }
 input PageInput {
-  field page: Int32;
-  field size: Int32;
+  field page: PageNo;
+  field size: PageSize;
 }
 error InvalidPage;
 capability ActiveCourses {
@@ -1087,15 +1099,15 @@ capability ActiveCourses {
 
 ```sir-error SIR-VALID-001
 entity Note persistent {
-  identity id: Int64 generated auto;
-  field text: String;
+  identity id: Id generated auto;
+  field text: Text;
 }
 view NoteView from Note {
-  field id: Int64;
-  field text: String;
+  field id: Id;
+  field text: Text;
 }
 input NoteInput {
-  field text: String where notBlank;
+  field text: Text where notBlank;
 }
 capability TwoWrites {
   input NoteInput;
@@ -1117,34 +1129,34 @@ capability TwoWrites {
 
 ```sir-error SIR-VALID-002
 entity Counter persistent {
-  identity id: Int64 generated auto;
-  field a: Int64 versioned;
-  field b: Int64 versioned;
+  identity id: Id generated auto;
+  field a: Version;
+  field b: Version;
 }
 ```
 
 ```sir-error SIR-VALID-003
 entity Course persistent {
-  identity id: Int64 generated auto;
-  field name: String;
-  field version: Int64 versioned;
+  identity id: Id generated auto;
+  field name: Text;
+  field version: Version;
 }
 input RenameCourse patch of Course {
-  field name: String;
+  field name: Text;
 }
 ```
 
 ```sir-error SIR-VALID-004
 entity Note persistent {
-  identity id: Int64 generated auto;
-  field text: String;
+  identity id: Id generated auto;
+  field text: Text;
 }
 view NoteView from Note {
-  field id: Int64;
-  field text: String;
+  field id: Id;
+  field text: Text;
 }
 input NoteInput {
-  field text: String;
+  field text: Text;
 }
 error Stale http 409;
 capability PostNote {
@@ -1165,49 +1177,49 @@ capability PostNote {
 
 ```sir-error SIR-VALID-005
 entity A persistent {
-  identity id: Int64 generated auto;
-  field name: String;
+  identity id: Id generated auto;
+  field name: Text;
 }
 entity B persistent {
-  identity id: Int64 generated auto;
+  identity id: Id generated auto;
   field a: Ref<A>;
 }
 entity C persistent {
-  identity id: Int64 generated auto;
+  identity id: Id generated auto;
   field b: Ref<B>;
 }
 entity D persistent {
-  identity id: Int64 generated auto;
+  identity id: Id generated auto;
   field c: Ref<C>;
 }
 view AView from A {
-  field id: Int64;
-  field name: String;
+  field id: Id;
+  field name: Text;
 }
 view BView from B {
-  field id: Int64;
+  field id: Id;
   field a: AView;
 }
 view CView from C {
-  field id: Int64;
+  field id: Id;
   field b: BView;
 }
 view DView from D {
-  field id: Int64;
+  field id: Id;
   field c: CView;
 }
 ```
 
 ```sir-error SIR-VALID-006
 entity Account persistent {
-  identity id: Int64 generated auto;
-  field name: String;
+  identity id: Id generated auto;
+  field name: Text;
 }
 view AccountView from Account {
-  field id: Int64;
+  field id: Id;
 }
 input ByName {
-  field name: String;
+  field name: Text;
 }
 error AccountNotFound http 404;
 capability FindAccount {
@@ -1225,15 +1237,15 @@ capability FindAccount {
 
 ```sir-error SIR-VALID-007
 entity Token persistent {
-  identity id: Uuid generated uuid;
-  field used: Boolean;
-  field uses: Int32;
+  identity id: Token generated uuid;
+  field used: Flag;
+  field uses: Count;
 }
 view TokenView from Token {
-  field id: Uuid;
+  field id: Token;
 }
 input TokenInput {
-  field token: Uuid;
+  field token: Token;
 }
 error Gone http 409;
 capability Spend {
@@ -1253,30 +1265,30 @@ capability Spend {
 
 ```sir-error SIR-VALID-009
 entity User persistent {
-  identity id: Int64 generated auto;
+  identity id: Id generated auto;
 }
 entity AccessToken persistent {
-  identity id: Uuid generated uuid;
+  identity id: Token generated uuid;
   field owner: Ref<User>;
-  field expiresAt: DateTime;
+  field expiresAt: Moment;
   credential subject owner expires expiresAt;
 }
 entity ApiKey persistent {
-  identity id: Uuid generated uuid;
+  identity id: Token generated uuid;
   field owner: Ref<User>;
-  field expiresAt: DateTime;
+  field expiresAt: Moment;
   credential subject owner expires expiresAt;
 }
 ```
 
 ```sir-error SIR-FLOW-001
 entity Note persistent {
-  identity id: Int64 generated auto;
-  field text: String;
+  identity id: Id generated auto;
+  field text: Text;
 }
 view NoteView from Note {
-  field id: Int64;
-  field text: String;
+  field id: Id;
+  field text: Text;
 }
 capability Nothing {
   output NoteView;
@@ -1290,14 +1302,14 @@ capability Nothing {
 
 ```sir-error SIR-FLOW-002
 entity Note persistent {
-  identity id: Int64 generated auto;
-  field text: String;
+  identity id: Id generated auto;
+  field text: Text;
 }
 view NoteView from Note {
-  field id: Int64;
+  field id: Id;
 }
 input NoteRef {
-  field id: Int64;
+  field id: Id;
 }
 error NoNote http 404;
 capability GetNote {
@@ -1314,14 +1326,14 @@ capability GetNote {
 
 ```sir-error SIR-FLOW-003
 entity Note persistent {
-  identity id: Int64 generated auto;
-  field text: String;
+  identity id: Id generated auto;
+  field text: Text;
 }
 view NoteView from Note {
-  field id: Int64;
+  field id: Id;
 }
 input NoteRef {
-  field id: Int64;
+  field id: Id;
 }
 error NoNote http 404;
 capability GetNote {
@@ -1338,14 +1350,14 @@ capability GetNote {
 
 ```sir-error SIR-FLOW-004
 entity Note persistent {
-  identity id: Int64 generated auto;
-  field text: String;
+  identity id: Id generated auto;
+  field text: Text;
 }
 view NoteView from Note {
-  field id: Int64;
+  field id: Id;
 }
 input NoteInput {
-  field text: String;
+  field text: Text;
 }
 capability Wrong {
   input NoteInput;
@@ -1363,18 +1375,18 @@ capability Wrong {
 
 ```sir-error SIR-FLOW-005
 entity Course persistent {
-  identity id: Int64 generated auto;
-  field code: String;
+  identity id: Id generated auto;
+  field code: Text;
 }
 entity Enrollment persistent {
-  identity id: Int64 generated auto;
+  identity id: Id generated auto;
   field course: Ref<Course>;
 }
 view CourseView from Course {
-  field id: Int64;
+  field id: Id;
 }
 input CourseRef {
-  field id: Int64;
+  field id: Id;
 }
 error NoCourse http 404;
 capability Wrong {
@@ -1394,6 +1406,6 @@ capability Wrong {
 ## 10. 还没有的东西
 
 - 删除（`delete`）步骤、路由模板（路径参数）、授权（角色与数据范围）。
-- 数据库建表和迁移：SIR 描述数据长什么样，**建表由部署方负责**（测试里的 DDL 只是夹具）。字段名在数据库里是下划线形式（`passwordHash` → `password_hash`，`Ref` 字段 `owner` → `owner_id`），`Uuid` 列用 `CHAR(36)`。
+- 数据库建表和迁移：SIR 描述数据长什么样，**建表由部署方负责**（测试里的 DDL 只是夹具）。字段名在数据库里是下划线形式（`passwordHash` → `password_hash`，`Ref` 字段 `owner` → `owner_id`），`Token` 列用 `CHAR(36)`。
 - 口令强度、登录失败的锁定与限流、令牌的缓存。
 - 除上面的 target 之外的语言、框架、数据库。

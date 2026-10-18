@@ -21,7 +21,7 @@ import org.junit.jupiter.api.Test;
  * the role is a later phase's rule.
  */
 class CredentialClauseGrammarTest {
-    private static final String USER = "entity User persistent { identity id: Int64 generated auto; field name: String; }\n";
+    private static final String USER = "entity User persistent { identity id: Id generated auto; field name: Text; }\n";
 
     private final SirParser parser = new DefaultSirParser();
 
@@ -29,9 +29,9 @@ class CredentialClauseGrammarTest {
     void theClauseNamesTheSubjectAndTheExpiryFieldOfTheEntityItCloses() {
         AstEntityDecl token = entity(parseOk(USER + """
                 entity AccessToken persistent {
-                  identity id: Uuid generated uuid;
+                  identity id: Token generated uuid;
                   field owner: Ref<User>;
-                  field expiresAt: DateTime;
+                  field expiresAt: Moment;
                   credential subject owner expires expiresAt;
                 }
                 """), "AccessToken");
@@ -49,10 +49,10 @@ class CredentialClauseGrammarTest {
     void theWordsAreStillOrdinaryNamesWhereTheyAreNotTheClause() {
         AstEntityDecl odd = entity(parseOk("""
                 entity credential persistent {
-                  identity id: Int64 generated auto;
-                  field credential: String;
-                  field subject: String;
-                  field expires: String;
+                  identity id: Id generated auto;
+                  field credential: Text;
+                  field subject: Text;
+                  field expires: Text;
                 }
                 """), "credential");
 
@@ -62,13 +62,13 @@ class CredentialClauseGrammarTest {
 
     @Test
     void aMalformedClauseIsAGrammarError() {
-        String head = USER + "entity T persistent { identity id: Uuid generated uuid; field owner: Ref<User>; field at: DateTime;\n";
+        String head = USER + "entity T persistent { identity id: Token generated uuid; field owner: Ref<User>; field at: Moment;\n";
         assertRejected(head + "credential owner at; }");
         assertRejected(head + "credential subject owner; }");
         assertRejected(head + "credential subject owner expires; }");
         assertRejected(head + "credential expires at subject owner; }");
         assertRejected(head + "credential subject owner expires at }");
-        assertRejected(head + "credential subject owner expires at; field late: String; }");
+        assertRejected(head + "credential subject owner expires at; field late: Text; }");
     }
 
     private static AstEntityDecl entity(AstSoftware software, String name) {
@@ -103,7 +103,7 @@ class CredentialClauseGrammarTest {
 
     private static String document(String declarations) {
         return """
-                sir 0.2
+                sir 0.3
                 software CredentialGrammar {
                   metadata {
                     displayName "Credential Grammar";

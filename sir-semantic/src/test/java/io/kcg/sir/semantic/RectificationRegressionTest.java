@@ -66,16 +66,16 @@ class RectificationRegressionTest {
 
     private static final String USER_ENTITY = """
             entity User persistent {
-              identity id: Int64 generated auto;
-              field name: String;
-              field age: Int32;
+              identity id: Id generated auto;
+              field name: Text;
+              field age: Count;
             }
             """;
 
     private static final String CREATE_INPUT = """
             input CreateInput {
-              field name: String;
-              field age: Int32;
+              field name: Text;
+              field age: Count;
             }
             """;
 
@@ -128,7 +128,7 @@ class RectificationRegressionTest {
     void r03_twoFindItemsHaveDifferentSymbolIds() {
         String source = sir(USER_ENTITY + """
                 input LookupInput {
-                  field minAge: Int32;
+                  field minAge: Count;
                 }
                 capability Find {
                   input LookupInput;
@@ -181,8 +181,8 @@ class RectificationRegressionTest {
     void r05_unknownUpdateFieldProducesSymbolError() {
         String source = sir(USER_ENTITY + """
                 input UpdateInput {
-                  field id: Int64;
-                  field name: String;
+                  field id: Id;
+                  field name: Text;
                 }
                 error NotFound;
                 capability Update {
@@ -210,7 +210,7 @@ class RectificationRegressionTest {
     void r06_updateAssignmentTypeMismatchProducesTypeError() {
         String source = sir(USER_ENTITY + """
                 input UpdateInput {
-                  field id: Int64;
+                  field id: Id;
                 }
                 error NotFound;
                 capability Update {
@@ -332,8 +332,8 @@ class RectificationRegressionTest {
     void r12_booleanWithNotBlankProducesTypeError() {
         String source = sir("""
                 entity User persistent {
-                  identity id: Int64 generated auto;
-                  field active: Boolean where notBlank;
+                  identity id: Id generated auto;
+                  field active: Flag where notBlank;
                 }
                 """);
         SemanticAnalysis result = TestSources.analyze(source);
@@ -346,8 +346,8 @@ class RectificationRegressionTest {
     void r13_minMaxConflictProducesValidationError() {
         String source = sir("""
                 entity User persistent {
-                  identity id: Int64 generated auto;
-                  field age: Int32 where min(10), max(5);
+                  identity id: Id generated auto;
+                  field age: Count where min(10), max(5);
                 }
                 """);
         SemanticAnalysis result = TestSources.analyze(source);
@@ -360,8 +360,8 @@ class RectificationRegressionTest {
     void r14_constraintParamTypeInvalidProducesTypeError() {
         String source = sir("""
                 entity User persistent {
-                  identity id: Int64 generated auto;
-                  field name: String where length("a", "b");
+                  identity id: Id generated auto;
+                  field name: Text where length("a", "b");
                 }
                 """);
         SemanticAnalysis result = TestSources.analyze(source);
@@ -374,7 +374,7 @@ class RectificationRegressionTest {
     void r15_groupedExpressionNotInNormalizedModel() {
         String source = sir(USER_ENTITY + """
                 input CheckInput {
-                  field active: Boolean;
+                  field active: Flag;
                 }
                 error BadInput;
                 capability Check {
@@ -541,8 +541,8 @@ class RectificationRegressionTest {
     void r22_negativeMinAndMaxAreNumericConstantsAndSurviveNormalization() {
         String source = sir("""
                 entity User persistent {
-                  identity id: Int64 generated auto;
-                  field age: Int32 where min(-2), max(-1);
+                  identity id: Id generated auto;
+                  field age: Count where min(-2), max(-1);
                 }
                 """);
 
@@ -575,8 +575,8 @@ class RectificationRegressionTest {
     void r23_negativeMinMaxConflictProducesValidationError() {
         String source = sir("""
                 entity User persistent {
-                  identity id: Int64 generated auto;
-                  field age: Int32 where min(-1), max(-2);
+                  identity id: Id generated auto;
+                  field age: Count where min(-1), max(-2);
                 }
                 """);
 
@@ -590,14 +590,14 @@ class RectificationRegressionTest {
     void r24_lengthRejectsNegativeAndDecimalArguments() {
         SemanticAnalysis negative = TestSources.analyze(sir("""
                 entity User persistent {
-                  identity id: Int64 generated auto;
-                  field name: String where length(-1, 5);
+                  identity id: Id generated auto;
+                  field name: Text where length(-1, 5);
                 }
                 """));
         SemanticAnalysis decimal = TestSources.analyze(sir("""
                 entity User persistent {
-                  identity id: Int64 generated auto;
-                  field name: String where length(1.5, 2.5);
+                  identity id: Id generated auto;
+                  field name: Text where length(1.5, 2.5);
                 }
                 """));
 
@@ -620,9 +620,9 @@ class RectificationRegressionTest {
     void r26_everyWorkflowNameReferenceIsBoundBeforeNormalization() {
         String source = sir(USER_ENTITY + """
                 input ChangeInput {
-                  field id: Int64;
-                  field name: String;
-                  field age: Int32;
+                  field id: Id;
+                  field name: Text;
+                  field age: Count;
                 }
                 error Invalid;
                 capability Change {
@@ -693,7 +693,7 @@ class RectificationRegressionTest {
     @Test
     void r27_updateIdentityIsKnownButForbidden() {
         String source = sir(USER_ENTITY + """
-                input UpdateInput { field id: Int64; }
+                input UpdateInput { field id: Id; }
                 error NotFound;
                 capability Update {
                   input UpdateInput;

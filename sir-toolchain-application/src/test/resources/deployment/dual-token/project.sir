@@ -1,4 +1,4 @@
-sir 0.2
+sir 0.3
 
 software DualTokenDesk {
   metadata {
@@ -17,33 +17,33 @@ software DualTokenDesk {
   imports { }
   declarations {
     entity User persistent {
-      identity id: Int64 generated auto;
-      field name: String where length(1, 64) unique;
-      field passwordHash: String secret;
+      identity id: Id generated auto;
+      field name: Text where length(1, 64) unique;
+      field passwordHash: Secret;
     }
     entity Note persistent {
-      identity id: Int64 generated auto;
+      identity id: Id generated auto;
       field author: Ref<User>;
-      field text: String @id("note-text");
+      field text: Text @id("note-text");
     }
     view NoteView from Note {
-      field id: Int64;
-      field text: String;
+      field id: Id;
+      field text: Text;
     }
     input NoteInput {
-      field text: String where notBlank;
+      field text: Text where notBlank;
     }
     view UserView from User {
-      field id: Int64;
-      field name: String;
+      field id: Id;
+      field name: Text;
     }
     input UserRef {
-      field id: Int64;
+      field id: Id;
     }
     error UserNotFound http 404;
     input RegisterInput {
-      field name: String;
-      field password: String;
+      field name: Text;
+      field password: Text;
     }
     capability GetUser {
       input UserRef;

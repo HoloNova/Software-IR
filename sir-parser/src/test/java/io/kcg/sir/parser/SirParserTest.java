@@ -37,7 +37,7 @@ class SirParserTest {
         assertTrue(result.isSuccess(), () -> messages(result.diagnostics()));
         AstDocument document = result.unit().map(ParseTestSupport::document).orElseThrow();
         assertEquals(new BigInteger("0"), document.sirVersion().major());
-        assertEquals(new BigInteger("2"), document.sirVersion().minor());
+        assertEquals(new BigInteger("3"), document.sirVersion().minor());
         assertEquals("CampusMarket", document.software().name().text());
         assertEquals(6, document.software().declarations().size());
         assertInstanceOf(AstEnumDecl.class, document.software().declarations().get(0));
@@ -127,7 +127,7 @@ class SirParserTest {
     @Test
     void sourceOffsetsCountUnicodeCodePoints() {
         String content = """
-                sir 0.2
+                sir 0.3
                 software UnicodeSample {
                   metadata { displayName "😀"; namespace "example.unicode"; }
                   target {

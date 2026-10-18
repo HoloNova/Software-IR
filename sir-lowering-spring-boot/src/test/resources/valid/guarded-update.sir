@@ -1,4 +1,4 @@
-sir 0.2
+sir 0.3
 
 software CredentialDesk {
   metadata {
@@ -17,18 +17,18 @@ software CredentialDesk {
   imports { }
   declarations {
     entity Credential persistent {
-      identity id: Uuid generated uuid;
-      field owner: String;
-      field used: Boolean;
-      field expiresAt: DateTime;
+      identity id: Token generated uuid;
+      field owner: Text;
+      field used: Flag;
+      field expiresAt: Moment;
     }
     view CredentialView from Credential {
-      field id: Uuid;
-      field owner: String;
-      field expiresAt: DateTime;
+      field id: Token;
+      field owner: Text;
+      field expiresAt: Moment;
     }
     input RefreshInput {
-      field token: Uuid;
+      field token: Token;
     }
     error Expired;
     error Invalid http 409;

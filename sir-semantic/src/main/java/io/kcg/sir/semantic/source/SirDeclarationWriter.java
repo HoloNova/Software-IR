@@ -44,7 +44,7 @@ public final class SirDeclarationWriter {
       Map.entry("CONTAINS_LITERAL", CONTAINS), Map.entry("MATCHES", CONTAINS), Map.entry("ADD", ADDITIVE), Map.entry("SUB", ADDITIVE)
    );
    private static final Map<String, String> PRIMITIVE_TEXT = Map.of(
-      "BOOLEAN", "Boolean", "INT32", "Int32", "INT64", "Int64", "DECIMAL", "Decimal", "STRING", "String", "UUID", "Uuid", "DATE", "Date", "DATE_TIME", "DateTime", "UNIT", "Unit"
+      "UNIT", "Unit"
    );
 
    private static final List<String> REQUIREMENT_ORDER = List.of("AUTHENTICATED", "ATOMIC", "READONLY");
@@ -166,18 +166,24 @@ public final class SirDeclarationWriter {
 
    private String field(StructNode field, boolean entityField) {
       StringBuilder line = new StringBuilder("field ").append(text(field, "name")).append(": ").append(type(child(field, "type")));
+      // What the type already brings is part of its meaning, so it is not written again.
+      Optional<io.kcg.sir.semantic.feature.SemanticTypes.Entry> brought = semanticTypeOf(child(field, "type"));
+      List<String> brings = brought.map(e -> e.rules().stream().map(io.kcg.sir.semantic.feature.SemanticTypes.Rule::text).toList()).orElse(List.of());
       List<StructNode> constraints = nodes(field, "constraints");
-      if (!constraints.isEmpty()) {
-         List<String> parts = new ArrayList<>();
-         for (StructNode constraint : constraints) {
-            List<StructNode> args = nodes(constraint, "arguments");
-            parts.add(args.isEmpty() ? text(constraint, "name") : text(constraint, "name") + "(" + join(args.stream().map(a -> expression(a, 0)).toList()) + ")");
+      List<String> parts = new ArrayList<>();
+      for (StructNode constraint : constraints) {
+         List<StructNode> args = nodes(constraint, "arguments");
+         String written = args.isEmpty() ? text(constraint, "name") : text(constraint, "name") + "(" + join(args.stream().map(a -> expression(a, 0)).toList()) + ")";
+         if (!brings.contains(written)) {
+            parts.add(written);
          }
+      }
 
+      if (!parts.isEmpty()) {
          line.append(" where ").append(String.join(", ", parts));
       }
 
-      if (text(field, "versioned").equals("true")) {
+      if (text(field, "versioned").equals("true") && !brought.map(io.kcg.sir.semantic.feature.SemanticTypes.Entry::versioned).orElse(false)) {
          line.append(" versioned");
       }
 
@@ -185,7 +191,7 @@ public final class SirDeclarationWriter {
          line.append(" unique");
       }
 
-      if (entityField && text(field, "secret").equals("true")) {
+      if (entityField && text(field, "secret").equals("true") && !brought.map(io.kcg.sir.semantic.feature.SemanticTypes.Entry::secret).orElse(false)) {
          line.append(" secret");
       }
 
@@ -244,6 +250,15 @@ public final class SirDeclarationWriter {
 
    // ----- types --------------------------------------------------------------------------------
 
+   /** The semantic type a field is declared with, looking through {@code Optional}. */
+   private static Optional<io.kcg.sir.semantic.feature.SemanticTypes.Entry> semanticTypeOf(StructNode type) {
+      return switch (type.kind()) {
+         case "SemanticType" -> io.kcg.sir.semantic.feature.SemanticTypes.named(text(type, "name"));
+         case "OptionalType" -> semanticTypeOf(child(type, "element"));
+         default -> Optional.empty();
+      };
+   }
+
    private static String type(StructNode node) {
       return switch (node.kind()) {
          case "PrimitiveType" -> {
@@ -255,6 +270,7 @@ public final class SirDeclarationWriter {
 
             yield sir;
          }
+         case "SemanticType" -> text(node, "name");
          case "DeclaredType" -> text(node, "name");
          case "RefType" -> "Ref<" + text(node, "entityName") + ">";
          case "OptionalType" -> "Optional<" + type(child(node, "element")) + ">";

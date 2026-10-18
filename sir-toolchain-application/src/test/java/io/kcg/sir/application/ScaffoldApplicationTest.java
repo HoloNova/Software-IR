@@ -118,7 +118,7 @@ class ScaffoldApplicationTest {
     @Test
     void aNameThatIsTakenIsRefusedUntilAPrefixKeepsTheNamesApart() throws Exception {
         Path source = source("sir", "    entity Note persistent {",
-            "    entity AccessToken persistent {\n      identity id: Int64 generated auto;\n      field label: String;\n    }\n    entity Note persistent {");
+            "    entity AccessToken persistent {\n      identity id: Id generated auto;\n      field label: Text;\n    }\n    entity Note persistent {");
 
         var refused = assertInstanceOf(ScaffoldResult.Refused.class, new ScaffoldApplication().dualToken(request(source, "", 15, 7)));
         assertTrue(refused.details().stream().anyMatch(detail -> detail.contains("SIR-SYMBOL-001")), refused.details().toString());
@@ -129,7 +129,7 @@ class ScaffoldApplicationTest {
 
     @Test
     void anAccountThatLacksWhatTheLoginNeedsIsRefusedWithTheAnalysisFindings() throws Exception {
-        Path source = source("sir", "      field passwordHash: String secret;", "      field passwordHash: String;");
+        Path source = source("sir", "      field passwordHash: Secret;", "      field passwordHash: Text;");
 
         var refused = assertInstanceOf(ScaffoldResult.Refused.class, new ScaffoldApplication().dualToken(request(source, "", 15, 7)));
         assertTrue(refused.details().stream().anyMatch(detail -> detail.contains("SIR-VALID-008")), refused.details().toString());

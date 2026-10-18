@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test;
  */
 class IntegerWidthSemanticsTest {
     private static final String TEMPLATE = """
-            sir 0.2
+            sir 0.3
             software Width {
               metadata { displayName "Width"; namespace "example.width"; }
               target { language java 21; framework spring_boot; persistence mybatis_plus; database mysql; build maven; interface rest; }
@@ -23,13 +23,13 @@ class IntegerWidthSemanticsTest {
               imports { }
               declarations {
                 entity Item persistent {
-                  identity id: Int64 generated auto;
-                  field qty: Int64;
-                  field n: Int32;
+                  identity id: Id generated auto;
+                  field qty: Serial;
+                  field n: Count;
                 }
-                view ItemView from Item { field id: Int64; field qty: Int64; }
-                input In { field amount: Int64; field small: Int32; }
-                input PageIn { field page: Int32; field size: Int32; field min: Int64; }
+                view ItemView from Item { field id: Id; field qty: Serial; }
+                input In { field amount: Serial; field small: Count; }
+                input PageIn { field page: PageNo; field size: PageSize; field min: Serial; }
                 error Bad;
                 capability Make {
                   input In; output ItemView; fails Bad; requires atomic; expose command;

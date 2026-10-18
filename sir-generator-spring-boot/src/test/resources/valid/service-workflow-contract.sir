@@ -1,4 +1,4 @@
-sir 0.2
+sir 0.3
 
 software ServiceWorkflowContract {
   metadata {
@@ -18,13 +18,13 @@ software ServiceWorkflowContract {
   declarations {
     enum State { ACTIVE, INACTIVE }
     entity User persistent {
-      identity id: Uuid generated uuid;
+      identity id: Token generated uuid;
       field state: State;
     }
     input LookupInput {
-      field id: Uuid;
-      field active: Boolean;
-      field nickname: Optional<String>;
+      field id: Token;
+      field active: Flag;
+      field nickname: Optional<Text>;
     }
     error NotFound;
     capability ExerciseSteps {
@@ -45,7 +45,7 @@ software ServiceWorkflowContract {
     }
     capability ReadNickname {
       input LookupInput;
-      output Optional<String>;
+      output Optional<Text>;
       requires readonly;
       expose query;
       workflow {
@@ -54,7 +54,7 @@ software ServiceWorkflowContract {
     }
     capability EchoActive {
       input LookupInput;
-      output Boolean;
+      output Flag;
       requires readonly;
       expose query;
       workflow {

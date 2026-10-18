@@ -1,4 +1,4 @@
-sir 0.2
+sir 0.3
 
 software BadCall {
   metadata {
@@ -17,7 +17,7 @@ software BadCall {
   imports { }
   declarations {
     capability Bad {
-      output String;
+      output Text;
       expose command;
       workflow {
         return calculatePrice();

@@ -17,41 +17,41 @@ class GrammarBoundaryTest {
 
     @Test
     void versionMustBeOneContiguousDottedToken() {
-        assertGrammarRejected(emptyDocument().replace("sir 0.2", "sir 0./*x*/01"));
-        assertGrammarRejected(emptyDocument().replace("sir 0.2", "sir 0 . 1"));
+        assertGrammarRejected(emptyDocument().replace("sir 0.3", "sir 0./*x*/01"));
+        assertGrammarRejected(emptyDocument().replace("sir 0.3", "sir 0 . 1"));
     }
 
     @Test
     void lexicallyValidButUnsupportedVersionUsesVersionDiagnostic() {
         assertRejectedWith(
-                emptyDocument().replace("sir 0.2", "sir 0.01"),
+                emptyDocument().replace("sir 0.3", "sir 0.01"),
                 "SIR-VERSION-001");
     }
 
     @Test
     void zeroArgumentConstraintCallsAreNotAlternativeSpellings() {
-        assertGrammarRejected(entityDocument("field name: String where notBlank();"));
-        assertGrammarRejected(entityDocument("field name: String where min();"));
+        assertGrammarRejected(entityDocument("field name: Text where notBlank();"));
+        assertGrammarRejected(entityDocument("field name: Text where min();"));
     }
 
     @Test
     void constraintArgumentsMustBeConstants() {
-        assertGrammarRejected(entityDocument("field price: Decimal where min(input.price);"));
-        assertGrammarRejected(entityDocument("field price: Decimal where min(now());"));
-        assertGrammarRejected(entityDocument("field price: Decimal where min(State.ACTIVE);"));
+        assertGrammarRejected(entityDocument("field price: Money where min(input.price);"));
+        assertGrammarRejected(entityDocument("field price: Money where min(now());"));
+        assertGrammarRejected(entityDocument("field price: Money where min(State.ACTIVE);"));
     }
 
     @Test
     void fieldCannotRepeatWhereClause() {
         assertGrammarRejected(entityDocument(
-                "field name: String where notBlank where length(1, 100);"));
+                "field name: Text where notBlank where length(1, 100);"));
     }
 
     @Test
     void capabilityClausesHaveOneCanonicalOrder() {
         assertGrammarRejected(document("""
                 input Request {
-                  field value: String;
+                  field value: Text;
                 }
                 capability WrongOrder {
                   output Unit;
@@ -75,8 +75,8 @@ class GrammarBoundaryTest {
 
     @Test
     void requiredAndNullableAreNotAlternativeNullabilitySyntax() {
-        assertGrammarRejected(entityDocument("field name: String required;"));
-        assertGrammarRejected(entityDocument("field name: String nullable;"));
+        assertGrammarRejected(entityDocument("field name: Text required;"));
+        assertGrammarRejected(entityDocument("field name: Text nullable;"));
     }
 
     @Test
@@ -90,8 +90,8 @@ class GrammarBoundaryTest {
     void createBlockMustNotEndWithSemicolon() {
         assertGrammarRejected(document("""
                 entity Product persistent {
-                  identity id: Int64 generated auto;
-                  field name: String;
+                  identity id: Id generated auto;
+                  field name: Text;
                 }
                 capability CreateProduct {
                   output Ref<Product>;
@@ -128,20 +128,20 @@ class GrammarBoundaryTest {
     void viewDeclarationMustNameItsSourceEntity() {
         assertGrammarRejected(document("""
                 entity Course persistent {
-                  identity id: Int64 generated auto;
-                  field code: String;
+                  identity id: Id generated auto;
+                  field code: Text;
                 }
                 view CourseSummary {
-                  field code: String;
+                  field code: Text;
                 }
                 """));
         assertGrammarRejected(document("""
                 entity Course persistent {
-                  identity id: Int64 generated auto;
-                  field code: String;
+                  identity id: Id generated auto;
+                  field code: Text;
                 }
                 view CourseSummary from {
-                  field code: String;
+                  field code: Text;
                 }
                 """));
     }
@@ -181,8 +181,8 @@ class GrammarBoundaryTest {
     void pageContainerNeedsAnElementType() {
         assertGrammarRejected(document("""
                 entity Course persistent {
-                  identity id: Int64 generated auto;
-                  field code: String;
+                  identity id: Id generated auto;
+                  field code: Text;
                 }
                 capability BadPage {
                   output Page;
@@ -198,17 +198,17 @@ class GrammarBoundaryTest {
     private static String queryDocument(String workflow) {
         return document("""
                 entity Course persistent {
-                  identity id: Int64 generated auto;
-                  field code: String;
-                  field name: String;
+                  identity id: Id generated auto;
+                  field code: Text;
+                  field name: Text;
                 }
                 view CourseSummary from Course {
-                  field code: String;
+                  field code: Text;
                 }
                 input SearchCoursesInput {
-                  field keyword: String;
-                  field page: Int32;
-                  field size: Int32;
+                  field keyword: Text;
+                  field page: PageNo;
+                  field size: PageSize;
                 }
                 error InvalidPageParam;
                 capability SearchCourses {
@@ -261,7 +261,7 @@ class GrammarBoundaryTest {
     private static String entityDocument(String field) {
         return document("""
                 entity Sample persistent {
-                  identity id: Int64 generated auto;
+                  identity id: Id generated auto;
                   %s
                 }
                 """.formatted(field));
@@ -281,7 +281,7 @@ class GrammarBoundaryTest {
 
     private static String document(String declarations) {
         return """
-                sir 0.2
+                sir 0.3
                 software GrammarBoundary {
                   metadata {
                     displayName "Grammar Boundary";

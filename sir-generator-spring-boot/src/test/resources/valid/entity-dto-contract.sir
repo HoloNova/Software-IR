@@ -1,4 +1,4 @@
-sir 0.2
+sir 0.3
 
 software EntityDtoContract {
   metadata {
@@ -24,39 +24,39 @@ software EntityDtoContract {
     }
 
     entity Account persistent {
-      identity accountId: Uuid generated uuid;
-      field fullName: String where notBlank, length(1, 80);
-      field email: String where email;
-      field active: Boolean;
-      field retryCount: Int32;
-      field legacyNumber: Int64;
-      field creditLimit: Decimal where min(-10.50), max(999.99);
-      field externalKey: Uuid;
-      field openedOn: Date;
-      field updatedAt: DateTime;
-      field nickname: Optional<String>;
-      field aliases: List<String>;
+      identity accountId: Token generated uuid;
+      field fullName: Name where length(1, 80);
+      field email: Email;
+      field active: Flag;
+      field retryCount: Count;
+      field legacyNumber: Serial;
+      field creditLimit: Money where min(-10.50), max(999.99);
+      field externalKey: Token;
+      field openedOn: Day;
+      field updatedAt: Moment;
+      field nickname: Optional<Text>;
+      field aliases: List<Text>;
       field state: AccountState;
     }
 
     entity Purchase persistent {
-      identity id: Int64 generated auto;
+      identity id: Id generated auto;
       field account: Ref<Account>;
-      field amount: Decimal;
+      field amount: Money;
     }
 
     input RegisterAccountInput {
-      field fullName: String where notBlank, length(1, 80);
-      field email: String where email;
-      field active: Boolean;
-      field retryCount: Int32;
-      field legacyNumber: Int64;
-      field creditLimit: Decimal where min(-10.50), max(999.99);
-      field externalKey: Uuid;
-      field openedOn: Date;
-      field updatedAt: DateTime;
-      field nickname: Optional<String>;
-      field tags: List<String>;
+      field fullName: Name where length(1, 80);
+      field email: Email;
+      field active: Flag;
+      field retryCount: Count;
+      field legacyNumber: Serial;
+      field creditLimit: Money where min(-10.50), max(999.99);
+      field externalKey: Token;
+      field openedOn: Day;
+      field updatedAt: Moment;
+      field nickname: Optional<Text>;
+      field tags: List<Text>;
       field state: AccountState;
     }
   }

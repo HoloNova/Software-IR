@@ -68,7 +68,7 @@ class LexicalDiagnosticTest {
 
     private static String base() {
         return """
-                sir 0.2
+                sir 0.3
                 software LexicalSample {
                   metadata { displayName "DISPLAY"; namespace "example.lexical"; }
                   target {

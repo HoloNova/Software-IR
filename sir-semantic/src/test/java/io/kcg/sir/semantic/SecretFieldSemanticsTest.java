@@ -38,23 +38,23 @@ class SecretFieldSemanticsTest {
     @Test
     void onlyTextCanBeSecret() {
         // the string binding in the fixture no longer fits an Int32 field either, so this asserts the rule, not the count
-        SemanticAnalysis result = TestSources.analyze(replace("field passwordHash: String secret;", "field passwordHash: Int32 secret;"));
+        SemanticAnalysis result = TestSources.analyze(replace("field passwordHash: Secret;", "field passwordHash: Count secret;"));
 
         assertTrue(TestSources.hasError(result, "SIR-TYPE-001"), () -> result.diagnostics().toString());
     }
 
     @Test
     void aSecretCannotAlsoBeUniqueVersionedOrConstrained() {
-        assertOnly("SIR-VALID-008", replace("field passwordHash: String secret;", "field passwordHash: String unique secret;"));
-        assertOnly("SIR-VALID-008", replace("field passwordHash: String secret;", "field passwordHash: String where notBlank secret;"));
-        SemanticAnalysis versioned = TestSources.analyze(replace("field passwordHash: String secret;", "field passwordHash: String secret;\n      field version: Int64 versioned secret;"));
+        assertOnly("SIR-VALID-008", replace("field passwordHash: Secret;", "field passwordHash: Secret unique;"));
+        assertOnly("SIR-VALID-008", replace("field passwordHash: Secret;", "field passwordHash: Secret where notBlank;"));
+        SemanticAnalysis versioned = TestSources.analyze(replace("field passwordHash: Secret;", "field passwordHash: Secret;\n      field version: Version secret;"));
         assertTrue(TestSources.hasError(versioned, "SIR-VALID-008"), () -> versioned.diagnostics().toString());
     }
 
     @Test
     void aSecretIsNeverProjectedIntoAResponse() {
-        assertOnly("SIR-VALID-008", replace("field name: String;\n    }\n    input RegisterInput",
-                "field name: String;\n      field passwordHash: String;\n    }\n    input RegisterInput"));
+        assertOnly("SIR-VALID-008", replace("field name: Text;\n    }\n    input RegisterInput",
+                "field name: Text;\n      field passwordHash: Text;\n    }\n    input RegisterInput"));
     }
 
     @Test

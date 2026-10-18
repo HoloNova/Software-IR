@@ -27,14 +27,14 @@ import org.junit.jupiter.api.Test;
 class UniqueFieldGrammarTest {
     private static final String ACCOUNT = """
             entity Account persistent {
-              identity id: Int64 generated auto;
-              field name: String where notBlank, length(1, 64) unique;
-              field email: String unique @id("email");
-              field nickname: String;
-              field unique: String;
+              identity id: Id generated auto;
+              field name: Name where length(1, 64) unique;
+              field email: Text unique @id("email");
+              field nickname: Text;
+              field unique: Text;
             }
             error NotFound http 404;
-            input ByName { field name: String; }
+            input ByName { field name: Text; }
             """;
 
     private final SirParser parser = new DefaultSirParser();
@@ -58,13 +58,13 @@ class UniqueFieldGrammarTest {
 
     @Test
     void uniqueIsNotAdmittedOnInputOrViewFields() {
-        assertRejected(ACCOUNT + "input Bad { field name: String unique; }");
-        assertRejected(ACCOUNT + "view Bad from Account { field name: String unique; }");
+        assertRejected(ACCOUNT + "input Bad { field name: Text unique; }");
+        assertRejected(ACCOUNT + "view Bad from Account { field name: Text unique; }");
     }
 
     @Test
     void aWordOtherThanUniqueAfterTheTypeIsStillAGrammarError() {
-        assertRejected("entity E persistent { identity id: Int64 generated auto; field a: String uniq; }");
+        assertRejected("entity E persistent { identity id: Id generated auto; field a: Text uniq; }");
     }
 
     @Test
@@ -147,7 +147,7 @@ class UniqueFieldGrammarTest {
 
     private static String document(String declarations) {
         return """
-                sir 0.2
+                sir 0.3
                 software UniqueGrammar {
                   metadata {
                     displayName "Unique Grammar";

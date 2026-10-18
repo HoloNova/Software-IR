@@ -130,18 +130,18 @@ final class WorkspaceScenarios {
         int to = project.indexOf("    capability CreateCourse {");
         assertTrue(from > 0 && to > from, "fixture changed");
         String getCourse = project.substring(from, to);
-        String longerCode = "field code: String where notBlank, length(1, 32);";
-        String longerCodeTo = "field code: String where notBlank, length(1, 40);";
+        String longerCode = "field code: Code;";
+        String longerCodeTo = "field code: Name where length(1, 40);";
         return switch (kind) {
             case MIXED -> edit(base, new String[] {"project.sir", getCourse, NEW_CAPABILITY}, new String[] {"project.sir", longerCode, longerCodeTo});
             case RENAME -> edit(base, new String[] {"project.sir", "namespace \"com.example.courseadmin\"", "namespace \"com.example.coursemanager\""});
-            case SOURCE_ONLY -> edit(base, new String[] {"modules/student.sir", "sir 0.2", "sir 0.2\n// reviewed"});
+            case SOURCE_ONLY -> edit(base, new String[] {"modules/student.sir", "sir 0.3", "sir 0.3\n// reviewed"});
             case ADD_ONLY -> edit(base, new String[] {"project.sir", "    capability CreateCourse {", NEW_CAPABILITY + "    capability CreateCourse {"});
             case DELETE_ONLY -> edit(base, new String[] {"project.sir", getCourse, ""});
-            case TWO_SOURCES -> edit(base, new String[] {"project.sir", longerCode, longerCodeTo}, new String[] {"modules/student.sir", "sir 0.2", "sir 0.2\n// reviewed"});
+            case TWO_SOURCES -> edit(base, new String[] {"project.sir", longerCode, longerCodeTo}, new String[] {"modules/student.sir", "sir 0.3", "sir 0.3\n// reviewed"});
             case NEW_SOURCE_FILE -> {
                 SourceSnapshot listed = edit(base, new String[] {"project.sir", "    source \"modules/enrollment.sir\";", "    source \"modules/enrollment.sir\";\n    source \"modules/notes.sir\";"});
-                yield with(listed, "modules/notes.sir", "sir 0.2\nimports {}\ndeclarations {\n}\n");
+                yield with(listed, "modules/notes.sir", "sir 0.3\nimports {}\ndeclarations {\n}\n");
             }
         };
     }

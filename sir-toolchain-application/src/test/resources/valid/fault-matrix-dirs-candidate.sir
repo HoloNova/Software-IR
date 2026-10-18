@@ -1,4 +1,4 @@
-sir 0.2
+sir 0.3
 
 software FaultMatrixDirs {
   metadata {
@@ -24,8 +24,8 @@ software FaultMatrixDirs {
     }
 
     entity Goods persistent {
-      identity id: Int64 generated auto;
-      field title: String where notBlank;
+      identity id: Id generated auto;
+      field title: Text where notBlank;
       field status: GoodsStatus;
     }
 

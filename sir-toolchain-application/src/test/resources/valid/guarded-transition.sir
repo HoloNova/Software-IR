@@ -1,4 +1,4 @@
-sir 0.2
+sir 0.3
 
 software CredentialRotation {
   metadata {
@@ -17,22 +17,22 @@ software CredentialRotation {
   imports { }
   declarations {
     entity Credential persistent {
-      identity id: Int64 generated auto;
-      field owner: String;
-      field used: Boolean;
-      field expiresAt: DateTime;
+      identity id: Id generated auto;
+      field owner: Text;
+      field used: Flag;
+      field expiresAt: Moment;
     }
     view CredentialView from Credential {
-      field id: Int64;
-      field owner: String;
-      field used: Boolean;
-      field expiresAt: DateTime;
+      field id: Id;
+      field owner: Text;
+      field used: Flag;
+      field expiresAt: Moment;
     }
     input GetCredentialInput {
-      field id: Int64;
+      field id: Id;
     }
     input RefreshInput {
-      field id: Int64;
+      field id: Id;
     }
     error CredentialNotFound http 404;
     error Expired http 400;

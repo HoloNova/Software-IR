@@ -1,4 +1,4 @@
-sir 0.2
+sir 0.3
 
 software WorkflowSample {
   metadata {
@@ -18,12 +18,12 @@ software WorkflowSample {
   declarations {
     enum State { ACTIVE, INACTIVE }
     entity User persistent {
-      identity id: Uuid generated uuid;
+      identity id: Token generated uuid;
       field state: State;
     }
     input LookupInput {
-      field id: Uuid;
-      field active: Boolean;
+      field id: Token;
+      field active: Flag;
     }
     error NotFound;
     capability ExerciseSteps {

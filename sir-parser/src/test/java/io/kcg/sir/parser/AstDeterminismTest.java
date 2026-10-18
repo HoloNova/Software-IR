@@ -82,7 +82,7 @@ class AstDeterminismTest {
 
     private static String negativeSource() {
         return """
-                sir 0.2
+                sir 0.3
                 software NegativeConstants {
                   metadata { displayName "Negative Constants"; namespace "tests.negative"; }
                   target {
@@ -97,10 +97,10 @@ class AstDeterminismTest {
                   imports { }
                   declarations {
                     entity Measure persistent {
-                      identity id: Int64 generated auto;
-                      field value: Decimal where min(-0.5);
+                      identity id: Id generated auto;
+                      field value: Money where min(-0.5);
                     }
-                    input CheckInput { field value: Decimal; }
+                    input CheckInput { field value: Money; }
                     error Invalid;
                     capability Check {
                       input CheckInput;

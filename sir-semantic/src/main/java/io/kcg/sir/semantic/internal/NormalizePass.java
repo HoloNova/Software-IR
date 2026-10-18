@@ -235,7 +235,7 @@ final class NormalizePass {
 
    private NormalizedIdentity normalizeIdentity(AstIdentity identity, String entityName) {
       SymbolId identityId = SymbolIdFactory.entityIdentity(this.softwareName, entityName);
-      SirType type = this.validated.typeRefTypes().get(identity.type().id());
+      SirType type = this.semantic(identity.type(), this.validated.typeRefTypes().get(identity.type().id()));
       return new NormalizedIdentity(
          identityId, identity.name().text(), identity.span(), identity.id(), type != null ? type : PrimitiveType.INT64, identity.generation()
       );
@@ -282,7 +282,7 @@ final class NormalizePass {
          continue;
          }
 
-         SirType type = this.validated.typeRefTypes().get(field.type().id());
+         SirType type = this.semantic(field.type(), this.validated.typeRefTypes().get(field.type().id()));
          if (type == null) {
          continue;
          }
@@ -312,9 +312,31 @@ final class NormalizePass {
       return new NormalizedError(id, decl.name().text(), decl.span(), decl.id(), httpStatus);
    }
 
+   /**
+    * The declared type as the author named it: where the declaration says a semantic type, the model keeps that type
+    * (the resolved type is only the kind of value behind it).
+    */
+   private SirType semantic(io.kcg.sir.ast.AstTypeRef ref, SirType resolved) {
+      if (resolved == null) {
+         return null;
+      }
+
+      return switch (ref) {
+         case io.kcg.sir.ast.AstNamedTypeRef named when io.kcg.sir.semantic.feature.SemanticTypes.named(named.name().text()).isPresent() ->
+            new io.kcg.sir.semantic.type.SemanticType(named.name().text());
+         case io.kcg.sir.ast.AstOptionalTypeRef optional when resolved instanceof io.kcg.sir.semantic.type.OptionalType o ->
+            new io.kcg.sir.semantic.type.OptionalType(this.semantic(optional.elementType(), o.element()));
+         case io.kcg.sir.ast.AstListTypeRef list when resolved instanceof io.kcg.sir.semantic.type.ListType o ->
+            new io.kcg.sir.semantic.type.ListType(this.semantic(list.elementType(), o.element()));
+         case io.kcg.sir.ast.AstPageTypeRef page when resolved instanceof io.kcg.sir.semantic.type.PageType o ->
+            new io.kcg.sir.semantic.type.PageType(this.semantic(page.elementType(), o.element()));
+         default -> resolved;
+      };
+   }
+
    private NormalizedField normalizeField(AstField field) {
       String fieldName = field.name().text();
-      SirType type = this.validated.typeRefTypes().get(field.type().id());
+      SirType type = this.semantic(field.type(), this.validated.typeRefTypes().get(field.type().id()));
       if (type == null) {
          return null;
       }
@@ -370,7 +392,7 @@ final class NormalizePass {
    private NormalizedCapability normalizeCapability(AstCapabilityDecl decl, SymbolId id) {
       Optional<SymbolId> actorSymbol = decl.actor().map(c -> this.definitionBindingOrUnknown(c.id()));
       Optional<SymbolId> inputSymbol = decl.input().map(c -> this.definitionBindingOrUnknown(c.id()));
-      SirType outputType = this.validated.typeRefTypes().get(decl.output().type().id());
+      SirType outputType = this.semantic(decl.output().type(), this.validated.typeRefTypes().get(decl.output().type().id()));
       List<SymbolId> fails = new ArrayList<>();
       Set<SymbolId> failsSeen = new LinkedHashSet<>();
 

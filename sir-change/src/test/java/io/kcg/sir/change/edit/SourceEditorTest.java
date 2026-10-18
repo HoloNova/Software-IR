@@ -57,7 +57,7 @@ class SourceEditorTest {
 
     /** Adds a search input and a query that uses it, and tightens an existing capability, in one batch. */
     private static Command[] searchByNameBatch() {
-        StructValue newInput = child(input("SearchByNameInput", field("name", primitive("STRING"), constraint("notBlank"))));
+        StructValue newInput = child(input("SearchByNameInput", field("name", semantic("Text"), constraint("notBlank"))));
         StructValue newQuery = child(queryCapability(
             "SearchCoursesByName",
             "SearchByNameInput",
@@ -109,7 +109,7 @@ class SourceEditorTest {
             "CampusMarketMinimal",
             SourceEditor.sha256(snapshot(base)),
             List.of(
-                new Command.Add(DECLARATIONS, child(input("SearchGoodsByTitleInput", field("title", primitive("STRING"), constraint("notBlank"))))),
+                new Command.Add(DECLARATIONS, child(input("SearchGoodsByTitleInput", field("title", semantic("Text"), constraint("notBlank"))))),
                 new Command.Add(DECLARATIONS, child(queryCapability(
                     "SearchGoodsByTitle",
                     "SearchGoodsByTitleInput",

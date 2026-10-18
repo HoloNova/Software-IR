@@ -56,7 +56,7 @@ class QueryGrammarTest {
     @Test
     void viewFieldsStillAcceptConstraintsSoThatValidateOwnsThatRule() {
         SourceUnitParseResult result = parseText("valid/course-catalog-with-constraint.sir", resource(CATALOG)
-                .replace("field code: String;", "field code: String where notBlank;"));
+                .replace("field code: Text;", "field code: Text where notBlank;"));
 
         assertTrue(result.isSuccess(), result.diagnostics().toString());
         AstViewDecl view = (AstViewDecl) result.unit().map(ParseTestSupport::document).orElseThrow().software().declarations().get(1);

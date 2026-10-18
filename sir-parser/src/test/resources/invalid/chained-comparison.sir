@@ -1,4 +1,4 @@
-sir 0.2
+sir 0.3
 
 software BadComparison {
   metadata {
@@ -17,14 +17,14 @@ software BadComparison {
   imports { }
   declarations {
     input Values {
-      field a: Int32;
-      field b: Int32;
-      field c: Int32;
+      field a: Count;
+      field b: Count;
+      field c: Count;
     }
     error Invalid;
     capability Bad {
       input Values;
-      output Int32;
+      output Count;
       fails Invalid;
       expose command;
       workflow {

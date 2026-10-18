@@ -1,4 +1,4 @@
-sir 0.2
+sir 0.3
 
 software SemanticFailure {
   metadata {
@@ -17,11 +17,11 @@ software SemanticFailure {
   imports { }
   declarations {
     entity User persistent {
-      identity id: Int64 generated auto;
-      field name: String;
+      identity id: Id generated auto;
+      field name: Text;
     }
     capability BrokenLookup {
-      output String;
+      output Text;
       requires readonly;
       expose query;
       workflow {

@@ -61,8 +61,8 @@ class GuardedUpdateSemanticsTest {
 
     @Test
     void aGuardIsNotAllowedOnAVersionedEntity() {
-        SemanticAnalysis result = TestSources.analyze(replace("field expiresAt: DateTime;\n    }\n    view",
-                "field expiresAt: DateTime;\n      field version: Int64 versioned;\n    }\n    view"));
+        SemanticAnalysis result = TestSources.analyze(replace("field expiresAt: Moment;\n    }\n    view",
+                "field expiresAt: Moment;\n      field version: Version;\n    }\n    view"));
 
         assertTrue(TestSources.hasError(result, "SIR-VALID-007"), () -> result.diagnostics().toString());
     }

@@ -93,11 +93,11 @@ class RelationGrammarTest {
     void anExistencePredicateInAValidateStepIsAGrammarLevelForm() {
         SourceUnitParseResult result = parse(document("""
                 entity Course persistent {
-                  identity id: Int64 generated auto;
-                  field code: String;
+                  identity id: Id generated auto;
+                  field code: Text;
                 }
                 entity Enrollment persistent {
-                  identity id: Int64 generated auto;
+                  identity id: Id generated auto;
                   field course: Ref<Course>;
                 }
                 error NotAllowed;
@@ -155,8 +155,8 @@ class RelationGrammarTest {
     void anyIsNoLongerAvailableAsAnIdentifier() {
         assertGrammarRejected(document("""
                 entity Sample persistent {
-                  identity id: Int64 generated auto;
-                  field any: String;
+                  identity id: Id generated auto;
+                  field any: Text;
                 }
                 """));
     }
@@ -256,16 +256,16 @@ class RelationGrammarTest {
                   CANCELLED
                 }
                 entity Course persistent {
-                  identity id: Int64 generated auto;
-                  field code: String;
+                  identity id: Id generated auto;
+                  field code: Text;
                 }
                 entity Enrollment persistent {
-                  identity id: Int64 generated auto;
+                  identity id: Id generated auto;
                   field course: Ref<Course>;
                   field status: EnrollmentStatus;
                 }
                 input SearchInput {
-                  field code: String;
+                  field code: Text;
                 }
                 capability SearchCourses {
                   input SearchInput;
@@ -282,7 +282,7 @@ class RelationGrammarTest {
 
     private static String document(String declarations) {
         return """
-                sir 0.2
+                sir 0.3
                 software RelationGrammar {
                   metadata {
                     displayName "Relation Grammar";

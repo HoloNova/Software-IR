@@ -163,7 +163,7 @@ class RelationSliceLoweringTest {
     @Test
     void anExistenceConditionTheTargetCannotExpressIsRejectedBeforeLowering() {
         String source = LoweringTestSupport.source(SOURCE)
-                .replace("field size: Int32;", "field size: Int32;\n      field status: EnrollmentStatus;")
+                .replace("field size: PageSize;", "field size: PageSize;\n      field status: EnrollmentStatus;")
                 .replace("status == EnrollmentStatus.ACTIVE", "status == input.status");
 
         List<LoweringDiagnostic> diagnostics = LoweringTestSupport.inputDiagnostics(source);

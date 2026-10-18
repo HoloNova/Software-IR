@@ -53,7 +53,7 @@ class WriteGrammarTest {
         AstSoftware software = parse(readResource(CATALOG)).unit().map(ParseTestSupport::document).orElseThrow().software();
         AstField version = entityField(software, "Course", "version");
 
-        assertTrue(version.versioned(), "the version field carries the marker");
+        assertEquals("Version", ((io.kcg.sir.ast.AstNamedTypeRef) version.type()).name().text(), "the version field is typed as a version");
         assertFalse(entityField(software, "Course", "capacity").versioned());
         assertEquals(List.of(), version.constraints());
     }
@@ -62,11 +62,11 @@ class WriteGrammarTest {
     void aViewFieldParsesTheMarkerSoALaterPhaseCanRejectIt() {
         SourceUnitParseResult result = parse(document("""
                 entity Course persistent {
-                  identity id: Int64 generated auto;
-                  field code: String;
+                  identity id: Id generated auto;
+                  field code: Text;
                 }
                 view Summary from Course {
-                  field code: String versioned;
+                  field code: Text versioned;
                 }
                 """));
 
@@ -102,13 +102,13 @@ class WriteGrammarTest {
     void aPatchMarkerWithoutItsEntityIsRejected() {
         assertGrammarRejected(document("""
                 input UpdateInput patch {
-                  field name: String;
+                  field name: Text;
                 }
                 """));
 
         assertGrammarRejected(document("""
                 input UpdateInput patch of {
-                  field name: String;
+                  field name: Text;
                 }
                 """));
     }
@@ -195,7 +195,7 @@ class WriteGrammarTest {
     void aVersionMarkerRequiresAFieldType() {
         assertGrammarRejected(entityDocument("field version: versioned;"));
 
-        assertGrammarRejected(entityDocument("field version: Int64 versioned versioned;"));
+        assertGrammarRejected(entityDocument("field version: Serial versioned versioned;"));
     }
 
     @Test
@@ -303,7 +303,7 @@ class WriteGrammarTest {
     private static String entityDocument(String field) {
         return document("""
                 entity Sample persistent {
-                  identity id: Int64 generated auto;
+                  identity id: Id generated auto;
                   %s
                 }
                 """.formatted(field));
@@ -311,7 +311,7 @@ class WriteGrammarTest {
 
     private static String document(String declarations) {
         return """
-                sir 0.2
+                sir 0.3
                 software WriteGrammar {
                   metadata {
                     displayName "Write Grammar";

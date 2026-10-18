@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class LanguageReferenceExamplesTest {
     static final String SHELL_HEAD = """
-        sir 0.2
+        sir 0.3
 
         software Reference {
           metadata {

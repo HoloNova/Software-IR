@@ -27,8 +27,8 @@ class ProjectTypeValidationTest {
                         """);
         Files.writeString(root, text);
         Files.writeString(source.resolve("modules/clock.sir"), """
-                sir 0.2 imports {} declarations {
-                  entity Clock persistent { identity id: Int64 generated auto; field happened: Date; }
+                sir 0.3 imports {} declarations {
+                  entity Clock persistent { identity id: Id generated auto; field happened: Day; }
                 }
                 """);
         var diagnostic = rejected(source, "SIR-TYPE-001");
@@ -49,12 +49,12 @@ class ProjectTypeValidationTest {
         Files.writeString(root, Files.readString(root).replace("sources {", "sources { source \"modules/grade.sir\";")
                 .replace("imports {", "imports { import Grade from \"modules/grade.sir\";")
                 .replace("view StudentSummary from Student {", """
-                        view GradeSummary from Grade { field id: Int64; field score: Int32; }
+                        view GradeSummary from Grade { field id: Id; field score: Count; }
                         view StudentSummary from Student { field grades: List<GradeSummary>;
                         """));
         Files.writeString(source.resolve("modules/grade.sir"), """
-                sir 0.2 imports { import Student from "modules/student.sir"; } declarations {
-                  entity Grade persistent { identity id: Int64 generated auto; field student: Ref<Student>; field score: Int32; }
+                sir 0.3 imports { import Student from "modules/student.sir"; } declarations {
+                  entity Grade persistent { identity id: Id generated auto; field student: Ref<Student>; field score: Count; }
                 }
                 """);
         rejected(source, "SIR-VALID-005");

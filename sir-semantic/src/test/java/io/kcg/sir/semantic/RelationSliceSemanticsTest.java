@@ -41,18 +41,18 @@ class RelationSliceSemanticsTest {
               CANCELLED
             }
             entity Student persistent {
-              identity id: Int64 generated auto;
-              field studentNo: String where notBlank, length(1, 16);
-              field name: String where notBlank, length(1, 100);
+              identity id: Id generated auto;
+              field studentNo: Code where length(1, 16);
+              field name: Name;
             }
             entity Course persistent {
-              identity id: Int64 generated auto;
-              field code: String where notBlank, length(1, 32);
-              field name: String where notBlank, length(1, 100);
-              field capacity: Int32 where min(1);
+              identity id: Id generated auto;
+              field code: Code;
+              field name: Name;
+              field capacity: Quantity;
             }
             entity Enrollment persistent {
-              identity id: Int64 generated auto;
+              identity id: Id generated auto;
               field course: Ref<Course>;
               field student: Ref<Student>;
               field status: EnrollmentStatus;
@@ -61,28 +61,28 @@ class RelationSliceSemanticsTest {
 
     private static final String VIEWS = """
             view StudentSummary from Student {
-              field id: Int64;
-              field studentNo: String;
-              field name: String;
+              field id: Id;
+              field studentNo: Text;
+              field name: Text;
             }
             view EnrollmentSummary from Enrollment {
-              field id: Int64;
+              field id: Id;
               field student: StudentSummary;
               field status: EnrollmentStatus;
             }
             view CourseEnrollmentItem from Course {
-              field id: Int64;
-              field code: String;
-              field name: String;
-              field capacity: Int32;
+              field id: Id;
+              field code: Text;
+              field name: Text;
+              field capacity: Count;
               field enrollments: List<EnrollmentSummary>;
             }
             """;
 
     private static final String SEARCH_INPUT = """
             input SearchCourseEnrollmentsInput {
-              field page: Int32;
-              field size: Int32;
+              field page: PageNo;
+              field size: PageSize;
             }
             error InvalidPage;
             """;
@@ -228,8 +228,8 @@ class RelationSliceSemanticsTest {
         String source = document(ENTITIES
                 + """
                 input SeedCourseInput {
-                  field name: String;
-                  field capacity: Int32;
+                  field name: Text;
+                  field capacity: Count;
                 }
                 capability SeedCourse {
                   input SeedCourseInput;
@@ -264,11 +264,11 @@ class RelationSliceSemanticsTest {
         String source = document(ENTITIES
                 + """
                 view StudentSummary from Student {
-                  field id: Int64;
-                  field name: String;
+                  field id: Id;
+                  field name: Text;
                 }
                 view CourseStudentList from Course {
-                  field id: Int64;
+                  field id: Id;
                   field students: List<StudentSummary>;
                 }
                 """);
@@ -292,24 +292,24 @@ class RelationSliceSemanticsTest {
         String source = document(ENTITIES
                 + """
                 entity Grade persistent {
-                  identity id: Int64 generated auto;
+                  identity id: Id generated auto;
                   field enrollment: Ref<Enrollment>;
-                  field score: Int32;
+                  field score: Count;
                 }
                 view GradeSummary from Grade {
-                  field id: Int64;
-                  field score: Int32;
+                  field id: Id;
+                  field score: Count;
                 }
                 view StudentSummary from Student {
-                  field id: Int64;
+                  field id: Id;
                   field grades: List<GradeSummary>;
                 }
                 view EnrollmentSummary from Enrollment {
-                  field id: Int64;
+                  field id: Id;
                   field student: StudentSummary;
                 }
                 view CourseEnrollmentItem from Course {
-                  field id: Int64;
+                  field id: Id;
                   field enrollments: List<EnrollmentSummary>;
                 }
                 """);
@@ -322,7 +322,7 @@ class RelationSliceSemanticsTest {
         String source = document(ENTITIES
                 + """
                 view CourseEnrollmentList from Course {
-                  field id: Int64;
+                  field id: Id;
                   field enrollments: List<Enrollment>;
                 }
                 """);
@@ -350,11 +350,11 @@ class RelationSliceSemanticsTest {
         String source = document(ENTITIES
                 + """
                 view StudentSummary from Student {
-                  field id: Int64;
-                  field name: String;
+                  field id: Id;
+                  field name: Text;
                 }
                 view CourseStudent from Course {
-                  field id: Int64;
+                  field id: Id;
                   field student: StudentSummary;
                 }
                 """);
@@ -482,7 +482,7 @@ class RelationSliceSemanticsTest {
 
     private static String document(String declarations) {
         return """
-                sir 0.2
+                sir 0.3
                 software CourseEnrollment {
                   metadata {
                     displayName "Course Enrollment";

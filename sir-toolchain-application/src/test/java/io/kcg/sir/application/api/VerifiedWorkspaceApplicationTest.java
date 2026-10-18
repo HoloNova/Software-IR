@@ -43,7 +43,7 @@ class VerifiedWorkspaceApplicationTest {
     }
 
     private static SourceSnapshot withCodeLength(Template template, String replacement) {
-        return WorkspaceScenarios.edit(template.base(), new String[] {"project.sir", "field code: String where notBlank, length(1, 32);", replacement});
+        return WorkspaceScenarios.edit(template.base(), new String[] {"project.sir", "field code: Code;", replacement});
     }
 
     private static Map<String, Map<String, String>> state(Workspace ws) throws Exception {
@@ -105,7 +105,7 @@ class VerifiedWorkspaceApplicationTest {
     void evidenceAboutAnotherCandidateIsRefused() throws Exception {
         Workspace ws = this.workspace();
         var app = new WorkspaceVersionApplication(new FakeVersionControl());
-        var forOther = this.verify(withCodeLength(ws.template(), "field code: String where notBlank, length(1, 48);"), VerificationStage.BUSINESS, true, true);
+        var forOther = this.verify(withCodeLength(ws.template(), "field code: Name where length(1, 48);"), VerificationStage.BUSINESS, true, true);
         var before = state(ws);
 
         assertRefused(new VerifiedWorkspaceApplication(app).apply(this.request(ws, app, ws.template().candidate(), forOther, VerificationStage.BUSINESS)), "VERIFICATION_CANDIDATE_MISMATCH");

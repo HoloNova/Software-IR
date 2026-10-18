@@ -75,7 +75,7 @@ class DeclaredIdentityPhysicalNameTest {
 
     private static String source(String capabilityName) {
         return """
-                sir 0.2
+                sir 0.3
 
                 software PhysicalNames {
                   metadata {
@@ -94,11 +94,11 @@ class DeclaredIdentityPhysicalNameTest {
                   imports { }
                   declarations {
                     entity Course persistent {
-                      identity id: Int64 generated auto;
-                      field courseCode: String where notBlank @id("course-code");
+                      identity id: Id generated auto;
+                      field courseCode: Text where notBlank @id("course-code");
                     }
                     input GetCourseInput {
-                      field id: Int64;
+                      field id: Id;
                     }
                     error CourseNotFound;
                     capability %s @id("search-enrollments") {

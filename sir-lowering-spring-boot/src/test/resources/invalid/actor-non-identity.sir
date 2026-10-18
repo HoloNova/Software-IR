@@ -1,4 +1,4 @@
-sir 0.2
+sir 0.3
 
 software ActorMemberSample {
   metadata {
@@ -17,12 +17,12 @@ software ActorMemberSample {
   imports { }
   declarations {
     entity User persistent {
-      identity id: Int64 generated auto;
-      field name: String;
+      identity id: Id generated auto;
+      field name: Text;
     }
     capability CurrentActorName {
       actor Ref<User>;
-      output String;
+      output Text;
       requires authenticated;
       requires readonly;
       expose query;

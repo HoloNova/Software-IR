@@ -66,7 +66,7 @@ class StructureViewCoverageTest {
     /** Boolean and string literals and a unary operator, which none of the shared fixtures spell. */
     private static String literalsAndUnary() {
         String source = TestSources.resource("valid/all-workflow-steps.sir")
-            .replace("field state: State;", "field state: State;\n      field name: String;")
+            .replace("field state: State;", "field state: State;\n      field name: Text;")
             .replace("load User by input.id", "validate not input.active else NotFound;\n        validate input.active == true else NotFound;\n        load User by input.id")
             .replace("item.state == State.ACTIVE", "item.state == State.ACTIVE and item.name == \"abc\"");
         assertTrue(TestSources.analyze(source).isSuccess(), "coverage source must stay valid");

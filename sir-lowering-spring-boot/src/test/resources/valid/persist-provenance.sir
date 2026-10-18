@@ -1,4 +1,4 @@
-sir 0.2
+sir 0.3
 
 software PersistProvenance {
   metadata {
@@ -17,12 +17,12 @@ software PersistProvenance {
   imports { }
   declarations {
     entity User persistent {
-      identity id: Int64 generated auto;
-      field name: String;
+      identity id: Id generated auto;
+      field name: Text;
     }
     input CreateInput {
-      field id: Int64;
-      field name: String;
+      field id: Id;
+      field name: Text;
     }
     error NotFound;
     capability CreateAndPersist {

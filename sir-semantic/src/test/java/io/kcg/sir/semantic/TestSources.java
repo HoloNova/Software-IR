@@ -75,7 +75,7 @@ public final class TestSources {
 
     public static String sir(String declarations) {
         return """
-                sir 0.2
+                sir 0.3
 
                 software Test {
                   metadata {
@@ -107,12 +107,12 @@ public final class TestSources {
 
     public static final String DUPLICATE_ENTITY = sir("""
             entity User persistent {
-              identity id: Int64 generated auto;
-              field name: String;
+              identity id: Id generated auto;
+              field name: Text;
             }
             entity User persistent {
-              identity id: Int64 generated auto;
-              field email: String;
+              identity id: Id generated auto;
+              field email: Text;
             }
             """);
 
@@ -125,23 +125,23 @@ public final class TestSources {
 
     public static final String DUPLICATE_FIELD = sir("""
             entity User persistent {
-              identity id: Int64 generated auto;
-              field name: String;
-              field name: String;
+              identity id: Id generated auto;
+              field name: Text;
+              field name: Text;
             }
             """);
 
     public static final String UNDEFINED_TYPE = sir("""
             entity User persistent {
-              identity id: Int64 generated auto;
+              identity id: Id generated auto;
               field status: UndefinedType;
             }
             """);
 
     public static final String PRIMITIVE_SHADOWING = sir("""
-            entity Boolean persistent {
-              identity id: Int64 generated auto;
-              field name: String;
+            entity Money persistent {
+              identity id: Id generated auto;
+              field name: Text;
             }
             """);
 
@@ -167,58 +167,58 @@ public final class TestSources {
 
     public static final String OPTIONAL_OF_OPTIONAL = sir("""
             entity User persistent {
-              identity id: Int64 generated auto;
-              field name: Optional<Optional<String>>;
+              identity id: Id generated auto;
+              field name: Optional<Optional<Text>>;
             }
             """);
 
     public static final String REF_TO_ENUM = sir("""
             enum Status { ACTIVE, INACTIVE }
             entity User persistent {
-              identity id: Int64 generated auto;
+              identity id: Id generated auto;
               field status: Ref<Status>;
             }
             """);
 
     public static final String REF_TO_UNDEFINED = sir("""
             entity User persistent {
-              identity id: Int64 generated auto;
+              identity id: Id generated auto;
               field ref: Ref<Account>;
             }
             """);
 
     public static final String ENTITY_FIELD_WITHOUT_REF = sir("""
             entity User persistent {
-              identity id: Int64 generated auto;
-              field name: String;
+              identity id: Id generated auto;
+              field name: Text;
             }
             entity Order persistent {
-              identity id: Int64 generated auto;
+              identity id: Id generated auto;
               field buyer: User;
             }
             """);
 
     public static final String OPTIONAL_UNIT = sir("""
             entity User persistent {
-              identity id: Int64 generated auto;
+              identity id: Id generated auto;
               field name: Optional<Unit>;
             }
             """);
 
     public static final String UNIT_AS_FIELD = sir("""
             entity User persistent {
-              identity id: Int64 generated auto;
+              identity id: Id generated auto;
               field result: Unit;
             }
             """);
 
     public static final String INT32_TO_INT64 = sir("""
             entity Counter persistent {
-              identity id: Int64 generated auto;
-              field count: Int64;
+              identity id: Id generated auto;
+              field count: Serial;
             }
             input CreateInput {
-              field count: Int32;
+              field count: Count;
             }
             capability Create {
               input CreateInput;
@@ -237,12 +237,12 @@ public final class TestSources {
 
     public static final String T_TO_OPTIONAL_T = sir("""
             entity User persistent {
-              identity id: Int64 generated auto;
-              field name: String;
-              field nickname: Optional<String>;
+              identity id: Id generated auto;
+              field name: Text;
+              field nickname: Optional<Text>;
             }
             input CreateInput {
-              field name: String;
+              field name: Text;
             }
             capability Create {
               input CreateInput;
@@ -262,8 +262,8 @@ public final class TestSources {
 
     public static final String RETURN_TYPE_MISMATCH = sir("""
             entity User persistent {
-              identity id: Int64 generated auto;
-              field name: String;
+              identity id: Id generated auto;
+              field name: Text;
             }
             capability Ping {
               output Ref<User>;
@@ -275,11 +275,11 @@ public final class TestSources {
 
     public static final String NOW_IS_DATETIME = sir("""
             entity Event persistent {
-              identity id: Int64 generated auto;
-              field timestamp: DateTime;
+              identity id: Id generated auto;
+              field timestamp: Moment;
             }
             input CreateEventInput {
-              field dummy: Boolean;
+              field dummy: Flag;
             }
             capability CreateEvent {
               input CreateEventInput;
@@ -298,8 +298,8 @@ public final class TestSources {
 
     public static final String VALIDATE_NON_BOOLEAN = sir("""
             entity User persistent {
-              identity id: Int64 generated auto;
-              field name: String;
+              identity id: Id generated auto;
+              field name: Text;
             }
             error BadName;
             capability Create {
@@ -316,59 +316,59 @@ public final class TestSources {
               }
             }
             input CreateInput {
-              field name: String;
+              field name: Text;
             }
             """);
 
     public static final String NOTBLANK_ON_INT32 = sir("""
             entity User persistent {
-              identity id: Int64 generated auto;
-              field age: Int32 where notBlank;
+              identity id: Id generated auto;
+              field age: Count where notBlank;
             }
             """);
 
     public static final String MIN_ON_STRING = sir("""
             entity User persistent {
-              identity id: Int64 generated auto;
-              field name: String where min(5);
+              identity id: Id generated auto;
+              field name: Text where min(5);
             }
             """);
 
     public static final String DUPLICATE_NOTBLANK = sir("""
             entity User persistent {
-              identity id: Int64 generated auto;
-              field name: String where notBlank, notBlank;
+              identity id: Id generated auto;
+              field name: Text where notBlank, notBlank;
             }
             """);
 
     public static final String MIN_MAX_CONFLICT = sir("""
             entity User persistent {
-              identity id: Int64 generated auto;
-              field age: Int32 where min(10), max(5);
+              identity id: Id generated auto;
+              field age: Count where min(10), max(5);
             }
             """);
 
     public static final String LENGTH_WRONG_ARGS = sir("""
             entity User persistent {
-              identity id: Int64 generated auto;
-              field name: String where length(5);
+              identity id: Id generated auto;
+              field name: Text where length(5);
             }
             """);
 
     public static final String UNKNOWN_CONSTRAINT = sir("""
             entity User persistent {
-              identity id: Int64 generated auto;
-              field name: String where weirdConstraint;
+              identity id: Id generated auto;
+              field name: Text where weirdConstraint;
             }
             """);
 
     public static final String VALIDATE_UNDECLARED_ERROR = sir("""
             entity User persistent {
-              identity id: Int64 generated auto;
-              field name: String;
+              identity id: Id generated auto;
+              field name: Text;
             }
             input CreateInput {
-              field name: String;
+              field name: Text;
             }
             capability Create {
               input CreateInput;
@@ -386,11 +386,11 @@ public final class TestSources {
 
     public static final String LOAD_UNDECLARED_ERROR = sir("""
             entity User persistent {
-              identity id: Int64 generated auto;
-              field name: String;
+              identity id: Id generated auto;
+              field name: Text;
             }
             input LookupInput {
-              field id: Int64;
+              field id: Id;
             }
             capability Lookup {
               input LookupInput;
@@ -406,11 +406,11 @@ public final class TestSources {
 
     public static final String MISSING_RETURN = sir("""
             entity User persistent {
-              identity id: Int64 generated auto;
-              field name: String;
+              identity id: Id generated auto;
+              field name: Text;
             }
             input CreateInput {
-              field name: String;
+              field name: Text;
             }
             capability Create {
               input CreateInput;
@@ -426,11 +426,11 @@ public final class TestSources {
 
     public static final String UNDEFINED_VARIABLE = sir("""
             entity User persistent {
-              identity id: Int64 generated auto;
-              field name: String;
+              identity id: Id generated auto;
+              field name: Text;
             }
             input CreateInput {
-              field name: String;
+              field name: Text;
             }
             capability Create {
               input CreateInput;
@@ -447,12 +447,12 @@ public final class TestSources {
 
     public static final String CREATE_MISSING_REQUIRED = sir("""
             entity User persistent {
-              identity id: Int64 generated auto;
-              field name: String;
-              field email: String;
+              identity id: Id generated auto;
+              field name: Text;
+              field email: Text;
             }
             input CreateInput {
-              field name: String;
+              field name: Text;
             }
             capability Create {
               input CreateInput;
@@ -469,11 +469,11 @@ public final class TestSources {
 
     public static final String QUERY_WITH_PERSIST = sir("""
             entity User persistent {
-              identity id: Int64 generated auto;
-              field name: String;
+              identity id: Id generated auto;
+              field name: Text;
             }
             input CreateInput {
-              field name: String;
+              field name: Text;
             }
             capability Create {
               input CreateInput;
@@ -490,11 +490,11 @@ public final class TestSources {
 
     public static final String QUERY_WITHOUT_READONLY = sir("""
             entity User persistent {
-              identity id: Int64 generated auto;
-              field name: String;
+              identity id: Id generated auto;
+              field name: Text;
             }
             input LookupInput {
-              field id: Int64;
+              field id: Id;
             }
             capability Lookup {
               input LookupInput;
@@ -510,11 +510,11 @@ public final class TestSources {
 
     public static final String ATOMIC_PLUS_READONLY = sir("""
             entity User persistent {
-              identity id: Int64 generated auto;
-              field name: String;
+              identity id: Id generated auto;
+              field name: Text;
             }
             input CreateInput {
-              field name: String;
+              field name: Text;
             }
             capability Create {
               input CreateInput;
@@ -532,13 +532,13 @@ public final class TestSources {
 
     public static final String MULTI_WRITE_WITHOUT_ATOMIC = sir("""
             entity User persistent {
-              identity id: Int64 generated auto;
-              field name: String;
-              field email: String;
+              identity id: Id generated auto;
+              field name: Text;
+              field email: Text;
             }
             input CreateInput {
-              field name: String;
-              field email: String;
+              field name: Text;
+              field email: Text;
             }
             capability Create {
               input CreateInput;
@@ -555,11 +555,11 @@ public final class TestSources {
     public static final String ENUM_MEMBER_ACCESS = sir("""
             enum Status { ACTIVE, INACTIVE }
             entity User persistent {
-              identity id: Int64 generated auto;
+              identity id: Id generated auto;
               field status: Status;
             }
             input CreateInput {
-              field dummy: Boolean;
+              field dummy: Flag;
             }
             capability Create {
               input CreateInput;
@@ -576,8 +576,8 @@ public final class TestSources {
 
     public static final String FAILS_NOT_SORTED = sir("""
             entity User persistent {
-              identity id: Int64 generated auto;
-              field name: String;
+              identity id: Id generated auto;
+              field name: Text;
             }
             error ZetaError;
             error AlphaError;
@@ -595,17 +595,17 @@ public final class TestSources {
               }
             }
             input CreateInput {
-              field name: String;
+              field name: Text;
             }
             """);
 
     public static final String REQUIRES_NOT_SORTED = sir("""
             entity User persistent {
-              identity id: Int64 generated auto;
-              field name: String;
+              identity id: Id generated auto;
+              field name: Text;
             }
             input CreateInput {
-              field name: String;
+              field name: Text;
             }
             capability Create {
               input CreateInput;
@@ -623,12 +623,12 @@ public final class TestSources {
 
     public static final String FAILS_DUPLICATE = sir("""
             entity User persistent {
-              identity id: Int64 generated auto;
-              field name: String;
+              identity id: Id generated auto;
+              field name: Text;
             }
             error BadName;
             input CreateInput {
-              field name: String;
+              field name: Text;
             }
             capability Create {
               input CreateInput;
@@ -647,11 +647,11 @@ public final class TestSources {
 
     public static final String REQUIRES_DUPLICATE = sir("""
             entity User persistent {
-              identity id: Int64 generated auto;
-              field name: String;
+              identity id: Id generated auto;
+              field name: Text;
             }
             input CreateInput {
-              field name: String;
+              field name: Text;
             }
             capability Create {
               input CreateInput;
@@ -669,20 +669,20 @@ public final class TestSources {
 
     public static final String FORWARD_REFERENCE = sir("""
             entity Goods persistent {
-              identity id: Int64 generated auto;
+              identity id: Id generated auto;
               field seller: Ref<User>;
             }
             entity User persistent {
-              identity id: Int64 generated auto;
-              field name: String;
+              identity id: Id generated auto;
+              field name: Text;
             }
             """);
 
     public static final String CONSTRAINT_ORDER_PRESERVED = sir("""
             entity User persistent {
-              identity id: Int64 generated auto;
-              field name: String where notBlank, length(1, 100);
-              field email: String where email, notBlank;
+              identity id: Id generated auto;
+              field name: Name;
+              field email: Text where email, notBlank;
             }
             """);
 }

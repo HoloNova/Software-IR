@@ -36,47 +36,47 @@ class WriteSliceSemanticsTest {
 
     private static final String ENTITY = """
             entity Course persistent {
-              identity id: Int64 generated auto;
-              field code: String where notBlank, length(1, 32);
-              field name: String where notBlank, length(1, 100);
-              field description: Optional<String> where length(0, 500);
-              field capacity: Int32 where min(1);
-              field version: Int64 versioned;
+              identity id: Id generated auto;
+              field code: Code;
+              field name: Name;
+              field description: Optional<Remark>;
+              field capacity: Quantity;
+              field version: Version;
             }
             """;
 
     private static final String VIEW = """
             view CourseDetail from Course {
-              field id: Int64;
-              field code: String;
-              field name: String;
-              field description: Optional<String>;
-              field capacity: Int32;
-              field version: Int64;
+              field id: Id;
+              field code: Text;
+              field name: Text;
+              field description: Optional<Text>;
+              field capacity: Count;
+              field version: Serial;
             }
             """;
 
     private static final String GET_INPUT = """
             input GetCourseInput {
-              field id: Int64;
+              field id: Id;
             }
             """;
 
     private static final String CREATE_INPUT = """
             input CreateCourseInput {
-              field code: String where notBlank, length(1, 32);
-              field name: String where notBlank, length(1, 100);
-              field description: Optional<String> where length(0, 500);
-              field capacity: Int32 where min(1);
+              field code: Code;
+              field name: Name;
+              field description: Optional<Remark>;
+              field capacity: Quantity;
             }
             """;
 
     private static final String PATCH_INPUT = """
             input UpdateCourseInput patch of Course {
-              field id: Int64;
-              field name: String;
-              field description: Optional<String>;
-              field capacity: Int32;
+              field id: Id;
+              field name: Text;
+              field description: Optional<Text>;
+              field capacity: Count;
             }
             """;
 
@@ -143,7 +143,7 @@ class WriteSliceSemanticsTest {
             """;
 
     /** The version marker line, as it appears inside the entity block. */
-    private static final String VERSION_MARKER = "field version: Int64 versioned;";
+    private static final String VERSION_MARKER = "field version: Version;";
 
     private static String declarations() {
         return String.join("\n",
@@ -331,7 +331,7 @@ class WriteSliceSemanticsTest {
     @Test
     void aSecondVersionFieldIsRejected() {
         assertRejectedWith(
-                replaceBlock(ENTITY, insertAfter(ENTITY, VERSION_MARKER, "field other: Int64 versioned;")),
+                replaceBlock(ENTITY, insertAfter(ENTITY, VERSION_MARKER, "field other: Version;")),
                 "SIR-VALID-002", 1);
     }
 
@@ -340,24 +340,24 @@ class WriteSliceSemanticsTest {
         // Two errors follow from one edit: the marker's own type rule, and the projection that
         // then declares a type the entity no longer has.
         assertRejectedWith(
-                replaceBlock(ENTITY, replaceLine(ENTITY, VERSION_MARKER, "field version: String versioned;")),
+                replaceBlock(ENTITY, replaceLine(ENTITY, VERSION_MARKER, "field version: Text versioned;")),
                 "SIR-TYPE-001", 2);
     }
 
     @Test
     void aConstrainedVersionFieldIsRejected() {
         assertRejectedWith(
-                replaceBlock(ENTITY, replaceLine(ENTITY, VERSION_MARKER, "field version: Int64 where min(0) versioned;")),
+                replaceBlock(ENTITY, replaceLine(ENTITY, VERSION_MARKER, "field version: Version where min(0);")),
                 "SIR-VALID-002", 1);
     }
 
     @Test
     void theVersionMarkerIsRejectedOnProjectionsAndPayloadFields() {
         assertRejectedWith(
-                replaceBlock(VIEW, replaceLine(VIEW, "field version: Int64;", "field version: Int64 versioned;")),
+                replaceBlock(VIEW, replaceLine(VIEW, "field version: Serial;", "field version: Serial versioned;")),
                 "SIR-VALID-002", 1);
         assertRejectedWith(
-                replaceBlock(GET_INPUT, replaceLine(GET_INPUT, "field id: Int64;", "field id: Int64 versioned;")),
+                replaceBlock(GET_INPUT, replaceLine(GET_INPUT, "field id: Id;", "field id: Id versioned;")),
                 "SIR-VALID-002", 1);
     }
 
@@ -424,35 +424,35 @@ class WriteSliceSemanticsTest {
     void aPatchFieldWithConstraintsIsRejected() {
         assertRejectedWith(
                 replaceBlock(PATCH_INPUT,
-                        replaceLine(PATCH_INPUT, "field capacity: Int32;", "field capacity: Int32 where min(1);")),
+                        replaceLine(PATCH_INPUT, "field capacity: Count;", "field capacity: Quantity;")),
                 "SIR-VALID-003", 1);
     }
 
     @Test
     void aPatchPayloadWithoutItsIdentityIsRejected() {
         assertRejectedWith(
-                replaceBlock(PATCH_INPUT, removeLine(PATCH_INPUT, "field id: Int64;")),
+                replaceBlock(PATCH_INPUT, removeLine(PATCH_INPUT, "field id: Id;")),
                 "SIR-VALID-003", 1);
     }
 
     @Test
     void aPatchPayloadDeclaringItsIdentityTwiceIsRejected() {
         assertRejectedWith(
-                replaceBlock(PATCH_INPUT, insertAfter(PATCH_INPUT, "field capacity: Int32;", "field id: Int64;")),
+                replaceBlock(PATCH_INPUT, insertAfter(PATCH_INPUT, "field capacity: Count;", "field id: Id;")),
                 "SIR-VALID-003", 1);
     }
 
     @Test
     void aPatchPayloadCannotDeclareTheVersionField() {
         assertRejectedWith(
-                replaceBlock(PATCH_INPUT, insertAfter(PATCH_INPUT, "field capacity: Int32;", "field version: Int64;")),
+                replaceBlock(PATCH_INPUT, insertAfter(PATCH_INPUT, "field capacity: Count;", "field version: Serial;")),
                 "SIR-VALID-003", 1);
     }
 
     @Test
     void aPatchPayloadRequiresAVersionedEntity() {
         String source = declarations()
-                .replace(VERSION_MARKER, "field version: Int64;")
+                .replace(VERSION_MARKER, "field version: Serial;")
                 .replace("persist course else StaleVersion;", "persist course;");
         assertRejectedWith(source, "SIR-VALID-003", 1);
     }
@@ -462,14 +462,14 @@ class WriteSliceSemanticsTest {
         // One edit, two reports: the payload's own contract, and the update binding that would
         // then hand the entity a value it cannot hold.
         assertRejectedWith(
-                replaceBlock(PATCH_INPUT, replaceLine(PATCH_INPUT, "field capacity: Int32;", "field capacity: String;")),
+                replaceBlock(PATCH_INPUT, replaceLine(PATCH_INPUT, "field capacity: Count;", "field capacity: Text;")),
                 "SIR-TYPE-001", 2);
     }
 
     @Test
     void aPatchFieldMustExistOnTheEntity() {
         assertRejectedWith(
-                replaceBlock(PATCH_INPUT, insertAfter(PATCH_INPUT, "field capacity: Int32;", "field missing: String;")),
+                replaceBlock(PATCH_INPUT, insertAfter(PATCH_INPUT, "field capacity: Count;", "field missing: Text;")),
                 "SIR-SYMBOL-002", 1);
     }
 
@@ -494,7 +494,7 @@ class WriteSliceSemanticsTest {
     void presenceRequiresAPatchPayloadField() {
         // A plain input's field has no presence to ask about: absent and empty are the same value.
         String source = declarations()
-                .replace(GET_INPUT, insertAfter(GET_INPUT, "field id: Int64;", "field only: Boolean;"))
+                .replace(GET_INPUT, insertAfter(GET_INPUT, "field id: Id;", "field only: Flag;"))
                 .replace("capability CreateCourse", "capability CreateCourse")
                 .replace(GET_CAPABILITY, insertAfter(GET_CAPABILITY, "workflow {", "validate input.only.present else CourseNotFound;"));
         assertRejectedWith(source, "SIR-FLOW-001", 1);

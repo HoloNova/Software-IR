@@ -1,9 +1,9 @@
-sir 0.2
+sir 0.3
 imports {}
 declarations {
   entity Student persistent {
-    identity id: Int64 generated auto;
-    field studentNo: String where notBlank, length(1, 16);
-    field name: String where notBlank, length(1, 100);
+    identity id: Id generated auto;
+    field studentNo: Code where length(1, 16);
+    field name: Name;
   }
 }

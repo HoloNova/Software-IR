@@ -1,4 +1,4 @@
-sir 0.2
+sir 0.3
 
 software CourseAdmin {
   metadata {
@@ -19,12 +19,12 @@ software CourseAdmin {
   imports { }
   declarations {
     entity Course persistent {
-      identity id: Int64 generated auto;
-      field code: String where notBlank, length(1, 32);
-      field name: String where notBlank, length(1, 100);
-      field description: Optional<String> where length(0, 500);
-      field capacity: Int32 where min(1);
-      field version: Int64 versioned;
+      identity id: Id generated auto;
+      field code: Code;
+      field name: Name;
+      field description: Optional<Remark>;
+      field capacity: Quantity;
+      field version: Version;
     }
 
     // Q13 chain base: the already accepted course-admin source (Q10) plus the enrollment slice
@@ -37,70 +37,70 @@ software CourseAdmin {
     }
 
     entity Student persistent {
-      identity id: Int64 generated auto;
-      field studentNo: String where notBlank, length(1, 16);
-      field name: String where notBlank, length(1, 100);
+      identity id: Id generated auto;
+      field studentNo: Code where length(1, 16);
+      field name: Name;
     }
 
     entity Enrollment persistent {
-      identity id: Int64 generated auto;
+      identity id: Id generated auto;
       field course: Ref<Course>;
       field student: Ref<Student>;
       field status: EnrollmentStatus;
     }
 
     view CourseDetail from Course {
-      field id: Int64;
-      field code: String;
-      field name: String;
-      field description: Optional<String>;
-      field capacity: Int32;
-      field version: Int64;
+      field id: Id;
+      field code: Text;
+      field name: Text;
+      field description: Optional<Text>;
+      field capacity: Count;
+      field version: Serial;
     }
 
     view StudentSummary from Student {
-      field id: Int64;
-      field studentNo: String;
-      field name: String;
+      field id: Id;
+      field studentNo: Text;
+      field name: Text;
     }
 
     view EnrollmentSummary from Enrollment {
-      field id: Int64;
+      field id: Id;
       field student: StudentSummary;
       field status: EnrollmentStatus;
     }
 
     view CourseEnrollmentItem from Course {
-      field id: Int64;
-      field code: String;
-      field name: String;
-      field capacity: Int32;
+      field id: Id;
+      field code: Text;
+      field name: Text;
+      field capacity: Count;
       field enrollments: List<EnrollmentSummary>;
     }
 
     input GetCourseInput {
-      field id: Int64;
+      field id: Id;
     }
 
     input CreateCourseInput {
-      field code: String where notBlank, length(1, 32);
+      field code: Code;
       // Q13 R2 tightens the accepted length of a course name on the create input only. The entity
       // column keeps length(1, 100), which a tighter input constraint stays compatible with.
-      field name: String where notBlank, length(1, 20);
-      field description: Optional<String> where length(0, 500);
-      field capacity: Int32 where min(1);
+      field name: Code where length(1, 20);
+      field description: Optional<Remark>;
+      field capacity: Quantity;
     }
 
     input UpdateCourseInput patch of Course {
-      field id: Int64;
-      field name: String;
-      field description: Optional<String>;
-      field capacity: Int32;
+      field id: Id;
+      field name: Text;
+      field description: Optional<Text>;
+      field capacity: Count;
     }
 
     input SearchCourseEnrollmentsInput {
-      field page: Int32;
-      field size: Int32;
+      field page: PageNo;
+      field size: PageSize;
     }
 
     error CourseNotFound http 404;

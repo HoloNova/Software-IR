@@ -100,7 +100,7 @@ class SirValidationApplicationTest {
         assertFalse(app.check(new SirValidationRequest("x".repeat(1025),sir)).ok());
         assertNull(app.check(new SirValidationRequest("x","x".repeat(SirValidationApplication.MAX_SIR_BYTES+1))).sourceSha256());
         var bom = app.check(new SirValidationRequest("a","\ufeff"+sir)); assertTrue(bom.ok()); assertEquals(a.digest(),bom.digest()); assertNotEquals(a.sourceSha256(),bom.sourceSha256());
-        var old = app.check(new SirValidationRequest("v1",sir.replace("sir 0.2","sir 0.1")));
+        var old = app.check(new SirValidationRequest("v1",sir.replace("sir 0.3","sir 0.1")));
         assertFalse(old.ok()); assertEquals("SIR-VERSION-001", old.diagnostics().get(0).code());
     }
     @Test void callerOwnedOriginalDiagnosticTraceSurvivesLaterStageException() throws Exception {

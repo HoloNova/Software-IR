@@ -16,7 +16,7 @@ class SourceEditingApplicationTest {
     @TempDir Path temp;
     private static final SourceId ENTRY = SourceId.of("project.sir");
     private static final String SOURCE = """
-        sir 0.2
+        sir 0.3
         software Demo {
           metadata { displayName "Demo"; namespace "example.demo"; }
           target { language java 21; framework spring_boot; persistence mybatis_plus;
@@ -86,7 +86,7 @@ class SourceEditingApplicationTest {
     }
 
     @Test void malformedSourceAndSymlinkRootsKeepOriginalReadDiagnostics() throws Exception {
-        Path root = source("sir 0.2 broken");
+        Path root = source("sir 0.3 broken");
         var app = new SourceEditingApplication();
         var bad = assertInstanceOf(SourceInspectionResult.Failure.class, app.inspect(new SourceInspectionRequest(root, ENTRY)));
         assertTrue(bad.diagnostics().stream().anyMatch(ExecutionDiagnostic::isError));

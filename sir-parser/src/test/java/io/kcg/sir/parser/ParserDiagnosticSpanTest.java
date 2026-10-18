@@ -30,7 +30,7 @@ class ParserDiagnosticSpanTest {
 
     private static String validSource() {
         return """
-                sir 0.2
+                sir 0.3
                 software DiagnosticSample {
                   metadata {
                     displayName "Example";

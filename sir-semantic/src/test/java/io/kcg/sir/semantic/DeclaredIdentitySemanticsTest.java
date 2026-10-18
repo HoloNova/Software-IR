@@ -29,12 +29,12 @@ class DeclaredIdentitySemanticsTest {
 
     private static final String DECLARED = TestSources.sir("""
             entity Course persistent {
-              identity id: Int64 generated auto;
-              field code: String where notBlank @id("course-code");
-              field title: String where notBlank @id("course-title");
+              identity id: Id generated auto;
+              field code: Text where notBlank @id("course-code");
+              field title: Text where notBlank @id("course-title");
             }
             input GetCourseInput {
-              field id: Int64;
+              field id: Id;
             }
             error CourseNotFound;
             capability GetCourse @id("get-course") {
@@ -53,7 +53,7 @@ class DeclaredIdentitySemanticsTest {
     /** The same program with the capability and one member renamed; both keep their declared ids. */
     private static final String DECLARED_RENAMED = DECLARED
             .replace("GetCourse", "FindCourse")
-            .replace("field title: String", "field name: String");
+            .replace("field title: Text", "field name: Text");
 
     private static final String DECLARED_RECREATED = DECLARED.replace("@id(\"get-course\")", "@id(\"get-course-2026\")");
 
@@ -150,9 +150,9 @@ class DeclaredIdentitySemanticsTest {
                 capability B @id("shared") { output Unit; requires readonly; expose query; workflow { return unit; } }
                 """, """
                 entity Course persistent {
-                  identity id: Int64 generated auto;
-                  field code: String @id("shared");
-                  field label: String @id("shared");
+                  identity id: Id generated auto;
+                  field code: Text @id("shared");
+                  field label: Text @id("shared");
                 }
                 """)) {
             var result = TestSources.analyze(TestSources.sir(declarations));
@@ -168,8 +168,8 @@ class DeclaredIdentitySemanticsTest {
     void duplicateDeclaredIdsAreRejectedWithSpanAndCode() {
         SemanticAnalysis duplicates = TestSources.analyze(TestSources.sir("""
                 entity Course persistent {
-                  identity id: Int64 generated auto;
-                  field code: String @id("shared");
+                  identity id: Id generated auto;
+                  field code: Text @id("shared");
                 }
                 error CourseNotFound;
                 capability GetCourse @id("shared") {
@@ -193,8 +193,8 @@ class DeclaredIdentitySemanticsTest {
     void malformedDeclaredIdsAreRejectedWithSpanAndCode() {
         SemanticAnalysis malformed = TestSources.analyze(TestSources.sir("""
                 entity Course persistent {
-                  identity id: Int64 generated auto;
-                  field code: String @id("has space");
+                  identity id: Id generated auto;
+                  field code: Text @id("has space");
                 }
                 """));
 

@@ -31,7 +31,7 @@ class DeclaredIdentityGrammarTest {
     private final DefaultSirParser parser = new DefaultSirParser();
 
     private static final String DECLARED_IDS = """
-            sir 0.2
+            sir 0.3
 
             software Identity {
               metadata {
@@ -50,9 +50,9 @@ class DeclaredIdentityGrammarTest {
               imports { }
               declarations {
                 entity Course persistent {
-                  identity id: Int64 generated auto;
-                  field code: String where notBlank @id("course-code");
-                  field title: String @id("course-title");
+                  identity id: Id generated auto;
+                  field code: Text where notBlank @id("course-code");
+                  field title: Text @id("course-title");
                 }
                 error CourseNotFound;
                 capability SearchCourses @id("search-courses") {
@@ -98,7 +98,7 @@ class DeclaredIdentityGrammarTest {
 
         String renamed = DECLARED_IDS
                 .replace("SearchCourses", "SearchEnrollments")
-                .replace("field title: String @id(\"course-title\");", "field name: String @id(\"course-title\");");
+                .replace("field title: Text @id(\"course-title\");", "field name: Text @id(\"course-title\");");
         AstCapabilityDecl candidate = capability(parse(renamed));
         AstEntityDecl candidateEntity = entity(parse(renamed));
 
@@ -120,9 +120,9 @@ class DeclaredIdentityGrammarTest {
     @Test
     void theAnnotationIsRejectedWhereTheLanguageDoesNotGivePersistentIdentity() {
         assertFalse(parse(DECLARED_IDS
-                .replace("field title: String @id(\"course-title\");", "field title: String;")
+                .replace("field title: Text @id(\"course-title\");", "field title: Text;")
                 .replace("capability SearchCourses @id(\"search-courses\") {",
-                        "input SearchCoursesInput {\n    field keyword: String @id(\"keyword\");\n  }\n  capability SearchCourses {"))
+                        "input SearchCoursesInput {\n    field keyword: Text @id(\"keyword\");\n  }\n  capability SearchCourses {"))
                 .isSuccess());
     }
 

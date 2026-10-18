@@ -647,6 +647,7 @@ public final class SpringBootModelLowerer {
             case PrimitiveType value -> value == PrimitiveType.UNIT
                     ? TransportPlan.ResponseRepresentation.VOID
                     : TransportPlan.ResponseRepresentation.VALUE;
+            case io.kcg.sir.semantic.type.SemanticType ignored -> TransportPlan.ResponseRepresentation.VALUE;
             case RefType ignored -> TransportPlan.ResponseRepresentation.ENTITY_BODY;
             case DeclaredType value -> value.kind() == DeclaredType.DeclaredKind.ENTITY
                     ? TransportPlan.ResponseRepresentation.ENTITY_BODY
@@ -1371,6 +1372,7 @@ public final class SpringBootModelLowerer {
     private LoweredJavaType lowerType(SirType type) {
         return switch (type) {
             case PrimitiveType value -> scalar(value);
+            case io.kcg.sir.semantic.type.SemanticType value -> scalar(value.kind());
             case OptionalType value -> new LoweredJavaType.OptionalValue(lowerType(value.element()));
             case ListType value -> new LoweredJavaType.ListValue(lowerType(value.element()));
             case PageType value -> new LoweredJavaType.PageValue(lowerType(value.element()));
@@ -1385,7 +1387,7 @@ public final class SpringBootModelLowerer {
     }
 
     private LoweredJavaType.Scalar scalar(SirType type) {
-        PrimitiveType primitive = (PrimitiveType)type;
+        PrimitiveType primitive = type instanceof io.kcg.sir.semantic.type.SemanticType semantic ? semantic.kind() : (PrimitiveType)type;
         LoweredJavaType.ScalarKind kind = switch (primitive) {
             default -> throw new MatchException(null, null);
             case PrimitiveType.BOOLEAN -> LoweredJavaType.ScalarKind.BOOLEAN;

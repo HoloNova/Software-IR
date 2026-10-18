@@ -27,8 +27,8 @@ import org.junit.jupiter.api.io.TempDir;
 class KcgVersionCommandsTest {
     private static final SourceId ENTRY = SourceId.of("project.sir");
     private static final List<String> FILES = List.of("project.sir", "modules/course.sir", "modules/student.sir", "modules/enrollment.sir");
-    private static final String CODE_32 = "field code: String where notBlank, length(1, 32);";
-    private static final String CODE_40 = "field code: String where notBlank, length(1, 40);";
+    private static final String CODE_32 = "field code: Code;";
+    private static final String CODE_40 = "field code: Name where length(1, 40);";
 
     @TempDir Path temp;
     private Path repository;

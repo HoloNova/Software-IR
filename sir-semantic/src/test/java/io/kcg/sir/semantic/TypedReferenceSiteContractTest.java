@@ -52,55 +52,55 @@ class TypedReferenceSiteContractTest {
     private static final String SOFTWARE_DECLARATIONS = """
             enum Status { ACTIVE, INACTIVE }
             entity User persistent {
-              identity id: Int64 generated auto;
+              identity id: Id generated auto;
               field state: Status;
             }
             entity Account persistent {
-              identity id: Int64 generated auto;
+              identity id: Id generated auto;
               field state: Status;
               field owner: Ref<User>;
-              field version: Int64 versioned;
+              field version: Version;
             }
             entity Handle persistent {
-              identity id: Int64 generated auto;
-              field label: String unique;
+              identity id: Id generated auto;
+              field label: Text unique;
             }
-            entity Token persistent {
-              identity id: Uuid generated uuid;
+            entity Ticket persistent {
+              identity id: Token generated uuid;
               field owner: Ref<User>;
-              field expiresAt: DateTime;
+              field expiresAt: Moment;
               credential subject owner expires expiresAt;
             }
             input LookupInput {
-              field id: Int64;
-              field active: Boolean;
+              field id: Id;
+              field active: Flag;
             }
             input HandleInput {
-              field label: String;
+              field label: Text;
             }
             view HandleSummary from Handle {
-              field id: Int64;
-              field label: String;
+              field id: Id;
+              field label: Text;
             }
             view UserSummary from User {
-              field id: Int64;
+              field id: Id;
               field state: Status;
             }
             view AccountSummary from Account {
-              field id: Int64;
+              field id: Id;
               field state: Status;
             }
             view UserAccounts from User {
-              field id: Int64;
+              field id: Id;
               field accounts: List<AccountSummary>;
             }
             input SearchInput {
-              field keyword: String;
-              field page: Int32;
-              field size: Int32;
+              field keyword: Text;
+              field page: PageNo;
+              field size: PageSize;
             }
             input AccountPatch patch of Account {
-              field id: Int64;
+              field id: Id;
               field state: Status;
             }
             error NotFound;
@@ -487,11 +487,11 @@ class TypedReferenceSiteContractTest {
     void undefinedReferenceProducesOnlyResolveStageError() {
         String source = TestSources.sir("""
                 entity User persistent {
-                  identity id: Int64 generated auto;
-                  field name: String;
+                  identity id: Id generated auto;
+                  field name: Text;
                 }
                 input LookupInput {
-                  field id: Int64;
+                  field id: Id;
                 }
                 capability Lookup {
                   input LookupInput;
@@ -523,11 +523,11 @@ class TypedReferenceSiteContractTest {
     void wrongRoleKindProducesOnlyResolveStageError() {
         String source = TestSources.sir("""
                 entity User persistent {
-                  identity id: Int64 generated auto;
-                  field name: String;
+                  identity id: Id generated auto;
+                  field name: Text;
                 }
                 input CreateInput {
-                  field name: String;
+                  field name: Text;
                 }
                 capability Create {
                   input CreateInput;
@@ -561,11 +561,11 @@ class TypedReferenceSiteContractTest {
     void undefinedLoadErrorProducesOnlyResolveStageError() {
         String source = TestSources.sir("""
                 entity User persistent {
-                  identity id: Int64 generated auto;
-                  field name: String;
+                  identity id: Id generated auto;
+                  field name: Text;
                 }
                 input LookupInput {
-                  field id: Int64;
+                  field id: Id;
                 }
                 capability Lookup {
                   input LookupInput;

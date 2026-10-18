@@ -30,15 +30,15 @@ import org.junit.jupiter.api.Test;
 class SecretFieldGrammarTest {
     private static final String ACCOUNT = """
             entity Account persistent {
-              identity id: Int64 generated auto;
-              field name: String unique;
-              field passwordHash: String secret;
-              field token: String unique secret @id("token");
-              field secret: String;
-              field matches: String;
+              identity id: Id generated auto;
+              field name: Text unique;
+              field passwordHash: Text secret;
+              field token: Text unique secret @id("token");
+              field secret: Text;
+              field matches: Text;
             }
             error Bad;
-            input Login { field name: String; field password: String; }
+            input Login { field name: Text; field password: Text; }
             """;
 
     private final SirParser parser = new DefaultSirParser();
@@ -63,8 +63,8 @@ class SecretFieldGrammarTest {
 
     @Test
     void secretIsNotAdmittedOnInputOrViewFields() {
-        assertRejected(ACCOUNT + "input Bad2 { field password: String secret; }");
-        assertRejected(ACCOUNT + "view Bad3 from Account { field name: String secret; }");
+        assertRejected(ACCOUNT + "input Bad2 { field password: Text secret; }");
+        assertRejected(ACCOUNT + "view Bad3 from Account { field name: Text secret; }");
     }
 
     @Test
@@ -148,7 +148,7 @@ class SecretFieldGrammarTest {
 
     private static String document(String declarations) {
         return """
-                sir 0.2
+                sir 0.3
                 software SecretGrammar {
                   metadata {
                     displayName "Secret Grammar";

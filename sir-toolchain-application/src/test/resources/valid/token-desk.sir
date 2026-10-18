@@ -1,4 +1,4 @@
-sir 0.2
+sir 0.3
 
 software TokenDesk {
   metadata {
@@ -17,37 +17,37 @@ software TokenDesk {
   imports { }
   declarations {
     entity Credential persistent {
-      identity id: Uuid generated uuid;
-      field owner: String;
-      field used: Boolean;
-      field expiresAt: DateTime;
+      identity id: Token generated uuid;
+      field owner: Text;
+      field used: Flag;
+      field expiresAt: Moment;
     }
     entity Account persistent {
-      identity id: Int64 generated auto;
-      field name: String unique;
-      field passwordHash: String secret;
+      identity id: Id generated auto;
+      field name: Text unique;
+      field passwordHash: Secret;
     }
     view CredentialView from Credential {
-      field id: Uuid;
-      field owner: String;
-      field expiresAt: DateTime;
+      field id: Token;
+      field owner: Text;
+      field expiresAt: Moment;
     }
     view AccountView from Account {
-      field id: Int64;
-      field name: String;
+      field id: Id;
+      field name: Text;
     }
     input CredentialRef {
-      field token: Uuid;
+      field token: Token;
     }
     input GetCredentialInput {
-      field id: Uuid;
+      field id: Token;
     }
     input AccountName {
-      field name: String;
+      field name: Text;
     }
     input Credentials {
-      field name: String;
-      field password: String;
+      field name: Text;
+      field password: Text;
     }
     error Expired;
     error Invalid http 409;

@@ -96,12 +96,12 @@ class ArithmeticGrammarTest {
     void theUnitWordsAreStillOrdinaryNamesWhereTheyAreNotAUnit() {
         SourceUnitParseResult result = parse("""
                 entity Window persistent {
-                  identity id: Int64 generated auto;
-                  field days: Int32;
-                  field minutes: Int32;
+                  identity id: Id generated auto;
+                  field days: Count;
+                  field minutes: Count;
                 }
                 error NotFound;
-                input In { field hours: Int32; }
+                input In { field hours: Count; }
                 capability Check {
                   input In;
                   output Unit;
@@ -155,7 +155,7 @@ class ArithmeticGrammarTest {
     private static String wrap(String expression) {
         return """
                 error NotFound;
-                input In { field a: Int32; field b: Int32; }
+                input In { field a: Count; field b: Count; }
                 capability Check {
                   input In;
                   output Unit;
@@ -172,7 +172,7 @@ class ArithmeticGrammarTest {
 
     private SourceUnitParseResult parse(String declarations) {
         return parser.parseProject(new SirSource(SourceId.of("tests/arithmetic.sir"), """
-                sir 0.2
+                sir 0.3
                 software Arithmetic {
                   metadata {
                     displayName "Arithmetic";

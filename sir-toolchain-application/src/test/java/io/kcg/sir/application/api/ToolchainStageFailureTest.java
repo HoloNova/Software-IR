@@ -24,7 +24,7 @@ class ToolchainStageFailureTest {
     @Test
     void parseFailureIsStructuredKeepsTheOriginalCodesAndCreatesNoOutput() throws Exception {
         Path source = Files.createDirectories(temporaryDirectory.resolve("sources-parse"));
-        Files.writeString(source.resolve("project.sir"), "sir 0.2\nsoftware Broken {\n");
+        Files.writeString(source.resolve("project.sir"), "sir 0.3\nsoftware Broken {\n");
         Path outputRoot = temporaryDirectory.resolve("parse-output").toAbsolutePath();
 
         ToolchainResult.Failure failure = assertInstanceOf(ToolchainResult.Failure.class, new ToolchainApplication().execute(

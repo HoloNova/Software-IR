@@ -1,4 +1,4 @@
-sir 0.2
+sir 0.3
 
 software CourseAdmin {
   metadata {
@@ -19,35 +19,35 @@ software CourseAdmin {
   imports { }
   declarations {
     entity Course persistent {
-      identity id: Int64 generated auto;
-      field code: String where notBlank, length(1, 32);
-      field name: String where notBlank, length(1, 100);
-      field description: Optional<String> where length(0, 500);
-      field capacity: Int32 where min(1);
-      field version: Int64 versioned;
+      identity id: Id generated auto;
+      field code: Code;
+      field name: Name;
+      field description: Optional<Remark>;
+      field capacity: Quantity;
+      field version: Version;
     }
     view CourseDetail from Course {
-      field id: Int64;
-      field code: String;
-      field name: String;
-      field description: Optional<String>;
-      field capacity: Int32;
-      field version: Int64;
+      field id: Id;
+      field code: Text;
+      field name: Text;
+      field description: Optional<Text>;
+      field capacity: Count;
+      field version: Serial;
     }
     input GetCourseInput {
-      field id: Int64;
+      field id: Id;
     }
     input CreateCourseInput {
-      field code: String where notBlank, length(1, 32);
-      field name: String where notBlank, length(1, 100);
-      field description: Optional<String> where length(0, 500);
-      field capacity: Int32 where min(1);
+      field code: Code;
+      field name: Name;
+      field description: Optional<Remark>;
+      field capacity: Quantity;
     }
     input UpdateCourseInput patch of Course {
-      field id: Int64;
-      field name: String;
-      field description: Optional<String>;
-      field capacity: Int32;
+      field id: Id;
+      field name: Text;
+      field description: Optional<Text>;
+      field capacity: Count;
     }
     error CourseNotFound http 404;
     error EmptyChange;

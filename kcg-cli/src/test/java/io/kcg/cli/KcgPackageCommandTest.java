@@ -17,7 +17,7 @@ class KcgPackageCommandTest {
             text = new String(Objects.requireNonNull(input).readAllBytes(), StandardCharsets.UTF_8);
         }
         text = text.substring(0, text.indexOf("    capability PostNote")) + "  }\n}\n";
-        text = text.replace("field name: String unique;", "field name: String where length(1, 64) unique;");
+        text = text.replace("field name: Text unique;", "field name: Text where length(1, 64) unique;");
         Files.writeString(source.resolve("project.sir"), text);
         var result = run("package", "--source-root", source.toString(), "--entry", "project.sir", "--output-root", output.toString());
         assertEquals(0, result.exit(), result.stdout() + result.stderr());

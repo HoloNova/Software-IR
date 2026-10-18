@@ -96,8 +96,8 @@ class DeploymentPackageApplicationTest {
         Path source = source(true);
         Path base = export(source, temp.resolve("base")).manifest().outputRoot();
         String text = Files.readString(source.resolve("project.sir"));
-        Files.writeString(source.resolve("project.sir"), text.replace("      field author: Ref<User>;\n      field text: String;\n    }",
-            "      field author: Ref<User>;\n      field text: String;\n      field title: Optional<String> where length(0, 80);\n    }"));
+        Files.writeString(source.resolve("project.sir"), text.replace("      field author: Ref<User>;\n      field text: Text;\n    }",
+            "      field author: Ref<User>;\n      field text: Text;\n      field title: Optional<Text> where length(0, 80);\n    }"));
         var result = new DeploymentPackageApplication().export(new DeploymentPackageRequest(source, ENTRY, temp.resolve("next"), Optional.empty(), Optional.of(base)));
         var exported = assertInstanceOf(DeploymentPackageResult.Exported.class, result, result.toString());
         Path next = exported.manifest().outputRoot();
@@ -121,7 +121,7 @@ class DeploymentPackageApplicationTest {
         // The base's sources must rebuild exactly the schema it was published with, or its model is not the database's.
         Path drifted = copy(next, temp.resolve("drifted"));
         String published = Files.readString(drifted.resolve("sir/project.sir"));
-        republish(drifted, "sir/project.sir", published.replace("field title: Optional<String> where length(0, 80);", "field title: Optional<String> where length(0, 90);"));
+        republish(drifted, "sir/project.sir", published.replace("field title: Optional<Text> where length(0, 80);", "field title: Optional<Text> where length(0, 90);"));
         var notReproduced = new DeploymentPackageApplication().export(new DeploymentPackageRequest(source, ENTRY, temp.resolve("not-reproduced"), Optional.empty(), Optional.of(drifted)));
         assertTrue(notReproduced.diagnostics().stream().anyMatch(d -> d.code().equals("SIR-APP-PACKAGE-BASE-004")), notReproduced.toString());
         assertFalse(Files.exists(temp.resolve("not-reproduced")));
@@ -141,12 +141,12 @@ class DeploymentPackageApplicationTest {
     @Test void aFieldRenamedUnderItsDeclaredIdentityRenamesTheColumnAndRecordsItForTheMigrationTool() throws Exception {
         Path source = source(true);
         String declared = Files.readString(source.resolve("project.sir")).replace(
-            "      field author: Ref<User>;\n      field text: String;\n    }", "      field author: Ref<User>;\n      field text: String @id(\"note-text\");\n    }");
+            "      field author: Ref<User>;\n      field text: Text;\n    }", "      field author: Ref<User>;\n      field text: Text @id(\"note-text\");\n    }");
         Files.writeString(source.resolve("project.sir"), declared);
         Path base = export(source, temp.resolve("base")).manifest().outputRoot();
         String renamed = declared
-            .replace("field text: String @id(\"note-text\");", "field body: String @id(\"note-text\");")
-            .replace("    view NoteView from Note {\n      field id: Int64;\n      field text: String;", "    view NoteView from Note {\n      field id: Int64;\n      field body: String;")
+            .replace("field text: Text @id(\"note-text\");", "field body: Text @id(\"note-text\");")
+            .replace("    view NoteView from Note {\n      field id: Id;\n      field text: Text;", "    view NoteView from Note {\n      field id: Id;\n      field body: Text;")
             .replace("          text: input.text;", "          body: input.text;");
         Files.writeString(source.resolve("project.sir"), renamed);
         var result = new DeploymentPackageApplication().export(new DeploymentPackageRequest(source, ENTRY, temp.resolve("renamed"), Optional.empty(), Optional.of(base)));
@@ -161,8 +161,8 @@ class DeploymentPackageApplicationTest {
         assertFalse(Files.readString(next.resolve("deploy/schema.tsv")).contains("note\ttext\t"));
 
         // A later version inherits the record, so an instance two versions behind still reads the column correctly.
-        Files.writeString(source.resolve("project.sir"), renamed.replace("      field body: String @id(\"note-text\");\n    }",
-            "      field body: String @id(\"note-text\");\n      field title: Optional<String> where length(0, 80);\n    }"));
+        Files.writeString(source.resolve("project.sir"), renamed.replace("      field body: Text @id(\"note-text\");\n    }",
+            "      field body: Text @id(\"note-text\");\n      field title: Optional<Text> where length(0, 80);\n    }"));
         var third = new DeploymentPackageApplication().export(new DeploymentPackageRequest(source, ENTRY, temp.resolve("third"), Optional.empty(), Optional.of(next)));
         var continued = assertInstanceOf(DeploymentPackageResult.Exported.class, third, third.toString());
         assertEquals(List.of("V3 ADD_NULLABLE_COLUMN note.title"), continued.continuation().orElseThrow().steps());
@@ -281,7 +281,7 @@ class DeploymentPackageApplicationTest {
         Path root = Files.createTempDirectory(temp, "source-");
         try (var input = getClass().getResourceAsStream("/valid/dual-token-scaffolded.sir")) {
             String text = new String(Objects.requireNonNull(input).readAllBytes(), StandardCharsets.UTF_8);
-            if (bounded) text = text.replace("field name: String unique;", "field name: String where length(1, 64) unique;");
+            if (bounded) text = text.replace("field name: Text unique;", "field name: Text where length(1, 64) unique;");
             Files.writeString(root.resolve("project.sir"), text);
         }
         return root;

@@ -1,4 +1,4 @@
-sir 0.2
+sir 0.3
 
 software ProjectionParity {
   metadata {
@@ -24,71 +24,71 @@ software ProjectionParity {
     }
 
     entity Course persistent {
-      identity id: Int64 generated auto;
-      field code: String where notBlank, length(1, 32);
-      field name: String where notBlank, length(1, 100);
-      field capacity: Int32 where min(1);
-      field version: Int64 versioned;
+      identity id: Id generated auto;
+      field code: Code;
+      field name: Name;
+      field capacity: Quantity;
+      field version: Version;
     }
 
     entity Student persistent {
-      identity id: Int64 generated auto;
-      field studentNo: String where notBlank, length(1, 16);
-      field name: String where notBlank, length(1, 100);
+      identity id: Id generated auto;
+      field studentNo: Code where length(1, 16);
+      field name: Name;
       /* Student has no patch input, so this versioned field isolates the versioned fact
          from the language rule that couples a patch payload with a version field. */
-      field version: Int64 versioned;
+      field version: Version;
     }
 
     entity Enrollment persistent {
-      identity id: Int64 generated auto;
+      identity id: Id generated auto;
       field course: Ref<Course>;
       field student: Ref<Student>;
       field status: EnrollmentStatus;
     }
 
     view CourseDetail from Course {
-      field id: Int64;
-      field code: String;
-      field name: String;
-      field capacity: Int32;
-      field version: Int64;
+      field id: Id;
+      field code: Text;
+      field name: Text;
+      field capacity: Count;
+      field version: Serial;
     }
 
     view StudentSummary from Student {
-      field id: Int64;
-      field studentNo: String;
-      field name: String;
+      field id: Id;
+      field studentNo: Text;
+      field name: Text;
     }
 
     view StudentSummaryAlt from Student {
-      field id: Int64;
-      field studentNo: String;
+      field id: Id;
+      field studentNo: Text;
     }
 
     view EnrollmentSummary from Enrollment {
-      field id: Int64;
+      field id: Id;
       field student: StudentSummary;
       field status: EnrollmentStatus;
     }
 
     view CourseEnrollmentItem from Course {
-      field id: Int64;
-      field code: String;
-      field name: String;
+      field id: Id;
+      field code: Text;
+      field name: Text;
       field enrollments: List<EnrollmentSummary>;
     }
 
     input UpdateCourseInput patch of Course {
-      field id: Int64;
-      field name: String;
-      field capacity: Int32;
+      field id: Id;
+      field name: Text;
+      field capacity: Count;
     }
 
     input SearchInput {
-      field page: Int32;
-      field size: Int32;
-      field sizeAlt: Int32;
+      field page: PageNo;
+      field size: PageSize;
+      field sizeAlt: Count;
     }
 
     error CourseNotFound;

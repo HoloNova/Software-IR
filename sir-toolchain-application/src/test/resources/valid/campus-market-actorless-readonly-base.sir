@@ -1,4 +1,4 @@
-sir 0.2
+sir 0.3
 
 software CampusMarketActorless {
   metadata {
@@ -24,13 +24,13 @@ software CampusMarketActorless {
     }
 
     entity Goods persistent {
-      identity id: Int64 generated auto;
-      field title: String where notBlank;
+      identity id: Id generated auto;
+      field title: Text where notBlank;
       field status: GoodsStatus;
     }
 
     input SearchGoodsInput {
-      field title: String where notBlank;
+      field title: Text where notBlank;
     }
 
     capability SearchGoods {

@@ -251,7 +251,7 @@ class WorkspaceVersionApplicationTest {
 
         // Someone edits the SIR after the plan was made.
         Path student = ws.sources().resolve("modules/student.sir");
-        Files.writeString(student, Files.readString(student).replace("sir 0.2", "sir 0.2\n// edited after planning"));
+        Files.writeString(student, Files.readString(student).replace("sir 0.3", "sir 0.3\n// edited after planning"));
         var before = state(ws);
 
         var failure = assertInstanceOf(WorkspaceApplyResult.Failure.class, app.apply(ws.request(), planned));

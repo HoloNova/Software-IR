@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 
 class ProjectSourceGrammarTest {
     static final String ROOT = """
-        sir 0.2 software Demo {
+        sir 0.3 software Demo {
           metadata { displayName "Demo"; namespace "example.demo"; }
           target { language java 21; framework spring_boot; persistence mybatis_plus; database mysql; build maven; interface rest; }
           sources { source "modules/course.sir"; }
@@ -29,15 +29,15 @@ class ProjectSourceGrammarTest {
         assertEquals("Course", root.imports().getFirst().declaration().text());
         assertEquals(id, root.imports().getFirst().from().span().source());
         var fragment = parser.parseFragment(new SirSource(SourceId.of("modules/course.sir"),
-                "sir 0.2 imports {} declarations { entity Course persistent { identity id: Int64 generated auto; } }"));
+                "sir 0.3 imports {} declarations { entity Course persistent { identity id: Id generated auto; } }"));
         assertTrue(fragment.isSuccess(), fragment.diagnostics().toString());
         assertInstanceOf(AstSourceUnit.Fragment.class, fragment.unit().orElseThrow());
     }
-    @Test void aRootAndAFragmentAreNotInterchangeableAndOnlyVersionTwoIsAccepted() {
-        assertFalse(parser.parseProject(new SirSource(id, ROOT.replace("0.2", "0.1"))).isSuccess());
+    @Test void aRootAndAFragmentAreNotInterchangeableAndOnlyVersionThreeIsAccepted() {
+        assertFalse(parser.parseProject(new SirSource(id, ROOT.replace("0.3", "0.2"))).isSuccess());
         assertFalse(parser.parseFragment(new SirSource(id, ROOT)).isSuccess());
-        assertFalse(parser.parseFragment(new SirSource(id, "sir 0.2 sources {} imports {} declarations {} ")).isSuccess());
-        assertFalse(parser.parseFragment(new SirSource(id, "sir 0.2 imports {} declarations {} trailing")).isSuccess());
+        assertFalse(parser.parseFragment(new SirSource(id, "sir 0.3 sources {} imports {} declarations {} ")).isSuccess());
+        assertFalse(parser.parseFragment(new SirSource(id, "sir 0.3 imports {} declarations {} trailing")).isSuccess());
         assertFalse(parser.parseProject(new SirSource(id, ROOT.replace("sources {", "anything {"))).isSuccess());
         assertFalse(parser.parseProject(new SirSource(id, ROOT.replace("java 21", "java 17"))).isSuccess());
     }
@@ -45,14 +45,14 @@ class ProjectSourceGrammarTest {
         for (String word : List.of("sources", "source", "imports", "import")) {
             String text = ROOT;
             text = text.substring(0, text.indexOf("  sources {")) + "sources { } imports { } declarations { entity " + word
-                    + " persistent { identity id: Int64 generated auto; } } }";
+                    + " persistent { identity id: Id generated auto; } } }";
             var result = parser.parseProject(new SirSource(id, text));
             assertTrue(result.isSuccess(), result.diagnostics().toString());
         }
     }
     @Test void lexicalErrorsAndExactFragmentLocationSurviveTheNewEntry() {
         var result = parser.parseFragment(new SirSource(SourceId.of("broken.sir"),
-                "sir 0.2 imports { import Course from \"bad\\q\"; } declarations {}"));
+                "sir 0.3 imports { import Course from \"bad\\q\"; } declarations {}"));
         assertFalse(result.isSuccess());
         assertEquals(SourceId.of("broken.sir"), result.diagnostics().getFirst().primarySpan().source());
         assertTrue(result.diagnostics().getFirst().primarySpan().start().column() > 1);

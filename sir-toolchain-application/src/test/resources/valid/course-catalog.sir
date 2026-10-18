@@ -1,4 +1,4 @@
-sir 0.2
+sir 0.3
 
 software CourseCatalog {
   metadata {
@@ -19,21 +19,21 @@ software CourseCatalog {
   imports { }
   declarations {
     entity Course persistent {
-      identity id: Int64 generated auto;
-      field code: String where notBlank, length(1, 32);
-      field name: String where notBlank, length(1, 100);
-      field description: Optional<String> where length(0, 500);
-      field capacity: Int32 where min(1);
+      identity id: Id generated auto;
+      field code: Code;
+      field name: Name;
+      field description: Optional<Remark>;
+      field capacity: Quantity;
     }
     view CourseSummary from Course {
-      field code: String;
-      field name: String;
-      field capacity: Int32;
+      field code: Text;
+      field name: Text;
+      field capacity: Count;
     }
     input SearchCoursesInput {
-      field keyword: String where notBlank, length(1, 50);
-      field page: Int32;
-      field size: Int32;
+      field keyword: Name where length(1, 50);
+      field page: PageNo;
+      field size: PageSize;
     }
     error InvalidPageParam;
     capability SearchCourses {

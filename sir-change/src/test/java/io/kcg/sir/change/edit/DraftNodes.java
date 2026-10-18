@@ -51,6 +51,10 @@ final class DraftNodes {
         return node("PrimitiveType", "constant", FACT, text(constant));
     }
 
+    static StructNode semantic(String name) {
+        return node("SemanticType", "name", FACT, text(name));
+    }
+
     static StructNode constraint(String name) {
         return node("NormalizedConstraint", "name", FACT, text(name), "arguments", FACT, seq());
     }

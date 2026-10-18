@@ -65,28 +65,28 @@ class UniqueLookupSemanticsTest {
 
     @Test
     void theKeyValueMustFitTheFieldItIsComparedWith() {
-        assertOnly("SIR-TYPE-001", replace("input FindByBadgeInput { field badge: Int64; }",
-                "input FindByBadgeInput { field badge: String; }"));
+        assertOnly("SIR-TYPE-001", replace("input FindByBadgeInput { field badge: Serial; }",
+                "input FindByBadgeInput { field badge: Text; }"));
     }
 
     @Test
     void onlyTextIntegersAndUuidsCanBeUnique() {
-        assertOnly("SIR-TYPE-001", replace("field email: String where notBlank unique;", "field email: Optional<String> unique;"));
-        assertOnly("SIR-TYPE-001", replace("field email: String where notBlank unique;", "field email: Decimal unique;"));
-        assertOnly("SIR-TYPE-001", replace("field email: String where notBlank unique;", "field email: Boolean unique;"));
+        assertOnly("SIR-TYPE-001", replace("field email: Text where notBlank unique;", "field email: Optional<Text> unique;"));
+        assertOnly("SIR-TYPE-001", replace("field email: Text where notBlank unique;", "field email: Money unique;"));
+        assertOnly("SIR-TYPE-001", replace("field email: Text where notBlank unique;", "field email: Flag unique;"));
     }
 
     @Test
     void theVersionFieldIsNotUnique() {
         // the versioned entity also makes the fixture's keyed load-then-update illegal, so this asserts the one rule, not the count
-        SemanticAnalysis result = TestSources.analyze(replace("field token: Uuid unique;", "field token: Uuid unique;\n      field version: Int64 versioned unique;"));
+        SemanticAnalysis result = TestSources.analyze(replace("field token: Token unique;", "field token: Token unique;\n      field version: Version unique;"));
 
         assertTrue(TestSources.hasError(result, "SIR-VALID-002"), () -> result.diagnostics().toString());
     }
 
     @Test
     void aVersionedEntityCannotBeLoadedByAFieldAndThenUpdatedBecauseThatLoadCannotTakeTheRowLock() {
-        SemanticAnalysis result = TestSources.analyze(replace("field token: Uuid unique;", "field token: Uuid unique;\n      field version: Int64 versioned;"));
+        SemanticAnalysis result = TestSources.analyze(replace("field token: Token unique;", "field token: Token unique;\n      field version: Version;"));
 
         assertTrue(TestSources.hasError(result, "SIR-VALID-006"), () -> result.diagnostics().toString());
     }

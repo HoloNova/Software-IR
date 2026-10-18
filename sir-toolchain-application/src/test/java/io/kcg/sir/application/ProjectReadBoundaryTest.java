@@ -79,7 +79,7 @@ class ProjectReadBoundaryTest {
         refuse(sizeCase, source, "SIR-APP-SOURCES-LIMIT-001");
         Path totalCase = Files.createDirectory(temp.resolve("total-size")); source = fixture(totalCase); root = source.resolve("project.sir");
         sources = new StringBuilder("sources {");
-        String fragment = "sir 0.2 imports {} declarations {}\n//";
+        String fragment = "sir 0.3 imports {} declarations {}\n//";
         for (int i = 0; i < 8; i++) {
             sources.append("source \"modules/part").append(i).append(".sir\";");
             Files.writeString(source.resolve("modules/part" + i + ".sir"), fragment + "x".repeat(ProjectSourceReader.MAX_FILE_BYTES - fragment.length()));
@@ -99,7 +99,7 @@ class ProjectReadBoundaryTest {
         StringBuilder sources = new StringBuilder("sources {");
         for (int i = 0; i < 127; i++) {
             sources.append("source \"modules/part").append(i).append(".sir\";");
-            Files.writeString(source.resolve("modules/part" + i + ".sir"), "sir 0.2 imports {} declarations {}");
+            Files.writeString(source.resolve("modules/part" + i + ".sir"), "sir 0.3 imports {} declarations {}");
         }
         Files.writeString(root, header(root) + sources + "} imports {} declarations {} }");
         assertEquals(128, generate(source, count.resolve("output")).sources().manifest().files().size());

@@ -1,4 +1,4 @@
-sir 0.2
+sir 0.3
 
 software TicketDesk {
   metadata {
@@ -17,27 +17,27 @@ software TicketDesk {
   imports { }
   declarations {
     entity Ticket persistent {
-      identity id: Int64 generated auto;
-      field issuedAt: DateTime;
-      field expiresAt: DateTime;
-      field dueOn: Date;
-      field attempts: Int32;
-      field score: Decimal;
+      identity id: Id generated auto;
+      field issuedAt: Moment;
+      field expiresAt: Moment;
+      field dueOn: Day;
+      field attempts: Count;
+      field score: Money;
     }
     view TicketView from Ticket {
-      field id: Int64;
-      field expiresAt: DateTime;
-      field dueOn: Date;
-      field attempts: Int32;
+      field id: Id;
+      field expiresAt: Moment;
+      field dueOn: Day;
+      field attempts: Count;
     }
     input OpenInput {
-      field start: Date;
-      field base: Int32;
-      field bonus: Decimal;
+      field start: Day;
+      field base: Count;
+      field bonus: Money;
     }
     input PageInput {
-      field page: Int32;
-      field size: Int32;
+      field page: PageNo;
+      field size: PageSize;
     }
     error BadPage;
     error Expired;
