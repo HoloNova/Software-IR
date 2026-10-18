@@ -38,6 +38,23 @@ class SchemaEvolutionPlannerTest {
             steps.stream().map(SchemaEvolution.Step::describe).toList());
     }
 
+    @Test void aRequiredColumnWithADatabaseDefaultCanBeAddedBecauseExistingRowsGetTheDefault() {
+        String target = base().replace(NOTE, "      field author: Ref<User>;\n      field text: Text;\n      field visits: Count default 0;\n"
+            + "      field label: Text where length(1, 16) default \"open\";\n    }");
+        var steps = continueFrom(base(), target).evolution().orElseThrow().steps();
+        assertEquals(List.of("V2 ADD_DEFAULTED_COLUMN note.visits", "V3 ADD_DEFAULTED_COLUMN note.label"),
+            steps.stream().map(SchemaEvolution.Step::describe).toList());
+        assertTrue(steps.get(1).addedRows().getFirst().endsWith("\t=open"), steps.get(1).addedRows().toString());
+    }
+
+    @Test void aDefaultTheDatabaseCannotHoldStillLeavesARequiredColumnRefused() {
+        // The moment of creation would give existing rows the migration's time; unbounded text holds no plain default.
+        String target = base().replace(NOTE, "      field author: Ref<User>;\n      field text: Text;\n      field openedAt: Moment default now();\n"
+            + "      field memo: Text default \"\";\n    }");
+        var outcome = continueFrom(base(), target);
+        assertEquals(List.of("REQUIRED_COLUMN_ADDED note.opened_at", "REQUIRED_COLUMN_ADDED note.memo"), outcome.refusals());
+    }
+
     @Test void everyUnsupportedChangeIsListedAndNothingIsPlanned() {
         String archive = "\n    entity Archive persistent { identity id: Id generated auto; field text: Text; }";
         String before = base().replace(NOTE, NOTE + archive);

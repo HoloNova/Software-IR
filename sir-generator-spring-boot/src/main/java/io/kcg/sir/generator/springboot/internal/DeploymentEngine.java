@@ -183,6 +183,7 @@ public final class DeploymentEngine {
     /** One column as V1 and every later version write it, so a column means the same DDL whichever version adds it. */
     private static String definition(Column column) {
         String definition = quote(column.name()) + " " + sqlType(column) + (column.nullable() ? " NULL" : " NOT NULL");
+        if (column.defaultValue().isPresent()) definition += " DEFAULT " + defaultLiteral(column);
         if (column.autoIncrement()) definition += " AUTO_INCREMENT";
         if (column.primary()) definition += " PRIMARY KEY";
         if (column.unique()) definition += " UNIQUE";
@@ -225,6 +226,9 @@ public final class DeploymentEngine {
                         header + "CREATE TABLE " + quote(create.table().name()) + " (\n" + String.join(",\n", definitions)
                             + "\n) ENGINE=InnoDB DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_bin;\n");
                 }
+                case SchemaEvolution.AddDefaultedColumn column -> add(files, plan,
+                    "deploy/migrations/V" + step.version() + "__add_column_" + (column.table() + "_" + column.column().name()).toLowerCase(Locale.ROOT) + ".sql",
+                    header + "ALTER TABLE " + quote(column.table()) + " ADD COLUMN " + definition(column.column()) + ", ALGORITHM=INSTANT;\n");
                 case SchemaEvolution.AddNullableColumn column -> add(files, plan,
                     "deploy/migrations/V" + step.version() + "__add_column_" + (column.table() + "_" + column.column().name()).toLowerCase(Locale.ROOT) + ".sql",
                     header + "ALTER TABLE " + quote(column.table()) + " ADD COLUMN " + definition(column.column()) + ", ALGORITHM=INSTANT;\n");
@@ -237,6 +241,13 @@ public final class DeploymentEngine {
         if (!renames.isEmpty()) add(files, plan, "deploy/renames.tsv", renames.toString());
         return List.copyOf(files);
     }
+    /** A text default as a quoted literal (both quote and backslash escaped, as MySQL reads them); a number or flag as is. */
+    private static String defaultLiteral(Column column) {
+        String value = column.defaultValue().orElseThrow();
+        return column.storage() == DeploymentPlan.Storage.VARCHAR || column.storage() == DeploymentPlan.Storage.UUID
+            ? "'" + value.replace("\\", "\\\\").replace("'", "''") + "'" : value;
+    }
+
     private static String sqlType(Column column) {
         return switch (column.storage()) {
             case INT -> "INT"; case BIGINT -> "BIGINT"; case BOOLEAN -> "BOOLEAN";

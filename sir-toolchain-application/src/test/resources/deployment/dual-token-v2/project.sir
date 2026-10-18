@@ -26,6 +26,7 @@ software DualTokenDesk {
       field author: Ref<User>;
       field body: Text @id("note-text");
       field title: Optional<Text> where length(0, 120);
+      field state: Text where length(1, 16) default "open";
     }
     entity Label persistent {
       identity id: Id generated auto;

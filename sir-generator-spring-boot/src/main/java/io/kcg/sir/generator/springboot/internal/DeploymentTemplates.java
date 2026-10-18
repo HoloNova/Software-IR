@@ -568,7 +568,7 @@ final class DeploymentTemplates {
             private static List<String[]> contract(Path file) throws Exception {
                 List<String[]> rows = Files.readAllLines(file).stream().filter(s -> !s.isBlank()).map(s -> s.split("\\t", -1)).toList();
                 for (String[] row : rows) {
-                    if (row.length != 10 || !row[0].matches("[A-Za-z_][A-Za-z0-9_]{0,63}") || !row[1].matches("[A-Za-z_][A-Za-z0-9_]{0,63}"))
+                    if (row.length != 11 || !row[0].matches("[A-Za-z_][A-Za-z0-9_]{0,63}") || !row[1].matches("[A-Za-z_][A-Za-z0-9_]{0,63}"))
                         throw new IllegalStateException("invalid schema contract: " + file.getFileName());
                 }
                 return rows;
@@ -762,7 +762,7 @@ final class DeploymentTemplates {
                 Map<String, String[]> columns = new TreeMap<>();
                 Set<String> tables = new TreeSet<>(), uniques = new TreeSet<>(), references = new TreeSet<>();
                 for (String[] row : expected) {
-                    if (row.length != 10) throw new IllegalStateException("invalid schema contract");
+                    if (row.length != 11) throw new IllegalStateException("invalid schema contract");
                     tables.add(row[0]); columns.put(row[0] + "." + row[1], row);
                     if (row[5].equals("true") || row[7].equals("true")) uniques.add(row[0] + "." + row[1]);
                     if (!row[8].isEmpty()) references.add(row[0] + "." + row[1] + ">" + row[8] + "." + row[9]);
@@ -786,7 +786,8 @@ final class DeploymentTemplates {
                                 || !row[4].equals(Boolean.toString(rs.getString(5).equals("YES")))
                                 || !row[5].equals(Boolean.toString(rs.getString(7).equals("PRI")))
                                 || !row[6].equals(Boolean.toString(rs.getString(6).contains("auto_increment")))
-                                || rs.getString(9).contains("unsigned") || rs.getObject(11) != null
+                                || rs.getString(9).contains("unsigned")
+                                || !row[10].equals(rs.getString(11) == null ? "" : "=" + java.net.URLEncoder.encode(rs.getString(11), java.nio.charset.StandardCharsets.UTF_8))
                                 || !rs.getString(6).equals(row[6].equals("true") ? "auto_increment" : "")) throw new IllegalStateException("column contract mismatch: " + key);
                         if ((row[2].equals("char") || row[2].equals("varchar")) && Long.parseLong(row[3]) != rs.getLong(4))
                             throw new IllegalStateException("column length mismatch: " + key);

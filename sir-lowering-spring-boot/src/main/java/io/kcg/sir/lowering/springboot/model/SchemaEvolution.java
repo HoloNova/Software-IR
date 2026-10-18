@@ -19,7 +19,7 @@ public record SchemaEvolution(int baseVersion, List<Step> steps) {
 
     public int targetVersion() { return baseVersion + steps.size(); }
 
-    public sealed interface Step permits RenameColumn, CreateTable, AddNullableColumn {
+    public sealed interface Step permits RenameColumn, CreateTable, AddNullableColumn, AddDefaultedColumn {
         int version();
         /** The contract rows this version adds. */
         List<String> addedRows();
@@ -58,5 +58,17 @@ public record SchemaEvolution(int baseVersion, List<Step> steps) {
         }
         public List<String> addedRows() { return List.of(SchemaContract.row(table, column)); }
         public String describe() { return "V" + version + " ADD_NULLABLE_COLUMN " + table + "." + column.name(); }
+    }
+
+    /** A required column with a database default: the rows already in the table get the default, so none is left empty. */
+    public record AddDefaultedColumn(int version, String table, Column column) implements Step {
+        public AddDefaultedColumn {
+            Objects.requireNonNull(table); Objects.requireNonNull(column);
+            if (column.nullable() || column.defaultValue().isEmpty() || column.primary() || column.autoIncrement() || column.unique()
+                    || column.reference().isPresent())
+                throw new IllegalArgumentException("only a plain required column with a default can be added this way");
+        }
+        public List<String> addedRows() { return List.of(SchemaContract.row(table, column)); }
+        public String describe() { return "V" + version + " ADD_DEFAULTED_COLUMN " + table + "." + column.name(); }
     }
 }

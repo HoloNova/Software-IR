@@ -9,7 +9,8 @@ import java.util.List;
 /**
  * The physical schema contract a delivery's migration tool verifies the live database against: one tab-separated row
  * per column (table, column, MySQL data type, length, nullable, primary, auto increment, unique, referenced table and
- * column). The same rows are what an update compares a new plan with, so both sides are rendered here only.
+ * column, and the database default: empty for none, else "=" and the value URL-encoded, so any text fits one field).
+ * The same rows are what an update compares a new plan with, so both sides are rendered here only.
  */
 public final class SchemaContract {
     private SchemaContract() {}
@@ -25,7 +26,8 @@ public final class SchemaContract {
         return String.join("\t", table, column.name(), dataType(column.storage()),
             Integer.toString(column.storage() == Storage.UUID ? 36 : column.length()),
             Boolean.toString(column.nullable()), Boolean.toString(column.primary()), Boolean.toString(column.autoIncrement()),
-            Boolean.toString(column.unique()), ref.map(ForeignKey::table).orElse(""), ref.map(ForeignKey::column).orElse(""));
+            Boolean.toString(column.unique()), ref.map(ForeignKey::table).orElse(""), ref.map(ForeignKey::column).orElse(""),
+            column.defaultValue().map(v -> "=" + java.net.URLEncoder.encode(v, java.nio.charset.StandardCharsets.UTF_8)).orElse(""));
     }
 
     private static String dataType(Storage storage) {

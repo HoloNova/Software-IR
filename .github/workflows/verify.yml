@@ -237,12 +237,12 @@ jobs:
             > "$RUNNER_TEMP/deployment-evidence/export-next.json"
           python3 -c 'import json,sys; assert json.load(open(sys.argv[1]))["outcome"] == "PACKAGE_EXPORTED"' "$RUNNER_TEMP/deployment-evidence/export-next.json"
           # Version 2 continues the chain of the package the instance will run: Note.text renamed to body under its
-          # declared identity, a new table and a new nullable column.
+          # declared identity, a new table, a new nullable column and a new required column with a default.
           java -Xmx256m -jar "$RUNNER_TEMP/delivery-cli/kcg.jar" package \
             --source-root "$GITHUB_WORKSPACE/sir-toolchain-application/src/test/resources/deployment/dual-token-v2" \
             --entry project.sir --output-root "$RUNNER_TEMP/backend-delivery-v2" --base-package "$RUNNER_TEMP/backend-delivery-next" \
             > "$RUNNER_TEMP/deployment-evidence/export-v2.json"
-          python3 -c 'import json,sys; d = json.load(open(sys.argv[1])); assert d["outcome"] == "PACKAGE_EXPORTED" and d["schemaVersion"] == 4 and [x["step"] for x in d["steps"]] == ["V2 RENAME_COLUMN note.text -> body", "V3 CREATE_TABLE label", "V4 ADD_NULLABLE_COLUMN note.title"], d' "$RUNNER_TEMP/deployment-evidence/export-v2.json"
+          python3 -c 'import json,sys; d = json.load(open(sys.argv[1])); assert d["outcome"] == "PACKAGE_EXPORTED" and d["schemaVersion"] == 5 and [x["step"] for x in d["steps"]] == ["V2 RENAME_COLUMN note.text -> body", "V3 CREATE_TABLE label", "V4 ADD_NULLABLE_COLUMN note.title", "V5 ADD_DEFAULTED_COLUMN note.state"], d' "$RUNNER_TEMP/deployment-evidence/export-v2.json"
           # Going back to version 1 on top of version 2 would drop data: the public CLI refuses it and writes nothing.
           STATUS=0
           java -Xmx256m -jar "$RUNNER_TEMP/delivery-cli/kcg.jar" package \

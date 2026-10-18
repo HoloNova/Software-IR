@@ -92,6 +92,21 @@ class DeploymentPackageApplicationTest {
         return process.exitValue();
     }
 
+    @Test void aRequiredFieldWithADefaultIsAddedToTheRunningTableWithThatDefault() throws Exception {
+        Path source = source(true);
+        Path base = export(source, temp.resolve("base")).manifest().outputRoot();
+        String text = Files.readString(source.resolve("project.sir"));
+        Files.writeString(source.resolve("project.sir"), text.replace("      field author: Ref<User>;\n      field text: Text;\n    }",
+            "      field author: Ref<User>;\n      field text: Text;\n      field state: Text where length(1, 16) default \"it's\";\n    }"));
+        var result = new DeploymentPackageApplication().export(new DeploymentPackageRequest(source, ENTRY, temp.resolve("next"), Optional.empty(), Optional.of(base)));
+        var exported = assertInstanceOf(DeploymentPackageResult.Exported.class, result, result.toString());
+        Path next = exported.manifest().outputRoot();
+        assertEquals(List.of("V2 ADD_DEFAULTED_COLUMN note.state"), exported.continuation().orElseThrow().steps());
+        assertEquals("-- KCG delivery schema version 2; frozen once published.\nALTER TABLE `note` ADD COLUMN `state` VARCHAR(16) NOT NULL DEFAULT 'it''s', ALGORITHM=INSTANT;\n",
+            Files.readString(next.resolve("deploy/migrations/V2__add_column_note_state.sql")));
+        assertTrue(Files.readString(next.resolve("deploy/schema.tsv")).contains("note\tstate\tvarchar\t16\tfalse\tfalse\tfalse\tfalse\t\t\t=it%27s\n"));
+    }
+
     @Test void aContinuationInheritsTheBaseChainVerbatimAndAppendsOneStatementPerVersion() throws Exception {
         Path source = source(true);
         Path base = export(source, temp.resolve("base")).manifest().outputRoot();

@@ -16,7 +16,8 @@ import java.util.*;
  * or field the delta adds becomes a table or column to create; one it deletes is refused. A column kept under the same
  * identity is compared physically: when only its name differs (a field renamed under a declared {@code @id}) the column
  * is renamed with it and keeps its values; any other difference is refused. Round 1 thus supports an unchanged schema,
- * renamed non-key columns, new tables and new plain nullable columns.
+ * renamed non-key columns, new tables, new plain nullable columns and new plain required columns that have a database
+ * default (existing rows get the default).
  *
  * <p>A table or column that appears or disappears without the delta adding or deleting it means the two inputs
  * disagree. That, and a chain that does not end at the target contract, are faults of the toolchain (SELFCHECK), never
@@ -79,7 +80,7 @@ public final class SpringBootSchemaEvolutionPlanner {
                 else refusals.add("COLUMN_CHANGED " + old.name() + "." + column.name() + ": " + attributes(before) + " -> " + attributes(after));
             }
         }
-        List<SchemaEvolution.AddNullableColumn> columnsToAdd = new ArrayList<>();
+        List<SchemaEvolution.Step> columnsToAdd = new ArrayList<>();
         List<Table> created = new ArrayList<>();
         for (Table table : target.tables()) {
             if (!baseTableSymbols.contains(table.symbol())) {
@@ -96,10 +97,11 @@ public final class SpringBootSchemaEvolutionPlanner {
                 String subject = table.name() + "." + column.name();
                 if (!added.contains(column.symbol())) refusals.add("SELFCHECK column " + subject + " is new but the change layer added no field for it");
                 else if (oldNamesLower.contains(column.name().toLowerCase(Locale.ROOT))) refusals.add("NAME_CASE_CONFLICT " + subject);
-                else if (!column.nullable()) refusals.add("REQUIRED_COLUMN_ADDED " + subject);
+                else if (!column.nullable() && column.defaultValue().isEmpty()) refusals.add("REQUIRED_COLUMN_ADDED " + subject);
                 else if (column.unique()) refusals.add("UNIQUE_COLUMN_ADDED " + subject);
                 else if (column.reference().isPresent()) refusals.add("REFERENCE_COLUMN_ADDED " + subject);
-                else columnsToAdd.add(new SchemaEvolution.AddNullableColumn(0, table.name(), column));
+                else if (column.nullable()) columnsToAdd.add(new SchemaEvolution.AddNullableColumn(0, table.name(), column));
+                else columnsToAdd.add(new SchemaEvolution.AddDefaultedColumn(0, table.name(), column));
             }
         }
         List<Table> ordered = dependencyOrder(created, refusals);
@@ -109,7 +111,11 @@ public final class SpringBootSchemaEvolutionPlanner {
         // Renames first, so every later version is written against the final column names.
         for (var rename : renames) steps.add(new SchemaEvolution.RenameColumn(++version, rename.table(), rename.from(), rename.to()));
         for (Table table : ordered) steps.add(new SchemaEvolution.CreateTable(++version, table));
-        for (var column : columnsToAdd) steps.add(new SchemaEvolution.AddNullableColumn(++version, column.table(), column.column()));
+        for (var column : columnsToAdd) steps.add(switch (column) {
+            case SchemaEvolution.AddNullableColumn c -> new SchemaEvolution.AddNullableColumn(++version, c.table(), c.column());
+            case SchemaEvolution.AddDefaultedColumn c -> new SchemaEvolution.AddDefaultedColumn(++version, c.table(), c.column());
+            default -> throw new IllegalStateException("not a column addition: " + column);
+        });
         var evolution = new SchemaEvolution(baseVersion, steps);
         // The chain must end exactly at the target contract; anything else is a fault of this planner, not of the input.
         Set<String> reached = new HashSet<>(SchemaContract.render(base.tables()).lines().toList());
@@ -142,6 +148,6 @@ public final class SpringBootSchemaEvolutionPlanner {
     private static String attributes(String row) {
         String[] f = row.split("\t", -1);
         return f[2] + "(" + f[3] + ") nullable=" + f[4] + " primary=" + f[5] + " auto=" + f[6] + " unique=" + f[7]
-            + (f[8].isEmpty() ? "" : " ref=" + f[8] + "." + f[9]);
+            + (f[8].isEmpty() ? "" : " ref=" + f[8] + "." + f[9]) + (f[10].isEmpty() ? "" : " default" + f[10]);
     }
 }

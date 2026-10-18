@@ -60,12 +60,24 @@ public record DeploymentPlan(LoweredNodeId id, ProjectArtifact.MavenProject appl
     public record ForeignKey(String table, String column) {
         public ForeignKey { identifier(table); identifier(column); }
     }
-    /** {@code symbol} is the semantic identity of the entity identity or field the column stores. */
+    /**
+     * {@code symbol} is the semantic identity of the entity identity or field the column stores. {@code defaultValue} is
+     * the value the database gives a row that does not set the column, written as MySQL reports it (text without quotes,
+     * a flag as 0 or 1); it is what lets a required column be added to a table that already has rows.
+     */
     public record Column(String symbol, String name, Storage storage, int length, boolean nullable, boolean primary,
-            boolean autoIncrement, boolean unique, Optional<ForeignKey> reference) {
+            boolean autoIncrement, boolean unique, Optional<ForeignKey> reference, Optional<String> defaultValue) {
         public Column {
             Objects.requireNonNull(symbol); identifier(name); Objects.requireNonNull(storage); Objects.requireNonNull(reference);
+            Objects.requireNonNull(defaultValue);
             if (storage == Storage.VARCHAR && (length < 1 || length > 768)) throw new IllegalArgumentException("invalid VARCHAR length");
+            if (defaultValue.isPresent() && (primary || autoIncrement || unique || reference.isPresent()
+                    || storage == Storage.LONGTEXT || storage == Storage.DATE || storage == Storage.DATETIME))
+                throw new IllegalArgumentException("only a plain number, flag or bounded text column can have a database default: " + name);
+        }
+        public Column(String symbol, String name, Storage storage, int length, boolean nullable, boolean primary,
+                boolean autoIncrement, boolean unique, Optional<ForeignKey> reference) {
+            this(symbol, name, storage, length, nullable, primary, autoIncrement, unique, reference, Optional.empty());
         }
     }
     private static final String QUALIFIED = "[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z_][A-Za-z0-9_]*)*";

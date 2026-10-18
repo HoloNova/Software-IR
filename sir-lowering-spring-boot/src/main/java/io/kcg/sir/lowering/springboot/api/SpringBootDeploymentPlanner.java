@@ -12,7 +12,8 @@ import java.util.*;
 public final class SpringBootDeploymentPlanner {
     public DeploymentPlan plan(NormalizedSemanticModel semantic, SpringBootLoweredModel model) {
         Map<SymbolId, NormalizedField> fields = new HashMap<>();
-        semantic.declarations().stream().filter(NormalizedEntity.class::isInstance).map(NormalizedEntity.class::cast)
+        // The implementable model: an entity's fields include the ones extend declarations add.
+        semantic.implementable().declarations().stream().filter(NormalizedEntity.class::isInstance).map(NormalizedEntity.class::cast)
             .forEach(e -> e.fields().forEach(f -> fields.put(f.id(), f)));
         Map<SymbolId, SpringBootDeclaration.EntityDeclaration> entities = new LinkedHashMap<>();
         model.declarations().stream().filter(SpringBootDeclaration.EntityDeclaration.class::isInstance)
@@ -61,7 +62,10 @@ public final class SpringBootDeploymentPlanner {
                 } else throw new IllegalArgumentException("unsupported persistent deployment type: " + type);
                 if (field.unique() && storage == Storage.LONGTEXT)
                     throw new IllegalArgumentException("unique text needs a declared length at most 768: " + field.name());
-                columns.add(new Column(property.sourceSymbol().value(), property.columnName().orElseThrow(), storage, length, nullable, false, false, field.unique(), reference));
+                Optional<String> defaultValue = storage == Storage.LONGTEXT || storage == Storage.DATE || storage == Storage.DATETIME
+                    ? Optional.empty() : field.defaultValue().flatMap(value -> databaseDefault(value, model));
+                columns.add(new Column(property.sourceSymbol().value(), property.columnName().orElseThrow(), storage, length, nullable, false, false,
+                    field.unique(), reference, defaultValue));
             }
             Set<String> columnNames = new HashSet<>();
             int inlineBytes = 0;
@@ -149,6 +153,25 @@ public final class SpringBootDeploymentPlanner {
             }
         }
         return notBlank || min > 0 || max.isPresent() ? Optional.of(new TextRule(field.javaName(), notBlank, min, max)) : Optional.empty();
+    }
+
+    /**
+     * A field's default as the database stores it, when it is a constant the database can hold: a number, a flag, a text
+     * or an enum member (stored by its Java name, like every enum value). The moment of creation is not one: the database
+     * would give rows that already exist the time of the migration, which is not when they were created.
+     */
+    private static Optional<String> databaseDefault(io.kcg.sir.semantic.model.NormalizedExpression value, SpringBootLoweredModel model) {
+        return switch (value) {
+            case io.kcg.sir.semantic.model.NormalizedExpression.BooleanLiteral v -> Optional.of(v.value() ? "1" : "0");
+            case io.kcg.sir.semantic.model.NormalizedExpression.IntegerLiteral v -> Optional.of(v.value().toString());
+            case io.kcg.sir.semantic.model.NormalizedExpression.StringLiteral v -> Optional.of(v.value());
+            case io.kcg.sir.semantic.model.NormalizedExpression.UnaryExpression v
+                    when v.operand() instanceof io.kcg.sir.semantic.model.NormalizedExpression.IntegerLiteral n -> Optional.of(n.value().negate().toString());
+            case io.kcg.sir.semantic.model.NormalizedExpression.MemberExpression v -> model.declarations().stream()
+                .filter(SpringBootDeclaration.EnumDeclaration.class::isInstance).map(SpringBootDeclaration.EnumDeclaration.class::cast)
+                .flatMap(e -> e.members().stream()).filter(m -> m.sourceSymbol().equals(v.resolvedMember())).map(SpringBootDeclaration.EnumMember::javaName).findFirst();
+            default -> Optional.empty();
+        };
     }
 
     private static Storage scalar(LoweredJavaType.Scalar type) {
