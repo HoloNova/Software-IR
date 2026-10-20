@@ -1238,8 +1238,15 @@ public final class SpringBootIrValidation {
             this.validateExpression(value.receiver(), owner);
             this.requireKnown(value.resolvedMember(), owner, "member expression");
             break;
+         case SpringExpression.OptionalPayloadValue value:
+            this.validateExpression(value.payloadMember(), owner);
+            if (!this.isRawOptionalPayload(value.payloadMember()) || !value.type().equals(value.payloadMember().type())) {
+               this.error(owner, "an optional payload read must unwrap its typed INPUT member");
+            }
+            break;
          case SpringExpression.UnaryExpression value:
              this.validateExpression(value.operand(), owner);
+             this.requireNullablePayloadValue(value.operand(), owner);
              if ((value.operator() == SpringExpression.UnaryOperator.IS_NONE || value.operator() == SpringExpression.UnaryOperator.IS_PRESENT)
                    && !(value.operand().type() instanceof LoweredJavaType.OptionalValue)) {
                 this.error(owner, "a null test requires an optional operand");
@@ -1267,6 +1274,19 @@ public final class SpringBootIrValidation {
       }
    }
 
+    private boolean isRawOptionalPayload(SpringExpression expression) {
+       return expression instanceof SpringExpression.MemberExpression member
+          && member.type() instanceof LoweredJavaType.OptionalValue
+          && member.receiver().type() instanceof LoweredJavaType.Declared receiver
+          && receiver.kind() == LoweredJavaType.DeclaredKind.INPUT;
+    }
+
+    private void requireNullablePayloadValue(SpringExpression expression, SpringBootDeclaration owner) {
+       if (this.isRawOptionalPayload(expression)) {
+          this.error(owner, "an optional payload operand requires an explicit nullable read plan");
+       }
+    }
+
     /** The null policy is mandatory for optional comparisons and must match their physical operands. */
     private void validatePresentComparison(SpringExpression.BinaryExpression value, SpringBootDeclaration owner) {
        boolean comparison = switch (value.operator()) {
@@ -1276,6 +1296,10 @@ public final class SpringBootIrValidation {
        boolean left = value.left().type() instanceof LoweredJavaType.OptionalValue;
        boolean right = value.right().type() instanceof LoweredJavaType.OptionalValue;
        boolean needsPlan = comparison && (left || right);
+       if (comparison) {
+          this.requireNullablePayloadValue(value.left(), owner);
+          this.requireNullablePayloadValue(value.right(), owner);
+       }
        if (needsPlan != value.presentComparison().isPresent()) {
           this.error(owner, "optional comparisons require exactly one present-only comparison plan");
        }
@@ -1387,6 +1411,7 @@ public final class SpringBootIrValidation {
       for (SpringExpression.ExistsArgument argument : exists.arguments()) {
          if (argument instanceof SpringExpression.ExistsArgument.Value value) {
             this.validateExpression(value.expression(), owner);
+            this.requireNullablePayloadValue(value.expression(), owner);
          }
       }
       int placeholders = 0;

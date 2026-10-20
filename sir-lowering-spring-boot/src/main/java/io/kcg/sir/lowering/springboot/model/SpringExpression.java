@@ -22,6 +22,7 @@ public sealed interface SpringExpression
    SpringExpression.TimeShiftExpression,
    SpringExpression.DigestExpression,
    SpringExpression.PayloadPresence,
+   SpringExpression.OptionalPayloadValue,
    SpringExpression.ExistsPredicate {
    LoweredNodeId id();
 
@@ -203,6 +204,15 @@ public sealed interface SpringExpression
       public PayloadPresence {
          SpringExpression.requireNode(id, origin, type);
          SpringExpression.requireText(sourcePropertyName, "sourcePropertyName");
+      }
+   }
+
+   /** Reads a DTO Optional as its nullable scalar value; entity columns already use nullable values. */
+   record OptionalPayloadValue(LoweredNodeId id, LoweredOrigin origin, LoweredJavaType type, SpringExpression payloadMember)
+      implements SpringExpression {
+      public OptionalPayloadValue {
+         SpringExpression.requireNode(id, origin, type);
+         Objects.requireNonNull(payloadMember, "payloadMember");
       }
    }
 

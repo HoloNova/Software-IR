@@ -494,3 +494,9 @@ validate not hasOpenLoans else HasOpenLoans;
 组合测试发现共用的 `containsLiteral` 计划收集只遍历二元表达式，NOT 内的匹配会被 IR 校验拒绝；已在共用收集器补遍历一元表达式，同时服务 find 与新步骤。Windows 回归还发现旧测试对 LF 的硬编码：源编辑测试入口统一夹具换行后仍独立验证 CRLF 保真，Mapper 测试按实际换行截取能力；未修改生产词法规则或弱化安全读源要求。
 
 本机最终选定 25 类测试的最新 Surefire XML 合计 **192 / 0 / 0 / 0**（run／fail／error／skip），没有累计重跑次数。八题内存编译／生成／交付规划和语言参考检查通过。部署 v3 冒烟新增 0／1／多行、账号隔离、可选过滤、绑定文本注入样本与 scope 隐藏行检查；只改变代码与查询范围，迁移仍为 V1..V11。真实 MySQL／HTTP、八题生成工程离线编译、全量门及同源码 CI 尚未运行。详细命令与各类结果见[验证说明第 7 节](../qualification/README.md#g2-g4-local)。
+
+### 18.8 CI 失败后的取值计划修正
+
+后续读取 #136（`33f960b`）与 #137（`00e3ce9`）的日志，证实 G7 的真实 HTTP 路径会把输入 DTO 的 Optional 传到 JDBC，且 `is none` 错把 Optional.empty 当成有值。原 DTO 的容器和实体字段的可空值是两种物理表示，不能只靠语义 Optional 类型统一输出 `== null`。当前工作区增加 `SpringExpression.OptionalPayloadValue`：由 Lowering 在比较、空值判断、关联参数消费处标记 DTO Optional 的 nullable 读值，Generator 按计划解包（兼容 null 容器）；实体列不加解包，原 DTO 容器校验、返回和写入／PATCH 协议不改。IR Validator 拒绝在这些位置缺失或类型不符的取值计划。真实生成 DTO 的 Java 编译／执行测试覆盖了旧测试替换 getter 后遗漏的问题。
+
+#137 另外暴露旧非法语料被 G4 合法化，以及 `SCALAR_QUERY_ENTITY` 缺少跨文件例子；分别保留原写法为正例、换用仍不支持的关联时钟表达式作负例，并补 exists／count 的跨文件绑定与缺失 import 的精确位置检查。58 项定向通过不代表真实 HTTP、原文件导出集成或全量 CI 已通过；完整命令和待验边界见[验证说明第 8 节](../qualification/README.md#ci-136-137-fix)。负责人随后已授权将本修复提交并推送；同源码 CI 结果另行核验。

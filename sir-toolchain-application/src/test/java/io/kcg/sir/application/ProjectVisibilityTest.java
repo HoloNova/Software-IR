@@ -21,6 +21,7 @@ class ProjectVisibilityTest {
         Path source = fixture(temp);
         addKeyedLookup(source);
         addGuardedUpdate(source);
+        addScalarQueries(source);
         moveContracts(source);
         var positive = generate(source, temp.resolve("positive"));
         var model = model(positive.sources());
@@ -62,6 +63,30 @@ class ProjectVisibilityTest {
             Files.writeString(file, original);
         }
         assertEquals(before, tree(temp));
+    }
+
+    @Test void scalarQuerySourcesRequireExplicitImportsWithoutFileExport() throws Exception {
+        Path source = fixture(temp), root = source.resolve("project.sir");
+        addScalarQueries(source);
+        var positive = new SirSemanticAnalyzer().analyzeProject(parsedSources(source));
+        assertTrue(positive.isSuccess(), () -> positive.diagnostics().toString());
+        var model = positive.model().orElseThrow();
+        var scalar = model.referenceSiteBindings().all().stream()
+                .filter(binding -> binding.site().role() == ReferenceRole.SCALAR_QUERY_ENTITY).toList();
+        assertEquals(2, scalar.size(), "both exists and count must exercise cross-file entity references");
+        String original = Files.readString(root);
+        for (var binding : scalar) {
+            var entity = model.symbols().byId(binding.targetSymbol()).orElseThrow();
+            String from = entity.name().equals("Course") ? "modules/course.sir" : "modules/student.sir";
+            String literal = "import " + entity.name() + " from \"" + from + "\";";
+            assertTrue(original.contains(literal));
+            Files.writeString(root, original.replace(literal, " ".repeat(literal.length())));
+            var negative = new SirSemanticAnalyzer().analyzeProject(parsedSources(source));
+            assertFalse(negative.isSuccess());
+            assertTrue(negative.diagnostics().stream().anyMatch(d -> d.code().value().equals("SIR-SOURCE-VISIBILITY-001")
+                    && d.primarySpan().equals(binding.site().span())), () -> negative.diagnostics().toString());
+            Files.writeString(root, original);
+        }
     }
 
     @Test void badImportSourceDeclarationAndRepeatedSlotAreNeverSilentlyBoundByGlobalName() throws Exception {
@@ -194,6 +219,25 @@ class ProjectVisibilityTest {
                         + "        update student when student.name != input.name else CourseNotFound { name: input.name; }\n"
                         + "        persist student;\n        return student;\n      }\n    }\n"
                         + anchor));
+    }
+
+    private static void addScalarQueries(Path source) throws Exception {
+        Path root = source.resolve("project.sir");
+        String project = Files.readString(root);
+        String anchor = "    capability CreateCourse {";
+        assertTrue(project.contains(anchor), "the scalar query fixture anchor must exist");
+        Files.writeString(root, project.replace(anchor, """
+                    capability InspectImportedRows {
+                      output Unit;
+                      requires readonly;
+                      expose query;
+                      workflow {
+                        exists Course where true as courseFound;
+                        count Student where true as studentTotal;
+                        return unit;
+                      }
+                    }
+                """ + anchor));
     }
 
     private static void moveContracts(Path source) throws Exception {

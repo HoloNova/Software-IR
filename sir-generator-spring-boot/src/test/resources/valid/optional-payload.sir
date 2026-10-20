@@ -1,0 +1,39 @@
+sir 0.3
+software OptionalPayload {
+  metadata { displayName "Optional payload"; namespace "example.optionalpayload"; }
+  target { language java 21; framework spring_boot; persistence mybatis_plus; database mysql; build maven; interface rest; }
+  sources {} imports {}
+  declarations {
+    entity Entry persistent {
+      identity id: Id generated auto;
+      field key: Text unique;
+      field score: Optional<Id>;
+    }
+    entity Link persistent {
+      identity id: Id generated auto;
+      field entry: Ref<Entry>;
+      field marker: Id;
+    }
+    input Filter { field minimum: Optional<Id>; }
+    error Invalid;
+    capability Check {
+      input Filter; output Unit; fails Invalid;
+      requires readonly; expose query;
+      workflow {
+        load Entry by key: "probe" as row else Invalid;
+        validate input.minimum is none or row.score >= input.minimum else Invalid;
+        return unit;
+      }
+    }
+    capability Search {
+      input Filter; output Unit;
+      requires readonly; expose query;
+      workflow {
+        exists Entry where input.minimum is none or item.score >= input.minimum as found;
+        count Entry where input.minimum is none or item.score >= input.minimum as total;
+        exists Entry where any(Link, entry == item and (input.minimum is none or marker >= input.minimum)) as linked;
+        return unit;
+      }
+    }
+  }
+}

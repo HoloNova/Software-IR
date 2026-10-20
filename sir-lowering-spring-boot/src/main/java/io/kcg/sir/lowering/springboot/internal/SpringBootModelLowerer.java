@@ -1244,11 +1244,11 @@ public final class SpringBootModelLowerer {
             }
             case NormalizedExpression.UnaryExpression value -> new SpringExpression.UnaryExpression(
                     id, origin, type, SpringExpression.UnaryOperator.valueOf(value.operator().name()),
-                    lowerExpression(value.operand(), owner, actorSymbol, itemSymbol));
+                    nullablePayloadValue(lowerExpression(value.operand(), owner, actorSymbol, itemSymbol)));
             case NormalizedExpression.BinaryExpression value -> new SpringExpression.BinaryExpression(
-                    id, origin, type, lowerExpression(value.left(), owner, actorSymbol, itemSymbol),
+                    id, origin, type, nullablePayloadValue(lowerExpression(value.left(), owner, actorSymbol, itemSymbol)),
                     SpringExpression.BinaryOperator.valueOf(value.operator().name()),
-                    lowerExpression(value.right(), owner, actorSymbol, itemSymbol), presentComparison(value));
+                    nullablePayloadValue(lowerExpression(value.right(), owner, actorSymbol, itemSymbol)), presentComparison(value));
             case NormalizedExpression.TimeShiftExpression value -> new SpringExpression.TimeShiftExpression(
                     id, origin, type, lowerExpression(value.base(), owner, actorSymbol, itemSymbol),
                     SpringExpression.ShiftDirection.valueOf(value.direction().name()),
@@ -1258,6 +1258,17 @@ public final class SpringBootModelLowerer {
                     id, origin, type, this.presencePropertyName(value));
             case NormalizedExpression.ExistsExpression value -> this.lowerExistsPredicate(value, id, origin, type, itemSymbol);
         };
+    }
+
+    private SpringExpression nullablePayloadValue(SpringExpression expression) {
+        if (expression.type() instanceof LoweredJavaType.OptionalValue
+                && expression instanceof SpringExpression.MemberExpression member
+                && member.receiver().type() instanceof LoweredJavaType.Declared receiver
+                && receiver.kind() == LoweredJavaType.DeclaredKind.INPUT) {
+            return new SpringExpression.OptionalPayloadValue(this.nodeId(expression.id().value(), "optional-payload-value"),
+                    expression.origin(), expression.type(), expression);
+        }
+        return expression;
     }
 
     private Optional<SpringExpression.PresentComparison> presentComparison(NormalizedExpression.BinaryExpression value) {
@@ -1470,7 +1481,7 @@ public final class SpringBootModelLowerer {
     }
 
     private SpringExpression externalValue(NormalizedExpression expression, SymbolId owner) {
-        return this.asIdentity(this.lowerExpression(expression, owner, this.capability(owner).actorSymbol()));
+        return this.asIdentity(this.nullablePayloadValue(this.lowerExpression(expression, owner, this.capability(owner).actorSymbol())));
     }
 
     private ExistenceSql boundValue(SpringExpression.ExistsArgument value, List<SpringExpression.ExistsArgument> arguments) {

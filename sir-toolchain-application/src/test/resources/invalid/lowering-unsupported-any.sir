@@ -24,6 +24,7 @@ software UnsupportedAnySample {
       identity id: Id generated auto;
       field course: Ref<Course>;
       field note: Text;
+      field expiresAt: Moment;
     }
     view CourseView from Course {
       field id: Id;
@@ -42,7 +43,7 @@ software UnsupportedAnySample {
       requires readonly;
       expose query;
       workflow {
-        find Course where any(Enrollment, course == item and note == input.note)
+        find Course where any(Enrollment, course == item and expiresAt < now())
           order by id ascending Page input.page, input.size else BadPage as rows;
         return rows;
       }

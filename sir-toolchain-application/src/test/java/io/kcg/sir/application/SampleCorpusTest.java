@@ -36,6 +36,17 @@ class SampleCorpusTest {
             System.out.println("CORPUS " + file + " files=" + snapshot.orElseThrow().generatedFiles().size());
         }
     }
+    @Test void relatedRequestParametersAreNowAValidGeneratedSoftware() throws Exception {
+        var diagnostics = new ArrayList<ExecutionDiagnostic>();
+        var compiled = ProjectCompilation.compile(ProjectTestSupport.oneFile("sample.sir", resource("valid/related-request-values.sir")),
+                new SpringBootGenerator()::generate, diagnostics);
+        assertTrue(compiled.isPresent(), () -> diagnostics.toString());
+        String service = compiled.orElseThrow().generatedFiles().stream()
+                .filter(file -> file.relativePath().endsWith("/SearchCoursesService.java")).findFirst().orElseThrow().content();
+        assertTrue(service.contains("enrollment_rel.note = {0}"), service);
+        assertTrue(service.contains(", input.getNote())"), service);
+    }
+
     @Test void existingInvalidStagesArePinned() throws Exception {
         for (var item : List.of("semantic-unresolved-name.sir:SEMANTIC", "lowering-unsupported-any.sir:LOWERING")) {
             var parts = item.split(":"); var diagnostics = new ArrayList<ExecutionDiagnostic>();

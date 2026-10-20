@@ -36,15 +36,15 @@ class GeneratorOptionalValueContractTest {
         String expression = line.substring("if (!(".length(), line.length() - ")) {".length())
                 .replace("row.getScore()", "score").replace("input.getMinimum()", "minimum");
         Path source = dir.resolve("Probe.java");
-        Files.writeString(source, "public class Probe { public static boolean test(Integer score, Integer minimum) { return " + expression + "; } }");
+        Files.writeString(source, "public class Probe { public static boolean test(Integer score, java.util.Optional<Integer> minimum) { return " + expression + "; } }");
         assertEquals(0, ToolProvider.getSystemJavaCompiler().run(null, null, null, "-d", dir.toString(), source.toString()));
         try (URLClassLoader loader = new URLClassLoader(new java.net.URL[] { dir.toUri().toURL() })) {
-            var test = loader.loadClass("Probe").getMethod("test", Integer.class, Integer.class);
-            assertEquals(false, test.invoke(null, new Object[] { null, null }));
-            assertEquals(false, test.invoke(null, null, 2));
-            assertEquals(false, test.invoke(null, 2, null));
-            assertEquals(false, test.invoke(null, 1000, 1000));
-            assertEquals(true, test.invoke(null, 1000, 1001));
+            var test = loader.loadClass("Probe").getMethod("test", Integer.class, java.util.Optional.class);
+            assertEquals(false, test.invoke(null, new Object[] { null, java.util.Optional.empty() }));
+            assertEquals(false, test.invoke(null, null, java.util.Optional.of(2)));
+            assertEquals(false, test.invoke(null, 2, java.util.Optional.empty()));
+            assertEquals(false, test.invoke(null, 1000, java.util.Optional.of(1000)));
+            assertEquals(true, test.invoke(null, 1000, java.util.Optional.of(1001)));
         }
     }
 
@@ -66,10 +66,10 @@ class GeneratorOptionalValueContractTest {
         String expression = line.substring("if (!(".length(), line.length() - ")) {".length())
                 .replace("row.getScore()", "score").replace("input.getMinimum()", "minimum");
         Path source = dir.resolve("Probe.java");
-        Files.writeString(source, "public class Probe { public static boolean test(Integer score, Integer minimum) { return " + expression + "; } }");
+        Files.writeString(source, "public class Probe { public static boolean test(Integer score, java.util.Optional<Integer> minimum) { return " + expression + "; } }");
         assertEquals(0, ToolProvider.getSystemJavaCompiler().run(null, null, null, "-d", dir.toString(), source.toString()));
         try (URLClassLoader loader = new URLClassLoader(new java.net.URL[] { dir.toUri().toURL() })) {
-            var method = loader.loadClass("Probe").getMethod("test", Integer.class, Integer.class);
+            var method = loader.loadClass("Probe").getMethod("test", Integer.class, java.util.Optional.class);
             for (Integer left : new Integer[] { null, 1000, 1001 }) {
                 for (Integer right : new Integer[] { null, 1000, 1001 }) {
                     boolean both = left != null && right != null;
@@ -87,7 +87,7 @@ class GeneratorOptionalValueContractTest {
                         case "and" -> both && left >= right;
                         default -> throw new AssertionError(operator);
                     };
-                    assertEquals(expected, method.invoke(null, left, right), operator + ": " + left + ", " + right);
+                    assertEquals(expected, method.invoke(null, left, java.util.Optional.ofNullable(right)), operator + ": " + left + ", " + right);
                 }
             }
         }

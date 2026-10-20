@@ -57,6 +57,10 @@ final class ExpressionRenderer {
             yield override != null ? override : name.targetName();
          }
          case MemberExpression member -> renderMember(member, variableNames, presence);
+         case SpringExpression.OptionalPayloadValue value -> {
+            String payload = renderExpression(value.payloadMember(), variableNames, presence);
+            yield "(" + payload + " == null ? null : " + payload + ".orElse(null))";
+         }
          case UnaryExpression unary -> renderUnary(unary, variableNames, presence);
          case SpringExpression.DigestExpression digest ->
             "SecretDigest.digest(" + renderExpression(digest.operand(), variableNames, presence) + ")";

@@ -1317,6 +1317,9 @@ final class WorkflowRenderer {
 
             collectExpressionImports(ctx, receiver, variableNames, imports, currentPackage);
             break;
+         case SpringExpression.OptionalPayloadValue value:
+            collectExpressionImports(ctx, value.payloadMember(), variableNames, imports, currentPackage);
+            break;
          case UnaryExpression unary:
             collectExpressionImports(ctx, unary.operand(), variableNames, imports, currentPackage);
             break;

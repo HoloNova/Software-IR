@@ -18,6 +18,17 @@ class OptionalValueLoweringTest {
                 .filter(SpringBootWorkflow.ValidateStep.class::isInstance)
                 .map(SpringBootWorkflow.ValidateStep.class::cast).findFirst().orElseThrow().condition();
         assertTrue(comparison.presentComparison().isPresent());
+        var read = assertInstanceOf(SpringExpression.OptionalPayloadValue.class, comparison.right());
+        assertInstanceOf(SpringExpression.MemberExpression.class, comparison.left());
+        var raw = new SpringExpression.BinaryExpression(comparison.id(), comparison.origin(), comparison.type(),
+                comparison.left(), comparison.operator(), read.payloadMember(), comparison.presentComparison());
+        assertTrue(new SpringBootLoweredIrValidator().validate(replaceComparison(model, check, raw)).stream()
+                .anyMatch(diagnostic -> diagnostic.message().contains("explicit nullable read plan")));
+        var wrongCarrier = new SpringExpression.OptionalPayloadValue(read.id(), read.origin(), read.type(), comparison.left());
+        var damaged = new SpringExpression.BinaryExpression(comparison.id(), comparison.origin(), comparison.type(),
+                comparison.left(), comparison.operator(), wrongCarrier, comparison.presentComparison());
+        assertTrue(new SpringBootLoweredIrValidator().validate(replaceComparison(model, check, damaged)).stream()
+                .anyMatch(diagnostic -> diagnostic.message().contains("typed INPUT member")));
         SpringExpression.PresentComparison plan = comparison.presentComparison().orElseThrow();
         assertTrue(plan.checkLeft());
         assertTrue(plan.checkRight());
