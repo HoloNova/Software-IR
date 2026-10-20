@@ -62,13 +62,13 @@ def deploy(action, expected=0, instance=None, state=None, port=None, extra=(), p
     return run(command + list(extra), expected)
 
 
-def exchange(path, body, token, expected, base=None):
+def exchange(path, body, token, expected, base=None, method=None):
     """Sends one request and records its shape (never tokens, passwords or response bodies) in the report."""
     headers = {'Content-Type': 'application/json'}
     if token:
         headers['Authorization'] = 'Bearer ' + token
     req = urllib.request.Request((base or f'http://127.0.0.1:{a.port}') + path,
-                                 data=None if body is None else json.dumps(body).encode(), headers=headers)
+                                 data=None if body is None else json.dumps(body).encode(), headers=headers, method=method)
     try:
         with urllib.request.urlopen(req, timeout=20) as response:
             status, content_type, data = response.status, response.headers.get('Content-Type'), response.read()
@@ -81,9 +81,9 @@ def exchange(path, body, token, expected, base=None):
     return content_type, data
 
 
-def request(path, body=None, token=None, expected=200, base=None):
+def request(path, body=None, token=None, expected=200, base=None, method=None):
     """A call whose business result is asserted: the body must be JSON."""
-    content_type, data = exchange(path, body, token, expected, base)
+    content_type, data = exchange(path, body, token, expected, base, method)
     try:
         return json.loads(data)
     except ValueError as error:
@@ -205,16 +205,21 @@ try:
     label = request('/api/add-label', {'noteId': note_id, 'name': 'kept'}, expected=201, base=server)
     assert sql(f"SELECT note_id FROM `label` WHERE id={int(label['id'])}", instance=acceptance_instance).strip() == str(note_id)
     assert request('/api/add-label', {'noteId': 999999999, 'name': 'none'}, expected=404, base=server)['code'] == 'NoteNotFound'
-    # Version 2 also has the create, show, list, change and delete of labels, from one `use Crud { entity: Label; }`.
-    made = request('/api/create-label', {'noteId': note_id, 'name': 'crud'}, expected=201, base=server)
+    # Version 2 also has the create, show, list, change and delete of labels, from one
+    # `use Crud { entity: Label; path: labels; }`, at REST-style paths.
+    made = request('/api/labels', {'noteId': note_id, 'name': 'crud'}, expected=201, base=server)
     assert made['note'] == note_id and made['name'] == 'crud', made
-    assert request(f"/api/get-label?id={made['id']}", base=server)['name'] == 'crud'
-    listed = request('/api/list-label?page=1&size=100', base=server)
+    label_path = f"/api/labels/{made['id']}"
+    assert request(label_path, base=server)['name'] == 'crud'
+    listed = request('/api/labels?page=1&size=100', base=server)
     assert made['id'] in [row['id'] for row in listed['records']] and listed['total'] >= 2, listed
-    assert request('/api/update-label', {'id': made['id'], 'noteId': note_id, 'name': 'renamed'}, base=server)['name'] == 'renamed'
+    # The identity comes from the path; a different one in the body does not redirect the change.
+    changed = request(label_path, {'id': 999999999, 'noteId': note_id, 'name': 'renamed'}, base=server, method='PUT')
+    assert changed['id'] == made['id'] and changed['name'] == 'renamed', changed
     assert sql(f"SELECT name FROM `label` WHERE id={int(made['id'])}", instance=acceptance_instance).strip() == 'renamed'
-    exchange('/api/delete-label', {'id': made['id']}, None, 200, base=server)
-    assert request(f"/api/get-label?id={made['id']}", expected=404, base=server)['code'] == 'LabelNotFound'
+    assert request(label_path, {'noteId': note_id, 'name': ''}, expected=400, base=server, method='PUT')['code'] == 'INVALID_REQUEST'
+    exchange(label_path, None, None, 200, base=server, method='DELETE')
+    assert request(label_path, expected=404, base=server)['code'] == 'LabelNotFound'
     assert sql(f"SELECT COUNT(*) FROM `label` WHERE id={int(made['id'])}", instance=acceptance_instance).strip() == '0'
     # Notes belong to their author (`use Crud { entity: Note; owner: author; }`): another account does not find them,
     # and the hand-written PinNote answers it 403.
