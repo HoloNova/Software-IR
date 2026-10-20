@@ -1,0 +1,231 @@
+sir 0.3
+
+software RoomBooking {
+  metadata {
+    displayName "Room Booking";
+    namespace "example.booking";
+  }
+  target {
+    language java 21;
+    framework spring_boot;
+    persistence mybatis_plus;
+    database mysql;
+    build maven;
+    interface rest;
+  }
+  sources { }
+  imports { }
+  declarations {
+    enum Role { MEMBER, ADMIN }
+    enum BookingState { ACTIVE, CANCELLED }
+    entity User persistent {
+      identity id: Id generated auto;
+      field role: Role default Role.MEMBER;
+    }
+    use DualTokenLogin {
+      account: User;
+      name: name;
+      password: passwordHash;
+    }
+    input RegisterInput {
+      field name: Name;
+      field password: Text where length(6, 64);
+    }
+    view UserView from User {
+      field id: Id;
+      field name: Name;
+      field role: Role;
+    }
+    capability Register {
+      input RegisterInput;
+      output UserView;
+      requires atomic;
+      expose command at "/register";
+      workflow {
+        create User as user {
+          name: input.name;
+          passwordHash: input.password;
+        }
+        persist user;
+        return user;
+      }
+    }
+    error BadPage;
+    error Forbidden http 403;
+    input PageOnly {
+      field page: PageNo;
+      field size: PageSize;
+    }
+
+    entity Room persistent {
+      identity id: Id generated auto;
+      field name: Name unique;
+      field location: Name;
+      field capacity: Quantity;
+    }
+    entity Booking persistent {
+      identity id: Id generated auto;
+      field room: Ref<Room>;
+      field booker: Ref<User>;
+      field startsAt: Moment;
+      field endsAt: Moment;
+      field purpose: Remark;
+      field state: BookingState default BookingState.ACTIVE;
+    }
+    view RoomView from Room {
+      field id: Id;
+      field name: Name;
+      field location: Name;
+      field capacity: Quantity;
+    }
+    view BookingView from Booking {
+      field id: Id;
+      field room: Ref<Room>;
+      field startsAt: Moment;
+      field endsAt: Moment;
+      field purpose: Remark;
+      field state: BookingState;
+    }
+
+    input NewRoom {
+      field name: Name;
+      field location: Name;
+      field capacity: Quantity;
+    }
+    capability AddRoom {
+      actor Ref<User>;
+      input NewRoom;
+      output RoomView;
+      fails Forbidden;
+      requires authenticated;
+      requires atomic;
+      expose command at "/rooms";
+      workflow {
+        validate actor.role == Role.ADMIN else Forbidden;
+        create Room as room {
+          name: input.name;
+          location: input.location;
+          capacity: input.capacity;
+        }
+        persist room;
+        return room;
+      }
+    }
+    capability Rooms {
+      input PageOnly;
+      output Page<RoomView>;
+      fails BadPage;
+      requires readonly;
+      expose query at "/rooms";
+      workflow {
+        find Room where true order by name ascending Page input.page, input.size else BadPage as rows;
+        return rows;
+      }
+    }
+
+    // GAP: two bookings of one room must not overlap, but a workflow cannot ask "is there any booking in this
+    // window" (an existence test works only inside `find`), and there is no unique key over (room, slot) to let the
+    // database refuse the second one. The window is checked for sanity only; overlaps are not refused.
+    input NewBooking {
+      field roomId: Id;
+      field startsAt: Moment;
+      field endsAt: Moment;
+      field purpose: Remark where notBlank;
+    }
+    error BadWindow;
+    error RoomNotFound http 404;
+    capability Book {
+      actor Ref<User>;
+      input NewBooking;
+      output BookingView;
+      fails BadWindow;
+      fails RoomNotFound;
+      requires authenticated;
+      requires atomic;
+      expose command at "/bookings";
+      workflow {
+        validate input.endsAt > input.startsAt else BadWindow;
+        validate input.startsAt > now() else BadWindow;
+        validate input.endsAt < input.startsAt + 8 hours else BadWindow;
+        load Room by input.roomId as room else RoomNotFound;
+        create Booking as made {
+          room: room;
+          booker: actor;
+          startsAt: input.startsAt;
+          endsAt: input.endsAt;
+          purpose: input.purpose;
+        }
+        persist made;
+        return made;
+      }
+    }
+    input BookingRef {
+      field id: Id;
+    }
+    error BookingNotFound http 404;
+    error NotCancellable http 409;
+    capability CancelBooking {
+      actor Ref<User>;
+      input BookingRef;
+      output BookingView;
+      fails BookingNotFound;
+      fails Forbidden;
+      fails NotCancellable;
+      requires authenticated;
+      requires atomic;
+      expose command at "/bookings/{id}/cancel";
+      workflow {
+        load Booking by input.id as made else BookingNotFound;
+        validate made.booker == actor else Forbidden;
+        update made when made.state == BookingState.ACTIVE and made.startsAt > now() else NotCancellable {
+          state: BookingState.CANCELLED;
+        }
+        persist made;
+        return made;
+      }
+    }
+    capability MyBookings {
+      actor Ref<User>;
+      input PageOnly;
+      output Page<BookingView>;
+      fails BadPage;
+      requires authenticated;
+      requires readonly;
+      expose query at "/bookings";
+      workflow {
+        find Booking
+          where item.booker == actor and item.state == BookingState.ACTIVE
+          order by startsAt ascending, id ascending
+          Page input.page, input.size else BadPage
+        as rows;
+        return rows;
+      }
+    }
+    input Schedule {
+      field roomId: Id;
+      field since: Moment;
+      field until: Moment;
+      field page: PageNo;
+      field size: PageSize;
+    }
+    capability RoomSchedule {
+      input Schedule;
+      output Page<BookingView>;
+      fails BadPage;
+      fails BadWindow;
+      fails RoomNotFound;
+      requires readonly;
+      expose query at "/rooms/{roomId}/bookings";
+      workflow {
+        validate input.until > input.since else BadWindow;
+        load Room by input.roomId as room else RoomNotFound;
+        find Booking
+          where item.room == room and item.state == BookingState.ACTIVE and item.startsAt < input.until and item.endsAt > input.since
+          order by startsAt ascending, id ascending
+          Page input.page, input.size else BadPage
+        as rows;
+        return rows;
+      }
+    }
+  }
+}

@@ -1,0 +1,280 @@
+sir 0.3
+
+software CampusLibrary {
+  metadata {
+    displayName "Campus Library";
+    namespace "example.library";
+  }
+  target {
+    language java 21;
+    framework spring_boot;
+    persistence mybatis_plus;
+    database mysql;
+    build maven;
+    interface rest;
+  }
+  sources { }
+  imports { }
+  declarations {
+    enum Role { READER, LIBRARIAN }
+    enum CopyStatus { AVAILABLE, BORROWED, LOST }
+
+    entity User persistent {
+      identity id: Id generated auto;
+      field role: Role default Role.READER;
+    }
+    use DualTokenLogin {
+      account: User;
+      name: name;
+      password: passwordHash;
+    }
+    input RegisterInput {
+      field name: Name;
+      field password: Text where length(6, 64);
+    }
+    view UserView from User {
+      field id: Id;
+      field name: Name;
+      field role: Role;
+    }
+    capability Register {
+      input RegisterInput;
+      output UserView;
+      requires atomic;
+      expose command at "/register";
+      workflow {
+        create User as user {
+          name: input.name;
+          passwordHash: input.password;
+        }
+        persist user;
+        return user;
+      }
+    }
+
+    entity Book persistent {
+      identity id: Id generated auto;
+      field isbn: Code unique;
+      field title: Name;
+      field author: Name;
+      field publisher: Optional<Name>;
+    }
+    entity Copy persistent {
+      identity id: Id generated auto;
+      field barcode: Code unique;
+      field book: Ref<Book>;
+      field status: CopyStatus default CopyStatus.AVAILABLE;
+    }
+    entity Loan persistent {
+      identity id: Id generated auto;
+      field reader: Ref<User>;
+      field copy: Ref<Copy>;
+      field borrowedAt: Moment default now();
+      field dueAt: Moment;
+      field renewals: Count default 0;
+      field returned: Flag default false;
+      field returnedAt: Optional<Moment>;
+    }
+
+    error Forbidden http 403;
+
+    // Librarians keep the catalogue; anybody reads it.
+    use Crud {
+      entity: Book;
+      path: books;
+    }
+    view CopyView from Copy {
+      field id: Id;
+      field barcode: Code;
+      field status: CopyStatus;
+    }
+    input AddCopyInput {
+      field bookId: Id;
+      field barcode: Code;
+    }
+    capability AddCopy {
+      actor Ref<User>;
+      input AddCopyInput;
+      output CopyView;
+      fails BookNotFound;
+      fails Forbidden;
+      requires authenticated;
+      requires atomic;
+      expose command at "/copies";
+      workflow {
+        validate actor.role == Role.LIBRARIAN else Forbidden;
+        load Book by input.bookId as book else BookNotFound;
+        create Copy as copy {
+          barcode: input.barcode;
+          book: book;
+        }
+        persist copy;
+        return copy;
+      }
+    }
+
+    input SearchBooks {
+      field keyword: Text;
+      field page: PageNo;
+      field size: PageSize;
+    }
+    error BadPage;
+    capability SearchByTitle {
+      input SearchBooks;
+      output Page<BookView>;
+      fails BadPage;
+      requires readonly;
+      expose query at "/catalogue";
+      workflow {
+        find Book
+          where item.title containsLiteral input.keyword or item.author containsLiteral input.keyword
+          order by title ascending, id ascending
+          Page input.page, input.size else BadPage
+        as rows;
+        return rows;
+      }
+    }
+
+    view LoanView from Loan {
+      field id: Id;
+      field copy: Ref<Copy>;
+      field borrowedAt: Moment;
+      field dueAt: Moment;
+      field renewals: Count;
+      field returned: Flag;
+      field returnedAt: Optional<Moment>;
+    }
+    input BorrowInput {
+      field barcode: Code;
+    }
+    error CopyNotFound http 404;
+    error CopyNotAvailable http 409;
+    capability Borrow {
+      actor Ref<User>;
+      input BorrowInput;
+      output LoanView;
+      fails CopyNotAvailable;
+      fails CopyNotFound;
+      requires authenticated;
+      requires atomic;
+      expose command at "/loans";
+      workflow {
+        load Copy by barcode: input.barcode as copy else CopyNotFound;
+        update copy when copy.status == CopyStatus.AVAILABLE else CopyNotAvailable {
+          status: CopyStatus.BORROWED;
+        }
+        create Loan as loan {
+          reader: actor;
+          copy: copy;
+          dueAt: now() + 30 days;
+        }
+        persist copy;
+        persist loan;
+        return loan;
+      }
+    }
+
+    input LoanRef {
+      field id: Id;
+    }
+    // GAP: the copy of a loan cannot be loaded from the loan (`loan.copy.id` produces Java that does not compile), so
+    // the reader scans the barcode again and the workflow checks that it is the copy of this loan.
+    input ReturnRequest {
+      field id: Id;
+      field barcode: Code;
+    }
+    error AlreadyReturned http 409;
+    error LoanNotFound http 404;
+    capability GiveBack {
+      actor Ref<User>;
+      input ReturnRequest;
+      output LoanView;
+      fails AlreadyReturned;
+      fails CopyNotFound;
+      fails Forbidden;
+      fails LoanNotFound;
+      requires authenticated;
+      requires atomic;
+      expose command at "/loans/{id}/return";
+      workflow {
+        load Loan by input.id as loan else LoanNotFound;
+        validate loan.reader == actor else Forbidden;
+        update loan when loan.returned == false else AlreadyReturned {
+          returned: true;
+          returnedAt: now();
+        }
+        load Copy by barcode: input.barcode as copy else CopyNotFound;
+        validate loan.copy == copy else CopyNotFound;
+        update copy {
+          status: CopyStatus.AVAILABLE;
+        }
+        persist loan;
+        persist copy;
+        return loan;
+      }
+    }
+    error NotRenewable http 409;
+    capability Renew {
+      actor Ref<User>;
+      input LoanRef;
+      output LoanView;
+      fails Forbidden;
+      fails LoanNotFound;
+      fails NotRenewable;
+      requires authenticated;
+      requires atomic;
+      expose command at "/loans/{id}/renew";
+      workflow {
+        load Loan by input.id as loan else LoanNotFound;
+        validate loan.reader == actor else Forbidden;
+        update loan when loan.returned == false and loan.renewals == 0 and loan.dueAt > now() else NotRenewable {
+          renewals: 1;
+          dueAt: now() + 44 days;
+        }
+        persist loan;
+        return loan;
+      }
+    }
+
+    input PageOnly {
+      field page: PageNo;
+      field size: PageSize;
+    }
+    capability MyLoans {
+      actor Ref<User>;
+      input PageOnly;
+      output Page<LoanView>;
+      fails BadPage;
+      requires authenticated;
+      requires readonly;
+      expose query at "/loans";
+      workflow {
+        find Loan
+          where item.reader == actor and item.returned == false
+          order by dueAt ascending, id ascending
+          Page input.page, input.size else BadPage
+        as rows;
+        return rows;
+      }
+    }
+    capability OverdueLoans {
+      actor Ref<User>;
+      input PageOnly;
+      output Page<LoanView>;
+      fails BadPage;
+      fails Forbidden;
+      requires authenticated;
+      requires readonly;
+      expose query at "/loans/overdue";
+      workflow {
+        validate actor.role == Role.LIBRARIAN else Forbidden;
+        find Loan
+          where item.returned == false and item.dueAt < now()
+          order by dueAt ascending, id ascending
+          Page input.page, input.size else BadPage
+        as rows;
+        return rows;
+      }
+    }
+  }
+}

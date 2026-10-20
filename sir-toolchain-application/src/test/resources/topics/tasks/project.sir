@@ -1,0 +1,237 @@
+sir 0.3
+
+software TaskBoard {
+  metadata {
+    displayName "Task Board";
+    namespace "example.tasks";
+  }
+  target {
+    language java 21;
+    framework spring_boot;
+    persistence mybatis_plus;
+    database mysql;
+    build maven;
+    interface rest;
+  }
+  sources { }
+  imports { }
+  declarations {
+    enum TaskState { TODO, DOING, DONE }
+    entity User persistent {
+      identity id: Id generated auto;
+    }
+    use DualTokenLogin {
+      account: User;
+      name: name;
+      password: passwordHash;
+    }
+    input RegisterInput {
+      field name: Name;
+      field password: Text where length(6, 64);
+    }
+    view UserView from User {
+      field id: Id;
+      field name: Name;
+    }
+    capability Register {
+      input RegisterInput;
+      output UserView;
+      requires atomic;
+      expose command at "/register";
+      workflow {
+        create User as user {
+          name: input.name;
+          passwordHash: input.password;
+        }
+        persist user;
+        return user;
+      }
+    }
+    error BadPage;
+    error Forbidden http 403;
+    input PageOnly {
+      field page: PageNo;
+      field size: PageSize;
+    }
+
+    entity Project persistent {
+      identity id: Id generated auto;
+      field owner: Ref<User>;
+      field name: Name;
+      field description: Optional<Remark>;
+    }
+    entity Task persistent {
+      identity id: Id generated auto;
+      field project: Ref<Project>;
+      field title: Name;
+      field detail: Optional<Text>;
+      // GAP: an optional reference or time cannot be compared (`assignee == actor`, `dueAt < now()`), so both are
+      // required: a new task is assigned to its creator and carries a due time.
+      field assignee: Ref<User>;
+      field state: TaskState default TaskState.TODO;
+      field priority: Count default 3;
+      field dueAt: Moment;
+      field createdAt: Moment default now();
+    }
+    use Crud {
+      entity: Project;
+      owner: owner;
+      path: projects;
+    }
+    view TaskView from Task {
+      field id: Id;
+      field title: Name;
+      field detail: Optional<Text>;
+      field assignee: Ref<User>;
+      field state: TaskState;
+      field priority: Count;
+      field dueAt: Moment;
+    }
+    input NewTask {
+      field projectId: Id;
+      field title: Name;
+      field priority: Count where min(1), max(5);
+      field dueAt: Moment;
+    }
+    capability CreateTask {
+      actor Ref<User>;
+      input NewTask;
+      output TaskView;
+      fails Forbidden;
+      fails ProjectNotFound;
+      requires authenticated;
+      requires atomic;
+      expose command at "/projects/{projectId}/tasks";
+      workflow {
+        load Project by input.projectId as project else ProjectNotFound;
+        validate project.owner == actor else Forbidden;
+        create Task as task {
+          project: project;
+          title: input.title;
+          assignee: actor;
+          priority: input.priority;
+          dueAt: input.dueAt;
+        }
+        persist task;
+        return task;
+      }
+    }
+    // GAP: the project of a task cannot be loaded from the task (`task.project.id` produces Java that does not compile),
+    // so the client names the project too and the workflow checks it.
+    input Assign {
+      field taskId: Id;
+      field projectId: Id;
+      field userId: Id;
+    }
+    error TaskNotFound http 404;
+    error UserNotFound http 404;
+    capability AssignTask {
+      actor Ref<User>;
+      input Assign;
+      output TaskView;
+      fails Forbidden;
+      fails ProjectNotFound;
+      fails TaskNotFound;
+      fails UserNotFound;
+      requires authenticated;
+      requires atomic;
+      expose command put at "/tasks/{taskId}/assignee";
+      workflow {
+        load Task by input.taskId as task else TaskNotFound;
+        load Project by input.projectId as project else ProjectNotFound;
+        validate task.project == project else TaskNotFound;
+        validate project.owner == actor else Forbidden;
+        load User by input.userId as user else UserNotFound;
+        update task {
+          assignee: user;
+        }
+        persist task;
+        return task;
+      }
+    }
+    input Move {
+      field taskId: Id;
+      field state: TaskState;
+    }
+    capability MoveTask {
+      actor Ref<User>;
+      input Move;
+      output TaskView;
+      fails Forbidden;
+      fails TaskNotFound;
+      requires authenticated;
+      requires atomic;
+      expose command put at "/tasks/{taskId}/state";
+      workflow {
+        load Task by input.taskId as task else TaskNotFound;
+        validate task.assignee == actor else Forbidden;
+        update task {
+          state: input.state;
+        }
+        persist task;
+        return task;
+      }
+    }
+    input TaskQuery {
+      field projectId: Id;
+      field state: TaskState;
+      field page: PageNo;
+      field size: PageSize;
+    }
+    capability TasksOfProject {
+      actor Ref<User>;
+      input TaskQuery;
+      output Page<TaskView>;
+      fails BadPage;
+      fails Forbidden;
+      fails ProjectNotFound;
+      requires authenticated;
+      requires readonly;
+      expose query at "/projects/{projectId}/tasks";
+      workflow {
+        load Project by input.projectId as project else ProjectNotFound;
+        validate project.owner == actor else Forbidden;
+        find Task
+          where item.project == project and item.state == input.state
+          order by priority descending, id ascending
+          Page input.page, input.size else BadPage
+        as rows;
+        return rows;
+      }
+    }
+    capability MyTasks {
+      actor Ref<User>;
+      input PageOnly;
+      output Page<TaskView>;
+      fails BadPage;
+      requires authenticated;
+      requires readonly;
+      expose query at "/tasks/mine";
+      workflow {
+        find Task
+          where item.assignee == actor and item.state != TaskState.DONE
+          order by priority descending, id ascending
+          Page input.page, input.size else BadPage
+        as rows;
+        return rows;
+      }
+    }
+    capability OverdueTasks {
+      actor Ref<User>;
+      input PageOnly;
+      output Page<TaskView>;
+      fails BadPage;
+      requires authenticated;
+      requires readonly;
+      expose query at "/tasks/overdue";
+      workflow {
+        find Task
+          where item.assignee == actor and item.dueAt < now() and item.state != TaskState.DONE
+          order by dueAt ascending, id ascending
+          Page input.page, input.size else BadPage
+        as rows;
+        return rows;
+      }
+    }
+  }
+}

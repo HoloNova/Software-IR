@@ -1,0 +1,307 @@
+sir 0.3
+
+software OnlineShop {
+  metadata {
+    displayName "Online Shop";
+    namespace "example.shop";
+  }
+  target {
+    language java 21;
+    framework spring_boot;
+    persistence mybatis_plus;
+    database mysql;
+    build maven;
+    interface rest;
+  }
+  sources { }
+  imports { }
+  declarations {
+    enum Role { CUSTOMER, ADMIN }
+    enum ProductState { ON_SHELF, OFF_SHELF }
+    enum OrderState { CREATED, PAID, SHIPPED, CANCELLED }
+    entity User persistent {
+      identity id: Id generated auto;
+      field role: Role default Role.CUSTOMER;
+    }
+    use DualTokenLogin {
+      account: User;
+      name: name;
+      password: passwordHash;
+    }
+    input RegisterInput {
+      field name: Name;
+      field password: Text where length(6, 64);
+    }
+    view UserView from User {
+      field id: Id;
+      field name: Name;
+      field role: Role;
+    }
+    capability Register {
+      input RegisterInput;
+      output UserView;
+      requires atomic;
+      expose command at "/register";
+      workflow {
+        create User as user {
+          name: input.name;
+          passwordHash: input.password;
+        }
+        persist user;
+        return user;
+      }
+    }
+    error BadPage;
+    error Forbidden http 403;
+    input PageOnly {
+      field page: PageNo;
+      field size: PageSize;
+    }
+
+    // Prices are whole cents: Money (a decimal) cannot be delivered by this target yet.
+    entity Product persistent {
+      identity id: Id generated auto;
+      field name: Name;
+      field description: Optional<Remark>;
+      field price: Serial where min(0);
+      field stock: Count where min(0);
+      field state: ProductState default ProductState.ON_SHELF;
+    }
+    entity PurchaseOrder persistent {
+      identity id: Id generated auto;
+      field buyer: Ref<User>;
+      field state: OrderState default OrderState.CREATED;
+      field total: Serial;
+      field createdAt: Moment default now();
+    }
+    entity OrderLine persistent {
+      identity id: Id generated auto;
+      field purchase: Ref<PurchaseOrder>;
+      field product: Ref<Product>;
+      field quantity: Quantity;
+      field unitPrice: Serial;
+    }
+    view ProductView from Product {
+      field id: Id;
+      field name: Name;
+      field description: Optional<Remark>;
+      field price: Serial;
+      field stock: Count;
+      field state: ProductState;
+    }
+    view LineView from OrderLine {
+      field id: Id;
+      field product: ProductView;
+      field quantity: Quantity;
+      field unitPrice: Serial;
+    }
+    view OrderView from PurchaseOrder {
+      field id: Id;
+      field state: OrderState;
+      field total: Serial;
+      field createdAt: Moment;
+    }
+
+    // The catalogue is kept by an administrator, so each step is written out (a Crud would let anybody change it).
+    input NewProduct {
+      field name: Name;
+      field description: Optional<Remark>;
+      field price: Serial where min(0);
+      field stock: Count where min(0);
+    }
+    capability AddProduct {
+      actor Ref<User>;
+      input NewProduct;
+      output ProductView;
+      fails Forbidden;
+      requires authenticated;
+      requires atomic;
+      expose command at "/products";
+      workflow {
+        validate actor.role == Role.ADMIN else Forbidden;
+        create Product as product {
+          name: input.name;
+          description: input.description;
+          price: input.price;
+          stock: input.stock;
+        }
+        persist product;
+        return product;
+      }
+    }
+    input ProductSearch {
+      field keyword: Text;
+      field page: PageNo;
+      field size: PageSize;
+    }
+    capability SearchProducts {
+      input ProductSearch;
+      output Page<ProductView>;
+      fails BadPage;
+      requires readonly;
+      expose query at "/products";
+      workflow {
+        find Product
+          where item.state == ProductState.ON_SHELF and item.name containsLiteral input.keyword
+          order by name ascending, id ascending
+          Page input.page, input.size else BadPage
+        as rows;
+        return rows;
+      }
+    }
+
+    // GAP: an order has several lines in real life, but a request cannot carry a list that the workflow walks, and a
+    // line's amount (quantity times price) cannot be computed (only + and -). So one request buys one unit of one
+    // product; stock is read then written, so two buyers of the last unit can both succeed.
+    input BuyRequest {
+      field productId: Id;
+    }
+    error OutOfStock http 409;
+    error ProductNotFound http 404;
+    capability BuyNow {
+      actor Ref<User>;
+      input BuyRequest;
+      output OrderView;
+      fails OutOfStock;
+      fails ProductNotFound;
+      requires authenticated;
+      requires atomic;
+      expose command at "/orders";
+      workflow {
+        load Product by input.productId as product else ProductNotFound;
+        validate product.state == ProductState.ON_SHELF else ProductNotFound;
+        validate product.stock > 0 else OutOfStock;
+        update product {
+          stock: product.stock - 1;
+        }
+        create PurchaseOrder as purchase {
+          buyer: actor;
+          total: product.price;
+        }
+        create OrderLine as line {
+          purchase: purchase;
+          product: product;
+          quantity: 1;
+          unitPrice: product.price;
+        }
+        persist product;
+        persist purchase;
+        persist line;
+        return purchase;
+      }
+    }
+    input OrderRef {
+      field id: Id;
+    }
+    error NotPayable http 409;
+    error NotYourOrder http 403;
+    error OrderNotFound http 404;
+    capability Pay {
+      actor Ref<User>;
+      input OrderRef;
+      output OrderView;
+      fails NotPayable;
+      fails NotYourOrder;
+      fails OrderNotFound;
+      requires authenticated;
+      requires atomic;
+      expose command at "/orders/{id}/pay";
+      workflow {
+        load PurchaseOrder by input.id as purchase else OrderNotFound;
+        validate purchase.buyer == actor else NotYourOrder;
+        update purchase when purchase.state == OrderState.CREATED else NotPayable {
+          state: OrderState.PAID;
+        }
+        persist purchase;
+        return purchase;
+      }
+    }
+    error NotShippable http 409;
+    capability Ship {
+      actor Ref<User>;
+      input OrderRef;
+      output OrderView;
+      fails Forbidden;
+      fails NotShippable;
+      fails OrderNotFound;
+      requires authenticated;
+      requires atomic;
+      expose command at "/orders/{id}/ship";
+      workflow {
+        validate actor.role == Role.ADMIN else Forbidden;
+        load PurchaseOrder by input.id as purchase else OrderNotFound;
+        update purchase when purchase.state == OrderState.PAID else NotShippable {
+          state: OrderState.SHIPPED;
+        }
+        persist purchase;
+        return purchase;
+      }
+    }
+    error NotCancellable http 409;
+    // GAP: cancelling should give every line's quantity back to its product; a request cannot walk the lines of an
+    // order, so the stock is not restored.
+    capability CancelOrder {
+      actor Ref<User>;
+      input OrderRef;
+      output OrderView;
+      fails NotCancellable;
+      fails NotYourOrder;
+      fails OrderNotFound;
+      requires authenticated;
+      requires atomic;
+      expose command at "/orders/{id}/cancel";
+      workflow {
+        load PurchaseOrder by input.id as purchase else OrderNotFound;
+        validate purchase.buyer == actor else NotYourOrder;
+        update purchase when purchase.state == OrderState.CREATED else NotCancellable {
+          state: OrderState.CANCELLED;
+        }
+        persist purchase;
+        return purchase;
+      }
+    }
+    capability MyOrders {
+      actor Ref<User>;
+      input PageOnly;
+      output Page<OrderView>;
+      fails BadPage;
+      requires authenticated;
+      requires readonly;
+      expose query at "/orders";
+      workflow {
+        find PurchaseOrder
+          where item.buyer == actor
+          order by createdAt descending, id descending
+          Page input.page, input.size else BadPage
+        as rows;
+        return rows;
+      }
+    }
+    input LinesQuery {
+      field orderId: Id;
+      field page: PageNo;
+      field size: PageSize;
+    }
+    capability OrderLines {
+      actor Ref<User>;
+      input LinesQuery;
+      output Page<LineView>;
+      fails BadPage;
+      fails NotYourOrder;
+      fails OrderNotFound;
+      requires authenticated;
+      requires readonly;
+      expose query at "/orders/{orderId}/lines";
+      workflow {
+        load PurchaseOrder by input.orderId as purchase else OrderNotFound;
+        validate purchase.buyer == actor else NotYourOrder;
+        find OrderLine
+          where item.purchase == purchase
+          order by id ascending
+          Page input.page, input.size else BadPage
+        as rows;
+        return rows;
+      }
+    }
+  }
+}

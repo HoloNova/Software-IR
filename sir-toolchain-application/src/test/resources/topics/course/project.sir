@@ -1,0 +1,252 @@
+sir 0.3
+
+software CourseSelection {
+  metadata {
+    displayName "Course Selection";
+    namespace "example.course";
+  }
+  target {
+    language java 21;
+    framework spring_boot;
+    persistence mybatis_plus;
+    database mysql;
+    build maven;
+    interface rest;
+  }
+  sources { }
+  imports { }
+  declarations {
+    enum Role { STUDENT, TEACHER, ADMIN }
+    enum EnrollState { ENROLLED, DROPPED }
+    entity User persistent {
+      identity id: Id generated auto;
+      field role: Role default Role.STUDENT;
+    }
+    use DualTokenLogin {
+      account: User;
+      name: name;
+      password: passwordHash;
+    }
+    input RegisterInput {
+      field name: Name;
+      field password: Text where length(6, 64);
+    }
+    view UserView from User {
+      field id: Id;
+      field name: Name;
+      field role: Role;
+    }
+    capability Register {
+      input RegisterInput;
+      output UserView;
+      requires atomic;
+      expose command at "/register";
+      workflow {
+        create User as user {
+          name: input.name;
+          passwordHash: input.password;
+        }
+        persist user;
+        return user;
+      }
+    }
+    error BadPage;
+    error Forbidden http 403;
+    input PageOnly {
+      field page: PageNo;
+      field size: PageSize;
+    }
+
+    entity Course persistent {
+      identity id: Id generated auto;
+      field code: Code unique;
+      field name: Name;
+      field teacher: Ref<User>;
+      field capacity: Quantity;
+      field enrolled: Count default 0;
+    }
+    entity Enrollment persistent {
+      identity id: Id generated auto;
+      field student: Ref<User>;
+      field course: Ref<Course>;
+      field state: EnrollState default EnrollState.ENROLLED;
+      field createdAt: Moment default now();
+    }
+    view CourseView from Course {
+      field id: Id;
+      field code: Code;
+      field name: Name;
+      field teacher: Ref<User>;
+      field capacity: Quantity;
+      field enrolled: Count;
+    }
+    view EnrollmentView from Enrollment {
+      field id: Id;
+      field course: Ref<Course>;
+      field state: EnrollState;
+      field createdAt: Moment;
+    }
+
+    input NewCourse {
+      field code: Code;
+      field name: Name;
+      field teacherId: Id;
+      field capacity: Quantity;
+    }
+    error TeacherNotFound http 404;
+    capability CreateCourse {
+      actor Ref<User>;
+      input NewCourse;
+      output CourseView;
+      fails Forbidden;
+      fails TeacherNotFound;
+      requires authenticated;
+      requires atomic;
+      expose command at "/courses";
+      workflow {
+        validate actor.role == Role.ADMIN else Forbidden;
+        load User by input.teacherId as teacher else TeacherNotFound;
+        create Course as course {
+          code: input.code;
+          name: input.name;
+          teacher: teacher;
+          capacity: input.capacity;
+        }
+        persist course;
+        return course;
+      }
+    }
+    input CourseSearch {
+      field keyword: Text;
+      field page: PageNo;
+      field size: PageSize;
+    }
+    capability SearchCourses {
+      input CourseSearch;
+      output Page<CourseView>;
+      fails BadPage;
+      requires readonly;
+      expose query at "/courses";
+      workflow {
+        find Course
+          where item.name containsLiteral input.keyword or item.code containsLiteral input.keyword
+          order by code ascending, id ascending
+          Page input.page, input.size else BadPage
+        as rows;
+        return rows;
+      }
+    }
+
+    input CourseRef {
+      field id: Id;
+    }
+    error AlreadyEnrolled http 409;
+    error CourseFull http 409;
+    error CourseNotFound http 404;
+    // GAP: capacity is checked and counted by reading then writing, so two students taking the last seat at the same
+    // moment can both succeed; and nothing stops a student enrolling twice (no atomic counter, no composite unique).
+    capability Enroll {
+      actor Ref<User>;
+      input CourseRef;
+      output EnrollmentView;
+      fails CourseFull;
+      fails CourseNotFound;
+      requires authenticated;
+      requires atomic;
+      expose command at "/courses/{id}/enroll";
+      workflow {
+        load Course by input.id as course else CourseNotFound;
+        validate course.enrolled < course.capacity else CourseFull;
+        update course {
+          enrolled: course.enrolled + 1;
+        }
+        create Enrollment as made {
+          student: actor;
+          course: course;
+        }
+        persist course;
+        persist made;
+        return made;
+      }
+    }
+    // GAP: the course of an enrollment cannot be loaded from the enrollment (`made.course.id` produces Java that does
+    // not compile), so the client names the course too and the workflow checks it.
+    input DropRequest {
+      field id: Id;
+      field courseId: Id;
+    }
+    error EnrollmentNotFound http 404;
+    error NotDroppable http 409;
+    capability Drop {
+      actor Ref<User>;
+      input DropRequest;
+      output EnrollmentView;
+      fails CourseNotFound;
+      fails EnrollmentNotFound;
+      fails Forbidden;
+      fails NotDroppable;
+      requires authenticated;
+      requires atomic;
+      expose command at "/enrollments/{id}/drop";
+      workflow {
+        load Enrollment by input.id as made else EnrollmentNotFound;
+        validate made.student == actor else Forbidden;
+        update made when made.state == EnrollState.ENROLLED else NotDroppable {
+          state: EnrollState.DROPPED;
+        }
+        load Course by input.courseId as course else CourseNotFound;
+        validate made.course == course else CourseNotFound;
+        update course {
+          enrolled: course.enrolled - 1;
+        }
+        persist made;
+        persist course;
+        return made;
+      }
+    }
+    capability MyEnrollments {
+      actor Ref<User>;
+      input PageOnly;
+      output Page<EnrollmentView>;
+      fails BadPage;
+      requires authenticated;
+      requires readonly;
+      expose query at "/enrollments";
+      workflow {
+        find Enrollment
+          where item.student == actor and item.state == EnrollState.ENROLLED
+          order by createdAt descending, id descending
+          Page input.page, input.size else BadPage
+        as rows;
+        return rows;
+      }
+    }
+    // A teacher sees the roster of their own course only.
+    input RosterQuery {
+      field courseId: Id;
+      field page: PageNo;
+      field size: PageSize;
+    }
+    capability Roster {
+      actor Ref<User>;
+      input RosterQuery;
+      output Page<EnrollmentView>;
+      fails BadPage;
+      fails CourseNotFound;
+      fails Forbidden;
+      requires authenticated;
+      requires readonly;
+      expose query at "/courses/{courseId}/roster";
+      workflow {
+        load Course by input.courseId as course else CourseNotFound;
+        validate course.teacher == actor else Forbidden;
+        find Enrollment
+          where item.course == course and item.state == EnrollState.ENROLLED
+          order by createdAt ascending, id ascending
+          Page input.page, input.size else BadPage
+        as rows;
+        return rows;
+      }
+    }
+  }
+}

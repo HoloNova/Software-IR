@@ -1,0 +1,151 @@
+sir 0.3
+
+software PersonalLedger {
+  metadata {
+    displayName "Personal Ledger";
+    namespace "example.ledger";
+  }
+  target {
+    language java 21;
+    framework spring_boot;
+    persistence mybatis_plus;
+    database mysql;
+    build maven;
+    interface rest;
+  }
+  sources { }
+  imports { }
+  declarations {
+    enum Direction { INCOME, EXPENSE }
+    entity User persistent {
+      identity id: Id generated auto;
+    }
+    use DualTokenLogin {
+      account: User;
+      name: name;
+      password: passwordHash;
+    }
+    input RegisterInput {
+      field name: Name;
+      field password: Text where length(6, 64);
+    }
+    view UserView from User {
+      field id: Id;
+      field name: Name;
+    }
+    capability Register {
+      input RegisterInput;
+      output UserView;
+      requires atomic;
+      expose command at "/register";
+      workflow {
+        create User as user {
+          name: input.name;
+          passwordHash: input.password;
+        }
+        persist user;
+        return user;
+      }
+    }
+    error BadPage;
+    error Forbidden http 403;
+    input PageOnly {
+      field page: PageNo;
+      field size: PageSize;
+    }
+
+    entity Category persistent {
+      identity id: Id generated auto;
+      field owner: Ref<User>;
+      field name: Name;
+      field direction: Direction;
+    }
+    // Amounts are whole cents: Money (a decimal) cannot be delivered by this target yet.
+    entity Entry persistent {
+      identity id: Id generated auto;
+      field owner: Ref<User>;
+      field category: Ref<Category>;
+      field amount: Serial where min(1);
+      field note: Optional<Remark>;
+      field occurredAt: Moment;
+    }
+    entity Budget persistent {
+      identity id: Id generated auto;
+      field owner: Ref<User>;
+      field category: Ref<Category>;
+      field monthlyLimit: Serial where min(1);
+    }
+    use Crud {
+      entity: Category;
+      owner: owner;
+      path: categories;
+    }
+    use Crud {
+      entity: Entry;
+      owner: owner;
+      path: entries;
+    }
+    use Crud {
+      entity: Budget;
+      owner: owner;
+      path: budgets;
+    }
+    input RangeQuery {
+      field since: Moment;
+      field until: Moment;
+      field page: PageNo;
+      field size: PageSize;
+    }
+    error BadRange;
+    capability EntriesBetween {
+      actor Ref<User>;
+      input RangeQuery;
+      output Page<EntryView>;
+      fails BadPage;
+      fails BadRange;
+      requires authenticated;
+      requires readonly;
+      expose query at "/entries/between";
+      workflow {
+        validate input.until > input.since else BadRange;
+        find Entry
+          where item.owner == actor and item.occurredAt >= input.since and item.occurredAt < input.until
+          order by occurredAt descending, id descending
+          Page input.page, input.size else BadPage
+        as rows;
+        return rows;
+      }
+    }
+    input CategoryRange {
+      field categoryId: Id;
+      field since: Moment;
+      field until: Moment;
+      field page: PageNo;
+      field size: PageSize;
+    }
+    capability EntriesOfCategory {
+      actor Ref<User>;
+      input CategoryRange;
+      output Page<EntryView>;
+      fails BadPage;
+      fails BadRange;
+      fails CategoryNotFound;
+      requires authenticated;
+      requires readonly;
+      expose query at "/categories/{categoryId}/entries";
+      workflow {
+        validate input.until > input.since else BadRange;
+        load Category by input.categoryId as category else CategoryNotFound;
+        find Entry
+          where item.owner == actor and item.category == category and item.occurredAt >= input.since and item.occurredAt < input.until
+          order by occurredAt descending, id descending
+          Page input.page, input.size else BadPage
+        as rows;
+        return rows;
+      }
+    }
+    // GAP: the point of a ledger is the month's total per category and "am I over budget", which need sums and counts
+    // over many rows. A query can list the rows but cannot add them up, so the client does the arithmetic and the
+    // budget is stored but never compared with spending.
+  }
+}

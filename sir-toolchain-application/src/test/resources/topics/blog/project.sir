@@ -1,0 +1,317 @@
+sir 0.3
+
+software CampusBlog {
+  metadata {
+    displayName "Campus Blog";
+    namespace "example.blog";
+  }
+  target {
+    language java 21;
+    framework spring_boot;
+    persistence mybatis_plus;
+    database mysql;
+    build maven;
+    interface rest;
+  }
+  sources { }
+  imports { }
+  declarations {
+    enum PostState { DRAFT, PUBLISHED }
+    entity User persistent {
+      identity id: Id generated auto;
+    }
+    use DualTokenLogin {
+      account: User;
+      name: name;
+      password: passwordHash;
+    }
+    input RegisterInput {
+      field name: Name;
+      field password: Text where length(6, 64);
+    }
+    view UserView from User {
+      field id: Id;
+      field name: Name;
+    }
+    capability Register {
+      input RegisterInput;
+      output UserView;
+      requires atomic;
+      expose command at "/register";
+      workflow {
+        create User as user {
+          name: input.name;
+          passwordHash: input.password;
+        }
+        persist user;
+        return user;
+      }
+    }
+    error BadPage;
+    error Forbidden http 403;
+    input PageOnly {
+      field page: PageNo;
+      field size: PageSize;
+    }
+
+    entity Post persistent {
+      identity id: Id generated auto;
+      field author: Ref<User>;
+      field category: Ref<Category>;
+      field title: Name;
+      field content: Text;
+      field state: PostState default PostState.DRAFT;
+      field likes: Count default 0;
+      field createdAt: Moment default now();
+    }
+    entity Comment persistent {
+      identity id: Id generated auto;
+      field post: Ref<Post>;
+      field author: Ref<User>;
+      field content: Remark;
+      field createdAt: Moment default now();
+    }
+    // GAP: a post can have one category, not several tags. "Posts with tag X" would need an existence test against a
+    // value the client chooses (`any(PostTag, post == item and tag == wanted)`), which this target cannot translate.
+    entity Category persistent {
+      identity id: Id generated auto;
+      field name: Code unique;
+    }
+    entity Like persistent {
+      identity id: Id generated auto;
+      field post: Ref<Post>;
+      field user: Ref<User>;
+    }
+
+    // Authors manage their own posts (including drafts).
+    use Crud {
+      entity: Post;
+      owner: author;
+      path: myposts;
+    }
+    view PublicPost from Post {
+      field id: Id;
+      field author: Ref<User>;
+      field category: Ref<Category>;
+      field title: Name;
+      field content: Text;
+      field likes: Count;
+      field createdAt: Moment;
+    }
+    input PostRef {
+      field id: Id;
+    }
+    error NotPublishable http 409;
+    capability Publish {
+      actor Ref<User>;
+      input PostRef;
+      output PostView;
+      fails Forbidden;
+      fails NotPublishable;
+      fails PostNotFound;
+      requires authenticated;
+      requires atomic;
+      expose command at "/my/posts/{id}/publish";
+      workflow {
+        load Post by input.id as post else PostNotFound;
+        validate post.author == actor else Forbidden;
+        update post when post.state == PostState.DRAFT else NotPublishable {
+          state: PostState.PUBLISHED;
+        }
+        persist post;
+        return post;
+      }
+    }
+
+    input FeedQuery {
+      field keyword: Text;
+      field page: PageNo;
+      field size: PageSize;
+    }
+    capability Feed {
+      input FeedQuery;
+      output Page<PublicPost>;
+      fails BadPage;
+      requires readonly;
+      expose query at "/posts";
+      workflow {
+        find Post
+          where item.state == PostState.PUBLISHED and (item.title containsLiteral input.keyword or item.content containsLiteral input.keyword)
+          order by createdAt descending, id descending
+          Page input.page, input.size else BadPage
+        as rows;
+        return rows;
+      }
+    }
+    input CategoryQuery {
+      field categoryId: Id;
+      field page: PageNo;
+      field size: PageSize;
+    }
+    capability PostsByCategory {
+      input CategoryQuery;
+      output Page<PublicPost>;
+      fails BadPage;
+      fails CategoryNotFound;
+      requires readonly;
+      expose query at "/categories/{categoryId}/posts";
+      workflow {
+        load Category by input.categoryId as wanted else CategoryNotFound;
+        find Post
+          where item.state == PostState.PUBLISHED and item.category == wanted
+          order by createdAt descending, id descending
+          Page input.page, input.size else BadPage
+        as rows;
+        return rows;
+      }
+    }
+    // GAP: the page of a post cannot show its comments in the same answer (a view cannot list children of a loaded
+    // row), so a client asks twice.
+    capability ViewPost {
+      input PostRef;
+      output PublicPost;
+      fails PostNotFound;
+      requires readonly;
+      expose query at "/posts/{id}";
+      workflow {
+        load Post by input.id as post else PostNotFound;
+        validate post.state == PostState.PUBLISHED else PostNotFound;
+        return post;
+      }
+    }
+
+    view CommentView from Comment {
+      field id: Id;
+      field author: Ref<User>;
+      field content: Remark;
+      field createdAt: Moment;
+    }
+    input NewComment {
+      field postId: Id;
+      field content: Remark where notBlank;
+    }
+    capability AddComment {
+      actor Ref<User>;
+      input NewComment;
+      output CommentView;
+      fails PostNotFound;
+      requires authenticated;
+      requires atomic;
+      expose command at "/posts/{postId}/comments";
+      workflow {
+        load Post by input.postId as post else PostNotFound;
+        validate post.state == PostState.PUBLISHED else PostNotFound;
+        create Comment as made {
+          post: post;
+          author: actor;
+          content: input.content;
+        }
+        persist made;
+        return made;
+      }
+    }
+    input CommentQuery {
+      field postId: Id;
+      field page: PageNo;
+      field size: PageSize;
+    }
+    capability Comments {
+      input CommentQuery;
+      output Page<CommentView>;
+      fails BadPage;
+      fails PostNotFound;
+      requires readonly;
+      expose query at "/posts/{postId}/comments";
+      workflow {
+        load Post by input.postId as post else PostNotFound;
+        find Comment
+          where item.post == post
+          order by createdAt ascending, id ascending
+          Page input.page, input.size else BadPage
+        as rows;
+        return rows;
+      }
+    }
+    input CommentRef {
+      field id: Id;
+    }
+    error CommentNotFound http 404;
+    capability DeleteComment {
+      actor Ref<User>;
+      input CommentRef;
+      output Unit;
+      fails CommentNotFound;
+      fails Forbidden;
+      requires authenticated;
+      requires atomic;
+      expose command delete at "/comments/{id}";
+      workflow {
+        load Comment by input.id as comment else CommentNotFound;
+        validate comment.author == actor else Forbidden;
+        delete comment;
+        return unit;
+      }
+    }
+
+    // GAP: one reader can like a post many times (no composite unique, no "exists" check), and the counter is read
+    // then written, so simultaneous likes can be lost.
+    capability LikePost {
+      actor Ref<User>;
+      input PostRef;
+      output PublicPost;
+      fails PostNotFound;
+      requires authenticated;
+      requires atomic;
+      expose command at "/posts/{id}/like";
+      workflow {
+        load Post by input.id as post else PostNotFound;
+        validate post.state == PostState.PUBLISHED else PostNotFound;
+        create Like as made {
+          post: post;
+          user: actor;
+        }
+        update post {
+          likes: post.likes + 1;
+        }
+        persist made;
+        persist post;
+        return post;
+      }
+    }
+
+    input NewCategory {
+      field name: Code;
+    }
+    view CategoryView from Category {
+      field id: Id;
+      field name: Code;
+    }
+    error CategoryNotFound http 404;
+    capability CreateCategory {
+      actor Ref<User>;
+      input NewCategory;
+      output CategoryView;
+      requires authenticated;
+      requires atomic;
+      expose command at "/categories";
+      workflow {
+        create Category as category {
+          name: input.name;
+        }
+        persist category;
+        return category;
+      }
+    }
+    capability Categories {
+      input PageOnly;
+      output Page<CategoryView>;
+      fails BadPage;
+      requires readonly;
+      expose query at "/categories";
+      workflow {
+        find Category where true order by name ascending Page input.page, input.size else BadPage as rows;
+        return rows;
+      }
+    }
+  }
+}

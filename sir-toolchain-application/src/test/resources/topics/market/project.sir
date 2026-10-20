@@ -1,0 +1,235 @@
+sir 0.3
+
+software CampusMarket {
+  metadata {
+    displayName "Campus Market";
+    namespace "example.market";
+  }
+  target {
+    language java 21;
+    framework spring_boot;
+    persistence mybatis_plus;
+    database mysql;
+    build maven;
+    interface rest;
+  }
+  sources { }
+  imports { }
+  declarations {
+    enum ItemStatus { ON_SALE, SOLD, OFF_SHELF }
+    enum OrderStatus { PLACED, CANCELLED }
+
+    entity User persistent {
+      identity id: Id generated auto;
+    }
+    use DualTokenLogin {
+      account: User;
+      name: name;
+      password: passwordHash;
+    }
+    input RegisterInput {
+      field name: Name;
+      field password: Text where length(6, 64);
+    }
+    view UserView from User {
+      field id: Id;
+      field name: Name;
+    }
+    capability Register {
+      input RegisterInput;
+      output UserView;
+      requires atomic;
+      expose command at "/register";
+      workflow {
+        create User as user {
+          name: input.name;
+          passwordHash: input.password;
+        }
+        persist user;
+        return user;
+      }
+    }
+
+    entity Item persistent {
+      identity id: Id generated auto;
+      field seller: Ref<User>;
+      field title: Name;
+      field description: Optional<Remark>;
+      field price: Serial where min(0);
+      field status: ItemStatus default ItemStatus.ON_SALE;
+      field createdAt: Moment default now();
+    }
+    entity TradeOrder persistent {
+      identity id: Id generated auto;
+      field buyer: Ref<User>;
+      // The seller is copied onto the order so the seller can list what was bought from them (an order cannot be
+      // filtered by a field of its item).
+      field seller: Ref<User>;
+      field goods: Ref<Item>;
+      field price: Serial;
+      field status: OrderStatus default OrderStatus.PLACED;
+      field createdAt: Moment default now();
+    }
+
+    // The seller manages their own items: create, view, list, change and delete.
+    use Crud {
+      entity: Item;
+      owner: seller;
+      path: items;
+    }
+
+    view OrderView from TradeOrder {
+      field id: Id;
+      field goods: Ref<Item>;
+      field price: Serial;
+      field status: OrderStatus;
+      field createdAt: Moment;
+    }
+
+    // Everybody browses what is on sale.
+    input BrowseInput {
+      field keyword: Text;
+      field page: PageNo;
+      field size: PageSize;
+    }
+    error BadPage;
+    capability BrowseItems {
+      input BrowseInput;
+      output Page<ItemView>;
+      fails BadPage;
+      requires readonly;
+      expose query at "/shop/items";
+      workflow {
+        find Item
+          where item.status == ItemStatus.ON_SALE and item.title containsLiteral input.keyword
+          order by createdAt descending, id descending
+          Page input.page, input.size else BadPage
+        as rows;
+        return rows;
+      }
+    }
+    input ItemRef {
+      field id: Id;
+    }
+    capability ViewItem {
+      input ItemRef;
+      output ItemView;
+      fails ItemNotFound;
+      requires readonly;
+      expose query at "/shop/items/{id}";
+      workflow {
+        load Item by input.id as goods else ItemNotFound;
+        return goods;
+      }
+    }
+
+    error AlreadySold http 409;
+    error OwnItem http 403;
+    capability BuyItem {
+      actor Ref<User>;
+      input ItemRef;
+      output OrderView;
+      fails AlreadySold;
+      fails ItemNotFound;
+      fails OwnItem;
+      requires authenticated;
+      requires atomic;
+      expose command at "/shop/items/{id}/buy";
+      workflow {
+        load Item by input.id as goods else ItemNotFound;
+        validate goods.seller != actor else OwnItem;
+        update goods when goods.status == ItemStatus.ON_SALE else AlreadySold {
+          status: ItemStatus.SOLD;
+        }
+        create TradeOrder as made {
+          buyer: actor;
+          seller: goods.seller;
+          goods: goods;
+          price: goods.price;
+        }
+        persist goods;
+        persist made;
+        return made;
+      }
+    }
+
+    input OrderRef {
+      field id: Id;
+    }
+    // GAP: the order's item cannot be loaded from the order (`load Item by placed.goods` is a type error and
+    // `placed.goods.id` produces Java that does not compile), so the client sends the item too and the workflow checks it.
+    input CancelRequest {
+      field orderId: Id;
+      field itemId: Id;
+    }
+    error OrderNotFound http 404;
+    error NotYourOrder http 403;
+    error NotCancellable http 409;
+    capability CancelOrder {
+      actor Ref<User>;
+      input CancelRequest;
+      output OrderView;
+      fails ItemNotFound;
+      fails NotCancellable;
+      fails NotYourOrder;
+      fails OrderNotFound;
+      requires authenticated;
+      requires atomic;
+      expose command at "/orders/{orderId}/cancel";
+      workflow {
+        load TradeOrder by input.orderId as placed else OrderNotFound;
+        validate placed.buyer == actor else NotYourOrder;
+        load Item by input.itemId as goods else ItemNotFound;
+        validate placed.goods == goods else ItemNotFound;
+        update placed when placed.status == OrderStatus.PLACED else NotCancellable {
+          status: OrderStatus.CANCELLED;
+        }
+        update goods {
+          status: ItemStatus.ON_SALE;
+        }
+        persist placed;
+        persist goods;
+        return placed;
+      }
+    }
+
+    input MyPage {
+      field page: PageNo;
+      field size: PageSize;
+    }
+    capability SoldOrders {
+      actor Ref<User>;
+      input MyPage;
+      output Page<OrderView>;
+      fails BadPage;
+      requires authenticated;
+      requires readonly;
+      expose query at "/orders/sold";
+      workflow {
+        find TradeOrder
+          where item.seller == actor
+          order by id descending
+          Page input.page, input.size else BadPage
+        as rows;
+        return rows;
+      }
+    }
+    capability MyOrders {
+      actor Ref<User>;
+      input MyPage;
+      output Page<OrderView>;
+      fails BadPage;
+      requires authenticated;
+      requires readonly;
+      expose query at "/orders";
+      workflow {
+        find TradeOrder
+          where item.buyer == actor
+          order by id descending
+          Page input.page, input.size else BadPage
+        as rows;
+        return rows;
+      }
+    }
+  }
+}
