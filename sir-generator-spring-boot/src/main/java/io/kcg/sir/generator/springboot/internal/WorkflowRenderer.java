@@ -84,6 +84,9 @@ final class WorkflowRenderer {
          case SpringBootWorkflow.LoadActorStep load:
             renderLoadActor(ctx, load, variableNames, imports, currentPackage, lines, mappers);
             break;
+         case SpringBootWorkflow.ScalarQueryStep query:
+            renderScalarQuery(ctx, query, variableNames, imports, currentPackage, lines, mappers, stringMatches);
+            break;
          case FindStep find:
          renderFind(ctx, find, inputName, variableNames, imports, currentPackage, lines, mappers, stringMatches);
             break;
@@ -255,6 +258,31 @@ final class WorkflowRenderer {
       lines.add("        if (!java.util.Objects.equals(" + loadedName + "." + versionGetter + "(), " + expected + ")) {");
       lines.add("            throw new " + errorName + "();");
       lines.add("        }");
+   }
+
+   private static void renderScalarQuery(GenerationContext ctx, SpringBootWorkflow.ScalarQueryStep step,
+      Map<SymbolId, String> variableNames, ImportSorter imports, String currentPackage, List<String> lines,
+      Map<SymbolId, WorkflowRenderer.MapperReference> mappers, List<SpringExpression.StringMatch> stringMatches) {
+      EntityDeclaration entity = ctx.entity(step.entitySymbol());
+      registerEntityImport(ctx, entity, imports, currentPackage);
+      WorkflowRenderer.MapperReference mapper = ensureMapper(ctx, step.entitySymbol(), entity.javaName(), mappers);
+      imports.add("com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper");
+      stringMatches.addAll(step.stringMatches());
+      Map<LoweredNodeId, SpringExpression.StringMatch> matches = new LinkedHashMap<>();
+      for (SpringExpression.StringMatch match : step.stringMatches()) {
+         matches.put(match.expressionId(), match);
+      }
+      String wrapper = renderPredicateChain(ctx, step.predicate(), step.itemVariable(), entity, matches, variableNames, imports, currentPackage);
+      if (step.plan().projectionProperty().isPresent()) {
+         wrapper += ".select(" + entity.javaName() + "::" + getterName(step.plan().projectionProperty().orElseThrow()) + ")";
+      }
+      if (step.plan().tailSql().isPresent()) {
+         wrapper += ".last(" + StringEscape.javaString(step.plan().tailSql().orElseThrow()) + ")";
+      }
+      String call = mapper.mapperFieldName() + "." + step.plan().mapperMethod() + "(" + wrapper + ")";
+      boolean exists = step.plan().kind() == SpringBootWorkflow.ScalarResult.EXISTS;
+      lines.add("        " + (exists ? "boolean " : "long ") + step.result().targetName() + " = "
+         + (exists ? "!" + call + ".isEmpty()" : call) + ";");
    }
 
    private static void renderFind(
@@ -1114,7 +1142,7 @@ final class WorkflowRenderer {
             // The correlated subquery is decided before rendering: this only quotes its text and
             // binds the values the plan declares, in the order it declares them.
             return wrapperName + ".apply(" + StringEscape.javaString("EXISTS (" + exists.subquerySql() + ")")
-               + renderExistsArguments(exists) + ")";
+               + renderExistsArguments(ctx, exists, variableNames, imports, currentPackage) + ")";
          default:
             throw new IllegalStateException("Unsupported find predicate expression: " + predicate);
       }
@@ -1146,10 +1174,15 @@ final class WorkflowRenderer {
           + ", " + value + ")";
     }
 
-    private static String renderExistsArguments(SpringExpression.ExistsPredicate exists) {
+    private static String renderExistsArguments(GenerationContext ctx, SpringExpression.ExistsPredicate exists, Map<SymbolId, String> variableNames, ImportSorter imports, String currentPackage) {
       StringBuilder out = new StringBuilder();
       for (SpringExpression.ExistsArgument argument : exists.arguments()) {
-         out.append(", ").append(renderExistsArgument(argument));
+         if (argument instanceof SpringExpression.ExistsArgument.Value value) {
+             collectExpressionImports(ctx, value.expression(), variableNames, imports, currentPackage);
+             out.append(", ").append(ExpressionRenderer.renderExpression(value.expression(), variableNames));
+          } else {
+             out.append(", ").append(renderExistsArgument(argument));
+          }
       }
 
       return out.toString();
@@ -1157,6 +1190,7 @@ final class WorkflowRenderer {
 
    private static String renderExistsArgument(SpringExpression.ExistsArgument argument) {
       return switch (argument) {
+         case SpringExpression.ExistsArgument.Value ignored -> throw new IllegalStateException("external values require their bound variable context");
          case SpringExpression.ExistsArgument.Text text -> StringEscape.javaString(text.value());
          case SpringExpression.ExistsArgument.Integral integral -> integral.value() + "L";
          case SpringExpression.ExistsArgument.Decimal decimal ->

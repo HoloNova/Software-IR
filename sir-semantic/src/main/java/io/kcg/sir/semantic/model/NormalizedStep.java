@@ -15,6 +15,7 @@ public sealed interface NormalizedStep
    permits NormalizedStep.ValidateStep,
    NormalizedStep.LoadStep,
    NormalizedStep.FindStep,
+   NormalizedStep.ScalarQueryStep,
    NormalizedStep.CreateStep,
    NormalizedStep.UpdateStep,
    NormalizedStep.PersistStep,
@@ -23,6 +24,20 @@ public sealed interface NormalizedStep
    AstNodeId sourceNodeId();
 
    SourceSpan span();
+
+   record ScalarQueryStep(@Source AstNodeId sourceNodeId, @Source SourceSpan span,
+      @Fact io.kcg.sir.ast.AstScalarQueryStep.Kind kind, @Reference SymbolId entitySymbol,
+      @Fact NormalizedExpression predicate, @Reference SymbolId resultVariable, @Derived SymbolId itemVariable) implements NormalizedStep {
+      public ScalarQueryStep {
+         Objects.requireNonNull(sourceNodeId, "sourceNodeId");
+         Objects.requireNonNull(span, "span");
+         Objects.requireNonNull(kind, "kind");
+         Objects.requireNonNull(entitySymbol, "entitySymbol");
+         Objects.requireNonNull(predicate, "predicate");
+         Objects.requireNonNull(resultVariable, "resultVariable");
+         Objects.requireNonNull(itemVariable, "itemVariable");
+      }
+   }
 
    /** One key of a {@code find} step's declared {@code order by} clause, in authored order. */
    record OrderKey(@Source AstNodeId sourceNodeId, @Source SourceSpan span, @Reference SymbolId fieldSymbol, @Fact boolean descending) {

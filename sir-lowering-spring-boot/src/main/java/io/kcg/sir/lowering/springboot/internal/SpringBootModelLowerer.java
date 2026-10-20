@@ -786,6 +786,10 @@ public final class SpringBootModelLowerer {
                     this.lowerOrderKeys(value), this.lowerPageSpec(value), this.lowerStringMatches(value, owner),
                     this.lowerStatementBudget(value),
                     variable(value.resultVariable()), variable(value.itemVariable()));
+            case NormalizedStep.ScalarQueryStep value -> new SpringBootWorkflow.ScalarQueryStep(
+                    id, origin, value.entitySymbol(), lowerExpression(value.predicate(), owner, actorSymbol, Optional.of(value.itemVariable())),
+                    this.lowerStringMatches(value.predicate(), owner), this.scalarQueryPlan(value),
+                    variable(value.resultVariable()), variable(value.itemVariable()));
             case NormalizedStep.CreateStep value -> new SpringBootWorkflow.CreateStep(
                     id, origin, value.entitySymbol(), variable(value.resultVariable()),
                     withDefaults(value, owner, actorSymbol));
@@ -977,17 +981,33 @@ public final class SpringBootModelLowerer {
                 page.errorSymbol()));
     }
 
+    private SpringBootWorkflow.ScalarQueryPlan scalarQueryPlan(NormalizedStep.ScalarQueryStep step) {
+        boolean exists = step.kind() == io.kcg.sir.ast.AstScalarQueryStep.Kind.EXISTS;
+        return new SpringBootWorkflow.ScalarQueryPlan(exists ? SpringBootWorkflow.ScalarResult.EXISTS : SpringBootWorkflow.ScalarResult.COUNT,
+                exists ? "selectObjs" : "selectCount",
+                exists ? Optional.of(this.targetMemberNames.get(this.entities.get(step.entitySymbol()).identity().id())) : Optional.empty(),
+                exists ? Optional.of("LIMIT 1") : Optional.empty(), 1);
+    }
+
     /**
      * Every literal string match of the predicate becomes an explicit plan entry, so the renderer
      * never has to decide on its own which comparisons need escaping.
      */
     private List<SpringExpression.StringMatch> lowerStringMatches(NormalizedStep.FindStep step, SymbolId owner) {
+        return this.lowerStringMatches(step.predicate(), owner);
+    }
+
+    private List<SpringExpression.StringMatch> lowerStringMatches(NormalizedExpression predicate, SymbolId owner) {
         ArrayList<SpringExpression.StringMatch> matches = new ArrayList<SpringExpression.StringMatch>();
-        this.collectStringMatches(step.predicate(), owner, matches);
+        this.collectStringMatches(predicate, owner, matches);
         return List.copyOf(matches);
     }
 
     private void collectStringMatches(NormalizedExpression expression, SymbolId owner, List<SpringExpression.StringMatch> matches) {
+        if (expression instanceof NormalizedExpression.UnaryExpression unary) {
+            this.collectStringMatches(unary.operand(), owner, matches);
+            return;
+        }
         if (!(expression instanceof NormalizedExpression.BinaryExpression binary)) {
             return;
         }
@@ -1282,7 +1302,7 @@ public final class SpringBootModelLowerer {
         NormalizedExpression conditions = this.withoutConnection(value.conditions(), value.connectionField(), itemSymbol);
         ExistenceSql condition = conditions == null
                 ? new ExistenceSql("", List.of())
-                : this.existenceSql(conditions, related, root, alias, itemSymbol, List.of());
+                : this.existenceSql(conditions, related, root, alias, itemSymbol, List.of(), origin.ownerSymbol().orElseThrow());
         String rootTable = this.snake(root.name());
         String subquery = "SELECT 1 FROM " + this.snake(related.name()) + " " + alias
                 + " WHERE " + alias + "." + relatedColumn + " = " + rootTable + "." + this.snake(root.identity().name())
@@ -1354,11 +1374,11 @@ public final class SpringBootModelLowerer {
      */
     private ExistenceSql existenceSql(
             NormalizedExpression expression, NormalizedEntity related, NormalizedEntity root, String alias,
-            Optional<SymbolId> itemSymbol, List<SpringExpression.ExistsArgument> arguments) {
+            Optional<SymbolId> itemSymbol, List<SpringExpression.ExistsArgument> arguments, SymbolId owner) {
         return switch (expression) {
             case NormalizedExpression.BinaryExpression binary when isComparison(binary.operator()) -> {
-                ExistenceSql left = this.existenceSql(binary.left(), related, root, alias, itemSymbol, arguments);
-                ExistenceSql right = this.existenceSql(binary.right(), related, root, alias, itemSymbol, left.arguments());
+                ExistenceSql left = this.existenceSql(binary.left(), related, root, alias, itemSymbol, arguments, owner);
+                ExistenceSql right = this.existenceSql(binary.right(), related, root, alias, itemSymbol, left.arguments(), owner);
                 String comparison = left.text() + " " + comparisonOperator(binary.operator()) + " " + right.text();
                 if (binary.left().type() instanceof OptionalType || binary.right().type() instanceof OptionalType) {
                     comparison = "COALESCE(" + comparison + ", FALSE)";
@@ -1367,23 +1387,24 @@ public final class SpringBootModelLowerer {
             }
             case NormalizedExpression.BinaryExpression binary when binary.operator() == io.kcg.sir.ast.AstBinaryOperator.AND
                     || binary.operator() == io.kcg.sir.ast.AstBinaryOperator.OR -> {
-                ExistenceSql left = this.existenceSql(binary.left(), related, root, alias, itemSymbol, arguments);
-                ExistenceSql right = this.existenceSql(binary.right(), related, root, alias, itemSymbol, left.arguments());
+                ExistenceSql left = this.existenceSql(binary.left(), related, root, alias, itemSymbol, arguments, owner);
+                ExistenceSql right = this.existenceSql(binary.right(), related, root, alias, itemSymbol, left.arguments(), owner);
                 String operator = binary.operator() == io.kcg.sir.ast.AstBinaryOperator.AND ? " AND " : " OR ";
                 yield new ExistenceSql("(" + left.text() + operator + right.text() + ")", right.arguments());
             }
             case NormalizedExpression.UnaryExpression unary when unary.operator() == io.kcg.sir.ast.AstUnaryOperator.NOT -> {
-                ExistenceSql operand = this.existenceSql(unary.operand(), related, root, alias, itemSymbol, arguments);
+                ExistenceSql operand = this.existenceSql(unary.operand(), related, root, alias, itemSymbol, arguments, owner);
                 yield new ExistenceSql("NOT (" + operand.text() + ")", operand.arguments());
             }
             case NormalizedExpression.UnaryExpression unary when unary.operator() == io.kcg.sir.ast.AstUnaryOperator.IS_NONE
                     || unary.operator() == io.kcg.sir.ast.AstUnaryOperator.IS_PRESENT -> {
-                ExistenceSql operand = this.existenceSql(unary.operand(), related, root, alias, itemSymbol, arguments);
+                ExistenceSql operand = this.existenceSql(unary.operand(), related, root, alias, itemSymbol, arguments, owner);
                 yield new ExistenceSql(operand.text() + (unary.operator() == io.kcg.sir.ast.AstUnaryOperator.IS_NONE ? " IS NULL" : " IS NOT NULL"), operand.arguments());
             }
-            case NormalizedExpression.NameExpression name -> new ExistenceSql(
-                    this.columnReference(name.resolvedSymbol(), related, root, alias, itemSymbol), arguments);
-            case NormalizedExpression.MemberExpression member -> this.memberReference(member, related, root, alias, itemSymbol, arguments);
+            case NormalizedExpression.NameExpression name -> this.isExternalValue(name, itemSymbol)
+                    ? this.boundValue(new SpringExpression.ExistsArgument.Value(this.externalValue(name, owner)), arguments)
+                    : new ExistenceSql(this.columnReference(name.resolvedSymbol(), related, root, alias, itemSymbol), arguments);
+            case NormalizedExpression.MemberExpression member -> this.memberReference(member, related, root, alias, itemSymbol, arguments, owner);
             case NormalizedExpression.StringLiteral literal -> this.boundValue(new SpringExpression.ExistsArgument.Text(literal.value()), arguments);
             case NormalizedExpression.BooleanLiteral literal -> this.boundValue(new SpringExpression.ExistsArgument.Flag(literal.value()), arguments);
             case NormalizedExpression.IntegerLiteral literal -> this.boundValue(
@@ -1414,7 +1435,7 @@ public final class SpringBootModelLowerer {
     /** A column of the queried row, or the persisted text of an enum member. */
     private ExistenceSql memberReference(
             NormalizedExpression.MemberExpression member, NormalizedEntity related, NormalizedEntity root, String alias,
-            Optional<SymbolId> itemSymbol, List<SpringExpression.ExistsArgument> arguments) {
+            Optional<SymbolId> itemSymbol, List<SpringExpression.ExistsArgument> arguments, SymbolId owner) {
         boolean onItem = itemSymbol.isPresent()
                 && member.receiver() instanceof NormalizedExpression.NameExpression receiver
                 && receiver.resolvedSymbol().equals(itemSymbol.get());
@@ -1434,7 +1455,22 @@ public final class SpringBootModelLowerer {
             return this.boundValue(new SpringExpression.ExistsArgument.Text(memberOwner.name()), arguments);
         }
 
+        if (this.isExternalValue(member, itemSymbol)) {
+            return this.boundValue(new SpringExpression.ExistsArgument.Value(this.externalValue(member, owner)), arguments);
+        }
         throw new IllegalStateException("unsupported existence-predicate member reference: " + member);
+    }
+
+    private boolean isExternalValue(NormalizedExpression expression, Optional<SymbolId> itemSymbol) {
+        if (expression instanceof NormalizedExpression.MemberExpression member) {
+            return this.isExternalValue(member.receiver(), itemSymbol);
+        }
+        return expression instanceof NormalizedExpression.NameExpression name && !itemSymbol.filter(name.resolvedSymbol()::equals).isPresent()
+                && this.source.symbols().byId(name.resolvedSymbol()).orElse(null) instanceof Symbol.VariableSymbol;
+    }
+
+    private SpringExpression externalValue(NormalizedExpression expression, SymbolId owner) {
+        return this.asIdentity(this.lowerExpression(expression, owner, this.capability(owner).actorSymbol()));
     }
 
     private ExistenceSql boundValue(SpringExpression.ExistsArgument value, List<SpringExpression.ExistsArgument> arguments) {
@@ -1538,6 +1574,7 @@ public final class SpringBootModelLowerer {
             switch (step) {
                 case NormalizedStep.LoadStep s -> ids.add(s.resultVariable());
                 case NormalizedStep.CreateStep s -> ids.add(s.resultVariable());
+                case NormalizedStep.ScalarQueryStep s -> ids.add(s.itemVariable());
                 case NormalizedStep.FindStep s -> {
                     ids.add(s.resultVariable());
                     ids.add(s.itemVariable());

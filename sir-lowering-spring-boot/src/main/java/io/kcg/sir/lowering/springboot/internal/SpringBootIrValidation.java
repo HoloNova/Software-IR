@@ -1007,6 +1007,14 @@ public final class SpringBootIrValidation {
                this.error(owner, "only a capability with an actor can read the actor's row");
             }
             break;
+         case SpringBootWorkflow.ScalarQueryStep value:
+            this.requireDeclaration(value.entitySymbol(), SpringBootDeclaration.EntityDeclaration.class, owner);
+            this.validateExpression(value.predicate(), owner);
+            this.requireKnown(value.result().symbol(), owner, "scalar query result");
+            this.requireKnown(value.itemVariable().symbol(), owner, "scalar query item");
+            this.validateScalarQuery(value, owner);
+            this.validateStringMatches(value.stringMatches(), value.predicate(), owner);
+            break;
          case SpringBootWorkflow.FindStep value:
             this.requireDeclaration(value.entitySymbol(), SpringBootDeclaration.EntityDeclaration.class, owner);
             this.validateExpression(value.predicate(), owner);
@@ -1043,6 +1051,23 @@ public final class SpringBootIrValidation {
             break;
          default:
             throw new MatchException(null, null);
+      }
+   }
+
+   private void validateScalarQuery(SpringBootWorkflow.ScalarQueryStep query, SpringBootDeclaration.CapabilityDeclaration owner) {
+      SpringBootWorkflow.ScalarQueryPlan plan = query.plan();
+      boolean exists = plan.kind() == SpringBootWorkflow.ScalarResult.EXISTS;
+      LoweredJavaType expected = new LoweredJavaType.Scalar(exists ? LoweredJavaType.ScalarKind.BOOLEAN : LoweredJavaType.ScalarKind.LONG);
+      if (!query.result().type().equals(expected) || plan.statements() != 1
+            || !plan.mapperMethod().equals(exists ? "selectObjs" : "selectCount")) {
+         this.error(owner, "scalar query result, method and one-statement budget must agree");
+      }
+      if (this.declarations.get(query.entitySymbol()) instanceof SpringBootDeclaration.EntityDeclaration entity) {
+         java.util.Optional<String> projection = exists ? java.util.Optional.of(entity.identity().javaName()) : java.util.Optional.empty();
+         java.util.Optional<String> tail = exists ? java.util.Optional.of("LIMIT 1") : java.util.Optional.empty();
+         if (!plan.projectionProperty().equals(projection) || !plan.tailSql().equals(tail)) {
+            this.error(owner, "existence reads one identity with LIMIT 1; count has neither projection nor limit");
+         }
       }
    }
 
@@ -1148,8 +1173,12 @@ public final class SpringBootIrValidation {
    }
 
    private void validateStringMatches(SpringBootWorkflow.FindStep find, SpringBootDeclaration.CapabilityDeclaration owner) {
+      this.validateStringMatches(find.stringMatches(), find.predicate(), owner);
+   }
+
+   private void validateStringMatches(List<SpringExpression.StringMatch> matches, SpringExpression predicate, SpringBootDeclaration.CapabilityDeclaration owner) {
       Set<LoweredNodeId> planned = new LinkedHashSet<>();
-      for (SpringExpression.StringMatch match : find.stringMatches()) {
+      for (SpringExpression.StringMatch match : matches) {
          this.addNode(match.id(), match.origin(), "string match plan");
          if (!planned.add(match.expressionId())) {
          this.error(owner, "duplicate literal-match plan entry: " + match.expressionId());
@@ -1162,7 +1191,7 @@ public final class SpringBootIrValidation {
       }
 
       Set<LoweredNodeId> actual = new LinkedHashSet<>();
-      this.collectLiteralMatches(find.predicate(), actual);
+      this.collectLiteralMatches(predicate, actual);
       for (LoweredNodeId expressionId : actual) {
          if (!planned.contains(expressionId)) {
          this.error(owner, "literal match in the predicate has no plan entry: " + expressionId);
@@ -1355,6 +1384,11 @@ public final class SpringBootIrValidation {
    * nobody uses) would silently shift every parameter that follows it.
    */
    private void validateExistsPredicate(SpringExpression.ExistsPredicate exists, SpringBootDeclaration owner) {
+      for (SpringExpression.ExistsArgument argument : exists.arguments()) {
+         if (argument instanceof SpringExpression.ExistsArgument.Value value) {
+            this.validateExpression(value.expression(), owner);
+         }
+      }
       int placeholders = 0;
       while (exists.subquerySql().contains("{" + placeholders + "}")) {
          placeholders++;

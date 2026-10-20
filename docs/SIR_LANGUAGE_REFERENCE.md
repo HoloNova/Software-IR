@@ -319,7 +319,7 @@ capability OpenTicket {
 
 #### 默认查询范围（`scope`）
 
-`scope 条件;` 写在实体最后，说明哪些行对软件来说“存在”。这个实体的每个 `load`、`find` 和 `any(...)` 都只看满足条件的行：`find` 自动加上这个条件，`load` 到范围外的行时按 `load` 自己的错误失败。条件里直接写本实体的字段名（和 `any` 的条件一样）。典型用法是软删除：
+`scope 条件;` 写在实体最后，说明哪些行对软件来说“存在”。这个实体的每个 `load`、`find`、`exists`、`count` 和 `any(...)` 都只看满足条件的行：`find` 自动加上这个条件，`load` 到范围外的行时按 `load` 自己的错误失败。条件里直接写本实体的字段名（和 `any` 的条件一样）。典型用法是软删除：
 
 ```sir-declarations
 entity Note persistent {
@@ -887,7 +887,7 @@ capability RemoveNote {
 
 ## 5. 工作流（`workflow`）
 
-工作流是一串**步骤**，按顺序执行，**以且只以一个 `return` 结束**（`SIR-FLOW-002`）。变量由 `load`、`find`、`create` 的 `as 名字` 引入，之后才能用（`SIR-FLOW-001`）。
+工作流是一串**步骤**，按顺序执行，**以且只以一个 `return` 结束**（`SIR-FLOW-002`）。变量由 `load`、`find`、`exists`、`count`、`create` 的 `as 名字` 引入，之后才能用（`SIR-FLOW-001`）。
 
 ### 5.1 `validate`
 
@@ -1146,7 +1146,7 @@ capability FilterTickets {
 }
 ```
 
-**关联存在性：`any(实体, 条件)`。** 在 `find` 的谓词里问“有没有另一个实体的行指向我，并满足条件”：
+**关联存在性：`any(实体, 条件)`。** 在查询步骤的谓词里问“有没有另一个实体的行指向我，并满足条件”：
 
 ```sir-declarations
 entity Course persistent {
@@ -1163,6 +1163,7 @@ view CourseView from Course {
   field code: Text;
 }
 input PageInput {
+  field onlyActive: Flag;
   field page: PageNo;
   field size: PageSize;
 }
@@ -1175,7 +1176,7 @@ capability ActiveCourses {
   expose query;
   workflow {
     find Course
-      where any(Enrollment, course == item and active == true)
+      where any(Enrollment, course == item and active == input.onlyActive)
       order by code ascending
       Page input.page, input.size else InvalidPage
     as courses;
@@ -1184,7 +1185,7 @@ capability ActiveCourses {
 }
 ```
 
-`any` 只能出现在 `find` 的谓词里，不能嵌套，条件里必须有 `指向根实体的Ref字段 == item`。
+`any` 只能出现在查询步骤的谓词里，不能嵌套，条件里必须有 `指向根实体的Ref字段 == item`。
 
 ### 5.4 `create`
 
@@ -1373,6 +1374,63 @@ return 变量;
 ```
 
 返回的类型必须和 `output` 一致（`SIR-TYPE-001`）。没有 `return` 或有多个都不行。
+
+### 5.9 `exists` 与 `count`：只读一个布尔值或数量
+
+```text
+exists 实体 where 条件 as 是否存在;
+count 实体 where 条件 as 数量;
+```
+
+两者都是显式的工作流步骤，执行到这里才读数据库，结果变量之后可以复用。`item` 只在本次查询的谓词内有效。`exists` 是 Boolean，零行时 false；`count` 是非负的核心 Int64（Java long），零行时 0。没有隐含分页，也不取回全表后在 Java 中数行；实体 `scope` 和 G7 空值规则均生效。不能附加 `Page`、排序或视图投影。`exists`、`count` 是上下文词，不增加全局保留字。
+
+```sir-declarations
+entity Ticket persistent {
+  identity id: Id generated auto;
+  field priority: Count;
+}
+input CheckTickets {
+  field minimum: Count;
+  field expected: Serial;
+  field hasMatches: Flag;
+}
+error Mismatch;
+capability CheckMatchingTickets {
+  input CheckTickets;
+  output Unit;
+  fails Mismatch;
+  requires readonly;
+  expose query at "/tickets/check";
+  workflow {
+    exists Ticket where item.priority >= input.minimum as anyMatch;
+    count Ticket where item.priority >= input.minimum as total;
+    validate anyMatch == input.hasMatches and total == input.expected else Mismatch;
+    return unit;
+  }
+}
+```
+
+每个查询步骤对应一条 SQL。Spring Boot 目标将 exists 降级成只投影主键、带固定 `LIMIT 1` 的读取，再转成布尔值；count 使用 `COUNT(*)`。这些物理选择和语句数量都记录在 Lowered IR 中。若读取 actor 的其它字段，仍会按第 4.2 节独立加载 actor 行，不能把步骤的单条查询预算误当成整次请求只查一次。
+
+数量不是布尔值：
+
+```sir-error SIR-TYPE-001
+entity Ticket persistent { identity id: Id generated auto; }
+error Mismatch;
+capability WrongCount {
+  output Unit;
+  fails Mismatch;
+  requires readonly;
+  expose query;
+  workflow {
+    count Ticket where true as total;
+    validate total else Mismatch;
+    return unit;
+  }
+}
+```
+
+**不是并发保护。** `count < 5` 或“不存在”后插入，两个请求仍可能同时通过；`requires atomic` 不会自动锁住查询范围。硬限额继续组合行内原子计数和守卫；固定预约时段用联合唯一。没有通用锁、任意时间段并发排他、SUM／AVG／分组，也没有把 `any`／`count` 放进任意表达式或更新守卫。
 
 ## 6. 表达式
 
@@ -1625,7 +1683,7 @@ use Crud {
 | `SIR-FLOW-002` | `return` 的数量不对，或 `return` 后面还有步骤 |
 | `SIR-FLOW-003` | 用到的错误没有在 `fails` 里声明 |
 | `SIR-FLOW-004` | 只读能力里有 `create`／`update`／`persist`／`delete` |
-| `SIR-FLOW-005`／`006` | `any` 出现在 `find` 的谓词之外／`any` 里面又嵌套了 `any` |
+| `SIR-FLOW-005`／`006` | `any` 出现在 `find`／`exists`／`count` 的谓词之外／`any` 里面又嵌套了 `any` |
 | `SIR-SOURCE-*` | 多文件工程的问题：入口没列出文件、`import` 找不到声明、没 import 就用了别的文件的声明（`SIR-SOURCE-VISIBILITY-001`） |
 | `SIR-LOWER-*` | 软件本身合法，但目标（Java／Spring Boot／MySQL）暂不支持 |
 

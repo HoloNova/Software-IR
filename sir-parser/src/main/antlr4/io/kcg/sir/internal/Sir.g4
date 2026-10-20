@@ -279,6 +279,7 @@ workflowStep
     : validateStep
     | loadStep
     | findStep
+    | scalarQueryStep
     | createStep
     | updateStep
     | persistStep
@@ -299,6 +300,11 @@ loadStep
 
 findStep
     : FIND entity=IDENT WHERE predicate=expression findOrderClause? findPageClause? AS result=IDENT SEMI
+    ;
+
+scalarQueryStep
+    : {_input.LT(1).getText().equals("exists") || _input.LT(1).getText().equals("count")}? kind=IDENT
+      entity=IDENT WHERE predicate=expression AS result=IDENT SEMI
     ;
 
 findOrderClause

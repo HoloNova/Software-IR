@@ -26,6 +26,7 @@ software DualTokenDesk {
       field body: Text @id("note-text");
       field pinned: Flag default true;
       field state: Text where length(1, 64) default "open";
+      scope state != "hidden";
     }
     use Crud {
       entity: Note;
@@ -56,6 +57,63 @@ software DualTokenDesk {
     input FavoriteScore {
       field id: Id;
       field score: Optional<Count>;
+    }
+    input FavoriteCountCheck {
+      field expected: Serial;
+      field hasRows: Flag;
+      field minimum: Optional<Count>;
+    }
+    error CountRejected http 409;
+    capability CheckFavoriteCount {
+      actor Ref<User>;
+      input FavoriteCountCheck;
+      output Unit;
+      fails CountRejected;
+      requires authenticated;
+      requires readonly;
+      expose query at "/favorites/check-count";
+      workflow {
+        count Favorite where item.owner == actor and (input.minimum is none or item.score >= input.minimum) as actual;
+        exists Favorite where item.owner == actor and (input.minimum is none or item.score >= input.minimum) as anyRows;
+        validate actual == input.expected and anyRows == input.hasRows else CountRejected;
+        return unit;
+      }
+    }
+    capability CheckVisibleNoteCount {
+      actor Ref<User>;
+      input FavoriteCountCheck;
+      output Unit;
+      fails CountRejected;
+      requires authenticated;
+      requires readonly;
+      expose query at "/notes/check-count";
+      workflow {
+        count Note where item.author == actor as actual;
+        exists Note where item.author == actor as anyRows;
+        validate actual == input.expected and anyRows == input.hasRows else CountRejected;
+        return unit;
+      }
+    }
+    input FavoritedNoteFilter {
+      field text: Text;
+      field minimum: Optional<Count>;
+      field page: PageNo;
+      field size: PageSize;
+    }
+    capability FavoritedNotes {
+      actor Ref<User>;
+      input FavoritedNoteFilter;
+      output Page<NoteView>;
+      fails BadPage;
+      requires authenticated;
+      requires readonly;
+      expose query at "/notes/favorited";
+      workflow {
+        find Note where any(Favorite, note == item and owner == actor and item.body == input.text
+          and (input.minimum is none or score >= input.minimum))
+          order by id ascending Page input.page, input.size else BadPage as rows;
+        return rows;
+      }
     }
     error BadPage;
     error ScoreRejected http 409;

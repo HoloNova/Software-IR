@@ -26,7 +26,7 @@ class SourceEditorTest {
     private static final Selector DECLARATIONS = Selector.root().slot("declarations");
 
     private static String source() {
-        return EditFixtures.courseCatalog();
+        return EditFixtures.courseCatalog().replace("\r\n", "\n");
     }
 
     private static final SourceId ENTRY = SourceId.of("project.sir");

@@ -446,6 +446,10 @@ final class ValidatePass {
                   }
                });
                continue;
+         case io.kcg.sir.ast.AstScalarQueryStep s:
+               this.validateStringMatchShape(s.predicate());
+               this.rejectArithmeticTheQueryCannotCarry(s.predicate(), false);
+               break;
          case AstFindStep s:
                this.validateFindStep(s, capDecl, failsSet);
                break;
@@ -885,6 +889,7 @@ final class ValidatePass {
          switch (step) {
             case AstValidateStep s -> this.checkSecretReads(s.condition(), false);
             case AstLoadStep s -> this.checkSecretReads(s.idExpression(), false);
+            case io.kcg.sir.ast.AstScalarQueryStep s -> this.checkSecretReads(s.predicate(), true);
             case AstFindStep s -> {
                this.checkSecretReads(s.predicate(), true);
                s.page().ifPresent(page -> {
@@ -1506,6 +1511,7 @@ final class ValidatePass {
          case AstValidateStep s -> walkPresent(s.condition(), action);
          case AstLoadStep s -> walkPresent(s.idExpression(), action);
          case AstFindStep s -> walkPresent(s.predicate(), action);
+         case io.kcg.sir.ast.AstScalarQueryStep s -> walkPresent(s.predicate(), action);
          case AstCreateStep s -> s.bindings().forEach(binding -> walkPresent(binding.value(), action));
          case AstUpdateStep s -> {
             s.guard().ifPresent(guard -> walkPresent(guard, action));
@@ -1552,6 +1558,8 @@ final class ValidatePass {
                this.validateExistenceUsage(page.page(), ExistenceUsage.REJECTED);
                this.validateExistenceUsage(page.size(), ExistenceUsage.REJECTED);
             });
+         } else if (step instanceof io.kcg.sir.ast.AstScalarQueryStep query) {
+            this.validateExistenceUsage(query.predicate(), ExistenceUsage.ALLOWED);
          } else if (step instanceof AstValidateStep validateStep) {
             this.validateExistenceUsage(validateStep.condition(), ExistenceUsage.REJECTED);
          } else if (step instanceof AstLoadStep loadStep) {
@@ -1576,7 +1584,7 @@ final class ValidatePass {
          case AstAnyExpression any -> {
             if (usage == ExistenceUsage.REJECTED) {
                this.diagnostics.add(DiagnosticBuilder.error(
-                  "SIR-FLOW-005", "any 只能出现在 find 的 where 谓词中", any.span()));
+                  "SIR-FLOW-005", "any 只能出现在 find/exists/count 的 where 谓词中", any.span()));
             } else if (usage == ExistenceUsage.NESTED) {
                this.diagnostics.add(DiagnosticBuilder.error(
                   "SIR-FLOW-006", "any 的条件内不能再出现 any: " + any.entity().text(), any.span()));

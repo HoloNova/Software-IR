@@ -121,6 +121,8 @@ class TypedReferenceSiteContractTest {
                 update user { state: Status.ACTIVE; }
                 persist user;
                 delete user;
+                exists User where item.id == input.id as found;
+                count User where item.id == input.id as total;
                 find User where item.id == input.id as users;
                 return users;
               }
@@ -695,6 +697,10 @@ class TypedReferenceSiteContractTest {
                     collectExpressionRefs(page.size(), sink);
                     sink.put(page.error().id(), page.error().text());
                 });
+            }
+            case io.kcg.sir.ast.AstScalarQueryStep s -> {
+                sink.put(s.entity().id(), s.entity().text());
+                collectExpressionRefs(s.predicate(), sink);
             }
             case AstCreateStep s -> {
                 sink.put(s.entity().id(), s.entity().text());

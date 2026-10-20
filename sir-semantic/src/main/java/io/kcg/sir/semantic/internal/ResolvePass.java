@@ -786,6 +786,20 @@ final class ResolvePass {
             SirType resultType = s.page().isPresent() ? outputType : itemType == null ? null : new ListType(itemType);
                this.registerStepResultVar(s.result(), s.id(), capScopeId, visibleVars, resultType);
                break;
+            case io.kcg.sir.ast.AstScalarQueryStep s:
+               this.resolveEntityRef(s.entity(), ReferenceRole.SCALAR_QUERY_ENTITY);
+               SymbolId queryScope = SymbolIdFactory.capabilityStepScope(capScopeId, s.id().value());
+               this.scopeSymbols.put(queryScope, new ArrayList<>());
+               this.scopeParents.put(queryScope, capScopeId);
+               SymbolId queryItem = SymbolIdFactory.capabilityStepVariable(capScopeId, s.id().value(), "item");
+               this.addSymbol(new Symbol.VariableSymbol(queryItem, "item", s.span(), this.buildRefType(s.entity().text()), null), queryScope);
+               this.findItemBindings.put(s.id(), queryItem);
+               Set<String> queryVars = new LinkedHashSet<>(visibleVars);
+               queryVars.add("item");
+               this.resolveExpression(s.predicate(), capName, queryScope, queryVars, queryItem, null);
+               this.registerStepResultVar(s.result(), s.id(), capScopeId, visibleVars,
+                  s.kind() == io.kcg.sir.ast.AstScalarQueryStep.Kind.EXISTS ? PrimitiveType.BOOLEAN : PrimitiveType.INT64);
+               break;
             case AstCreateStep s:
                this.resolveEntityRef(s.entity(), ReferenceRole.CREATE_ENTITY);
 
@@ -1012,7 +1026,7 @@ final class ResolvePass {
           if (currentItemSymbol != null) {
              this.bindReference(expr.name(), ReferenceRole.EXPRESSION_NAME, currentItemSymbol);
           } else {
-             this.diagnostics.add(DiagnosticBuilder.error("SIR-FLOW-001", "item 仅在 Find 谓词内可用: " + name, expr.span()));
+             this.diagnostics.add(DiagnosticBuilder.error("SIR-FLOW-001", "item 仅在 find/exists/count 谓词内可用: " + name, expr.span()));
           }
        } else if (anyEntityName != null && this.entityFieldSymbols.getOrDefault(anyEntityName, Map.of()).containsKey(name)) {
           this.bindReference(

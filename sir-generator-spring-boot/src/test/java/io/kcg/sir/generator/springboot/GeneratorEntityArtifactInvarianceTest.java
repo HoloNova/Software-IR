@@ -64,13 +64,23 @@ class GeneratorEntityArtifactInvarianceTest {
         assertFalse(mapper.contains("FOR UPDATE"), mapper);
     }
 
+    @Test
+    void scalarQueryCapabilitiesDoNotAlterTheEntityMapper() {
+        String source = GeneratorTestSupport.resourceText("valid/scalar-queries.sir");
+        String mapper = "/persistence/EntryMapper.java";
+        String withQueries = GeneratorTestSupport.contentEndingWith(GeneratorTestSupport.generateSuccessFromText(source), mapper);
+        String withoutQueries = GeneratorTestSupport.contentEndingWith(GeneratorTestSupport.generateSuccessFromText(removeCapability(source, "Check")), mapper);
+        assertEquals(withQueries, withoutQueries);
+    }
+
     /** Removes one capability block, keeping its input/error declarations behind (Q3 convention). */
     private static String removeCapability(String source, String capabilityName) {
         String marker = "capability " + capabilityName + " {";
         int start = source.indexOf(marker);
         assertTrue(start > 0, "the fixture must declare " + capabilityName);
-        int end = source.indexOf("\n    }\n", start);
+        String closing = source.contains("\r\n") ? "\r\n    }\r\n" : "\n    }\n";
+        int end = source.indexOf(closing, start);
         assertTrue(end > start, "the capability block must be closed");
-        return source.substring(0, start) + source.substring(end + "\n    }\n".length());
+        return source.substring(0, start) + source.substring(end + closing.length());
     }
 }

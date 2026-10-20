@@ -62,6 +62,12 @@ software TaskBoard {
       field name: Name;
       field description: Optional<Remark>;
     }
+    entity ProjectMember persistent {
+      identity id: Id generated auto;
+      field project: Ref<Project>;
+      field user: Ref<User>;
+      unique (project, user);
+    }
     entity Task persistent {
       identity id: Id generated auto;
       field project: Ref<Project>;
@@ -107,7 +113,8 @@ software TaskBoard {
       expose command at "/projects/{projectId}/tasks";
       workflow {
         load Project by input.projectId as project else ProjectNotFound;
-        validate project.owner == actor else Forbidden;
+        exists ProjectMember where item.project == project and item.user == actor as isMember;
+        validate project.owner == actor or isMember else Forbidden;
         create Task as task {
           project: project;
           title: input.title;
@@ -139,13 +146,39 @@ software TaskBoard {
       workflow {
         load Task by input.taskId as task else TaskNotFound;
         load Project by task.project as project else ProjectNotFound;
-        validate project.owner == actor else Forbidden;
+        exists ProjectMember where item.project == project and item.user == actor as isMember;
+        validate project.owner == actor or isMember else Forbidden;
         load User by input.userId as user else UserNotFound;
         update task {
           assignee: user;
         }
         persist task;
         return task;
+      }
+    }
+    input AddMember {
+      field projectId: Id;
+      field userId: Id;
+    }
+    error AlreadyMember http 409;
+    capability AddProjectMember {
+      actor Ref<User>;
+      input AddMember;
+      output Unit;
+      fails AlreadyMember;
+      fails Forbidden;
+      fails ProjectNotFound;
+      fails UserNotFound;
+      requires authenticated;
+      requires atomic;
+      expose command at "/projects/{projectId}/members";
+      workflow {
+        load Project by input.projectId as project else ProjectNotFound;
+        validate project.owner == actor else Forbidden;
+        load User by input.userId as user else UserNotFound;
+        create ProjectMember as member { project: project; user: user; }
+        persist member else AlreadyMember;
+        return unit;
       }
     }
     input Move {
@@ -157,13 +190,16 @@ software TaskBoard {
       input Move;
       output TaskView;
       fails Forbidden;
+      fails ProjectNotFound;
       fails TaskNotFound;
       requires authenticated;
       requires atomic;
       expose command put at "/tasks/{taskId}/state";
       workflow {
         load Task by input.taskId as task else TaskNotFound;
-        validate task.assignee == actor else Forbidden;
+        load Project by task.project as project else ProjectNotFound;
+        exists ProjectMember where item.project == project and item.user == actor as isMember;
+        validate task.assignee == actor or project.owner == actor or isMember else Forbidden;
         update task {
           state: input.state;
         }
@@ -190,7 +226,8 @@ software TaskBoard {
       expose query at "/projects/{projectId}/tasks";
       workflow {
         load Project by input.projectId as project else ProjectNotFound;
-        validate project.owner == actor else Forbidden;
+        exists ProjectMember where item.project == project and item.user == actor as isMember;
+        validate project.owner == actor or isMember else Forbidden;
         find Task
            where item.project == project
              and (input.state is none or item.state == input.state)
@@ -230,7 +267,8 @@ software TaskBoard {
       expose query at "/projects/{projectId}/tasks/unassigned";
       workflow {
         load Project by input.projectId as project else ProjectNotFound;
-        validate project.owner == actor else Forbidden;
+        exists ProjectMember where item.project == project and item.user == actor as isMember;
+        validate project.owner == actor or isMember else Forbidden;
         find Task where item.project == project and item.assignee is none
           order by priority descending, id ascending
           Page input.page, input.size else BadPage as rows;

@@ -74,6 +74,33 @@ public record SpringBootWorkflow(LoweredNodeId id, LoweredOrigin origin, List<Sp
       }
    }
 
+   public enum ScalarResult { EXISTS, COUNT }
+
+   /** Physical query choices are made by Lowering, including the one-row existence bound. */
+   public record ScalarQueryPlan(ScalarResult kind, String mapperMethod,
+      java.util.Optional<String> projectionProperty, java.util.Optional<String> tailSql, int statements) {
+      public ScalarQueryPlan {
+         Objects.requireNonNull(kind, "kind");
+         requireText(mapperMethod, "mapperMethod");
+         Objects.requireNonNull(projectionProperty, "projectionProperty");
+         Objects.requireNonNull(tailSql, "tailSql");
+      }
+   }
+
+   public record ScalarQueryStep(LoweredNodeId id, LoweredOrigin origin, SymbolId entitySymbol,
+      SpringExpression predicate, List<SpringExpression.StringMatch> stringMatches, ScalarQueryPlan plan,
+      Variable result, Variable itemVariable) implements Step {
+      public ScalarQueryStep {
+         requireStep(id, origin);
+         Objects.requireNonNull(entitySymbol, "entitySymbol");
+         Objects.requireNonNull(predicate, "predicate");
+         stringMatches = List.copyOf(Objects.requireNonNull(stringMatches, "stringMatches"));
+         Objects.requireNonNull(plan, "plan");
+         Objects.requireNonNull(result, "result");
+         Objects.requireNonNull(itemVariable, "itemVariable");
+      }
+   }
+
    public record FindStep(
       LoweredNodeId id,
       LoweredOrigin origin,
@@ -280,6 +307,7 @@ public record SpringBootWorkflow(LoweredNodeId id, LoweredOrigin origin, List<Sp
       SpringBootWorkflow.LoadStep,
       SpringBootWorkflow.LoadActorStep,
       SpringBootWorkflow.FindStep,
+      SpringBootWorkflow.ScalarQueryStep,
       SpringBootWorkflow.CreateStep,
       SpringBootWorkflow.UpdateStep,
       SpringBootWorkflow.PersistStep,

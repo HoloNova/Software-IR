@@ -75,6 +75,72 @@ software CampusBlog {
     }
     // GAP: a post can have one category, not several tags. "Posts with tag X" would need an existence test against a
     // value the client chooses (`any(PostTag, post == item and tag == wanted)`), which this target cannot translate.
+    // G4: the earlier GAP describes the old restriction; PostTag now carries multiple tags and filters bind the selected value.
+    entity Tag persistent {
+      identity id: Id generated auto;
+      field name: Code unique;
+    }
+    entity PostTag persistent {
+      identity id: Id generated auto;
+      field post: Ref<Post>;
+      field tag: Ref<Tag>;
+      unique (post, tag);
+    }
+    view TagView from Tag { field id: Id; field name: Code; }
+    error TagNameTaken http 409;
+    error TagNotFound http 404;
+    error TagAttached http 409;
+    capability CreateTag {
+      actor Ref<User>;
+      input NewCategory;
+      output TagView;
+      fails TagNameTaken;
+      requires authenticated;
+      requires atomic;
+      expose command at "/tags";
+      workflow {
+        create Tag as tag { name: input.name; }
+        persist tag else TagNameTaken;
+        return tag;
+      }
+    }
+    input AttachTagInput { field postId: Id; field tagId: Id; }
+    capability AttachTag {
+      actor Ref<User>;
+      input AttachTagInput;
+      output Unit;
+      fails Forbidden;
+      fails PostNotFound;
+      fails TagAttached;
+      fails TagNotFound;
+      requires authenticated;
+      requires atomic;
+      expose command at "/posts/{postId}/tags";
+      workflow {
+        load Post by input.postId as post else PostNotFound;
+        validate post.author == actor else Forbidden;
+        load Tag by input.tagId as tag else TagNotFound;
+        create PostTag as link { post: post; tag: tag; }
+        persist link else TagAttached;
+        return unit;
+      }
+    }
+    input TagQuery { field tagId: Id; field page: PageNo; field size: PageSize; }
+    capability PostsByTag {
+      input TagQuery;
+      output Page<PublicPost>;
+      fails BadPage;
+      fails TagNotFound;
+      requires readonly;
+      expose query at "/tags/{tagId}/posts";
+      workflow {
+        load Tag by input.tagId as wanted else TagNotFound;
+        find Post where item.state == PostState.PUBLISHED and any(PostTag, post == item and tag == wanted)
+          order by createdAt descending, id descending
+          Page input.page, input.size else BadPage as rows;
+        return rows;
+      }
+    }
     entity Category persistent {
       identity id: Id generated auto;
       field name: Code unique;

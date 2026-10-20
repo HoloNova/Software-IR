@@ -499,6 +499,12 @@ public final class SpringBootInputValidator {
             this.validateDeclarationKind(value.errorSymbol(), NormalizedError.class, capability);
             value.keyField().ifPresent(key -> this.validateLoadKey(value, key, capability));
             break;
+         case NormalizedStep.ScalarQueryStep value:
+            this.validateDeclarationKind(value.entitySymbol(), NormalizedEntity.class, capability);
+            this.validateExpression(value.predicate(), capability.id(), actorAccess);
+            this.validateVariable(value.resultVariable(), capability);
+            this.validateVariable(value.itemVariable(), capability);
+            break;
          case FindStep value:
             this.validateDeclarationKind(value.entitySymbol(), NormalizedEntity.class, capability);
             this.validateExpression(value.predicate(), capability.id(), actorAccess);
@@ -698,7 +704,8 @@ public final class SpringBootInputValidator {
             this.validateExistsCondition(value.operand(), related, root, owner);
          }
          case NameExpression value -> {
-            if (!this.isFieldOf(value.resolvedSymbol(), related) && !this.isFindItem(value.resolvedSymbol())) {
+            if (!this.isFieldOf(value.resolvedSymbol(), related) && !this.isFindItem(value.resolvedSymbol())
+                  && !this.isExternalQueryValue(value)) {
                this.unsupportedExistsCondition(value, owner);
             }
          }
@@ -711,7 +718,7 @@ public final class SpringBootInputValidator {
                return;
             }
 
-            if (!onEnumType) {
+            if (!onEnumType && !this.isExternalQueryValue(value)) {
                this.unsupportedExistsCondition(value, owner);
             }
          }
@@ -725,6 +732,14 @@ public final class SpringBootInputValidator {
          }
          default -> this.unsupportedExistsCondition(expression, owner);
       }
+   }
+
+   private boolean isExternalQueryValue(NormalizedExpression expression) {
+      if (expression instanceof MemberExpression member) {
+         return this.isExternalQueryValue(member.receiver());
+      }
+      return expression instanceof NameExpression name && !this.isFindItem(name.resolvedSymbol())
+         && this.model.symbols().byId(name.resolvedSymbol()).orElse(null) instanceof VariableSymbol;
    }
 
    private boolean isFieldOf(SymbolId symbol, NormalizedEntity entity) {

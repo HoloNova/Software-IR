@@ -532,6 +532,15 @@ final class TypePass {
                s.page().ifPresent(page -> this.typePageClause(page, capScopeId, visibleVars));
                visibleVars.add(s.result().text());
                break;
+            case io.kcg.sir.ast.AstScalarQueryStep s:
+               Set<String> queryVars = new LinkedHashSet<>(visibleVars);
+               queryVars.add("item");
+               SirType queryType = this.typeExpression(s.predicate(), SymbolIdFactory.capabilityStepScope(capScopeId, s.id().value()), queryVars);
+               if (queryType != null && !TypeRules.isBoolean(queryType)) {
+                  this.diagnostics.add(DiagnosticBuilder.error("SIR-TYPE-001", "查询谓词必须是 Boolean", s.predicate().span()));
+               }
+               visibleVars.add(s.result().text());
+               break;
             case AstCreateStep s:
                Set<SymbolId> boundFieldIds = new LinkedHashSet<>();
 

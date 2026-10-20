@@ -11,6 +11,7 @@ import subprocess
 import sys
 import traceback
 import urllib.error
+import urllib.parse
 import urllib.request
 
 p = argparse.ArgumentParser()
@@ -321,6 +322,41 @@ try:
     request('/api/favorites/raise', {'id': first, 'score': 999}, token=owner, expected=409, base=server)
     request('/api/favorites/raise', {'id': first, 'score': None}, token=owner, expected=409, base=server)
     assert sql(f'SELECT score FROM favorite WHERE id={int(first)}', instance=acceptance_instance).strip() == '1000'
+    # G2/G4: scalar reads stay in SQL; correlated request values (including text) stay bound parameters.
+    def check_count(path, expected, has_rows, minimum=None, token=owner, status=200):
+        query = {'expected': expected, 'hasRows': str(has_rows).lower()}
+        if minimum is not None:
+            query['minimum'] = minimum
+        exchange(f'/api/{path}/check-count?' + urllib.parse.urlencode(query), None, token, status, base=server, method='GET')
+    check_count('favorites', 7, True)
+    check_count('favorites', 2, True, 1000)
+    check_count('favorites', 1, True, 1001)
+    check_count('favorites', 0, False, 1002)
+    check_count('favorites', 8, True, status=409)
+    check_count('favorites', 7, False, status=409)
+    other = request('/api/login', {'name': 'v2-owner-b', 'password': 'test-password'}, expected=201, base=server)['accessToken']
+    check_count('favorites', 0, False, token=other)
+    check_count('notes', 7, True)
+    check_count('notes', 0, False, token=other)
+    def favorited_notes(text, minimum=None, token=owner):
+        query = {'text': text, 'page': 1, 'size': 100}
+        if minimum is not None:
+            query['minimum'] = minimum
+        return request('/api/notes/favorited?' + urllib.parse.urlencode(query), token=token, base=server)['records']
+    assert [row['id'] for row in favorited_notes('v3-kept')] == [kept['id']]
+    assert [row['id'] for row in favorited_notes('v3-kept', 1000)] == [kept['id']]
+    assert favorited_notes('v3-kept', 1001) == []
+    assert favorited_notes("v3-kept' OR 1=1 --") == []
+    assert favorited_notes('v3-kept', token=other) == []
+    # Note's declared scope excludes hidden rows from both scalar reads and correlated root queries.
+    request('/api/update-note', {'id': kept['id'], 'body': 'v3-kept', 'pinned': True, 'state': 'hidden'}, token=owner, base=server)
+    check_count('notes', 6, True)
+    assert favorited_notes('v3-kept') == []
+    sql(f"UPDATE `note` SET state='hidden' WHERE author_id=(SELECT id FROM `user` WHERE name='v2-owner-a')", instance=acceptance_instance)
+    check_count('notes', 0, False)
+    # Hidden rows cannot be loaded by the public API; restore only this conformance fixture through SQL.
+    sql(f"UPDATE `note` SET state='open' WHERE author_id=(SELECT id FROM `user` WHERE name='v2-owner-a')", instance=acceptance_instance)
+    check_count('notes', 7, True)
     long_state = 'x' * 40
     assert request('/api/update-note', {'id': kept['id'], 'body': 'v3-kept', 'pinned': True, 'state': long_state}, token=owner, base=server)['state'] == long_state
     assert 'KCG_UPDATE_CURRENT' in deploy('update', instance=acceptance_instance, state=acceptance_state, package=a.v3_package)

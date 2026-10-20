@@ -265,7 +265,13 @@ public sealed interface SpringExpression
       permits SpringExpression.ExistsArgument.Text,
       SpringExpression.ExistsArgument.Integral,
       SpringExpression.ExistsArgument.Decimal,
-      SpringExpression.ExistsArgument.Flag {
+      SpringExpression.ExistsArgument.Flag,
+      SpringExpression.ExistsArgument.Value {
+      /** A request-time value captured by its existing binding; never part of the SQL text. */
+      record Value(SpringExpression expression) implements SpringExpression.ExistsArgument {
+         public Value { Objects.requireNonNull(expression, "expression"); }
+      }
+
       record Text(String value) implements SpringExpression.ExistsArgument {
          public Text {
             Objects.requireNonNull(value, "value");

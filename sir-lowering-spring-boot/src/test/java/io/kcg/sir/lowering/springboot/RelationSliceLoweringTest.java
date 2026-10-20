@@ -161,10 +161,10 @@ class RelationSliceLoweringTest {
     }
 
     @Test
-    void anExistenceConditionTheTargetCannotExpressIsRejectedBeforeLowering() {
+    void aClockExpressionInsideRelatedSqlRemainsRejectedBeforeLowering() {
         String source = LoweringTestSupport.source(SOURCE)
-                .replace("field size: PageSize;", "field size: PageSize;\n      field status: EnrollmentStatus;")
-                .replace("status == EnrollmentStatus.ACTIVE", "status == input.status");
+                .replace("field status: EnrollmentStatus;", "field status: EnrollmentStatus;\n      field expiresAt: Moment;")
+                .replace("status == EnrollmentStatus.ACTIVE", "expiresAt < now()");
 
         List<LoweringDiagnostic> diagnostics = LoweringTestSupport.inputDiagnostics(source);
         List<LoweringDiagnostic> matching = diagnostics.stream()

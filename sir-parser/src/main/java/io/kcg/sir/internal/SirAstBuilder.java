@@ -507,6 +507,12 @@ final class SirAstBuilder {
                     page,
                     name(value.result));
         }
+        if (context.scalarQueryStep() != null) {
+            var value = context.scalarQueryStep();
+            return new AstScalarQueryStep(ids.id(path), source.span(value),
+                    value.kind.getText().equals("exists") ? AstScalarQueryStep.Kind.EXISTS : AstScalarQueryStep.Kind.COUNT,
+                    nameRef(value.entity, path, "entity"), expression(value.predicate, path), name(value.result));
+        }
         if (context.createStep() != null) {
             var value = context.createStep();
             return new AstCreateStep(

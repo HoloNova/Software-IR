@@ -425,3 +425,72 @@ use 登录 {
 **没有做。** 可选值加减、时间平移、空引用继续访问成员、默认值运算、隐式类型收窄、可选文本作为 containsLiteral 的右操作数均未放开。可选筛选不是自动过滤或自动授权。G7 之外的缺口没有借此展开。
 
 **证据。** 本机采用 Windows 11、Temurin 21.0.11、Maven 3.9.14，串行定向测试，Maven 堆 768 MiB、测试 fork 堆 512 MiB。RED 是新语法被解析器拒绝及降级计划尚不存在；语义、降级、生成契约与 Java 真值表随后转绿。详细命令、数量及环境缺口见[验证说明](../qualification/README.md)。没有运行全量闸门、八题生成工程离线构建或真实 MySQL／HTTP；同源码 CI 为 NOT_RUN。Windows 的部署导出测试在现有安全读源边界失败（`SecureDirectoryStream` 不可用），没有为验收而放宽它。
+
+## 18. 多行查询：关联参数与 exists／count 步骤（G4/G2，已确认并实现）
+
+**状态。** 负责人已授权推进下一阶段。G7 已提交并推送为 `33f960b`，按要求不等待或核验 CI；这不是 CI 通过的声明。负责人随后确认本节方案，G4/G2 已贯通生产链与定向验证；负责人随后已授权将本批提交并推送、不等待 CI；实现随本提交保存，没有已核验的同源码 CI 证据。
+
+### 18.1 当前为什么写不出
+
+不是缺少一个现成的 `rows.count` 属性：`find` 当前面向读取／分页投影，取回列表后数行既可能只数当前页，也可能读全表，不能代替数据库计数。现有 `any` 也不是通用查询函数：
+
+- `TypePass.typeAnyExpression` 要求条件里有 `<Ref 字段> == item`，明确把它限定为关联当前根行的子查询；`NormalizePass` 记录该连接字段，不能简单去掉 Type 的限制而沿用后续模型。
+- `ValidatePass.validateExistenceUsage` 拒绝在工作流校验、赋值等位置放 `any`（`SIR-FLOW-005`），同时拒绝嵌套 `any`（`SIR-FLOW-006`）。
+- `SpringBootInputValidator.validateExistsCondition` 与 `SpringBootModelLowerer.memberReference` 只接受相关列、根行列、字面量和枚举成员，不接受 `input.tag` 等外部值，因此 G4 在 Lowering 被拒绝。
+
+提案把“关联子查询可绑定外部值”和“工作流读出一个布尔／数量”分开实现，共用既有的类型检查、引用绑定、过滤语义及 G7 空值规则。
+
+### 18.2 先补 G4：关联条件的外部值按参数绑定
+
+保留 `any(PostTag, post == item and tag == input.tag)` 的现有形状；其中 `tag` 与 `input.tag` 必须有兼容的引用类型（例如 `Ref<Tag>`），不为了查询把任意主键或整数自动当成引用。
+
+在目前允许的比较位置增加外部的请求字段、actor、已加载行的标量／引用值。Resolve 仍只绑定一次；Lowering 根据 binding 区分数据库列与请求时的值，将后者写入有类型的参数计划，按固定遍历顺序编号。Generator 只渲染参数表达式和绑定，不能把请求值拼进 SQL，也不能自己重新猜变量或列。
+
+可选参数沿用 G7：缺失时普通比较为 false；“没传就不筛选”必须在外层显式写 `input.tag is none or any(...)`。保留关联根行的要求，不把缺少连接的 `any` 静默解释为查整张表。仍不支持嵌套 any、任意 SQL 或空引用成员访问。
+
+### 18.3 再补 G2：明确的 exists／count 工作流步骤
+
+已实现的写法（声明与完整示例见语言参考第 5.9 节）：
+
+```text
+exists Loan where item.reader == actor and item.returned == false as hasOpenLoans;
+count Loan where item.reader == actor and item.returned == false as openLoanCount;
+validate not hasOpenLoans else HasOpenLoans;
+```
+
+`exists`／`count` 按上下文识别，不新增全局保留字。`item` 和已有 `find` 一样表示本次查询的行，查询结果按 `as` 声明普通的强类型工作流变量。`exists` 返回 Boolean，至少一行符合即为 true，零行为 false；`count` 返回非负的核心 Int64（Java long），没有匹配时为 0，不返回 null，不改变现有 `Count` 字段的 32 位类型。
+
+每个步骤执行一条数据库查询。Lowering 明确存在查询／计数查询计划、源实体、谓词、结果变量及语句数量；exists 选择主键投影、固定 `LIMIT 1` 和 `selectObjs` 后转 Boolean，count 选择 `selectCount`／`COUNT(*)`，不取回全部行计数，不以“查总数再判断非零”实现存在查询。这样复用既有 Mapper，不因某个能力是否存在而改变实体 Mapper；实体产物不变性测试同时覆盖新增查询能力的删除。两者统计的是满足条件的源实体行，不是关联 join 的重复行，不带分页、排序或视图加载。
+
+新步骤接入当前实体 `scope` 的同一注入链，不能让计数或存在查询绕过软删除范围。过滤继续复用 find 的 Boolean 组合、比较与 G7 空值行为；相关 `any` 复用 G4 的参数计划。源身份、字段和查询变量必须经过正式 ReferenceRole／binding，SourceEditor 与 SIR 写回同步覆盖新节点，不新增业务专用 Change 指令。
+
+### 18.4 为什么采用步骤，而不直接放开表达式
+
+- `rows.count`／`rows.empty` 容易混淆“当前页有多少”和“整个筛选有多少”，也诱导先加载数据；不采用。
+- 直接让 `any`／`count` 出现在任意表达式，会把数据库读取藏进短路布尔、更新绑定或单语句更新守卫中，还需要决定重复求值与执行顺序；这不是本次普通多行查询所必需，不采用。
+- 显式步骤多一行，但读取发生在哪里、读几次、之后复用什么值都可见；可以组合现有 validate、更新与返回，不为借书、预约、选课各加一个关键词。代价是本阶段 `validate any(...)` 仍拒绝，应先用 exists 步骤绑定结果。
+
+### 18.5 读取不等于并发约束
+
+`count < 5` 后插入不是并发限额：两个请求可能都读到 4，再各插一行。`requires atomic` 也不自动把任意范围查询变成跨行互斥。需要硬上限的借阅数、名额等，继续使用已有的行内原子计数与守卫，并与业务写入在同一事务内完成；仅新增 count 不能把试写报告的“并发安全借阅上限”记为完成。
+
+同样，“不存在重叠预约”后插入也不能由 exists 自动保证并发互斥。固定时段继续由已有联合唯一约束兜底；任意时间段的并发排他不在本提案中隐式承诺。只读数量／存在性是本次能力，通用锁、隔离级别控制、查询后自动锁定不是。
+
+### 18.6 实施顺序、验收与范围
+
+1. G4：先写当前 `SIR-LOWER-FEATURE-001` 的最小复现，再补外部参数的 Lowered 计划及校验；覆盖参数顺序、同一参数重复出现、外部引用编号、可选参数、NOT／AND／OR、scope 与注入样本，检查 SQL 形状不随请求值改变。
+2. G2：语法与 AST → 正式 Resolve／Type／Validate／Normalize → 强类型查询计划与 IR Validator → 确定性生成。补源写回、结构覆盖、引用覆盖和增删改编辑回归；无匹配、单行、多行、过滤、scope、结果变量类型与后续使用都要有正反例。
+3. 样例：博客恢复按选定标签过滤；图书／任务等按能完整实现的需求逐项修改，不因有了查询就把尚无并发保证、循环或聚合的需求改成完成。语言参考、试写数字与现状文档同步更新。
+4. 本机只跑受影响的定向测试；全量门、八题生成工程离线编译、真实 MySQL／HTTP 交给 CI。CI 不等待时保持未核验，不使用“默认通过”作测试证据；不为下一批源码自动沿用本次提交／推送授权。
+
+**没有做。** SUM／AVG／分组聚合、工作流循环、批量写入、通用锁、任意 SQL、Crud 参数扩展与金额精度，不借此进入本阶段。
+
+### 18.7 本轮落地与证据
+
+`AstScalarQueryStep` 共用一个查询步骤节点和 EXISTS／COUNT 种类，独立 `SCALAR_QUERY_ENTITY` 引用角色；Resolve 建立步骤内 item 与结果变量，后续只消费 binding。Normalize／SoftwareSchema／SIR 写回与通用 SourceEditor 均覆盖它，实体 scope 接入现有 `EntityScopes` 链。`ScalarQueryPlan` 记录方法、投影、SQL 尾部、结果种类和单条预算，IR Validator 拒绝不符的计划。关联参数以 `ExistsArgument.Value` 保存已降级的有类型表达式，由既有 Java 渲染器生成取值、MyBatis 负责绑定；原有字面量参数计划保持不变。
+
+博客增加 Tag／PostTag、作者添加标签和按选中标签查询；任务看板增加由项目所有者授予的成员关系，并以 exists 组合既有授权检查，成员可以读和改任务。没有把借阅上限、先修课、任意时间段并发排他或动态标签列表查询一并记为完成。
+
+组合测试发现共用的 `containsLiteral` 计划收集只遍历二元表达式，NOT 内的匹配会被 IR 校验拒绝；已在共用收集器补遍历一元表达式，同时服务 find 与新步骤。Windows 回归还发现旧测试对 LF 的硬编码：源编辑测试入口统一夹具换行后仍独立验证 CRLF 保真，Mapper 测试按实际换行截取能力；未修改生产词法规则或弱化安全读源要求。
+
+本机最终选定 25 类测试的最新 Surefire XML 合计 **192 / 0 / 0 / 0**（run／fail／error／skip），没有累计重跑次数。八题内存编译／生成／交付规划和语言参考检查通过。部署 v3 冒烟新增 0／1／多行、账号隔离、可选过滤、绑定文本注入样本与 scope 隐藏行检查；只改变代码与查询范围，迁移仍为 V1..V11。真实 MySQL／HTTP、八题生成工程离线编译、全量门及同源码 CI 尚未运行。详细命令与各类结果见[验证说明第 7 节](../qualification/README.md#g2-g4-local)。

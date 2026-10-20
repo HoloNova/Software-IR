@@ -1,0 +1,59 @@
+sir 0.3
+software ScalarQueries {
+  metadata { displayName "Scalar Queries"; namespace "example.scalarqueries"; }
+  target { language java 21; framework spring_boot; persistence mybatis_plus;
+    database mysql; build maven; interface rest; }
+  sources { }
+  imports { }
+  declarations {
+    entity Owner persistent { identity id: Id generated auto; }
+    entity Entry persistent {
+      identity id: Id generated auto;
+      field owner: Ref<Owner>;
+      field score: Optional<Count>;
+      field removed: Flag default false;
+      scope removed == false;
+    }
+    entity Tag persistent { identity id: Id generated auto; field name: Name; }
+    entity EntryTag persistent {
+      identity id: Id generated auto;
+      field entry: Ref<Entry>;
+      field tag: Ref<Tag>;
+    }
+    view EntryView from Entry { field id: Id; field score: Optional<Count>; }
+    input Filter {
+      field owner: Ref<Owner>;
+      field tag: Ref<Tag>;
+      field minimum: Optional<Count>;
+      field page: PageNo;
+      field size: PageSize;
+    }
+    error BadPage;
+    error Invalid;
+    capability Check {
+      input Filter;
+      output Unit;
+      fails Invalid;
+      requires readonly;
+      expose query at "/entries/check";
+      workflow {
+        exists Entry where item.owner == input.owner and (input.minimum is none or item.score >= input.minimum) as found;
+        count Entry where item.owner == input.owner and any(EntryTag, entry == item and tag == input.tag) as total;
+        validate found or total == 0 else Invalid;
+        return unit;
+      }
+    }
+    capability Search {
+      input Filter;
+      output Page<EntryView>;
+      fails BadPage;
+      requires readonly;
+      expose query at "/entries";
+      workflow {
+        find Entry where any(EntryTag, entry == item and tag == input.tag)
+          order by id ascending Page input.page, input.size else BadPage as rows;
+        return rows;
+      }
+    }
+  }
+}

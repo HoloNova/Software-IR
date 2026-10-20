@@ -28,7 +28,7 @@ class OptionalDeploymentFixtureTest {
         var project = compiled.orElseThrow();
         new SpringBootDeploymentPlanner().plan(project.semanticModel(), project.loweredModel());
         for (String capability : java.util.List.of("FilterFavorites", "MissingFavoriteScores", "DifferentFavoriteScores",
-                "NotEqualFavoriteScores", "RaiseFavoriteScore", "CheckFavoriteScore")) {
+                "NotEqualFavoriteScores", "RaiseFavoriteScore", "CheckFavoriteScore", "CheckFavoriteCount", "CheckVisibleNoteCount", "FavoritedNotes")) {
             assertTrue(project.generatedFiles().stream().anyMatch(file -> file.relativePath().endsWith("/" + capability + "Service.java")), capability);
         }
     }
