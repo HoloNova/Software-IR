@@ -137,7 +137,7 @@ software CampusLibrary {
 
     view LoanView from Loan {
       field id: Id;
-      field copy: Ref<Copy>;
+      field copy: CopyView;
       field borrowedAt: Moment;
       field dueAt: Moment;
       field renewals: Count;

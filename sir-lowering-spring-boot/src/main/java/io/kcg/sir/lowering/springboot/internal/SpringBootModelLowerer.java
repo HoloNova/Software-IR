@@ -810,7 +810,7 @@ public final class SpringBootModelLowerer {
             }
             case NormalizedStep.DeleteStep value -> new SpringBootWorkflow.PersistStep(id, origin, value.targetVariable(), PersistenceAction.DELETE);
             case NormalizedStep.ReturnStep value -> new SpringBootWorkflow.ReturnStep(
-                    id, origin, lowerExpression(value.value(), owner, actorSymbol));
+                    id, origin, lowerExpression(value.value(), owner, actorSymbol), this.returnedRowReads(value, owner));
         };
     }
 
@@ -1422,6 +1422,20 @@ public final class SpringBootModelLowerer {
             case GE -> ">=";
             default -> throw new IllegalArgumentException("not a comparison operator: " + operator);
         };
+    }
+
+    /**
+     * The batch reads answering with one row costs: one per association the response view nests. A returned find result
+     * is counted by the find itself.
+     */
+    private int returnedRowReads(NormalizedStep.ReturnStep step, SymbolId owner) {
+        NormalizedCapability capability = this.capability(owner);
+        if (capability == null || !(step.value().type() instanceof RefType)
+                || !(capability.outputType() instanceof DeclaredType declared) || declared.kind() != DeclaredType.DeclaredKind.VIEW) {
+            return 0;
+        }
+
+        return this.associationReadCount(declared.symbolId());
     }
 
     /** The set of reads one find promises, counted from the projection it answers with. */

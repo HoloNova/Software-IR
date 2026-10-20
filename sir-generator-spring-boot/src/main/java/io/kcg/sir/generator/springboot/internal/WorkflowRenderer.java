@@ -97,7 +97,7 @@ final class WorkflowRenderer {
             renderPersist(ctx, capability, persist, workflow, variableNames, imports, currentPackage, lines, mappers);
             break;
          case ReturnStep ret:
-            renderReturn(ctx, capability, ret, responseRepresentation, variableNames, imports, currentPackage, lines);
+            renderReturn(ctx, capability, ret, responseRepresentation, variableNames, imports, currentPackage, lines, mappers);
             break;
          default:
             throw new MatchException(null, null);
@@ -885,7 +885,8 @@ final class WorkflowRenderer {
       Map<SymbolId, String> variableNames,
       ImportSorter imports,
       String currentPackage,
-      List<String> lines
+      List<String> lines,
+      Map<SymbolId, WorkflowRenderer.MapperReference> mappers
    ) {
       if (responseRepresentation == ResponseRepresentation.VOID) {
          lines.add("        return;");
@@ -896,6 +897,21 @@ final class WorkflowRenderer {
       collectExpressionImports(ctx, step.value(), variableNames, imports, currentPackage);
       if (responseRepresentation != ResponseRepresentation.PROJECTION) {
          lines.add("        return " + value + ";");
+         return;
+      }
+
+      if (step.associationStatements() > 0) {
+         // The row nests other views: read what it refers to (or what refers to it) the way a page of rows does, with
+         // one statement per association, taking this one row as the rows already loaded.
+         if (!(capability.outputType() instanceof LoweredJavaType.Declared declared)
+            || !(ctx.declaration(declared.symbolId()) instanceof SpringBootDeclaration.ViewDeclaration view)) {
+            throw new IllegalStateException("a projected response must declare a view output: " + capability.javaName());
+         }
+
+         lines.add("        var returnedRows = java.util.List.of(" + value + ");");
+         Map<String, WorkflowRenderer.RelationRead> reads = new LinkedHashMap<>();
+         readAssociations(ctx, view, "returnedRows", reads, imports, currentPackage, lines, mappers, new int[]{0}, "");
+         lines.add("        return " + renderProjectionRow(ctx, view, value, reads, "", imports, currentPackage) + ";");
          return;
       }
 

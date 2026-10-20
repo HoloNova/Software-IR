@@ -1029,6 +1029,7 @@ public final class SpringBootIrValidation {
             break;
          case SpringBootWorkflow.ReturnStep value:
             this.validateExpression(value.value(), owner);
+            this.validateReturnReads(value, owner);
             break;
          default:
             throw new MatchException(null, null);
@@ -1078,6 +1079,18 @@ public final class SpringBootIrValidation {
       if (budget.associationStatements() != associations) {
          this.error(owner, "the response projection nests " + associations + " batch reads but the budget says "
             + budget.associationStatements());
+      }
+   }
+
+   /**
+   * Answering with one row that the response view nests other views into costs one batch read per association, and the
+   * step must say so; answering with a find result (counted by the find) or a row with nothing nested costs none.
+   */
+   private void validateReturnReads(SpringBootWorkflow.ReturnStep step, SpringBootDeclaration.CapabilityDeclaration owner) {
+      boolean aFindResult = step.value().type() instanceof LoweredJavaType.PageValue || step.value().type() instanceof LoweredJavaType.ListValue;
+      int expected = aFindResult ? 0 : this.associationReads(owner.outputType());
+      if (step.associationStatements() != expected) {
+         this.error(owner, "answering with a row nests " + expected + " batch reads but the return says " + step.associationStatements());
       }
    }
 

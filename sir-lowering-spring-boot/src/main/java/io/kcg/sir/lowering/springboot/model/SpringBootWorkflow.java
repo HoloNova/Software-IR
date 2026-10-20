@@ -233,10 +233,26 @@ public record SpringBootWorkflow(LoweredNodeId id, LoweredOrigin origin, List<Sp
       }
    }
 
-   public record ReturnStep(LoweredNodeId id, LoweredOrigin origin, SpringExpression value) implements SpringBootWorkflow.Step {
+   /**
+   * The value the workflow answers with.
+   *
+   * <p>{@code associationStatements} is how many batch reads answering costs when the value is one row that the
+   * response view nests other views into (the related rows are read after the row, one statement per association). A
+   * find already declares its own reads in its budget, so a returned find result and a returned row that needs
+   * no association both say zero.
+   */
+   public record ReturnStep(LoweredNodeId id, LoweredOrigin origin, SpringExpression value, int associationStatements)
+      implements SpringBootWorkflow.Step {
       public ReturnStep {
          SpringBootWorkflow.requireStep(id, origin);
          Objects.requireNonNull(value, "value");
+         if (associationStatements < 0) {
+            throw new IllegalArgumentException("associationStatements must not be negative");
+         }
+      }
+
+      public ReturnStep(LoweredNodeId id, LoweredOrigin origin, SpringExpression value) {
+         this(id, origin, value, 0);
       }
    }
 

@@ -402,6 +402,54 @@ view BookView from Book {
 }
 ```
 
+嵌套的视图有两种：指向一个（上面的 `author`，本实体持有 `Ref`），和列出一批（`field reviews: List<ReviewView>`，子实体持有指向本实体的 `Ref`，必须只有一个）。它们可以出现在两个地方：分页 `find` 的结果里，以及 `load` 或 `create` 之后 `return` 的那一行里。两处都是每个嵌套多一条批量查询，不会逐行查询；列出一批时读出全部子行，不分页，按子行主键升序，所以子行可能很多的关系应当另写一个分页的 `find`。不分页的 `find` 结果带嵌套视图会被拒绝（`SIR-LOWER-FEATURE-001`）。
+
+```sir-declarations
+entity Author persistent {
+  identity id: Id generated auto;
+  field name: Text;
+}
+entity Book persistent {
+  identity id: Id generated auto;
+  field title: Text;
+  field author: Ref<Author>;
+}
+entity Review persistent {
+  identity id: Id generated auto;
+  field book: Ref<Book>;
+  field text: Text;
+}
+view AuthorSummary from Author {
+  field id: Id;
+  field name: Text;
+}
+view ReviewView from Review {
+  field id: Id;
+  field text: Text;
+}
+view BookDetail from Book {
+  field id: Id;
+  field title: Text;
+  field author: AuthorSummary;
+  field reviews: List<ReviewView>;
+}
+input BookRef {
+  field id: Id;
+}
+error BookNotFound http 404;
+capability GetBook {
+  input BookRef;
+  output BookDetail;
+  fails BookNotFound;
+  requires readonly;
+  expose query;
+  workflow {
+    load Book by input.id as book else BookNotFound;
+    return book;
+  }
+}
+```
+
 ### 3.5 错误（`error`）
 
 ```

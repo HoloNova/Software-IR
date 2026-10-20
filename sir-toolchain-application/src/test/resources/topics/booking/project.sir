@@ -80,7 +80,7 @@ software RoomBooking {
     }
     view BookingView from Booking {
       field id: Id;
-      field room: Ref<Room>;
+      field room: RoomView;
       field startsAt: Moment;
       field endsAt: Moment;
       field purpose: Remark;

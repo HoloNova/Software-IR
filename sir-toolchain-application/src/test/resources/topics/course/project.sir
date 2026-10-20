@@ -76,13 +76,13 @@ software CourseSelection {
       field id: Id;
       field code: Code;
       field name: Name;
-      field teacher: Ref<User>;
+      field teacher: UserView;
       field capacity: Quantity;
       field enrolled: Count;
     }
     view EnrollmentView from Enrollment {
       field id: Id;
-      field course: Ref<Course>;
+      field course: CourseView;
       field state: EnrollState;
       field createdAt: Moment;
     }

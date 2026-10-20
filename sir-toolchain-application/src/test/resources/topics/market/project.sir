@@ -80,7 +80,7 @@ software CampusMarket {
 
     view OrderView from TradeOrder {
       field id: Id;
-      field goods: Ref<Item>;
+      field goods: ItemView;
       field price: Serial;
       field status: OrderStatus;
       field createdAt: Moment;

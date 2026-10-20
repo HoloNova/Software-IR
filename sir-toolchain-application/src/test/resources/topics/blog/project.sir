@@ -91,8 +91,8 @@ software CampusBlog {
     }
     view PublicPost from Post {
       field id: Id;
-      field author: Ref<User>;
-      field category: Ref<Category>;
+      field author: UserView;
+      field category: CategoryView;
       field title: Name;
       field content: Text;
       field likes: Count;
@@ -165,11 +165,9 @@ software CampusBlog {
         return rows;
       }
     }
-    // GAP: the page of a post cannot show its comments in the same answer (a view cannot list children of a loaded
-    // row), so a client asks twice.
     capability ViewPost {
       input PostRef;
-      output PublicPost;
+      output PostDetail;
       fails PostNotFound;
       requires readonly;
       expose query at "/posts/{id}";
@@ -182,9 +180,20 @@ software CampusBlog {
 
     view CommentView from Comment {
       field id: Id;
-      field author: Ref<User>;
+      field author: UserView;
       field content: Remark;
       field createdAt: Moment;
+    }
+    // The page of one post shows its comments in the same answer.
+    view PostDetail from Post {
+      field id: Id;
+      field author: UserView;
+      field category: CategoryView;
+      field title: Name;
+      field content: Text;
+      field likes: Count;
+      field createdAt: Moment;
+      field comments: List<CommentView>;
     }
     input NewComment {
       field postId: Id;

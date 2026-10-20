@@ -82,7 +82,7 @@ software TaskBoard {
       field id: Id;
       field title: Name;
       field detail: Optional<Text>;
-      field assignee: Ref<User>;
+      field assignee: UserView;
       field state: TaskState;
       field priority: Count;
       field dueAt: Moment;
