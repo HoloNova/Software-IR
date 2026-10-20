@@ -1,0 +1,73 @@
+sir 0.3
+software OptionalValues {
+  metadata { displayName "Optional Values"; namespace "example.optional"; }
+  target {
+    language java 21; framework spring_boot; persistence mybatis_plus;
+    database mysql; build maven; interface rest;
+  }
+  sources { }
+  imports { }
+  declarations {
+    entity Entry persistent {
+      identity id: Id generated auto;
+      field score: Optional<Count>;
+      field dueAt: Optional<Moment>;
+    }
+    view EntryView from Entry {
+      field id: Id;
+      field score: Optional<Count>;
+      field dueAt: Optional<Moment>;
+    }
+    input Filter {
+      field id: Id;
+      field minimum: Optional<Count>;
+      field page: PageNo;
+      field size: PageSize;
+    }
+    error BadPage;
+    error Invalid;
+    error Missing http 404;
+    capability Search {
+      input Filter;
+      output Page<EntryView>;
+      fails BadPage;
+      requires readonly;
+      expose query at "/entries";
+      workflow {
+        find Entry where (input.minimum is none or item.score >= input.minimum)
+          and not (item.score == input.minimum) and item.dueAt is present
+          order by id ascending Page input.page, input.size else BadPage as rows;
+        return rows;
+      }
+    }
+    capability Check {
+      input Filter;
+      output Unit;
+      fails Invalid;
+      fails Missing;
+      expose command at "/entries/check";
+      workflow {
+        load Entry by input.id as row else Missing;
+        validate row.score != input.minimum else Invalid;
+        validate row.dueAt is none or row.dueAt < now() else Invalid;
+        return unit;
+      }
+    }
+    capability SetScore {
+      input Filter;
+      output Unit;
+      fails Invalid;
+      fails Missing;
+      requires atomic;
+      expose command at "/entries/score";
+      workflow {
+        load Entry by input.id as row else Missing;
+        update row when row.score is none or row.score < input.minimum else Invalid {
+          score: input.minimum;
+        }
+        persist row;
+        return unit;
+      }
+    }
+  }
+}

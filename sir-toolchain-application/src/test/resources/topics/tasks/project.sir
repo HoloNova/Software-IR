@@ -69,10 +69,11 @@ software TaskBoard {
       field detail: Optional<Text>;
       // GAP: an optional reference or time cannot be compared (`assignee == actor`, `dueAt < now()`), so both are
       // required: a new task is assigned to its creator and carries a due time.
-      field assignee: Ref<User>;
+      // G7: assignee and due time may now be absent; the preceding GAP records the old workaround.
+      field assignee: Optional<Ref<User>>;
       field state: TaskState default TaskState.TODO;
       field priority: Count default 3;
-      field dueAt: Moment;
+      field dueAt: Optional<Moment>;
       field createdAt: Moment default now();
     }
     use Crud {
@@ -84,16 +85,16 @@ software TaskBoard {
       field id: Id;
       field title: Name;
       field detail: Optional<Text>;
-      field assignee: UserView;
+      field assignee: Optional<Ref<User>>;
       field state: TaskState;
       field priority: Count;
-      field dueAt: Moment;
+      field dueAt: Optional<Moment>;
     }
     input NewTask {
       field projectId: Id;
       field title: Name;
       field priority: Count where min(1), max(5);
-      field dueAt: Moment;
+      field dueAt: Optional<Moment>;
     }
     capability CreateTask {
       actor Ref<User>;
@@ -110,7 +111,7 @@ software TaskBoard {
         create Task as task {
           project: project;
           title: input.title;
-          assignee: actor;
+
           priority: input.priority;
           dueAt: input.dueAt;
         }
@@ -172,7 +173,8 @@ software TaskBoard {
     }
     input TaskQuery {
       field projectId: Id;
-      field state: TaskState;
+      field state: Optional<TaskState>;
+      field priority: Optional<Count>;
       field page: PageNo;
       field size: PageSize;
     }
@@ -190,7 +192,9 @@ software TaskBoard {
         load Project by input.projectId as project else ProjectNotFound;
         validate project.owner == actor else Forbidden;
         find Task
-          where item.project == project and item.state == input.state
+           where item.project == project
+             and (input.state is none or item.state == input.state)
+             and (input.priority is none or item.priority == input.priority)
           order by priority descending, id ascending
           Page input.page, input.size else BadPage
         as rows;
@@ -211,6 +215,25 @@ software TaskBoard {
           order by priority descending, id ascending
           Page input.page, input.size else BadPage
         as rows;
+        return rows;
+      }
+    }
+    capability UnassignedTasks {
+      actor Ref<User>;
+      input TaskQuery;
+      output Page<TaskView>;
+      fails BadPage;
+      fails Forbidden;
+      fails ProjectNotFound;
+      requires authenticated;
+      requires readonly;
+      expose query at "/projects/{projectId}/tasks/unassigned";
+      workflow {
+        load Project by input.projectId as project else ProjectNotFound;
+        validate project.owner == actor else Forbidden;
+        find Task where item.project == project and item.assignee is none
+          order by priority descending, id ascending
+          Page input.page, input.size else BadPage as rows;
         return rows;
       }
     }

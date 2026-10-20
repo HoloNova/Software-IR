@@ -72,7 +72,7 @@ software Library {
 
 `sir software metadata displayName namespace target language framework persistence database build interface declarations enum entity persistent identity generated auto uuid field versioned present where input patch of view from order ascending descending Page containsLiteral error http capability actor output fails requires authenticated atomic readonly expose command query workflow validate else load by as find item any create update persist return Optional List Ref true false and or not now unit`
 
-最容易撞上的是 `item`、`order`、`error`、`input`、`target`、`query`、`command`、`build`、`from`、`field`、`present`。另一类词只在特定位置才有含义，别的地方仍然可以当名字：`sources source imports import unique secret credential subject expires when matches`，以及时间单位 `second(s) minute(s) hour(s) day(s)`。
+最容易撞上的是 `item`、`order`、`error`、`input`、`target`、`query`、`command`、`build`、`from`、`field`、`present`。另一类词只在特定位置才有含义，别的地方仍然可以当名字：`sources source imports import unique secret credential subject expires when matches is none`，以及时间单位 `second(s) minute(s) hour(s) day(s)`。
 
 ```sir-error SIR-PARSE-001
 entity Booking persistent {
@@ -1116,9 +1116,9 @@ capability Wrong {
 }
 ```
 
-谓词里不能和可选值比较（字段或请求参数是 `Optional<...>` 的那一边）：值缺失时这个条件是“一行也不匹配”还是“不加这个条件”，语言还没有规定，所以现在直接拒绝，而不是让生成的查询悄悄查不到任何行：
+**可选值与可选筛选。** `Optional<T>` 可以和同底层类型的值比较；任意一侧为空，`== != < <= > >=` 都是 false，两个空值也不相等。不会自动省略筛选条件。请求没传就不限制，明确写 `input.kind is none or item.kind == input.kind`：
 
-```sir-error SIR-TYPE-001
+```sir-declarations
 entity Ticket persistent {
   identity id: Id generated auto;
   field kind: Optional<Code>;
@@ -1132,14 +1132,15 @@ input Filter {
   field size: PageSize;
 }
 error BadPage;
-capability Wrong {
+capability FilterTickets {
   input Filter;
   output Page<TicketView>;
   fails BadPage;
   requires readonly;
   expose query;
   workflow {
-    find Ticket where item.kind == input.kind Page input.page, input.size else BadPage as found;
+    find Ticket where input.kind is none or item.kind == input.kind
+      Page input.page, input.size else BadPage as found;
     return found;
   }
 }
@@ -1282,7 +1283,7 @@ capability Rotate {
 }
 ```
 
-规则：守卫是布尔表达式，由“目标字段与值的比较”用 `and`／`or`／`not` 组合，比较的右边可以是值，也可以恰好是目标的另一个字段（`course.enrolled < course.capacity`，由数据库拿两列比）；目标必须是 `load` 出来的行；实体不能带 `versioned`；错误要在 `fails` 里声明；绑定的值**不能读目标自己的字段**（守卫只钉住它判断的那些字段，其它字段在内存里是旧的，读它们再写回会丢失更新），可以读 `input`、常量、`now()` 和别的变量，唯一的例外是下一节的“本字段加减一个值”（`SIR-VALID-007`）；带守卫的 `update` 后面要有对同一行的普通 `persist`，这一行只能有这一个 `update`。
+规则：守卫是布尔表达式，由“目标字段与值的比较”、目标可选字段的空值判断或不读取目标的可选值空值判断用 `and`／`or`／`not` 组合，比较的右边可以是值，也可以恰好是目标的另一个字段（`course.enrolled < course.capacity`，由数据库拿两列比）；目标必须是 `load` 出来的行；实体不能带 `versioned`；错误要在 `fails` 里声明；绑定的值**不能读目标自己的字段**（守卫只钉住它判断的那些字段，其它字段在内存里是旧的，读它们再写回会丢失更新），可以读 `input`、常量、`now()` 和别的变量，唯一的例外是下一节的“本字段加减一个值”（`SIR-VALID-007`）；带守卫的 `update` 后面要有对同一行的普通 `persist`，这一行只能有这一个 `update`。
 
 守卫在**一条 SQL 里**检查并写入，所以并发下只有一个请求成功。它依赖数据库驱动把“匹配的行数”当影响行数（MySQL Connector/J 的默认行为）；如果部署时在连接串上加了 `useAffectedRows=true`，“设成和原来一样的值”会被当成没有匹配而报守卫的错误。
 
@@ -1380,7 +1381,8 @@ return 变量;
 | `true`、`false`、`42`、`0.01`、`"文本"`、`unit` | 字面量 |
 | `名字`、`input`、`actor`、`item` | 变量；`input` 是请求，`actor` 是发起人，`item` 只在 `find` 里 |
 | `a.b.c` | 取成员 |
-| `x.字段.present` | 局部更新里，客户端传了没有 |
+| `x.字段.present` | 局部更新里，客户端传了没有（包括显式传 null） |
+| `x is none`、`x is present` | 可选值为空／非空；不是 PATCH 的传参标记 |
 | `枚举.成员` | 枚举值，如 `Status.OPEN` |
 | `now()` | 现在（`Moment`） |
 | `- x`、`not x` | 负号、非 |
@@ -1394,6 +1396,15 @@ return 变量;
 | `( ... )` | 括号 |
 
 **优先级**（从紧到松）：一元（`-`、`not`）→ `+`／`-` → 比较（`<` 等）→ `containsLiteral`／`matches` → `==`／`!=` → `and` → `or`。
+
+**可选值（G7）。** `is none`／`is present` 只用于 `Optional<T>`，作用于查询、工作流校验和更新守卫；优先级与大小比较相同。要否定空值判断，写 `not (x is none)`。普通比较要求去掉可选包装后的类型兼容，任意一侧为空均为 false（包括 `!=`，两个空值也不相等）；`not (x == y)` 则是普通取反，有空值时为 true，因此不等同于 `x != y`。查询和 Java 工作流遵守同一规则。空值判断不改变静态类型，不允许借此访问可选引用的成员、做可选值加减或时间平移；`containsLiteral` 的右侧仍要求非可选文本。`is none` 不表示“PATCH 没传”，缺席和显式 null 在普通可选输入中都按空值处理，PATCH 是否传过字段仍问 `.present`。
+
+| 左值 | 右值 | `==` | `!=` | `not (==)` |
+| --- | --- | --- | --- | --- |
+| 空 | 空或有值 | false | false | true |
+| 有值 | 空 | false | false | true |
+| 相同值 | 相同值 | true | false | false |
+| 不同值 | 不同值 | false | true | true |
 
 **时间平移**：底必须是 `Moment`，或者只按天的 `Day`；数量最大 2147483647；孤立的“15 minutes”不是表达式。“一天”按 24 小时算。`now() + 15 minutes`、`input.start + 3 days`。
 

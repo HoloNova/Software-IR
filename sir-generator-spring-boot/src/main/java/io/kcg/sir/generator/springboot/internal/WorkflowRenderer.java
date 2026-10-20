@@ -1045,7 +1045,10 @@ final class WorkflowRenderer {
                      case GE -> "ge";
                      default -> throw new IllegalStateException();
                   };
-                  if (binary.right() instanceof MemberExpression otherColumn
+                   if (binary.presentComparison().isPresent()) {
+                      return renderPresentComparison(ctx, binary, itemVariable, entity, variableNames, imports, currentPackage, wrapperName);
+                   }
+                   if (binary.right() instanceof MemberExpression otherColumn
                      && otherColumn.receiver() instanceof NameExpression otherName
                      && otherName.resolvedSymbol().equals(itemVariable.symbol())) {
                      // Two columns of the same row are compared by the database, not by a value read earlier.
@@ -1094,7 +1097,16 @@ final class WorkflowRenderer {
             String nestedName = nextWrapperName(counter);
          String nested = renderPredicateNode(ctx, unary.operand(), itemVariable, entity, stringMatches, variableNames, imports, currentPackage, nestedName, counter);
             return wrapperName + ".not(" + nestedName + " -> " + nested + ")";
-         case SpringExpression.BooleanLiteral literal:
+          case UnaryExpression unary when unary.operator() == UnaryOperator.IS_NONE || unary.operator() == UnaryOperator.IS_PRESENT:
+             if (unary.operand() instanceof MemberExpression member && member.receiver() instanceof NameExpression name
+                   && name.resolvedSymbol().equals(itemVariable.symbol())) {
+                String method = unary.operator() == UnaryOperator.IS_NONE ? "isNull" : "isNotNull";
+                return wrapperName + "." + method + "(" + renderFindField(unary.operand(), itemVariable, entity.javaName()) + ")";
+             }
+             collectExpressionImports(ctx, unary.operand(), variableNames, imports, currentPackage);
+             String question = ExpressionRenderer.renderExpression(unary, variableNames);
+             return wrapperName + ".apply((" + question + ") ? \"1 = 1\" : \"1 = 0\")";
+          case SpringExpression.BooleanLiteral literal:
             // "where true" is every row (a list of everything, narrowed only by the entity's scope); a wrapper has no
             // empty condition, so the constant is written as one.
             return wrapperName + ".apply(" + StringEscape.javaString(literal.value() ? "1 = 1" : "1 = 0") + ")";
@@ -1108,7 +1120,33 @@ final class WorkflowRenderer {
       }
    }
 
-   private static String renderExistsArguments(SpringExpression.ExistsPredicate exists) {
+    /** The lowerer declared a present-only comparison: COALESCE removes SQL UNKNOWN before any NOT. */
+    private static String renderPresentComparison(
+       GenerationContext ctx, BinaryExpression binary, Variable itemVariable, EntityDeclaration entity,
+       Map<SymbolId, String> variableNames, ImportSorter imports, String currentPackage, String wrapperName
+    ) {
+       String column = columnOf(entity, memberSymbol(binary.left(), itemVariable));
+       String operator = switch (binary.operator()) {
+          case EQ -> "=";
+          case NE -> "<>";
+          case LT -> "<";
+          case LE -> "<=";
+          case GT -> ">";
+          case GE -> ">=";
+          default -> throw new IllegalStateException("a comparison plan requires a comparison");
+       };
+       if (binary.right() instanceof MemberExpression member && member.receiver() instanceof NameExpression name
+             && name.resolvedSymbol().equals(itemVariable.symbol())) {
+          String rightColumn = columnOf(entity, member.resolvedMember());
+          return wrapperName + ".apply(" + StringEscape.javaString("COALESCE(" + column + " " + operator + " " + rightColumn + ", FALSE)") + ")";
+       }
+       collectExpressionImports(ctx, binary.right(), variableNames, imports, currentPackage);
+       String value = ExpressionRenderer.renderExpression(binary.right(), variableNames);
+       return wrapperName + ".apply(" + StringEscape.javaString("COALESCE(" + column + " " + operator + " {0}, FALSE)")
+          + ", " + value + ")";
+    }
+
+    private static String renderExistsArguments(SpringExpression.ExistsPredicate exists) {
       StringBuilder out = new StringBuilder();
       for (SpringExpression.ExistsArgument argument : exists.arguments()) {
          out.append(", ").append(renderExistsArgument(argument));

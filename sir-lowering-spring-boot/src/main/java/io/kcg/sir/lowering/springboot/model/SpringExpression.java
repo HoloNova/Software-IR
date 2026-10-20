@@ -43,13 +43,29 @@ public sealed interface SpringExpression
    }
 
    record BinaryExpression(
-      LoweredNodeId id, LoweredOrigin origin, LoweredJavaType type, SpringExpression left, SpringExpression.BinaryOperator operator, SpringExpression right
+      LoweredNodeId id, LoweredOrigin origin, LoweredJavaType type, SpringExpression left, SpringExpression.BinaryOperator operator, SpringExpression right,
+      java.util.Optional<PresentComparison> presentComparison
    ) implements SpringExpression {
       public BinaryExpression {
          SpringExpression.requireNode(id, origin, type);
          Objects.requireNonNull(left, "left");
          Objects.requireNonNull(operator, "operator");
          Objects.requireNonNull(right, "right");
+         Objects.requireNonNull(presentComparison, "presentComparison");
+      }
+
+      public BinaryExpression(LoweredNodeId id, LoweredOrigin origin, LoweredJavaType type,
+            SpringExpression left, BinaryOperator operator, SpringExpression right) {
+         this(id, origin, type, left, operator, right, java.util.Optional.empty());
+      }
+   }
+
+   /** A comparison is false unless its optional operands have values. The target chooses the
+    * underlying representation and guards here; renderers never infer a null policy. */
+   record PresentComparison(LoweredJavaType operandType, boolean checkLeft, boolean checkRight) {
+      public PresentComparison {
+         Objects.requireNonNull(operandType, "operandType");
+         if (!checkLeft && !checkRight) throw new IllegalArgumentException("a present comparison guards an optional operand");
       }
    }
 
@@ -214,7 +230,9 @@ public sealed interface SpringExpression
 
    enum UnaryOperator {
       NOT,
-      NEGATE;
+      NEGATE,
+      IS_NONE,
+      IS_PRESENT;
    }
 
    record UnitLiteral(LoweredNodeId id, LoweredOrigin origin, LoweredJavaType type) implements SpringExpression {

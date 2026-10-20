@@ -393,7 +393,13 @@ matchesOperator
     ;
 
 relationalExpression
-    : additiveExpression ((GT | GE | LT | LE) additiveExpression)?
+    : additiveExpression (((GT | GE | LT | LE) additiveExpression) | nullTest)?
+    ;
+
+// Contextual words preserve existing identifiers named is/none. `present` is already reserved for PATCH.
+nullTest
+    : {_input.LT(1).getText().equals("is")}? IDENT
+      (PRESENT | {_input.LT(1).getText().equals("none")}? IDENT)
     ;
 
 // Plus and minus bind tighter than a comparison and looser than a prefix operator, and chain to the left.

@@ -295,6 +295,32 @@ try:
     assert sql(counted, instance=acceptance_instance).strip() == '7', 'concurrent favourites were not all counted'
     assert sql("SELECT COUNT(*) FROM information_schema.STATISTICS WHERE TABLE_SCHEMA='kcg' AND TABLE_NAME='favorite' AND INDEX_NAME='kcg_uq_0' AND NON_UNIQUE=0",
                instance=acceptance_instance).strip() == '2', 'the unique key over two columns is not there'
+    # G7: query SQL and Java validation share the same present-only comparison policy. In particular,
+    # != excludes a NULL operand, while NOT(==) includes it. Optional filters must be explicitly skipped.
+    def favorite_rows(path, suffix=''):
+        return request(f'/api/favorites/{path}?page=1&size=100{suffix}', token=owner, base=server)['records']
+    favorites = favorite_rows('filter')
+    assert len(favorites) == 7 and all(row['score'] is None for row in favorites), favorites
+    assert len(favorite_rows('missing')) == 7
+    assert favorite_rows('different') == []
+    assert len(favorite_rows('not-equal')) == 7
+    first, second = favorites[0]['id'], favorites[1]['id']
+    exchange('/api/favorites/raise', {'id': first, 'score': 1000}, owner, 201, base=server)
+    exchange('/api/favorites/raise', {'id': second, 'score': 1001}, owner, 201, base=server)
+    assert {row['score'] for row in favorite_rows('filter', '&minimum=1000')} == {1000, 1001}
+    assert [row['score'] for row in favorite_rows('filter', '&maximum=1000')] == [1000]
+    assert favorite_rows('filter', '&minimum=1002') == []
+    assert len(favorite_rows('missing')) == 5
+    assert [row['score'] for row in favorite_rows('different', '&minimum=1000')] == [1001]
+    assert len(favorite_rows('not-equal', '&minimum=1000')) == 6
+    assert favorite_rows('different') == [] and len(favorite_rows('not-equal')) == 7
+    exchange(f'/api/favorites/check?id={first}&score=1001', None, owner, 200, base=server, method='GET')
+    request(f'/api/favorites/check?id={first}&score=1000', token=owner, expected=409, base=server)
+    request(f'/api/favorites/check?id={first}', token=owner, expected=409, base=server)
+    request(f"/api/favorites/check?id={favorites[2]['id']}&score=1000", token=owner, expected=409, base=server)
+    request('/api/favorites/raise', {'id': first, 'score': 999}, token=owner, expected=409, base=server)
+    request('/api/favorites/raise', {'id': first, 'score': None}, token=owner, expected=409, base=server)
+    assert sql(f'SELECT score FROM favorite WHERE id={int(first)}', instance=acceptance_instance).strip() == '1000'
     long_state = 'x' * 40
     assert request('/api/update-note', {'id': kept['id'], 'body': 'v3-kept', 'pinned': True, 'state': long_state}, token=owner, base=server)['state'] == long_state
     assert 'KCG_UPDATE_CURRENT' in deploy('update', instance=acceptance_instance, state=acceptance_state, package=a.v3_package)

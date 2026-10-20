@@ -689,7 +689,8 @@ public final class SpringBootInputValidator {
             this.validateExistsCondition(value.right(), related, root, owner);
          }
          case UnaryExpression value -> {
-            if (value.operator() != AstUnaryOperator.NOT) {
+             if (value.operator() != AstUnaryOperator.NOT && value.operator() != AstUnaryOperator.IS_NONE
+                   && value.operator() != AstUnaryOperator.IS_PRESENT) {
                this.unsupportedExistsCondition(value, owner);
                return;
             }

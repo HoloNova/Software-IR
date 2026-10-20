@@ -58,6 +58,7 @@ software CampusMarket {
       field title: Name;
       field description: Optional<Remark>;
       field price: Serial where min(0);
+      field condition: Optional<Text> where length(1, 32);
       field status: ItemStatus default ItemStatus.ON_SALE;
       field createdAt: Moment default now();
     }
@@ -91,6 +92,9 @@ software CampusMarket {
     // Everybody browses what is on sale.
     input BrowseInput {
       field keyword: Text;
+      field minPrice: Optional<Serial>;
+      field maxPrice: Optional<Serial>;
+      field condition: Optional<Text> where length(1, 32);
       field page: PageNo;
       field size: PageSize;
     }
@@ -103,7 +107,10 @@ software CampusMarket {
       expose query at "/shop/items";
       workflow {
         find Item
-          where item.status == ItemStatus.ON_SALE and item.title containsLiteral input.keyword
+           where item.status == ItemStatus.ON_SALE and item.title containsLiteral input.keyword
+             and (input.minPrice is none or item.price >= input.minPrice)
+             and (input.maxPrice is none or item.price <= input.maxPrice)
+             and (input.condition is none or item.condition == input.condition)
           order by createdAt descending, id descending
           Page input.page, input.size else BadPage
         as rows;

@@ -39,7 +39,116 @@ software DualTokenDesk {
       identity id: Id generated auto;
       field note: Ref<Note>;
       field owner: Ref<User>;
+      field score: Optional<Count>;
       unique (note, owner);
+    }
+    // Optional-value conformance uses the existing newly-created table, so the migration chain stays V1..V11.
+    view FavoriteView from Favorite {
+      field id: Id;
+      field score: Optional<Count>;
+    }
+    input FavoriteFilter {
+      field minimum: Optional<Count>;
+      field maximum: Optional<Count>;
+      field page: PageNo;
+      field size: PageSize;
+    }
+    input FavoriteScore {
+      field id: Id;
+      field score: Optional<Count>;
+    }
+    error BadPage;
+    error ScoreRejected http 409;
+    capability FilterFavorites {
+      actor Ref<User>;
+      input FavoriteFilter;
+      output Page<FavoriteView>;
+      fails BadPage;
+      requires authenticated;
+      requires readonly;
+      expose query at "/favorites/filter";
+      workflow {
+        find Favorite where item.owner == actor
+          and (input.minimum is none or item.score >= input.minimum)
+          and (input.maximum is none or item.score <= input.maximum)
+          order by id ascending Page input.page, input.size else BadPage as rows;
+        return rows;
+      }
+    }
+    capability MissingFavoriteScores {
+      actor Ref<User>;
+      input FavoriteFilter;
+      output Page<FavoriteView>;
+      fails BadPage;
+      requires authenticated;
+      requires readonly;
+      expose query at "/favorites/missing";
+      workflow {
+        find Favorite where item.owner == actor and item.score is none
+          order by id ascending Page input.page, input.size else BadPage as rows;
+        return rows;
+      }
+    }
+    capability DifferentFavoriteScores {
+      actor Ref<User>;
+      input FavoriteFilter;
+      output Page<FavoriteView>;
+      fails BadPage;
+      requires authenticated;
+      requires readonly;
+      expose query at "/favorites/different";
+      workflow {
+        find Favorite where item.owner == actor and item.score != input.minimum
+          order by id ascending Page input.page, input.size else BadPage as rows;
+        return rows;
+      }
+    }
+    capability NotEqualFavoriteScores {
+      actor Ref<User>;
+      input FavoriteFilter;
+      output Page<FavoriteView>;
+      fails BadPage;
+      requires authenticated;
+      requires readonly;
+      expose query at "/favorites/not-equal";
+      workflow {
+        find Favorite where item.owner == actor and not (item.score == input.minimum)
+          order by id ascending Page input.page, input.size else BadPage as rows;
+        return rows;
+      }
+    }
+    capability RaiseFavoriteScore {
+      actor Ref<User>;
+      input FavoriteScore;
+      output Unit;
+      fails ScoreRejected;
+      requires authenticated;
+      requires atomic;
+      expose command at "/favorites/raise";
+      workflow {
+        load Favorite by input.id as favorite else ScoreRejected;
+        validate favorite.owner == actor else ScoreRejected;
+        update favorite when favorite.score is none or favorite.score < input.score else ScoreRejected {
+          score: input.score;
+        }
+        persist favorite;
+        return unit;
+      }
+    }
+    capability CheckFavoriteScore {
+      actor Ref<User>;
+      input FavoriteScore;
+      output Unit;
+      fails ScoreRejected;
+      requires authenticated;
+      requires readonly;
+      expose query at "/favorites/check";
+      workflow {
+        load Favorite by input.id as favorite else ScoreRejected;
+        validate favorite.owner == actor else ScoreRejected;
+        validate favorite.score != input.score else ScoreRejected;
+        return unit;
+      }
     }
     error AlreadyFavorite http 409;
     capability FavoriteNote {

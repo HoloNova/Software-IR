@@ -625,6 +625,11 @@ final class SirAstBuilder {
     private AstExpression relationalExpression(SirParser.RelationalExpressionContext context, String parent) {
         List<SirParser.AdditiveExpressionContext> operands = context.additiveExpression();
         AstExpression left = additiveExpression(operands.getFirst(), parent);
+        if (context.nullTest() != null) {
+            String path = ids.indexed(parent, "expression");
+            return new AstUnaryExpression(ids.id(path), source.span(context),
+                    context.nullTest().PRESENT() == null ? AstUnaryOperator.IS_NONE : AstUnaryOperator.IS_PRESENT, left);
+        }
         if (operands.size() == 1) {
             return left;
         }

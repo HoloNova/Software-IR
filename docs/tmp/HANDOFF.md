@@ -36,19 +36,13 @@
 
 ## 4. 待办（按建议顺序）
 
-当前试写数字：84 条需求，58 条（69%）完整写出，6 条（7%）带折扣，20 条（24%）写不出。每补一个缺口，都要更新 `TOPIC_TRIALS.md` 的表和数字、`PROJECT_STATUS.md` 里那一句、语言参考、设计 12 新增一节。
+当前试写数字（G7 后）：84 条需求，62 条（74%）完整写出，5 条（6%）带折扣，17 条（20%）写不出。每补一个缺口，都要更新 `TOPIC_TRIALS.md` 的表和数字、`PROJECT_STATUS.md` 里那一句、语言参考、设计 12 新增一节。
 
-### 4.1 G7 可选值的比较与空值判断（最高优先，**必须先设计、等确认**）
+### 4.1 G7 可选值比较与空值判断（已确认并实现，待同源码 CI）
 
-现状：可选字段不能和值比较（`item.assignee == actor`、`dueAt < now()` 报 `SIR-TYPE-001`）；没有"是否为空"的判断（`.present` 只能用在局部更新的输入上）；可选的请求参数当筛选条件会被 `SIR-TYPE-001` 拒绝（D3 修复时先拒绝了，留待这里统一设计）。后果：任务看板只能把指派人、到期时间做成必填；二手市场做不了"按可选条件筛选"。挡住的需求条数最多（tasks、market）。
+负责人已确认设计：`is none`／`is present` 判断空值；普通比较任一侧为空均为 false（包括 `!=`），`not (==)` 是普通取反；可选筛选以 `input.x is none or item.x == input.x` 显式表达；PATCH `.present` 保持原义。实现与限制见设计 12 第 17 节，不要重开设计或改为空值自动跳过。
 
-要负责人拍板的核心问题——**"值缺失时条件怎么算"**，上一个 Agent 倾向的方案（仅供参考，仍须确认）：
-1. 加一个空值判断，比如 `item.assignee is none` / `item.assignee is present`（同时用于 `find` 谓词和 `validate`），数据库侧生成 `IS NULL` / `IS NOT NULL`；
-2. 可选值与值比较：在 `find` 谓词里按 SQL 的习惯，缺失时该行不匹配（`NULL = x` 为假），语义要写明；
-3. "可选的筛选条件"（请求没传就不加这个条件）是另一件事，建议单独一个写法（例如 `where item.kind == input.kind when input.kind is present`，或"请求里可选的值缺失即跳过该比较"），**不要混进第 2 点**；
-4. 工作流里（非 `find`）对可选值的比较，缺失时是直接报错还是为假，也要定。
-
-涉及：`TypePass`（`inFindPredicate` 标志与 D3 的拒绝在这里）、`WorkflowRenderer.renderPredicateNode`（谓词渲染）、题目 `tasks`、`market`。
+tasks、market 已更新；本机语义、降级、生成真值表、源往返与题目内存生成通过。部署真库冒烟已补，八题离线构建与 MySQL／HTTP 留给 CI。Windows 部署导出测试被现有 SecureDirectoryStream 边界阻断，不放宽该安全规则。负责人随后已授权本批 G7 提交并推送、不等待 CI；没有核验新 CI，不将其记为通过。Git 授权仍以负责人当次明确指令为准。
 
 ### 4.2 G2 对多行的存在与计数
 

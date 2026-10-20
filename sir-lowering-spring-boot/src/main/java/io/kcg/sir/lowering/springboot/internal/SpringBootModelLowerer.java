@@ -1228,7 +1228,7 @@ public final class SpringBootModelLowerer {
             case NormalizedExpression.BinaryExpression value -> new SpringExpression.BinaryExpression(
                     id, origin, type, lowerExpression(value.left(), owner, actorSymbol, itemSymbol),
                     SpringExpression.BinaryOperator.valueOf(value.operator().name()),
-                    lowerExpression(value.right(), owner, actorSymbol, itemSymbol));
+                    lowerExpression(value.right(), owner, actorSymbol, itemSymbol), presentComparison(value));
             case NormalizedExpression.TimeShiftExpression value -> new SpringExpression.TimeShiftExpression(
                     id, origin, type, lowerExpression(value.base(), owner, actorSymbol, itemSymbol),
                     SpringExpression.ShiftDirection.valueOf(value.direction().name()),
@@ -1238,6 +1238,18 @@ public final class SpringBootModelLowerer {
                     id, origin, type, this.presencePropertyName(value));
             case NormalizedExpression.ExistsExpression value -> this.lowerExistsPredicate(value, id, origin, type, itemSymbol);
         };
+    }
+
+    private Optional<SpringExpression.PresentComparison> presentComparison(NormalizedExpression.BinaryExpression value) {
+        boolean comparison = switch (value.operator()) {
+            case EQ, NE, LT, LE, GT, GE -> true;
+            default -> false;
+        };
+        boolean leftOptional = value.left().type() instanceof OptionalType;
+        boolean rightOptional = value.right().type() instanceof OptionalType;
+        if (!comparison || (!leftOptional && !rightOptional)) return Optional.empty();
+        SirType operand = value.left().type() instanceof OptionalType optional ? optional.element() : value.left().type();
+        return Optional.of(new SpringExpression.PresentComparison(lowerType(operand), leftOptional, rightOptional));
     }
 
     private Optional<SymbolId> findItemSymbol(NormalizedStep.FindStep step) {
@@ -1347,7 +1359,11 @@ public final class SpringBootModelLowerer {
             case NormalizedExpression.BinaryExpression binary when isComparison(binary.operator()) -> {
                 ExistenceSql left = this.existenceSql(binary.left(), related, root, alias, itemSymbol, arguments);
                 ExistenceSql right = this.existenceSql(binary.right(), related, root, alias, itemSymbol, left.arguments());
-                yield new ExistenceSql(left.text() + " " + comparisonOperator(binary.operator()) + " " + right.text(), right.arguments());
+                String comparison = left.text() + " " + comparisonOperator(binary.operator()) + " " + right.text();
+                if (binary.left().type() instanceof OptionalType || binary.right().type() instanceof OptionalType) {
+                    comparison = "COALESCE(" + comparison + ", FALSE)";
+                }
+                yield new ExistenceSql(comparison, right.arguments());
             }
             case NormalizedExpression.BinaryExpression binary when binary.operator() == io.kcg.sir.ast.AstBinaryOperator.AND
                     || binary.operator() == io.kcg.sir.ast.AstBinaryOperator.OR -> {
@@ -1359,6 +1375,11 @@ public final class SpringBootModelLowerer {
             case NormalizedExpression.UnaryExpression unary when unary.operator() == io.kcg.sir.ast.AstUnaryOperator.NOT -> {
                 ExistenceSql operand = this.existenceSql(unary.operand(), related, root, alias, itemSymbol, arguments);
                 yield new ExistenceSql("NOT (" + operand.text() + ")", operand.arguments());
+            }
+            case NormalizedExpression.UnaryExpression unary when unary.operator() == io.kcg.sir.ast.AstUnaryOperator.IS_NONE
+                    || unary.operator() == io.kcg.sir.ast.AstUnaryOperator.IS_PRESENT -> {
+                ExistenceSql operand = this.existenceSql(unary.operand(), related, root, alias, itemSymbol, arguments);
+                yield new ExistenceSql(operand.text() + (unary.operator() == io.kcg.sir.ast.AstUnaryOperator.IS_NONE ? " IS NULL" : " IS NOT NULL"), operand.arguments());
             }
             case NormalizedExpression.NameExpression name -> new ExistenceSql(
                     this.columnReference(name.resolvedSymbol(), related, root, alias, itemSymbol), arguments);

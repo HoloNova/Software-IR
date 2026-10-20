@@ -95,3 +95,56 @@
 - 没有跨进程锁；真实断电验证；对真实 Git 的故障注入（钩子失败、索引锁被占用）。
 - SLM 生成样本集上的评测尚未启动，见 [SLM 评测计划](SLM_GENERATED_PROJECT_EVALUATION_PLAN.md)。
 - 新部署包已在CI中完成首次初始化，但HTTP及后续门尚未完成，不同包迁移未实现；原业务IT仍使用测试夹具，不能充当产品部署验收。
+
+## 6. G7 可选值（2026-10-20，本机定向，待同源码 CI）
+
+源码基点 `11bb51b5a779907e6659a61543b0cbc5cbe13041`，本节覆盖其上的本批 G7 修改，不是该基点原有 CI 的结论。环境实际为 Windows 11 / Temurin 21.0.11 / Maven 3.9.14，仓库 `D:\maven-repo`，单构建串行，Maven JVM `-Xmx768m`、测试 fork `-Xmx512m`；没有启动业务应用、数据库或容器。
+
+### 已执行与结果
+
+先新增 `OptionalValueSemanticsTest` 与夹具运行：15 / 15 / 0 / 0，失败点为新增 `is` 语法被解析器拒绝（RED）。随后语法与语义转绿；`OptionalValueLoweringTest` 在新增的 `presentComparison()` / `PresentComparison` 尚不存在时编译失败（降级计划的编译期 RED），补齐后转绿。初次语义复跑还纠正了测试夹具：分页视图应声明 `Page<view>`，不能拿未分页的 `List<Ref<Entity>>` 直接返回为 `List<view>`；未为此放宽生产规则。
+
+定向命令（PowerShell；两次选择不同受影响测试，不执行全量门）：
+
+```powershell
+$env:MAVEN_OPTS='-Xmx768m'
+mvn -B -o -pl sir-toolchain-application -am test "-Dtest=OptionalValueSemanticsTest,OptionalValueLoweringTest,GeneratorOptionalValueContractTest,SirDeclarationWriterRoundTripTest,WriteSliceSemanticsTest,WriteSliceLoweringTest,GeneratorWriteSliceContractTest,TopicSamplesTest,DeploymentPackageApplicationTest,ExpressionVariantCoverageTest" "-Dsurefire.failIfNoSpecifiedTests=false" "-DargLine=-Xmx512m"
+mvn -B -q -o -pl sir-toolchain-application -am test "-Dtest=OptionalValueSemanticsTest,OptionalValueLoweringTest,GeneratorOptionalValueContractTest,OptionalComparisonRenderingTest,SirDeclarationWriterRoundTripTest,RelationSliceLoweringTest,GeneratorRelationSliceContractTest,OptionalDeploymentFixtureTest,LanguageReferenceExamplesTest,AstDeterminismTest,TypedReferenceSiteContractTest" "-Dsurefire.failIfNoSpecifiedTests=false" "-DargLine=-Xmx512m"
+```
+
+以下取本轮各类**最后一次** Surefire XML，不累加重复执行：
+
+| 测试类 | run / fail / error / skip |
+| --- | --- |
+| OptionalValueSemanticsTest | 16 / 0 / 0 / 0 |
+| OptionalValueLoweringTest | 2 / 0 / 0 / 0 |
+| GeneratorOptionalValueContractTest | 13 / 0 / 0 / 0 |
+| OptionalComparisonRenderingTest | 1 / 0 / 0 / 0 |
+| SirDeclarationWriterRoundTripTest | 2 / 0 / 0 / 0 |
+| AstDeterminismTest | 2 / 0 / 0 / 0 |
+| TypedReferenceSiteContractTest | 18 / 0 / 0 / 0 |
+| WriteSliceSemanticsTest | 29 / 0 / 0 / 0 |
+| WriteSliceLoweringTest | 21 / 0 / 0 / 0 |
+| GeneratorWriteSliceContractTest | 17 / 0 / 0 / 0 |
+| RelationSliceLoweringTest | 13 / 0 / 0 / 0 |
+| GeneratorRelationSliceContractTest | 6 / 0 / 0 / 0 |
+| ExpressionVariantCoverageTest | 4 / 0 / 0 / 0 |
+| LanguageReferenceExamplesTest | 3 / 0 / 0 / 0 |
+| TopicSamplesTest | 1 / 0 / 0 / 0 |
+| OptionalDeploymentFixtureTest | 1 / 0 / 0 / 0 |
+| 上述通过范围合计 | **149 / 0 / 0 / 0** |
+| DeploymentPackageApplicationTest（环境阻断，真实执行失败） | **16 / 16 / 0 / 0** |
+
+不能将本轮整体称为全部通过：第一条命令因部署导出类失败，第二条命令成功。Windows 读源不支持安全的目录相对访问，导出在 `SIR-APP-SOURCES-READ-001: filesystem does not support secure directory-relative source reads` 处失败，发生在业务规划之前；没有跳过测试、篡改期望或放宽生产读源规则。新增 `OptionalDeploymentFixtureTest` 直接从源快照验证 v3 的编译、生成和交付规划，**不替代**文件系统导出验收。
+
+### 这些证据证明什么
+
+- 空值判断、六个比较操作、可选引用比较与拒绝空引用成员访问、可选算术拒绝；PATCH 的缺席／null／有值约定回归通过。
+- 计划记录左右非空保护与底层类型，丢失计划或保护位不匹配会被 IR Validator 拒绝；已有相关子查询内部也在 NOT 前消除 UNKNOWN。
+- 把生成的 Java 条件放进临时类，用 JDK 编译并反射执行：11 种条件各覆盖 3×3 有值／空值组合；另测小数数值相等（1.0 与 1.00）、可选时间比较、可选引用编号比较。不是仅断言模板字符串，也不是启动业务应用。
+- 八题内存编译／生成／交付规划与语言参考示例通过；重新测量了当前源码与生成文件的行数，不以测量代替构建。
+- `.github/scripts/deployment-smoke.py` 已加入 G7 真库断言，Python AST 语法检查通过。Favorite 本来在 v3 才建表，可选 score 随表创建，因此迁移链仍为 V1..V11，不改工作流版本预期。
+
+### 尚未验证
+
+同源码 CI、全量门、八题生成工程离线编译、真实 MySQL／HTTP、Linux 上部署导出：**NOT_RUN**，无新 run URL／artifact。负责人随后授权提交并推送、不等待 CI；CI 结果不作核验，也不默认记为通过，不使用旧 CI 代替。代码覆盖率未测量，不宣称达到 80%；真值表覆盖不等于行覆盖率。AFT Java/JDTLS 在初始化时退出，诊断为 PARTIAL，不能据此宣称无编译错误；上述 Maven 定向编译与测试才是本轮编译证据。无 UI 修改。

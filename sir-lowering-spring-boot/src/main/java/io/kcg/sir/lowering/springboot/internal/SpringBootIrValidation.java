@@ -1210,12 +1210,17 @@ public final class SpringBootIrValidation {
             this.requireKnown(value.resolvedMember(), owner, "member expression");
             break;
          case SpringExpression.UnaryExpression value:
-            this.validateExpression(value.operand(), owner);
-            break;
-         case SpringExpression.BinaryExpression value:
+             this.validateExpression(value.operand(), owner);
+             if ((value.operator() == SpringExpression.UnaryOperator.IS_NONE || value.operator() == SpringExpression.UnaryOperator.IS_PRESENT)
+                   && !(value.operand().type() instanceof LoweredJavaType.OptionalValue)) {
+                this.error(owner, "a null test requires an optional operand");
+             }
+             break;
+          case SpringExpression.BinaryExpression value:
             this.validateExpression(value.left(), owner);
             this.validateExpression(value.right(), owner);
-            this.validateArithmetic(value, owner);
+             this.validatePresentComparison(value, owner);
+             this.validateArithmetic(value, owner);
             this.validateMatches(value, owner);
             break;
          case SpringExpression.DigestExpression value:
@@ -1233,8 +1238,29 @@ public final class SpringBootIrValidation {
       }
    }
 
-   /**
-   * A guard is written into the statement that persists the row, so the update must be persisted and
+    /** The null policy is mandatory for optional comparisons and must match their physical operands. */
+    private void validatePresentComparison(SpringExpression.BinaryExpression value, SpringBootDeclaration owner) {
+       boolean comparison = switch (value.operator()) {
+          case EQ, NE, LT, LE, GT, GE -> true;
+          default -> false;
+       };
+       boolean left = value.left().type() instanceof LoweredJavaType.OptionalValue;
+       boolean right = value.right().type() instanceof LoweredJavaType.OptionalValue;
+       boolean needsPlan = comparison && (left || right);
+       if (needsPlan != value.presentComparison().isPresent()) {
+          this.error(owner, "optional comparisons require exactly one present-only comparison plan");
+       }
+       value.presentComparison().ifPresent(plan -> {
+          LoweredJavaType operand = left ? ((LoweredJavaType.OptionalValue) value.left().type()).elementType() : value.left().type();
+          LoweredJavaType other = right ? ((LoweredJavaType.OptionalValue) value.right().type()).elementType() : value.right().type();
+          if (!plan.operandType().equals(operand) || !operand.equals(other) || plan.checkLeft() != left || plan.checkRight() != right) {
+             this.error(owner, "present-only comparison plan does not match its operands");
+          }
+       });
+    }
+
+    /**
+    * A guard is written into the statement that persists the row, so the update must be persisted and
    * that persist must be a plain one: a version check and a guard are two different protections and a
    * lowered model that asks for both (or for a guard on nothing) would generate a statement that
    * checks one of them by accident.

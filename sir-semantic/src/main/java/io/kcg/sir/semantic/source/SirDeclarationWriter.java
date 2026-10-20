@@ -410,7 +410,10 @@ public final class SirDeclarationWriter {
          case "BinaryExpression" -> binary(node);
          case "UnaryExpression" -> {
             String operator = text(node, "operator");
-            String prefix = switch (operator) {
+             if (operator.equals("IS_NONE") || operator.equals("IS_PRESENT")) {
+                yield expression(child(node, "operand"), RELATIONAL + 1) + (operator.equals("IS_NONE") ? " is none" : " is present");
+             }
+             String prefix = switch (operator) {
                case "NOT" -> "not ";
                case "NEGATE" -> "-";
                default -> throw new IllegalArgumentException("unknown unary operator " + operator);
@@ -450,7 +453,7 @@ public final class SirDeclarationWriter {
    private static int levelOf(StructNode node) {
       return switch (node.kind()) {
          case "BinaryExpression" -> OPERATOR_LEVEL.getOrDefault(text(node, "operator"), POSTFIX);
-         case "UnaryExpression" -> UNARY;
+          case "UnaryExpression" -> text(node, "operator").startsWith("IS_") ? RELATIONAL : UNARY;
          case "TimeShiftExpression" -> ADDITIVE;
          case "IntegerLiteral" -> text(node, "value").startsWith("-") ? UNARY : POSTFIX;
          case "DecimalLiteral" -> text(node, "value").startsWith("-") ? UNARY : POSTFIX;

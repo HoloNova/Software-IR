@@ -112,14 +112,23 @@ final class ExpressionRenderer {
 
       return switch (unary.operator()) {
          case NOT -> "!(" + operand + ")";
-         case NEGATE -> "-(" + operand + ")";
+          case NEGATE -> "-(" + operand + ")";
+          case IS_NONE -> "(" + operand + ") == null";
+          case IS_PRESENT -> "(" + operand + ") != null";
       };
    }
 
    private static String renderBinary(BinaryExpression binary, Map<SymbolId, String> variableNames, PresenceScope presence) {
       String left = renderExpression(binary.left(), variableNames, presence);
       String right = renderExpression(binary.right(), variableNames, presence);
-      LoweredJavaType operandType = binary.left().type();
+       if (binary.presentComparison().isPresent()) {
+          SpringExpression.PresentComparison plan = binary.presentComparison().orElseThrow();
+          String comparison = renderComparison(binary.operator(), left, right, plan.operandType());
+          String guard = (plan.checkLeft() ? "(" + left + ") != null && " : "")
+             + (plan.checkRight() ? "(" + right + ") != null && " : "");
+          return "(" + guard + "(" + comparison + "))";
+       }
+       LoweredJavaType operandType = binary.left().type();
 
       return switch (binary.operator()) {
          case AND -> "(" + left + ") && (" + right + ")";
@@ -135,6 +144,23 @@ final class ExpressionRenderer {
          case MATCHES -> "SecretDigest.matches(" + right + ", " + left + ")";
          case CONTAINS_LITERAL -> throw new IllegalStateException(
                  "literal matching is a query predicate, not a value expression: " + binary.id());
+      };
+   }
+
+   private static String renderComparison(SpringExpression.BinaryOperator operator, String left, String right, LoweredJavaType type) {
+      // Boxed optional integers compare by value, not by their wrapper object's identity.
+      if ((operator == SpringExpression.BinaryOperator.EQ || operator == SpringExpression.BinaryOperator.NE)
+            && (isScalarKind(type, ScalarKind.INTEGER) || isScalarKind(type, ScalarKind.LONG))) {
+         return (operator == SpringExpression.BinaryOperator.NE ? "!" : "") + "java.util.Objects.equals(" + left + ", " + right + ")";
+      }
+      return switch (operator) {
+         case EQ -> renderEquality(left, right, type, "==", true);
+         case NE -> renderEquality(left, right, type, "!=", false);
+         case LT -> renderOrdering(left, right, type, "<");
+         case LE -> renderOrdering(left, right, type, "<=");
+         case GT -> renderOrdering(left, right, type, ">");
+         case GE -> renderOrdering(left, right, type, ">=");
+         default -> throw new IllegalStateException("present-only plan on a non-comparison: " + operator);
       };
    }
 

@@ -1426,7 +1426,16 @@ final class ValidatePass {
                this.diagnostics.add(DiagnosticBuilder.error("SIR-VALID-007", GUARD_SHAPE, binary.span()));
             }
          }
-         case AstUnaryExpression unary when unary.operator() == AstUnaryOperator.NOT -> this.validateGuardShape(unary.operand(), target);
+          case AstUnaryExpression unary when unary.operator() == AstUnaryOperator.NOT -> this.validateGuardShape(unary.operand(), target);
+          case AstUnaryExpression unary when unary.operator() == AstUnaryOperator.IS_NONE || unary.operator() == AstUnaryOperator.IS_PRESENT -> {
+             AstExpression operand = this.ungroup(unary.operand());
+             boolean column = operand instanceof AstMemberExpression member
+                && this.ungroup(member.receiver()) instanceof AstNameExpression name
+                && target.equals(this.typed.referenceSiteBindings().targetFor(name.name().id()).orElse(null));
+             if (!column && this.mentionsVariable(operand, target)) {
+                this.diagnostics.add(DiagnosticBuilder.error("SIR-VALID-007", GUARD_SHAPE, unary.span()));
+             }
+          }
          default -> this.diagnostics.add(DiagnosticBuilder.error("SIR-VALID-007", GUARD_SHAPE, expression.span()));
       }
    }
