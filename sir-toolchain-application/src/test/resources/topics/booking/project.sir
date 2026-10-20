@@ -36,9 +36,11 @@ software RoomBooking {
       field name: Name;
       field role: Role;
     }
+    error NameTaken http 409;
     capability Register {
       input RegisterInput;
       output UserView;
+      fails NameTaken;
       requires atomic;
       expose command at "/register";
       workflow {
@@ -46,7 +48,7 @@ software RoomBooking {
           name: input.name;
           passwordHash: input.password;
         }
-        persist user;
+        persist user else NameTaken;
         return user;
       }
     }

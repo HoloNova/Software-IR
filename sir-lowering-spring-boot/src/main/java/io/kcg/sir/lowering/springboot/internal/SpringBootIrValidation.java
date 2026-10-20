@@ -1026,6 +1026,13 @@ public final class SpringBootIrValidation {
             break;
          case SpringBootWorkflow.PersistStep value:
             this.requireKnown(value.targetVariable(), owner, "persist target variable");
+            if (value.action() == io.kcg.sir.lowering.springboot.model.PersistenceAction.INSERT && value.failure().isPresent()) {
+               // The error a new row's collision with an existing row is answered with must be one the capability declares.
+               this.requireDeclaration(value.failure().orElseThrow(), SpringBootDeclaration.ErrorDeclaration.class, owner);
+               if (!owner.failures().contains(value.failure().orElseThrow())) {
+                  this.error(owner, "an insert's duplicate failure must be declared in the capability failures: " + value.failure().orElseThrow());
+               }
+            }
             break;
          case SpringBootWorkflow.ReturnStep value:
             this.validateExpression(value.value(), owner);

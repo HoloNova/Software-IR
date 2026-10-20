@@ -85,6 +85,8 @@ final class ValidatePass {
    private final Map<SymbolId, SymbolId> entityVersionFields = new LinkedHashMap<>();
    /** Entity field symbols the author declared unique: the only fields a load may look a row up by. */
    private final Set<SymbolId> uniqueFields = new LinkedHashSet<>();
+   /** Entities that have a unique constraint: the rows of these can collide with a row that is already there. */
+   private final Set<SymbolId> uniqueEntities = new LinkedHashSet<>();
    /** Entity field symbols the author declared secret: stored as a digest, readable only through matches. */
    private final Set<SymbolId> secretFields = new LinkedHashSet<>();
 
@@ -125,6 +127,7 @@ final class ValidatePass {
 
                      if (f.unique() && fieldSymId != null) {
                         this.uniqueFields.add(fieldSymId);
+                        this.uniqueEntities.add(declSymId);
                      }
 
                      if (f.secret() && fieldSymId != null) {
@@ -1088,9 +1091,17 @@ final class ValidatePass {
                "SIR-VALID-004", "versioned 实体的条件更新 persist 必须声明 else 错误", persist.span()));
          }
 
-         if (!conditionalUpdate && persist.failure().isPresent()) {
+         if (!conditionalUpdate && persist.failure().isPresent() && !this.insertsIntoUniqueEntity(capDecl, persist)) {
             this.diagnostics.add(DiagnosticBuilder.error(
-               "SIR-VALID-004", "persist ... else 只适用于 versioned 实体的条件更新（插入行数恒为 1）", persist.failure().orElseThrow().span()));
+               "SIR-VALID-004", PERSIST_ELSE_RULE, persist.failure().orElseThrow().span()));
+         }
+      }
+
+      // An earlier persist may carry an else only when it writes a new row that can collide with a unique constraint.
+      for (AstStep step : capDecl.workflow().steps()) {
+         if (step instanceof AstPersistStep persist && persist != lastPersist && persist.failure().isPresent()
+               && !this.insertsIntoUniqueEntity(capDecl, persist)) {
+            this.diagnostics.add(DiagnosticBuilder.error("SIR-VALID-004", PERSIST_ELSE_RULE, persist.failure().orElseThrow().span()));
          }
       }
 
@@ -1285,6 +1296,26 @@ final class ValidatePass {
       }
 
       return identitySiteTarget;
+   }
+
+   private static final String PERSIST_ELSE_RULE =
+      "persist ... else 只适用于 versioned 实体的条件更新，和写入有唯一约束的实体的新行（撞上已有的行时报这个错误）";
+
+   /** Whether the persisted variable is a row this workflow creates, of an entity that has a unique constraint. */
+   private boolean insertsIntoUniqueEntity(AstCapabilityDecl capDecl, AstPersistStep persist) {
+      SymbolId variable = this.typed.referenceSiteBindings().targetFor(persist.target().id()).orElse(null);
+      SymbolId entity = this.persistTargetEntitySymId(persist);
+      if (variable == null || entity == null || !this.uniqueEntities.contains(entity)) {
+         return false;
+      }
+
+      for (AstStep step : capDecl.workflow().steps()) {
+         if (step instanceof AstCreateStep create && variable.equals(this.typed.referenceBindings().get(create.id()))) {
+            return true;
+         }
+      }
+
+      return false;
    }
 
    private SymbolId persistTargetEntitySymId(AstPersistStep step) {

@@ -615,6 +615,17 @@ final class WorkflowRenderer {
             // matched against it.
             entity.version().ifPresent(version -> lines.add("        " + targetName + "."
                + setter(version.javaName()) + "(" + version.initialValue() + "L);"));
+            if (step.failure().isPresent()) {
+               // The row may collide with one that is already there (a unique field or key): that is the declared failure.
+               String duplicate = errorJavaName(ctx, step.failure().orElseThrow(), imports, currentPackage);
+               lines.add("        try {");
+               lines.add("            " + mapper.mapperFieldName() + ".insert(" + targetName + ");");
+               lines.add("        } catch (org.springframework.dao.DuplicateKeyException duplicate) {");
+               lines.add("            throw new " + duplicate + "();");
+               lines.add("        }");
+               return;
+            }
+
             lines.add("        " + mapper.mapperFieldName() + ".insert(" + targetName + ");");
             return;
          }

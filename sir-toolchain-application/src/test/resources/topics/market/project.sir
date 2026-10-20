@@ -35,9 +35,11 @@ software CampusMarket {
       field id: Id;
       field name: Name;
     }
+    error NameTaken http 409;
     capability Register {
       input RegisterInput;
       output UserView;
+      fails NameTaken;
       requires atomic;
       expose command at "/register";
       workflow {
@@ -45,7 +47,7 @@ software CampusMarket {
           name: input.name;
           passwordHash: input.password;
         }
-        persist user;
+        persist user else NameTaken;
         return user;
       }
     }

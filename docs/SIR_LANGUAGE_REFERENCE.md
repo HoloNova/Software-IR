@@ -1154,7 +1154,38 @@ persist 变量;
 
 `update` 只改内存里的这一行，`persist` 才写入。`update` 不能改主键，也不能改 `versioned` 字段（框架负责递增）。
 
-对**带 `versioned` 的实体**：更新它的能力必须用这个实体的局部更新输入（`patch of`，见 3.3），更新后的 `persist` 必须写 `else 错误名`，在别人先改过时报这个错误；对没有 `versioned` 的实体不能写 `else`。违反这几条都是 `SIR-VALID-004`。
+对**带 `versioned` 的实体**：更新它的能力必须用这个实体的局部更新输入（`patch of`，见 3.3），更新后的 `persist` 必须写 `else 错误名`，在别人先改过时报这个错误；对没有 `versioned` 的实体，`else` 只有下面说的一种用法。违反这几条都是 `SIR-VALID-004`。
+
+**新建的行撞上已有的行。**实体里有 `unique` 字段时，新建的行可能和已经存在的行重复（比如重复注册同一个名字）。`persist 变量 else 错误名;` 说明这时报哪个已声明的错误；不写 `else`，数据库的异常会原样变成 500。这个 `else` 只对 `create` 出来的行、且实体有唯一约束时才能写（`SIR-VALID-004`）：
+
+```sir-declarations
+entity Account persistent {
+  identity id: Id generated auto;
+  field name: Name unique;
+}
+view AccountView from Account {
+  field id: Id;
+  field name: Name;
+}
+input NewAccount {
+  field name: Name;
+}
+error NameTaken http 409;
+capability Register {
+  input NewAccount;
+  output AccountView;
+  fails NameTaken;
+  requires atomic;
+  expose command;
+  workflow {
+    create Account as made {
+      name: input.name;
+    }
+    persist made else NameTaken;
+    return made;
+  }
+}
+```
 
 ### 5.6 守卫更新：`update 变量 when 条件 else 错误 { ... }`
 
