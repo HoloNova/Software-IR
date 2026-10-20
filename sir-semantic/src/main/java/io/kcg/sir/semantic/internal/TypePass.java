@@ -521,7 +521,14 @@ final class TypePass {
                SymbolId stepScopeId = SymbolIdFactory.capabilityStepScope(capScopeId, s.id().value());
                Set<String> predVars = new LinkedHashSet<>(visibleVars);
                predVars.add("item");
-               SirType predType = this.typeExpression(s.predicate(), stepScopeId, predVars);
+               this.inFindPredicate = true;
+               SirType predType;
+               try {
+                  predType = this.typeExpression(s.predicate(), stepScopeId, predVars);
+               } finally {
+                  this.inFindPredicate = false;
+               }
+
                if (predType != null && !TypeRules.isBoolean(predType)) {
                   this.diagnostics.add(DiagnosticBuilder.error("SIR-TYPE-001", "find 谓词必须是 Boolean", s.predicate().span()));
                }
@@ -680,6 +687,13 @@ final class TypePass {
       return found instanceof Symbol.FieldSymbol field ? field.type() : null;
    }
 
+   private boolean isComparison(AstBinaryOperator operator) {
+      return switch (operator) {
+         case EQ, NE, GT, GE, LT, LE -> true;
+         default -> false;
+      };
+   }
+
    private SirType typeMemberExpression(AstMemberExpression expr, SymbolId scopeId, Set<String> visibleVars) {
       SirType receiverType = this.typeExpression(expr.receiver(), scopeId, visibleVars);
       if (receiverType == null) {
@@ -820,6 +834,9 @@ final class TypePass {
       return null;
    }
 
+   /** Whether the expression being typed is the predicate of a find. */
+   private boolean inFindPredicate;
+
    private SirType typeBinaryExpression(AstBinaryExpression expr, SymbolId scopeId, Set<String> visibleVars) {
       SirType leftType = this.typeExpression(expr.left(), scopeId, visibleVars);
       SirType rightType = this.typeExpression(expr.right(), scopeId, visibleVars);
@@ -829,6 +846,15 @@ final class TypePass {
          } else if (leftType == PrimitiveType.INT64 && rightType == PrimitiveType.INT32 && this.widenIntegerLiteral(expr.right())) {
             rightType = PrimitiveType.INT64;
          }
+      }
+
+      if (this.inFindPredicate && leftType != null && rightType != null && this.isComparison(expr.operator())
+            && (leftType instanceof OptionalType || rightType instanceof OptionalType)) {
+         // A condition on a column is one comparison with a bound value; what it means when either side may be absent
+         // (no row matches? every row?) is not defined, so it is refused rather than guessed.
+         this.diagnostics.add(DiagnosticBuilder.error(
+            "SIR-TYPE-001", "find 谓词里不能和可选值比较：可选值缺失时这个条件的含义没有定义", expr.span()));
+         return null;
       }
 
       if (leftType != null && rightType != null) {

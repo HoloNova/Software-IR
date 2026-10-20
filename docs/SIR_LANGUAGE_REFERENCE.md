@@ -1020,6 +1020,35 @@ capability Wrong {
 }
 ```
 
+谓词里不能和可选值比较（字段或请求参数是 `Optional<...>` 的那一边）：值缺失时这个条件是“一行也不匹配”还是“不加这个条件”，语言还没有规定，所以现在直接拒绝，而不是让生成的查询悄悄查不到任何行：
+
+```sir-error SIR-TYPE-001
+entity Ticket persistent {
+  identity id: Id generated auto;
+  field kind: Optional<Code>;
+}
+view TicketView from Ticket {
+  field id: Id;
+}
+input Filter {
+  field kind: Optional<Code>;
+  field page: PageNo;
+  field size: PageSize;
+}
+error BadPage;
+capability Wrong {
+  input Filter;
+  output Page<TicketView>;
+  fails BadPage;
+  requires readonly;
+  expose query;
+  workflow {
+    find Ticket where item.kind == input.kind Page input.page, input.size else BadPage as found;
+    return found;
+  }
+}
+```
+
 **关联存在性：`any(实体, 条件)`。** 在 `find` 的谓词里问“有没有另一个实体的行指向我，并满足条件”：
 
 ```sir-declarations
