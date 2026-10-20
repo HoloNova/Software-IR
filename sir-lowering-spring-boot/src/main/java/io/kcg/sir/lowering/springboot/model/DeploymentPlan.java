@@ -27,11 +27,16 @@ public record DeploymentPlan(LoweredNodeId id, ProjectArtifact.MavenProject appl
     /** How an endpoint receives its input: none, a JSON body, or query parameters. */
     public enum Binding { NONE, BODY, QUERY }
     /** Text rules are only listed for a plain (non-patch) JSON body, the only place their violation has a declared envelope. */
-    public record Endpoint(String method, String route, boolean authenticated, Binding binding, List<TextRule> textRules,
+    /**
+     * One operation of the interface. {@code route} is the path as documented, with its {@code {field}} segments;
+     * {@code sample} is a path a check can request, each segment filled with a value of the field's kind.
+     */
+    public record Endpoint(String method, String route, String sample, boolean authenticated, Binding binding, List<TextRule> textRules,
             List<DeclaredError> errors) {
         public Endpoint {
-            if (method == null || !method.matches("GET|POST|PATCH")) throw new IllegalArgumentException("unsupported HTTP method: " + method);
-            if (route == null || !route.matches("/[A-Za-z0-9/_-]*")) throw new IllegalArgumentException("unsupported route: " + route);
+            if (method == null || !method.matches("GET|POST|PUT|PATCH|DELETE")) throw new IllegalArgumentException("unsupported HTTP method: " + method);
+            if (route == null || !route.matches("/[A-Za-z0-9/_{}-]*")) throw new IllegalArgumentException("unsupported route: " + route);
+            if (sample == null || !sample.matches("/[A-Za-z0-9/_-]*")) throw new IllegalArgumentException("unsupported sample path: " + sample);
             Objects.requireNonNull(binding);
             textRules = List.copyOf(textRules);
             errors = List.copyOf(errors);

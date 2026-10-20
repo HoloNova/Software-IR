@@ -44,7 +44,7 @@ ${if owner}
       requires authenticated;
 ${end}
       requires atomic;
-      expose command;
+      expose command${if path} at "/${path}"${end};
       workflow {
         create ${entity} as row {
 ${for f in entity.fields except defaulted, versioned, owner}
@@ -69,7 +69,7 @@ ${if owner}
       requires authenticated;
 ${end}
       requires readonly;
-      expose query;
+      expose query${if path} at "/${path}/{${entity.identity.name}}"${end};
       workflow {
         load ${entity} by input.${entity.identity.name} as row else ${entity}NotFound;
 ${if owner}
@@ -89,7 +89,7 @@ ${if owner}
       requires authenticated;
 ${end}
       requires readonly;
-      expose query;
+      expose query${if path} at "/${path}"${end};
       workflow {
 ${if owner}
         find ${entity} where item.${owner} == actor order by ${entity.identity.name} ascending Page input.page, input.size else Invalid${entity}Page as rows;
@@ -113,7 +113,7 @@ ${if owner}
       requires authenticated;
 ${end}
       requires atomic;
-      expose command;
+      expose command${if path}${if not entity.versioned} put${end} at "/${path}/{${entity.identity.name}}"${end};
       workflow {
         load ${entity} by input.${entity.identity.name} as row else ${entity}NotFound;
 ${if owner}
@@ -143,7 +143,7 @@ ${if owner}
       requires authenticated;
 ${end}
       requires atomic;
-      expose command;
+      expose command${if path} delete at "/${path}/{${entity.identity.name}}"${end};
       workflow {
         load ${entity} by input.${entity.identity.name} as row else ${entity}NotFound;
 ${if owner}

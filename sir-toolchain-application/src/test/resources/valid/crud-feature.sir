@@ -49,8 +49,8 @@ software CrudDesk {
       field author: Ref<User>;
       field text: Text;
     }
-    use Crud { entity: Note; }
-    use Crud { entity: Item; }
+    use Crud { entity: Note; path: notes; }
+    use Crud { entity: Item; path: items; }
     use Crud { entity: User; }
     use Crud { entity: Post; owner: author; }
     use DualTokenLogin { account: User; }

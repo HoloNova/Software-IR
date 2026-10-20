@@ -63,9 +63,9 @@ class CrudFeatureTest {
 
     @Test void aCrudThatCannotBeIsRefusedAtTheUse() throws IOException {
         String base = resource("/valid/crud-feature.sir");
-        assertEquals(List.of("SIR-FEATURE-003"), errors(base.replace("use Crud { entity: Item; }", "use Crud { entity: Level; }")));
-        assertEquals(List.of("SIR-FEATURE-005"), errors(base.replace("use Crud { entity: Item; }", "use Crud { entity: Note; }")));
-        assertEquals(List.of("SIR-FEATURE-002"), errors(base.replace("use Crud { entity: Item; }", "use Crud { }")));
+        assertEquals(List.of("SIR-FEATURE-003"), errors(base.replace("use Crud { entity: Item; path: items; }", "use Crud { entity: Level; }")));
+        assertEquals(List.of("SIR-FEATURE-005"), errors(base.replace("use Crud { entity: Item; path: items; }", "use Crud { entity: Note; }")));
+        assertEquals(List.of("SIR-FEATURE-002"), errors(base.replace("use Crud { entity: Item; path: items; }", "use Crud { }")));
         // The owner must be a field of the entity.
         assertEquals(List.of("SIR-FEATURE-003"), errors(base.replace("owner: author;", "owner: writer;")));
     }
@@ -101,7 +101,7 @@ class CrudFeatureTest {
     }
 
     @Test void anEditCanAddAnotherUseOfTheSameFeature() throws IOException {
-        String base = resource("/valid/crud-feature.sir").replace("    use Crud { entity: Item; }\n", "");
+        String base = resource("/valid/crud-feature.sir").replace("    use Crud { entity: Item; path: items; }\n", "");
         var use = new StructNode("NormalizedFeatureUse", List.of(
             new StructNode.Slot("name", SlotKind.FACT, new StructValue.Text("Crud")),
             new StructNode.Slot("arguments", SlotKind.FACT, new StructValue.Seq(List.of(new StructValue.Child(new StructNode("NormalizedFeatureArgument", List.of(
@@ -112,7 +112,7 @@ class CrudFeatureTest {
             List.of(new Command.Add(Selector.root().slot("declarations"), new StructValue.Child(use)))));
         assertTrue(result instanceof EditResult.Edited, result::toString);
         String text = new String(((EditResult.Edited) result).sources().bytes(ENTRY), StandardCharsets.UTF_8);
-        assertTrue(text.contains("use Crud {\n      entity: Item;\n    }") || text.contains("use Crud { entity: Item; }"), text);
+        assertTrue(text.contains("use Crud {\n      entity: Item;\n    }") || text.contains("use Crud { entity: Item; path: items; }"), text);
         assertEquals(files(compile(resource("/valid/crud-feature.sir"))).keySet(), files(compile(text)).keySet());
     }
 

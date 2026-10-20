@@ -87,7 +87,7 @@ final class Nodes {
     /** A read-only query capability with no actor, errors or paging. */
     static StructNode queryCapability(String name, String inputName, StructNode output, StructNode... steps) {
         return node("NormalizedCapability", "name", FACT, text(name), "actorSymbol", REF, none(), "inputSymbol", REF, text(inputName), "outputType", FACT, child(output),
-            "fails", REF, seq(), "requires", FACT, seq(text("READONLY")), "exposure", FACT, text("QUERY"),
+            "fails", REF, seq(), "requires", FACT, seq(text("READONLY")), "exposure", FACT, text("QUERY"), "method", FACT, none(), "path", FACT, none(),
             "workflow", FACT, child(node("NormalizedWorkflow", "steps", FACT, seqOf(List.of(steps)))));
     }
 }

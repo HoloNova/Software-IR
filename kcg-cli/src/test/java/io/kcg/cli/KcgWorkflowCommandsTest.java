@@ -140,7 +140,7 @@ class KcgWorkflowCommandsTest {
         var inspected = run("", sourceArgs("inspect", source)); assertEquals(0, inspected.exit(), inspected.stdout());
         var expanded = (List<?>) obj(StrictJson.parse(inspected.stdout())).get("expandedDeclarations");
         assertTrue(expanded.contains(Map.of("kind", "NormalizedCapability", "name", "CreateNote", "feature", "Crud",
-            "arguments", Map.of("entity", "Note"), "role", "CreateNote")), expanded.toString());
+            "arguments", Map.of("entity", "Note", "path", "notes"), "role", "CreateNote")), expanded.toString());
         assertTrue(expanded.contains(Map.of("kind", "NormalizedEntityExtension", "name", "User", "feature", "DualTokenLogin",
             "arguments", Map.of("account", "User"), "role", "User")), expanded.toString());
         // Written declarations are not listed: the entities, and the uses themselves.

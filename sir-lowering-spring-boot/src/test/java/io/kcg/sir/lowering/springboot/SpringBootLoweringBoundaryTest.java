@@ -77,7 +77,7 @@ class SpringBootLoweringBoundaryTest {
                         capability.id(), capability.name(), capability.span(), capability.sourceNodeId(),
                         capability.actorSymbol(), capability.inputSymbol(), capability.outputType(),
                         List.of(new SymbolId("sir://unknown/error")), capability.requires(), capability.exposure(),
-                        capability.workflow()));
+                        capability.method(), capability.path(), capability.workflow()));
             }
         }
 

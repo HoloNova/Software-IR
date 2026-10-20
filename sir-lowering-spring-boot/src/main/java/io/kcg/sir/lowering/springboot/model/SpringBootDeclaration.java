@@ -181,7 +181,9 @@ public sealed interface SpringBootDeclaration
    enum HttpMethod {
       GET,
       POST,
-      PATCH;
+      PUT,
+      PATCH,
+      DELETE;
    }
 
    enum HttpStatus {

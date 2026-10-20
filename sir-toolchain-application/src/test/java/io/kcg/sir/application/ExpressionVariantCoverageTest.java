@@ -55,9 +55,10 @@ class ExpressionVariantCoverageTest {
         check(problems, kinds, SEMANTIC + "internal/ResolvePass.java", SYNTAX_LEAVES);
         check(problems, kinds, SEMANTIC + "internal/TypePass.java", Set.of());
         check(problems, kinds, SEMANTIC + "internal/NormalizePass.java", Set.of());
-        // the validator only walks for presence tests and existence predicates, which leaves can contain neither of
+        // the validator only walks for presence tests and existence predicates, which leaves can contain neither of; it
+        // names AstStringLiteral all the same, as the literal path of an expose clause
         check(problems, kinds, SEMANTIC + "internal/ValidatePass.java",
-                Set.of("AstBooleanLiteral", "AstStringLiteral", "AstUnitLiteral", "AstNowExpression"));
+                Set.of("AstBooleanLiteral", "AstUnitLiteral", "AstNowExpression"));
         check(problems, kinds, "sir-parser/src/main/java/io/kcg/sir/internal/SirAstBuilder.java", Set.of());
 
         assertTrue(problems.isEmpty(), () -> String.join("\n", problems));

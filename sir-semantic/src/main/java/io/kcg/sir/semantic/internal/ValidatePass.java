@@ -16,6 +16,8 @@ import io.kcg.sir.ast.AstExposureKind;
 import io.kcg.sir.ast.AstExpression;
 import io.kcg.sir.ast.AstFailsClause;
 import io.kcg.sir.ast.AstField;
+import io.kcg.sir.ast.AstStringLiteral;
+import io.kcg.sir.source.SourceSpan;
 import io.kcg.sir.ast.AstFindOrderKey;
 import io.kcg.sir.ast.AstFindPage;
 import io.kcg.sir.ast.AstFindStep;
@@ -191,6 +193,8 @@ final class ValidatePass {
          }
       }
 
+      this.validateExposures();
+
       for (AstDeclaration decl : this.software.declarations()) {
          if (this.typed.declarationBindings().containsKey(decl.id())) {
             if (decl instanceof AstEntityDecl entityDecl) {
@@ -212,6 +216,124 @@ final class ValidatePass {
 
       this.validateCredentials();
       return ValidatedContext.from(this.typed, List.copyOf(this.diagnostics));
+   }
+
+   private static final String ROUTE_CODE = "SIR-VALID-013";
+   private static final java.util.regex.Pattern ROUTE_SEGMENT = java.util.regex.Pattern.compile("[a-z0-9]+(-[a-z0-9]+)*|\\{[A-Za-z][A-Za-z0-9]*}");
+
+   /**
+   * Where each capability is reached: an HTTP method and a path under {@code /api}.
+   *
+   * <p>{@code put} and {@code delete} change a command's method; a patch payload is always sent with PATCH. A written
+   * path is lower-case words and {@code {field}} segments, each naming a required field of the input with a plain value
+   * (a number, a text or a uuid); with a patch payload only its identity may be in the path, because the
+   * other fields are changes. Two capabilities may not share a method and a path shape ({@code /notes/{id}} and
+   * {@code /notes/{noteId}} are one shape), counting the paths capabilities get from their names.
+   */
+   private void validateExposures() {
+      Map<String, AstCapabilityDecl> shapes = new LinkedHashMap<>();
+      for (AstDeclaration decl : this.software.declarations()) {
+         if (!(decl instanceof AstCapabilityDecl capDecl) || !this.typed.declarationBindings().containsKey(decl.id())) {
+            continue;
+         }
+
+         var expose = capDecl.exposure();
+         boolean query = expose.exposure() == AstExposureKind.QUERY;
+         SymbolId inputSymId = this.capabilityInputSymbolId(capDecl);
+         boolean patch = inputSymId != null && this.patchInputSourceEntities.containsKey(inputSymId);
+         if (expose.method().isPresent() && query) {
+            this.diagnostics.add(DiagnosticBuilder.error(ROUTE_CODE, "put/delete 只能用于 expose command", expose.method().get().span()));
+         } else if (expose.method().isPresent() && patch) {
+            this.diagnostics.add(DiagnosticBuilder.error(ROUTE_CODE, "patch 载荷固定用 PATCH，不能写 put/delete", expose.method().get().span()));
+         }
+
+         String method = query ? "GET" : expose.method().map(m -> m.text().toUpperCase(java.util.Locale.ROOT)).orElse(patch ? "PATCH" : "POST");
+         String path = expose.path().map(AstStringLiteral::value).orElse("/" + kebab(capDecl.name().text()));
+         if (expose.path().isPresent() && !this.validRoute(capDecl, path, inputSymId, patch)) {
+            continue;
+         }
+
+         String shape = method + " " + path.replaceAll("\\{[^}]*}", "{}");
+         AstCapabilityDecl first = shapes.putIfAbsent(shape, capDecl);
+         if (first != null) {
+            this.diagnostics.add(DiagnosticBuilder.errorWithRelated(ROUTE_CODE, "两个能力的方法和路径相同: " + method + " /api" + path,
+               expose.span(), new RelatedLocation("另一个能力在此处", first.exposure().span())));
+         }
+      }
+   }
+
+   private boolean validRoute(AstCapabilityDecl capDecl, String path, SymbolId inputSymId, boolean patch) {
+      SourceSpan span = capDecl.exposure().path().orElseThrow().span();
+      if (!path.startsWith("/") || path.length() < 2 || path.length() > 200) {
+         this.diagnostics.add(DiagnosticBuilder.error(ROUTE_CODE, "路径以 / 开头，不能只有 /，最长 200 个字符: " + path, span));
+         return false;
+      }
+
+      AstInputDecl input = inputSymId == null ? null : this.inputDeclarations.get(inputSymId);
+      Set<String> named = new LinkedHashSet<>();
+      boolean valid = true;
+      for (String segment : path.substring(1).split("/", -1)) {
+         if (!ROUTE_SEGMENT.matcher(segment).matches()) {
+            this.diagnostics.add(DiagnosticBuilder.error(ROUTE_CODE, "路径段只能是小写字母、数字和短横线，或 {输入字段}: " + segment, span));
+            valid = false;
+            continue;
+         }
+
+         if (!segment.startsWith("{")) {
+            continue;
+         }
+
+         String name = segment.substring(1, segment.length() - 1);
+         if (!named.add(name)) {
+            this.diagnostics.add(DiagnosticBuilder.error(ROUTE_CODE, "路径里 {" + name + "} 出现了两次", span));
+            valid = false;
+            continue;
+         }
+
+         AstField field = input == null ? null : input.fields().stream().filter(f -> f.name().text().equals(name)).findFirst().orElse(null);
+         if (field == null) {
+            this.diagnostics.add(DiagnosticBuilder.error(ROUTE_CODE, "路径里的 {" + name + "} 不是这个能力输入的字段", span));
+            valid = false;
+            continue;
+         }
+
+         SirType type = this.typed.typeRefTypes().get(field.type().id());
+         SirType kind = type == null ? null : io.kcg.sir.semantic.feature.SemanticTypes.kind(type);
+         boolean plain = kind == PrimitiveType.INT32 || kind == PrimitiveType.INT64 || kind == PrimitiveType.STRING || kind == PrimitiveType.UUID;
+         if (!plain) {
+            this.diagnostics.add(DiagnosticBuilder.error(ROUTE_CODE,
+               "路径里的 {" + name + "} 必须是必填的数字、文本或 uuid 字段", span));
+            valid = false;
+            continue;
+         }
+
+         if (patch) {
+            SymbolId member = this.typed.patchFieldBindings().get(SymbolIdFactory.inputField(this.softwareName, input.name().text(), name));
+            SymbolId identity = this.entityIdentitySymbolIds.get(this.patchInputSourceEntities.get(inputSymId));
+            if (member == null || !member.equals(identity)) {
+               this.diagnostics.add(DiagnosticBuilder.error(ROUTE_CODE, "patch 载荷只能把主键放进路径: " + name, span));
+               valid = false;
+            }
+         }
+      }
+
+      return valid;
+   }
+
+   /** A capability's name as the path it gets when none is written: PublishGoods is publish-goods. */
+   private static String kebab(String value) {
+      StringBuilder result = new StringBuilder();
+      for (int offset = 0; offset < value.length(); ) {
+         int point = value.codePointAt(offset);
+         if (Character.isUpperCase(point) && result.length() > 0) {
+            result.append('-');
+         }
+
+         result.appendCodePoint(Character.toLowerCase(point));
+         offset += Character.charCount(point);
+      }
+
+      return result.toString();
    }
 
    private void validateCapability(AstCapabilityDecl capDecl) {

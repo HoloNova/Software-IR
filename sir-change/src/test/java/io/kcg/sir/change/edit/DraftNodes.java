@@ -113,6 +113,8 @@ final class DraftNodes {
             "fails", REF, seq(),
             "requires", FACT, seq(text("READONLY")),
             "exposure", FACT, text("QUERY"),
+            "method", FACT, none(),
+            "path", FACT, none(),
             "workflow", FACT, child(node("NormalizedWorkflow", "steps", FACT, seqOf(List.of(steps))))
         );
     }

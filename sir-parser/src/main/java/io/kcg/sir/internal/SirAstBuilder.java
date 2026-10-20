@@ -424,10 +424,14 @@ final class SirAstBuilder {
                 })
                 .toList();
         String exposePath = ids.fixed(path, "expose");
+        SirParser.ExposeClauseContext expose = context.exposeClause();
         AstExposeClause exposure = new AstExposeClause(
                 ids.id(exposePath),
-                source.span(context.exposeClause()),
-                context.exposeClause().COMMAND() == null ? AstExposureKind.QUERY : AstExposureKind.COMMAND);
+                source.span(expose),
+                expose.COMMAND() == null ? AstExposureKind.QUERY : AstExposureKind.COMMAND,
+                java.util.Optional.ofNullable(expose.httpVerb()).map(verb -> name(verb.IDENT())),
+                java.util.Optional.ofNullable(expose.routePath()).map(route -> new AstStringLiteral(ids.id(ids.fixed(exposePath, "path")),
+                        source.span(route.path), SirStringDecoder.decode(route.path.getText()))));
         return new AstCapabilityDecl(
                 ids.id(path),
                 source.span(context),

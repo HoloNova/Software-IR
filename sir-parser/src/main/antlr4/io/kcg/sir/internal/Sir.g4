@@ -249,8 +249,18 @@ requirement
     | READONLY
     ;
 
+// "expose command put at \"/notes/{id}\";" chooses the HTTP method and path of a capability; without them the
+// method follows the kind and the path is the capability's name. "put", "delete" and "at" are contextual words.
 exposeClause
-    : EXPOSE (COMMAND | QUERY) SEMI
+    : EXPOSE (COMMAND | QUERY) httpVerb? routePath? SEMI
+    ;
+
+httpVerb
+    : {_input.LT(1).getText().equals("put") || _input.LT(1).getText().equals("delete")}? IDENT
+    ;
+
+routePath
+    : {_input.LT(1).getText().equals("at")}? IDENT path=STRING
     ;
 
 workflowDecl

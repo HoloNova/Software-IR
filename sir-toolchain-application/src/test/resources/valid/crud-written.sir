@@ -87,7 +87,7 @@ software CrudDesk {
       input CreateNoteInput;
       output NoteView;
       requires atomic;
-      expose command;
+      expose command at "/notes";
       workflow {
         create Note as row {
           title: input.title;
@@ -105,7 +105,7 @@ software CrudDesk {
       output NoteView;
       fails NoteNotFound;
       requires readonly;
-      expose query;
+      expose query at "/notes/{id}";
       workflow {
         load Note by input.id as row else NoteNotFound;
         return row;
@@ -116,7 +116,7 @@ software CrudDesk {
       output Page<NoteView>;
       fails InvalidNotePage;
       requires readonly;
-      expose query;
+      expose query at "/notes";
       workflow {
         find Note where true order by id ascending Page input.page, input.size else InvalidNotePage as rows;
         return rows;
@@ -128,7 +128,7 @@ software CrudDesk {
       fails NoteNotFound;
       fails StaleNote;
       requires atomic;
-      expose command;
+      expose command at "/notes/{id}";
       workflow {
         load Note by input.id as row else NoteNotFound;
         update row {
@@ -147,7 +147,7 @@ software CrudDesk {
       output Unit;
       fails NoteNotFound;
       requires atomic;
-      expose command;
+      expose command delete at "/notes/{id}";
       workflow {
         load Note by input.id as row else NoteNotFound;
         delete row;
@@ -180,7 +180,7 @@ software CrudDesk {
       input CreateItemInput;
       output ItemView;
       requires atomic;
-      expose command;
+      expose command at "/items";
       workflow {
         create Item as row {
           title: input.title;
@@ -194,7 +194,7 @@ software CrudDesk {
       output ItemView;
       fails ItemNotFound;
       requires readonly;
-      expose query;
+      expose query at "/items/{id}";
       workflow {
         load Item by input.id as row else ItemNotFound;
         return row;
@@ -205,7 +205,7 @@ software CrudDesk {
       output Page<ItemView>;
       fails InvalidItemPage;
       requires readonly;
-      expose query;
+      expose query at "/items";
       workflow {
         find Item where true order by id ascending Page input.page, input.size else InvalidItemPage as rows;
         return rows;
@@ -216,7 +216,7 @@ software CrudDesk {
       output ItemView;
       fails ItemNotFound;
       requires atomic;
-      expose command;
+      expose command put at "/items/{id}";
       workflow {
         load Item by input.id as row else ItemNotFound;
         update row {
@@ -232,7 +232,7 @@ software CrudDesk {
       output Unit;
       fails ItemNotFound;
       requires atomic;
-      expose command;
+      expose command delete at "/items/{id}";
       workflow {
         load Item by input.id as row else ItemNotFound;
         delete row;

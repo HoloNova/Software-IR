@@ -72,7 +72,7 @@ final class EntityScopes {
       }
       NormalizedWorkflow w = c.workflow();
       return new NormalizedCapability(c.id(), c.name(), c.span(), c.sourceNodeId(), c.actorSymbol(), c.inputSymbol(), c.outputType(),
-         c.fails(), c.requires(), c.exposure(), new NormalizedWorkflow(w.id(), w.span(), w.sourceNodeId(), steps));
+         c.fails(), c.requires(), c.exposure(), c.method(), c.path(), new NormalizedWorkflow(w.id(), w.span(), w.sourceNodeId(), steps));
    }
 
    private NormalizedStep step(NormalizedStep step) {

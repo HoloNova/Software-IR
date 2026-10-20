@@ -513,6 +513,8 @@ final class NormalizePass {
          List.copyOf(fails),
          List.copyOf(requires),
          decl.exposure().exposure(),
+         decl.exposure().method().map(m -> m.text()),
+         decl.exposure().path().map(p -> p.value()),
          workflow
       );
    }

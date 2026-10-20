@@ -678,9 +678,18 @@ public final class SpringBootIrValidation {
       }
 
       if (capability.kind() == SpringBootDeclaration.CapabilityKind.COMMAND
-         && capability.httpMethod() != SpringBootDeclaration.HttpMethod.POST
-         && capability.httpMethod() != SpringBootDeclaration.HttpMethod.PATCH) {
-         this.error(capability, "command capability must use POST or PATCH");
+         && capability.httpMethod() == SpringBootDeclaration.HttpMethod.GET) {
+         this.error(capability, "command capability must not use GET");
+      }
+
+      // A path's {name} segments are fields of the input the request carries.
+      java.util.regex.Matcher variable = java.util.regex.Pattern.compile("\\{([^}]*)}").matcher(capability.route());
+      while (variable.find()) {
+         String name = variable.group(1);
+         boolean known = this.payloadOf(capability).map(input -> input.fields().stream().anyMatch(f -> f.javaName().equals(name))).orElse(false);
+         if (!known) {
+            this.error(capability, "route variable is not a field of the input: " + name);
+         }
       }
 
       boolean patchPayload = this.payloadOf(capability).flatMap(SpringBootDeclaration.InputDeclaration::patch).isPresent();
@@ -897,6 +906,7 @@ public final class SpringBootIrValidation {
       if (capability.input().isEmpty()) {
          expectedInput = TransportPlan.InputBinding.NONE;
       } else if (capability.httpMethod() == SpringBootDeclaration.HttpMethod.POST
+         || capability.httpMethod() == SpringBootDeclaration.HttpMethod.PUT
          || capability.httpMethod() == SpringBootDeclaration.HttpMethod.PATCH) {
          expectedInput = TransportPlan.InputBinding.REQUEST_BODY;
       } else {

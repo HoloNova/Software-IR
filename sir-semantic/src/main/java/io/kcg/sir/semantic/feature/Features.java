@@ -133,11 +133,17 @@ public final class Features {
      * <p>With {@code owner: seller}, the rows belong to accounts: every capability requires an authenticated actor of the
      * type {@code seller} refers to, creating sets {@code seller} to the actor, and showing, listing, changing and
      * deleting see only the actor's own rows. Another account's row is not found (404), so its existence is not told.
+     *
+     * <p>With {@code path: notes}, the capabilities are reached REST-style: {@code POST /api/notes}, {@code GET
+     * /api/notes/{id}}, {@code GET /api/notes}, {@code PUT /api/notes/{id}} (PATCH for a versioned entity) and
+     * {@code DELETE /api/notes/{id}}. Without it each is reached at its own name, as any capability.
      */
     public static final Feature CRUD = new Feature("Crud", List.of(
         new Parameter("entity", Kind.NAME, Optional.empty(), NAME, 0, 0, "entity must name the entity whose rows are managed"),
         new Parameter("owner", Kind.NAME, Optional.of(""), Pattern.compile("([A-Za-z][A-Za-z0-9]{0,63})?"), 0, 0,
-            "owner must name the entity's reference field to the account that owns a row")),
+            "owner must name the entity's reference field to the account that owns a row"),
+        new Parameter("path", Kind.NAME, Optional.of(""), Pattern.compile("([a-z][a-z0-9]{0,63})?"), 0, 0,
+            "path must be a lower-case name such as notes")),
         "/io/kcg/sir/semantic/feature/crud.sir");
 
     private static final Map<String, Feature> ALL = Map.of(DUAL_TOKEN_LOGIN.name(), DUAL_TOKEN_LOGIN, CRUD.name(), CRUD);

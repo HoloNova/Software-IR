@@ -265,7 +265,9 @@ public final class SirDeclarationWriter {
          }
       }
 
-      out.line(1, "expose " + text(node, "exposure").toLowerCase(java.util.Locale.ROOT) + ";");
+      out.line(1, "expose " + text(node, "exposure").toLowerCase(java.util.Locale.ROOT)
+         + optionalText(node, "method").map(m -> " " + m).orElse("")
+         + optionalText(node, "path").map(p -> " at " + string(p)).orElse("") + ";");
       out.line(1, "workflow {");
       for (StructNode step : nodes(child(node, "workflow"), "steps")) {
          this.writeStep(step, out);

@@ -160,6 +160,7 @@ public final class DeploymentEngine {
                 + rule.notBlank() + ", " + rule.minLength() + ", "
                 + (rule.maxLength().isPresent() ? "OptionalInt.of(" + rule.maxLength().getAsInt() + ")" : "OptionalInt.empty()") + ")");
             lines.add("            new Endpoint(" + StringEscape.javaString(endpoint.method()) + ", " + StringEscape.javaString(endpoint.route())
+                + ", " + StringEscape.javaString(endpoint.sample())
                 + ", " + endpoint.authenticated() + ", " + StringEscape.javaString(endpoint.binding().name()) + ", List.of(" + String.join(", ", rules) + "), List.of("
                 + String.join(", ", endpoint.errors().stream().map(e -> StringEscape.javaString(e.status() + " " + e.code())).toList()) + "))");
         }

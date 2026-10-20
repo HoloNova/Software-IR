@@ -601,12 +601,14 @@ public final class SpringBootModelLowerer {
             case AstExposureKind.COMMAND -> SpringBootDeclaration.CapabilityKind.COMMAND;
             case AstExposureKind.QUERY -> SpringBootDeclaration.CapabilityKind.QUERY;
         };
-        SpringBootDeclaration.HttpMethod httpMethod = this.lowerHttpMethod(kind, value.inputSymbol());
+        SpringBootDeclaration.HttpMethod httpMethod = value.method()
+                .map(method -> SpringBootDeclaration.HttpMethod.valueOf(method.toUpperCase(Locale.ROOT)))
+                .orElseGet(() -> this.lowerHttpMethod(kind, value.inputSymbol()));
         Optional<SpringBootWorkflow.Variable> actor = value.actorSymbol().map(this::variable);
         Optional<SpringBootWorkflow.Variable> input = value.inputSymbol().map(this::variable);
         Optional<ActorBinding> actorBinding = value.actorSymbol().map(this::lowerActorBinding);
         TransportPlan transportPlan = this.lowerTransportPlan(value, httpMethod, input.isPresent());
-        return new SpringBootDeclaration.CapabilityDeclaration(this.symbolId(value.id(), "capability"), this.origin(value.id(), value.sourceNodeId(), value.span()), value.id(), value.name(), value.name() + "Service", value.name() + "Controller", this.lowerFirst(value.name()), httpMethod, "/api/" + this.kebab(value.name()), kind, transactionMode, authenticated, actor, input, actorBinding, transportPlan, this.lowerType(value.outputType()), value.fails(), this.lowerWorkflow(value));
+        return new SpringBootDeclaration.CapabilityDeclaration(this.symbolId(value.id(), "capability"), this.origin(value.id(), value.sourceNodeId(), value.span()), value.id(), value.name(), value.name() + "Service", value.name() + "Controller", this.lowerFirst(value.name()), httpMethod, "/api" + value.path().orElse("/" + this.kebab(value.name())), kind, transactionMode, authenticated, actor, input, actorBinding, transportPlan, this.lowerType(value.outputType()), value.fails(), this.lowerWorkflow(value));
     }
 
     private ActorBinding lowerActorBinding(SymbolId actorSymbol) {
@@ -644,7 +646,9 @@ public final class SpringBootModelLowerer {
     }
 
     private TransportPlan lowerTransportPlan(NormalizedCapability capability, SpringBootDeclaration.HttpMethod httpMethod, boolean hasInput) {
-        TransportPlan.InputBinding inputBinding = !hasInput ? TransportPlan.InputBinding.NONE : (httpMethod == SpringBootDeclaration.HttpMethod.GET ? TransportPlan.InputBinding.MODEL_ATTRIBUTE : TransportPlan.InputBinding.REQUEST_BODY);
+        // GET and DELETE carry the input in the query string, the others in a JSON body; a path's values join either.
+        boolean query = httpMethod == SpringBootDeclaration.HttpMethod.GET || httpMethod == SpringBootDeclaration.HttpMethod.DELETE;
+        TransportPlan.InputBinding inputBinding = !hasInput ? TransportPlan.InputBinding.NONE : (query ? TransportPlan.InputBinding.MODEL_ATTRIBUTE : TransportPlan.InputBinding.REQUEST_BODY);
         TransportPlan.ResponseRepresentation response = this.lowerResponseRepresentation(capability);
         return new TransportPlan(inputBinding, response);
     }

@@ -35,13 +35,7 @@ final class ControllerRenderer {
       ImportSorter imports = new ImportSorter();
       imports.add("org.springframework.web.bind.annotation.RestController");
       imports.add("org.springframework.web.bind.annotation.RequestMapping");
-      if (decl.httpMethod() == HttpMethod.POST) {
-         imports.add("org.springframework.web.bind.annotation.PostMapping");
-      } else if (decl.httpMethod() == HttpMethod.PATCH) {
-         imports.add("org.springframework.web.bind.annotation.PatchMapping");
-      } else {
-         imports.add("org.springframework.web.bind.annotation.GetMapping");
-      }
+      imports.add("org.springframework.web.bind.annotation." + mappingName(decl.httpMethod()));
 
       if (createsEntity(decl)) {
          imports.add("org.springframework.http.HttpStatus");
@@ -73,8 +67,23 @@ final class ControllerRenderer {
             imports.add("org.springframework.web.bind.annotation.ModelAttribute");
          }
 
-         if (inputHasConstraints) {
+         if (inputHasConstraints && !validatesAfterPath(decl)) {
             imports.add("jakarta.validation.Valid");
+         }
+      }
+
+      if (!pathVariables(ctx, decl).isEmpty()) {
+         imports.add("org.springframework.web.bind.annotation.PathVariable");
+      }
+
+      if (validatesAfterPath(decl) && inputHasConstraints) {
+         WriteSupport support = WriteSupport.of(ctx.model());
+         imports.add("jakarta.validation.Validator");
+         if (!samePackage(support.exceptionBaseFqn(), packageName)) {
+            imports.add(support.exceptionBaseFqn());
+         }
+         if (!samePackage(support.errorResponseFqn(), packageName)) {
+            imports.add(support.errorResponseFqn());
          }
       }
 
@@ -99,16 +108,20 @@ final class ControllerRenderer {
       out.append("@RestController\n");
       out.append("@RequestMapping(").append(StringEscape.javaString(decl.route())).append(")\n");
       out.append("public class ").append(decl.controllerName()).append(" {\n\n");
-      out.append("    private final ").append(serviceSimpleName(ctx, decl)).append(" service;\n\n");
-      out.append("    public ").append(decl.controllerName()).append("(").append(serviceSimpleName(ctx, decl)).append(" service) {\n");
+      boolean validator = validatesAfterPath(decl) && inputHasConstraints;
+      out.append("    private final ").append(serviceSimpleName(ctx, decl)).append(" service;\n");
+      if (validator) {
+         out.append("    private final Validator validator;\n");
+      }
+      out.append('\n');
+      out.append("    public ").append(decl.controllerName()).append("(").append(serviceSimpleName(ctx, decl)).append(" service")
+         .append(validator ? ", Validator validator" : "").append(") {\n");
       out.append("        this.service = service;\n");
+      if (validator) {
+         out.append("        this.validator = validator;\n");
+      }
       out.append("    }\n\n");
-      String httpMapping = switch (decl.httpMethod()) {
-         case POST -> "@PostMapping";
-         case PATCH -> "@PatchMapping";
-         case GET -> "@GetMapping";
-      };
-      out.append("    ").append(httpMapping).append('\n');
+      out.append("    @").append(mappingName(decl.httpMethod())).append('\n');
       if (createsEntity(decl)) {
          out.append("    @ResponseStatus(HttpStatus.CREATED)\n");
       }
@@ -123,6 +136,17 @@ final class ControllerRenderer {
          firstParam = false;
       }
 
+      java.util.List<Property> pathVariables = pathVariables(ctx, decl);
+      for (Property variable : pathVariables) {
+         if (!firstParam) {
+            out.append(", ");
+         }
+
+         out.append("@PathVariable(").append(StringEscape.javaString(variable.javaName())).append(") ")
+            .append(TypeRenderer.renderBoxedType(variable.type())).append(' ').append(pathParameter(variable));
+         firstParam = false;
+      }
+
       if (decl.input().isPresent() && inputJavaName != null) {
          if (!firstParam) {
             out.append(", ");
@@ -130,7 +154,7 @@ final class ControllerRenderer {
 
          Variable inputVar = decl.input().get();
          String bindingAnnotation = decl.transportPlan().inputBinding() == InputBinding.REQUEST_BODY ? "@RequestBody" : "@ModelAttribute";
-         if (inputHasConstraints) {
+         if (inputHasConstraints && !validatesAfterPath(decl)) {
             out.append("@Valid ");
          }
 
@@ -138,6 +162,26 @@ final class ControllerRenderer {
       }
 
       out.append(") {\n");
+      if (validatesAfterPath(decl)) {
+         // The path's values belong to the input; the body may not override them. The input is checked only once they are
+         // in it, with the same field errors a body check gives.
+         String inputName = decl.input().orElseThrow().targetName();
+         for (Property variable : pathVariables) {
+            out.append("        ").append(inputName).append(".set").append(capitalise(variable.javaName())).append('(')
+               .append(pathParameter(variable)).append(");\n");
+         }
+         if (validator) {
+            WriteSupport support = WriteSupport.of(ctx.model());
+            String fieldError = simpleName(support.errorResponseFqn()) + "." + support.fieldErrorFqn().substring(support.fieldErrorFqn().lastIndexOf('.') + 1);
+            out.append("        var violations = validator.validate(").append(inputName).append(");\n");
+            out.append("        if (!violations.isEmpty()) {\n");
+            out.append("            throw ").append(simpleName(support.exceptionBaseFqn())).append(".invalidRequest(violations.stream()\n");
+            out.append("                    .map(violation -> new ").append(fieldError).append("(violation.getPropertyPath().toString(),\n");
+            out.append("                            violation.getConstraintDescriptor().getAnnotation().annotationType().getSimpleName(), violation.getMessage()))\n");
+            out.append("                    .toList());\n");
+            out.append("        }\n");
+         }
+      }
       boolean voidResponse = decl.transportPlan().responseRepresentation() == ResponseRepresentation.VOID;
       out.append("        ");
       if (!voidResponse) {
@@ -174,6 +218,52 @@ final class ControllerRenderer {
    private static boolean createsEntity(CapabilityDeclaration decl) {
       return decl.workflow().steps().stream()
          .anyMatch(step -> step instanceof io.kcg.sir.lowering.springboot.model.SpringBootWorkflow.CreateStep);
+   }
+
+   private static String mappingName(HttpMethod method) {
+      return switch (method) {
+         case GET -> "GetMapping";
+         case POST -> "PostMapping";
+         case PUT -> "PutMapping";
+         case PATCH -> "PatchMapping";
+         case DELETE -> "DeleteMapping";
+      };
+   }
+
+   /** A body request whose path carries some of the input: the path's values are written in, then the input is checked. */
+   private static boolean validatesAfterPath(CapabilityDeclaration decl) {
+      return decl.transportPlan().inputBinding() == InputBinding.REQUEST_BODY && decl.route().contains("{");
+   }
+
+   /** The input fields the route's {name} segments name, in the route's order. */
+   private static java.util.List<Property> pathVariables(GenerationContext ctx, CapabilityDeclaration decl) {
+      java.util.List<Property> variables = new java.util.ArrayList<>();
+      java.util.regex.Matcher segment = java.util.regex.Pattern.compile("\\{([^}]*)}").matcher(decl.route());
+      while (segment.find()) {
+         String name = segment.group(1);
+         Variable input = decl.input().orElseThrow(() -> new IllegalStateException("route variable without an input: " + name));
+         InputDeclaration inputDecl = (InputDeclaration) ctx.declaration(((Declared) input.type()).symbolId());
+         variables.add(inputDecl.fields().stream().filter(f -> f.javaName().equals(name)).findFirst()
+            .orElseThrow(() -> new IllegalStateException("route variable is not an input field: " + name)));
+      }
+      return variables;
+   }
+
+   /** The controller parameter that receives a path value; suffixed so it never shadows the input's own name. */
+   private static String pathParameter(Property variable) {
+      return variable.javaName() + "FromPath";
+   }
+
+   private static String capitalise(String value) {
+      return Character.toUpperCase(value.charAt(0)) + value.substring(1);
+   }
+
+   private static String simpleName(String fqn) {
+      return fqn.substring(fqn.lastIndexOf('.') + 1);
+   }
+
+   private static boolean samePackage(String fqn, String packageName) {
+      return fqn.substring(0, fqn.lastIndexOf('.')).equals(packageName);
    }
 
    private static String serviceSimpleName(GenerationContext ctx, CapabilityDeclaration decl) {

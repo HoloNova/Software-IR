@@ -716,6 +716,79 @@ capability RemoveGoods {
 - 路由是能力名转短横线：`PublishGoods` → `/api/publish-goods`。
 - 成功的状态码：创建了新行是 `201`，其它是 `200`。
 
+也可以自己定方法和路径，路径前自动加 `/api`：
+
+```
+expose query at "/notes/{id}";              // GET    /api/notes/{id}
+expose command at "/notes";                 // POST   /api/notes
+expose command put at "/notes/{id}";        // PUT    /api/notes/{id}
+expose command delete at "/notes/{id}";     // DELETE /api/notes/{id}
+```
+
+路径里的 `{名字}` 是输入的一个必填字段，取自 URL；其余字段 GET、DELETE 从查询参数取，POST、PUT、PATCH 从 JSON 请求体取（请求体里同名的值被路径上的值覆盖，字段规则在合并后检查）。规则（都是 `SIR-VALID-013`）：
+
+- 路径以 `/` 开头，每段是小写字母、数字和短横线，或 `{输入字段}`；
+- 路径字段必须是必填的数字、文本或 uuid 字段，同一个字段只能出现一次；
+- `put`、`delete` 只能用于 `command`；输入是局部更新（`patch`）时方法固定是 `PATCH`，路径里只能放它的主键；
+- 两个能力的方法和路径不能相同，`/notes/{id}` 和 `/notes/{noteId}` 也算相同（不写路径的能力按它的名字算）。
+
+```sir-declarations
+entity Note persistent {
+  identity id: Id generated auto;
+  field body: Text;
+}
+view NoteView from Note {
+  field id: Id;
+  field body: Text;
+}
+input NoteRef {
+  field id: Id;
+}
+input EditNoteInput {
+  field id: Id;
+  field body: Text where notBlank;
+}
+error NoteNotFound http 404;
+capability ShowNote {
+  input NoteRef;
+  output NoteView;
+  fails NoteNotFound;
+  requires readonly;
+  expose query at "/notes/{id}";
+  workflow {
+    load Note by input.id as note else NoteNotFound;
+    return note;
+  }
+}
+capability EditNote {
+  input EditNoteInput;
+  output NoteView;
+  fails NoteNotFound;
+  requires atomic;
+  expose command put at "/notes/{id}";
+  workflow {
+    load Note by input.id as note else NoteNotFound;
+    update note {
+      body: input.body;
+    }
+    persist note;
+    return note;
+  }
+}
+capability RemoveNote {
+  input NoteRef;
+  output Unit;
+  fails NoteNotFound;
+  requires atomic;
+  expose command delete at "/notes/{id}";
+  workflow {
+    load Note by input.id as note else NoteNotFound;
+    delete note;
+    return unit;
+  }
+}
+```
+
 ## 5. 工作流（`workflow`）
 
 工作流是一串**步骤**，按顺序执行，**以且只以一个 `return` 结束**（`SIR-FLOW-002`）。变量由 `load`、`find`、`create` 的 `as 名字` 引入，之后才能用（`SIR-FLOW-001`）。
@@ -1262,6 +1335,8 @@ use Crud {
 }
 ```
 
+**路径**：`use Crud { entity: Note; path: notes; }` 用 REST 风格的路径：`POST /api/notes` 创建、`GET /api/notes/{id}` 查看、`GET /api/notes` 列表、`PUT /api/notes/{id}` 修改（带版本号的实体是 `PATCH`）、`DELETE /api/notes/{id}` 删除。`path` 是小写的名字；不写时每个能力按自己的名字（`/api/create-note` 等）。
+
 需要不同的规则时，就不用 `Crud`，自己写这几个能力（或者用 `feature` 定义自己的版本）。
 
 ## 8. 多文件工程
@@ -1299,6 +1374,7 @@ use Crud {
 | `SIR-VALID-010` | `default` 的规则：`unique`、`secret`、`versioned` 字段不能有默认值 |
 | `SIR-VALID-011` | `scope` 的规则：不能用 `any(...)` 或 `.present` |
 | `SIR-VALID-012` | `delete` 的规则：只能删 `load` 出来的行，删后不能再用 |
+| `SIR-VALID-013` | 方法与路径的规则：`put`/`delete` 只用于 command、路径段与路径字段的写法、方法加路径不能重复 |
 | `SIR-TYPE-005` | `type` 声明的问题：名字被语言占用、基类型成环 |
 | `SIR-EXTEND-001` | `extend` 的目标不是实体 |
 | `SIR-FEATURE-001`…`006` | 功能的问题：不认识的功能、参数缺失或多余、参数值不对（包括该指向实体却没有）、展开失败、对同一组值重复 `use`、`feature` 定义本身有错（包括模板里的循环和条件） |
@@ -1776,7 +1852,6 @@ capability Wrong {
 
 ## 10. 还没有的东西
 
-- 路由模板（路径参数）、授权（角色与数据范围）。
 - 已上线系统的部分结构变更：删表删列、改列的类型、给已有表加引用或唯一列，会在打交付包时被拒绝（改列的默认值可以，已有的行保持原值）。数据库里字段名是下划线形式（`passwordHash` → `password_hash`，`Ref` 字段 `owner` → `owner_id`），`Token` 列用 `CHAR(36)`。
 - 口令强度、登录失败的锁定与限流、令牌的缓存。
 - 除上面的 target 之外的语言、框架、数据库。

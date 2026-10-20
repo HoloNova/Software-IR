@@ -1006,7 +1006,7 @@ final class DeploymentTemplates {
 
             record TextRule(String property, boolean notBlank, int minLength, OptionalInt maxLength) {}
 
-            record Endpoint(String method, String route, boolean authenticated, String binding, List<TextRule> textRules, List<String> errors) {}
+            record Endpoint(String method, String route, String sample, boolean authenticated, String binding, List<TextRule> textRules, List<String> errors) {}
 
             /** The interface exactly as the target lowered it when this package was exported. */
             static final List<Endpoint> ENDPOINTS = List.of(
@@ -1074,31 +1074,31 @@ final class DeploymentTemplates {
                 String empty = endpoint.binding().equals("BODY") ? "{}" : null;
                 if (endpoint.authenticated()) {
                     checks.add(check(scope, "refuses a request without credential with 401", () ->
-                            assertEquals(401, send(base, endpoint.method(), endpoint.route(), empty, null).statusCode())));
+                            assertEquals(401, send(base, endpoint.method(), endpoint.sample(), empty, null).statusCode())));
                     checks.add(check(scope, "refuses a malformed bearer credential with 401", () ->
-                            assertEquals(401, send(base, endpoint.method(), endpoint.route(), empty, "Bearer not-a-token").statusCode())));
+                            assertEquals(401, send(base, endpoint.method(), endpoint.sample(), empty, "Bearer not-a-token").statusCode())));
                     checks.add(check(scope, "refuses a well-formed token that was never issued with 401", () ->
-                            assertEquals(401, send(base, endpoint.method(), endpoint.route(), empty, "Bearer " + UUID.randomUUID()).statusCode())));
+                            assertEquals(401, send(base, endpoint.method(), endpoint.sample(), empty, "Bearer " + UUID.randomUUID()).statusCode())));
                 }
                 if (endpoint.binding().equals("BODY") && !endpoint.authenticated()) {
                     checks.add(check(scope, "answers a malformed JSON body with the 400 error envelope", () ->
-                            envelope(send(base, endpoint.method(), endpoint.route(), "{", null), null, null)));
+                            envelope(send(base, endpoint.method(), endpoint.sample(), "{", null), null, null)));
                     checks.add(check(scope, "answers an undeclared property with the 400 error envelope naming it", () ->
-                            envelope(send(base, endpoint.method(), endpoint.route(), "{\\"kcgUndeclaredProperty\\":true}", null),
+                            envelope(send(base, endpoint.method(), endpoint.sample(), "{\\"kcgUndeclaredProperty\\":true}", null),
                                     "kcgUndeclaredProperty", null)));
                     for (TextRule rule : endpoint.textRules()) {
                         if (rule.notBlank()) {
                             checks.add(check(scope, rule.property() + ": a blank value is refused as NotBlank", () ->
-                                    envelope(send(base, endpoint.method(), endpoint.route(), body(rule.property(), "   "), null), rule.property(), "NotBlank")));
+                                    envelope(send(base, endpoint.method(), endpoint.sample(), body(rule.property(), "   "), null), rule.property(), "NotBlank")));
                         }
                         if (rule.minLength() > 1) {
                             checks.add(check(scope, rule.property() + ": " + (rule.minLength() - 1) + " characters are refused as Size", () ->
-                                    envelope(send(base, endpoint.method(), endpoint.route(), body(rule.property(), "x".repeat(rule.minLength() - 1)), null), rule.property(), "Size")));
+                                    envelope(send(base, endpoint.method(), endpoint.sample(), body(rule.property(), "x".repeat(rule.minLength() - 1)), null), rule.property(), "Size")));
                         }
                         if (rule.maxLength().isPresent() && rule.maxLength().getAsInt() < LONGEST_SAMPLE) {
                             int length = rule.maxLength().getAsInt() + 1;
                             checks.add(check(scope, rule.property() + ": " + length + " characters are refused as Size", () ->
-                                    envelope(send(base, endpoint.method(), endpoint.route(), body(rule.property(), "x".repeat(length)), null), rule.property(), "Size")));
+                                    envelope(send(base, endpoint.method(), endpoint.sample(), body(rule.property(), "x".repeat(length)), null), rule.property(), "Size")));
                         }
                     }
                 }

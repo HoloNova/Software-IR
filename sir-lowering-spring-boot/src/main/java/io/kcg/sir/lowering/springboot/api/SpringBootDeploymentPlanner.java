@@ -127,9 +127,29 @@ public final class SpringBootDeploymentPlanner {
                         case BAD_REQUEST -> 400; case UNAUTHORIZED -> 401; case FORBIDDEN -> 403; case NOT_FOUND -> 404; case CONFLICT -> 409;
                     }, errorCode(error)));
                 }
-                endpoints.add(new Endpoint(capability.httpMethod().name(), capability.route(), capability.authenticated(), binding, rules, errors));
+                endpoints.add(new Endpoint(capability.httpMethod().name(), capability.route(), sample(capability.route(), input.orElse(null)),
+                    capability.authenticated(), binding, rules, errors));
             });
         return endpoints;
+    }
+
+    /** The route with each {field} replaced by a value of that field's kind: 1 for a number, a fixed uuid, x for a text. */
+    private static String sample(String route, SpringBootDeclaration.InputDeclaration input) {
+        java.util.regex.Matcher variable = java.util.regex.Pattern.compile("\\{([^}]*)}").matcher(route);
+        StringBuilder sample = new StringBuilder();
+        while (variable.find()) {
+            String name = variable.group(1);
+            var field = Objects.requireNonNull(input, "route variable without an input").fields().stream()
+                .filter(f -> f.javaName().equals(name)).findFirst().orElseThrow();
+            String value = field.type() instanceof LoweredJavaType.Scalar scalar ? switch (scalar.kind()) {
+                case UUID -> "00000000-0000-4000-8000-000000000001";
+                case STRING -> "x";
+                default -> "1";
+            } : "1";
+            variable.appendReplacement(sample, value);
+        }
+        variable.appendTail(sample);
+        return sample.toString();
     }
 
     /** The code the application answers with: the SIR error name, exactly as the generated exception passes it. */
