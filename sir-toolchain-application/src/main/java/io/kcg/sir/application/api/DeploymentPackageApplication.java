@@ -88,10 +88,16 @@ public final class DeploymentPackageApplication {
                 "SIR-APP-PACKAGE-BASE-004", "base package's SIR does not reproduce its schema contract with this toolchain");
             SemanticDelta delta = SemanticDelta.between(SoftwareDraft.of(baseModel), SoftwareDraft.of(snapshot.semanticModel()),
                 SoftwareSchema.normalizedModel());
-            var outcome = new SpringBootSchemaEvolutionPlanner().plan(basePlan, base.mysqlImage(), base.version(), delta, plan);
+            var outcome = new SpringBootSchemaEvolutionPlanner().plan(basePlan, base.mysqlImage(), base.version(), delta, plan,
+                request.confirmBackup());
             if (outcome.evolution().isEmpty()) {
-                for (String refusal : outcome.refusals()) diagnostics.add(ExecutionDiagnostic.error(refusal.startsWith("SELFCHECK ")
-                    ? "SIR-DEPLOY-UPDATE-SELFCHECK-001" : "SIR-DEPLOY-UPDATE-UNSUPPORTED-001", ExecutionStage.LOWERING, refusal));
+                for (String refusal : outcome.refusals()) {
+                    boolean dropsData = refusal.startsWith("TABLE_REMOVED ") || refusal.startsWith("COLUMN_REMOVED ");
+                    diagnostics.add(ExecutionDiagnostic.error(refusal.startsWith("SELFCHECK ") ? "SIR-DEPLOY-UPDATE-SELFCHECK-001"
+                        : dropsData ? "SIR-DEPLOY-UPDATE-BACKUP-001" : "SIR-DEPLOY-UPDATE-UNSUPPORTED-001", ExecutionStage.LOWERING,
+                        dropsData ? refusal + ": this update drops it with the data in it. Back up the running instance, then export again with"
+                            + " --confirm-backup yes (the update itself takes no backup)" : refusal));
+                }
                 return new DeploymentPackageResult.Failure(diagnostics);
             }
             SchemaEvolution evolution = outcome.evolution().get();
@@ -107,7 +113,8 @@ public final class DeploymentPackageApplication {
             }
             continuation = Optional.of(new DeploymentPackageResult.Continuation(base.id(), evolution.targetVersion(),
                 delta.changes().stream().map(SemanticDelta.Change::toString).toList(),
-                evolution.steps().stream().map(SchemaEvolution.Step::describe).toList()));
+                evolution.steps().stream().map(SchemaEvolution.Step::describe).toList(),
+                dataLoss(evolution)));
         }
         for (var entry : acceptance.entrySet()) {
             String path = "acceptance/" + entry.getKey();
@@ -136,6 +143,15 @@ public final class DeploymentPackageApplication {
         diagnostics.addAll(saved.warnings());
         return new DeploymentPackageResult.Exported(packageId, loaded.get().snapshot().manifest(),
             new ExecutionManifest(output, saved.appliedFiles()), diagnostics, continuation);
+    }
+    /** The tables and columns the versions drop, with their data. */
+    private static List<String> dataLoss(SchemaEvolution evolution) {
+        List<String> lost = new ArrayList<>();
+        for (var step : evolution.steps()) {
+            if (step instanceof SchemaEvolution.DropColumn drop) lost.add(drop.table() + "." + drop.column().name());
+            else if (step instanceof SchemaEvolution.DropTable drop) lost.add(drop.table().name());
+        }
+        return lost;
     }
     private static final String SIR_ENTRY = "sir-entry", RENAMES = "deploy/renames.tsv";
 

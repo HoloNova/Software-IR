@@ -244,14 +244,29 @@ jobs:
             --entry project.sir --output-root "$RUNNER_TEMP/backend-delivery-v2" --base-package "$RUNNER_TEMP/backend-delivery-next" \
             > "$RUNNER_TEMP/deployment-evidence/export-v2.json"
           python3 -c 'import json,sys; d = json.load(open(sys.argv[1])); assert d["outcome"] == "PACKAGE_EXPORTED" and d["schemaVersion"] == 6 and [x["step"] for x in d["steps"]] == ["V2 RENAME_COLUMN note.text -> body", "V3 CHANGE_COLUMN_DEFAULT note.pinned", "V4 CREATE_TABLE label", "V5 ADD_NULLABLE_COLUMN note.title", "V6 ADD_DEFAULTED_COLUMN note.state"], d' "$RUNNER_TEMP/deployment-evidence/export-v2.json"
-          # Going back to version 1 on top of version 2 would drop data: the public CLI refuses it and writes nothing.
+          # Going back to version 1 on top of version 2 would drop data: without a confirmed backup the public CLI refuses
+          # it and writes nothing.
           STATUS=0
           java -Xmx256m -jar "$RUNNER_TEMP/delivery-cli/kcg.jar" package \
             --source-root "$GITHUB_WORKSPACE/sir-toolchain-application/src/test/resources/deployment/dual-token" \
             --entry project.sir --output-root "$RUNNER_TEMP/backend-delivery-back" --base-package "$RUNNER_TEMP/backend-delivery-v2" \
             > "$RUNNER_TEMP/deployment-evidence/export-refused.json" || STATUS=$?
           test "$STATUS" -eq 3 && test ! -e "$RUNNER_TEMP/backend-delivery-back"
-          grep -q 'SIR-DEPLOY-UPDATE-UNSUPPORTED-001' "$RUNNER_TEMP/deployment-evidence/export-refused.json"
+          grep -q 'SIR-DEPLOY-UPDATE-BACKUP-001' "$RUNNER_TEMP/deployment-evidence/export-refused.json"
+          # Version 3 widens a column and drops a column and a table. Refused until the backup is confirmed; then exported
+          # with the dropped data named.
+          STATUS=0
+          java -Xmx256m -jar "$RUNNER_TEMP/delivery-cli/kcg.jar" package \
+            --source-root "$GITHUB_WORKSPACE/sir-toolchain-application/src/test/resources/deployment/dual-token-v3" \
+            --entry project.sir --output-root "$RUNNER_TEMP/backend-delivery-v3" --base-package "$RUNNER_TEMP/backend-delivery-v2" \
+            > "$RUNNER_TEMP/deployment-evidence/export-v3-refused.json" || STATUS=$?
+          test "$STATUS" -eq 3 && test ! -e "$RUNNER_TEMP/backend-delivery-v3"
+          grep -q 'SIR-DEPLOY-UPDATE-BACKUP-001' "$RUNNER_TEMP/deployment-evidence/export-v3-refused.json"
+          java -Xmx256m -jar "$RUNNER_TEMP/delivery-cli/kcg.jar" package \
+            --source-root "$GITHUB_WORKSPACE/sir-toolchain-application/src/test/resources/deployment/dual-token-v3" \
+            --entry project.sir --output-root "$RUNNER_TEMP/backend-delivery-v3" --base-package "$RUNNER_TEMP/backend-delivery-v2" \
+            --confirm-backup yes > "$RUNNER_TEMP/deployment-evidence/export-v3.json"
+          python3 -c 'import json,sys; d = json.load(open(sys.argv[1])); assert d["outcome"] == "PACKAGE_EXPORTED" and d["schemaVersion"] == 9 and [x["step"] for x in d["steps"]] == ["V7 WIDEN_COLUMN note.state", "V8 DROP_COLUMN note.title", "V9 DROP_TABLE label"] and d["dataLoss"] == ["note.title", "label"], d' "$RUNNER_TEMP/deployment-evidence/export-v3.json"
           tar -czf "$RUNNER_TEMP/backend-delivery.tar.gz" -C "$RUNNER_TEMP/backend-delivery" .
       - name: Cold deployment, actual HTTP and persistence acceptance
         run: |
@@ -260,6 +275,7 @@ jobs:
             --package "$RUNNER_TEMP/backend-delivery" \
             --next-package "$RUNNER_TEMP/backend-delivery-next" \
             --v2-package "$RUNNER_TEMP/backend-delivery-v2" \
+            --v3-package "$RUNNER_TEMP/backend-delivery-v3" \
             --state "$RUNNER_TEMP/deployment state" \
             --evidence "$RUNNER_TEMP/deployment-evidence" \
             --instance "kcg-delivery-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" --port 18080

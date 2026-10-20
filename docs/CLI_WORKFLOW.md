@@ -134,4 +134,4 @@ kcg version-apply --repository-root "$WORK" --source-root "$SOURCE" \
 
 ## 6. package：独立部署源码包
 
-`kcg package --source-root … --entry … --output-root … [--acceptance …] [--base-package …]`只导出新的源码/数据库/Docker交付目录（可附带独立业务验收包；以实例当前运行的包为基础时继承其迁移链并追加新版本），不启动Docker、不下载依赖、不Git。完整参数、物理支持边界及目标机器上的随包入口见[部署包v1](DEPLOYMENT_DELIVERY.md)。步骤①已由CI #94在本样例上验收（构建、建库、HTTP、权限、持久化、丢失卷拒绝），见[报告](DEPLOYMENT_DELIVERY_REPORT.md)；这不是生产或全平台资格。原generate不变；部署包不是原version-plan/apply的开发工程目标，尚不支持不同包升级。
+`kcg package --source-root … --entry … --output-root … [--acceptance …] [--base-package …] [--confirm-backup yes]`只导出新的源码/数据库/Docker交付目录（可附带独立业务验收包；以实例当前运行的包为基础时继承其迁移链并追加新版本），不启动Docker、不下载依赖、不Git。完整参数、物理支持边界及目标机器上的随包入口见[部署包v1](DEPLOYMENT_DELIVERY.md)。源码里删掉实体或字段，以旧包为基础导出会丢失数据：不带`--confirm-backup yes`以`SIR-DEPLOY-UPDATE-BACKUP-001`拒绝；带上表示你已备份了正在运行的实例的数据，导出才会写出删除迁移，结果的`dataLoss`列出被删的表与列。这个参数只是声明，工具不检查备份，`update`本身也不备份；它只能与`--base-package`一起用，值只能是`yes`。步骤①已由CI #94在本样例上验收（构建、建库、HTTP、权限、持久化、丢失卷拒绝），见[报告](DEPLOYMENT_DELIVERY_REPORT.md)；这不是生产或全平台资格。原generate不变；部署包不是原version-plan/apply的开发工程目标，尚不支持不同包升级。

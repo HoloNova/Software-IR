@@ -14,10 +14,11 @@ public sealed interface DeploymentPackageResult {
     }
     /**
      * How the export continues a base delivery's chain: what changed in the software since the base (as the change layer
-     * reports it), the schema version the chain ends at, and the versions it appends.
+     * reports it), the schema version the chain ends at, the versions it appends, and the tables and columns those
+     * versions drop with their data (empty unless the request confirmed a backup).
      */
-    record Continuation(String basePackageId, int schemaVersion, List<String> changes, List<String> steps) {
-        public Continuation { changes = List.copyOf(changes); steps = List.copyOf(steps); }
+    record Continuation(String basePackageId, int schemaVersion, List<String> changes, List<String> steps, List<String> dataLoss) {
+        public Continuation { changes = List.copyOf(changes); steps = List.copyOf(steps); dataLoss = List.copyOf(dataLoss); }
     }
     record Failure(List<ExecutionDiagnostic> diagnostics) implements DeploymentPackageResult {
         public Failure { diagnostics = List.copyOf(diagnostics); }

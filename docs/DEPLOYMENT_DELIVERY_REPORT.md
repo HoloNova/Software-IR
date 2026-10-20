@@ -132,7 +132,7 @@ Artifact：#95 [deployment-evidence](https://github.com/HoloNova/Software-IR/act
 - `update`（schema不变）：同schema、不同字节的新包在业务验收实例上update，输出`applied=none`，五张业务表`CHECKSUM TABLE`前后一致，Flyway历史仍为1条，status显示已绑定新包；重复update为`KCG_UPDATE_CURRENT`；旧包`start`以`KCG_BLOCKED`拒绝；新应用上双Token业务验收再次通过。
 - `dataUpdate`（追加迁移）：以该包为基础导出的v2（新表`label`、可空列`note.title`）update后只应用V2..V3并输出`KCG_DATA_VERIFIED`；`user`与`note`原有行的主键、字段值和作者关系逐行不变，Flyway成功记录为3条，旧行的`title`全为NULL；新接口`/api/add-label`引用旧note返回201、引用不存在的note返回404 `NoteNotFound`；重复update为CURRENT；较旧的包update以AHEAD拒绝且旧应用保持就绪。
 - `freshChain`：新实例直接部署v2，从V1重放到V3，HTTP注册成功。
-- 导出侧：以v2为基础导出v1，公开CLI以`SIR-DEPLOY-UPDATE-UNSUPPORTED-001`拒绝（退出码3）且不留输出。
+- 导出侧：以v2为基础导出v1，公开CLI以`SIR-DEPLOY-UPDATE-UNSUPPORTED-001`拒绝（退出码3）且不留输出。（2026-10-20起删表删列改为要求`--confirm-backup yes`，这条拒绝的代码随之是`SIR-DEPLOY-UPDATE-BACKUP-001`。）
 
 Artifact（#98）：[deployment-evidence](https://github.com/HoloNova/Software-IR/actions/runs/39026265442/artifacts/12099382262)（含report.json、各次导出结果与脱敏日志）、[backend-source-delivery](https://github.com/HoloNova/Software-IR/actions/runs/39026265442/artifacts/12099227681)、[standalone-cli](https://github.com/HoloNova/Software-IR/actions/runs/39026265442/artifacts/12098998537)、[surefire-reports](https://github.com/HoloNova/Software-IR/actions/runs/39026265442/artifacts/12099018292)、[conformance-evidence](https://github.com/HoloNova/Software-IR/actions/runs/39026265442/artifacts/12098884143)。
 

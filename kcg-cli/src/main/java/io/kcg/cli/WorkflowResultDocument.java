@@ -44,6 +44,8 @@ final class WorkflowResultDocument {
                 for (int i = 0; i < c.changes().size(); i++) { if (i > 0) out.append(','); out.append('{'); JsonFields.field(out, "change", c.changes().get(i)); out.append('}'); }
                 out.append("],\"steps\":[");
                 for (int i = 0; i < c.steps().size(); i++) { if (i > 0) out.append(','); out.append('{'); JsonFields.field(out, "step", c.steps().get(i)); out.append('}'); }
+                out.append("],\"dataLoss\":[");
+                for (int i = 0; i < c.dataLoss().size(); i++) { if (i > 0) out.append(','); out.append(JsonStringEncoder.encode(c.dataLoss().get(i))); }
                 out.append(']');
             });
         }

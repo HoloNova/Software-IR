@@ -22,6 +22,8 @@ p.add_argument('--port', type=int, default=18080)
 p.add_argument('--next-package', required=True, type=Path)
 # Continues the next package's chain with a new table and a new nullable column (step 3, slice B).
 p.add_argument('--v2-package', required=True, type=Path)
+# Continues version 2's chain with a widened column and, with the data loss confirmed at export, a dropped column and table.
+p.add_argument('--v3-package', required=True, type=Path)
 a = p.parse_args()
 a.evidence.mkdir(parents=True, exist_ok=True)
 report = {'commit': os.getenv('GITHUB_SHA'), 'runUrl': f"{os.getenv('GITHUB_SERVER_URL')}/{os.getenv('GITHUB_REPOSITORY')}/actions/runs/{os.getenv('GITHUB_RUN_ID')}",
@@ -31,11 +33,12 @@ report = {'commit': os.getenv('GITHUB_SHA'), 'runUrl': f"{os.getenv('GITHUB_SERV
           'cleanup': 'NOT_RUN',
           'notRunByContract': ['interruptedMigration', 'schemaDrift'],
           'nextPackageId': (a.next_package / 'package.id').read_text().strip(),
-          'v2PackageId': (a.v2_package / 'package.id').read_text().strip(), 'requests': []}
+          'v2PackageId': (a.v2_package / 'package.id').read_text().strip(),
+          'v3PackageId': (a.v3_package / 'package.id').read_text().strip(), 'requests': []}
 sequence = 0
 # Business acceptance writes data, so it gets its own disposable instance of the same package.
 acceptance_instance, acceptance_state, acceptance_port = a.instance + '-acc', a.state.with_name(a.state.name + ' acceptance'), a.port + 1
-# A new instance deployed straight from version 2 replays the whole chain V1..V3.
+# A new instance deployed straight from version 3 replays the whole chain V1..V9.
 fresh_instance, fresh_state, fresh_port = a.instance + '-v2', a.state.with_name(a.state.name + ' fresh'), a.port + 2
 INSTANCES = (a.instance, acceptance_instance, fresh_instance)
 STATES = (a.state, acceptance_state, fresh_state)
@@ -248,9 +251,40 @@ try:
     older = deploy('update', expected=3, instance=acceptance_instance, state=acceptance_state, package=a.next_package)
     assert 'AHEAD' in older and 'application=RUNNING' in older, 'an older package must be refused before the application stops'
     assert request('/actuator/health/readiness', base=server)['status'] == 'UP'
+    # Step 3, slice C: version 3 widens note.state from 16 to 64 characters, drops note.title and drops the label table
+    # (the data loss was confirmed when the package was exported). Every other row and value stays as it was.
+    kept = request('/api/create-note', {'body': 'v3-kept'}, token=owner, expected=201, base=server)
+    request('/api/update-note', {'id': kept['id'], 'body': 'v3-kept', 'pinned': True, 'state': 'open', 'title': 'gone soon'}, token=owner, base=server)
+    assert sql(f"SELECT title FROM `note` WHERE id={int(kept['id'])}", instance=acceptance_instance).strip() == 'gone soon'
+    keep3 = 'SELECT id, author_id, body, pinned, state FROM `note` ORDER BY id'
+    rows_before3 = sql(keep3, instance=acceptance_instance)
+    assert int(sql('SELECT COUNT(*) FROM `label`', instance=acceptance_instance).strip()) > 0
+    updated = deploy('update', instance=acceptance_instance, state=acceptance_state, package=a.v3_package)
+    assert f"KCG_UPDATED {report['v2PackageId']}->{report['v3PackageId']}" in updated, 'the update that drops data did not complete'
+    assert 'applied=V7..V9' in updated and 'KCG_DATA_VERIFIED' in updated, 'the migration tool did not apply and verify V7..V9'
+    assert 'KCG_DATA_DROPPED' in updated and 'note.title' in updated and 'label.' in updated, 'the migration tool did not name what it dropped'
+    assert sql(keep3, instance=acceptance_instance) == rows_before3, 'rows or values that stay changed'
+    assert sql("SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='kcg' AND TABLE_NAME='note' AND COLUMN_NAME='title'",
+               instance=acceptance_instance).strip() == '0', 'the dropped column is still there'
+    assert sql("SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA='kcg' AND TABLE_NAME='label'",
+               instance=acceptance_instance).strip() == '0', 'the dropped table is still there'
+    assert sql("SELECT CHARACTER_MAXIMUM_LENGTH FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='kcg' AND TABLE_NAME='note' AND COLUMN_NAME='state'",
+               instance=acceptance_instance).strip() == '64', 'the column was not widened'
+    assert sql("SELECT COLUMN_DEFAULT FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='kcg' AND TABLE_NAME='note' AND COLUMN_NAME='state'",
+               instance=acceptance_instance).strip() == 'open', 'widening lost the default'
+    assert sql('SELECT COUNT(*) FROM flyway_schema_history WHERE success=1', instance=acceptance_instance).strip() == '9'
+    # The new application serves what stays and no longer has what was dropped.
+    owner = request('/api/login', {'name': 'v2-owner-a', 'password': 'test-password'}, expected=201, base=server)['accessToken']
+    assert request(f"/api/get-note?id={kept['id']}", token=owner, base=server)['body'] == 'v3-kept'
+    exchange('/api/labels?page=1&size=1', None, None, 404, base=server)
+    long_state = 'x' * 40
+    assert request('/api/update-note', {'id': kept['id'], 'body': 'v3-kept', 'pinned': True, 'state': long_state}, token=owner, base=server)['state'] == long_state
+    assert 'KCG_UPDATE_CURRENT' in deploy('update', instance=acceptance_instance, state=acceptance_state, package=a.v3_package)
+    older = deploy('update', expected=3, instance=acceptance_instance, state=acceptance_state, package=a.v2_package)
+    assert 'AHEAD' in older and 'application=RUNNING' in older, 'an older package must be refused before the application stops'
     report['dataUpdate'] = 'PASSED'
-    deploy('deploy', instance=fresh_instance, state=fresh_state, port=fresh_port, package=a.v2_package)
-    assert sql('SELECT COUNT(*) FROM flyway_schema_history WHERE success=1', instance=fresh_instance).strip() == '6'
+    deploy('deploy', instance=fresh_instance, state=fresh_state, port=fresh_port, package=a.v3_package)
+    assert sql('SELECT COUNT(*) FROM flyway_schema_history WHERE success=1', instance=fresh_instance).strip() == '9'
     assert request('/api/register', {'name': 'fresh-user', 'password': 'test-password'}, expected=201, base=f'http://127.0.0.1:{fresh_port}')
     report['freshChain'] = 'PASSED'
 except Exception as error:

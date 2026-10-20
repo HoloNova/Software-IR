@@ -125,6 +125,96 @@ class DeploymentPackageApplicationTest {
         assertTrue(Files.readString(next.resolve("deploy/contracts/V1.tsv")).contains("note\tstate\tvarchar\t16\tfalse\tfalse\tfalse\tfalse\t\t\t=open\n"));
     }
 
+    @Test void aWidenedColumnIsModifiedInPlaceWithoutRestatingItsKeysAndIndexes() throws Exception {
+        Path source = source(true);
+        String text = Files.readString(source.resolve("project.sir"));
+        String before = text.replace("      field author: Ref<User>;\n      field text: Text;\n    }",
+            "      field author: Ref<User>;\n      field text: Text;\n      field state: Text where length(1, 16) default \"open\";\n      field extra: Optional<Count>;\n    }");
+        Files.writeString(source.resolve("project.sir"), before);
+        Path base = export(source, temp.resolve("base")).manifest().outputRoot();
+        Files.writeString(source.resolve("project.sir"), before.replace("length(1, 16) default", "length(1, 64) default")
+            .replace("field extra: Optional<Count>;", "field extra: Optional<Serial>;"));
+        var result = new DeploymentPackageApplication().export(new DeploymentPackageRequest(source, ENTRY, temp.resolve("next"), Optional.empty(), Optional.of(base)));
+        var exported = assertInstanceOf(DeploymentPackageResult.Exported.class, result, result.toString());
+        Path next = exported.manifest().outputRoot();
+        assertEquals(List.of("V2 WIDEN_COLUMN note.state", "V3 WIDEN_COLUMN note.extra"), exported.continuation().orElseThrow().steps());
+        assertEquals(List.of(), exported.continuation().orElseThrow().dataLoss());
+        assertEquals("-- KCG delivery schema version 2; frozen once published.\nALTER TABLE `note` MODIFY COLUMN `state` VARCHAR(64) NOT NULL DEFAULT 'open';\n",
+            Files.readString(next.resolve("deploy/migrations/V2__widen_column_note_state.sql")));
+        assertEquals("-- KCG delivery schema version 3; frozen once published.\nALTER TABLE `note` MODIFY COLUMN `extra` BIGINT NULL;\n",
+            Files.readString(next.resolve("deploy/migrations/V3__widen_column_note_extra.sql")));
+        assertTrue(Files.readString(next.resolve("deploy/contracts/V2.tsv")).contains("note\tstate\tvarchar\t64\tfalse\t"));
+        assertTrue(Files.readString(next.resolve("deploy/contracts/V2.tsv")).contains("note\textra\tint\t"));
+        assertTrue(Files.readString(next.resolve("deploy/schema.tsv")).contains("note\textra\tbigint\t"));
+    }
+
+    @Test void whatTheSourceNoLongerHasIsRefusedUntilABackupIsConfirmedThenDroppedWithItsDataNamed() throws Exception {
+        Path source = source(true);
+        String text = Files.readString(source.resolve("project.sir"));
+        String before = text.replace("    entity Note persistent {", "    entity Archive persistent { identity id: Id generated auto; field text: Text; }\n    entity Note persistent {")
+            .replace("      field author: Ref<User>;\n      field text: Text;\n    }",
+                "      field author: Ref<User>;\n      field text: Text;\n      field state: Text where length(1, 16) default \"open\";\n    }");
+        Files.writeString(source.resolve("project.sir"), before);
+        Path base = export(source, temp.resolve("base")).manifest().outputRoot();
+        Files.writeString(source.resolve("project.sir"), text);
+
+        var refused = new DeploymentPackageApplication().export(new DeploymentPackageRequest(source, ENTRY, temp.resolve("refused"), Optional.empty(), Optional.of(base)));
+        assertInstanceOf(DeploymentPackageResult.Failure.class, refused);
+        var backup = refused.diagnostics().stream().filter(d -> d.code().equals("SIR-DEPLOY-UPDATE-BACKUP-001")).map(d -> d.message()).toList();
+        assertEquals(2, backup.size(), refused.toString());
+        assertTrue(backup.stream().allMatch(m -> m.contains("--confirm-backup yes")), backup.toString());
+        assertFalse(Files.exists(temp.resolve("refused")), "nothing is written");
+
+        var result = new DeploymentPackageApplication().export(new DeploymentPackageRequest(source, ENTRY, temp.resolve("next"), Optional.empty(), Optional.of(base), true));
+        var exported = assertInstanceOf(DeploymentPackageResult.Exported.class, result, result.toString());
+        Path next = exported.manifest().outputRoot();
+        assertEquals(List.of("V2 DROP_COLUMN note.state", "V3 DROP_TABLE archive"), exported.continuation().orElseThrow().steps());
+        assertEquals(List.of("note.state", "archive"), exported.continuation().orElseThrow().dataLoss());
+        assertEquals("-- KCG delivery schema version 2; frozen once published.\nALTER TABLE `note` DROP COLUMN `state`;\n",
+            Files.readString(next.resolve("deploy/migrations/V2__drop_column_note_state.sql")));
+        assertEquals("-- KCG delivery schema version 3; frozen once published.\nDROP TABLE `archive`;\n",
+            Files.readString(next.resolve("deploy/migrations/V3__drop_table_archive.sql")));
+        assertTrue(Files.readString(next.resolve("deploy/contracts/V1.tsv")).contains("note\tstate\t"));
+        assertTrue(Files.readString(next.resolve("deploy/contracts/V1.tsv")).contains("archive\ttext\t"));
+        assertTrue(Files.readString(next.resolve("deploy/contracts/V2.tsv")).contains("archive\ttext\t"));
+        assertFalse(Files.readString(next.resolve("deploy/contracts/V2.tsv")).contains("note\tstate\t"));
+        assertFalse(Files.readString(next.resolve("deploy/schema.tsv")).contains("archive\t"));
+        // The migration tool is told nothing about drops: it reads them from the contracts it is given.
+        assertTrue(Files.readString(next.resolve("deploy/tools/src/main/java/kcg/delivery/Migrate.java")).contains("KCG_DATA_DROPPED"));
+    }
+
+    /** The three deployment samples CI moves a running instance through: the versions and what each one does to the data. */
+    @Test void theDeploymentSamplesFormAChainWhoseThirdVersionDropsDataOnlyWhenConfirmed() throws Exception {
+        Path one = export(sample("dual-token"), temp.resolve("one")).manifest().outputRoot();
+        var second = new DeploymentPackageApplication().export(new DeploymentPackageRequest(sample("dual-token-v2"), ENTRY, temp.resolve("two"),
+            Optional.empty(), Optional.of(one)));
+        var v2 = assertInstanceOf(DeploymentPackageResult.Exported.class, second, second.toString());
+        assertEquals(List.of("V2 RENAME_COLUMN note.text -> body", "V3 CHANGE_COLUMN_DEFAULT note.pinned", "V4 CREATE_TABLE label",
+            "V5 ADD_NULLABLE_COLUMN note.title", "V6 ADD_DEFAULTED_COLUMN note.state"), v2.continuation().orElseThrow().steps());
+        Path two = v2.manifest().outputRoot();
+
+        Path third = sample("dual-token-v3");
+        var refused = new DeploymentPackageApplication().export(new DeploymentPackageRequest(third, ENTRY, temp.resolve("refused"), Optional.empty(), Optional.of(two)));
+        assertInstanceOf(DeploymentPackageResult.Failure.class, refused);
+        assertEquals(2, refused.diagnostics().stream().filter(d -> d.code().equals("SIR-DEPLOY-UPDATE-BACKUP-001")).count(), refused.toString());
+        var result = new DeploymentPackageApplication().export(new DeploymentPackageRequest(third, ENTRY, temp.resolve("three"), Optional.empty(), Optional.of(two), true));
+        var v3 = assertInstanceOf(DeploymentPackageResult.Exported.class, result, result.toString());
+        assertEquals(9, v3.continuation().orElseThrow().schemaVersion());
+        assertEquals(List.of("V7 WIDEN_COLUMN note.state", "V8 DROP_COLUMN note.title", "V9 DROP_TABLE label"), v3.continuation().orElseThrow().steps());
+        assertEquals(List.of("note.title", "label"), v3.continuation().orElseThrow().dataLoss());
+        // A new instance replays the whole chain, drops included, and ends at the contract of the last version.
+        assertFalse(Files.readString(v3.manifest().outputRoot().resolve("deploy/schema.tsv")).contains("label\t"));
+        assertTrue(Files.readString(v3.manifest().outputRoot().resolve("deploy/schema.tsv")).contains("note\tstate\tvarchar\t64\t"));
+    }
+
+    private Path sample(String name) throws Exception {
+        Path root = Files.createTempDirectory(temp, "sample-");
+        try (var input = getClass().getResourceAsStream("/deployment/" + name + "/project.sir")) {
+            Files.write(root.resolve("project.sir"), Objects.requireNonNull(input, name).readAllBytes());
+        }
+        return root;
+    }
+
     @Test void aContinuationInheritsTheBaseChainVerbatimAndAppendsOneStatementPerVersion() throws Exception {
         Path source = source(true);
         Path base = export(source, temp.resolve("base")).manifest().outputRoot();
@@ -148,7 +238,8 @@ class DeploymentPackageApplicationTest {
         // Reverting to the base source on top of the continuation removes a column: refused, nothing written.
         Files.writeString(source.resolve("project.sir"), text);
         var back = new DeploymentPackageApplication().export(new DeploymentPackageRequest(source, ENTRY, temp.resolve("back"), Optional.empty(), Optional.of(next)));
-        assertTrue(back.diagnostics().stream().anyMatch(d -> d.code().equals("SIR-DEPLOY-UPDATE-UNSUPPORTED-001") && d.message().equals("COLUMN_REMOVED note.title")), back.toString());
+        assertTrue(back.diagnostics().stream().anyMatch(d -> d.code().equals("SIR-DEPLOY-UPDATE-BACKUP-001") && d.message().startsWith("COLUMN_REMOVED note.title")
+            && d.message().contains("--confirm-backup yes")), back.toString());
         assertFalse(Files.exists(temp.resolve("back")));
 
         // The base's sources must rebuild exactly the schema it was published with, or its model is not the database's.

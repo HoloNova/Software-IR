@@ -192,6 +192,16 @@ public final class DeploymentEngine {
     }
 
     /**
+     * A column as MODIFY COLUMN restates it: type, nullability and default only. Uniqueness, key and reference stay
+     * with the table's indexes and constraints; restating UNIQUE here would add a second index.
+     */
+    private static String modifiedDefinition(Column column) {
+        String definition = quote(column.name()) + " " + sqlType(column) + (column.nullable() ? " NULL" : " NOT NULL");
+        if (column.defaultValue().isPresent()) definition += " DEFAULT " + defaultLiteral(column);
+        return definition;
+    }
+
+    /**
      * The versions a delivery appends to the chain it inherits: one statement per file, and the contract after each
      * version but the last (the last is schema.tsv). Contract V(base) is the inherited schema.tsv, copied by the caller.
      */
@@ -213,6 +223,15 @@ public final class DeploymentEngine {
                     renames.append(step.version()).append('\t').append(rename.table()).append('\t').append(rename.from().name())
                         .append('\t').append(rename.to().name()).append('\n');
                 }
+                case SchemaEvolution.WidenColumn widen -> add(files, plan,
+                    "deploy/migrations/V" + step.version() + "__widen_column_" + (widen.table() + "_" + widen.to().name()).toLowerCase(Locale.ROOT) + ".sql",
+                    header + "ALTER TABLE " + quote(widen.table()) + " MODIFY COLUMN " + modifiedDefinition(widen.to()) + ";\n");
+                case SchemaEvolution.DropColumn drop -> add(files, plan,
+                    "deploy/migrations/V" + step.version() + "__drop_column_" + (drop.table() + "_" + drop.column().name()).toLowerCase(Locale.ROOT) + ".sql",
+                    header + "ALTER TABLE " + quote(drop.table()) + " DROP COLUMN " + quote(drop.column().name()) + ";\n");
+                case SchemaEvolution.DropTable drop -> add(files, plan,
+                    "deploy/migrations/V" + step.version() + "__drop_table_" + drop.table().name().toLowerCase(Locale.ROOT) + ".sql",
+                    header + "DROP TABLE " + quote(drop.table().name()) + ";\n");
                 case SchemaEvolution.ChangeColumnDefault change -> add(files, plan,
                     "deploy/migrations/V" + step.version() + "__change_default_" + (change.table() + "_" + change.to().name()).toLowerCase(Locale.ROOT) + ".sql",
                     header + "ALTER TABLE " + quote(change.table()) + " ALTER COLUMN " + quote(change.to().name())

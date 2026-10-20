@@ -13,12 +13,13 @@ import java.util.*;
  *
  * <p>The change layer decides what changed ({@link SemanticDelta}); this class only maps those changes onto tables and
  * columns, matched by semantic identity rather than by name, and decides which of them the target can apply. An entity
- * or field the delta adds becomes a table or column to create; one it deletes is refused. A column kept under the same
- * identity is compared physically: when only its name differs (a field renamed under a declared {@code @id}) the column
- * is renamed with it and keeps its values; when its database default differs, the default is changed and the rows keep
- * their values; any other difference is refused. Round 1 thus supports an unchanged schema, renamed non-key columns,
- * changed defaults, new tables, new plain nullable columns and new plain required columns that have a database default
- * (existing rows get the default).
+ * or field the delta adds becomes a table or column to create. A column kept under the same identity is compared
+ * physically and walked through its changes one at a time: first renamed (a field renamed under a declared {@code @id}
+ * keeps its values), then widened (a 32-bit number to 64-bit, a bounded text to a larger limit or to unbounded, a
+ * required column to an optional one; no existing value changes), then given its new database default (the rows keep
+ * their values). Any other difference is refused. An entity or field the delta deletes is dropped, rows and all, but only
+ * when the caller says the data loss is accepted ({@code allowDataLoss}); otherwise it is refused. Dropping a key
+ * column, or a column that refers to another table, is always refused.
  *
  * <p>A table or column that appears or disappears without the delta adding or deleting it means the two inputs
  * disagree. That, and a chain that does not end at the target contract, are faults of the toolchain (SELFCHECK), never
@@ -39,6 +40,12 @@ public final class SpringBootSchemaEvolutionPlanner {
      * @param delta          what changed from the running delivery's model to the target's
      */
     public Outcome plan(DeploymentPlan base, String baseMysqlImage, int baseVersion, SemanticDelta delta, DeploymentPlan target) {
+        return plan(base, baseMysqlImage, baseVersion, delta, target, false);
+    }
+
+    /** @param allowDataLoss whether the tables and columns the delta deletes may be dropped, with the data in them */
+    public Outcome plan(DeploymentPlan base, String baseMysqlImage, int baseVersion, SemanticDelta delta, DeploymentPlan target,
+            boolean allowDataLoss) {
         Set<String> added = new HashSet<>(), deleted = new HashSet<>();
         for (SemanticDelta.Change change : delta.changes()) {
             change.subject().ifPresent(subject -> (change.kind() == SemanticDelta.Kind.ADD ? added : deleted).add(subject));
@@ -50,14 +57,19 @@ public final class SpringBootSchemaEvolutionPlanner {
         target.tables().forEach(t -> targetTables.put(t.symbol(), t));
         Set<String> baseTableSymbols = new HashSet<>(), baseTableNamesLower = new HashSet<>();
         List<SchemaEvolution.RenameColumn> renames = new ArrayList<>();
+        List<SchemaEvolution.WidenColumn> widenings = new ArrayList<>();
         List<SchemaEvolution.ChangeColumnDefault> defaults = new ArrayList<>();
+        List<SchemaEvolution.DropColumn> droppedColumns = new ArrayList<>();
+        List<Table> droppedTables = new ArrayList<>();
         for (Table old : base.tables()) {
             baseTableSymbols.add(old.symbol());
             baseTableNamesLower.add(old.name().toLowerCase(Locale.ROOT));
             Table now = targetTables.get(old.symbol());
             if (now == null) {
-                refusals.add(deleted.contains(old.symbol()) ? "TABLE_REMOVED " + old.name()
-                    : "SELFCHECK table " + old.name() + " is gone but the change layer deleted no entity for it");
+                if (!deleted.contains(old.symbol()))
+                    refusals.add("SELFCHECK table " + old.name() + " is gone but the change layer deleted no entity for it");
+                else if (!allowDataLoss) refusals.add("TABLE_REMOVED " + old.name());
+                else droppedTables.add(old);
                 continue;
             }
             Map<String, Column> nowColumns = new LinkedHashMap<>();
@@ -65,32 +77,37 @@ public final class SpringBootSchemaEvolutionPlanner {
             for (Column column : old.columns()) {
                 Column current = nowColumns.get(column.symbol());
                 if (current == null) {
-                    refusals.add(deleted.contains(column.symbol()) ? "COLUMN_REMOVED " + old.name() + "." + column.name()
-                        : "SELFCHECK column " + old.name() + "." + column.name() + " is gone but the change layer deleted no field for it");
+                    String subject = old.name() + "." + column.name();
+                    if (!deleted.contains(column.symbol()))
+                        refusals.add("SELFCHECK column " + subject + " is gone but the change layer deleted no field for it");
+                    else if (column.primary()) refusals.add("PRIMARY_COLUMN_REMOVED " + subject);
+                    else if (column.reference().isPresent()) refusals.add("REFERENCE_COLUMN_REMOVED " + subject);
+                    else if (!allowDataLoss) refusals.add("COLUMN_REMOVED " + subject);
+                    else droppedColumns.add(new SchemaEvolution.DropColumn(0, old.name(), column));
                     continue;
                 }
                 String before = SchemaContract.row(old.name(), column), after = SchemaContract.row(now.name(), current);
                 if (before.equals(after)) continue;
-                // A changed default is a change of the column's definition only; under a new name the column is renamed
-                // first, keeping its old default, and the default changes after.
-                Column renamed = current;
-                if (!column.primary() && !column.defaultValue().equals(current.defaultValue())
-                        && attributes(SchemaEvolution.ChangeColumnDefault.withoutDefault(before) + "\t")
-                            .equals(attributes(SchemaEvolution.ChangeColumnDefault.withoutDefault(after) + "\t"))) {
-                    renamed = withDefault(current, column.defaultValue());
-                    defaults.add(new SchemaEvolution.ChangeColumnDefault(0, now.name(), renamed, current));
-                    after = SchemaContract.row(now.name(), renamed);
-                    if (before.equals(after)) continue;
+                // The column's states, one change each: renamed, widened, then given its final default. Each version is
+                // written against the column as the versions before it left it.
+                Column renamed = rename(column, current.name());
+                Column widened = withDefault(current, column.defaultValue());
+                boolean widen = !renamed.equals(widened);
+                if (widen && !SchemaEvolution.WidenColumn.widens(renamed, widened)) {
+                    refusals.add("COLUMN_CHANGED " + old.name() + "." + column.name() + ": " + attributes(before) + " -> " + attributes(after));
+                    continue;
                 }
-                if (!column.name().equals(current.name()) && attributes(before).equals(attributes(after))) {
+                if (!column.name().equals(current.name())) {
                     String subject = old.name() + "." + column.name() + " -> " + current.name();
                     boolean taken = old.columns().stream().anyMatch(c -> !c.symbol().equals(column.symbol())
                         && c.name().equalsIgnoreCase(current.name()));
-                    if (column.primary()) refusals.add("PRIMARY_COLUMN_RENAMED " + subject);
-                    else if (taken) refusals.add("NAME_CASE_CONFLICT " + subject);
-                    else renames.add(new SchemaEvolution.RenameColumn(0, old.name(), column, renamed));
+                    if (column.primary()) { refusals.add("PRIMARY_COLUMN_RENAMED " + subject); continue; }
+                    if (taken) { refusals.add("NAME_CASE_CONFLICT " + subject); continue; }
+                    renames.add(new SchemaEvolution.RenameColumn(0, old.name(), column, renamed));
                 }
-                else refusals.add("COLUMN_CHANGED " + old.name() + "." + column.name() + ": " + attributes(before) + " -> " + attributes(after));
+                if (widen) widenings.add(new SchemaEvolution.WidenColumn(0, now.name(), renamed, widened));
+                if (!column.defaultValue().equals(current.defaultValue()))
+                    defaults.add(new SchemaEvolution.ChangeColumnDefault(0, now.name(), widened, current));
             }
         }
         List<SchemaEvolution.Step> columnsToAdd = new ArrayList<>();
@@ -118,11 +135,13 @@ public final class SpringBootSchemaEvolutionPlanner {
             }
         }
         List<Table> ordered = dependencyOrder(created, refusals);
+        List<Table> dropOrder = dropOrder(droppedTables, target, refusals);
         if (!refusals.isEmpty()) return new Outcome(Optional.empty(), refusals);
         List<SchemaEvolution.Step> steps = new ArrayList<>();
         int version = baseVersion;
         // Renames first, so every later version is written against the final column names.
         for (var rename : renames) steps.add(new SchemaEvolution.RenameColumn(++version, rename.table(), rename.from(), rename.to()));
+        for (var widening : widenings) steps.add(new SchemaEvolution.WidenColumn(++version, widening.table(), widening.from(), widening.to()));
         for (var change : defaults) steps.add(new SchemaEvolution.ChangeColumnDefault(++version, change.table(), change.from(), change.to()));
         for (Table table : ordered) steps.add(new SchemaEvolution.CreateTable(++version, table));
         for (var column : columnsToAdd) steps.add(switch (column) {
@@ -130,6 +149,9 @@ public final class SpringBootSchemaEvolutionPlanner {
             case SchemaEvolution.AddDefaultedColumn c -> new SchemaEvolution.AddDefaultedColumn(++version, c.table(), c.column());
             default -> throw new IllegalStateException("not a column addition: " + column);
         });
+        // Drops come last, so nothing above reads a column that is about to go, and tables go before the tables they refer to.
+        for (var drop : droppedColumns) steps.add(new SchemaEvolution.DropColumn(++version, drop.table(), drop.column()));
+        for (Table table : dropOrder) steps.add(new SchemaEvolution.DropTable(++version, table));
         var evolution = new SchemaEvolution(baseVersion, steps);
         // The chain must end exactly at the target contract; anything else is a fault of this planner, not of the input.
         Set<String> reached = new HashSet<>(SchemaContract.render(base.tables()).lines().toList());
@@ -156,6 +178,39 @@ public final class SpringBootSchemaEvolutionPlanner {
         }
         if (!pending.isEmpty()) refusals.add("NEW_TABLE_CYCLE " + String.join(", ", pending));
         return ordered;
+    }
+
+    /**
+     * The tables to drop, those that refer to another dropped table first. A table that stays and still refers to a
+     * dropped one cannot happen unless its reference column is also gone, which is refused on its own; it is checked
+     * all the same, as is a reference cycle among the dropped tables.
+     */
+    private static List<Table> dropOrder(List<Table> dropped, DeploymentPlan target, List<String> refusals) {
+        Set<String> names = new LinkedHashSet<>();
+        dropped.forEach(t -> names.add(t.name()));
+        for (Table kept : target.tables()) for (Column column : kept.columns())
+            if (column.reference().isPresent() && names.contains(column.reference().get().table()))
+                refusals.add("TABLE_REFERENCED " + column.reference().get().table() + " by " + kept.name() + "." + column.name());
+        Set<String> pending = new LinkedHashSet<>(names);
+        List<Table> ordered = new ArrayList<>();
+        boolean progress = true;
+        while (!pending.isEmpty() && progress) {
+            progress = false;
+            for (Table table : dropped) {
+                if (!pending.contains(table.name())) continue;
+                // Nothing still waiting to be dropped may refer to this table (a table referring to itself is dropped with it).
+                boolean referred = dropped.stream().filter(other -> pending.contains(other.name()) && !other.name().equals(table.name()))
+                    .anyMatch(other -> other.columns().stream().anyMatch(c -> c.reference().map(r -> r.table().equals(table.name())).orElse(false)));
+                if (!referred) { ordered.add(table); pending.remove(table.name()); progress = true; }
+            }
+        }
+        if (!pending.isEmpty()) refusals.add("DROPPED_TABLE_CYCLE " + String.join(", ", pending));
+        return ordered;
+    }
+
+    private static Column rename(Column column, String name) {
+        return new Column(column.symbol(), name, column.storage(), column.length(), column.nullable(), column.primary(),
+            column.autoIncrement(), column.unique(), column.reference(), column.defaultValue());
     }
 
     private static Column withDefault(Column column, Optional<String> defaultValue) {

@@ -656,7 +656,8 @@ final class DeploymentTemplates {
             /**
              * Applies V(k+1)..Vn one version at a time, verifying each contract. For an existing database it proves that the
              * rows and values of every table and column of V(k) are unchanged (a column those versions renamed is read under
-             * its new name), that added columns are null in every old row and that added tables are empty.
+             * its new name; a column or table they dropped is not compared), that added columns are null in every old row
+             * and that added tables are empty.
              */
             private static void apply(Connection db, String url, String password, List<List<String[]>> contracts, List<String[]> renames,
                     int k, int n, boolean preserve) throws Exception {
@@ -672,7 +673,17 @@ final class DeploymentTemplates {
                     if (key == null) throw new IllegalStateException("renames.tsv renames a column V" + k + " does not have: " + rename[1] + "." + rename[2]);
                     moved.put(key, rename[3]);
                 }
-                Map<String, String> before = preserve ? digest(db, contracts.get(k), Map.of()) : Map.of();
+                // What V(k) has and V(n) no longer has was dropped on purpose (the package was exported with the data loss
+                // confirmed): its values are not compared, everything else is.
+                Set<String> finalColumns = new HashSet<>();
+                for (String[] row : contracts.get(n)) finalColumns.add(row[0] + "." + row[1]);
+                List<String[]> kept = new ArrayList<>();
+                List<String> dropped = new ArrayList<>();
+                for (String[] row : contracts.get(k)) {
+                    if (finalColumns.contains(row[0] + "." + moved.get(row[0] + "." + row[1]))) kept.add(row);
+                    else dropped.add(row[0] + "." + row[1]);
+                }
+                Map<String, String> before = preserve ? digest(db, kept, Map.of()) : Map.of();
                 for (int version = k + 1; version <= n; version++) {
                     changing = true;
                     try {
@@ -687,7 +698,7 @@ final class DeploymentTemplates {
                     }
                 }
                 if (!preserve) return;
-                Map<String, String> after = digest(db, contracts.get(k), moved);
+                Map<String, String> after = digest(db, kept, moved);
                 if (!before.equals(after)) throw new Recovery("DATA_CHANGED", "rows or values of the previous schema changed during migration");
                 Set<String> oldColumns = new HashSet<>(), oldTables = new HashSet<>();
                 for (String[] row : contracts.get(k)) oldTables.add(row[0]);
@@ -710,6 +721,7 @@ final class DeploymentTemplates {
                 long rows = 0;
                 for (String value : before.values()) rows += Long.parseLong(value.substring(0, value.indexOf(':')));
                 System.out.println("KCG_DATA_VERIFIED tables=" + before.size() + " rows=" + rows);
+                if (!dropped.isEmpty()) System.out.println("KCG_DATA_DROPPED columns=" + dropped.size() + " " + String.join(",", dropped));
             }
 
             /** Per table "<rows>:<sha256>" over its contract columns in primary key order; NULL is encoded apart from any value. */

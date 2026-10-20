@@ -1,6 +1,7 @@
 package io.kcg.sir.lowering.springboot.model;
 
 import io.kcg.sir.lowering.springboot.model.DeploymentPlan.Column;
+import io.kcg.sir.lowering.springboot.model.DeploymentPlan.Storage;
 import io.kcg.sir.lowering.springboot.model.DeploymentPlan.Table;
 import java.util.List;
 import java.util.Objects;
@@ -19,7 +20,8 @@ public record SchemaEvolution(int baseVersion, List<Step> steps) {
 
     public int targetVersion() { return baseVersion + steps.size(); }
 
-    public sealed interface Step permits RenameColumn, ChangeColumnDefault, CreateTable, AddNullableColumn, AddDefaultedColumn {
+    public sealed interface Step permits RenameColumn, WidenColumn, ChangeColumnDefault, CreateTable, AddNullableColumn, AddDefaultedColumn,
+            DropColumn, DropTable {
         int version();
         /** The contract rows this version adds. */
         List<String> addedRows();
@@ -42,6 +44,42 @@ public record SchemaEvolution(int baseVersion, List<Step> steps) {
         public List<String> addedRows() { return List.of(SchemaContract.row(table, to)); }
         public List<String> removedRows() { return List.of(SchemaContract.row(table, from)); }
         public String describe() { return "V" + version + " RENAME_COLUMN " + table + "." + from.name() + " -> " + to.name(); }
+    }
+
+    /**
+     * A column that can hold everything it held before and more, so no existing value changes: a 32-bit number becomes a
+     * 64-bit one, a bounded text gets a larger limit or none, a required column becomes optional. Name, key, uniqueness,
+     * reference and default stay as they were. The database may copy the table to do it.
+     */
+    public record WidenColumn(int version, String table, Column from, Column to) implements Step {
+        public WidenColumn {
+            Objects.requireNonNull(table); Objects.requireNonNull(from); Objects.requireNonNull(to);
+            if (!widens(from, to)) throw new IllegalArgumentException("not a widening of the column: " + from.name());
+        }
+        public List<String> addedRows() { return List.of(SchemaContract.row(table, to)); }
+        public List<String> removedRows() { return List.of(SchemaContract.row(table, from)); }
+        public String describe() { return "V" + version + " WIDEN_COLUMN " + table + "." + to.name(); }
+
+        /**
+         * Whether {@code to} is {@code from} widened in at least one way and changed in no other. Storage widens from
+         * INT to BIGINT, a VARCHAR to a longer VARCHAR, and a VARCHAR without a default or a unique key to LONGTEXT;
+         * nullability only from required to optional. A column that is a key, counts up by itself or refers to another
+         * table is never widened, since other tables depend on its exact type.
+         */
+        public static boolean widens(Column from, Column to) {
+            if (from.primary() || from.autoIncrement() || to.primary() || to.autoIncrement()
+                    || from.reference().isPresent() && (from.storage() != to.storage() || from.length() != to.length())
+                    || !from.symbol().equals(to.symbol()) || !from.name().equals(to.name())
+                    || from.unique() != to.unique() || !from.reference().equals(to.reference())
+                    || !from.defaultValue().equals(to.defaultValue())) return false;
+            boolean sameType = from.storage() == to.storage() && (from.storage() != Storage.VARCHAR || from.length() == to.length());
+            boolean longer = from.storage() == Storage.VARCHAR && to.storage() == Storage.VARCHAR && to.length() > from.length();
+            boolean wider = from.storage() == Storage.INT && to.storage() == Storage.BIGINT
+                || from.storage() == Storage.VARCHAR && to.storage() == Storage.LONGTEXT && !from.unique() && from.defaultValue().isEmpty();
+            boolean typeOk = sameType || longer || wider;
+            boolean optional = !from.nullable() && to.nullable();
+            return typeOk && (!sameType || optional) && (from.nullable() == to.nullable() || optional);
+        }
     }
 
     /**
@@ -89,5 +127,28 @@ public record SchemaEvolution(int baseVersion, List<Step> steps) {
         }
         public List<String> addedRows() { return List.of(SchemaContract.row(table, column)); }
         public String describe() { return "V" + version + " ADD_DEFAULTED_COLUMN " + table + "." + column.name(); }
+    }
+
+    /**
+     * A column that is gone, and every value in it with it. Only a column no other table refers to and that is not a key:
+     * dropping a column that holds a foreign key would first need that constraint dropped by its name.
+     */
+    public record DropColumn(int version, String table, Column column) implements Step {
+        public DropColumn {
+            Objects.requireNonNull(table); Objects.requireNonNull(column);
+            if (column.primary() || column.reference().isPresent())
+                throw new IllegalArgumentException("a key or reference column cannot be dropped: " + column.name());
+        }
+        public List<String> addedRows() { return List.of(); }
+        public List<String> removedRows() { return List.of(SchemaContract.row(table, column)); }
+        public String describe() { return "V" + version + " DROP_COLUMN " + table + "." + column.name(); }
+    }
+
+    /** A table that is gone, with all its rows. No table that stays may refer to it; the caller drops referring tables first. */
+    public record DropTable(int version, Table table) implements Step {
+        public DropTable { Objects.requireNonNull(table); }
+        public List<String> addedRows() { return List.of(); }
+        public List<String> removedRows() { return table.columns().stream().map(c -> SchemaContract.row(table.name(), c)).toList(); }
+        public String describe() { return "V" + version + " DROP_TABLE " + table.name(); }
     }
 }

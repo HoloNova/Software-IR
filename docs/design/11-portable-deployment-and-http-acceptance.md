@@ -218,6 +218,8 @@ Swagger负责接口展示和手动发真实HTTP请求；它本身不是自动业
 | ADD_NULLABLE_COLUMN：旧表上可空、非主键、非自增、非唯一、无引用的新列 | 支持 |
 | 删表、删列（含任何改名、Ref可空性翻转）、列属性变化（含加宽长度、可空性、唯一、引用、枚举成员变长、VARCHAR↔LONGTEXT）、新增必填/唯一/引用列、新表成环、名字仅大小写冲突、MySQL镜像变化 | 以`SIR-DEPLOY-UPDATE-UNSUPPORTED-001`逐条列出并拒绝，不留输出 |
 
+**后续补充（2026-10-20）。** 上表“列属性变化”中的几种放宽（整数变宽、文本变长或去掉长度、必填变可空）已支持，删表、删列在导出时带`--confirm-backup yes`才支持，见[设计12第14节](12-feature-semantics-and-semantic-types.md)；其余仍如上表。
+
 新增版本每个文件只含一条DDL：先按拓扑与目标顺序`V<v>__create_table_<t>.sql`（外键内联，命名`kcg_v<v>_fk_<i>`，与V1的`kcg_fk_<n>`不冲突），再按（表，列）顺序`V<v>__add_column_<t>_<c>.sql`（`ALTER TABLE … ADD COLUMN … NULL, ALGORITHM=INSTANT`）。旧包迁移与合同逐字节复制，`contracts/V<b>.tsv`取旧`schema.tsv`，每个新版本前的合同写入`contracts/`，`schema.tsv`为最终合同；合同链逐行合并须等于目标合同，否则`SIR-DEPLOY-UPDATE-SELFCHECK-001`。已发布的迁移只追加，不重渲染；新实例从V1重放全链。结果JSON增加`basePackageId`、`schemaVersion`与`steps`。只收紧业务规则而无DDL的变更（notBlank、长度下限等）不对旧行核验，报告写“物理数据保留；旧行的业务规则兼容性NOT_VERIFIED”。
 
 **迁移工具（A片）。** `migrate.jar initialize|verify|check|update`。合同链`S_0=∅`、`S_i`为`contracts/V<i>.tsv`、`S_n`为`schema.tsv`；按序判定（先中先得）：无history表且无业务表→EMPTY，有业务表→BLOCKED UNMANAGED_SCHEMA；存在失败记录→RECOVERY FAILED_MIGRATION；已应用最高版本>n→BLOCKED AHEAD；已应用集合不是`{1..k}`或校验和不符→BLOCKED DIVERGED；活库等于`S_k`→AT(k)；`k<n`且活库等于`S_{k+1}`→RECOVERY INTERRUPTED；否则BLOCKED DRIFT。`initialize`接受EMPTY或AT(k)并迁移；`verify`只接受AT(n)；`check`只读报告`KCG_DB_STATE V<k> package=V<n>`；`update`接受AT(k≥1)并迁移。迁移前按主键流式摘要`S_k`全部表与列（区分NULL）并计行数，逐版本`target=v`迁移并核验`S_v`，再摘要须相等，新增列在所有旧行上为NULL，新表为空，否则RECOVERY DATA_CHANGED。退出码3=`KCG_DB_BLOCKED`（未改动），5=`KCG_DB_RECOVERY_REQUIRED`；不打印数据值或摘要。

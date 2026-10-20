@@ -59,9 +59,9 @@ class SchemaEvolutionPlannerTest {
         assertTrue(steps.get(0).addedRows().getFirst().endsWith("\t=open"), steps.get(0).addedRows().toString());
         assertTrue(steps.get(1).addedRows().getFirst().endsWith("\t=3"), steps.get(1).addedRows().toString());
         assertTrue(steps.get(2).addedRows().getFirst().endsWith("\t=new"), steps.get(2).addedRows().toString());
-        // A default that changes together with anything else is still a changed column.
-        var widened = continueFrom(before, before.replace("field visits: Count default 0;", "field visits: Optional<Count> default 1;"));
-        assertTrue(widened.refusals().stream().anyMatch(r -> r.startsWith("COLUMN_CHANGED note.visits")), widened.refusals().toString());
+        // A default that changes together with a change that is not a widening is still a changed column.
+        var retyped = continueFrom(before, before.replace("field visits: Count default 0;", "field visits: Flag default true;"));
+        assertTrue(retyped.refusals().stream().anyMatch(r -> r.startsWith("COLUMN_CHANGED note.visits")), retyped.refusals().toString());
     }
 
     @Test void aDefaultTheDatabaseCannotHoldStillLeavesARequiredColumnRefused() {
@@ -76,7 +76,7 @@ class SchemaEvolutionPlannerTest {
         String archive = "\n    entity Archive persistent { identity id: Id generated auto; field text: Text; }";
         String before = base().replace(NOTE, NOTE + archive);
         String after = base()
-            .replace("field name: Text where length(1, 64) unique;", "field name: Text where length(1, 128) unique;")
+            .replace("field name: Text where length(1, 64) unique;", "field name: Text where length(1, 32) unique;")
             .replace(NOTE, "      field author: Ref<User>;\n      field text: Text;\n      field editor: Optional<Ref<User>>;\n    }" + archive.replace("field text", "field body"));
         var outcome = continueFrom(before, after);
         assertTrue(outcome.evolution().isEmpty());
@@ -124,12 +124,94 @@ class SchemaEvolutionPlannerTest {
         assertEquals(List.of("SELFCHECK table archive is new but the change layer added no entity for it"), outcome.refusals());
     }
 
+
+    private static final String WIDE = "      field author: Ref<User>;\n      field text: Text;\n      field visits: Optional<Count>;\n"
+        + "      field label: Text where length(1, 16) default \"open\";\n      field memo: Optional<Text> where length(0, 16);\n"
+        + "      field seen: Count default 0;\n    }";
+
+    @Test void aColumnThatCanHoldMoreIsWidenedInPlaceAndKeepsEveryValue() {
+        String before = base().replace(NOTE, WIDE);
+        String after = before.replace("field visits: Optional<Count>;", "field visits: Optional<Serial>;")
+            .replace("field label: Text where length(1, 16) default \"open\";", "field label: Text where length(1, 64) default \"open\";")
+            .replace("field memo: Optional<Text> where length(0, 16);", "field memo: Optional<Text>;")
+            .replace("field seen: Count default 0;", "field seen: Optional<Count> default 0;");
+        var steps = continueFrom(before, after).evolution().orElseThrow().steps();
+        assertEquals(List.of("V2 WIDEN_COLUMN note.visits", "V3 WIDEN_COLUMN note.label", "V4 WIDEN_COLUMN note.memo", "V5 WIDEN_COLUMN note.seen"),
+            steps.stream().map(SchemaEvolution.Step::describe).toList());
+        assertTrue(steps.get(0).addedRows().getFirst().contains("\tbigint\t"), steps.get(0).addedRows().toString());
+        assertTrue(steps.get(1).addedRows().getFirst().contains("\tvarchar\t64\t"), steps.get(1).addedRows().toString());
+        assertTrue(steps.get(2).addedRows().getFirst().contains("\tlongtext\t"), steps.get(2).addedRows().toString());
+        assertTrue(steps.get(3).addedRows().getFirst().contains("\tint\t0\ttrue\t"), steps.get(3).addedRows().toString());
+        // The reference to a user may become optional too: the column keeps its type and its foreign key. (An optional
+        // reference is named after its field, without the _id of a required one, so the column is renamed first.)
+        var optionalAuthor = continueFrom(before, before.replace("field author: Ref<User>;\n      field text: Text;\n      field visits",
+            "field author: Optional<Ref<User>>;\n      field text: Text;\n      field visits"));
+        assertEquals(List.of("V2 RENAME_COLUMN note.author_id -> author", "V3 WIDEN_COLUMN note.author"),
+            optionalAuthor.evolution().orElseThrow().steps().stream().map(SchemaEvolution.Step::describe).toList());
+    }
+
+    @Test void aColumnIsRenamedThenWidenedThenGivenItsNewDefaultEachInItsOwnVersion() {
+        String before = base().replace(NOTE, "      field author: Ref<User>;\n      field text: Text;\n"
+            + "      field label: Text where length(1, 16) default \"open\" @id(\"note-label\");\n    }");
+        String after = before.replace("field label: Text where length(1, 16) default \"open\"", "field tag: Text where length(1, 64) default \"new\"");
+        var steps = continueFrom(before, after).evolution().orElseThrow().steps();
+        assertEquals(List.of("V2 RENAME_COLUMN note.label -> tag", "V3 WIDEN_COLUMN note.tag", "V4 CHANGE_COLUMN_DEFAULT note.tag"),
+            steps.stream().map(SchemaEvolution.Step::describe).toList());
+        // Each version is written against the column as the one before left it: the old default until the last.
+        assertTrue(steps.get(1).addedRows().getFirst().endsWith("\tvarchar\t64\tfalse\tfalse\tfalse\tfalse\t\t\t=open"), steps.get(1).addedRows().toString());
+        assertTrue(steps.get(2).addedRows().getFirst().endsWith("=new"), steps.get(2).addedRows().toString());
+    }
+
+    @Test void aChangeThatCouldLoseAValueIsNotAWidening() {
+        String before = base().replace(NOTE, WIDE);
+        for (String[] narrowing : new String[][] {
+                {"field visits: Optional<Count>;", "field visits: Optional<Flag>;"},
+                {"field label: Text where length(1, 16) default \"open\";", "field label: Text where length(1, 8) default \"open\";"},
+                {"field memo: Optional<Text> where length(0, 16);", "field memo: Optional<Count>;"}}) {
+            var refused = continueFrom(before, before.replace(narrowing[0], narrowing[1]));
+            assertTrue(refused.evolution().isEmpty() && refused.refusals().stream().anyMatch(r -> r.startsWith("COLUMN_CHANGED note.")),
+                narrowing[1] + " " + refused.refusals());
+        }
+        // An optional column cannot become required: rows may hold nothing.
+        String optional = before.replace("field seen: Count default 0;", "field seen: Optional<Count> default 0;");
+        assertTrue(continueFrom(optional, before).refusals().stream().anyMatch(r -> r.startsWith("COLUMN_CHANGED note.seen")));
+    }
+
+    @Test void whatIsDroppedNeedsTheDataLossToBeAcceptedAndGoesLast() {
+        String archive = "\n    entity Archive persistent { identity id: Id generated auto; field text: Text; }"
+            + "\n    entity Entry persistent { identity id: Id generated auto; field archive: Ref<Archive>; field memo: Optional<Text>; }";
+        String before = base().replace(NOTE, WIDE + archive);
+        String after = base().replace(NOTE, WIDE.replace("      field visits: Optional<Count>;\n", ""));
+        var unconfirmed = continueFrom(before, after);
+        assertEquals(java.util.Set.of("TABLE_REMOVED archive", "TABLE_REMOVED entry", "COLUMN_REMOVED note.visits"), java.util.Set.copyOf(unconfirmed.refusals()));
+        assertTrue(unconfirmed.evolution().isEmpty());
+        // Accepted: the column goes first, then the tables, a table before the one it refers to whatever the declaration order.
+        var steps = continueFrom(before, after, true).evolution().orElseThrow().steps();
+        assertEquals(List.of("V2 DROP_COLUMN note.visits", "V3 DROP_TABLE entry", "V4 DROP_TABLE archive"),
+            steps.stream().map(SchemaEvolution.Step::describe).toList());
+        assertTrue(steps.get(0).removedRows().getFirst().startsWith("note\tvisits\t"));
+        assertEquals(3, steps.get(1).removedRows().size());
+    }
+
+    @Test void aReferenceColumnIsNeverDroppedEvenWhenTheDataLossIsAccepted() {
+        // Dropping it would first need its foreign key dropped by name, which the contract does not carry.
+        String withoutAuthor = base().replace("      field author: Ref<User>;\n      field text: Text;\n    }", "      field text: Text;\n    }")
+            .replace("          author: actor;\n", "");
+        var dropped = continueFrom(base(), withoutAuthor, true);
+        assertTrue(dropped.evolution().isEmpty());
+        assertTrue(dropped.refusals().contains("REFERENCE_COLUMN_REMOVED note.author_id"), dropped.refusals().toString());
+    }
+
     private record Compiled(NormalizedSemanticModel model, DeploymentPlan plan) {}
 
     private static SpringBootSchemaEvolutionPlanner.Outcome continueFrom(String base, String target) {
+        return continueFrom(base, target, false);
+    }
+
+    private static SpringBootSchemaEvolutionPlanner.Outcome continueFrom(String base, String target, boolean allowDataLoss) {
         Compiled before = compile(base), after = compile(target);
         var delta = SemanticDelta.between(SoftwareDraft.of(before.model()), SoftwareDraft.of(after.model()), SoftwareSchema.normalizedModel());
-        return new SpringBootSchemaEvolutionPlanner().plan(before.plan(), "mysql:8.4.5", 1, delta, after.plan());
+        return new SpringBootSchemaEvolutionPlanner().plan(before.plan(), "mysql:8.4.5", 1, delta, after.plan(), allowDataLoss);
     }
 
     private static String base() {
