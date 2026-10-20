@@ -30,6 +30,33 @@ software DualTokenDesk {
       entity: Note;
       owner: author;
     }
+    // A reader favourites a note once: the pair is unique, and the database says no to the second time.
+    entity Favorite persistent {
+      identity id: Id generated auto;
+      field note: Ref<Note>;
+      field owner: Ref<User>;
+      unique (note, owner);
+    }
+    error AlreadyFavorite http 409;
+    capability FavoriteNote {
+      actor Ref<User>;
+      input NoteIdInput;
+      output Unit;
+      fails AlreadyFavorite;
+      fails NoteNotFound;
+      requires authenticated;
+      requires atomic;
+      expose command at "/notes/{id}/favorite";
+      workflow {
+        load Note by input.id as note else NoteNotFound;
+        create Favorite as made {
+          note: note;
+          owner: actor;
+        }
+        persist made else AlreadyFavorite;
+        return unit;
+      }
+    }
     error NotAuthor http 403;
     capability PinNote {
       actor Ref<User>;

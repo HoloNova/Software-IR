@@ -38,7 +38,7 @@ report = {'commit': os.getenv('GITHUB_SHA'), 'runUrl': f"{os.getenv('GITHUB_SERV
 sequence = 0
 # Business acceptance writes data, so it gets its own disposable instance of the same package.
 acceptance_instance, acceptance_state, acceptance_port = a.instance + '-acc', a.state.with_name(a.state.name + ' acceptance'), a.port + 1
-# A new instance deployed straight from version 3 replays the whole chain V1..V9.
+# A new instance deployed straight from version 3 replays the whole chain V1..V10.
 fresh_instance, fresh_state, fresh_port = a.instance + '-v2', a.state.with_name(a.state.name + ' fresh'), a.port + 2
 INSTANCES = (a.instance, acceptance_instance, fresh_instance)
 STATES = (a.state, acceptance_state, fresh_state)
@@ -261,7 +261,7 @@ try:
     assert int(sql('SELECT COUNT(*) FROM `label`', instance=acceptance_instance).strip()) > 0
     updated = deploy('update', instance=acceptance_instance, state=acceptance_state, package=a.v3_package)
     assert f"KCG_UPDATED {report['v2PackageId']}->{report['v3PackageId']}" in updated, 'the update that drops data did not complete'
-    assert 'applied=V7..V9' in updated and 'KCG_DATA_VERIFIED' in updated, 'the migration tool did not apply and verify V7..V9'
+    assert 'applied=V7..V10' in updated and 'KCG_DATA_VERIFIED' in updated, 'the migration tool did not apply and verify V7..V10'
     assert 'KCG_DATA_DROPPED' in updated and 'note.title' in updated and 'label.' in updated, 'the migration tool did not name what it dropped'
     assert sql(keep3, instance=acceptance_instance) == rows_before3, 'rows or values that stay changed'
     assert sql("SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='kcg' AND TABLE_NAME='note' AND COLUMN_NAME='title'",
@@ -272,11 +272,19 @@ try:
                instance=acceptance_instance).strip() == '64', 'the column was not widened'
     assert sql("SELECT COLUMN_DEFAULT FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='kcg' AND TABLE_NAME='note' AND COLUMN_NAME='state'",
                instance=acceptance_instance).strip() == 'open', 'widening lost the default'
-    assert sql('SELECT COUNT(*) FROM flyway_schema_history WHERE success=1', instance=acceptance_instance).strip() == '9'
+    assert sql('SELECT COUNT(*) FROM flyway_schema_history WHERE success=1', instance=acceptance_instance).strip() == '10'
     # The new application serves what stays and no longer has what was dropped.
     owner = request('/api/login', {'name': 'v2-owner-a', 'password': 'test-password'}, expected=201, base=server)['accessToken']
     assert request(f"/api/get-note?id={kept['id']}", token=owner, base=server)['body'] == 'v3-kept'
     exchange('/api/labels?page=1&size=1', None, None, 404, base=server)
+    # A unique key over two columns (note, owner), created with the new table: the second favourite of one note by one
+    # account is refused by the database and answered with the declared error.
+    exchange(f"/api/notes/{kept['id']}/favorite", {}, owner, 201, base=server, method='POST')
+    again = request(f"/api/notes/{kept['id']}/favorite", {}, token=owner, expected=409, base=server, method='POST')
+    assert again['code'] == 'AlreadyFavorite', again
+    assert sql('SELECT COUNT(*) FROM `favorite`', instance=acceptance_instance).strip() == '1', 'the refused favourite was written'
+    assert sql("SELECT COUNT(*) FROM information_schema.STATISTICS WHERE TABLE_SCHEMA='kcg' AND TABLE_NAME='favorite' AND INDEX_NAME='kcg_uq_0' AND NON_UNIQUE=0",
+               instance=acceptance_instance).strip() == '2', 'the unique key over two columns is not there'
     long_state = 'x' * 40
     assert request('/api/update-note', {'id': kept['id'], 'body': 'v3-kept', 'pinned': True, 'state': long_state}, token=owner, base=server)['state'] == long_state
     assert 'KCG_UPDATE_CURRENT' in deploy('update', instance=acceptance_instance, state=acceptance_state, package=a.v3_package)
@@ -284,7 +292,7 @@ try:
     assert 'AHEAD' in older and 'application=RUNNING' in older, 'an older package must be refused before the application stops'
     report['dataUpdate'] = 'PASSED'
     deploy('deploy', instance=fresh_instance, state=fresh_state, port=fresh_port, package=a.v3_package)
-    assert sql('SELECT COUNT(*) FROM flyway_schema_history WHERE success=1', instance=fresh_instance).strip() == '9'
+    assert sql('SELECT COUNT(*) FROM flyway_schema_history WHERE success=1', instance=fresh_instance).strip() == '10'
     assert request('/api/register', {'name': 'fresh-user', 'password': 'test-password'}, expected=201, base=f'http://127.0.0.1:{fresh_port}')
     report['freshChain'] = 'PASSED'
 except Exception as error:

@@ -17,7 +17,6 @@ software CourseSelection {
   imports { }
   declarations {
     enum Role { STUDENT, TEACHER, ADMIN }
-    enum EnrollState { ENROLLED, DROPPED }
     entity User persistent {
       identity id: Id generated auto;
       field role: Role default Role.STUDENT;
@@ -71,8 +70,8 @@ software CourseSelection {
       identity id: Id generated auto;
       field student: Ref<User>;
       field course: Ref<Course>;
-      field state: EnrollState default EnrollState.ENROLLED;
       field createdAt: Moment default now();
+      unique (student, course);
     }
     view CourseView from Course {
       field id: Id;
@@ -85,7 +84,6 @@ software CourseSelection {
     view EnrollmentView from Enrollment {
       field id: Id;
       field course: CourseView;
-      field state: EnrollState;
       field createdAt: Moment;
     }
 
@@ -145,12 +143,13 @@ software CourseSelection {
     error AlreadyEnrolled http 409;
     error CourseFull http 409;
     error CourseNotFound http 404;
-    // GAP: capacity is checked and counted by reading then writing, so two students taking the last seat at the same
-    // moment can both succeed; and nothing stops a student enrolling twice (no atomic counter, no composite unique).
+    // GAP: the seats are checked and counted by reading then writing, so two students taking the last seat at the same
+    // moment can both succeed (no atomic counter). A student cannot enrol twice: the pair is unique.
     capability Enroll {
       actor Ref<User>;
       input CourseRef;
       output EnrollmentView;
+      fails AlreadyEnrolled;
       fails CourseFull;
       fails CourseNotFound;
       requires authenticated;
@@ -166,8 +165,8 @@ software CourseSelection {
           student: actor;
           course: course;
         }
+        persist made else AlreadyEnrolled;
         persist course;
-        persist made;
         return made;
       }
     }
@@ -175,31 +174,27 @@ software CourseSelection {
       field id: Id;
     }
     error EnrollmentNotFound http 404;
-    error NotDroppable http 409;
+    // Dropping takes the enrolment away, so the student can enrol again later.
     capability Drop {
       actor Ref<User>;
       input EnrollmentRef;
-      output EnrollmentView;
+      output Unit;
       fails CourseNotFound;
       fails EnrollmentNotFound;
       fails Forbidden;
-      fails NotDroppable;
       requires authenticated;
       requires atomic;
-      expose command at "/enrollments/{id}/drop";
+      expose command delete at "/enrollments/{id}";
       workflow {
         load Enrollment by input.id as made else EnrollmentNotFound;
         validate made.student == actor else Forbidden;
-        update made when made.state == EnrollState.ENROLLED else NotDroppable {
-          state: EnrollState.DROPPED;
-        }
         load Course by made.course as course else CourseNotFound;
         update course {
           enrolled: course.enrolled - 1;
         }
-        persist made;
+        delete made;
         persist course;
-        return made;
+        return unit;
       }
     }
     capability MyEnrollments {
@@ -212,7 +207,7 @@ software CourseSelection {
       expose query at "/enrollments";
       workflow {
         find Enrollment
-          where item.student == actor and item.state == EnrollState.ENROLLED
+          where item.student == actor
           order by createdAt descending, id descending
           Page input.page, input.size else BadPage
         as rows;
@@ -239,7 +234,7 @@ software CourseSelection {
         load Course by input.courseId as course else CourseNotFound;
         validate course.teacher == actor else Forbidden;
         find Enrollment
-          where item.course == course and item.state == EnrollState.ENROLLED
+          where item.course == course
           order by createdAt ascending, id ascending
           Page input.page, input.size else BadPage
         as rows;

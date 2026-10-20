@@ -17,7 +17,6 @@ software RoomBooking {
   imports { }
   declarations {
     enum Role { MEMBER, ADMIN }
-    enum BookingState { ACTIVE, CANCELLED }
     entity User persistent {
       identity id: Id generated auto;
       field role: Role default Role.MEMBER;
@@ -65,14 +64,17 @@ software RoomBooking {
       field location: Name;
       field capacity: Quantity;
     }
+    // A booking is one hour of one room. The (room, day, hour) triple is unique, so the database refuses a second
+    // booking of the same hour even when two people ask at the same moment. GAP: a meeting of several hours is
+    // several bookings (a request cannot carry a list the workflow walks).
     entity Booking persistent {
       identity id: Id generated auto;
       field room: Ref<Room>;
       field booker: Ref<User>;
-      field startsAt: Moment;
-      field endsAt: Moment;
+      field day: Day;
+      field hour: Count where min(0), max(23);
       field purpose: Remark;
-      field state: BookingState default BookingState.ACTIVE;
+      unique (room, day, hour);
     }
     view RoomView from Room {
       field id: Id;
@@ -83,10 +85,9 @@ software RoomBooking {
     view BookingView from Booking {
       field id: Id;
       field room: RoomView;
-      field startsAt: Moment;
-      field endsAt: Moment;
+      field day: Day;
+      field hour: Count;
       field purpose: Remark;
-      field state: BookingState;
     }
 
     input NewRoom {
@@ -125,39 +126,33 @@ software RoomBooking {
       }
     }
 
-    // GAP: two bookings of one room must not overlap, but a workflow cannot ask "is there any booking in this
-    // window" (an existence test works only inside `find`), and there is no unique key over (room, slot) to let the
-    // database refuse the second one. The window is checked for sanity only; overlaps are not refused.
     input NewBooking {
       field roomId: Id;
-      field startsAt: Moment;
-      field endsAt: Moment;
+      field day: Day;
+      field hour: Count where min(0), max(23);
       field purpose: Remark where notBlank;
     }
-    error BadWindow;
+    error HourTaken http 409;
     error RoomNotFound http 404;
     capability Book {
       actor Ref<User>;
       input NewBooking;
       output BookingView;
-      fails BadWindow;
+      fails HourTaken;
       fails RoomNotFound;
       requires authenticated;
       requires atomic;
       expose command at "/bookings";
       workflow {
-        validate input.endsAt > input.startsAt else BadWindow;
-        validate input.startsAt > now() else BadWindow;
-        validate input.endsAt < input.startsAt + 8 hours else BadWindow;
         load Room by input.roomId as room else RoomNotFound;
         create Booking as made {
           room: room;
           booker: actor;
-          startsAt: input.startsAt;
-          endsAt: input.endsAt;
+          day: input.day;
+          hour: input.hour;
           purpose: input.purpose;
         }
-        persist made;
+        persist made else HourTaken;
         return made;
       }
     }
@@ -165,25 +160,22 @@ software RoomBooking {
       field id: Id;
     }
     error BookingNotFound http 404;
-    error NotCancellable http 409;
+    // Cancelling takes the booking away, so the hour is free again. GAP: whether the hour is already past cannot be
+    // asked (a Day cannot be compared with now()).
     capability CancelBooking {
       actor Ref<User>;
       input BookingRef;
-      output BookingView;
+      output Unit;
       fails BookingNotFound;
       fails Forbidden;
-      fails NotCancellable;
       requires authenticated;
       requires atomic;
-      expose command at "/bookings/{id}/cancel";
+      expose command delete at "/bookings/{id}";
       workflow {
         load Booking by input.id as made else BookingNotFound;
         validate made.booker == actor else Forbidden;
-        update made when made.state == BookingState.ACTIVE and made.startsAt > now() else NotCancellable {
-          state: BookingState.CANCELLED;
-        }
-        persist made;
-        return made;
+        delete made;
+        return unit;
       }
     }
     capability MyBookings {
@@ -196,8 +188,8 @@ software RoomBooking {
       expose query at "/bookings";
       workflow {
         find Booking
-          where item.booker == actor and item.state == BookingState.ACTIVE
-          order by startsAt ascending, id ascending
+          where item.booker == actor
+          order by day ascending, hour ascending, id ascending
           Page input.page, input.size else BadPage
         as rows;
         return rows;
@@ -205,8 +197,7 @@ software RoomBooking {
     }
     input Schedule {
       field roomId: Id;
-      field since: Moment;
-      field until: Moment;
+      field day: Day;
       field page: PageNo;
       field size: PageSize;
     }
@@ -214,16 +205,14 @@ software RoomBooking {
       input Schedule;
       output Page<BookingView>;
       fails BadPage;
-      fails BadWindow;
       fails RoomNotFound;
       requires readonly;
       expose query at "/rooms/{roomId}/bookings";
       workflow {
-        validate input.until > input.since else BadWindow;
         load Room by input.roomId as room else RoomNotFound;
         find Booking
-          where item.room == room and item.state == BookingState.ACTIVE and item.startsAt < input.until and item.endsAt > input.since
-          order by startsAt ascending, id ascending
+          where item.room == room and item.day == input.day
+          order by hour ascending, id ascending
           Page input.page, input.size else BadPage
         as rows;
         return rows;

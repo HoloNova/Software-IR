@@ -266,7 +266,7 @@ jobs:
             --source-root "$GITHUB_WORKSPACE/sir-toolchain-application/src/test/resources/deployment/dual-token-v3" \
             --entry project.sir --output-root "$RUNNER_TEMP/backend-delivery-v3" --base-package "$RUNNER_TEMP/backend-delivery-v2" \
             --confirm-backup yes > "$RUNNER_TEMP/deployment-evidence/export-v3.json"
-          python3 -c 'import json,sys; d = json.load(open(sys.argv[1])); assert d["outcome"] == "PACKAGE_EXPORTED" and d["schemaVersion"] == 9 and [x["step"] for x in d["steps"]] == ["V7 WIDEN_COLUMN note.state", "V8 DROP_COLUMN note.title", "V9 DROP_TABLE label"] and d["dataLoss"] == ["note.title", "label"], d' "$RUNNER_TEMP/deployment-evidence/export-v3.json"
+          python3 -c 'import json,sys; d = json.load(open(sys.argv[1])); assert d["outcome"] == "PACKAGE_EXPORTED" and d["schemaVersion"] == 10 and [x["step"] for x in d["steps"]] == ["V7 WIDEN_COLUMN note.state", "V8 CREATE_TABLE favorite", "V9 DROP_COLUMN note.title", "V10 DROP_TABLE label"] and d["dataLoss"] == ["note.title", "label"], d' "$RUNNER_TEMP/deployment-evidence/export-v3.json"
           tar -czf "$RUNNER_TEMP/backend-delivery.tar.gz" -C "$RUNNER_TEMP/backend-delivery" .
       - name: Cold deployment, actual HTTP and persistence acceptance
         run: |

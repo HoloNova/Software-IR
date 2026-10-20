@@ -83,6 +83,7 @@ software CampusBlog {
       identity id: Id generated auto;
       field post: Ref<Post>;
       field user: Ref<User>;
+      unique (post, user);
     }
 
     // Authors manage their own posts (including drafts).
@@ -103,6 +104,7 @@ software CampusBlog {
     input PostRef {
       field id: Id;
     }
+    error AlreadyLiked http 409;
     error NotPublishable http 409;
     capability Publish {
       actor Ref<User>;
@@ -264,12 +266,13 @@ software CampusBlog {
       }
     }
 
-    // GAP: one reader can like a post many times (no composite unique, no "exists" check), and the counter is read
-    // then written, so simultaneous likes can be lost.
+    // One reader likes a post once: the pair is unique. GAP: the counter is read then written, so simultaneous likes
+    // by different readers can be lost.
     capability LikePost {
       actor Ref<User>;
       input PostRef;
       output PublicPost;
+      fails AlreadyLiked;
       fails PostNotFound;
       requires authenticated;
       requires atomic;
@@ -284,7 +287,7 @@ software CampusBlog {
         update post {
           likes: post.likes + 1;
         }
-        persist made;
+        persist made else AlreadyLiked;
         persist post;
         return post;
       }
