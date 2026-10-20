@@ -1,6 +1,6 @@
 # KCG-Code 当前项目状态
 
-> 更新：2026-10-17。状态：正常开发中的工程，不宣称生产就绪。本文说明**现在能做什么**；验证口径与证据在[验证说明](qualification/README.md)；已完成或退役的材料在 [history](history/README.md)。
+> 更新：2026-10-20。状态：正常开发中的工程，不宣称生产就绪。本文说明**现在能做什么**；验证口径与证据在[验证说明](qualification/README.md)；已完成或退役的材料在 [history](history/README.md)。
 
 ## 1. 定位
 
@@ -29,8 +29,9 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 - 只有一种文档形式：`sir 0.3` 根文档（`metadata`、`target`、`sources { }`、`imports { }`、`declarations { }`）加可选的声明片段文件。一个软件写在一个文件里，就是没有片段的根文档。最多 128 个文件、每个 1 MiB、合计 8 MiB。
 - 编译阶段：Parser → Resolve（名称只解析一次）→ Type → Validate → Normalize → Spring Boot 降级 → 确定性生成。名称解析出错后分析仍会继续，类型与校验错误一并报告（只有身份冲突会提前停止）。
 - 声明按（种类，名称）排序，生成的文件顺序因此是规范的，同一输入总得到逐字节相同的输出。
-- 业务语言已覆盖：查询切片（`view` 响应投影、`Page<T>` 分页、显式 `order by`、字面匹配 `containsLiteral`）、唯一字段与按唯一字段加载（`unique`、`load … by 字段:`，CI [#76](https://github.com/HoloNova/Software-IR/actions/runs/38710339131) 通过）、时间平移与数值加减（`now() + 15 minutes`、`a - 1`，CI [#77](https://github.com/HoloNova/Software-IR/actions/runs/38712747591) 通过）、带守卫的状态流转（`update … when … else …`，CI [#78](https://github.com/HoloNova/Software-IR/actions/runs/38715357765) 通过，含真实 MySQL 并发 IT）、写入切片（`versioned` 并发字段、声明式错误状态码、`persist … else` 条件持久化、`input … patch of` 局部更新、`.present` 存在性、结构化错误信封）、关系切片（关联存在性过滤与批量关联读取）。这些在真实 MySQL 8.4 + HTTP 的场景 IT 中验证过（见验证说明）。路由模板仍未实现。
+- 业务语言已覆盖：查询切片（`view` 响应投影、`Page<T>` 分页、显式 `order by`、字面匹配 `containsLiteral`）、唯一字段与按唯一字段加载（`unique`、`load … by 字段:`，CI [#76](https://github.com/HoloNova/Software-IR/actions/runs/38710339131) 通过）、时间平移与数值加减（`now() + 15 minutes`、`a - 1`，CI [#77](https://github.com/HoloNova/Software-IR/actions/runs/38712747591) 通过）、带守卫的状态流转（`update … when … else …`，CI [#78](https://github.com/HoloNova/Software-IR/actions/runs/38715357765) 通过，含真实 MySQL 并发 IT）、写入切片（`versioned` 并发字段、声明式错误状态码、`persist … else` 条件持久化、`input … patch of` 局部更新、`.present` 存在性、结构化错误信封）、关系切片（关联存在性过滤与批量关联读取）。这些在真实 MySQL 8.4 + HTTP 的场景 IT 中验证过（见验证说明）。
 - 语言升级（2026-10-18，[设计 12](design/12-feature-semantics-and-semantic-types.md) 第 13 节）：字段只写语义类型（`Name`、`Count`、`Moment`、`Secret` 等，自带规则），由目标决定 Java 类型和数据库列；`type` 自定义语义类型；`use 功能 { 参数 }` 一句展开成一组声明（自带 `DualTokenLogin`），`feature` 自定义功能；`delete` 步骤；字段 `default`（同时是数据库列默认值）；实体 `scope`（默认查询范围，如软删除）；`extend` 给已有实体加字段（功能借它带上所需字段）。写法见[语言参考](SIR_LANGUAGE_REFERENCE.md)。
+- 语义补充（2026-10-18～20）：内置 `use Crud { entity: X; }` 一句给出增删改查，`owner` 让每一行只属于一个账号，`path` 给出 REST 路径；错误可以声明 403，工作流可以读当前用户的字段（`actor.role`），授权就是以 `actor` 为一边的普通检查；`expose … [put|delete] at "/notes/{id}"` 自定 HTTP 方法和带路径参数的路径；已上线的列可以改默认值。部署第二版用 `Crud`（含 `owner`、`path`）管理笔记和标签，CI 冒烟在真实 MySQL 上核对 401／403／404 与 REST 路径。
 
 ### 首次生成
 
@@ -38,7 +39,7 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 
 ### 增删改指令编辑
 
-`SourceEditor` 把 `CommandBatch`（增加／删除／更新三种固定指令）应用到类型化草稿，只重写变化的声明、写回 SIR 文本，并用正式分析复核。保持强类型模型，不为新增功能补专用操作。
+`SourceEditor` 把 `CommandBatch`（增加／删除／更新三种固定指令，另有按身份一并改引用的改名 `rename`）应用到类型化草稿，只重写变化的声明、写回 SIR 文本，并用正式分析复核。保持强类型模型，不为新增功能补专用操作。
 
 公开入口已验收（2026-10-15，提交 `1c80c73`，CI [verify #72](https://github.com/HoloNova/Software-IR/actions/runs/38671123332) 通过）：`generate`调用原首次生成，`inspect`只读schema/draft与源集合摘要，`edit`读取JSON增删改批次并保存完整候选源目录，再接原version-plan/apply。原源与生成工程在edit期间不变；CLI不直接访问文件系统、不构建/启动。详见[CLI使用说明](CLI_WORKFLOW.md)。
 
@@ -65,7 +66,8 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 
 ## 4. 验证状态
 
-- 最新核验：`a7cba11`的[verify #93](https://github.com/HoloNova/Software-IR/actions/runs/39002409782)总结果failure；原主job全绿，新部署job建库/启动成功后在HTTP响应JSON解析处失败。分项和artifact见[部署报告](DEPLOYMENT_DELIVERY_REPORT.md)，不是部署已验收。
+- 最新核验：`b56ce16`（改名）的[verify #124](https://github.com/HoloNova/Software-IR/actions/runs/39362618814)通过；此前路由 `b5d6c25` 的 [#122](https://github.com/HoloNova/Software-IR/actions/runs/39361622833)、归属与授权冒烟 `5c7b1fb` 的 [#121](https://github.com/HoloNova/Software-IR/actions/runs/39116237645) 通过（#123 因 #124 的推送被取消，其改动由 #124 覆盖）。核对时只读了运行状态。
+- 部署交付：`a7cba11` 的 [verify #93](https://github.com/HoloNova/Software-IR/actions/runs/39002409782) 曾因验收脚本失败，之后由 #94～#98 验收，见[部署报告](DEPLOYMENT_DELIVERY_REPORT.md)。
 - 此前业务能力 CI：`verify` [#88](https://github.com/HoloNova/Software-IR/actions/runs/38901782044)（`fe40836`，`kcg scaffold dual-token`，`main`）通过，日志确认双 Token 脚手架 IT 全部 PASS；此前 [#85](https://github.com/HoloNova/Software-IR/actions/runs/38897336941)（`70dc6cc`，Bearer 凭据认证，`main`）通过，日志确认新 IT 的认证场景全部 PASS；此前 [#82](https://github.com/HoloNova/Software-IR/actions/runs/38890915687)（`de563f6`，`secret` 字段与 `matches`，`main`）通过，日志确认注册／登录场景通过；此前 #81（401 状态码）、[#79](https://github.com/HoloNova/Software-IR/actions/runs/38884618786)（`6f244fa`，真实库核验的修复与 `TokenDeskBusinessConformanceIT`，`main`）通过，日志确认新 IT 运行并通过；此前 [#78](https://github.com/HoloNova/Software-IR/actions/runs/38715357765)（`aa1ad70`，守卫更新）、[#77](https://github.com/HoloNova/Software-IR/actions/runs/38712747591)（`1f947db`，时间平移与数值加减）通过：冻结与完成两条全量闸门、业务场景 IT、独立验证 IT、单文件包冒烟均 success，见[验证说明](qualification/README.md)。此前 [#76](https://github.com/HoloNova/Software-IR/actions/runs/38710339131)（`058c9d6`）、[#73](https://github.com/HoloNova/Software-IR/actions/runs/38677243253)、[#72](https://github.com/HoloNova/Software-IR/actions/runs/38671123332) 同样通过。核对时只读了运行与步骤状态。
 - 清理后工作树的本机定向单元测试共 830 项、0 失败（各模块数字见[验证说明](qualification/README.md)）；不含需要 MySQL 的 IT，也不是全量闸门。
 - 公开CLI入口的本机定向验证（提交前）：29项、0失败/错误/跳过，来自7个类各自最新Surefire XML；新命令用真实CLI子进程及临时Git工程串起多源编辑/应用，结果与候选从零生成逐字节相同，详见[阶段报告](CLI_WORKFLOW_REPORT.md)。#72 的测试数字未在此抄录，需要时以该运行页面的报告和 artifact 为准。
@@ -93,6 +95,8 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 ## 7. 当前阶段（2026-10-18）
 
 **语言升级已实施：**负责人 2026-10-17 确认把 SIR 做成 Java 之上的更高层语言——一句声明给出一个功能，作者写语义而不写机器类型，用户可以定义自己的类型和功能，数据库迁移由变更层驱动。[设计 12](design/12-feature-semantics-and-semantic-types.md) 第 9 节的五步已全部实施，结果与留到下一阶段的事项见其第 13 节。迁移由变更层驱动之后，已上线的表支持列改名（带 `@id`）、加可空列、加带默认值的必填列和新建表，这些都由 CI 部署冒烟在真实 MySQL 上核对。
+
+**之后的语义补充（2026-10-18～20）：**负责人确认先补语义、暂不做小模型评测，依次实施了内置 `Crud`、授权（403 与读当前用户字段）、路由与路径参数、通用改名命令，均已由 CI 通过（见第 4 节）。下一步待负责人决定，SLM 评测的模型与样本数仍未定。
 
 ## 7.1 上一阶段（2026-10-17）
 
