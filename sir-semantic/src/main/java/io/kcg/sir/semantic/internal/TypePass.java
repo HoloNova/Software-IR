@@ -508,7 +508,9 @@ final class TypePass {
                   }
                } else {
                   SirType identityType = entityId == null ? null : this.entityIdentityTypes.get(entityId);
-                  if (idType != null && identityType != null && !TypeRules.isAssignable(idType, identityType)) {
+                  // A reference to this very entity stores its identity, so it names the row as well as the identity does.
+                  boolean referenceToIt = idType instanceof RefType reference && reference.entityId().equals(entityId);
+                  if (idType != null && identityType != null && !referenceToIt && !TypeRules.isAssignable(idType, identityType)) {
                      this.diagnostics.add(DiagnosticBuilder.error("SIR-TYPE-001", "load 的 id 表达式类型与 Entity identity 不兼容", s.idExpression().span()));
                   }
                }

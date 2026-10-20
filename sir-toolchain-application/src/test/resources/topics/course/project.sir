@@ -169,17 +169,14 @@ software CourseSelection {
         return made;
       }
     }
-    // GAP: the course of an enrollment cannot be loaded from the enrollment (`made.course.id` produces Java that does
-    // not compile), so the client names the course too and the workflow checks it.
-    input DropRequest {
+    input EnrollmentRef {
       field id: Id;
-      field courseId: Id;
     }
     error EnrollmentNotFound http 404;
     error NotDroppable http 409;
     capability Drop {
       actor Ref<User>;
-      input DropRequest;
+      input EnrollmentRef;
       output EnrollmentView;
       fails CourseNotFound;
       fails EnrollmentNotFound;
@@ -194,8 +191,7 @@ software CourseSelection {
         update made when made.state == EnrollState.ENROLLED else NotDroppable {
           state: EnrollState.DROPPED;
         }
-        load Course by input.courseId as course else CourseNotFound;
-        validate made.course == course else CourseNotFound;
+        load Course by made.course as course else CourseNotFound;
         update course {
           enrolled: course.enrolled - 1;
         }

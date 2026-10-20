@@ -156,18 +156,12 @@ software CampusMarket {
     input OrderRef {
       field id: Id;
     }
-    // GAP: the order's item cannot be loaded from the order (`load Item by placed.goods` is a type error and
-    // `placed.goods.id` produces Java that does not compile), so the client sends the item too and the workflow checks it.
-    input CancelRequest {
-      field orderId: Id;
-      field itemId: Id;
-    }
     error OrderNotFound http 404;
     error NotYourOrder http 403;
     error NotCancellable http 409;
     capability CancelOrder {
       actor Ref<User>;
-      input CancelRequest;
+      input OrderRef;
       output OrderView;
       fails ItemNotFound;
       fails NotCancellable;
@@ -175,15 +169,14 @@ software CampusMarket {
       fails OrderNotFound;
       requires authenticated;
       requires atomic;
-      expose command at "/orders/{orderId}/cancel";
+      expose command at "/orders/{id}/cancel";
       workflow {
-        load TradeOrder by input.orderId as placed else OrderNotFound;
+        load TradeOrder by input.id as placed else OrderNotFound;
         validate placed.buyer == actor else NotYourOrder;
-        load Item by input.itemId as goods else ItemNotFound;
-        validate placed.goods == goods else ItemNotFound;
         update placed when placed.status == OrderStatus.PLACED else NotCancellable {
           status: OrderStatus.CANCELLED;
         }
+        load Item by placed.goods as goods else ItemNotFound;
         update goods {
           status: ItemStatus.ON_SALE;
         }

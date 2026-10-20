@@ -878,6 +878,41 @@ capability Rename {
 ```
 
 
+**顺着引用加载。**引用字段里存的就是被引用那一行的主键，所以键的位置可以直接写引用，也可以写 `.id`，两者等价：
+
+```sir-declarations
+entity Item persistent {
+  identity id: Id generated auto;
+  field title: Text;
+}
+entity Line persistent {
+  identity id: Id generated auto;
+  field product: Ref<Item>;
+}
+view ItemView from Item {
+  field id: Id;
+  field title: Text;
+}
+input LineRef {
+  field id: Id;
+}
+error Missing http 404;
+capability ItemOfLine {
+  input LineRef;
+  output ItemView;
+  fails Missing;
+  requires readonly;
+  expose query;
+  workflow {
+    load Line by input.id as line else Missing;
+    load Item by line.product as found else Missing;
+    return found;
+  }
+}
+```
+
+引用必须指向被加载的这个实体，否则是类型不一致（`SIR-TYPE-001`）。
+
 ### 5.3 `find`
 
 按条件取多行：

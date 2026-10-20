@@ -177,17 +177,11 @@ software CampusLibrary {
     input LoanRef {
       field id: Id;
     }
-    // GAP: the copy of a loan cannot be loaded from the loan (`loan.copy.id` produces Java that does not compile), so
-    // the reader scans the barcode again and the workflow checks that it is the copy of this loan.
-    input ReturnRequest {
-      field id: Id;
-      field barcode: Code;
-    }
     error AlreadyReturned http 409;
     error LoanNotFound http 404;
     capability GiveBack {
       actor Ref<User>;
-      input ReturnRequest;
+      input LoanRef;
       output LoanView;
       fails AlreadyReturned;
       fails CopyNotFound;
@@ -203,8 +197,7 @@ software CampusLibrary {
           returned: true;
           returnedAt: now();
         }
-        load Copy by barcode: input.barcode as copy else CopyNotFound;
-        validate loan.copy == copy else CopyNotFound;
+        load Copy by loan.copy as copy else CopyNotFound;
         update copy {
           status: CopyStatus.AVAILABLE;
         }

@@ -777,7 +777,7 @@ public final class SpringBootModelLowerer {
             case NormalizedStep.ValidateStep value -> new SpringBootWorkflow.ValidateStep(
                     id, origin, lowerExpression(value.condition(), owner, actorSymbol), value.errorSymbol());
             case NormalizedStep.LoadStep value -> new SpringBootWorkflow.LoadStep(
-                    id, origin, value.entitySymbol(), lowerExpression(value.idExpression(), owner, actorSymbol),
+                    id, origin, value.entitySymbol(), this.asIdentity(lowerExpression(value.idExpression(), owner, actorSymbol)),
                     variable(value.resultVariable()), value.errorSymbol(), this.locksRow(value, owner), value.keyField());
             case NormalizedStep.FindStep value -> new SpringBootWorkflow.FindStep(
                     id, origin, value.entitySymbol(),
@@ -1081,6 +1081,22 @@ public final class SpringBootModelLowerer {
         return new SpringBootWorkflow.Binding(binding.fieldSymbol(), targetName, value, this.sourcePropertyName(value, owner));
     }
 
+    /** A reference to a row stores that row's identity, so wherever an identity is wanted it stands for it. */
+    private SpringExpression asIdentity(SpringExpression expression) {
+        if (!(expression.type() instanceof LoweredJavaType.EntityReference reference)) {
+            return expression;
+        }
+
+        LoweredJavaType identity = reference.identityStorageType();
+        return switch (expression) {
+            case SpringExpression.MemberExpression member -> new SpringExpression.MemberExpression(
+                    member.id(), member.origin(), identity, member.receiver(), member.resolvedMember(), member.targetMember());
+            case SpringExpression.NameExpression name -> new SpringExpression.NameExpression(
+                    name.id(), name.origin(), identity, name.resolvedSymbol(), name.targetName());
+            default -> expression;
+        };
+    }
+
     /**
      * A reference field stores the identity of the row it refers to. The actor already stands for that
      * identity in the generated code, but a variable that holds a loaded or created row is the row itself,
@@ -1174,8 +1190,15 @@ public final class SpringBootModelLowerer {
                             id, origin, type, actorSymbol.get(),
                             source.symbols().byId(actorSymbol.get()).orElseThrow().name());
                 }
+                SpringExpression receiverLowered = lowerExpression(value.receiver(), owner, actorSymbol, itemSymbol);
+                if (receiverLowered instanceof SpringExpression.MemberExpression field
+                        && field.type() instanceof LoweredJavaType.EntityReference reference
+                        && this.entities.get(reference.entitySymbol()).identity().id().equals(value.resolvedMember())) {
+                    // A reference field stores the identity of the row it refers to, so `row.ref.id` is the field itself.
+                    yield new SpringExpression.MemberExpression(id, origin, type, field.receiver(), field.resolvedMember(), field.targetMember());
+                }
                 yield new SpringExpression.MemberExpression(
-                        id, origin, type, lowerExpression(value.receiver(), owner, actorSymbol, itemSymbol),
+                        id, origin, type, receiverLowered,
                         value.resolvedMember(),
                         targetMemberNames.getOrDefault(
                                 value.resolvedMember(),

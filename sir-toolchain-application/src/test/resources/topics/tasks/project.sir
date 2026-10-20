@@ -116,11 +116,8 @@ software TaskBoard {
         return task;
       }
     }
-    // GAP: the project of a task cannot be loaded from the task (`task.project.id` produces Java that does not compile),
-    // so the client names the project too and the workflow checks it.
     input Assign {
       field taskId: Id;
-      field projectId: Id;
       field userId: Id;
     }
     error TaskNotFound http 404;
@@ -138,8 +135,7 @@ software TaskBoard {
       expose command put at "/tasks/{taskId}/assignee";
       workflow {
         load Task by input.taskId as task else TaskNotFound;
-        load Project by input.projectId as project else ProjectNotFound;
-        validate task.project == project else TaskNotFound;
+        load Project by task.project as project else ProjectNotFound;
         validate project.owner == actor else Forbidden;
         load User by input.userId as user else UserNotFound;
         update task {
