@@ -28,6 +28,7 @@ import io.kcg.sir.ast.AstLoadStep;
 import io.kcg.sir.ast.AstMemberExpression;
 import io.kcg.sir.ast.AstNameExpression;
 import io.kcg.sir.ast.AstNameRef;
+import io.kcg.sir.ast.AstUniqueKey;
 import io.kcg.sir.ast.AstPersistStep;
 import io.kcg.sir.ast.AstPresentExpression;
 import io.kcg.sir.ast.AstRequirementKind;
@@ -113,6 +114,9 @@ final class ValidatePass {
                case AstEntityDecl e:
                   this.declaredEntities.add(declSymId);
                   this.entityFieldTypes.put(declSymId, new LinkedHashMap<>());
+                  if (!e.uniqueKeys().isEmpty()) {
+                     this.uniqueEntities.add(declSymId);
+                  }
 
                   for (AstField f : e.fields()) {
                      SirType ft = this.typed.typeRefTypes().get(f.type().id());
@@ -204,6 +208,7 @@ final class ValidatePass {
                this.validateEntityConstraints(entityDecl);
                this.validateEntityVersionField(entityDecl);
                this.validateEntityUniqueField(entityDecl);
+               this.validateUniqueKeys(entityDecl);
                this.validateEntitySecretField(entityDecl);
                this.validateEntityDefaultField(entityDecl);
                this.validateEntityScope(entityDecl);
@@ -222,6 +227,9 @@ final class ValidatePass {
    }
 
    private static final String ROUTE_CODE = "SIR-VALID-013";
+   private static final String UNIQUE_KEY_CODE = "SIR-VALID-014";
+   /** What an index may hold: 3072 bytes, and a character takes up to 4. */
+   private static final int UNIQUE_KEY_TEXT_LIMIT = 768;
    private static final java.util.regex.Pattern ROUTE_SEGMENT = java.util.regex.Pattern.compile("[a-z0-9]+(-[a-z0-9]+)*|\\{[A-Za-z][A-Za-z0-9]*}");
 
    /**
@@ -645,6 +653,78 @@ final class ValidatePass {
    * nothing a caller could look a row up by. Where a unique field may be declared, and of what type,
    * is the grammar's and the type check's business.
    */
+   /**
+   * A unique key holds the fields no two rows may share together. NULL never equals NULL in the database, so an
+   * optional field would let rows through silently; a secret is stored as a digest nobody compares; unbounded text
+   * has no index; and an index is bounded in size.
+   */
+   private void validateUniqueKeys(AstEntityDecl entity) {
+      Map<String, AstField> fields = new LinkedHashMap<>();
+      entity.fields().forEach(field -> fields.put(field.name().text(), field));
+      Set<Set<String>> seen = new LinkedHashSet<>();
+      for (AstUniqueKey key : entity.uniqueKeys()) {
+         Set<String> names = new LinkedHashSet<>();
+         int textSize = 0;
+         for (AstNameRef ref : key.fields()) {
+            String name = ref.text();
+            if (!names.add(name)) {
+               this.diagnostics.add(DiagnosticBuilder.error(UNIQUE_KEY_CODE, "联合唯一里同一个字段不能出现两次: " + name, ref.span()));
+               continue;
+            }
+
+            AstField field = fields.get(name);
+            if (field == null) {
+               if (name.equals(entity.identity().name().text())) {
+                  this.diagnostics.add(DiagnosticBuilder.error(UNIQUE_KEY_CODE, "主键本来就唯一，不用放进联合唯一: " + name, ref.span()));
+               }
+               continue;
+            }
+
+            SirType type = this.typed.typeRefTypes().get(field.type().id());
+            String why = null;
+            if (type instanceof OptionalType) {
+               why = "可选字段不能放进联合唯一（空值之间不算重复，约束会悄悄失效）: ";
+            } else if (field.secret()) {
+               why = "secret 字段不能放进联合唯一: ";
+            } else if (field.versioned()) {
+               why = "版本号字段不能放进联合唯一: ";
+            } else if (type == PrimitiveType.STRING) {
+               int limit = this.declaredLength(field);
+               if (limit < 0) {
+                  why = "不限长的文本不能放进联合唯一，先用 length 约束限定长度: ";
+               } else {
+                  textSize += limit;
+               }
+            }
+
+            if (why != null) {
+               this.diagnostics.add(DiagnosticBuilder.error(UNIQUE_KEY_CODE, why + name, ref.span()));
+            }
+         }
+
+         if (textSize > UNIQUE_KEY_TEXT_LIMIT) {
+            this.diagnostics.add(DiagnosticBuilder.error(UNIQUE_KEY_CODE,
+               "联合唯一里文本字段的最大长度加起来是 " + textSize + "，索引最多容纳 " + UNIQUE_KEY_TEXT_LIMIT + " 个字符", key.span()));
+         }
+
+         if (!seen.add(names)) {
+            this.diagnostics.add(DiagnosticBuilder.error(UNIQUE_KEY_CODE, "同一组字段的联合唯一不能声明两次", key.span()));
+         }
+      }
+   }
+
+   /** The largest length a text field's {@code length} constraint allows, or -1 when it has none. */
+   private int declaredLength(AstField field) {
+      for (AstConstraint constraint : field.constraints()) {
+         if (constraint.name().text().equals("length") && constraint.arguments().size() == 2
+               && constraint.arguments().get(1) instanceof AstIntegerLiteral max) {
+            return max.value().intValue();
+         }
+      }
+
+      return -1;
+   }
+
    private void validateEntityUniqueField(AstEntityDecl entityDecl) {
       for (AstField field : entityDecl.fields()) {
          if (field.unique() && field.versioned()) {

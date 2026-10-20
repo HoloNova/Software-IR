@@ -3,6 +3,7 @@ package io.kcg.sir.semantic.internal;
 import io.kcg.sir.api.Diagnostic;
 import io.kcg.sir.api.RelatedLocation;
 import io.kcg.sir.ast.AstActorClause;
+import io.kcg.sir.ast.AstUniqueKey;
 import io.kcg.sir.ast.AstAnyExpression;
 import io.kcg.sir.ast.AstBinaryExpression;
 import io.kcg.sir.ast.AstBinding;
@@ -410,6 +411,12 @@ final class ResolvePass {
             Symbol.FieldSymbol fieldSym = new Symbol.FieldSymbol(fieldSymId, fieldName, field.span(), fieldType, entityScopeId);
             this.addSymbol(fieldSym, entityScopeId);
             this.bind(field.id(), fieldSymId);
+         }
+      }
+
+      for (AstUniqueKey key : entityDecl.uniqueKeys()) {
+         for (AstNameRef field : key.fields()) {
+            this.resolveEntityFieldRef(field, entityName, ReferenceRole.UNIQUE_KEY_FIELD);
          }
       }
 

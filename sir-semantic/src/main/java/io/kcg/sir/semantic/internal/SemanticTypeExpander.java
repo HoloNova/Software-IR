@@ -36,7 +36,7 @@ final class SemanticTypeExpander {
       for (AstDeclaration declaration : declarations) {
          out.add(switch (declaration) {
             case AstEntityDecl entity -> new AstEntityDecl(entity.id(), entity.span(), entity.name(), entity.identity(),
-               entity.fields().stream().map(f -> field(f, types)).toList(), entity.credential(), entity.scope());
+               entity.fields().stream().map(f -> field(f, types)).toList(), entity.credential(), entity.scope(), entity.uniqueKeys());
             case AstInputDecl input -> new AstInputDecl(input.id(), input.span(), input.name(), input.patchSourceEntity(),
                input.fields().stream().map(f -> field(f, types)).toList());
             case AstEntityExtensionDecl extension -> new AstEntityExtensionDecl(extension.id(), extension.span(), extension.entity(),

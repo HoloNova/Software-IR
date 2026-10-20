@@ -28,6 +28,7 @@ public final class DeploymentEngine {
                         + ") ON DELETE RESTRICT ON UPDATE RESTRICT;");
                 }
             }
+            for (UniqueKey key : table.uniqueKeys()) definitions.add("  " + uniqueKey(key));
             sql.append("CREATE TABLE ").append(quote(table.name())).append(" (\n").append(String.join(",\n", definitions))
                 .append("\n) ENGINE=InnoDB DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_bin;\n\n");
         }
@@ -181,6 +182,11 @@ public final class DeploymentEngine {
     }
     private static String quote(String identifier) { return "`" + identifier + "`"; }
 
+    /** A unique key over several columns, as V1 and every later version write it. */
+    private static String uniqueKey(UniqueKey key) {
+        return "UNIQUE KEY " + quote(key.name()) + " (" + String.join(", ", key.columns().stream().map(DeploymentEngine::quote).toList()) + ")";
+    }
+
     /** One column as V1 and every later version write it, so a column means the same DDL whichever version adds it. */
     private static String definition(Column column) {
         String definition = quote(column.name()) + " " + sqlType(column) + (column.nullable() ? " NULL" : " NOT NULL");
@@ -239,6 +245,7 @@ public final class DeploymentEngine {
                 case SchemaEvolution.CreateTable create -> {
                     List<String> definitions = new ArrayList<>();
                     create.table().columns().forEach(c -> definitions.add("  " + definition(c)));
+                    create.table().uniqueKeys().forEach(key -> definitions.add("  " + uniqueKey(key)));
                     int fk = 0;
                     for (Column column : create.table().columns()) {
                         if (column.reference().isEmpty()) continue;

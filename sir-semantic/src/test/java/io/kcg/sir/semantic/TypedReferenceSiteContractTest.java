@@ -60,6 +60,7 @@ class TypedReferenceSiteContractTest {
               field state: Status;
               field owner: Ref<User>;
               field version: Version;
+              unique (state, owner);
             }
             entity Handle persistent {
               identity id: Id generated auto;
@@ -627,6 +628,7 @@ class TypedReferenceSiteContractTest {
                     for (io.kcg.sir.ast.AstField f : e.fields()) {
                         collectTypeRef(f.type(), sink);
                     }
+                    e.uniqueKeys().forEach(key -> key.fields().forEach(field -> sink.put(field.id(), field.text())));
                     e.credential().ifPresent(credential -> {
                         sink.put(credential.subject().id(), credential.subject().text());
                         sink.put(credential.expires().id(), credential.expires().text());

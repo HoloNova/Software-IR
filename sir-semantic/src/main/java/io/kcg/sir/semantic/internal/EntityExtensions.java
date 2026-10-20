@@ -81,7 +81,7 @@ final class EntityExtensions {
             if (declaration instanceof AstEntityDecl entity && added.containsKey(entity.name().text()) && entities.get(entity.name().text()) == entity) {
                List<AstField> fields = new ArrayList<>(entity.fields());
                fields.addAll(added.get(entity.name().text()));
-               declaration = new AstEntityDecl(entity.id(), entity.span(), entity.name(), entity.identity(), fields, entity.credential(), entity.scope());
+               declaration = new AstEntityDecl(entity.id(), entity.span(), entity.name(), entity.identity(), fields, entity.credential(), entity.scope(), entity.uniqueKeys());
             }
             out.add(declaration);
          }

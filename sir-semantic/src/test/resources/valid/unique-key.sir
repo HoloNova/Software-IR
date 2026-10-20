@@ -1,0 +1,65 @@
+sir 0.3
+
+software KeyDesk {
+  metadata {
+    displayName "Key Desk";
+    namespace "example.key";
+  }
+  target {
+    language java 21;
+    framework spring_boot;
+    persistence mybatis_plus;
+    database mysql;
+    build maven;
+    interface rest;
+  }
+  sources { }
+  imports { }
+  declarations {
+    entity Student persistent {
+      identity id: Id generated auto;
+      field name: Name;
+    }
+    entity Course persistent {
+      identity id: Id generated auto;
+      field code: Code;
+      field term: Code;
+      unique (code, term);
+    }
+    entity Enrollment persistent {
+      identity id: Id generated auto;
+      field student: Ref<Student>;
+      field course: Ref<Course>;
+      unique (student, course);
+    }
+    view EnrollmentView from Enrollment {
+      field id: Id;
+    }
+    input EnrollInput {
+      field studentId: Id;
+      field courseId: Id;
+    }
+    error AlreadyEnrolled http 409;
+    error NoStudent http 404;
+    error NoCourse http 404;
+    capability Enroll {
+      input EnrollInput;
+      output EnrollmentView;
+      fails AlreadyEnrolled;
+      fails NoCourse;
+      fails NoStudent;
+      requires atomic;
+      expose command;
+      workflow {
+        load Student by input.studentId as student else NoStudent;
+        load Course by input.courseId as course else NoCourse;
+        create Enrollment as made {
+          student: student;
+          course: course;
+        }
+        persist made else AlreadyEnrolled;
+        return made;
+      }
+    }
+  }
+}

@@ -58,8 +58,25 @@ public record DeploymentPlan(LoweredNodeId id, ProjectArtifact.MavenProject appl
         }
     }
     /** {@code symbol} is the semantic identity of the entity the table stores; updates match tables by it, not by name. */
-    public record Table(String symbol, String name, List<Column> columns) {
-        public Table { Objects.requireNonNull(symbol); identifier(name); columns = List.copyOf(columns); }
+    /**
+     * {@code uniqueKeys} are the combinations of columns no two rows may share; each is one index of the table, named
+     * after its place among the table's keys.
+     */
+    public record Table(String symbol, String name, List<Column> columns, List<UniqueKey> uniqueKeys) {
+        public Table {
+            Objects.requireNonNull(symbol); identifier(name); columns = List.copyOf(columns); uniqueKeys = List.copyOf(uniqueKeys);
+            for (UniqueKey key : uniqueKeys)
+                for (String column : key.columns())
+                    if (columns.stream().noneMatch(c -> c.name().equals(column))) throw new IllegalArgumentException("a unique key names no column of " + name + ": " + column);
+        }
+        public Table(String symbol, String name, List<Column> columns) { this(symbol, name, columns, List.of()); }
+    }
+    public record UniqueKey(String name, List<String> columns) {
+        public UniqueKey {
+            identifier(name); columns = List.copyOf(columns);
+            if (columns.size() < 2) throw new IllegalArgumentException("a unique key holds at least two columns");
+            columns.forEach(DeploymentPlan::identifier);
+        }
     }
     public enum Storage { INT, BIGINT, BOOLEAN, VARCHAR, LONGTEXT, UUID, DATE, DATETIME }
     public record ForeignKey(String table, String column) {
@@ -86,7 +103,7 @@ public record DeploymentPlan(LoweredNodeId id, ProjectArtifact.MavenProject appl
         }
     }
     private static final String QUALIFIED = "[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z_][A-Za-z0-9_]*)*";
-    private static void identifier(String name) {
+    static void identifier(String name) {
         if (name == null || !name.matches("[A-Za-z_][A-Za-z0-9_]{0,63}"))
             throw new IllegalArgumentException("deployment SQL identifier is unsupported: " + name);
     }

@@ -15,6 +15,7 @@ public enum ReferenceRole {
    LOAD_KEY_FIELD(SymbolKind.FIELD),
    CREDENTIAL_SUBJECT_FIELD(SymbolKind.FIELD),
    CREDENTIAL_EXPIRY_FIELD(SymbolKind.FIELD),
+   UNIQUE_KEY_FIELD(SymbolKind.FIELD),
    FIND_ENTITY(SymbolKind.ENTITY),
    CREATE_ENTITY(SymbolKind.ENTITY),
    UPDATE_TARGET(SymbolKind.VARIABLE),

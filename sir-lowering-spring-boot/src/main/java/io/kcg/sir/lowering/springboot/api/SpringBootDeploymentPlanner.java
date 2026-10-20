@@ -15,6 +15,9 @@ public final class SpringBootDeploymentPlanner {
         // The implementable model: an entity's fields include the ones extend declarations add.
         semantic.implementable().declarations().stream().filter(NormalizedEntity.class::isInstance).map(NormalizedEntity.class::cast)
             .forEach(e -> e.fields().forEach(f -> fields.put(f.id(), f)));
+        Map<SymbolId, NormalizedEntity> semanticEntities = new HashMap<>();
+        semantic.implementable().declarations().stream().filter(NormalizedEntity.class::isInstance).map(NormalizedEntity.class::cast)
+            .forEach(e -> semanticEntities.put(e.id(), e));
         Map<SymbolId, SpringBootDeclaration.EntityDeclaration> entities = new LinkedHashMap<>();
         model.declarations().stream().filter(SpringBootDeclaration.EntityDeclaration.class::isInstance)
             .map(SpringBootDeclaration.EntityDeclaration.class::cast).forEach(e -> entities.put(e.sourceSymbol(), e));
@@ -73,10 +76,22 @@ public final class SpringBootDeploymentPlanner {
                 if (!columnNames.add(c.name().toLowerCase(Locale.ROOT))) throw new IllegalArgumentException("conflicting deployment column: " + c.name());
                 inlineBytes += c.storage() == Storage.VARCHAR ? 4 * c.length() + 2 : c.storage() == Storage.UUID ? 145 : 32;
             }
-            long indexes = columns.stream().filter(c -> c.primary() || c.unique() || c.reference().isPresent()).count();
+            List<UniqueKey> uniqueKeys = new ArrayList<>();
+            NormalizedEntity semanticEntity = semanticEntities.get(entity.sourceSymbol());
+            if (semanticEntity != null) {
+                for (var key : semanticEntity.uniqueKeys()) {
+                    List<String> keyColumns = new ArrayList<>();
+                    for (SymbolId field : key.fields()) {
+                        keyColumns.add(columns.stream().filter(c -> c.symbol().equals(field.value())).findFirst()
+                            .orElseThrow(() -> new IllegalArgumentException("a unique key names a field with no column: " + entity.tableName())).name());
+                    }
+                    uniqueKeys.add(new UniqueKey("kcg_uq_" + uniqueKeys.size(), keyColumns));
+                }
+            }
+            long indexes = columns.stream().filter(c -> c.primary() || c.unique() || c.reference().isPresent()).count() + uniqueKeys.size();
             if (inlineBytes > 60000 || columns.size() > 1000 || indexes > 64)
                 throw new IllegalArgumentException("deployment exceeds conservative MySQL row/column/index budget: " + entity.tableName());
-            tables.add(new Table(entity.sourceSymbol().value(), entity.tableName(), columns));
+            tables.add(new Table(entity.sourceSymbol().value(), entity.tableName(), columns, uniqueKeys));
         }
         var original = model.mavenProject();
         var dependencies = new ArrayList<>(original.dependencies());

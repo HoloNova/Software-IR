@@ -72,6 +72,9 @@ public final class SpringBootSchemaEvolutionPlanner {
                 else droppedTables.add(old);
                 continue;
             }
+            // A unique key is checked against the rows already there, so one cannot be added to, taken from or changed on a
+            // table that exists; it can only come with a new table.
+            if (!old.uniqueKeys().equals(now.uniqueKeys())) refusals.add("UNIQUE_KEY_CHANGED " + old.name());
             Map<String, Column> nowColumns = new LinkedHashMap<>();
             now.columns().forEach(c -> nowColumns.put(c.symbol(), c));
             for (Column column : old.columns()) {

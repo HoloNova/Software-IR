@@ -47,6 +47,12 @@ class RenameTest {
               field writer: Ref<User>;
               field text: Text;
             }
+            entity Slot persistent {
+              identity id: Id generated auto;
+              field room: Code;
+              field hour: Count;
+              unique (room, hour);
+            }
             view NoteView from Note {
               field id: Id;
               field body: Text;
@@ -157,6 +163,20 @@ class RenameTest {
             assertTrue(text.contains(written), written + "\n" + text);
         }
         assertFalse(text.contains("NoteNotFound"), text);
+    }
+
+    @Test void aUniqueKeyFollowsTheFieldsItNames() {
+        String text = renamed(new Command.Rename(Selector.root().named("declarations", "Slot").named("fields", "room"), "place"));
+        assertTrue(contains(text, "unique (place, hour);"), text);
+    }
+
+    @Test void aUniqueKeyCanBeAddedToAnEntityByAnEdit() {
+        var key = new io.kcg.sir.semantic.schema.StructNode("NormalizedUniqueKey", List.of(new io.kcg.sir.semantic.schema.StructNode.Slot("fields",
+            io.kcg.sir.semantic.schema.SlotKind.REFERENCE, new StructValue.Seq(List.of(new StructValue.Text("author"), new StructValue.Text("level"))))));
+        var added = edit(List.of(new Command.Add(Selector.root().named("declarations", "Note").slot("uniqueKeys"), new StructValue.Child(key))));
+        assertTrue(added instanceof EditResult.Edited, added::toString);
+        String text = new String(((EditResult.Edited) added).sources().bytes(ENTRY), StandardCharsets.UTF_8);
+        assertTrue(contains(text, "unique (author, level);"), text);
     }
 
     @Test void aUseFollowsTheEntityAndTheFieldItNames() {

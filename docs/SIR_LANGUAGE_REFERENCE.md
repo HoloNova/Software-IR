@@ -238,6 +238,54 @@ entity Account persistent {
 
 **`unique`**：声明这个字段的值在所有行里不重复，交付包建表时给它建唯一索引。有了它，才能 `load 实体 by 字段: 值`（见 5.2）。只能用在文本、整数（32 位或 64 位）和 `Token` 上，不能和 `versioned` 同用。
 
+**联合唯一：`unique (字段, 字段, ...);`**写在实体的字段之后、`credential` 和 `scope` 之前，说明这几个字段合起来在所有行里不重复（一人只能选一门课、一人只能点一次赞、一间房一个时段）。可以写多条。字段必须是这个实体自己的，至少两个，写的顺序就是索引的顺序；不能是可选的（数据库里空值之间不算重复，约束会悄悄失效）、`secret`、`versioned`、主键，不限长的文本要先用 `length` 限定，文本字段的最大长度加起来不超过 768。违反这些是 `SIR-VALID-014`。新建的行撞上它时，用 `persist 变量 else 错误名;` 报声明的错误（见 5.5）：
+
+```sir-declarations
+entity Student persistent {
+  identity id: Id generated auto;
+  field name: Name;
+}
+entity Course persistent {
+  identity id: Id generated auto;
+  field code: Code;
+}
+entity Enrollment persistent {
+  identity id: Id generated auto;
+  field student: Ref<Student>;
+  field course: Ref<Course>;
+  unique (student, course);
+}
+view EnrollmentView from Enrollment {
+  field id: Id;
+}
+input EnrollInput {
+  field studentId: Id;
+  field courseId: Id;
+}
+error AlreadyEnrolled http 409;
+error NoCourse http 404;
+error NoStudent http 404;
+capability Enroll {
+  input EnrollInput;
+  output EnrollmentView;
+  fails AlreadyEnrolled;
+  fails NoCourse;
+  fails NoStudent;
+  requires atomic;
+  expose command;
+  workflow {
+    load Student by input.studentId as student else NoStudent;
+    load Course by input.courseId as course else NoCourse;
+    create Enrollment as made {
+      student: student;
+      course: course;
+    }
+    persist made else AlreadyEnrolled;
+    return made;
+  }
+}
+```
+
 **`secret`**：这个文本字段（通常直接写 `Secret` 类型）存的是**摘要**，不是原文。它只能被写入，读取只有一种方式——`stored matches candidate`（见第 6 节）。不能同时 `unique`、`versioned`、带约束；不能出现在 `view` 里。例子见 7.1“登录”。
 
 **`default 值`**：`create` 没有写这个字段时取的值，可以是常量（`default 0`、`default "open"`、`default false`）、枚举成员（`default Status.OPEN`）或创建时刻（`default now()`）。写了 `default` 的字段在 `create` 里可以不写，写了就以写的为准。常量和枚举成员也会成为数据库列的默认值，所以给已上线的表加一个带默认值的必填字段时，老数据取这个默认值（`now()` 和不限长的 `Text` 没有数据库默认值）；已上线的字段改默认值时，只改列的默认值，已有的行保持原值。`unique`、`secret`、`versioned` 字段不能有默认值（`SIR-VALID-010`），默认值的类型要和字段一致（`SIR-TYPE-001`）。
@@ -1500,6 +1548,7 @@ use Crud {
 | `SIR-VALID-001` | 通用规则：`fails` 没排序、`requires` 顺序不对、`query` 没有 `readonly`、多个写步骤没有 `atomic`、`find` 谓词的比较方向不对、视图字段带了约束等 |
 | `SIR-VALID-002` | `versioned` 的规则：每个实体最多一个、版本字段不能带约束或 `unique`、只能用在实体字段上 |
 | `SIR-VALID-003` | 局部更新输入（`patch of`）的规则 |
+| `SIR-VALID-014` | 联合唯一 `unique (...)` 的规则：字段不能可选、`secret`、版本号、主键或不限长的文本，不能重复，长度加起来不能超过索引上限 |
 | `SIR-VALID-004` | 带 `versioned` 实体的更新规则、`persist ... else` 的用法、局部更新的字段必须全部绑定 |
 | `SIR-VALID-005` | 视图嵌套太深（最多 2 层） |
 | `SIR-VALID-006` | `load` 按字段加载的规则 |
@@ -1987,6 +2036,6 @@ capability Wrong {
 
 ## 10. 还没有的东西
 
-- 已上线系统的部分结构变更：改列的类型（除放宽外）、给已有表加引用或唯一列、删掉引用别的表的字段，会在打交付包时被拒绝。可以做的有：改列的默认值（已有的行保持原值）；放宽（`Count` 改 `Serial`、`Name where length(1, 16)` 改成更大的长度或去掉长度、必填改 `Optional<…>`，已有的值一个都不变）；删实体或字段，但要在打包时写 `--confirm-backup yes` 表示已备份，数据会随之丢掉。数据库里字段名是下划线形式（`passwordHash` → `password_hash`，`Ref` 字段 `owner` → `owner_id`），`Token` 列用 `CHAR(36)`。
+- 已上线系统的部分结构变更：改列的类型（除放宽外）、给已有表加引用、唯一列或联合唯一、删掉引用别的表的字段，会在打交付包时被拒绝。可以做的有：改列的默认值（已有的行保持原值）；放宽（`Count` 改 `Serial`、`Name where length(1, 16)` 改成更大的长度或去掉长度、必填改 `Optional<…>`，已有的值一个都不变）；删实体或字段，但要在打包时写 `--confirm-backup yes` 表示已备份，数据会随之丢掉。数据库里字段名是下划线形式（`passwordHash` → `password_hash`，`Ref` 字段 `owner` → `owner_id`），`Token` 列用 `CHAR(36)`。
 - 口令强度、登录失败的锁定与限流、令牌的缓存。
 - 除上面的 target 之外的语言、框架、数据库。

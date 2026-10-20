@@ -54,6 +54,7 @@ import io.kcg.sir.semantic.model.NormalizedCapability;
 import io.kcg.sir.semantic.model.NormalizedConstraint;
 import io.kcg.sir.semantic.model.NormalizedDeclaration;
 import io.kcg.sir.semantic.model.NormalizedCredential;
+import io.kcg.sir.semantic.model.NormalizedUniqueKey;
 import io.kcg.sir.semantic.model.NormalizedEntity;
 import io.kcg.sir.semantic.model.NormalizedEnum;
 import io.kcg.sir.semantic.model.NormalizedError;
@@ -195,7 +196,7 @@ final class NormalizePass {
                else own.add(field);
             }
             declarations.set(i, new NormalizedEntity(entity.id(), entity.name(), entity.span(), entity.sourceNodeId(), entity.persistent(),
-               entity.identity(), own, entity.versionField(), entity.credential(), entity.scope()));
+               entity.identity(), own, entity.versionField(), entity.credential(), entity.scope(), entity.uniqueKeys()));
          }
       }
       for (io.kcg.sir.ast.AstEntityExtensionDecl extension : this.extensions.stream()
@@ -316,7 +317,9 @@ final class NormalizePass {
          Optional.ofNullable(versionFieldId),
          decl.credential().map(clause -> new NormalizedCredential(
             clause.id(), clause.span(), this.siteTargetOrUnknown(clause.subject().id()), this.siteTargetOrUnknown(clause.expires().id()))),
-         decl.scope().map(this::normalizeExpression)
+         decl.scope().map(this::normalizeExpression),
+         decl.uniqueKeys().stream().map(key -> new NormalizedUniqueKey(
+            key.id(), key.span(), key.fields().stream().map(field -> this.siteTargetOrUnknown(field.id())).toList())).toList()
       );
    }
 

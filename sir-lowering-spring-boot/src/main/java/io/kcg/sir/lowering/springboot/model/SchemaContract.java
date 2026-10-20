@@ -10,15 +10,24 @@ import java.util.List;
  * The physical schema contract a delivery's migration tool verifies the live database against: one tab-separated row
  * per column (table, column, MySQL data type, length, nullable, primary, auto increment, unique, referenced table and
  * column, and the database default: empty for none, else "=" and the value URL-encoded, so any text fits one field).
- * The same rows are what an update compares a new plan with, so both sides are rendered here only.
+ * A unique key over several columns is one more row after its table's columns: UNIQUE, table, key name and the
+ * columns in index order. The same rows are what an update compares a new plan with, so both sides are rendered here only.
  */
 public final class SchemaContract {
     private SchemaContract() {}
 
     public static String render(List<Table> tables) {
         StringBuilder contract = new StringBuilder();
-        for (Table table : tables) for (Column column : table.columns()) contract.append(row(table.name(), column)).append('\n');
+        for (Table table : tables) {
+            for (Column column : table.columns()) contract.append(row(table.name(), column)).append('\n');
+            for (var key : table.uniqueKeys()) contract.append(keyRow(table.name(), key)).append('\n');
+        }
         return contract.toString();
+    }
+
+    /** The row of a unique key: {@code UNIQUE}, the table, the key's name and its columns in index order. */
+    public static String keyRow(String table, DeploymentPlan.UniqueKey key) {
+        return String.join("\t", "UNIQUE", table, key.name(), String.join(",", key.columns()));
     }
 
     public static String row(String table, Column column) {

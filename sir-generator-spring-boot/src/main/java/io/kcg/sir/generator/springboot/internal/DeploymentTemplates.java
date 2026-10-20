@@ -485,7 +485,7 @@ final class DeploymentTemplates {
          * Owns schema privileges only for the deployment step; the business app has DML privileges.
          *
          * <p>The package carries a migration chain V1..Vn and the schema contract after each version (contracts/V<i>.tsv, and
-         * schema.tsv for Vn). The live database is classified against that chain before anything runs, so a rerun is decided
+         * schema.tsv for Vn; besides the rows of columns, a contract has rows of the unique keys over several columns). The live database is classified against that chain before anything runs, so a rerun is decided
          * from the database itself. Modes: initialize (new or partly initialized), verify (must already be at Vn), check
          * (read-only report for an update), update (apply the missing versions of an initialized database).
          */
@@ -565,12 +565,24 @@ final class DeploymentTemplates {
                 return versions.size();
             }
 
+            /** The unique keys over several columns of a contract, by the list of its column rows (rows: UNIQUE, table, name, columns). */
+            private static final Map<List<String[]>, List<String[]>> KEYS = new IdentityHashMap<>();
+
+            /** The column rows of a contract; its unique-key rows are kept apart and found again by {@link #KEYS}. */
             private static List<String[]> contract(Path file) throws Exception {
-                List<String[]> rows = Files.readAllLines(file).stream().filter(s -> !s.isBlank()).map(s -> s.split("\\t", -1)).toList();
-                for (String[] row : rows) {
+                List<String[]> all = Files.readAllLines(file).stream().filter(s -> !s.isBlank()).map(s -> s.split("\\t", -1)).toList();
+                List<String[]> rows = new ArrayList<>(), keys = new ArrayList<>();
+                for (String[] row : all) {
+                    if (row.length == 4 && row[0].equals("UNIQUE") && row[1].matches("[A-Za-z_][A-Za-z0-9_]{0,63}")
+                            && row[2].matches("[A-Za-z_][A-Za-z0-9_]{0,63}") && row[3].matches("[A-Za-z_][A-Za-z0-9_]{0,63}(,[A-Za-z_][A-Za-z0-9_]{0,63})+")) {
+                        keys.add(row);
+                        continue;
+                    }
                     if (row.length != 11 || !row[0].matches("[A-Za-z_][A-Za-z0-9_]{0,63}") || !row[1].matches("[A-Za-z_][A-Za-z0-9_]{0,63}"))
                         throw new IllegalStateException("invalid schema contract: " + file.getFileName());
+                    rows.add(row);
                 }
+                KEYS.put(rows, keys);
                 return rows;
             }
 
@@ -833,9 +845,15 @@ final class DeploymentTemplates {
                         indexes.computeIfAbsent(rs.getString(1) + "/" + rs.getString(2), x -> new ArrayList<>()).add(rs.getString(1) + "." + rs.getString(3));
                     }
                 }
-                Set<String> actualUniques = new TreeSet<>();
-                for (var index : indexes.values()) { if (index.size() != 1) throw new IllegalStateException("unexpected composite unique index"); actualUniques.add(index.getFirst()); }
+                Set<String> actualUniques = new TreeSet<>(), actualKeys = new TreeSet<>(), expectedKeys = new TreeSet<>();
+                for (var index : indexes.values()) {
+                    if (index.size() == 1) actualUniques.add(index.getFirst());
+                    else actualKeys.add(index.getFirst().substring(0, index.getFirst().indexOf('.')) + "("
+                        + String.join(",", index.stream().map(c -> c.substring(c.indexOf('.') + 1)).toList()) + ")");
+                }
+                for (String[] key : KEYS.getOrDefault(expected, List.of())) expectedKeys.add(key[1] + "(" + key[3] + ")");
                 if (!actualUniques.equals(uniques)) throw new IllegalStateException("unique key mismatch");
+                if (!actualKeys.equals(expectedKeys)) throw new IllegalStateException("composite unique key mismatch");
                 Set<String> actualRefs = new TreeSet<>();
                 try (Statement s = db.createStatement(); ResultSet rs = s.executeQuery("SELECT TABLE_NAME,COLUMN_NAME,REFERENCED_TABLE_NAME,REFERENCED_COLUMN_NAME FROM information_schema.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA='kcg' AND REFERENCED_TABLE_NAME IS NOT NULL")) {
                     while (rs.next()) actualRefs.add(rs.getString(1) + "." + rs.getString(2) + ">" + rs.getString(3) + "." + rs.getString(4));

@@ -13,6 +13,7 @@ public sealed interface AstNode permits
         AstField,
         AstViewField,
         AstCredentialClause,
+        AstUniqueKey,
         AstCapabilityClause,
         AstWorkflow,
         AstStep,

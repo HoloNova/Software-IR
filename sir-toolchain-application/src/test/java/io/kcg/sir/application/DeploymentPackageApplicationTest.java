@@ -215,6 +215,47 @@ class DeploymentPackageApplicationTest {
         return root;
     }
 
+    @Test void aUniqueKeyOverSeveralColumnsIsAnIndexOfTheTableAndARowOfTheContract() throws Exception {
+        Path source = source(true);
+        String text = Files.readString(source.resolve("project.sir"));
+        Files.writeString(source.resolve("project.sir"), text.replace("      field author: Ref<User>;\n      field text: Text;\n    }",
+            "      field author: Ref<User>;\n      field text: Text;\n      field label: Text where length(1, 16) default \"x\";\n      unique (author, label);\n    }"));
+        Path delivery = export(source, temp.resolve("keyed")).manifest().outputRoot();
+        String sql = Files.readString(delivery.resolve("deploy/migrations/V1__initialize.sql"));
+        assertTrue(sql.contains("  UNIQUE KEY `kcg_uq_0` (`author_id`, `label`)\n) ENGINE=InnoDB"), sql);
+        String schema = Files.readString(delivery.resolve("deploy/schema.tsv"));
+        assertTrue(schema.contains("UNIQUE\tnote\tkcg_uq_0\tauthor_id,label\n"), schema);
+        // The key row follows the columns of its table.
+        assertTrue(schema.indexOf("note\tlabel\t") < schema.indexOf("UNIQUE\tnote\t"), schema);
+        // The tool that checks the database reads these rows.
+        assertTrue(Files.readString(delivery.resolve("deploy/tools/src/main/java/kcg/delivery/Migrate.java")).contains("composite unique key mismatch"));
+    }
+
+    @Test void aUniqueKeyComesOnlyWithANewTableNeverOntoOneThatHoldsRows() throws Exception {
+        Path source = source(true);
+        String text = Files.readString(source.resolve("project.sir")).replace("      field author: Ref<User>;\n      field text: Text;\n    }",
+            "      field author: Ref<User>;\n      field text: Text;\n      field label: Text where length(1, 16) default \"x\";\n    }");
+        Files.writeString(source.resolve("project.sir"), text);
+        Path base = export(source, temp.resolve("base")).manifest().outputRoot();
+
+        String withTable = text.replace("    entity Note persistent {", "    entity Tag persistent {\n      identity id: Id generated auto;\n      field owner: Ref<User>;\n"
+            + "      field name: Text where length(1, 16);\n      unique (owner, name);\n    }\n    entity Note persistent {");
+        Files.writeString(source.resolve("project.sir"), withTable);
+        var created = new DeploymentPackageApplication().export(new DeploymentPackageRequest(source, ENTRY, temp.resolve("created"), Optional.empty(), Optional.of(base)));
+        var exported = assertInstanceOf(DeploymentPackageResult.Exported.class, created, created.toString());
+        assertEquals(List.of("V2 CREATE_TABLE tag"), exported.continuation().orElseThrow().steps());
+        Path next = exported.manifest().outputRoot();
+        assertTrue(Files.readString(next.resolve("deploy/migrations/V2__create_table_tag.sql")).contains("  UNIQUE KEY `kcg_uq_0` (`owner_id`, `name`)"));
+        assertTrue(Files.readString(next.resolve("deploy/contracts/V1.tsv")).lines().noneMatch(l -> l.startsWith("UNIQUE")));
+        assertTrue(Files.readString(next.resolve("deploy/schema.tsv")).contains("UNIQUE\ttag\tkcg_uq_0\towner_id,name\n"));
+
+        // The same key on a table that already holds rows might already be broken by them.
+        Files.writeString(source.resolve("project.sir"), text.replace("      field label: Text where length(1, 16) default \"x\";\n    }",
+            "      field label: Text where length(1, 16) default \"x\";\n      unique (author, label);\n    }"));
+        var refused = new DeploymentPackageApplication().export(new DeploymentPackageRequest(source, ENTRY, temp.resolve("refused-key"), Optional.empty(), Optional.of(base)));
+        assertTrue(refused.diagnostics().stream().anyMatch(d -> d.code().equals("SIR-DEPLOY-UPDATE-UNSUPPORTED-001") && d.message().equals("UNIQUE_KEY_CHANGED note")), refused.toString());
+    }
+
     @Test void aContinuationInheritsTheBaseChainVerbatimAndAppendsOneStatementPerVersion() throws Exception {
         Path source = source(true);
         Path base = export(source, temp.resolve("base")).manifest().outputRoot();

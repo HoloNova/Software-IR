@@ -101,9 +101,16 @@ public record SchemaEvolution(int baseVersion, List<Step> steps) {
         public static String withoutDefault(String row) { return row.substring(0, row.lastIndexOf('\t')); }
     }
 
+    /** The contract rows of a whole table: its columns, then its unique keys. */
+    static List<String> tableRows(Table table) {
+        List<String> rows = new java.util.ArrayList<>(table.columns().stream().map(c -> SchemaContract.row(table.name(), c)).toList());
+        table.uniqueKeys().forEach(key -> rows.add(SchemaContract.keyRow(table.name(), key)));
+        return rows;
+    }
+
     public record CreateTable(int version, Table table) implements Step {
         public CreateTable { Objects.requireNonNull(table); }
-        public List<String> addedRows() { return table.columns().stream().map(c -> SchemaContract.row(table.name(), c)).toList(); }
+        public List<String> addedRows() { return tableRows(table); }
         public String describe() { return "V" + version + " CREATE_TABLE " + table.name(); }
     }
 
@@ -148,7 +155,7 @@ public record SchemaEvolution(int baseVersion, List<Step> steps) {
     public record DropTable(int version, Table table) implements Step {
         public DropTable { Objects.requireNonNull(table); }
         public List<String> addedRows() { return List.of(); }
-        public List<String> removedRows() { return table.columns().stream().map(c -> SchemaContract.row(table.name(), c)).toList(); }
+        public List<String> removedRows() { return tableRows(table); }
         public String describe() { return "V" + version + " DROP_TABLE " + table.name(); }
     }
 }

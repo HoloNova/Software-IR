@@ -123,6 +123,7 @@ entityDecl
     : ENTITY IDENT PERSISTENT LBRACE
         identityDecl
         entityMemberDecl*
+        uniqueKeyClause*
         credentialClause?
         scopeClause?
       RBRACE
@@ -154,6 +155,13 @@ fieldDecl
 // error rather than a silently ignored annotation.
 entityMemberDecl
     : FIELD IDENT COLON typeRef constraintList? VERSIONED? uniqueModifier? secretModifier? defaultModifier? idAnnotation? SEMI
+    ;
+
+// "unique (student, course);" says no two rows hold the same values in all of these fields together. "unique" is
+// contextual, as it is for a field: it follows the fields, where no member can start with an identifier, and the
+// parenthesis after it is what tells it from the other trailing clauses.
+uniqueKeyClause
+    : {_input.LT(1).getText().equals("unique")}? IDENT LPAREN fields+=IDENT (COMMA fields+=IDENT)+ RPAREN SEMI
     ;
 
 // "credential subject owner expires expiresAt;" closes an entity whose rows are bearer credentials. Its three

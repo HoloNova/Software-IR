@@ -178,6 +178,10 @@ public final class SirDeclarationWriter {
          out.line(1, this.field(field, true));
       }
 
+      for (StructNode key : nodes(node, "uniqueKeys")) {
+         out.line(1, "unique (" + String.join(", ", texts(key, "fields")) + ");");
+      }
+
       optionalChild(node, "credential").ifPresent(credential ->
          out.line(1, "credential subject " + text(credential, "subjectField") + " expires " + text(credential, "expiryField") + ";"));
       optionalChild(node, "scope").ifPresent(scope -> out.line(1, "scope " + expression(scope, 0) + ";"));

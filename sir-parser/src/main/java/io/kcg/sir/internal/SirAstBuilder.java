@@ -210,7 +210,11 @@ final class SirAstBuilder {
         Optional<AstCredentialClause> credential = Optional.ofNullable(context.credentialClause()).map(value -> credentialClause(value, path));
         Optional<AstExpression> scope = Optional.ofNullable(context.scopeClause())
                 .map(value -> expression(value.expression(), ids.fixed(path, "scope")));
-        return new AstEntityDecl(ids.id(path), source.span(context), name, identity, fields, credential, scope);
+        List<AstUniqueKey> uniqueKeys = new ArrayList<>();
+        for (int index = 0; index < context.uniqueKeyClause().size(); index++) {
+            uniqueKeys.add(uniqueKey(context.uniqueKeyClause(index), path, index));
+        }
+        return new AstEntityDecl(ids.id(path), source.span(context), name, identity, fields, credential, scope, uniqueKeys);
     }
 
     private AstInputDecl inputDeclaration(SirParser.InputDeclContext context, String parent) {
@@ -250,6 +254,15 @@ final class SirAstBuilder {
                 ? Optional.empty()
                 : Optional.of(new BigInteger(context.INT().getText()));
         return new AstErrorDecl(ids.id(path), source.span(context), name, httpStatus);
+    }
+
+    private AstUniqueKey uniqueKey(SirParser.UniqueKeyClauseContext context, String parent, int index) {
+        String path = ids.fixed(parent, "unique" + index);
+        List<AstNameRef> fields = new ArrayList<>();
+        for (int position = 0; position < context.fields.size(); position++) {
+            fields.add(nameRef(context.fields.get(position), path, "field" + position));
+        }
+        return new AstUniqueKey(ids.id(path), source.span(context), fields);
     }
 
     private AstCredentialClause credentialClause(SirParser.CredentialClauseContext context, String parent) {
