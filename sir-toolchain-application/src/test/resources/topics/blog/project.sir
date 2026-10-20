@@ -287,8 +287,8 @@ software CampusBlog {
         update post {
           likes: post.likes + 1;
         }
-        persist made else AlreadyLiked;
         persist post;
+        persist made else AlreadyLiked;
         return post;
       }
     }

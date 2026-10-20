@@ -18,6 +18,7 @@ software DualTokenDesk {
   declarations {
     entity User persistent {
       identity id: Id generated auto;
+      field favorites: Count default 0;
     }
     entity Note persistent {
       identity id: Id generated auto;
@@ -30,7 +31,10 @@ software DualTokenDesk {
       entity: Note;
       owner: author;
     }
-    // A reader favourites a note once: the pair is unique, and the database says no to the second time.
+    // A reader favourites a note once: the pair is unique, and the database says no to the second time. The reader's
+    // count of favourites is added to by the database, so requests that run at the same moment are all counted. The counted
+    // row is persisted first: inserting `made` locks the rows it refers to for reading, and two requests that each hold
+    // that lock and then ask to change the reader would wait for each other.
     entity Favorite persistent {
       identity id: Id generated auto;
       field note: Ref<Note>;
@@ -44,15 +48,21 @@ software DualTokenDesk {
       output Unit;
       fails AlreadyFavorite;
       fails NoteNotFound;
+      fails UserNotFound;
       requires authenticated;
       requires atomic;
       expose command at "/notes/{id}/favorite";
       workflow {
         load Note by input.id as note else NoteNotFound;
+        load User by actor as reader else UserNotFound;
         create Favorite as made {
           note: note;
           owner: actor;
         }
+        update reader {
+          favorites: reader.favorites + 1;
+        }
+        persist reader;
         persist made else AlreadyFavorite;
         return unit;
       }

@@ -199,14 +199,17 @@ class DeploymentPackageApplicationTest {
         assertEquals(2, refused.diagnostics().stream().filter(d -> d.code().equals("SIR-DEPLOY-UPDATE-BACKUP-001")).count(), refused.toString());
         var result = new DeploymentPackageApplication().export(new DeploymentPackageRequest(third, ENTRY, temp.resolve("three"), Optional.empty(), Optional.of(two), true));
         var v3 = assertInstanceOf(DeploymentPackageResult.Exported.class, result, result.toString());
-        assertEquals(10, v3.continuation().orElseThrow().schemaVersion());
-        assertEquals(List.of("V7 WIDEN_COLUMN note.state", "V8 CREATE_TABLE favorite", "V9 DROP_COLUMN note.title", "V10 DROP_TABLE label"),
-            v3.continuation().orElseThrow().steps());
+        assertEquals(11, v3.continuation().orElseThrow().schemaVersion());
+        assertEquals(List.of("V7 WIDEN_COLUMN note.state", "V8 CREATE_TABLE favorite", "V9 ADD_DEFAULTED_COLUMN user.favorites",
+            "V10 DROP_COLUMN note.title", "V11 DROP_TABLE label"), v3.continuation().orElseThrow().steps());
         assertEquals(List.of("note.title", "label"), v3.continuation().orElseThrow().dataLoss());
         // A new instance replays the whole chain, drops included, and ends at the contract of the last version.
         assertFalse(Files.readString(v3.manifest().outputRoot().resolve("deploy/schema.tsv")).contains("label\t"));
         assertTrue(Files.readString(v3.manifest().outputRoot().resolve("deploy/schema.tsv")).contains("note\tstate\tvarchar\t64\t"));
         assertTrue(Files.readString(v3.manifest().outputRoot().resolve("deploy/schema.tsv")).contains("UNIQUE\tfavorite\tkcg_uq_0\tnote_id,owner_id\n"));
+        // The counter a reader's favourites are added to, and the login name the smoke finds the reader by.
+        assertTrue(Files.readString(v3.manifest().outputRoot().resolve("deploy/schema.tsv")).contains("user\tfavorites\t"));
+        assertTrue(Files.readString(v3.manifest().outputRoot().resolve("deploy/schema.tsv")).contains("user\tname\t"));
     }
 
     private Path sample(String name) throws Exception {

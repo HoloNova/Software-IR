@@ -164,8 +164,8 @@ software CourseSelection {
           student: actor;
           course: course;
         }
-        persist made else AlreadyEnrolled;
         persist course;
+        persist made else AlreadyEnrolled;
         return made;
       }
     }
