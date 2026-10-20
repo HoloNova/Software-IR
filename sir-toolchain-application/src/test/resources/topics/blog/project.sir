@@ -266,8 +266,8 @@ software CampusBlog {
       }
     }
 
-    // One reader likes a post once: the pair is unique. GAP: the counter is read then written, so simultaneous likes
-    // by different readers can be lost.
+    // One reader likes a post once: the pair is unique. The counter is added to by the database, so simultaneous likes
+    // by different readers are all counted.
     capability LikePost {
       actor Ref<User>;
       input PostRef;

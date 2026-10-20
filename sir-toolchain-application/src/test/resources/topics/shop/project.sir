@@ -154,7 +154,8 @@ software OnlineShop {
 
     // GAP: an order has several lines in real life, but a request cannot carry a list that the workflow walks, and a
     // line's amount (quantity times price) cannot be computed (only + and -). So one request buys one unit of one
-    // product; stock is read then written, so two buyers of the last unit can both succeed.
+    // product; the unit is taken by one statement that checks the stock and takes one, so two buyers of the last unit
+    // cannot both succeed.
     input BuyRequest {
       field productId: Id;
     }
@@ -172,8 +173,7 @@ software OnlineShop {
       workflow {
         load Product by input.productId as product else ProductNotFound;
         validate product.state == ProductState.ON_SHELF else ProductNotFound;
-        validate product.stock > 0 else OutOfStock;
-        update product {
+        update product when product.stock > 0 else OutOfStock {
           stock: product.stock - 1;
         }
         create PurchaseOrder as purchase {

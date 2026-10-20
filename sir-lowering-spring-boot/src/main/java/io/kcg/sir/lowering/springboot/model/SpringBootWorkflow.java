@@ -30,17 +30,36 @@ public record SpringBootWorkflow(LoweredNodeId id, LoweredOrigin origin, List<Sp
    * One authored value assignment: the entity member it targets, the target's property name, the
    * value, and — when the value is a plain reference to an input member — the request property the
    * client sent, which is what a field error must point at.
+   *
+   * <p>{@code relative}, when present, says the binding changes its own column by an amount
+   * ({@code count: row.count + 1}); {@code value} is still the whole expression, which is what the
+   * in-memory row holds, while the stored row is changed by {@code amount} in the statement itself.
    */
-   public record Binding(SymbolId fieldSymbol, String targetProperty, SpringExpression value, java.util.Optional<String> sourcePropertyName) {
+   public record Binding(
+      SymbolId fieldSymbol, String targetProperty, SpringExpression value, java.util.Optional<String> sourcePropertyName,
+      java.util.Optional<SpringBootWorkflow.Relative> relative
+   ) {
       public Binding {
          Objects.requireNonNull(fieldSymbol, "fieldSymbol");
          SpringBootWorkflow.requireText(targetProperty, "targetProperty");
          Objects.requireNonNull(value, "value");
          Objects.requireNonNull(sourcePropertyName, "sourcePropertyName");
+         Objects.requireNonNull(relative, "relative");
+      }
+
+      public Binding(SymbolId fieldSymbol, String targetProperty, SpringExpression value, java.util.Optional<String> sourcePropertyName) {
+         this(fieldSymbol, targetProperty, value, sourcePropertyName, java.util.Optional.empty());
       }
 
       public Binding(SymbolId fieldSymbol, String targetProperty, SpringExpression value) {
-         this(fieldSymbol, targetProperty, value, java.util.Optional.empty());
+         this(fieldSymbol, targetProperty, value, java.util.Optional.empty(), java.util.Optional.empty());
+      }
+   }
+
+   /** The amount a column is increased by, or decreased by when {@code subtract}. */
+   public record Relative(boolean subtract, SpringExpression amount) {
+      public Relative {
+         Objects.requireNonNull(amount, "amount");
       }
    }
 

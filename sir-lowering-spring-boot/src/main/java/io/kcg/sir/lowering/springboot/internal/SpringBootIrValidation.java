@@ -1023,6 +1023,9 @@ public final class SpringBootIrValidation {
             this.requireKnown(value.targetVariable(), owner, "update target variable");
             value.bindings().forEach(binding -> this.validateBinding(binding, owner));
             value.guard().ifPresent(guard -> this.validateUpdateGuard(value, guard, owner));
+            if (value.bindings().stream().anyMatch(binding -> binding.relative().isPresent())) {
+               this.validateRelativeWrite(value, owner);
+            }
             break;
          case SpringBootWorkflow.PersistStep value:
             this.requireKnown(value.targetVariable(), owner, "persist target variable");
@@ -1243,6 +1246,19 @@ public final class SpringBootIrValidation {
          this.error(owner, "an update cannot carry both a version check and a guard: " + update.targetVariable());
       }
 
+      this.requirePlainPersist(update, owner, "a guarded update");
+   }
+
+   /** A column changed by an amount is one statement too, so the same holds: no version check, and a plain persist. */
+   private void validateRelativeWrite(SpringBootWorkflow.UpdateStep update, SpringBootDeclaration owner) {
+      if (update.conditional().isPresent()) {
+         this.error(owner, "an update cannot carry both a version check and a change by an amount: " + update.targetVariable());
+      }
+
+      this.requirePlainPersist(update, owner, "an update that changes a column by an amount");
+   }
+
+   private void requirePlainPersist(SpringBootWorkflow.UpdateStep update, SpringBootDeclaration owner, String what) {
       if (owner instanceof SpringBootDeclaration.CapabilityDeclaration capability) {
          boolean persistedPlainly = capability.workflow().steps().stream()
             .anyMatch(step -> step instanceof SpringBootWorkflow.PersistStep persist
@@ -1250,7 +1266,7 @@ public final class SpringBootIrValidation {
                && persist.action() == io.kcg.sir.lowering.springboot.model.PersistenceAction.UPDATE
                && persist.conditional().isEmpty());
          if (!persistedPlainly) {
-            this.error(owner, "a guarded update must be persisted by a plain persist of the same row: " + update.targetVariable());
+            this.error(owner, what + " must be persisted by a plain persist of the same row: " + update.targetVariable());
          }
       }
    }

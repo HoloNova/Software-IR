@@ -595,9 +595,9 @@ final class WorkflowRenderer {
       }
 
       renderCandidateChecks(ctx, capability, step, entity, targetName, imports, currentPackage, lines);
-      UpdateStep guarded = guardedUpdateOf(workflow, step);
-      if (guarded != null) {
-         renderGuardedPersist(ctx, guarded, target, entity, mapper, variableNames, imports, currentPackage, lines);
+      UpdateStep columnWrite = columnWriteOf(workflow, step);
+      if (columnWrite != null) {
+         renderColumnPersist(ctx, columnWrite, target, entity, mapper, variableNames, imports, currentPackage, lines);
          return;
       }
 
@@ -655,8 +655,11 @@ final class WorkflowRenderer {
          + setter(version.javaName()) + "(" + expectedVersion + " + " + conditional.versionIncrement() + "L);"));
    }
 
-   /** The guarded update this persist writes, if its row was updated under a guard. */
-   private static UpdateStep guardedUpdateOf(SpringBootWorkflow workflow, PersistStep persist) {
+   /**
+   * The update this persist writes as one statement on the stored row, if its row was updated under a guard or has a
+   * column changed by an amount. Validation has settled that a row has only one such update.
+   */
+   private static UpdateStep columnWriteOf(SpringBootWorkflow workflow, PersistStep persist) {
       if (persist.conditional().isPresent() || persist.action() != PersistenceAction.UPDATE) {
          return null;
       }
@@ -664,21 +667,27 @@ final class WorkflowRenderer {
       return workflow.steps().stream()
          .filter(UpdateStep.class::isInstance)
          .map(UpdateStep.class::cast)
-         .filter(update -> update.guard().isPresent() && update.targetVariable().equals(persist.targetVariable()))
+         .filter(update -> update.targetVariable().equals(persist.targetVariable()))
+         .filter(update -> update.guard().isPresent() || update.bindings().stream().anyMatch(binding -> binding.relative().isPresent()))
          .findFirst()
          .orElse(null);
    }
 
    /**
-   * Writes a guarded update as the one statement that both checks and writes the row.
+   * Writes an update as the one statement that both checks and writes the row.
    *
-   * <p>The statement is {@code UPDATE ... SET <only the bound columns> WHERE id = ? AND <guard>}. The guard
+   * <p>The statement is {@code UPDATE ... SET <only the bound columns> WHERE id = ? [AND <guard>]}. The guard
    * is evaluated by the database against the row as it is stored at that moment, so two requests that both
    * read the row as eligible cannot both write it: the second matches no row and gets the guard's error.
-   * Only the bound columns are written, because nothing pins the rest of the row the way a version would,
-   * and the values come from the candidate the update step already built in memory, so they are computed once.
+   * A column changed by an amount is written as {@code SET col = col + ?}, so concurrent requests all count
+   * instead of overwriting each other with a value computed from what each one read.
+   *
+   * <p>Only the bound columns are written, because nothing pins the rest of the row the way a version would,
+   * and the other values come from the candidate the update step already built in memory, so they are computed
+   * once. After a change by an amount the row is read back, so what the request goes on to return is the stored
+   * value, not the one computed from the earlier read.
    */
-   private static void renderGuardedPersist(
+   private static void renderColumnPersist(
       GenerationContext ctx,
       UpdateStep update,
       Variable target,
@@ -689,28 +698,52 @@ final class WorkflowRenderer {
       String currentPackage,
       List<String> lines
    ) {
-      SpringBootWorkflow.UpdateGuard guard = update.guard().orElseThrow();
       imports.add("com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper");
-      String errorName = errorJavaName(ctx, guard.failure(), imports, currentPackage);
       String targetName = target.targetName();
-      int[] counter = new int[]{0};
-      String rootName = nextWrapperName(counter);
-      String condition = renderPredicateNode(
-         ctx, guard.predicate(), target, entity, Map.of(), variableNames, imports, currentPackage, rootName, counter);
       String identity = getterName(entity.identity().javaName());
       String updated = targetName + "Updated";
       lines.add("        int " + updated + " = " + mapper.mapperFieldName() + ".update(null, new LambdaUpdateWrapper<" + entity.javaName() + ">()");
       lines.add("                .eq(" + entity.javaName() + "::" + identity + ", " + targetName + "." + identity + "())");
-      lines.add("                .and(" + rootName + " -> " + condition + ")");
+      if (update.guard().isPresent()) {
+         int[] counter = new int[]{0};
+         String rootName = nextWrapperName(counter);
+         String condition = renderPredicateNode(
+            ctx, update.guard().orElseThrow().predicate(), target, entity, Map.of(), variableNames, imports, currentPackage, rootName, counter);
+         lines.add("                .and(" + rootName + " -> " + condition + ")");
+      }
+
       for (int index = 0; index < update.bindings().size(); index++) {
-         String property = getterName(update.bindings().get(index).targetProperty());
+         Binding binding = update.bindings().get(index);
+         String property = getterName(binding.targetProperty());
          String closing = index == update.bindings().size() - 1 ? ");" : "";
-         lines.add("                .set(" + entity.javaName() + "::" + property + ", " + targetName + "." + property + "())" + closing);
+         if (binding.relative().isPresent()) {
+            SpringBootWorkflow.Relative relative = binding.relative().orElseThrow();
+            String amount = ExpressionRenderer.renderExpression(relative.amount(), variableNames);
+            collectExpressionImports(ctx, relative.amount(), variableNames, imports, currentPackage);
+            lines.add("                ." + (relative.subtract() ? "setDecrBy" : "setIncrBy") + "("
+               + entity.javaName() + "::" + property + ", " + amount + ")" + closing);
+         } else {
+            lines.add("                .set(" + entity.javaName() + "::" + property + ", " + targetName + "." + property + "())" + closing);
+         }
       }
 
       lines.add("        if (" + updated + " != 1) {");
-      lines.add("            throw new " + errorName + "();");
+      if (update.guard().isPresent()) {
+         String errorName = errorJavaName(ctx, update.guard().orElseThrow().failure(), imports, currentPackage);
+         lines.add("            throw new " + errorName + "();");
+      } else {
+         lines.add("            throw new IllegalStateException(\"the " + entity.javaName() + " row is gone: \" + " + targetName + "." + identity + "());");
+      }
+
       lines.add("        }");
+      List<Binding> counted = update.bindings().stream().filter(binding -> binding.relative().isPresent()).toList();
+      if (!counted.isEmpty()) {
+         String fresh = targetName + "Stored";
+         lines.add("        " + entity.javaName() + " " + fresh + " = " + mapper.mapperFieldName() + ".selectById(" + targetName + "." + identity + "());");
+         for (Binding binding : counted) {
+            lines.add("        " + targetName + "." + setter(binding.targetProperty()) + "(" + fresh + "." + getterName(binding.targetProperty()) + "());");
+         }
+      }
    }
 
    private static String expectedVersionPropertyOf(CapabilityDeclaration capability, GenerationContext ctx) {
@@ -1012,6 +1045,23 @@ final class WorkflowRenderer {
                      case GE -> "ge";
                      default -> throw new IllegalStateException();
                   };
+                  if (binary.right() instanceof MemberExpression otherColumn
+                     && otherColumn.receiver() instanceof NameExpression otherName
+                     && otherName.resolvedSymbol().equals(itemVariable.symbol())) {
+                     // Two columns of the same row are compared by the database, not by a value read earlier.
+                     String operator = switch (binary.operator()) {
+                        case EQ -> "=";
+                        case NE -> "<>";
+                        case LT -> "<";
+                        case LE -> "<=";
+                        case GT -> ">";
+                        case GE -> ">=";
+                        default -> throw new IllegalStateException();
+                     };
+                     return wrapperName + ".apply(" + StringEscape.javaString(
+                        columnOf(entity, memberSymbol(binary.left(), itemVariable)) + " " + operator + " " + columnOf(entity, otherColumn.resolvedMember())) + ")";
+                  }
+
                   String field = renderFindField(binary.left(), itemVariable, entity.javaName());
                   String value = ExpressionRenderer.renderExpression(binary.right(), variableNames);
                   collectExpressionImports(ctx, binary.right(), variableNames, imports, currentPackage);

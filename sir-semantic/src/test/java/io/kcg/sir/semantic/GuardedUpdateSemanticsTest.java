@@ -70,7 +70,14 @@ class GuardedUpdateSemanticsTest {
     @Test
     void theColumnMustBeOnTheLeftAndTheValueMustNotReadTheRow() {
         assertOnly("SIR-VALID-007", replace(GUARDED, "update old when false == old.used else Invalid { used: true; }"), "SIR-VALID-007");
-        assertOnly("SIR-VALID-007", replace(GUARDED, "update old when old.owner == old.owner else Invalid { used: true; }"), "SIR-VALID-007");
+        assertOnly("SIR-VALID-007", replace(GUARDED, "update old when old.expiresAt > old.expiresAt + 5 minutes else Invalid { used: true; }"), "SIR-VALID-007");
+    }
+
+    @Test
+    void theValueMayBeAnotherColumnOfTheRowItselfButNothingComputedFromTheRow() {
+        SemanticAnalysis result = TestSources.analyze(replace(GUARDED, "update old when old.expiresAt > old.expiresAt else Invalid { used: true; }"));
+
+        assertTrue(result.isSuccess(), () -> result.diagnostics().toString());
     }
 
     @Test

@@ -1,0 +1,73 @@
+sir 0.3
+
+software SeatDesk {
+  metadata {
+    displayName "Seat Desk";
+    namespace "example.seats";
+  }
+  target {
+    language java 21;
+    framework spring_boot;
+    persistence mybatis_plus;
+    database mysql;
+    build maven;
+    interface rest;
+  }
+  sources { }
+  imports { }
+  declarations {
+    entity Course persistent {
+      identity id: Id generated auto;
+      field name: Name;
+      field capacity: Quantity;
+      field enrolled: Count default 0;
+      field fee: Money default 0.00;
+    }
+    view CourseView from Course {
+      field id: Id;
+      field name: Name;
+      field capacity: Quantity;
+      field enrolled: Count;
+    }
+    input CourseRef {
+      field id: Id;
+    }
+    input LeaveInput {
+      field id: Id;
+      field seats: Count;
+    }
+    error CourseNotFound http 404;
+    error CourseFull http 409;
+    capability Take {
+      input CourseRef;
+      output CourseView;
+      fails CourseFull;
+      fails CourseNotFound;
+      requires atomic;
+      expose command at "/courses/{id}/take";
+      workflow {
+        load Course by input.id as course else CourseNotFound;
+        update course when course.enrolled < course.capacity else CourseFull {
+          enrolled: course.enrolled + 1;
+        }
+        persist course;
+        return course;
+      }
+    }
+    capability Leave {
+      input LeaveInput;
+      output CourseView;
+      fails CourseNotFound;
+      requires atomic;
+      expose command at "/courses/{id}/leave";
+      workflow {
+        load Course by input.id as course else CourseNotFound;
+        update course {
+          enrolled: course.enrolled - input.seats;
+        }
+        persist course;
+        return course;
+      }
+    }
+  }
+}

@@ -143,8 +143,8 @@ software CourseSelection {
     error AlreadyEnrolled http 409;
     error CourseFull http 409;
     error CourseNotFound http 404;
-    // GAP: the seats are checked and counted by reading then writing, so two students taking the last seat at the same
-    // moment can both succeed (no atomic counter). A student cannot enrol twice: the pair is unique.
+    // The seat is taken by one statement that checks the room left and adds one, so two students taking the last seat
+    // at the same moment cannot both succeed. A student cannot enrol twice: the pair is unique.
     capability Enroll {
       actor Ref<User>;
       input CourseRef;
@@ -157,8 +157,7 @@ software CourseSelection {
       expose command at "/courses/{id}/enroll";
       workflow {
         load Course by input.id as course else CourseNotFound;
-        validate course.enrolled < course.capacity else CourseFull;
-        update course {
+        update course when course.enrolled < course.capacity else CourseFull {
           enrolled: course.enrolled + 1;
         }
         create Enrollment as made {

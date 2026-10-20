@@ -27,6 +27,7 @@ import io.kcg.sir.lowering.springboot.model.TransportPlan;
 import io.kcg.sir.lowering.springboot.profile.SpringBootQueryPolicy;
 import io.kcg.sir.lowering.springboot.profile.SpringBootWritePolicy;
 import io.kcg.sir.lowering.springboot.profile.SpringBootTargetProfile;
+import io.kcg.sir.semantic.api.SelfRelativeBinding;
 import io.kcg.sir.semantic.api.NormalizedSemanticModel;
 import io.kcg.sir.semantic.model.NormalizedBinding;
 import io.kcg.sir.semantic.model.NormalizedCapability;
@@ -790,7 +791,7 @@ public final class SpringBootModelLowerer {
                     withDefaults(value, owner, actorSymbol));
             case NormalizedStep.UpdateStep value -> new SpringBootWorkflow.UpdateStep(
                     id, origin, value.targetVariable(),
-                    value.bindings().stream().map(binding -> lowerBinding(binding, owner, actorSymbol)).toList(),
+                    value.bindings().stream().map(binding -> this.lowerUpdateBinding(binding, value.targetVariable(), owner, actorSymbol)).toList(),
                     this.lowerConditionalUpdate(value, owner, actorSymbol),
                     value.guard().map(guard -> new SpringBootWorkflow.UpdateGuard(
                             lowerExpression(guard, owner, actorSymbol), value.guardError().orElseThrow())));
@@ -1066,6 +1067,23 @@ public final class SpringBootModelLowerer {
                     id, span, v.type(), reidentified(v.receiver(), base + "/receiver", span), v.member(), v.resolvedMember());
             default -> throw new IllegalStateException("not a default value: " + value);
         };
+    }
+
+    /**
+     * An update binding, which may change its own column by an amount instead of setting it. The amount is the right
+     * operand of the expression the binding already lowered, so it is the same node, not a second copy of it.
+     */
+    private SpringBootWorkflow.Binding lowerUpdateBinding(
+            NormalizedBinding binding, SymbolId targetVariable, SymbolId owner, Optional<SymbolId> actorSymbol) {
+        SpringBootWorkflow.Binding lowered = lowerBinding(binding, owner, actorSymbol);
+        Optional<SelfRelativeBinding> relative = SelfRelativeBinding.of(binding, targetVariable);
+        if (relative.isEmpty() || !(lowered.value() instanceof SpringExpression.BinaryExpression value)) {
+            return lowered;
+        }
+
+        return new SpringBootWorkflow.Binding(lowered.fieldSymbol(), lowered.targetProperty(), lowered.value(),
+                lowered.sourcePropertyName(),
+                Optional.of(new SpringBootWorkflow.Relative(relative.get().subtract(), value.right())));
     }
 
     private SpringBootWorkflow.Binding lowerBinding(NormalizedBinding binding, SymbolId owner, Optional<SymbolId> actorSymbol) {

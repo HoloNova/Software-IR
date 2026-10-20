@@ -423,6 +423,8 @@ final class ValidatePass {
                if (s.guard().isPresent()) {
                   this.validateUpdateGuard(s, capDecl, failsSet);
                }
+
+               this.validateSelfRelativeBindings(s, capDecl);
                break;
             case io.kcg.sir.ast.AstDeleteStep s:
                if (isReadonly || isQuery) {
@@ -1320,15 +1322,90 @@ final class ValidatePass {
 
       this.validateGuardShape(guard, target);
       for (AstBinding binding : step.bindings()) {
-         if (this.mentionsVariable(binding.value(), target)) {
+         if (this.mentionsVariable(binding.value(), target) && !this.isSelfRelative(binding, target)) {
             this.diagnostics.add(DiagnosticBuilder.error(
-               "SIR-VALID-007", "带守卫的 update 的绑定值不能读取目标自身的字段: " + binding.fieldName().text(), binding.value().span()));
+               "SIR-VALID-007", "带守卫的 update 的绑定值不能读取目标自身的字段（只有“本字段 + 值”或“本字段 - 值”可以）: "
+                  + binding.fieldName().text(), binding.value().span()));
          }
       }
    }
 
+   /**
+   * What a self-relative binding ({@code count: row.count + 1}) may be.
+   *
+   * <p>It is written as {@code SET count = count + ?}, so the database does the arithmetic on the stored
+   * value and concurrent requests all count. That only means something for a row that is already stored,
+   * on one integer column, and when one statement carries the whole update.
+   */
+   private void validateSelfRelativeBindings(AstUpdateStep step, AstCapabilityDecl capDecl) {
+      SymbolId target = this.typed.referenceSiteBindings().targetFor(step.target().id()).orElse(null);
+      if (target == null) {
+         return;
+      }
+
+      List<AstBinding> relative = step.bindings().stream().filter(binding -> this.isSelfRelative(binding, target)).toList();
+      if (!relative.isEmpty()) {
+         this.validateSelfRelativeTarget(step, capDecl, target, relative);
+      }
+
+      if (relative.isEmpty() && step.guard().isEmpty()) {
+         return;
+      }
+
+      long updatesOfTheRow = capDecl.workflow().steps().stream()
+         .filter(other -> other instanceof AstUpdateStep update
+            && target.equals(this.typed.referenceSiteBindings().targetFor(update.target().id()).orElse(null)))
+         .count();
+      if (updatesOfTheRow > 1) {
+         this.diagnostics.add(DiagnosticBuilder.error(
+            "SIR-VALID-007", "带守卫或“本字段 + 值”的 update 必须是这一行唯一的 update（它整个写成一条语句）: " + step.target().text(), step.target().span()));
+      }
+   }
+
+   private void validateSelfRelativeTarget(AstUpdateStep step, AstCapabilityDecl capDecl, SymbolId target, List<AstBinding> relative) {
+      boolean loaded = capDecl.workflow().steps().stream()
+         .anyMatch(other -> other instanceof AstLoadStep load && target.equals(this.typed.referenceBindings().get(load.id())));
+      if (!loaded) {
+         this.diagnostics.add(DiagnosticBuilder.error(
+            "SIR-VALID-007", "“本字段 + 值”只能用于 load 出来的行（新建的行还没有存下来的值）: " + step.target().text(), step.target().span()));
+      }
+
+      SymbolId entity = this.updateTargetEntitySymId(step);
+      if (entity != null && this.entityVersionFields.get(entity) != null) {
+         this.diagnostics.add(DiagnosticBuilder.error(
+            "SIR-VALID-007", "带 version 的实体不能使用“本字段 + 值”（版本已经保护了这一行）", step.target().span()));
+      }
+
+      for (AstBinding binding : relative) {
+         SirType type = this.typed.expressionTypes().get(binding.value().id());
+         if (type != PrimitiveType.INT32 && type != PrimitiveType.INT64) {
+            this.diagnostics.add(DiagnosticBuilder.error(
+               "SIR-VALID-007", "“本字段 + 值”只用于整数字段: " + binding.fieldName().text(), binding.value().span()));
+         }
+      }
+   }
+
+   /** {@code field: target.field + value} or {@code field: target.field - value}, the value not reading the target. */
+   private boolean isSelfRelative(AstBinding binding, SymbolId target) {
+      if (!(this.ungroup(binding.value()) instanceof AstBinaryExpression binary)
+         || (binary.operator() != AstBinaryOperator.ADD && binary.operator() != AstBinaryOperator.SUB)) {
+         return false;
+      }
+
+      if (!(this.ungroup(binary.left()) instanceof AstMemberExpression member)
+         || !(this.ungroup(member.receiver()) instanceof AstNameExpression name)
+         || !target.equals(this.typed.referenceSiteBindings().targetFor(name.name().id()).orElse(null))) {
+         return false;
+      }
+
+      SymbolId field = this.typed.referenceSiteBindings().targetFor(binding.fieldName().id()).orElse(null);
+      SymbolId read = this.typed.referenceSiteBindings().targetFor(member.member().id()).orElse(null);
+      return field != null && field.equals(read) && !this.mentionsVariable(binary.right(), target);
+   }
+
    private static final String GUARD_SHAPE =
-      "update 的守卫必须是“目标.字段 与值的比较”（==、!=、<、<=、>、>=），可以用 and、or、not 组合；值不能读取目标自身的字段";
+      "update 的守卫必须是“目标.字段 与值的比较”（==、!=、<、<=、>、>=），可以用 and、or、not 组合；值不能读取目标自身的字段，"
+         + "除非它恰好是目标的另一个字段（如 course.enrolled < course.capacity）";
 
    private void validateGuardShape(AstExpression expression, SymbolId target) {
       switch (this.ungroup(expression)) {
@@ -1342,7 +1419,10 @@ final class ValidatePass {
             boolean columnOnTheLeft = this.ungroup(binary.left()) instanceof AstMemberExpression member
                && this.ungroup(member.receiver()) instanceof AstNameExpression name
                && target.equals(this.typed.referenceSiteBindings().targetFor(name.name().id()).orElse(null));
-            if (!columnOnTheLeft || this.mentionsVariable(binary.right(), target)) {
+            boolean columnOnTheRight = this.ungroup(binary.right()) instanceof AstMemberExpression other
+               && this.ungroup(other.receiver()) instanceof AstNameExpression otherName
+               && target.equals(this.typed.referenceSiteBindings().targetFor(otherName.name().id()).orElse(null));
+            if (!columnOnTheLeft || (!columnOnTheRight && this.mentionsVariable(binary.right(), target))) {
                this.diagnostics.add(DiagnosticBuilder.error("SIR-VALID-007", GUARD_SHAPE, binary.span()));
             }
          }

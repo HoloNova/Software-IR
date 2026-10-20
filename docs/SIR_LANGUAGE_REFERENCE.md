@@ -1282,9 +1282,55 @@ capability Rotate {
 }
 ```
 
-规则：守卫是布尔表达式，由“目标字段与值的比较”用 `and`／`or`／`not` 组合；目标必须是 `load` 出来的行；实体不能带 `versioned`；错误要在 `fails` 里声明；绑定的值**不能读目标自己的字段**（守卫只钉住它判断的那些字段，其它字段在内存里是旧的，读它们再写回会丢失更新），可以读 `input`、常量、`now()` 和别的变量（`SIR-VALID-007`）；带守卫的 `update` 后面要有对同一行的普通 `persist`。
+规则：守卫是布尔表达式，由“目标字段与值的比较”用 `and`／`or`／`not` 组合，比较的右边可以是值，也可以恰好是目标的另一个字段（`course.enrolled < course.capacity`，由数据库拿两列比）；目标必须是 `load` 出来的行；实体不能带 `versioned`；错误要在 `fails` 里声明；绑定的值**不能读目标自己的字段**（守卫只钉住它判断的那些字段，其它字段在内存里是旧的，读它们再写回会丢失更新），可以读 `input`、常量、`now()` 和别的变量，唯一的例外是下一节的“本字段加减一个值”（`SIR-VALID-007`）；带守卫的 `update` 后面要有对同一行的普通 `persist`，这一行只能有这一个 `update`。
 
 守卫在**一条 SQL 里**检查并写入，所以并发下只有一个请求成功。它依赖数据库驱动把“匹配的行数”当影响行数（MySQL Connector/J 的默认行为）；如果部署时在连接串上加了 `useAffectedRows=true`，“设成和原来一样的值”会被当成没有匹配而报守卫的错误。
+
+#### 计数：`字段: 行.字段 + 值`
+
+库存、座位、点赞数这类“在原来的数上加减”的字段，直接写成**本字段加或减一个值**：
+
+```sir-declarations
+entity Course persistent {
+  identity id: Id generated auto;
+  field name: Name;
+  field capacity: Quantity;
+  field enrolled: Count default 0;
+}
+view CourseView from Course {
+  field id: Id;
+  field name: Name;
+  field capacity: Quantity;
+  field enrolled: Count;
+}
+input CourseRef {
+  field id: Id;
+}
+error CourseNotFound http 404;
+error CourseFull http 409;
+capability Take {
+  input CourseRef;
+  output CourseView;
+  fails CourseFull;
+  fails CourseNotFound;
+  requires atomic;
+  expose command at "/courses/{id}/take";
+  workflow {
+    load Course by input.id as course else CourseNotFound;
+    update course when course.enrolled < course.capacity else CourseFull {
+      enrolled: course.enrolled + 1;
+    }
+    persist course;
+    return course;
+  }
+}
+```
+
+这样的绑定写成 `SET enrolled = enrolled + ?`，加减由数据库在存着的值上做，所以并发的请求都会被数过，不会各自用读到的旧值覆盖对方；上面的守卫把“还有名额”也放进同一条语句，名额只剩一个时只有一个请求成功。
+
+规则（`SIR-VALID-007`）：形式只有 `字段: 变量.同一个字段 + 值` 和 `字段: 变量.同一个字段 - 值`，值不能读这一行；字段必须是整数（`Count`、`Quantity`、`Serial` 等）；行必须是 `load` 出来的，不能是本次新建的；实体不能带 `versioned`；这一行只能有这一个 `update`（它整个写成一条语句，只写绑定的那些列）。不带守卫也可以，行不在了会以服务器错误结束。写入后会把这一列重新读回来，所以返回的是存着的值，不是读到的旧值加一。
+
+没有加守卫、又不是这个形式的“读自己的字段再写回”（例如 `ratio: row.total / ...` 一类，或 `a: row.b + 1`）仍然合法，但那是“读、改、写”，并发下会丢更新；要并发安全就按这一节写。只支持加减：没有乘法，也没有 `Money` 的加减（`Money` 现在还交付不了）。
 
 ### 5.7 `delete`
 
