@@ -68,7 +68,11 @@ final class CommandJson {
                 fields(object, Set.of("op", "target", "value"), Set.of("expectedOld"));
                 yield new Command.Update(selector(object.get("target")), value(object.get("value")), expected(object));
             }
-            default -> throw StrictJson.bad("unknown operation; expected add, delete or update");
+            case "rename" -> {
+                fields(object, Set.of("op", "target", "name"), Set.of());
+                yield new Command.Rename(selector(object.get("target")), text(object.get("name")));
+            }
+            default -> throw StrictJson.bad("unknown operation; expected add, delete, update or rename");
         };
     }
 

@@ -66,24 +66,32 @@ public final class StructureView {
     * Resolve has run, and a name is what the source text will contain when it is written back.
     */
    static StructNode authored(NormalizedSemanticModel model) {
+      return authored(model, id -> Optional.empty());
+   }
+
+   /**
+    * The authored view with some things called by new names: {@code renamed} gives the new name of a thing by its
+    * identity, and every reference to it is written with that name.
+    */
+   static StructNode authored(NormalizedSemanticModel model, java.util.function.Function<SymbolId, Optional<String>> renamed) {
       BiFunction<SlotSpec, SymbolId, String> nameOf = (spec, id) -> {
          Symbol symbol = model.symbols()
             .byId(id)
             .orElseThrow(() -> new IllegalStateException("a reference points at " + id.value() + ", which the symbol table does not know"));
-         return spec.viaVariableType() ? writtenTypeName(symbol) : symbol.name();
+         return spec.viaVariableType() ? writtenTypeName(symbol, renamed) : renamed.apply(id).orElse(symbol.name());
       };
       return new StructureView(SoftwareSchema.normalizedModel(), FACTS, nameOf).node(model);
    }
 
    /** The type name the author wrote for a parameter variable such as {@code input} or {@code actor}. */
-   private static String writtenTypeName(Symbol symbol) {
+   private static String writtenTypeName(Symbol symbol, java.util.function.Function<SymbolId, Optional<String>> renamed) {
       if (symbol instanceof Symbol.VariableSymbol variable) {
          if (variable.type() instanceof io.kcg.sir.semantic.type.DeclaredType declared) {
-            return declared.name();
+            return renamed.apply(declared.symbolId()).orElse(declared.name());
          }
 
          if (variable.type() instanceof io.kcg.sir.semantic.type.RefType ref) {
-            return ref.entityName();
+            return renamed.apply(ref.entityId()).orElse(ref.entityName());
          }
       }
 

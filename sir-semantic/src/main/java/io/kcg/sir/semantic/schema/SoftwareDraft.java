@@ -29,6 +29,11 @@ public record SoftwareDraft(StructNode root) {
       return new SoftwareDraft(StructureView.authored(model));
    }
 
+   /** The authored structure with the things {@code renamed} names, by identity, referred to by their new names. */
+   public static SoftwareDraft of(NormalizedSemanticModel model, java.util.function.Function<io.kcg.sir.semantic.symbol.SymbolId, Optional<String>> renamed) {
+      return new SoftwareDraft(StructureView.authored(model, renamed));
+   }
+
    /** The declaration nodes, in the order they are kept. */
    public List<StructNode> declarations() {
       return ((StructValue.Seq)this.root.slot(DECLARATIONS).value()).elements().stream().map(v -> ((StructValue.Child)v).node()).toList();

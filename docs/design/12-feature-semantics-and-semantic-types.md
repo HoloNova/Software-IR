@@ -358,6 +358,6 @@ use 登录 {
 **本阶段留下的四项，后续处理情况（2026-10-18）：**
 
 1. 功能模板里的循环：已做。模板可以 `${for f in 参数.fields except ...}` 逐个走实体字段、`${if 参数.versioned}` 按是否带版本号选文本；据此内置了 `use Crud { entity: X; }`（增删改查，ded1e6a）。同一功能可以对不同的值多次 `use`。部署第二版用它管理标签，冒烟调用全部五个接口（06aeb07）。
-2. 实体改名时 `extend X` 不跟着改：未做。这不是 `extend` 独有的：编辑层里所有按名字的引用（`Ref<X>`、视图的 `from X`、`load X` 等）都不会随实体改名自动更新，作者要在同一批编辑里一起改。要解决需要一个通用的“改名并更新所有引用”命令。
+2. 实体改名时 `extend X` 不跟着改：已用通用的改名命令解决（编辑协议的 `rename` 操作）。它按身份找出所有引用（`Ref<X>`、视图的 `from X`、`extend X`、表达式、绑定、按实体字段命名的视图与 patch 字段、`use` 的参数）一起改名，见 [CLI 说明](../CLI_WORKFLOW.md)。
 3. 已上线的列改默认值：已做，新增迁移步骤 `CHANGE_COLUMN_DEFAULT`（b6e7abb）。
 4. `kcg inspect` 标出展开出来的声明：已做，结果里的 `expandedDeclarations`（21390ce）。

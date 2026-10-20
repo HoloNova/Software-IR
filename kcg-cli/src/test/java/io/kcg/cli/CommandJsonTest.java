@@ -28,6 +28,15 @@ class CommandJsonTest {
         assertEquals(child, encoded.toString());
     }
 
+    @Test void decodesARenameAndRefusesOneWithoutAName() {
+        String target = "{\"steps\":[{\"slot\":\"declarations\",\"name\":\"Note\"}]}";
+        var batch = CommandJson.decode(batch("{\"op\":\"rename\",\"target\":" + target + ",\"name\":\"Memo\"}"));
+        var rename = assertInstanceOf(io.kcg.sir.change.edit.Command.Rename.class, batch.commands().getFirst());
+        assertEquals("Memo", rename.name());
+        assertThrows(IllegalArgumentException.class, () -> CommandJson.decode(batch("{\"op\":\"rename\",\"target\":" + target + "}")));
+        assertThrows(IllegalArgumentException.class, () -> CommandJson.decode(batch("{\"op\":\"rename\",\"target\":" + target + ",\"name\":\"Memo\",\"value\":1}")));
+    }
+
     @Test void rejectsAmbiguousUnknownAndNullFieldsInsteadOfIgnoringThem() {
         for (String bad : new String[] {
             batch(UPDATE).replace("\"commands\":", "\"commands\":[],\"commands\":"),

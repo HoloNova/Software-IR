@@ -6,14 +6,14 @@ import java.util.Optional;
 import java.util.OptionalInt;
 
 /**
- * The three things a change can do to a software draft: add, delete, update.
+ * The things a change can do to a software draft: add, delete, update, and rename.
  *
  * <p>A command names where it acts and carries typed values; it never carries a rule about what the
  * software may contain. Whether the result is a valid software is decided only by the formal
  * analysis of the source written from the edited draft, so a new language construct needs no new
  * command.
  */
-public sealed interface Command permits Command.Add, Command.Delete, Command.Update {
+public sealed interface Command permits Command.Add, Command.Delete, Command.Update, Command.Rename {
    /**
     * Puts a new element into a collection (or a value into an empty optional slot).
     *
@@ -56,6 +56,19 @@ public sealed interface Command permits Command.Add, Command.Delete, Command.Upd
     *
     * @param expectedOld if present, the current value must match it (identity ignored) or the command fails
     */
+   /**
+    * Gives a declaration, a field or an enum member of the source a new name, and every place that refers to it the new
+    * name too: references, types, expressions, the fields of views and patch payloads that take their name from an
+    * entity field, and the arguments of uses that name it. Renames are applied before the other commands of their
+    * batch, so those commands already see the new names.
+    */
+   record Rename(Selector target, String name) implements Command {
+      public Rename {
+         Objects.requireNonNull(target, "target");
+         Objects.requireNonNull(name, "name");
+      }
+   }
+
    record Update(Selector target, StructValue value, Optional<StructValue> expectedOld) implements Command {
       public Update {
          Objects.requireNonNull(target, "target");

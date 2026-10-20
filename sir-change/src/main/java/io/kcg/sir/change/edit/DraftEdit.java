@@ -62,7 +62,30 @@ public final class DraftEdit {
          case Command.Add add -> this.descend(root, add.container().steps(), 0, add.container(), (node, spec, pick) -> this.add(node, spec, pick, add));
          case Command.Delete delete -> this.descend(root, delete.target().steps(), 0, delete.target(), (node, spec, pick) -> this.delete(node, spec, pick, delete));
          case Command.Update update -> this.descend(root, update.target().steps(), 0, update.target(), (node, spec, pick) -> this.update(node, spec, pick, update));
+         case Command.Rename rename -> throw new CommandRejected(rename.target() + ": a rename is applied before the other commands of its batch");
       };
+   }
+
+   /**
+    * The node a selector names: an element of a collection or the node in a slot.
+    *
+    * @throws IllegalArgumentException with the reason, when the selector names no node
+    */
+   public StructNode nodeAt(SoftwareDraft draft, Selector selector) {
+      StructNode[] found = new StructNode[1];
+      try {
+         this.descend(draft.root(), selector.steps(), 0, selector, (owner, spec, pick) -> {
+            StructValue current = owner.slot(spec.key()).value();
+            StructValue value = spec.cardinality() == SlotSpec.Cardinality.MANY
+               ? ((StructValue.Seq)current).elements().get(this.elementIndex(((StructValue.Seq)current).elements(), pick, selector))
+               : current;
+            found[0] = childOf(value, selector);
+            return owner;
+         });
+      } catch (CommandRejected e) {
+         throw new IllegalArgumentException(e.getMessage());
+      }
+      return found[0];
    }
 
    /** What to do once the last step of a selector has been reached. */

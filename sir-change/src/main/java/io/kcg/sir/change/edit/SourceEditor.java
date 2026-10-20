@@ -226,9 +226,21 @@ public final class SourceEditor {
       }
 
       SoftwareDraft before = SoftwareDraft.of(model);
-      DraftEdit.Result applied = this.draftEdit.apply(before, batch.commands());
+      // Renames are applied first, from the analysed source, so the other commands already see the new names.
+      List<Command.Rename> renames = batch.commands().stream().filter(Command.Rename.class::isInstance).map(Command.Rename.class::cast).toList();
+      List<Command> others = batch.commands().stream().filter(c -> !(c instanceof Command.Rename)).toList();
+      SoftwareDraft renamed = before;
+      if (!renames.isEmpty()) {
+         try {
+            renamed = Renamer.apply(model, before, renames, this.draftEdit);
+         } catch (Renamer.Refused refused) {
+            return refuse(Reason.COMMAND_REJECTED, "rename: " + refused.getMessage());
+         }
+      }
+
+      DraftEdit.Result applied = this.draftEdit.apply(renamed, others);
       if (applied instanceof DraftEdit.Rejected rejected) {
-         return refuse(Reason.COMMAND_REJECTED, "command " + (rejected.commandIndex() + 1) + " of " + batch.commands().size() + ": " + rejected.reason());
+         return refuse(Reason.COMMAND_REJECTED, "command " + (batch.commands().indexOf(others.get(rejected.commandIndex())) + 1) + " of " + batch.commands().size() + ": " + rejected.reason());
       }
 
       SoftwareDraft edited = ((DraftEdit.Applied)applied).draft();
