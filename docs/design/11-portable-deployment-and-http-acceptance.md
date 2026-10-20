@@ -137,7 +137,7 @@ Swagger负责接口展示和手动发真实HTTP请求；它本身不是自动业
 
 ### 7.3 独立业务验收
 
-首轮将DualTokenScaffoldBusinessConformanceIT中的需求断言整理为独立可运行套件，至少逐条验证登录、账号不存在与错密码同响应、访问令牌认证、过期、刷新轮换、重放、并发单次成功和登出。
+首轮将DualTokenBusinessConformanceIT中的需求断言整理为独立可运行套件，至少逐条验证登录、账号不存在与错密码同响应、访问令牌认证、过期、刷新轮换、重放、并发单次成功和登出。
 
 业务套件只获得部署地址、固定需求、测试数据与必要的隔离库核验连接，不读取候选SIR来决定期望。现有测试中的固定DDL不能成为新部署建表路径：验收实例必须先通过产品部署流程建表，套件只准备需求数据并核验结果。
 
@@ -192,7 +192,7 @@ Swagger负责接口展示和手动发真实HTTP请求；它本身不是自动业
 | `notBlank`、`length(min,max)` | 非认证、非PATCH请求体的String字段 | 400，`fields`含该字段及`NotBlank`/`Size`；长度上限超过4096不生成超长样例 |
 | 成功响应、声明错误、认证后的校验 | 每个接口 | 需要业务数据或账号，记为JUnit跳过，消息以`NOT_VERIFIED:`开头 |
 
-**独立业务验收包。** 形式为一个自带`pom.xml`的普通Maven工程，其`mvn test`即业务套件，接收`kcg.baseUrl`、`kcg.jdbcUrl`、`kcg.jdbcUser`、`kcg.jdbcPasswordFile`和报告目录`kcg.reportDir`。`kcg package`新增可选`--acceptance <绝对目录>`，把该目录的普通UTF-8文本文件逐字节复制到交付包`acceptance/`并纳入摘要；不编译、不解释它，拒绝符号链接、非文本（如构建产物）、以点开头或含特殊字符的文件名、超过1000个文件/单文件1 MiB/总计8 MiB，以及缺少根`pom.xml`；拒绝发生在发布前，不留半份交付包。双Token套件放在`sir-toolchain-application/src/test/resources/deployment/dual-token-acceptance/`，由`DualTokenScaffoldBusinessConformanceIT`的D0–D7断言整理而来；它只依据固定需求与物理表名核验，不读SIR或`app/`。
+**独立业务验收包。** 形式为一个自带`pom.xml`的普通Maven工程，其`mvn test`即业务套件，接收`kcg.baseUrl`、`kcg.jdbcUrl`、`kcg.jdbcUser`、`kcg.jdbcPasswordFile`和报告目录`kcg.reportDir`。`kcg package`新增可选`--acceptance <绝对目录>`，把该目录的普通UTF-8文本文件逐字节复制到交付包`acceptance/`并纳入摘要；不编译、不解释它，拒绝符号链接、非文本（如构建产物）、以点开头或含特殊字符的文件名、超过1000个文件/单文件1 MiB/总计8 MiB，以及缺少根`pom.xml`；拒绝发生在发布前，不留半份交付包。双Token套件放在`sir-toolchain-application/src/test/resources/deployment/dual-token-acceptance/`，由`DualTokenBusinessConformanceIT`的D0–D7断言整理而来；它只依据固定需求与物理表名核验，不读SIR或`app/`。
 
 **部署入口。** `deploy.sh`新增两个动作，都要求实例已部署且在运行，测试进程在受限Maven容器中经Compose网络访问`http://app:8080`，即跨容器真实HTTP：
 

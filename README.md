@@ -31,7 +31,7 @@ SIR 只有一种文档形式：`sir 0.3` 根文档（含 `metadata`、`target`�
 | `sir-project-graph` | 生成物的来源图（只读、可序列化） |
 | `sir-change` | 增删改指令对 SIR 的编辑与写回 |
 | `sir-toolchain-application` | 编排：编译、首次生成、基于 Git 的版本变更、独立验证 |
-| `kcg-cli` | 命令行：`generate`、`package`（待CI）、`inspect`、`edit`、`scaffold`、`check`、`version-plan`、`version-apply` |
+| `kcg-cli` | 命令行：`generate`、`package`（待CI）、`inspect`、`edit`、`check`、`version-plan`、`version-apply` |
 
 ## 命令行
 

@@ -106,18 +106,6 @@ public final class Features {
         "/io/kcg/sir/semantic/feature/dual-token-account.sir", "/io/kcg/sir/semantic/feature/dual-token-login.sir");
 
     /**
-     * The same login for an account that already declares its unique name field and its secret password field, named by
-     * {@code name} and {@code password}: what the scaffold writes into an existing software. It is not usable as
-     * {@code use}; a use always brings the fields.
-     */
-    public static final Feature DUAL_TOKEN_LOGIN_FOR_EXISTING_ACCOUNT = new Feature("DualTokenLogin", List.of(
-        new Parameter("account", Kind.NAME, Optional.empty(), NAME, 0, 0, "account must name the entity that logs in"),
-        new Parameter("name", Kind.NAME, Optional.empty(), NAME, 0, 0, "name must name the account's unique name field"),
-        new Parameter("password", Kind.NAME, Optional.empty(), NAME, 0, 0, "password must name the account's secret password field"),
-        DUAL_TOKEN_LOGIN.parameter("access").orElseThrow(), DUAL_TOKEN_LOGIN.parameter("refresh").orElseThrow(), DUAL_TOKEN_LOGIN.parameter("prefix").orElseThrow()),
-        "/io/kcg/sir/semantic/feature/dual-token-login.sir");
-
-    /**
      * Create, show, list a page of, change and delete the rows of an entity: one {@code use Crud { entity: Note; }}
      * gives the five capabilities with their inputs, their view and their errors. Everything comes from the entity:
      *

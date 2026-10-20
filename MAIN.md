@@ -145,7 +145,7 @@ ANTLR4 语法（`sir 0.3` 根文档与声明片段两个入口）、严格 UTF-8
 
 ### `kcg-cli`
 
-公开命令是首次生成 `generate`、独立交付导出 `package`（步骤①已由CI #94验收，见[部署包v1](docs/DEPLOYMENT_DELIVERY.md)）、只读结构查询 `inspect`、只读指令脚手架 `scaffold`、只保存候选源的 `edit`，以及 `check`、只读的 `version-plan` 和会改已有工程的 `version-apply`（要求 git；协议 `KCG-CLI-VERSION-CHANGE-V1`）。`check` 从 stdin 接收 JSONL（每行一个 `sir 0.2` 文档），按请求阶段校验并输出 canonical 结果；使用与边界见 [SIR 批量校验](docs/SIR_BATCH_CHECK.md)。新三命令的结果协议为 `KCG-CLI-WORKFLOW-V1`，edit外部JSON为 `KCG-CLI-COMMANDS-V1` 包装核心 `sir-command/1`；说明见 [CLI流程](docs/CLI_WORKFLOW.md)。`register`、`apply`、`recover` 不是公开命令。
+公开命令是首次生成 `generate`、独立交付导出 `package`（步骤①已由CI #94验收，见[部署包v1](docs/DEPLOYMENT_DELIVERY.md)）、只读结构查询 `inspect`、只保存候选源的 `edit`，以及 `check`、只读的 `version-plan` 和会改已有工程的 `version-apply`（要求 git；协议 `KCG-CLI-VERSION-CHANGE-V1`）。`check` 从 stdin 接收 JSONL（每行一个 `sir 0.2` 文档），按请求阶段校验并输出 canonical 结果；使用与边界见 [SIR 批量校验](docs/SIR_BATCH_CHECK.md)。新三命令的结果协议为 `KCG-CLI-WORKFLOW-V1`，edit外部JSON为 `KCG-CLI-COMMANDS-V1` 包装核心 `sir-command/1`；说明见 [CLI流程](docs/CLI_WORKFLOW.md)。`register`、`apply`、`recover` 不是公开命令。
 
 ## 5. 修改与验收协议
 

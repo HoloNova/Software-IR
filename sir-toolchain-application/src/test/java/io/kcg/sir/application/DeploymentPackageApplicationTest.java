@@ -312,7 +312,7 @@ class DeploymentPackageApplicationTest {
     }
     private Path source(boolean bounded) throws Exception {
         Path root = Files.createTempDirectory(temp, "source-");
-        try (var input = getClass().getResourceAsStream("/valid/dual-token-scaffolded.sir")) {
+        try (var input = getClass().getResourceAsStream("/valid/dual-token-written.sir")) {
             String text = new String(Objects.requireNonNull(input).readAllBytes(), StandardCharsets.UTF_8);
             text = text.replace("field name: Name unique;", bounded ? "field name: Text where length(1, 64) unique;" : "field name: Text unique;");
             Files.writeString(root.resolve("project.sir"), text);

@@ -5,25 +5,25 @@
 ## 1. 为什么选这道题
 
 - 需求句子和七条行为早就固定（[设计 10 第 7 节](../design/10-semantic-boundary-and-mechanisms.md)），不是为评测临时编的。
-- 判题器已经存在：`DualTokenScaffoldBusinessConformanceIT` 在真实 MySQL 上逐条验证这七条行为，并且已经有一份通过它的参考答案（`valid/dual-token-scaffolded.sir`，由 `kcg scaffold dual-token` 写出）。
+- 判题器已经存在：`DualTokenBusinessConformanceIT` 在真实 MySQL 上逐条验证这七条行为，并且已经有一份通过它的参考答案（`valid/dual-token-written.sir`，与 `use DualTokenLogin` 的生成结果逐字节相同；原由已删除的 `kcg scaffold dual-token` 写出）。
 - 它同时考语言的一整串能力：唯一字段加载、时间运算、`secret`／`matches`、守卫更新、`401`、`credential` 子句。模型缺哪一个，业务门就在哪一条行为上失败，失败能归因到具体构造。
 - 超出了评测计划里“现有查询、写入、关系三类业务”的限定（设计 10 第 13.4 节已指出），所以**是否采用要由负责人决定**。
 
 ## 2. 给模型的输入
 
-**(a) 基底软件。** 一个已经合法的 SIR 软件（`valid/scaffold-base.sir`）：`User`（`name` 唯一、`passwordHash` 为 `secret`）、`Note`、`Register`、`GetUser`、受保护的 `PostNote`。模型要在它上面加东西，返回**完整的 SIR 文档**。
+**(a) 基底软件。** 一个已经合法的 SIR 软件（`valid/dual-token-base.sir`）：`User`（`name` 唯一、`passwordHash` 为 `secret`）、`Note`、`Register`、`GetUser`、受保护的 `PostNote`。模型要在它上面加东西，返回**完整的 SIR 文档**。
 
 **(b) 需求（给模型的自然语言）。**
 
 > 在这个软件上增加双 Token 登录。`Login` 接收 `name` 和 `password`，成功时返回一对令牌：访问令牌（15 分钟有效）和刷新令牌（7 天有效），并把它们存起来；口令错误和账号不存在时，必须返回完全相同的 401 响应。受保护的 `PostNote` 只接受访问令牌（`Authorization: Bearer <访问令牌>`），没有令牌、令牌不对、令牌过期都是 401，刷新令牌不能当访问令牌用。`Refresh` 接收刷新令牌，换一对新令牌，并让旧的刷新令牌立刻作废；重放已作废的刷新令牌返回 401；同一个刷新令牌被同时使用多次，只能有一次成功。`Logout` 接收刷新令牌并让它作废，之后它不能再刷新。
 
-**(c) 固定的接口与名字。** 判题是 HTTP 加数据库断言，所以名字必须写死，否则判题器不知道请求哪条路由、查哪张表：能力名 `Login`、`Refresh`、`Logout`；实体名 `AccessToken`、`RefreshToken`、`TokenPair`（登录与刷新的返回）；请求与响应的字段：登录请求 `{name,password}`，登录和刷新的响应 `{accessToken,accessExpiresAt,refreshToken,refreshExpiresAt}`，刷新与登出的请求 `{refreshToken}`；错误状态码 401。（这些就是 `kcg scaffold dual-token` 用的名字。）
+**(c) 固定的接口与名字。** 判题是 HTTP 加数据库断言，所以名字必须写死，否则判题器不知道请求哪条路由、查哪张表：能力名 `Login`、`Refresh`、`Logout`；实体名 `AccessToken`、`RefreshToken`、`TokenPair`（登录与刷新的返回）；请求与响应的字段：登录请求 `{name,password}`，登录和刷新的响应 `{accessToken,accessExpiresAt,refreshToken,refreshExpiresAt}`，刷新与登出的请求 `{refreshToken}`；错误状态码 401。（这些就是 `use DualTokenLogin` 用的名字。）
 
 **(d) 语言参考。** 参考文档已经有了：[`SIR_LANGUAGE_REFERENCE.md`](../SIR_LANGUAGE_REFERENCE.md)，其中示例由测试检查，不会和语言脱节。是否把它放进提示词，要作为实验变量，不能默认。建议两组都做：不给参考（测模型已知多少）、给参考（测模型能否按参考写出新构造）。
 
 ## 3. 判题（来自需求，不来自候选答案）
 
-沿用评测计划第 1、3 节：四个门各自独立出结果——静态（`kcg check`）、构建、启动、业务。业务门是 `DualTokenScaffoldBusinessConformanceIT` 的断言，它们**只由上面的需求推出**，不看候选 SIR：
+沿用评测计划第 1、3 节：四个门各自独立出结果——静态（`kcg check`）、构建、启动、业务。业务门是 `DualTokenBusinessConformanceIT` 的断言，它们**只由上面的需求推出**，不看候选 SIR：
 
 | 行为 | 请求 | 期望 |
 | --- | --- | --- |
@@ -56,4 +56,4 @@ DDL 与种子数据：按名字固定后，表结构由题目自带（`dual-toke
 
 ## 6. 采用之后要做的（不在本提案范围）
 
-把 `DualTokenScaffoldBusinessConformanceIT` 的断言抽出来，让它接受任意候选 SIR 文件（现在它固定用 `dual-token-scaffolded.sir`）；增加按样本批量调度、记录每样本的 `static/build/start/business` 与失败行为的外层记录（评测计划第 3 节已规定字段）。这些需要另行授权（采用题目不等于授权），且重活在 CI；并且需要先有第 5 节第 2 项的模型与调用方式，否则做出来的批量调度没有东西可调度。
+把 `DualTokenBusinessConformanceIT` 的断言抽出来，让它接受任意候选 SIR 文件（现在它固定用 `dual-token-written.sir`）；增加按样本批量调度、记录每样本的 `static/build/start/business` 与失败行为的外层记录（评测计划第 3 节已规定字段）。这些需要另行授权（采用题目不等于授权），且重活在 CI；并且需要先有第 5 节第 2 项的模型与调用方式，否则做出来的批量调度没有东西可调度。

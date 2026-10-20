@@ -13,7 +13,7 @@ class KcgPackageCommandTest {
     @Test void packageIsAnExportNotADeploymentAndRefusesOverwrite() throws Exception {
         Path source = Files.createDirectory(temp.resolve("source")), output = temp.resolve("package");
         String text;
-        try (var input = getClass().getResourceAsStream("/io/kcg/cli/scaffold-base.sir")) {
+        try (var input = getClass().getResourceAsStream("/io/kcg/cli/dual-token-base.sir")) {
             text = new String(Objects.requireNonNull(input).readAllBytes(), StandardCharsets.UTF_8);
         }
         text = text.substring(0, text.indexOf("    capability PostNote")) + "  }\n}\n";

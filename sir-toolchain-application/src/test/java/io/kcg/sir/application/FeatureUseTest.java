@@ -45,7 +45,7 @@ class FeatureUseTest {
     private static final SourceId ENTRY = SourceId.of("project.sir");
 
     @Test void aUseDeclarationMeansExactlyTheDeclarationsItStandsFor() throws IOException {
-        var written = compile(resource("/valid/dual-token-scaffolded.sir"));
+        var written = compile(resource("/valid/dual-token-written.sir"));
         var used = compile(resource("/valid/dual-token-feature.sir"));
         assertEquals(authored(written.semanticModel()), authored(used.semanticModel()));
         assertEquals(files(written), files(used), "the generated project must be byte-identical");

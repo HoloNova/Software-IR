@@ -23,7 +23,6 @@ public final class CliCommandLine {
             case "--help", "-h", "help" -> new CliCommandLine.Help(null);
             case "--version", "-V", "version" -> new CliCommandLine.Version();
             case "generate", "package", "inspect", "edit" -> parseWorkflow(args, first);
-            case "scaffold" -> parseScaffold(args);
             case "version-plan" -> parseVersion(args, "version-plan", false);
             case "version-apply" -> parseVersion(args, "version-apply", true);
             case "check" -> args.length == 1 ? new ParsedCheck() : args.length == 2 && isHelp(args[1])
@@ -120,43 +119,6 @@ public final class CliCommandLine {
       return apply ? new CliCommandLine.ParsedVersionApply(arguments) : new CliCommandLine.ParsedVersionPlan(arguments);
    }
 
-   /** {@code scaffold <pattern> --source-root ... --entry ... --account ...}: the declarations of a pattern, fitted to a software. */
-   private static ParseResult parseScaffold(String[] args) {
-      if (args.length == 1 || (args.length == 2 && isHelp(args[1]))) return new Help("scaffold");
-      if (!"dual-token".equals(args[1])) return new UsageError("KCG-CLI-USAGE-001", "scaffold: unknown pattern: " + args[1]);
-      if (args.length == 3 && isHelp(args[2])) return new Help("scaffold");
-      Map<String, String> required = new LinkedHashMap<>();
-      required.put("--source-root", "sourceRoot");
-      required.put("--entry", "entry");
-      required.put("--account", "account");
-      required.put("--name-field", "nameField");
-      required.put("--password-field", "passwordField");
-      Set<String> optional = Set.of("--prefix", "--access-minutes", "--refresh-days");
-      Object parsed = parseOptions(args, 2, required, optional, "scaffold");
-      if (parsed instanceof UsageError error) return error;
-      OptionMap values = (OptionMap) parsed;
-      Path source = requireAbsPath(values, "--source-root");
-      if (source == null || !source.equals(source.normalize())) return new UsageError("KCG-CLI-USAGE-003", "--source-root must be an absolute normalized path");
-      SourceId entry;
-      try {
-         entry = SourceId.of(values.get("--entry"));
-      } catch (IllegalArgumentException e) {
-         return new UsageError("KCG-CLI-USAGE-003", "--entry must be a relative source path such as project.sir");
-      }
-
-      int accessMinutes;
-      int refreshDays;
-      try {
-         accessMinutes = values.get("--access-minutes") == null ? io.kcg.sir.application.api.ScaffoldRequest.DEFAULT_ACCESS_MINUTES : Integer.parseInt(values.get("--access-minutes"));
-         refreshDays = values.get("--refresh-days") == null ? io.kcg.sir.application.api.ScaffoldRequest.DEFAULT_REFRESH_DAYS : Integer.parseInt(values.get("--refresh-days"));
-      } catch (NumberFormatException e) {
-         return new UsageError("KCG-CLI-USAGE-003", "--access-minutes and --refresh-days must be whole numbers");
-      }
-
-      return new ParsedScaffold(new io.kcg.sir.application.api.ScaffoldRequest(source, entry, values.get("--account"), values.get("--name-field"),
-         values.get("--password-field"), values.get("--prefix") == null ? "" : values.get("--prefix"), accessMinutes, refreshDays));
-   }
-
    private static boolean isHelp(String arg) {
       return "--help".equals(arg) || "-h".equals(arg) || "help".equals(arg);
    }
@@ -239,16 +201,12 @@ public final class CliCommandLine {
       CliCommandLine.ParsedVersionPlan,
       CliCommandLine.ParsedVersionApply,
       CliCommandLine.ParsedCheck,
-      CliCommandLine.ParsedScaffold,
       CliCommandLine.Help,
       CliCommandLine.Version,
       CliCommandLine.UsageError {
    }
 
    public record ParsedCheck() implements CliCommandLine.ParseResult {
-   }
-
-   public record ParsedScaffold(io.kcg.sir.application.api.ScaffoldRequest request) implements CliCommandLine.ParseResult {
    }
 
    public record ParsedVersionPlan(VersionArguments arguments) implements CliCommandLine.ParseResult {

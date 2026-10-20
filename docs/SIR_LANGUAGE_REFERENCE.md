@@ -1270,15 +1270,7 @@ use DualTokenLogin {
 
 它展开成访问令牌（`credential` 实体）、刷新令牌（守卫更新，用过即废）、`Login`／`Refresh`／`Logout` 三个能力和它们的输入、视图与 401 错误，并给 `User` 加上唯一登录名 `loginName`（`Name`）和口令 `password`（`Secret`）两个字段——注册等其它能力照常使用它们。可选参数：`name`、`password`（两个字段叫什么）、`access`（访问令牌时长，默认 `15 minutes`）、`refresh`（默认 `7 days`）、`prefix`（加在它声明的每个名字前，避免重名）。
 
-已有账号字段的旧软件，可以用脚手架把同一模式（不含两个账号字段）写成普通 SIR，以便自己修改：
-
-```
-kcg scaffold dual-token --source-root ... --entry project.sir \
-  --account Account --name-field name --password-field passwordHash > scaffold.json
-kcg edit --source-root ... --entry project.sir --candidate-root ... < scaffold.json
-```
-
-它写出的就是普通 SIR（访问令牌是 `credential` 实体，刷新用守卫更新），见 [CLI 说明第 5 节](CLI_WORKFLOW.md)。
+需要偏离这套标准写法时（比如登录要加验证码），不用 `use`，直接写出同样的声明再自己改：访问令牌是 `credential` 实体，刷新用守卫更新。
 
 ### 7.3 增删改查
 

@@ -10,9 +10,8 @@ import java.nio.charset.StandardCharsets;
 public final class KcgCli {
    public static final String VERSION = "kcg 0.2.0 (" + VersionResultDocument.PROTOCOL + ")";
    static volatile RuntimeException crashInjection = null;
-   private static final String TOP_HELP = "Usage: kcg <command> [options]\nSIR generation, command editing and version change CLI.\n\nCommands:\n  generate       Generate a new Spring Boot project from SIR sources.\n  package        Export standalone source + database + Docker delivery. Does not deploy.\n  inspect        Read the software structure and command baseline. Read-only.\n  edit           Read command JSON from stdin and save a new candidate source directory.\n  scaffold       Write the declarations of a pattern (dual-token) for a software, as an edit command batch.\n  check          Validate SIR software samples (one document each) from UTF-8 JSONL stdin.\n  version-plan   Plan a change of a project kept in a Git working tree. Read-only.\n  version-apply  Carry out a planned change; the previous and the new version are saved in Git.\n\nGlobal options:\n  --help, -h     Show this help (or command help with `kcg <command> --help`).\n  --version, -V  Show the CLI version.";
+   private static final String TOP_HELP = "Usage: kcg <command> [options]\nSIR generation, command editing and version change CLI.\n\nCommands:\n  generate       Generate a new Spring Boot project from SIR sources.\n  package        Export standalone source + database + Docker delivery. Does not deploy.\n  inspect        Read the software structure and command baseline. Read-only.\n  edit           Read command JSON from stdin and save a new candidate source directory.\n  check          Validate SIR software samples (one document each) from UTF-8 JSONL stdin.\n  version-plan   Plan a change of a project kept in a Git working tree. Read-only.\n  version-apply  Carry out a planned change; the previous and the new version are saved in Git.\n\nGlobal options:\n  --help, -h     Show this help (or command help with `kcg <command> --help`).\n  --version, -V  Show the CLI version.";
    private static final String VERSION_OPTIONS = "--repository-root <absolute-path> --source-root <absolute-path> --entry <relative-path>\n                 --output-root <absolute-path> --candidate-root <absolute-path>";
-   private static final String SCAFFOLD_HELP = "Usage: kcg scaffold dual-token --source-root <absolute-path> --entry <relative-path>\n                      --account <Entity> --name-field <field> --password-field <field>\n                      [--prefix <UpperCaseName>] [--access-minutes <1-1440>] [--refresh-days <1-365>]\nWrites the dual-token pattern for an existing software: access and refresh token entities (the access token is a\ncredential), a token-pair view, and Login, Refresh and Logout capabilities with their inputs and 401 errors.\n--account is the entity that logs in; it must already declare the unique text field --name-field and the secret\nfield --password-field. --prefix goes in front of every name the pattern declares, to keep them clear of yours.\nDefaults: 15 minutes for access tokens, 7 days for refresh tokens.\nOn success stdout is exactly one KCG-CLI-COMMANDS-V1 batch of add commands: pipe it to `kcg edit` to save a\ncandidate, then publish with version-plan/apply. The pattern is checked by the same analysis as any edit, so a\nname that is taken or a missing field is refused with the analysis' own message. Nothing is written here.\nExit 0 batch written, 2 usage error, 3 refusal or unreadable source. Refusals print a KCG-CLI-WORKFLOW-V1 document.";
    private static final String VERSION_PLAN_HELP = "Usage: kcg version-plan " + VERSION_OPTIONS + "\nCompiles the SIR sources in --source-root and the candidate sources in --candidate-root, requires the project\nfiles in --output-root to be exactly what the current SIR compiles to, and prints the plan with its planId.\nChanges nothing. All roots must be inside --repository-root, and --source-root and --output-root must be\nseparate directories. --entry is the entry source, for example project.sir.\n\nAll options are required and must occur exactly once. Paths must be absolute.";
    private static final String VERSION_APPLY_HELP = "Usage: kcg version-apply " + VERSION_OPTIONS + "\n                    --expected-plan-id <64-lower-hex>\nCarries out the plan that version-plan printed, only if planning now gives exactly that plan (same planId).\nRequires git: the previous version is saved in Git first, then the project files and the SIR sources are\nwritten, then the new version is saved. A directory that is not a repository yet becomes one.\nIf it stops half way (exit 4) nothing is repaired: run the same command again to finish, or return to the\nsaved previous version with git.\n\nAll options are required and must occur exactly once. Paths must be absolute.";
 
@@ -57,7 +56,6 @@ public final class KcgCli {
          case CliCommandLine.ParsedVersionPlan vp -> runVersionPlan(vp.arguments());
          case CliCommandLine.ParsedVersionApply va -> runVersionApply(va.arguments());
          case CliCommandLine.ParsedCheck pc -> runCheck();
-         case CliCommandLine.ParsedScaffold sc -> runScaffold(sc.request());
          case CliCommandLine.ParsedWorkflow workflow -> runWorkflow(workflow);
          default -> throw new MatchException(null, null);
       };
@@ -121,21 +119,6 @@ public final class KcgCli {
       return result instanceof io.kcg.sir.application.api.SourceEditResult.Saved ? CliExit.OK : CliExit.FAILURE;
    }
 
-   /** Read-only. On success stdout is exactly the command batch, so it can be piped into {@code kcg edit}. */
-   private static int runScaffold(io.kcg.sir.application.api.ScaffoldRequest request) {
-      var result = new io.kcg.sir.application.api.ScaffoldApplication().dualToken(request);
-      if (result instanceof io.kcg.sir.application.api.ScaffoldResult.Scaffolded scaffolded) {
-         byte[] batch = CommandJson.writeBatch(scaffolded.softwareName(), scaffolded.baselineSha256(), scaffolded.declarations()).getBytes(StandardCharsets.UTF_8);
-         System.out.write(batch, 0, batch.length);
-         System.out.write(10);
-         System.out.flush();
-         return CliExit.OK;
-      }
-
-      ResultRenderer.render(WorkflowResultDocument.render(result));
-      return CliExit.FAILURE;
-   }
-
    private static int runCheck() {
       try {
          var summary = new io.kcg.sir.application.api.SirValidationApplication().checkBatch(
@@ -161,7 +144,6 @@ public final class KcgCli {
          case "package" -> "Usage: kcg package --source-root <absolute-path> --entry <relative-path> --output-root <absolute-path>\n                   [--acceptance <absolute-path>] [--base-package <absolute-path>]\nExports a new standalone source directory with Docker/Compose, Flyway initialization, Swagger and a contract test.\n--acceptance copies a separate business acceptance Maven project (root pom.xml, UTF-8 text files) to acceptance/;\nit is not compiled or interpreted here. Run it with deploy.sh acceptance-test on a disposable instance.\n--base-package is the delivery an instance runs now: its migration chain is inherited and only new tables and\nnew nullable columns are appended; anything else is refused. Move the instance with deploy.sh update.\nNo Docker, builds, downloads or processes run during export. Target: Linux x86_64.\nDelivery v1 refuses unbounded unique text, Decimal storage and missing external actor adapters.\nUse sh deploy/deploy.sh in the exported package on CI or your selected deployment machine.\nDoes not update an existing deployment; output-root must be new and nonoverlapping.\nExit 0 exported, 2 usage, 3 refused/I/O failure, 70 unexpected error. Result: KCG-CLI-WORKFLOW-V1.";
          case "inspect" -> "Usage: kcg inspect --source-root <absolute-path> --entry <relative-path>\nRead-only software/schema inspection, using the formal semantic analysis.\nPrints the source-set baselineSha256, softwareName and generic editable draft templates.\nNo target generation, files, Git or processes. Result: KCG-CLI-WORKFLOW-V1.";
          case "edit" -> "Usage: kcg edit --source-root <absolute-path> --entry <relative-path> --candidate-root <absolute-path> < commands.json\nReads one UTF-8 JSON object: KCG-CLI-COMMANDS-V1 wrapping sir-command/1 add/delete/update.\nLimits: 8 MiB JSON, 1 MiB/string, 64 JSON levels, 100000 values, 1000 commands, 64 selector steps.\nOnly declarations can be edited; header/import edits, BOM and rewrites losing comments are refused.\nSaves all candidate source files to a new nonoverlapping root. Never changes the original sources or project.\nUse version-plan/apply to publish the candidate. No Git, builds or processes here.\nExit 0 saved, 2 input/usage error, 3 refusal/I/O failure, 70 unexpected internal error. Result: KCG-CLI-WORKFLOW-V1.";
-         case "scaffold" -> SCAFFOLD_HELP;
          case "version-plan" -> VERSION_PLAN_HELP;
          case "version-apply" -> VERSION_APPLY_HELP;
          default -> TOP_HELP;

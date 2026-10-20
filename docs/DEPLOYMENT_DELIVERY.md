@@ -107,7 +107,7 @@ sh deploy/deploy.sh acceptance-test --instance demo-acc --state-root /absolute/p
 
 套件会写业务数据，所以必须在一次性实例上运行，并用`--confirm-disposable`重复实例名；不重复、名字不符或把该选项用于其他动作，都在任何Docker调用前以退出码2拒绝。包内没有验收包时输出`KCG_ACCEPTANCE_NOT_RUN`并以退出码4结束，不冒充通过。测试容器与`contract-test`同样受限、经Compose网络请求`http://app:8080`，只挂载`acceptance/`和该实例的数据库root口令文件。结果在`<state>/reports/acceptance/`（`acceptance-report.tsv`逐条需求及Surefire报告）；成功输出`KCG_ACCEPTANCE_PASSED`，失败以退出码5结束。
 
-仓库内的双Token套件位于`sir-toolchain-application/src/test/resources/deployment/dual-token-acceptance/`，由`DualTokenScaffoldBusinessConformanceIT`的D0–D7整理而来：成对令牌及有效期、错密码与未知账号同响应、访问令牌认证且刷新令牌不能认证、过期拒绝、刷新轮换、重放拒绝、6路并发刷新恰好一次成功、登出后刷新失效；每次状态变化经独立数据库连接核验。D3为模拟过期直接改写该令牌的过期时间，所用物理表名属于该需求夹具。账号名带随机后缀，可在同一实例重复运行。CI在同包的第二个实例上运行它，结果见`report.json`的`business`分项。
+仓库内的双Token套件位于`sir-toolchain-application/src/test/resources/deployment/dual-token-acceptance/`，由`DualTokenBusinessConformanceIT`的D0–D7整理而来：成对令牌及有效期、错密码与未知账号同响应、访问令牌认证且刷新令牌不能认证、过期拒绝、刷新轮换、重放拒绝、6路并发刷新恰好一次成功、登出后刷新失效；每次状态变化经独立数据库连接核验。D3为模拟过期直接改写该令牌的过期时间，所用物理表名属于该需求夹具。账号名带随机后缀，可在同一实例重复运行。CI在同包的第二个实例上运行它，结果见`report.json`的`business`分项。
 
 ## 9. 保留数据的同实例更新（步骤③）
 

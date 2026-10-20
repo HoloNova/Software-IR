@@ -16,8 +16,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 /**
- * Real-database business conformance for the dual-token pattern exactly as {@code kcg scaffold dual-token} writes it
- * (the fixture is the tool's own output, and a unit test keeps it that way). The seven behaviours of a dual-token
+ * Real-database business conformance for the dual-token login as written out in {@code dual-token-written.sir}
+ * (FeatureUseTest keeps it the same software as {@code use DualTokenLogin}, down to the generated project). The seven behaviours of a dual-token
  * login are each a request here: a pair of tokens on login, a wrong password and an unknown account answered alike,
  * the access token authenticating a protected route while the refresh token does not, an expired access token refused,
  * a refresh that replaces the pair, a replayed refresh refused (also when several arrive at the same moment), and a
@@ -28,11 +28,11 @@ import org.junit.jupiter.api.Test;
  * {@code NOT_RUN} and returns before any side effect. It is enabled with {@code -Dkcg.dual-token-conformance.enabled=true}
  * and the same reference environment properties as the other business slices.
  */
-class DualTokenScaffoldBusinessConformanceIT {
+class DualTokenBusinessConformanceIT {
 
     private static final BusinessSliceHarness.Fixture FIXTURE = new BusinessSliceHarness.Fixture(
-            "Dual token (the output of kcg scaffold dual-token)",
-            "/valid/dual-token-scaffolded.sir",
+            "Dual token (use DualTokenLogin, written out)",
+            "/valid/dual-token-written.sir",
             "/conformance/mysql/dual-token-ddl.sql",
             "/conformance/mysql/dual-token-seed.sql",
             "user",
@@ -55,14 +55,14 @@ class DualTokenScaffoldBusinessConformanceIT {
     void theDualTokenPatternBehavesLikeADualTokenLoginAgainstRealMysql() throws Exception {
         if (!environment.enabled()) {
             System.out.println("[DUAL-TOKEN-CONFORMANCE] NOT_RUN: " + FIXTURE.enabledProperty() + " is not true");
-            System.out.println("[DUAL-TOKEN-CONFORMANCE] The dual-token scaffold business slice was NOT verified.");
+            System.out.println("[DUAL-TOKEN-CONFORMANCE] The dual-token business slice was NOT verified.");
             return;
         }
 
         if (!environment.complete()) {
             System.out.println("[DUAL-TOKEN-CONFORMANCE] NOT_RUN: incomplete reference environment");
             System.out.println("[DUAL-TOKEN-CONFORMANCE] Missing prerequisites: " + environment.missingPrerequisites());
-            System.out.println("[DUAL-TOKEN-CONFORMANCE] The dual-token scaffold business slice was NOT verified.");
+            System.out.println("[DUAL-TOKEN-CONFORMANCE] The dual-token business slice was NOT verified.");
             return;
         }
 
@@ -81,12 +81,12 @@ class DualTokenScaffoldBusinessConformanceIT {
         slice.writeReport();
         if (slice.notRunReason() != null) {
             System.out.println("[DUAL-TOKEN-CONFORMANCE] NOT_RUN: " + slice.notRunReason());
-            System.out.println("[DUAL-TOKEN-CONFORMANCE] The dual-token scaffold business slice was NOT verified.");
+            System.out.println("[DUAL-TOKEN-CONFORMANCE] The dual-token business slice was NOT verified.");
             return;
         }
 
         System.out.println(slice.report());
-        assertTrue(slice.passed(), () -> "dual-token scaffold business conformance FAILED:\n" + slice.report());
+        assertTrue(slice.passed(), () -> "dual-token business conformance FAILED:\n" + slice.report());
     }
 
     /** Runs the slice end to end. Every failure is recorded; none is swallowed. */

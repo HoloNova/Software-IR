@@ -138,18 +138,6 @@ final class WorkflowResultDocument {
         return finish(out, result.diagnostics());
     }
 
-    /** Only what is not a batch: a success prints the command batch itself (see {@link CommandJson#writeBatch}). */
-    static String render(ScaffoldResult result) {
-        var out = start("scaffold", result instanceof ScaffoldResult.Refused ? "REFUSED" : "FAILURE");
-        if (result instanceof ScaffoldResult.Refused refused) {
-            field(out, "message", refused.message());
-            out.append(",\"details\":[");
-            for (int i = 0; i < refused.details().size(); i++) { if (i != 0) out.append(','); out.append(JsonStringEncoder.encode(refused.details().get(i))); }
-            out.append(']');
-        }
-        return finish(out, result.diagnostics());
-    }
-
     static String inputFailure(String outcome, String code, String message) {
         var out = start("edit", outcome); field(out, "code", code); field(out, "message", message);
         return finish(out, List.of());
