@@ -41,9 +41,11 @@ software DualTokenDesk {
       field note: Ref<Note>;
       field owner: Ref<User>;
       field score: Optional<Count>;
+      field amount: Money default 0.0;
+      field rebate: Optional<Money>;
       unique (note, owner);
     }
-    // Optional-value conformance uses the existing newly-created table, so the migration chain stays V1..V11.
+    // Optional-value and Money delivery conformance use this newly-created table; the chain remains V1..V11.
     view FavoriteView from Favorite {
       field id: Id;
       field score: Optional<Count>;

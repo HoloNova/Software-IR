@@ -730,6 +730,7 @@ final class WorkflowRenderer {
       String targetName = target.targetName();
       String identity = getterName(entity.identity().javaName());
       String updated = targetName + "Updated";
+      renderDecimalDeltas(ctx, update, entity, variableNames, lines);
       lines.add("        int " + updated + " = " + mapper.mapperFieldName() + ".update(null, new LambdaUpdateWrapper<" + entity.javaName() + ">()");
       lines.add("                .eq(" + entity.javaName() + "::" + identity + ", " + targetName + "." + identity + "())");
       if (update.guard().isPresent()) {
@@ -772,6 +773,25 @@ final class WorkflowRenderer {
             lines.add("        " + targetName + "." + setter(binding.targetProperty()) + "(" + fresh + "." + getterName(binding.targetProperty()) + "());");
          }
       }
+   }
+
+   private static void renderDecimalDeltas(GenerationContext ctx, UpdateStep update, EntityDeclaration entity,
+         Map<SymbolId, String> names, List<String> lines) {
+      List<Binding> decimals = update.bindings().stream()
+          .filter(binding -> binding.relative().flatMap(SpringBootWorkflow.Relative::decimalShape).isPresent()).toList();
+      if (decimals.isEmpty()) return;
+      WriteSupport support = WriteSupport.of(ctx.model());
+      String violations = "decimalViolations";
+      lines.add("        java.util.List<" + support.fieldErrorFqn() + "> " + violations + " = new java.util.ArrayList<>();");
+      for (Binding binding : decimals) {
+         var relative = binding.relative().orElseThrow();
+         var shape = relative.decimalShape().orElseThrow();
+         lines.add("        " + support.validationSupportFqn() + ".decimalScale(" + violations + ", "
+             + javaString(binding.sourcePropertyName().orElse(binding.targetProperty())) + ", "
+             + ExpressionRenderer.renderExpression(relative.amount(), names) + ", " + shape.scale() + ");");
+      }
+      lines.add("        if (!" + violations + ".isEmpty()) throw " + support.exceptionBaseFqn() + ".invalidRequest(" + violations + ");");
+      lines.add("        " + support.validationSupportFqn() + ".requireStrictDecimalSession(" + entity.javaName() + ".class);");
    }
 
    private static String expectedVersionPropertyOf(CapabilityDeclaration capability, GenerationContext ctx) {
@@ -865,10 +885,13 @@ final class WorkflowRenderer {
                   constraintsOf(entity, binding.fieldSymbol()),
                   isDecimal(entity, binding.fieldSymbol())));
             }
-         } else if (candidate instanceof UpdateStep update && update.targetVariable().equals(step.targetVariable())
-            && update.conditional().isPresent()) {
+         } else if (candidate instanceof UpdateStep update && update.targetVariable().equals(step.targetVariable())) {
             for (Binding binding : update.bindings()) {
-               String change = payloadPropertyOf(update.conditional().orElseThrow(), binding, ctx);
+               // An atomic delta's stale local preview is not its stored result.
+               if (binding.relative().isPresent()) continue;
+               String change = update.conditional().isPresent()
+                   ? payloadPropertyOf(update.conditional().orElseThrow(), binding, ctx)
+                   : binding.sourcePropertyName().orElse(binding.targetProperty());
                fields.add(new WorkflowRenderer.CandidateField(
                   binding.targetProperty(),
                   patch == null ? change : patch.changesPropertyName() + "." + change,
@@ -885,6 +908,7 @@ final class WorkflowRenderer {
       return entity.fields().stream()
          .filter(field -> field.sourceSymbol().equals(fieldSymbol))
          .map(SpringBootDeclaration.Property::type)
+         .map(GenerationContext::entityPropertyType)
          .anyMatch(type -> type instanceof LoweredJavaType.Scalar scalar && scalar.kind() == LoweredJavaType.ScalarKind.BIG_DECIMAL);
    }
 
@@ -902,6 +926,11 @@ final class WorkflowRenderer {
       String pathArgument = "StringEscapePlaceholder";
       String pathLiteral = javaString(path);
       return switch (constraint.kind()) {
+         case NOT_NULL -> "notNull(" + violations + ", " + pathLiteral + ", " + value + ");";
+         case PRECISION -> {
+            var shape = constraint.decimalShape().orElseThrow();
+            yield "precision(" + violations + ", " + pathLiteral + ", " + value + ", " + shape.precision() + ", " + shape.scale() + ");";
+         }
          case NOT_BLANK -> "notBlank(" + violations + ", " + pathLiteral + ", " + value + ");";
          case EMAIL -> "email(" + violations + ", " + pathLiteral + ", " + value + ");";
          case SIZE -> {

@@ -578,7 +578,7 @@ final class DeploymentTemplates {
                         keys.add(row);
                         continue;
                     }
-                    if (row.length != 11 || !row[0].matches("[A-Za-z_][A-Za-z0-9_]{0,63}") || !row[1].matches("[A-Za-z_][A-Za-z0-9_]{0,63}"))
+                    if (!validColumnShape(row) || !row[0].matches("[A-Za-z_][A-Za-z0-9_]{0,63}") || !row[1].matches("[A-Za-z_][A-Za-z0-9_]{0,63}"))
                         throw new IllegalStateException("invalid schema contract: " + file.getFileName());
                     rows.add(row);
                 }
@@ -799,11 +799,21 @@ final class DeploymentTemplates {
                 }
             }
 
+            private static boolean validColumnShape(String[] row) {
+                if (row.length < 3) return false;
+                if (!row[2].equals("decimal")) return row.length == 11;
+                if (row.length != 13) return false;
+                try {
+                    int precision = Integer.parseInt(row[11]), scale = Integer.parseInt(row[12]);
+                    return precision >= 1 && precision <= 65 && scale >= 0 && scale <= precision && scale <= 30;
+                } catch (NumberFormatException invalid) { return false; }
+            }
+
             private static void verify(Connection db, List<String[]> expected) throws Exception {
                 Map<String, String[]> columns = new TreeMap<>();
                 Set<String> tables = new TreeSet<>(), uniques = new TreeSet<>(), references = new TreeSet<>();
                 for (String[] row : expected) {
-                    if (row.length != 11) throw new IllegalStateException("invalid schema contract");
+                    if (!validColumnShape(row)) throw new IllegalStateException("invalid schema contract");
                     tables.add(row[0]); columns.put(row[0] + "." + row[1], row);
                     if (row[5].equals("true") || row[7].equals("true")) uniques.add(row[0] + "." + row[1]);
                     if (!row[8].isEmpty()) references.add(row[0] + "." + row[1] + ">" + row[8] + "." + row[9]);
@@ -820,7 +830,7 @@ final class DeploymentTemplates {
                     rs.next(); if (rs.getLong(1) != 0) throw new IllegalStateException("unmanaged trigger refused");
                 }
                 Set<String> seen = new TreeSet<>();
-                try (Statement s = db.createStatement(); ResultSet rs = s.executeQuery("SELECT TABLE_NAME,COLUMN_NAME,DATA_TYPE,CHARACTER_MAXIMUM_LENGTH,IS_NULLABLE,EXTRA,COLUMN_KEY,DATETIME_PRECISION,COLUMN_TYPE,COLLATION_NAME,COLUMN_DEFAULT FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='kcg' AND TABLE_NAME<>'flyway_schema_history'")) {
+                try (Statement s = db.createStatement(); ResultSet rs = s.executeQuery("SELECT TABLE_NAME,COLUMN_NAME,DATA_TYPE,CHARACTER_MAXIMUM_LENGTH,IS_NULLABLE,EXTRA,COLUMN_KEY,DATETIME_PRECISION,COLUMN_TYPE,COLLATION_NAME,COLUMN_DEFAULT,NUMERIC_PRECISION,NUMERIC_SCALE FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='kcg' AND TABLE_NAME<>'flyway_schema_history'")) {
                     while (rs.next()) {
                         String key = rs.getString(1) + "." + rs.getString(2); String[] row = columns.get(key);
                         if (row == null || !seen.add(key) || !row[2].equalsIgnoreCase(rs.getString(3))
@@ -833,6 +843,8 @@ final class DeploymentTemplates {
                         if ((row[2].equals("char") || row[2].equals("varchar")) && Long.parseLong(row[3]) != rs.getLong(4))
                             throw new IllegalStateException("column length mismatch: " + key);
                         if (row[2].equals("datetime") && rs.getInt(8) != 6) throw new IllegalStateException("time precision mismatch");
+                        if (row[2].equals("decimal") && (Integer.parseInt(row[11]) != rs.getInt(12) || Integer.parseInt(row[12]) != rs.getInt(13)))
+                            throw new IllegalStateException("decimal precision/scale mismatch: " + key);
                         if ((row[2].equals("char") || row[2].equals("varchar") || row[2].equals("longtext"))
                                 && !"utf8mb4_0900_bin".equals(rs.getString(10))) throw new IllegalStateException("text collation mismatch");
                     }

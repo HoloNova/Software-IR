@@ -213,18 +213,19 @@ public final class SpringBootSchemaEvolutionPlanner {
 
     private static Column rename(Column column, String name) {
         return new Column(column.symbol(), name, column.storage(), column.length(), column.nullable(), column.primary(),
-            column.autoIncrement(), column.unique(), column.reference(), column.defaultValue());
+            column.autoIncrement(), column.unique(), column.reference(), column.defaultValue(), column.decimalShape());
     }
 
     private static Column withDefault(Column column, Optional<String> defaultValue) {
         return new Column(column.symbol(), column.name(), column.storage(), column.length(), column.nullable(), column.primary(),
-            column.autoIncrement(), column.unique(), column.reference(), defaultValue);
+            column.autoIncrement(), column.unique(), column.reference(), defaultValue, column.decimalShape());
     }
 
     /** Everything a contract row says about a column except where it is (table and column name). */
     private static String attributes(String row) {
         String[] f = row.split("\t", -1);
         return f[2] + "(" + f[3] + ") nullable=" + f[4] + " primary=" + f[5] + " auto=" + f[6] + " unique=" + f[7]
-            + (f[8].isEmpty() ? "" : " ref=" + f[8] + "." + f[9]) + (f[10].isEmpty() ? "" : " default" + f[10]);
+            + (f[8].isEmpty() ? "" : " ref=" + f[8] + "." + f[9]) + (f[10].isEmpty() ? "" : " default" + f[10])
+            + (f.length == 13 ? " precision=" + f[11] + " scale=" + f[12] : "");
     }
 }

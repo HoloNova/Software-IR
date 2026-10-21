@@ -399,7 +399,7 @@ use 登录 {
 
 **为什么是这个形状，而不是别的：**
 - 问题的根是“拿读到的值算新值再整个写回”，所以让数据库做加减；不是给每个实体加锁，也不用 `versioned`；
-- 加减之外的算术没有同样的写法（`col = col * ?` 不会让并发的请求各自算对），所以不做乘法，也不做 `Money` 的加减（`Money` 现在交付不了，见 G10）；
+- 加减之外的算术没有同样的写法（`col = col * ?` 不会让并发的请求各自算对），所以本阶段不做乘法；Money 加减后来由第 20 节 G10 在严格连接与明确精度的边界内补齐；
 - 其它读自己字段的绑定仍可写（不带守卫时），只在文档里提醒并发下会丢更新；一律禁掉会让原来能写的东西写不出来。
 
 **行为：**影响行数不是 1 时，带守卫的报守卫的错误；不带守卫的以服务器错误结束（行在读到之后被别人删了）。写入后把计数列读回，返回的是存着的值。这一行只能有这一个 `update`，因为它整个写成一条语句，只写绑定的列（以前带守卫的更新也如此）。
@@ -598,3 +598,90 @@ writeExclude 生效后，客户端无论在普通更新还是 PATCH 中夹带 st
 library 的 Book 增加 writer／LIBRARIAN，market 的 Item 排除 status／createdAt，保留原浏览接口。`writeExclude` 保护请求输入和赋值，不新增并发保证；非版本普通更新仍沿用原持久化语义，不能把它称为并发锁或部分列原子更新。已有 Version、guard 和 secret 规则不变。
 
 本机 13 类定向测试共 89 项通过，包括旧 Crud 手写展开的产物等价、参数载体、精确改名、跨文件绑定与缺失 import、源编辑重读、真实 CRLF 编辑和语言参考例子。原全角色文件导出测试本机仍因 Windows 安全读源限制受阻，不删除、不放宽。新增 `CrudAccessBusinessConformanceIT` 复用既有隔离 MySQL／生成工程／HTTP／清理／证据 harness，接入 verify.yml 的业务 IT 步骤，默认不在本机执行。完整真库用例、生成工程编译和同源码全量 CI 均为 NOT_RUN。没有 UI 改动，无浏览器验收。随后已推送 f82cb94；#139 双全量门通过，新增 G9 真库 IT 因混用合法请求与字段篡改请求而失败。本轮仅修正测试请求，未放宽生产解码与授权；13 项相关定向通过，完整 IT 仍待新 CI。见[修复记录](../qualification/README.md#ci-139-fixture-fix)。
+
+
+<a id="g10-money-proposal"></a>
+## 20. G10：Money 的精度、交付与金额加减（已确认并实现，待本批 CI）
+
+负责人已确认本节金额规则，现已实现，结果见 20.7。基线 `484a8a792c3ec6a7b9f5a7b7171b009e981a8ce3` 的 [CI #140](https://github.com/HoloNova/Software-IR/actions/runs/39527408701) 已全部通过，闭环前述 G9 与部署修复；该结果不覆盖本批 G10。八题需求完成数本轮不提前上调。
+
+### 20.1 已核对的实现边界
+
+| 现有事实 | 对 G10 的影响 |
+| --- | --- |
+| `SemanticTypes` 把 Money 定义为无规则的 DECIMAL；`SemanticTypeDeclarations` 仅识别 notBlank／email／min／max／length；类型和字段的同名规则按现有协议覆盖，不取交集 | 新精度规则必须贯通类型声明、字段覆盖和正式约束校验，不能由 Generator 根据 `Money` 字符串猜默认值，也不另创约束继承语义 |
+| `SpringBootDeploymentPlanner.scalar` 明确拒绝 BIG_DECIMAL；`DeploymentPlan.Storage` 无 DECIMAL，Column 无 precision／scale | 这不是少映射一个 SQL 类型；当前拒绝是正确保护，必须在有明确精度计划后才放开 |
+| `SchemaContract` 的列行固定 11 列，`DeploymentTemplates` 的数据库核验未比较 decimal 精度／标度，也未校验 sql_mode | DDL、基线比对、现场数据库核验必须共用明确的物理形状；不能靠 MySQL 默认 DECIMAL 或默认严格模式 |
+| 普通加减和数值比较已有 BigDecimal 路径，但 `ExpressionRenderer` 的 NEGATE 仍使用 Java 一元负号 | 复用现有数值运算，补真实负金额的生成代码编译／执行；不新增金额表达式子语言 |
+| `ValidatePass.validateSelfRelativeTarget` 只允许 INT32／INT64；加载行与无 version 的限制已存在 | 原子金额加减应扩展已有计划，保留这些并发边界，不能先读、Java 算完再覆盖数据库 |
+| `WorkflowRenderer.candidateFields` 只收 create 和 conditional update；DTO 用 Bean Validation，`ValidationSupportRenderer` 为写入候选执行同类约束 | 只给 DTO 加注解会漏掉计算后金额及普通 update；应补共用候选校验，不只给某个样例打补丁 |
+
+已核验目标版本 MySQL `mysql-8.4.5` 的第一方源码：[my_decimal.h](https://github.com/mysql/mysql-server/blob/mysql-8.4.5/sql-common/my_decimal.h) 定义最大 precision 为 `9 * 9 - 8 * 2 = 65`；[dtoa.h](https://github.com/mysql/mysql-server/blob/mysql-8.4.5/include/mysql/strings/dtoa.h) 定义最大 scale 为 30。对应 blob 为 `12557dc4563100947eb3ee21ebc54dec718be66b`、`cb34d9755758f9bbf8d004ffb3048a272083f6ce`。不以最新文档版本冒称该目标版本依据。
+
+### 20.2 作者看到的规则
+
+负责人确认 Money 默认携带 `precision(19, 2)`：总共最多 19 位，其中最多 17 位整数、2 位小数，最大绝对值 `99999999999999999.99`。这是本次新增的语言规则；旧 Money 先前没有该限制。Money 不隐含非负、不带币种、不做汇率转换；需要非负的价格／金额仍显式声明 min。作者可以复用现有 where 写法：
+
+```text
+type Price = Money where min(0);
+type UnitPrice = Money where precision(19, 4), min(0);
+```
+
+`precision(p, s)` 的两个参数必须是整数常量，满足 `p >= 1`、`0 <= s <= p`，且能由规则载体的整数参数表示；同层重复、错误参数个数、负数、小数及非十进制字段都正式拒绝并定位。类型派生／字段 where 的同名覆盖沿用现有协议，因此 UnitPrice 的显式四位小数替换 Money 的默认两位，其他规则保留。不会为了允许四位单价另造乘法、货币对象或一套类型转换。
+
+MySQL 交付还须满足 `p <= 65`、`s <= 30`；目标限制在交付计划阶段明确拒绝，不把它冒充所有未来目标都必须遵守的 Core 上限。未携带精度规则的底层 Decimal 仍不能被交付层悄悄套成 Money(19, 2)。金额字段的新默认会收紧旧 Money 的合法值范围，须明确记录为语言规则变更；旧非金额源码和交付基线不应因此变化。
+
+### 20.3 数值语义：精确可表示，不隐式舍入
+
+判断的是数值是否可精确表示，不是请求文本写了几个字符。对于默认 Money，`1.23`、`1.2300`、`1.2300e0` 表示同一合法数值；`1.234` 拒绝；`0`、`0.00`、负数及合法指数写法按相同数值规则处理。`precision(2, 2)` 的零和 `0.99` 合法，`1` 非法。比较仍使用现有数值比较语义，不因 BigDecimal 的 scale 不同把等值金额判成不等。
+
+输入、候选值与默认值共用同一个精确可表示判定。DTO 的 Optional 元素约束、PATCH 的 absent／null／present、普通 create／update 与版本更新均要覆盖；计算后写入值按**目标字段**规则检验，不能因为输入用了较宽的 UnitPrice 就允许数据库替两位金额舍入。缺省与显式 null 仍遵守已有必填／可选协议，precision 不负责发明新的 null 语义。
+
+不直接把 Jakarta `@Digits` 当成全部实现：其按 BigDecimal 表示检查小数位，不能未经处理就把 `1.2300` 当四位金额拒绝。建议生成一个针对 precision 的约束与校验器，DTO 容器元素约束和候选支持代码共用判定；复用现有 Bean Validation 与生成支持文件机制，不新增外部金额库。规范化只用于判定和确定性存储／默认值表示，不通过 double 中转，也不修改调用者对象。
+
+加、减、取负的中间结果保持 BigDecimal 精确计算，不在每个表达式内部截位。当前视图读取实体字段的金额；G10 不顺带增加计算视图、金额格式化、乘除、税费或用户可配置的舍入模式。输入和可计算候选值的范围／精度违反沿用结构化字段错误；原子写入在数据库当前值上才发生的溢出按下一节的执行失败协议处理。
+
+### 20.4 Lowering 与交付合同
+
+Lowering 把已解析的精度降成明确的不可变 precision／scale 计划，生成注解、候选检查与交付层消费同一事实。DeploymentPlan 增加 DECIMAL 及相应形状，不把 precision 藏进字符串 length 或 SQL 文本，不由 Generator 重读原始约束推断业务。
+
+DDL 必须生成 `DECIMAL(p,s)`，合法数字默认值先验证，再用目标 scale 的精确形式写入，例如 `0.0` 与 MySQL 返回的 `0.00` 在合同中统一。默认值无法精确表示时，计划就拒绝，不能交给建表执行后才发现截断。添加非空金额列仍遵守现有“有明确默认值才可给已有行补列”的迁移规则。
+
+建议仅 DECIMAL 列行在原 11 列后追加 precision／scale 两列；新读取器接受旧非金额 11 列行，拒绝缺少精度的 Decimal 行及不合法额外列。旧非金额合同逐字节不变，旧迁移历史不可重写；不声称旧二进制能读取新 Decimal 合同。现场核验读取 `information_schema.COLUMNS` 的 NUMERIC_PRECISION／NUMERIC_SCALE，默认值与类型检查不能只看 DATA_TYPE=decimal。
+
+现有基线里的同一列若改变 precision／scale，按改变物理定义拒绝自动更新；本轮不自动放大、缩小或改写已有金额。新增／回滚金额列沿用已有迁移和清理机制。交付成功不等于获得任意精度数据迁移能力。
+
+### 20.5 金额原子加减与并发边界
+
+非 version 的加载行继续用既有 `field: row.field + amount`／减法及 guard／else 机制，在一条 SQL 中根据数据库当前值计算。只扩展数值形状，不引入先查余额再覆盖的伪原子更新，不取消必需的 guard，不自动生成“余额不足”业务规则，也不改变 version 路径原有禁止自相对写的规则。
+
+金额 delta 在执行前必须可精确落入目标 scale；整数部分不因输入类型更宽就由数据库静默夹断。最终整数位是否溢出不能只验证 load 出来的旧值：并发下该值可能已经过时。本方案要求实际执行原子写入的同一事务连接具有 STRICT_TRANS_TABLES 或 STRICT_ALL_TABLES；缺少严格模式时拒绝该写入，不尝试在运行时悄悄更改服务器全局设置。实现时将检查落在真实事务连接的支持层，不以导出时／启动时另一连接的检查代替；不把 Connector/J 的默认配置当证据。
+
+严格模式下，最终 DECIMAL 溢出必须失败并回滚，沿用数据库执行异常协议，不冒充作者 guard 指定的余额不足错误。合法 guard 不通过仍走原声明的 else；精度不合法的请求提前给字段错误。真库验收须同时验证普通越界、并发最后一步越界和显式非严格模式，证明没有截断／夹断／只改一半。输入非负、余额下界等业务约束仍由类型 min 和 SQL guard 组合表达。
+
+### 20.6 取舍与验收
+
+| 不选择的方案 | 原因 |
+| --- | --- |
+| 直接让所有 BigDecimal 映射 DECIMAL 或 DOUBLE | 没有作者契约；前者可能用数据库默认精度，后者丢失十进制精确性 |
+| Money 全部用整数分 | 会改变已存在的十进制含义及 HTTP 协议，也无法自然表示四位单价 |
+| 全局设置 HALF_UP 或超出 scale 自动截断 | 把业务舍入政策藏进存储层；作者无法知道金额何时改变 |
+| 仅 DTO 使用 @Digits | 表示尺度和数值尺度不一致，且漏过计算后与普通 update 的目标值 |
+| 只验证 load 后在 Java 算出的余额 | 并发下不是数据库实际待写值，不能证明最终结果不溢出 |
+| 复用现有规则、精确校验与显式物理计划（本方案） | 常见作者只写 Money；需要特殊精度时只覆写一条规则；同一修复覆盖各金额业务，不加目标端 Money 特判或逐题补丁 |
+
+实施按三段 RED→GREEN 推进：精度规则／覆盖／默认值／源往返；真实 DTO、Optional、PATCH、普通候选与 BigDecimal 取负；最后是 Decimal DDL／合同兼容／更新拒绝及原子金额。语义类型别名按既有协议在项目内全局可见；须验证跨文件别名的编辑重读、改名、源往返与确定性，以及金额实体缺少 import 的拒绝；已有整数运算、旧非金额交付合同和版本 PATCH 需定向回归。零、尾随零、指数、边界值／越界、较宽输入写较窄字段、可选值缺省和显式 null 均列入行为测试，而非只断言生成字符串。
+
+本机只跑受影响模块定向测试；真实 MySQL／HTTP、非严格模式与并发、生成工程编译和全量门交给同源码 CI。CI 必须绑定 commit SHA、run 和报告产物；未执行记 NOT_RUN，八题完成数不提前增加。不涉及 UI，不启动浏览器。
+
+已确认的业务选择：**默认 precision(19, 2)，允许显式覆写；按数值精确可表示判定，接受无损尾随零，拒绝隐式舍入。**
+
+### 20.7 实施结果与验收边界
+
+Core 增加 precision 的正式规则、参数／类型／默认值检查；Lowering 产出不可变 `DecimalShape`，精度约束、相对写和交付列消费明确计划。真实 DTO 使用共享的精确判定，修正 Optional 内限定类名的类型注解位置；普通 update 也检查目标候选，BigDecimal 取负使用 negate。PATCH 仅不展开继承的 precision，实体掌握实际精度；显式 precision 和 Quantity 等带入的业务约束仍拒绝，未放宽旧 PATCH 协议。
+
+DECIMAL 合同行追加两列，非金额仍为原 11 列；默认值由列计划在验证物理上限后精确规范到 scale，现场核验比较 precision／scale，任何已有金额精度变化均拒绝自动迁移。原子金额保留 SQL delta、guard、加载行与非 version 边界；先检查 delta scale，再检查实际 Spring 事务绑定的 MyBatis 连接严格模式，由数据库判定最终溢出并回滚。普通非版本持久化的全行／NULL 写策略未重设计。
+
+market／shop／ledger 已改为 Money，账目最小正金额为 0.01；乘法、多商品、统计仍未补。15 类最新定向报告合计 105 项通过（迁移类最新报告仅含新增两方法，不累加早前 15 项），真实 DTO／服务通过动态 javac 编译和执行；八题内存生成与交付规划通过。详见[验证记录](../qualification/README.md#g10-money-local)。
+
+`MoneyBusinessConformanceIT` 与 DECIMAL 部署漂移断言已接入 CI；本机未执行真实 MySQL／HTTP、并发业务 IT、生成工程 Maven 构建或全量门，均为 NOT_RUN，不沿用 #140 结果。无 UI 改动。阶段完成按授权直接 commit + push。

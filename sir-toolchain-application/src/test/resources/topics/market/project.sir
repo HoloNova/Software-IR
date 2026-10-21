@@ -57,7 +57,7 @@ software CampusMarket {
       field seller: Ref<User>;
       field title: Name;
       field description: Optional<Remark>;
-      field price: Serial where min(0);
+      field price: Money where min(0);
       field condition: Optional<Text> where length(1, 32);
       field status: ItemStatus default ItemStatus.ON_SALE;
       field createdAt: Moment default now();
@@ -69,7 +69,7 @@ software CampusMarket {
       // filtered by a field of its item).
       field seller: Ref<User>;
       field goods: Ref<Item>;
-      field price: Serial;
+      field price: Money;
       field status: OrderStatus default OrderStatus.PLACED;
       field createdAt: Moment default now();
     }
@@ -85,7 +85,7 @@ software CampusMarket {
     view OrderView from TradeOrder {
       field id: Id;
       field goods: ItemView;
-      field price: Serial;
+      field price: Money;
       field status: OrderStatus;
       field createdAt: Moment;
     }
@@ -93,8 +93,8 @@ software CampusMarket {
     // Everybody browses what is on sale.
     input BrowseInput {
       field keyword: Text;
-      field minPrice: Optional<Serial>;
-      field maxPrice: Optional<Serial>;
+      field minPrice: Optional<Money>;
+      field maxPrice: Optional<Money>;
       field condition: Optional<Text> where length(1, 32);
       field page: PageNo;
       field size: PageSize;

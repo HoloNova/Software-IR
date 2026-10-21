@@ -129,7 +129,7 @@ final class SemanticTypeDeclarations {
       int expected = switch (name) {
          case "notBlank", "email" -> 0;
          case "min", "max" -> 1;
-         case "length" -> 2;
+         case "length", "precision" -> 2;
          default -> -1;
       };
       SourceSpan span = constraint.span();
@@ -143,7 +143,11 @@ final class SemanticTypeDeclarations {
          return Optional.empty();
       }
 
-      boolean textRule = !name.equals("min") && !name.equals("max");
+      boolean textRule = !name.equals("min") && !name.equals("max") && !name.equals("precision");
+      if (name.equals("precision") && kind != PrimitiveType.DECIMAL) {
+         diagnostics.add(DiagnosticBuilder.error("SIR-TYPE-001", "precision 只适用于十进制类型", span));
+         return Optional.empty();
+      }
       boolean numeric = kind == PrimitiveType.INT32 || kind == PrimitiveType.INT64 || kind == PrimitiveType.DECIMAL;
       if (textRule && kind != PrimitiveType.STRING) {
          diagnostics.add(DiagnosticBuilder.error("SIR-TYPE-001", "约束 " + name + " 只适用于文本", span));
@@ -178,6 +182,10 @@ final class SemanticTypeDeclarations {
          }
       }
 
+      if (name.equals("precision") && io.kcg.sir.semantic.type.DecimalPrecision.parse(arguments).isEmpty()) {
+         diagnostics.add(DiagnosticBuilder.error("SIR-TYPE-001", "precision 参数必须为整数，且 p >= 1、0 <= s <= p", span));
+         return Optional.empty();
+      }
       return Optional.of(new SemanticTypes.Rule(name, arguments));
    }
 

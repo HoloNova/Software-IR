@@ -850,6 +850,18 @@ final class ValidatePass {
          if (field.unique() || field.secret() || field.versioned()) {
             this.diagnostics.add(DiagnosticBuilder.error(DEFAULT_CODE, "unique、secret、version 字段不能声明 default: " + name, field.defaultValue().get().span()));
          }
+         BigDecimal value = this.evalNumeric(field.defaultValue().get());
+         for (AstConstraint constraint : field.constraints()) {
+            if (!constraint.name().text().equals("precision")) continue;
+            List<String> arguments = constraint.arguments().stream().map(this::evalInteger)
+               .map(argument -> argument == null ? "" : argument.toString()).toList();
+            io.kcg.sir.semantic.type.DecimalPrecision.parse(arguments).ifPresent(shape -> {
+               if (value != null && !shape.accepts(value)) {
+                  this.diagnostics.add(DiagnosticBuilder.error(DEFAULT_CODE,
+                     "default 不能按字段 precision 精确表示: " + name, field.defaultValue().get().span()));
+               }
+            });
+         }
       }
    }
 
@@ -1383,9 +1395,9 @@ final class ValidatePass {
 
       for (AstBinding binding : relative) {
          SirType type = this.typed.expressionTypes().get(binding.value().id());
-         if (type != PrimitiveType.INT32 && type != PrimitiveType.INT64) {
+         if (type != PrimitiveType.INT32 && type != PrimitiveType.INT64 && type != PrimitiveType.DECIMAL) {
             this.diagnostics.add(DiagnosticBuilder.error(
-               "SIR-VALID-007", "“本字段 + 值”只用于整数字段: " + binding.fieldName().text(), binding.value().span()));
+               "SIR-VALID-007", "“本字段 + 值”只用于整数或精确十进制字段: " + binding.fieldName().text(), binding.value().span()));
          }
       }
    }
@@ -1947,7 +1959,17 @@ final class ValidatePass {
                   }
                }
 
-               if (name.equals("min") && !constraint.arguments().isEmpty()) {
+                if (name.equals("precision")) {
+                   List<String> arguments = constraint.arguments().stream().map(this::evalInteger)
+                      .map(value -> value == null ? "" : value.toString()).toList();
+                   if (io.kcg.sir.semantic.feature.SemanticTypes.kind(constraintType) != PrimitiveType.DECIMAL
+                      || io.kcg.sir.semantic.type.DecimalPrecision.parse(arguments).isEmpty()) {
+                      this.diagnostics.add(DiagnosticBuilder.error("SIR-TYPE-001",
+                         "precision 只适用于十进制类型，参数须为整数且 p >= 1、0 <= s <= p", constraint.span()));
+                   }
+                }
+
+                if (name.equals("min") && !constraint.arguments().isEmpty()) {
                   minValue = this.evalNumeric(constraint.arguments().get(0));
                }
 
@@ -1964,14 +1986,14 @@ final class ValidatePass {
    }
 
    private boolean isValidConstraintName(String name) {
-      return name.equals("notBlank") || name.equals("email") || name.equals("min") || name.equals("max") || name.equals("length");
+      return name.equals("notBlank") || name.equals("email") || name.equals("min") || name.equals("max") || name.equals("length") || name.equals("precision");
    }
 
    private int constraintArgCount(String name) {
       return switch (name) {
          case "notBlank", "email" -> 0;
          case "min", "max" -> 1;
-         case "length" -> 2;
+         case "length", "precision" -> 2;
          default -> 0;
       };
    }

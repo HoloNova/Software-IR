@@ -60,12 +60,12 @@ software OnlineShop {
       field size: PageSize;
     }
 
-    // Prices are whole cents: Money (a decimal) cannot be delivered by this target yet.
+    // Money carries exact precision(19, 2); no implicit rounding and no currency conversion.
     entity Product persistent {
       identity id: Id generated auto;
       field name: Name;
       field description: Optional<Remark>;
-      field price: Serial where min(0);
+      field price: Money where min(0);
       field stock: Count where min(0);
       field state: ProductState default ProductState.ON_SHELF;
     }
@@ -73,7 +73,7 @@ software OnlineShop {
       identity id: Id generated auto;
       field buyer: Ref<User>;
       field state: OrderState default OrderState.CREATED;
-      field total: Serial;
+      field total: Money;
       field createdAt: Moment default now();
     }
     entity OrderLine persistent {
@@ -81,13 +81,13 @@ software OnlineShop {
       field purchase: Ref<PurchaseOrder>;
       field product: Ref<Product>;
       field quantity: Quantity;
-      field unitPrice: Serial;
+      field unitPrice: Money;
     }
     view ProductView from Product {
       field id: Id;
       field name: Name;
       field description: Optional<Remark>;
-      field price: Serial;
+      field price: Money;
       field stock: Count;
       field state: ProductState;
     }
@@ -95,12 +95,12 @@ software OnlineShop {
       field id: Id;
       field product: ProductView;
       field quantity: Quantity;
-      field unitPrice: Serial;
+      field unitPrice: Money;
     }
     view OrderView from PurchaseOrder {
       field id: Id;
       field state: OrderState;
-      field total: Serial;
+      field total: Money;
       field createdAt: Moment;
     }
 
@@ -108,7 +108,7 @@ software OnlineShop {
     input NewProduct {
       field name: Name;
       field description: Optional<Remark>;
-      field price: Serial where min(0);
+      field price: Money where min(0);
       field stock: Count where min(0);
     }
     capability AddProduct {

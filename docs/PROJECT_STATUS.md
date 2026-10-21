@@ -1,6 +1,6 @@
 # KCG-Code 当前项目状态
 
-> 更新：2026-10-20。状态：正常开发中的工程，不宣称生产就绪。本文说明**现在能做什么**；验证口径与证据在[验证说明](qualification/README.md)；已完成或退役的材料在 [history](history/README.md)。
+> 更新：2026-10-21。状态：正常开发中的工程，不宣称生产就绪。本文说明**现在能做什么**；验证口径与证据在[验证说明](qualification/README.md)；已完成或退役的材料在 [history](history/README.md)。
 
 ## 1. 定位
 
@@ -36,9 +36,9 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 - 唯一约束（2026-10-20，[设计 12 第 15 节](design/12-feature-semantics-and-semantic-types.md)）：`persist 变量 else 错误` 能说明新建的行撞上唯一约束时报哪个错误（原来是 500）；实体可写 `unique (a, b);` 声明联合唯一，建表时成为复合唯一索引，保留数据的更新里只能随新建表创建。
 - 选题试写（2026-10-20，[报告](qualification/TOPIC_TRIALS.md)）：用 SIR 写了八个典型毕设后端（二手交易、图书借阅、选课、博客、任务看板、商城、会议室预约、记账），84 条需求里 76% 完整写出、6% 带折扣写出、18% 尚未写出（补上联合唯一、唯一冲突报错、原子计数、G7 可选值与 G2/G4 查询之后）。缺口集中在多行业务的并发与关联组合、列表循环、分组聚合与更完整的功能组合；另发现语言检查放过、但生成的 Java 编不过的写法（D1 沿引用加载、D2 一行带嵌套视图、D3 可选值比较），已修，八个题目的生成工程由 CI 逐个离线编译。
 
-- G7 可选值（2026-10-20，已实现；CI #136 部署失败，本提交修复待同源码 CI 验收）：`x is none`／`x is present` 判断空值，兼容类型可比较；任一侧为空普通比较均为 false（含 `!=`），`not` 仍普通取反。显式组合空值判断可写可选筛选，不自动省略条件，PATCH `.present` 不变。tasks、market 已更新，Java 真值表与题目内存生成已验证；八题生成工程离线编译和真实 MySQL／HTTP 为 NOT_RUN。Windows 部署导出测试因现有安全读源能力缺失失败，未放宽边界。方案与限制见[设计 12 第 17 节](design/12-feature-semantics-and-semantic-types.md)，定向证据见[验证说明](qualification/README.md)。
+- G7 可选值（2026-10-20，已实现；后续 #140 已回归验收）：`x is none`／`x is present` 判断空值，兼容类型可比较；任一侧为空普通比较均为 false（含 `!=`），`not` 仍普通取反。显式组合空值判断可写可选筛选，不自动省略条件，PATCH `.present` 不变。tasks、market 已更新，Java 真值表与题目内存生成已验证；八题生成工程离线编译和真实 MySQL／HTTP 为 NOT_RUN。Windows 部署导出测试因现有安全读源能力缺失失败，未放宽边界。方案与限制见[设计 12 第 17 节](design/12-feature-semantics-and-semantic-types.md)，定向证据见[验证说明](qualification/README.md)。
 
-- G2/G4 查询（2026-10-20，已实现；CI #137 全量门失败，本提交修复待同源码 CI 验收）：工作流 `exists`／`count` 显式返回 Boolean／Int64，每步一条 SQL，复用实体 scope 与 G7 空值规则；关联 any 可绑定请求、actor 和已加载值，不拼 SQL。博客恢复标签关系筛选，任务用成员关系与 exists 组合授权。定向 25 类 192 项通过；不宣称查询后写入具备并发限额或范围锁。实现与边界见[设计 12 第 18 节](design/12-feature-semantics-and-semantic-types.md)，真实 MySQL／HTTP 与八题生成工程编译尚未运行。
+- G2/G4 查询（2026-10-20，已实现；后续 #140 已回归验收）：工作流 `exists`／`count` 显式返回 Boolean／Int64，每步一条 SQL，复用实体 scope 与 G7 空值规则；关联 any 可绑定请求、actor 和已加载值，不拼 SQL。博客恢复标签关系筛选，任务用成员关系与 exists 组合授权。定向 25 类 192 项通过；不宣称查询后写入具备并发限额或范围锁。实现与边界见[设计 12 第 18 节](design/12-feature-semantics-and-semantic-types.md)，真实 MySQL／HTTP 与八题生成工程编译尚未运行。
 
 ### 首次生成
 
@@ -73,6 +73,9 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 
 ## 4. 验证状态
 
+- 当前验收基线：`484a8a792c3ec6a7b9f5a7b7171b009e981a8ce3` 的 [CI #140](https://github.com/HoloNova/Software-IR/actions/runs/39527408701) 全部 success，双全量门、业务 IT、独立验证、CLI、独立部署均通过，闭环 #136～#139；[证据索引](qualification/README.md#ci-140-accepted)。该基线不覆盖本批 G10，前文旧 NOT_RUN 描述属于历史执行点。
+- G10 本机：15 类最新定向报告 105 项通过，含真实生成 DTO／PATCH 服务的编译执行；三份金额样例及八题内存交付规划通过。当前源码的 MySQL／HTTP、并发金额与非严格模式、八题生成工程 Maven 编译、全量门和部署仍待 CI；[验证记录](qualification/README.md#g10-money-local)。
+
 - 最新核验：`b56ce16`（改名）的[verify #124](https://github.com/HoloNova/Software-IR/actions/runs/39362618814)通过；此前路由 `b5d6c25` 的 [#122](https://github.com/HoloNova/Software-IR/actions/runs/39361622833)、归属与授权冒烟 `5c7b1fb` 的 [#121](https://github.com/HoloNova/Software-IR/actions/runs/39116237645) 通过（#123 因 #124 的推送被取消，其改动由 #124 覆盖）。核对时只读了运行状态。
 - 部署交付：`a7cba11` 的 [verify #93](https://github.com/HoloNova/Software-IR/actions/runs/39002409782) 曾因验收脚本失败，之后由 #94～#98 验收，见[部署报告](DEPLOYMENT_DELIVERY_REPORT.md)。
 - 此前业务能力 CI：`verify` [#88](https://github.com/HoloNova/Software-IR/actions/runs/38901782044)（`fe40836`，`kcg scaffold dual-token`，`main`）通过，日志确认双 Token 脚手架 IT 全部 PASS；此前 [#85](https://github.com/HoloNova/Software-IR/actions/runs/38897336941)（`70dc6cc`，Bearer 凭据认证，`main`）通过，日志确认新 IT 的认证场景全部 PASS；此前 [#82](https://github.com/HoloNova/Software-IR/actions/runs/38890915687)（`de563f6`，`secret` 字段与 `matches`，`main`）通过，日志确认注册／登录场景通过；此前 #81（401 状态码）、[#79](https://github.com/HoloNova/Software-IR/actions/runs/38884618786)（`6f244fa`，真实库核验的修复与 `TokenDeskBusinessConformanceIT`，`main`）通过，日志确认新 IT 运行并通过；此前 [#78](https://github.com/HoloNova/Software-IR/actions/runs/38715357765)（`aa1ad70`，守卫更新）、[#77](https://github.com/HoloNova/Software-IR/actions/runs/38712747591)（`1f947db`，时间平移与数值加减）通过：冻结与完成两条全量闸门、业务场景 IT、独立验证 IT、单文件包冒烟均 success，见[验证说明](qualification/README.md)。此前 [#76](https://github.com/HoloNova/Software-IR/actions/runs/38710339131)（`058c9d6`）、[#73](https://github.com/HoloNova/Software-IR/actions/runs/38677243253)、[#72](https://github.com/HoloNova/Software-IR/actions/runs/38671123332) 同样通过。核对时只读了运行与步骤状态。
@@ -99,11 +102,13 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 - SLM 评测：总设计见 [SLM 评测计划](qualification/SLM_GENERATED_PROJECT_EVALUATION_PLAN.md)，尚未启动。
 - Windows 平台证据；生产、安全认证、性能、高可用资格均未声明。
 
-## 7. 当前阶段（2026-10-20）
+## 7. 当前阶段（2026-10-21）
 
 **语言升级已实施：**负责人 2026-10-17 确认把 SIR 做成 Java 之上的更高层语言——一句声明给出一个功能，作者写语义而不写机器类型，用户可以定义自己的类型和功能，数据库迁移由变更层驱动。[设计 12](design/12-feature-semantics-and-semantic-types.md) 第 9 节的五步已全部实施，结果与留到下一阶段的事项见其第 13 节。迁移由变更层驱动之后，已上线的表支持列改名（带 `@id`）、加可空列、加带默认值的必填列和新建表，这些都由 CI 部署冒烟在真实 MySQL 上核对。
 
 **之后的语义补充（2026-10-18～20）：**负责人确认先补语义、暂不做小模型评测，依次实施了内置 `Crud`、授权（403 与读当前用户字段）、路由与路径参数、通用改名命令，均已由 CI 通过（见第 4 节）。随后负责人确认并实施 G7 可选值比较、空值判断与显式筛选（`33f960b` 已推送，推送时按要求未核验 CI）；再确认并实现 G2/G4 查询原语（`00e3ce9` 已推送，推送时未核验 CI）。后续核验发现 #136 的真实 DTO Optional 取值错误、#137 的旧非法夹具和新增引用角色覆盖缺口；修复工作区 58 项定向通过，负责人随后授权随本提交推送并继续工作；同源码 CI 验收尚未完成。证据与未执行项见[验证说明第 8 节](qualification/README.md#ci-136-137-fix)。CI 修复已推送为 `ee6ddeb`；#138 的全量门通过、部署更新接口错误期待 201 而实际 200，本轮已改正断言，不能把整次 CI 记为通过。负责人确认后，[G9 Crud](design/12-feature-semantics-and-semantic-types.md#g9-crud) 已在工作区实现角色写权限、字段排除、公开读与多段路径，并贯通通用参数值和精确改名；library／market 已采用。89 项定向通过，真库 IT 已接入 CI，`f82cb94` 已推送；#139 双全量门通过，新增 G9 真库 IT 因把夹带排除字段的请求当作正常写入／权限请求而失败，后续部署被跳过。本轮分开合法请求与字段篡改请求，未改生产规则；13 项相关定向通过，完整 IT 仍待修复源码 CI。证据见[第 10 节](qualification/README.md#ci-139-fixture-fix)，八题完成数不提前上调。证据见[第 9 节](qualification/README.md#g9-crud-local)。SLM 评测的模型与样本数仍未定。
+
+**最新阶段：**G10 已按确认方案实现：Money 默认 precision(19,2)，可按同名规则覆写、接受无损尾随零、不隐式舍入；普通候选值、Optional／PATCH、DECIMAL 交付与严格事务连接上的原子金额加减贯通。market／shop／ledger 已改 Money；不自动转换整数分或迁移已有精度，不扩展乘法、循环、聚合。阶段完成直接 commit + push；G10 真库与部署待新 CI，64／5／15 不提前上调。下一项是 G6 乘法方案与 G11 计算视图。
 
 ## 7.1 上一阶段（2026-10-17）
 

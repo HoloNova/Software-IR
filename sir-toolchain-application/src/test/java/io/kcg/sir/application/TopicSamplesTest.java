@@ -39,6 +39,11 @@ class TopicSamplesTest {
             assertTrue(compiled.isPresent(), () -> topic + ": " + diagnostics);
             assertTrue(compiled.get().generatedFiles().size() > 40, topic);
             new SpringBootDeploymentPlanner().plan(compiled.get().semanticModel(), compiled.get().loweredModel());
+            long sirLines = new String(text, java.nio.charset.StandardCharsets.UTF_8).lines().count();
+            long javaLines = compiled.get().generatedFiles().stream().filter(f -> f.relativePath().endsWith(".java"))
+                    .mapToLong(f -> f.content().lines().count()).sum();
+            long endpoints = compiled.get().generatedFiles().stream().filter(f -> f.relativePath().endsWith("Controller.java")).count();
+            System.out.println("[TOPIC-SIZE] " + topic + " " + sirLines + " " + javaLines + " " + endpoints);
         }
     }
 }

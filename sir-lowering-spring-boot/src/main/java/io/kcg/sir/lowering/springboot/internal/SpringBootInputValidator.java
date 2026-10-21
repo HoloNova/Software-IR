@@ -412,7 +412,7 @@ public final class SpringBootInputValidator {
       this.validateType(field.type(), field.span(), field.id(), field.sourceNodeId());
 
       for (NormalizedConstraint constraint : field.constraints()) {
-         if (!Set.of("notBlank", "email", "length", "min", "max").contains(constraint.name())) {
+         if (!Set.of("notBlank", "email", "length", "min", "max", "precision").contains(constraint.name())) {
             this.error("SIR-LOWER-FEATURE-001", "unsupported constraint: " + constraint.name(), constraint.span(), field.id(), constraint.sourceNodeId());
          }
 
@@ -428,6 +428,10 @@ public final class SpringBootInputValidator {
       boolean valid = switch (constraint.name()) {
          case "notBlank", "email" -> constraint.arguments().isEmpty();
          case "length" -> constraint.arguments().size() == 2 && constraint.arguments().stream().allMatch(IntegerLiteral.class::isInstance);
+         case "precision" -> constraint.arguments().size() == 2
+            && constraint.arguments().stream().allMatch(IntegerLiteral.class::isInstance)
+            && io.kcg.sir.semantic.type.DecimalPrecision.parse(constraint.arguments().stream()
+                .map(a -> ((IntegerLiteral) a).value().toString()).toList()).isPresent();
          case "min", "max" -> constraint.arguments().size() == 1 && this.isNumericConstant(constraint.arguments().get(0));
          default -> true;
       };

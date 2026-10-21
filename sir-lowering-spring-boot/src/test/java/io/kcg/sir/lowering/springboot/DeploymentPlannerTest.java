@@ -52,10 +52,18 @@ class DeploymentPlannerTest {
         assertTrue(assertThrows(IllegalArgumentException.class, () -> plan(text)).getMessage().contains("external adapter"));
     }
 
-    @Test void refusesDecimalRatherThanSilentlyChoosingALossyScale() {
+    @Test void moneyCarriesAnExplicitShapeRatherThanChoosingDatabaseDefaults() {
         String text = bearer().replace("field name: Text unique;", "field name: Text where length(1, 64) unique;")
             .replace("entity Note persistent {", "entity Price persistent { identity id: Id generated auto; field value: Money; } entity Note persistent {");
-        assertTrue(assertThrows(IllegalArgumentException.class, () -> plan(text)).getMessage().contains("precision/scale"));
+        var column = plan(text).tables().stream().filter(t -> t.name().equals("price")).findFirst().orElseThrow()
+                .columns().stream().filter(c -> c.name().equals("value")).findFirst().orElseThrow();
+        assertEquals(DeploymentPlan.Storage.DECIMAL, column.storage());
+        assertEquals(new io.kcg.sir.lowering.springboot.model.DecimalShape(19, 2), column.decimalShape().orElseThrow());
+    }
+
+    @Test void anUnshapedDecimalColumnStillCannotBeDelivered() {
+        assertThrows(IllegalArgumentException.class, () -> new DeploymentPlan.Column("amount", "amount", DeploymentPlan.Storage.DECIMAL,
+                0, true, false, false, false, java.util.Optional.empty()));
     }
 
     private static String bearer() { return LoweringTestSupport.source("valid/bearer-credential.sir"); }

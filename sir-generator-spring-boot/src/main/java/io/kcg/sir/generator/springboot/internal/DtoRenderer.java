@@ -31,7 +31,7 @@ final class DtoRenderer {
 
       for (Property field : decl.fields()) {
          ctx.collectTypeImports(imports, field.type(), packageName);
-         collectConstraintImports(imports, field.constraints());
+         collectConstraintImports(imports, field.constraints(), WriteSupport.of(ctx.model()).validationSupportFqn());
       }
 
       String body = renderBody(decl);
@@ -152,7 +152,7 @@ final class DtoRenderer {
       return lastDot < 0 ? fqn : fqn.substring(lastDot + 1);
    }
 
-   private static void collectConstraintImports(ImportSorter imports, List<Constraint> constraints) {
+   private static void collectConstraintImports(ImportSorter imports, List<Constraint> constraints, String validationSupport) {
       for (Constraint constraint : constraints) {
          String type = switch (constraint.kind()) {
             case NOT_BLANK -> "jakarta.validation.constraints.NotBlank";
@@ -160,6 +160,8 @@ final class DtoRenderer {
             case SIZE -> "jakarta.validation.constraints.Size";
             case DECIMAL_MIN -> "jakarta.validation.constraints.DecimalMin";
             case DECIMAL_MAX -> "jakarta.validation.constraints.DecimalMax";
+            case NOT_NULL -> "jakarta.validation.constraints.NotNull";
+            case PRECISION -> validationSupport + ".ExactDecimal";
          };
          imports.add(type);
       }
@@ -194,11 +196,14 @@ final class DtoRenderer {
    private static void renderField(StringBuilder out, Property field) {
       if (field.type() instanceof io.kcg.sir.lowering.springboot.model.LoweredJavaType.OptionalValue optional) {
          out.append("    private java.util.Optional<");
+         String element = TypeRenderer.renderBoxedType(optional.elementType());
+         int qualifier = field.constraints().isEmpty() ? -1 : element.lastIndexOf('.');
+         if (qualifier >= 0) out.append(element, 0, qualifier + 1);
          for (Constraint constraint : field.constraints()) {
             out.append(renderConstraint(constraint)).append(' ');
          }
 
-         out.append(TypeRenderer.renderBoxedType(optional.elementType())).append("> ")
+         out.append(qualifier >= 0 ? element.substring(qualifier + 1) : element).append("> ")
             .append(field.javaName()).append(" = java.util.Optional.empty();\n\n");
          return;
       }
@@ -225,6 +230,11 @@ final class DtoRenderer {
          }
          case DECIMAL_MIN -> "@DecimalMin(" + StringEscape.javaString(argument(constraint)) + ")";
          case DECIMAL_MAX -> "@DecimalMax(" + StringEscape.javaString(argument(constraint)) + ")";
+         case NOT_NULL -> "@NotNull";
+         case PRECISION -> {
+            var shape = constraint.decimalShape().orElseThrow();
+            yield "@ExactDecimal(precision = " + shape.precision() + ", scale = " + shape.scale() + ")";
+         }
       };
    }
 

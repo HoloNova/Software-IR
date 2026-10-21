@@ -222,7 +222,15 @@ public final class SpringBootModelLowerer {
     private ProjectArtifact.ValidationSupport validationSupportArtifact() {
         String packageName = this.source.metadata().namespace() + ".api";
         String packagePath = "src/main/java/" + packageName.replace('.', '/') + "/";
-        List<String> codes = SpringBootWritePolicy.V0_1.validatedConstraintCodes();
+        boolean decimal = this.source.declarations().stream().anyMatch(declaration -> {
+            List<NormalizedField> fields = declaration instanceof NormalizedEntity e ? e.fields()
+                : declaration instanceof NormalizedInput i ? i.fields() : List.of();
+            return fields.stream().anyMatch(field -> field.constraints().stream().anyMatch(c -> c.name().equals("precision")));
+        });
+        List<String> codes = decimal
+            ? java.util.stream.Stream.concat(SpringBootWritePolicy.V0_1.validatedConstraintCodes().stream(),
+                java.util.stream.Stream.of("precision", "notNull")).toList()
+            : SpringBootWritePolicy.V0_1.validatedConstraintCodes();
         return new ProjectArtifact.ValidationSupport(
                 this.nodeId("project", "validation-support"), this.projectOrigin(),
                 packagePath + "ValidationSupport.java", packageName, "ValidationSupport",
@@ -577,7 +585,13 @@ public final class SpringBootModelLowerer {
         SirType sirType;
         SpringBootDeclaration.PersistenceShape shape = !persistent ? SpringBootDeclaration.PersistenceShape.NONE : (field.type() instanceof RefType ? SpringBootDeclaration.PersistenceShape.REFERENCE_ID : ((sirType = field.type()) instanceof DeclaredType && (declared = (DeclaredType)sirType).kind() == DeclaredType.DeclaredKind.ENUM ? SpringBootDeclaration.PersistenceShape.ENUM_TEXT : SpringBootDeclaration.PersistenceShape.SCALAR));
         String column = field.type() instanceof RefType ? this.snake(field.name()) + "_id" : this.snake(field.name());
-        List<SpringBootDeclaration.Constraint> constraints = field.constraints().stream().map(constraint -> this.lowerConstraint((NormalizedConstraint)constraint, owner)).toList();
+        List<SpringBootDeclaration.Constraint> declaredConstraints = field.constraints().stream().map(constraint -> this.lowerConstraint(constraint, owner)).toList();
+        List<SpringBootDeclaration.Constraint> constraints = !(field.type() instanceof OptionalType)
+                && declaredConstraints.stream().anyMatch(c -> c.kind() == SpringBootDeclaration.ConstraintKind.PRECISION)
+            ? java.util.stream.Stream.concat(declaredConstraints.stream(), java.util.stream.Stream.of(
+                new SpringBootDeclaration.Constraint(this.symbolId(field.id(), "required"),
+                    this.origin(owner, field.sourceNodeId(), field.span()), SpringBootDeclaration.ConstraintKind.NOT_NULL, List.of()))).toList()
+            : declaredConstraints;
         return new SpringBootDeclaration.Property(this.symbolId(field.id(), "property"), this.origin(owner, field.sourceNodeId(), field.span()), field.id(), this.targetPropertyName(field, persistent), persistent ? Optional.of(column) : Optional.empty(), this.lowerType(field.type()), shape, constraints);
     }
 
@@ -588,10 +602,14 @@ public final class SpringBootModelLowerer {
             case "length" -> SpringBootDeclaration.ConstraintKind.SIZE;
             case "min" -> SpringBootDeclaration.ConstraintKind.DECIMAL_MIN;
             case "max" -> SpringBootDeclaration.ConstraintKind.DECIMAL_MAX;
+            case "precision" -> SpringBootDeclaration.ConstraintKind.PRECISION;
             default -> throw new IllegalStateException("validated constraint is unsupported: " + constraint.name());
         };
-        List<String> arguments = constraint.arguments().stream().map(this::constantValue).toList();
-        return new SpringBootDeclaration.Constraint(this.nodeId(constraint.sourceNodeId().value(), "constraint"), this.origin(owner, constraint.sourceNodeId(), constraint.span()), kind, arguments);
+        List<String> arguments = kind == SpringBootDeclaration.ConstraintKind.PRECISION ? List.of()
+            : constraint.arguments().stream().map(this::constantValue).toList();
+        return new SpringBootDeclaration.Constraint(this.nodeId(constraint.sourceNodeId().value(), "constraint"),
+            this.origin(owner, constraint.sourceNodeId(), constraint.span()), kind, arguments,
+            kind == SpringBootDeclaration.ConstraintKind.PRECISION ? Optional.of(this.decimalShape(constraint)) : Optional.empty());
     }
 
     private SpringBootDeclaration.CapabilityDeclaration lowerCapability(NormalizedCapability value) {
@@ -1101,9 +1119,19 @@ public final class SpringBootModelLowerer {
             return lowered;
         }
 
+        Optional<io.kcg.sir.lowering.springboot.model.DecimalShape> decimal = this.entities.values().stream()
+            .flatMap(entity -> entity.fields().stream()).filter(field -> field.id().equals(binding.fieldSymbol()))
+            .flatMap(field -> field.constraints().stream()).filter(c -> c.name().equals("precision"))
+            .map(this::decimalShape)
+            .findFirst();
         return new SpringBootWorkflow.Binding(lowered.fieldSymbol(), lowered.targetProperty(), lowered.value(),
-                lowered.sourcePropertyName(),
-                Optional.of(new SpringBootWorkflow.Relative(relative.get().subtract(), value.right())));
+                this.sourcePropertyName(value.right(), owner),
+                Optional.of(new SpringBootWorkflow.Relative(relative.get().subtract(), value.right(), decimal)));
+    }
+
+    private io.kcg.sir.lowering.springboot.model.DecimalShape decimalShape(NormalizedConstraint constraint) {
+        return new io.kcg.sir.lowering.springboot.model.DecimalShape(
+            Integer.parseInt(this.constantValue(constraint.arguments().get(0))), Integer.parseInt(this.constantValue(constraint.arguments().get(1))));
     }
 
     private SpringBootWorkflow.Binding lowerBinding(NormalizedBinding binding, SymbolId owner, Optional<SymbolId> actorSymbol) {

@@ -32,18 +32,19 @@ public final class SchemaContract {
 
     public static String row(String table, Column column) {
         var ref = column.reference();
-        return String.join("\t", table, column.name(), dataType(column.storage()),
+        String row = String.join("\t", table, column.name(), dataType(column.storage()),
             Integer.toString(column.storage() == Storage.UUID ? 36 : column.length()),
             Boolean.toString(column.nullable()), Boolean.toString(column.primary()), Boolean.toString(column.autoIncrement()),
             Boolean.toString(column.unique()), ref.map(ForeignKey::table).orElse(""), ref.map(ForeignKey::column).orElse(""),
             column.defaultValue().map(v -> "=" + java.net.URLEncoder.encode(v, java.nio.charset.StandardCharsets.UTF_8)).orElse(""));
+        return column.decimalShape().map(shape -> row + "\t" + shape.precision() + "\t" + shape.scale()).orElse(row);
     }
 
     private static String dataType(Storage storage) {
         return switch (storage) {
             case INT -> "int"; case BIGINT -> "bigint"; case BOOLEAN -> "tinyint";
             case VARCHAR -> "varchar"; case LONGTEXT -> "longtext"; case UUID -> "char";
-            case DATE -> "date"; case DATETIME -> "datetime";
+            case DATE -> "date"; case DATETIME -> "datetime"; case DECIMAL -> "decimal";
         };
     }
 }

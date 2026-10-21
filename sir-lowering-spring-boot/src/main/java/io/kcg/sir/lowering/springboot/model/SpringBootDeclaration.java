@@ -81,16 +81,28 @@ public sealed interface SpringBootDeclaration
       QUERY;
    }
 
-   record Constraint(LoweredNodeId id, LoweredOrigin origin, SpringBootDeclaration.ConstraintKind kind, List<String> arguments) {
+   record Constraint(LoweredNodeId id, LoweredOrigin origin, SpringBootDeclaration.ConstraintKind kind, List<String> arguments,
+         Optional<DecimalShape> decimalShape) {
       public Constraint {
          Objects.requireNonNull(id, "id");
          Objects.requireNonNull(origin, "origin");
          Objects.requireNonNull(kind, "kind");
          arguments = List.copyOf(Objects.requireNonNull(arguments, "arguments"));
+         Objects.requireNonNull(decimalShape, "decimalShape");
+         if ((kind == ConstraintKind.PRECISION) != decimalShape.isPresent())
+            throw new IllegalArgumentException("only precision constraints carry an explicit DecimalShape");
+         if (decimalShape.isPresent() && !arguments.isEmpty())
+            throw new IllegalArgumentException("precision is a typed shape, not string arguments");
+      }
+
+      public Constraint(LoweredNodeId id, LoweredOrigin origin, ConstraintKind kind, List<String> arguments) {
+         this(id, origin, kind, arguments, Optional.empty());
       }
    }
 
    enum ConstraintKind {
+      NOT_NULL,
+      PRECISION,
       NOT_BLANK,
       EMAIL,
       SIZE,

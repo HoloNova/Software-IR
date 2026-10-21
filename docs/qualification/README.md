@@ -290,3 +290,53 @@ mvn -B -o -pl sir-toolchain-application -am '-Dtest=CrudAccessContractTest,Optio
 结果：13 项定向测试通过（12 + 1，0 failure/error/skip）；修改后的 IT 随模块测试源码编译通过。AFT Java/JDTLS 初始化失败，静态诊断为未知，以本次 javac 编译为准。不把这 13 项内存／生成契约测试称为真实 HTTP／MySQL GREEN。
 
 **仍待 CI。** 修复源码的 `CrudAccessBusinessConformanceIT`、双全量门、独立验证和部署门均待推送后执行。本机未启动 MySQL、生成应用或执行业务 IT；不更新八题完成数。后续完整结果必须绑定修复 commit SHA 与对应 run。
+
+
+<a id="ci-140-accepted"></a>
+## 11. CI #140：G9 与历史 CI 修复闭环
+
+源码 `484a8a792c3ec6a7b9f5a7b7171b009e981a8ce3`；[CI #140](https://github.com/HoloNova/Software-IR/actions/runs/39527408701) 已 completed / success。`gates-and-business-it` 与 `standalone-deployment` 均通过，实际步骤包括双全量门、业务 IT、独立验证、CLI，以及冷部署、HTTP 与持久化验收。前述 #136～#139 的已知阻塞至此闭环；不能用该 SHA 的结果验收后续 G10。
+
+已核对产物索引：`conformance-evidence`（12314706243）、`surefire-reports`（12314751145）、`deployment-evidence`（12315206741）、`backend-source-delivery`（12314847105）、`standalone-cli`（12314716218）。本次没有重新下载报告计数，不据 job 成功推算新的需求覆盖数量。
+
+<a id="g10-money-local"></a>
+## 12. G10：精确金额、写入校验与 DECIMAL 交付（本机定向，待本批 CI）
+
+负责人已确认默认 `precision(19,2)`、允许同名规则覆写、接受无损尾随零且拒绝隐式舍入。[设计 12 第 20 节](../design/12-feature-semantics-and-semantic-types.md#g10-money-proposal)记录原因与边界；[语言参考](../SIR_LANGUAGE_REFERENCE.md#2-类型)是作者侧规则。Money 不隐含非负、币种或汇率，旧整数分不自动换算，现存 precision／scale 变化不自动迁移。
+
+**实现。** Core 验证规则参数、适用类型、覆盖和默认值；Lowering 形成正式 DecimalShape／候选与相对写计划。生成 DTO 与候选校验共用精确判定，Optional 的限定类名注解可编译；普通更新也检查最终目标字段，BigDecimal 取负正确生成。PATCH 的继承 precision 来自实体，其他继承业务约束和显式 PATCH precision 仍拒绝，不改变旧 null／版本协议。语义类型仍全项目可见，实体仍需 import。
+
+DECIMAL 合同行是原 11 列加 precision／scale 两列，非金额合同不变；物理上限先检查，再由列计划验证并规范默认值，避免极端 scale 展开大字符串。现场精度、标度、默认值需核验。原子金额保持 SQL delta 与原守卫、加载行、非 version 限制；检查 delta scale 与同一 Spring 事务绑定的 MyBatis 连接严格模式，最终溢出由数据库拒绝并回滚，不改写为 guard 错误，不 SET GLOBAL。普通非版本持久化的全行／NULL 策略未重新设计。
+
+**RED→GREEN。** 新精度语义／默认值及源往返先补失败测试；真实生成 DTO／服务发现并修复 Optional<BigDecimal> 类型注解位置，金额取负和较宽输入写窄字段均执行验证。完整夹具发现 Money 默认 precision 与旧 PATCH 约束禁令的冲突，补正反例后仅跳过继承 precision，保留 Quantity 等旧反例。最后直接构造列计划的非精确默认值测试先 RED，再把规范化收口到列计划；十亿位精度带默认值现在先按物理上限拒绝，未在旧危险路径上做大分配复现。PATCH 运行代理补齐既有 selectByIdForUpdate／updateIfVersionMatches，不改生产锁或版本协议。
+
+最新 XML 封存到本机 `target/g10-verification/`，15 类合计 **105 tests / 0 failures / 0 errors / 0 skipped**，不累计重跑次数：
+
+| 测试 | 项数 |
+| --- | --- |
+| MoneyPrecisionSemanticsTest | 24 |
+| AtomicCounterSemanticsTest／SemanticTypeSemanticsTest | 8／10 |
+| SirDeclarationWriterRoundTripTest／WriteSliceSemanticsTest | 2／29 |
+| DeploymentPlannerTest／SpringBootLoweredIrValidatorTest | 6／1 |
+| SchemaEvolutionPlannerTest | 最新仅新增两个金额迁移方法，2 |
+| MoneyRuntimeTest | 7 |
+| MoneyDeliveryTest／MoneyAtomicContractTest | 5／1 |
+| GeneratorAtomicCounterContractTest | 3 |
+| MoneyToolchainContractTest | 3 |
+| TopicSamplesTest／LanguageReferenceExamplesTest | 1／3 |
+
+早前 SchemaEvolutionPlannerTest 的 15 个既有方法已定向通过，最终最新 XML 只保留两项新方法，不再加 15。真实运行时覆盖校验器、DTO、Optional、PATCH required-null／清空、普通计算越界拒写、取负及事务连接；数据库 mapper／JDBC 使用代理，**不把它称为真实 MySQL**。八题通过内存编译／生成／交付规划，market／shop／ledger 已改 Money；规模由 TopicSamplesTest 输出，不构建生成工程。
+
+执行记录节选（Windows、Java 21、Maven 离线单构建；Maven 堆 512m，测试 fork 384m）：
+
+```powershell
+$env:MAVEN_OPTS='-Xmx512m'
+mvn -B -o -pl sir-generator-spring-boot -am '-Dtest=MoneyRuntimeTest' '-DfailIfNoTests=false' '-Dsurefire.failIfNoSpecifiedTests=false' '-DargLine=-Xmx384m' test
+mvn -B -o -pl sir-toolchain-application -am '-Dtest=DeploymentPlannerTest,MoneyDeliveryTest,SchemaEvolutionPlannerTest#decimalPrecisionAndScaleChangesAreNeverAutomaticWidenings+aNewRequiredDecimalColumnStillNeedsAnExactDefault,TopicSamplesTest' '-DfailIfNoTests=false' '-Dsurefire.failIfNoSpecifiedTests=false' '-DargLine=-Xmx384m' test
+```
+
+AFT Java/JDTLS 初始化退出，诊断 PARTIAL／unknown，以实际 javac 与定向执行为准；未测覆盖率，不声明 80%。Python 冒烟脚本只做语法检查；差异与新文件均自审，不使用浏览器，无 UI 改动。本机未启动 MySQL、生成应用或容器。
+
+**已接入但尚未验收。** `MoneyBusinessConformanceIT` 复用 BusinessSliceHarness，接入 verify.yml 的串行业务 IT 与 `kcg.money-conformance.enabled=true`。覆盖真实 JSON 尾随零／指数／精度错误、必填 null、PATCH absent／null／版本冲突、原子金额并发、guard 不成立、溢出回滚，以及非严格池连接拒写；由独立 JDBC 核对行和值。部署 v3 增加金额和默认值，不增加迁移版本；独立部署烟测核对 DECIMAL precision／scale／默认值，并篡改精度确认公开 start 拒绝，再恢复，沿用既有清理与脱敏证据。
+
+本批真实 MySQL／HTTP、并发／非严格模式 IT、八题生成工程 Maven 编译、双全量门及完整部署均 **NOT_RUN**，留给本批 commit + push 后的 CI。必须以该 SHA、run URL 和上传的 conformance-evidence／surefire-reports／deployment-evidence 为准，不能沿用 #140。阶段提交按负责人授权直接推送；84 条需求账本仍为 64 完整／5 折扣／15 尚未写出，不将新原语直接换算为需求通过。

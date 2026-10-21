@@ -13,6 +13,9 @@ public record DeploymentPlan(LoweredNodeId id, ProjectArtifact.MavenProject appl
         Objects.requireNonNull(id); Objects.requireNonNull(applicationProject); Objects.requireNonNull(images); Objects.requireNonNull(api);
         tables = List.copyOf(tables);
     }
+    private static final int MYSQL_DECIMAL_MAX_PRECISION = 65;
+    private static final int MYSQL_DECIMAL_MAX_SCALE = 30;
+
     public record Images(String builder, String runtime, String mysql) {}
 
     /** The exposed interface as the target lowered it, so documentation and network tests need no second route list. */
@@ -78,7 +81,7 @@ public record DeploymentPlan(LoweredNodeId id, ProjectArtifact.MavenProject appl
             columns.forEach(DeploymentPlan::identifier);
         }
     }
-    public enum Storage { INT, BIGINT, BOOLEAN, VARCHAR, LONGTEXT, UUID, DATE, DATETIME }
+    public enum Storage { INT, BIGINT, BOOLEAN, VARCHAR, LONGTEXT, UUID, DATE, DATETIME, DECIMAL }
     public record ForeignKey(String table, String column) {
         public ForeignKey { identifier(table); identifier(column); }
     }
@@ -88,14 +91,29 @@ public record DeploymentPlan(LoweredNodeId id, ProjectArtifact.MavenProject appl
      * a flag as 0 or 1); it is what lets a required column be added to a table that already has rows.
      */
     public record Column(String symbol, String name, Storage storage, int length, boolean nullable, boolean primary,
-            boolean autoIncrement, boolean unique, Optional<ForeignKey> reference, Optional<String> defaultValue) {
+            boolean autoIncrement, boolean unique, Optional<ForeignKey> reference, Optional<String> defaultValue, Optional<DecimalShape> decimalShape) {
         public Column {
             Objects.requireNonNull(symbol); identifier(name); Objects.requireNonNull(storage); Objects.requireNonNull(reference);
-            Objects.requireNonNull(defaultValue);
+            Objects.requireNonNull(defaultValue); Objects.requireNonNull(decimalShape);
+            if ((storage == Storage.DECIMAL) != decimalShape.isPresent()) throw new IllegalArgumentException("decimal storage requires an explicit shape only: " + name);
+            if (decimalShape.isPresent() && (decimalShape.get().precision() > MYSQL_DECIMAL_MAX_PRECISION || decimalShape.get().scale() > MYSQL_DECIMAL_MAX_SCALE))
+                throw new IllegalArgumentException("decimal shape exceeds MySQL precision 65 / scale 30: " + name);
             if (storage == Storage.VARCHAR && (length < 1 || length > 768)) throw new IllegalArgumentException("invalid VARCHAR length");
             if (defaultValue.isPresent() && (primary || autoIncrement || unique || reference.isPresent()
                     || storage == Storage.LONGTEXT || storage == Storage.DATE || storage == Storage.DATETIME))
                 throw new IllegalArgumentException("only a plain number, flag or bounded text column can have a database default: " + name);
+            if (decimalShape.isPresent() && defaultValue.isPresent()) {
+                var shape = decimalShape.orElseThrow();
+                var number = new java.math.BigDecimal(defaultValue.orElseThrow());
+                if (!new io.kcg.sir.semantic.type.DecimalPrecision(shape.precision(), shape.scale()).accepts(number))
+                    throw new IllegalArgumentException("decimal default cannot be represented exactly: " + name);
+                // Bound the physical shape before setScale/toPlainString can expand its representation.
+                defaultValue = Optional.of(number.setScale(shape.scale(), java.math.RoundingMode.UNNECESSARY).toPlainString());
+            }
+        }
+        public Column(String symbol, String name, Storage storage, int length, boolean nullable, boolean primary,
+                boolean autoIncrement, boolean unique, Optional<ForeignKey> reference, Optional<String> defaultValue) {
+            this(symbol, name, storage, length, nullable, primary, autoIncrement, unique, reference, defaultValue, Optional.empty());
         }
         public Column(String symbol, String name, Storage storage, int length, boolean nullable, boolean primary,
                 boolean autoIncrement, boolean unique, Optional<ForeignKey> reference) {

@@ -1,0 +1,3 @@
+-- TEST_FIXTURE_DDL: isolated owned conformance schema, not a product migration.
+CREATE TABLE wallet (id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, balance DECIMAL(19,2) NOT NULL DEFAULT 0.00, rebate DECIMAL(19,2) NULL);
+CREATE TABLE versioned_wallet (id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, balance DECIMAL(19,2) NOT NULL, rebate DECIMAL(19,2) NULL, version BIGINT NOT NULL DEFAULT 0);

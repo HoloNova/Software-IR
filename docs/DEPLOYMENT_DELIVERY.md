@@ -58,7 +58,7 @@ stop不删卷、配置、密码或镜像。start要求卷/镜像存在，只核�
 | Day / Moment | DATE / DATETIME(6)，连接与会话UTC |
 | Text、Name、Code、Remark、Email | 有长度上限且不超过768时VARCHAR，否则LONGTEXT；业务约束仍由原生成代码检查 |
 | Secret | VARCHAR(255)，存摘要，不套用输入明文长度 |
-| Money | 暂不支持（没有精度与小数位的物理合同） |
+| Money | 显式 DECIMAL(p,s)，默认 (19,2)；p ≤ 65、s ≤ 30，不隐式舍入 |
 | 枚举 | 按目标枚举成员长度规划VARCHAR |
 | Ref | 目标主键的实际存储类型，外键RESTRICT |
 | 可空字段 | 保留NULL；非空字段NOT NULL |
@@ -67,6 +67,8 @@ stop不删卷、配置、密码或镜像。start要求卷/镜像存在，只核�
 表为InnoDB，文本使用`utf8mb4_0900_bin`完整值比较。unique只建立完整值唯一键，不建前缀唯一索引。唯一文本缺少不超过768的明确长度、Decimal缺少精度/scale契约、外部actor未提供credential实现、超出标识符/行预算等情况在导出时返回`SIR-DEPLOY-UNSUPPORTED-001`。普通generate仍遵循原合同。
 
 与Java映射不兼容的MySQL保留字在独立执行器的服务器核验中拒绝，不让健康检查成功掩盖业务SQL不可用。schema漂移或迁移失败保留现场，不自行repair或改旧数据。
+
+G10 的 DECIMAL 合同行在原 11 列后追加 precision／scale；新执行器兼容旧非金额 11 列合同，不声称旧执行器兼容新金额包。已有列的 precision／scale 改动拒绝自动迁移，旧整数分也不会自动转换。现场核验精度／标度及规范默认值；原子金额写另要求实际事务连接严格 SQL mode。实现定向已通过，金额真实部署、漂移与 HTTP 尚待本批 CI，见[验证记录](qualification/README.md#g10-money-local)。
 
 ## 5. 依赖与资源
 

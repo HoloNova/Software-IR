@@ -72,7 +72,8 @@ public record SchemaEvolution(int baseVersion, List<Step> steps) {
                     || !from.symbol().equals(to.symbol()) || !from.name().equals(to.name())
                     || from.unique() != to.unique() || !from.reference().equals(to.reference())
                     || !from.defaultValue().equals(to.defaultValue())) return false;
-            boolean sameType = from.storage() == to.storage() && (from.storage() != Storage.VARCHAR || from.length() == to.length());
+            boolean sameType = from.storage() == to.storage() && from.decimalShape().equals(to.decimalShape())
+                && (from.storage() != Storage.VARCHAR || from.length() == to.length());
             boolean longer = from.storage() == Storage.VARCHAR && to.storage() == Storage.VARCHAR && to.length() > from.length();
             boolean wider = from.storage() == Storage.INT && to.storage() == Storage.BIGINT
                 || from.storage() == Storage.VARCHAR && to.storage() == Storage.LONGTEXT && !from.unique() && from.defaultValue().isEmpty();

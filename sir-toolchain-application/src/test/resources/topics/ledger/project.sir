@@ -62,12 +62,12 @@ software PersonalLedger {
       field name: Name;
       field direction: Direction;
     }
-    // Amounts are whole cents: Money (a decimal) cannot be delivered by this target yet.
+    // Exact decimal amounts; 0.01 is the smallest positive value at Money's default scale.
     entity Entry persistent {
       identity id: Id generated auto;
       field owner: Ref<User>;
       field category: Ref<Category>;
-      field amount: Serial where min(1);
+      field amount: Money where min(0.01);
       field note: Optional<Remark>;
       field occurredAt: Moment;
     }
@@ -75,7 +75,7 @@ software PersonalLedger {
       identity id: Id generated auto;
       field owner: Ref<User>;
       field category: Ref<Category>;
-      field monthlyLimit: Serial where min(1);
+      field monthlyLimit: Money where min(0.01);
     }
     use Crud {
       entity: Category;

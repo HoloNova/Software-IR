@@ -284,6 +284,7 @@ public final class DeploymentEngine {
             case INT -> "INT"; case BIGINT -> "BIGINT"; case BOOLEAN -> "BOOLEAN";
             case VARCHAR -> "VARCHAR(" + column.length() + ")"; case LONGTEXT -> "LONGTEXT";
             case UUID -> "CHAR(36)"; case DATE -> "DATE"; case DATETIME -> "DATETIME(6)";
+            case DECIMAL -> "DECIMAL(" + column.decimalShape().orElseThrow().precision() + "," + column.decimalShape().orElseThrow().scale() + ")";
         };
     }
 }

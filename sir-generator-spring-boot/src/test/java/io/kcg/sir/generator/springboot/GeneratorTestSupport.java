@@ -46,7 +46,7 @@ final class GeneratorTestSupport {
         return generateSuccess(lowerText(sourceText));
     }
 
-    static SpringBootLoweredModel lowerText(String sourceText) {
+    static NormalizedSemanticModel normalizedText(String sourceText) {
         SourceUnitParseResult parsed = new DefaultSirParser().parseProject(new SirSource(SourceId.of("inline.sir"), sourceText));
         if (!parsed.isSuccess()) {
             throw new AssertionError("parse failed: " + parsed.diagnostics());
@@ -57,8 +57,12 @@ final class GeneratorTestSupport {
             throw new AssertionError("semantic analysis failed: " + semantic.diagnostics());
         }
 
+        return semantic.model().orElseThrow();
+    }
+
+    static SpringBootLoweredModel lowerText(String sourceText) {
         LoweringAnalysis<SpringBootLoweredModel> lowered =
-                new SpringBootTargetLowering().lower(semantic.model().orElseThrow());
+                new SpringBootTargetLowering().lower(normalizedText(sourceText));
         if (!lowered.isSuccess()) {
             throw new AssertionError("lowering failed: " + lowered.diagnostics());
         }

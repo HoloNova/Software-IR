@@ -67,8 +67,12 @@ public final class SpringBootDeploymentPlanner {
                     throw new IllegalArgumentException("unique text needs a declared length at most 768: " + field.name());
                 Optional<String> defaultValue = storage == Storage.LONGTEXT || storage == Storage.DATE || storage == Storage.DATETIME
                     ? Optional.empty() : field.defaultValue().flatMap(value -> databaseDefault(value, model));
+                Optional<DecimalShape> decimalShape = storage == Storage.DECIMAL
+                    ? Optional.of(property.constraints().stream().flatMap(c -> c.decimalShape().stream()).findFirst()
+                        .orElseThrow(() -> new IllegalArgumentException("Decimal deployment requires explicit precision/scale: " + field.name())))
+                    : Optional.empty();
                 columns.add(new Column(property.sourceSymbol().value(), property.columnName().orElseThrow(), storage, length, nullable, false, false,
-                    field.unique(), reference, defaultValue));
+                    field.unique(), reference, defaultValue, decimalShape));
             }
             Set<String> columnNames = new HashSet<>();
             int inlineBytes = 0;
@@ -199,6 +203,9 @@ public final class SpringBootDeploymentPlanner {
         return switch (value) {
             case io.kcg.sir.semantic.model.NormalizedExpression.BooleanLiteral v -> Optional.of(v.value() ? "1" : "0");
             case io.kcg.sir.semantic.model.NormalizedExpression.IntegerLiteral v -> Optional.of(v.value().toString());
+            case io.kcg.sir.semantic.model.NormalizedExpression.DecimalLiteral v -> Optional.of(v.value().toPlainString());
+            case io.kcg.sir.semantic.model.NormalizedExpression.UnaryExpression v
+                    when v.operand() instanceof io.kcg.sir.semantic.model.NormalizedExpression.DecimalLiteral n -> Optional.of(n.value().negate().toPlainString());
             case io.kcg.sir.semantic.model.NormalizedExpression.StringLiteral v -> Optional.of(v.value());
             case io.kcg.sir.semantic.model.NormalizedExpression.UnaryExpression v
                     when v.operand() instanceof io.kcg.sir.semantic.model.NormalizedExpression.IntegerLiteral n -> Optional.of(n.value().negate().toString());
@@ -218,8 +225,7 @@ public final class SpringBootDeploymentPlanner {
             case UUID -> Storage.UUID;
             case LOCAL_DATE -> Storage.DATE;
             case INSTANT -> Storage.DATETIME;
-            // The language has no physical Decimal precision/scale contract yet. Never round it silently.
-            case BIG_DECIMAL -> throw new IllegalArgumentException("Decimal deployment requires an explicit physical precision/scale contract; not supported in delivery v1");
+            case BIG_DECIMAL -> Storage.DECIMAL;
             case VOID -> throw new IllegalArgumentException("Unit cannot be persisted");
         };
     }

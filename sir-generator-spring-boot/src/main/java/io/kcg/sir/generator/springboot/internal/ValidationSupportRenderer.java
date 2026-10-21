@@ -42,6 +42,7 @@ final class ValidationSupportRenderer {
         renderLength(out, fieldError);
         renderBounds(out, fieldError, "min", "must be greater than or equal to", " < 0");
         renderBounds(out, fieldError, "max", "must be less than or equal to", " > 0");
+        if (artifact.constraintCodes().contains("precision")) out.append(DecimalValidationRenderer.render(fieldError));
         out.append("    private static void reject(List<").append(fieldError).append("> violations, String path, String code, String message) {\n");
         out.append("        violations.add(new ").append(fieldError).append("(path, code, message));\n");
         out.append("    }\n");

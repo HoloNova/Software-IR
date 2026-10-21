@@ -57,9 +57,13 @@ public record SpringBootWorkflow(LoweredNodeId id, LoweredOrigin origin, List<Sp
    }
 
    /** The amount a column is increased by, or decreased by when {@code subtract}. */
-   public record Relative(boolean subtract, SpringExpression amount) {
+   public record Relative(boolean subtract, SpringExpression amount, java.util.Optional<DecimalShape> decimalShape) {
       public Relative {
          Objects.requireNonNull(amount, "amount");
+         Objects.requireNonNull(decimalShape, "decimalShape");
+      }
+      public Relative(boolean subtract, SpringExpression amount) {
+         this(subtract, amount, java.util.Optional.empty());
       }
    }
 

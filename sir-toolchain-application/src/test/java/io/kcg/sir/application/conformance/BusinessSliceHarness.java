@@ -197,6 +197,7 @@ final class BusinessSliceHarness {
     private String lockName;
     private SpringApplicationProcess springProcess;
     private String actorMode;
+    private boolean nonStrictSqlModeFixture;
     private Process process;
     private boolean schemaCreated;
     private String failure;
@@ -399,6 +400,9 @@ final class BusinessSliceHarness {
         this.actorMode = mode;
     }
 
+    /** Fixed test-only session setup; never alters endpoint/schema validation or the server's global mode. */
+    void useNonStrictSqlModeFixture() { this.nonStrictSqlModeFixture = true; }
+
     Path buildAndLocateJar(MysqlRuntimeJdbcUrl runtimeUrl) throws IOException, InterruptedException {
         ChildEnvironmentBuilder childEnvironment = new ChildEnvironmentBuilder()
                 .copyOsAllowlist()
@@ -413,6 +417,10 @@ final class BusinessSliceHarness {
         }
 
         Map<String, String> childEnv = new java.util.LinkedHashMap<>(childEnvironment.build());
+        if (this.nonStrictSqlModeFixture) {
+            // Hikari runs this on every new physical connection, after Connector/J initialization.
+            childEnv.put("SPRING_DATASOURCE_HIKARI_CONNECTION_INIT_SQL", "SET SESSION sql_mode=''");
+        }
         // ChildEnvironmentBuilder deliberately drops inherited MAVEN_OPTS; limits must be explicit.
         List<String> mavenLimits = ConformanceJvmLimits.arguments("maven");
         if (!mavenLimits.isEmpty()) childEnv.put("MAVEN_OPTS", childEnv.get("MAVEN_OPTS") + " " + String.join(" ", mavenLimits));

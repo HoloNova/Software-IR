@@ -54,8 +54,9 @@ class AtomicCounterSemanticsTest {
     }
 
     @Test
-    void theColumnMustBeAnInteger() {
-        assertOnly(replace(LEAVE, "update course {\n          fee: course.fee - 1.00;\n        }"));
+    void theColumnMayAlsoBeAnExactDecimal() {
+        var result = TestSources.analyze(replace(LEAVE, "update course {\n          fee: course.fee - 1.00;\n        }"));
+        assertTrue(result.isSuccess(), () -> result.diagnostics().toString());
     }
 
     @Test
@@ -71,7 +72,7 @@ class AtomicCounterSemanticsTest {
     }
 
     private static String replace(String fragment, String replacement) {
-        String source = TestSources.resource(FIXTURE);
+        String source = TestSources.resource(FIXTURE).replace("\r\n", "\n");
         assertTrue(source.contains(fragment), "the fragment to replace is missing: " + fragment);
         return source.replace(fragment, replacement);
     }

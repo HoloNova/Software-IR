@@ -33,7 +33,8 @@ report = {'commit': os.getenv('GITHUB_SHA'), 'runUrl': f"{os.getenv('GITHUB_SERV
           'deployment': 'NOT_RUN', 'httpSmoke': 'NOT_RUN', 'persistence': 'NOT_RUN', 'privileges': 'NOT_RUN',
           'swagger': 'NOT_RUN', 'contract': 'NOT_RUN', 'missingVolume': 'NOT_RUN', 'business': 'NOT_RUN', 'update': 'NOT_RUN', 'dataUpdate': 'NOT_RUN', 'freshChain': 'NOT_RUN',
           'cleanup': 'NOT_RUN',
-          'notRunByContract': ['interruptedMigration', 'schemaDrift'],
+          'notRunByContract': ['interruptedMigration', 'schemaDriftOtherThanDecimalShape'],
+          'decimalShape': 'NOT_RUN',
           'nextPackageId': (a.next_package / 'package.id').read_text().strip(),
           'v2PackageId': (a.v2_package / 'package.id').read_text().strip(),
           'v3PackageId': (a.v3_package / 'package.id').read_text().strip(), 'requests': []}
@@ -359,6 +360,25 @@ try:
     check_count('notes', 7, True)
     long_state = 'x' * 40
     assert request('/api/update-note', {'id': kept['id'], 'body': 'v3-kept', 'pinned': True, 'state': long_state}, token=owner, base=server)['state'] == long_state
+    # G10: this is product-exported DDL/migration, not the business IT's TEST_FIXTURE_DDL.
+    shape_query = ("SELECT CONCAT(NUMERIC_PRECISION,',',NUMERIC_SCALE) FROM information_schema.COLUMNS "
+                   "WHERE TABLE_SCHEMA='kcg' AND TABLE_NAME='favorite' AND COLUMN_NAME='{}'")
+    for column in ('amount', 'rebate'):
+        assert sql(shape_query.format(column), instance=acceptance_instance).strip() == '19,2'
+    assert sql('SELECT DISTINCT amount FROM favorite', instance=acceptance_instance).strip() == '0.00'
+    # Precision drift preserves the same default; scale drift uses a nullable column without a default.
+    # Thus neither refusal can be satisfied only by the pre-existing default/type/nullability checks.
+    deploy('stop', instance=acceptance_instance, state=acceptance_state, package=a.v3_package)
+    sql('ALTER TABLE favorite MODIFY amount DECIMAL(20,2) NOT NULL DEFAULT 0.00', instance=acceptance_instance)
+    drift = deploy('start', expected=3, instance=acceptance_instance, state=acceptance_state, port=acceptance_port, package=a.v3_package)
+    assert 'decimal precision/scale mismatch' in drift, drift
+    sql('ALTER TABLE favorite MODIFY amount DECIMAL(19,2) NOT NULL DEFAULT 0.00', instance=acceptance_instance)
+    sql('ALTER TABLE favorite MODIFY rebate DECIMAL(19,3) NULL', instance=acceptance_instance)
+    drift = deploy('start', expected=3, instance=acceptance_instance, state=acceptance_state, port=acceptance_port, package=a.v3_package)
+    assert 'decimal precision/scale mismatch' in drift, drift
+    sql('ALTER TABLE favorite MODIFY rebate DECIMAL(19,2) NULL', instance=acceptance_instance)
+    deploy('start', instance=acceptance_instance, state=acceptance_state, port=acceptance_port, package=a.v3_package)
+    report['decimalShape'] = 'PASSED'
     assert 'KCG_UPDATE_CURRENT' in deploy('update', instance=acceptance_instance, state=acceptance_state, package=a.v3_package)
     older = deploy('update', expected=3, instance=acceptance_instance, state=acceptance_state, package=a.v2_package)
     assert 'AHEAD' in older and 'application=RUNNING' in older, 'an older package must be refused before the application stops'

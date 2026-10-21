@@ -73,7 +73,9 @@ public final class SemanticTypes {
       plain("Moment", PrimitiveType.DATE_TIME),
       plain("Day", PrimitiveType.DATE),
       plain("Flag", PrimitiveType.BOOLEAN),
-      plain("Money", PrimitiveType.DECIMAL)
+      ruled("Money", PrimitiveType.DECIMAL, new Rule("precision", List.of(
+          Integer.toString(io.kcg.sir.semantic.type.DecimalPrecision.MONEY_PRECISION),
+          Integer.toString(io.kcg.sir.semantic.type.DecimalPrecision.MONEY_SCALE))))
    );
 
    private static final SemanticTypes BUILTIN_ONLY = new SemanticTypes(BUILTIN);

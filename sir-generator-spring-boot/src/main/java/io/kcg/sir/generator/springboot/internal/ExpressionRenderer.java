@@ -116,7 +116,8 @@ final class ExpressionRenderer {
 
       return switch (unary.operator()) {
          case NOT -> "!(" + operand + ")";
-          case NEGATE -> "-(" + operand + ")";
+          case NEGATE -> unary.type() instanceof LoweredJavaType.Scalar scalar
+               && scalar.kind() == LoweredJavaType.ScalarKind.BIG_DECIMAL ? "(" + operand + ").negate()" : "-(" + operand + ")";
           case IS_NONE -> "(" + operand + ") == null";
           case IS_PRESENT -> "(" + operand + ") != null";
       };

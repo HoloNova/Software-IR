@@ -1,0 +1,114 @@
+sir 0.3
+software MoneyLedger {
+  metadata { displayName "Money Ledger"; namespace "example.money"; }
+  target {
+    language java 21; framework spring_boot; persistence mybatis_plus;
+    database mysql; build maven; interface rest;
+  }
+  sources { }
+  imports { }
+  declarations {
+    type UnitPrice = Money where precision(21, 4);
+    entity Wallet persistent {
+      identity id: Id generated auto;
+      field balance: Money default 0.0;
+      field rebate: Optional<Money>;
+    }
+    view WalletView from Wallet { field id: Id; field balance: Money; field rebate: Optional<Money>; }
+    input Amount { field id: Id; field amount: UnitPrice; field optional: Optional<Money>; }
+    input WalletId { field id: Id; }
+    input Movement { field id: Id; field peer: Id; field amount: UnitPrice; }
+    entity VersionedWallet persistent {
+      identity id: Id generated auto;
+      field balance: Money;
+      field rebate: Optional<Money>;
+      field version: Version;
+    }
+    input WalletPatch patch of VersionedWallet {
+      field id: Id;
+      field balance: Money;
+      field rebate: Optional<Money>;
+    }
+    error Missing http 404;
+    error Refused http 409;
+    capability ShowWallet {
+      input WalletId; output WalletView; fails Missing; requires readonly;
+      expose query at "/wallet/show";
+      workflow { load Wallet by input.id as wallet else Missing; return wallet; }
+    }
+    capability CreateWallet {
+      input Amount; output WalletView; requires atomic;
+      expose command at "/wallet/create";
+      workflow {
+        create Wallet as wallet { balance: input.amount; rebate: input.optional; }
+        persist wallet;
+        return wallet;
+      }
+    }
+    capability PatchWallet {
+      input WalletPatch; output Unit; fails Missing; fails Refused; requires atomic;
+      expose command at "/wallet/patch";
+      workflow {
+        load VersionedWallet by input.id as wallet else Missing;
+        update wallet { balance: input.balance; rebate: input.rebate; }
+        persist wallet else Refused;
+        return unit;
+      }
+    }
+    capability SetBalance {
+      input Amount; output Unit; fails Missing; requires atomic;
+      expose command at "/wallet/set";
+      workflow {
+        load Wallet by input.id as wallet else Missing;
+        update wallet { balance: input.amount; rebate: input.optional; }
+        persist wallet;
+        return unit;
+      }
+    }
+    capability CreditBalance {
+      input Movement; output Unit; fails Missing; fails Refused; requires atomic;
+      expose command at "/wallet/credit";
+      workflow {
+        load Wallet by input.id as wallet else Missing;
+        load Wallet by input.peer as peer else Missing;
+        validate input.id != input.peer else Refused;
+        update peer { rebate: input.amount; }
+        persist peer;
+        update wallet when wallet.balance >= 0.0 else Refused { balance: wallet.balance + input.amount; }
+        persist wallet;
+        return unit;
+      }
+    }
+    capability DebitBalance {
+      input Movement; output Unit; fails Missing; fails Refused; requires atomic;
+      expose command at "/wallet/debit";
+      workflow {
+        load Wallet by input.id as wallet else Missing;
+        validate input.amount >= 0.0 else Refused;
+        update wallet when wallet.balance >= input.amount else Refused { balance: wallet.balance - input.amount; }
+        persist wallet;
+        return unit;
+      }
+    }
+    capability DoubleBalance {
+      input Amount; output Unit; fails Missing; requires atomic;
+      expose command at "/wallet/double";
+      workflow {
+        load Wallet by input.id as wallet else Missing;
+        update wallet { balance: input.amount + input.amount; }
+        persist wallet;
+        return unit;
+      }
+    }
+    capability NegateBalance {
+      input Amount; output Unit; fails Missing; requires atomic;
+      expose command at "/wallet/negate";
+      workflow {
+        load Wallet by input.id as wallet else Missing;
+        update wallet { balance: -input.amount; }
+        persist wallet;
+        return unit;
+      }
+    }
+  }
+}

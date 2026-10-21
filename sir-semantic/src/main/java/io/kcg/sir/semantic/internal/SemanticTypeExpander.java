@@ -36,11 +36,11 @@ final class SemanticTypeExpander {
       for (AstDeclaration declaration : declarations) {
          out.add(switch (declaration) {
             case AstEntityDecl entity -> new AstEntityDecl(entity.id(), entity.span(), entity.name(), entity.identity(),
-               entity.fields().stream().map(f -> field(f, types)).toList(), entity.credential(), entity.scope(), entity.uniqueKeys());
+               entity.fields().stream().map(f -> field(f, types, true)).toList(), entity.credential(), entity.scope(), entity.uniqueKeys());
             case AstInputDecl input -> new AstInputDecl(input.id(), input.span(), input.name(), input.patchSourceEntity(),
-               input.fields().stream().map(f -> field(f, types)).toList());
+               input.fields().stream().map(f -> field(f, types, input.patchSourceEntity().isEmpty())).toList());
             case AstEntityExtensionDecl extension -> new AstEntityExtensionDecl(extension.id(), extension.span(), extension.entity(),
-               extension.fields().stream().map(f -> field(f, types)).toList());
+               extension.fields().stream().map(f -> field(f, types, true)).toList());
             default -> declaration;
          });
       }
@@ -48,7 +48,7 @@ final class SemanticTypeExpander {
       return List.copyOf(out);
    }
 
-   private static AstField field(AstField field, SemanticTypes types) {
+   private static AstField field(AstField field, SemanticTypes types, boolean inheritPrecision) {
       Optional<SemanticTypes.Entry> type = semanticTypeOf(field.type(), types);
       if (type.isEmpty()) {
          return field;
@@ -56,7 +56,10 @@ final class SemanticTypeExpander {
 
       SemanticTypes.Entry entry = type.get();
       List<AstConstraint> constraints = new ArrayList<>();
+      // A patch's decimal shape belongs to its entity, not to the payload's default Money shape.
+      // Keep other inherited rules: the existing patch contract still refuses those promises.
       for (SemanticTypes.Rule rule : entry.rules()) {
+         if (!inheritPrecision && rule.name().equals("precision")) continue;
          if (field.constraints().stream().noneMatch(c -> c.name().text().equals(rule.name()))) {
             constraints.add(constraint(field, rule));
          }

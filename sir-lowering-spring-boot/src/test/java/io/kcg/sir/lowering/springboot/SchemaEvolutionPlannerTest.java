@@ -202,6 +202,27 @@ class SchemaEvolutionPlannerTest {
         assertTrue(dropped.refusals().contains("REFERENCE_COLUMN_REMOVED note.author_id"), dropped.refusals().toString());
     }
 
+    @Test void decimalPrecisionAndScaleChangesAreNeverAutomaticWidenings() {
+        String before = base().replace(NOTE, NOTE + "\n    entity Wallet persistent { identity id: Id generated auto; field amount: Money default 0.0; }");
+        for (String replacement : List.of("Money where precision(20, 2)", "Money where precision(19, 4)",
+                "Optional<Money> where precision(20, 2)")) {
+            var outcome = continueFrom(before, before.replace("field amount: Money default 0.0;", "field amount: " + replacement + " default 0.0;"));
+            assertTrue(outcome.evolution().isEmpty(), replacement);
+            assertTrue(outcome.refusals().stream().anyMatch(r -> r.startsWith("COLUMN_CHANGED wallet.amount")), outcome.refusals().toString());
+        }
+    }
+
+    @Test void aNewRequiredDecimalColumnStillNeedsAnExactDefault() {
+        String before = base().replace(NOTE, NOTE + "\n    entity Wallet persistent { identity id: Id generated auto; }");
+        String after = before.replace("entity Wallet persistent { identity id: Id generated auto; }",
+                "entity Wallet persistent { identity id: Id generated auto; field amount: Money default 0.0; }");
+        var steps = continueFrom(before, after).evolution().orElseThrow().steps();
+        assertEquals(List.of("V2 ADD_DEFAULTED_COLUMN wallet.amount"), steps.stream().map(SchemaEvolution.Step::describe).toList());
+        assertTrue(steps.getFirst().addedRows().getFirst().endsWith("\t=0.00\t19\t2"), steps.toString());
+        var refused = continueFrom(before, after.replace("Money default 0.0", "Money"));
+        assertTrue(refused.refusals().contains("REQUIRED_COLUMN_ADDED wallet.amount"), refused.refusals().toString());
+    }
+
     private record Compiled(NormalizedSemanticModel model, DeploymentPlan plan) {}
 
     private static SpringBootSchemaEvolutionPlanner.Outcome continueFrom(String base, String target) {
@@ -215,7 +236,8 @@ class SchemaEvolutionPlannerTest {
     }
 
     private static String base() {
-        return LoweringTestSupport.source("valid/bearer-credential.sir").replace("field name: Text unique;", "field name: Text where length(1, 64) unique;");
+        return LoweringTestSupport.source("valid/bearer-credential.sir").replace("\r\n", "\n")
+            .replace("field name: Text unique;", "field name: Text where length(1, 64) unique;");
     }
 
     private static Compiled compile(String source) {

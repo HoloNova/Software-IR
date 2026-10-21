@@ -130,7 +130,7 @@ jobs:
           set -euo pipefail
           mvn -B -o -pl sir-toolchain-application -am \
             -Dmaven.repo.local="$MAVEN_REPO" \
-            -Dtest=QuerySliceBusinessConformanceIT,WriteSliceBusinessConformanceIT,RelationSliceBusinessConformanceIT,GuardedTransitionBusinessConformanceIT,TokenDeskBusinessConformanceIT,BearerCredentialBusinessConformanceIT,DualTokenBusinessConformanceIT,CrudAccessBusinessConformanceIT \
+            -Dtest=QuerySliceBusinessConformanceIT,WriteSliceBusinessConformanceIT,RelationSliceBusinessConformanceIT,GuardedTransitionBusinessConformanceIT,TokenDeskBusinessConformanceIT,BearerCredentialBusinessConformanceIT,DualTokenBusinessConformanceIT,CrudAccessBusinessConformanceIT,MoneyBusinessConformanceIT \
             -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false \
             -Dkcg.query-conformance.enabled=true \
             -Dkcg.write-conformance.enabled=true \
@@ -140,6 +140,7 @@ jobs:
             -Dkcg.bearer-conformance.enabled=true \
             -Dkcg.dual-token-conformance.enabled=true \
             -Dkcg.crud-conformance.enabled=true \
+            -Dkcg.money-conformance.enabled=true \
             -Dkcg.conformance.work-parent="$KCG_CONF_WORK_PARENT" \
             -Dkcg.conformance.evidence-parent="$KCG_CONF_EVIDENCE_PARENT" \
             -Dkcg.conformance.maven-executable="$(command -v mvn)" \
