@@ -2,6 +2,7 @@ package io.kcg.sir.parser;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -38,6 +39,21 @@ class FeatureGrammarTest {
         var limit = assertInstanceOf(AstFeatureArgument.Duration.class, use.arguments().get(1).value());
         assertEquals(AstTimeUnit.DAYS, limit.unit());
         assertEquals("3 days", limit.text());
+    }
+
+    @Test void textAndNamesHaveTypedValuesAndStableElementReferences() {
+        String body = "use Crud { entity: Note; path: \"my/posts\"; writeExclude: [status, createdAt]; }";
+        var use = assertInstanceOf(AstFeatureUseDecl.class, declarations(body).getFirst());
+        var text = assertInstanceOf(AstFeatureArgument.Text.class, use.arguments().get(1).value());
+        assertEquals("my/posts", text.value());
+        assertEquals("\"my/posts\"", text.text());
+        var names = assertInstanceOf(AstFeatureArgument.Names.class, use.arguments().get(2).value());
+        assertEquals(List.of("status", "createdAt"), names.items().stream().map(io.kcg.sir.ast.AstNameRef::text).toList());
+        assertNotEquals(names.items().get(0).id(), names.items().get(1).id());
+        var again = assertInstanceOf(AstFeatureUseDecl.class, declarations(body).getFirst());
+        assertEquals(names.items(), assertInstanceOf(AstFeatureArgument.Names.class, again.arguments().get(2).value()).items());
+        assertTrue(rejected("use Crud { writeExclude: [x,]; }"));
+        assertTrue(rejected("use Crud { writeExclude: [\"x\"]; }"));
     }
 
     @Test void aTypeDeclarationRecordsItsBaseAndRules() {

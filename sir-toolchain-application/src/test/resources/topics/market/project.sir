@@ -79,6 +79,7 @@ software CampusMarket {
       entity: Item;
       owner: seller;
       path: items;
+      writeExclude: [status, createdAt];
     }
 
     view OrderView from TradeOrder {

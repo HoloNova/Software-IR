@@ -536,7 +536,7 @@ view AccountView from Account {
 
 一个功能是一组声明的名字：`use 功能 { 参数: 值; }` 在编译时展开成它代表的声明，展开出来的东西和手写的一样被检查、生成、部署，但不写进源码，编辑时也只改 `use` 这一处。语言自带 `DualTokenLogin`（双 Token 登录，见 7.2）和 `Crud`（增删改查，见 7.3）。
 
-自己的功能用 `feature` 定义：参数有两种——`name`（一个名字，默认值可以是空的 `""`）和 `duration`（一段时长，如 `7 days`）——可以有默认值；模板是三个反引号括起来的 SIR 声明，用 `${参数}` 引用参数：
+自己的功能用 `feature` 定义：参数有 `name`（一个名字，默认值可以是空的 `""`）、`duration`（如 `7 days`）、`text`（如 `"my/posts"`，兼容单个名字）和 `names`（如 `[status, createdAt]`，空列表是 `[]`），可以有默认值。列表供字段 `only`／`except` 选择，不作为拼接的标量；模板是三个反引号括起来的 SIR 声明，用 `${参数}` 引用标量参数：
 
 ```sir-declarations
 entity Note persistent {
@@ -565,6 +565,8 @@ use Tagging {
 参数和模板在定义时就检查（参数重复、默认值不合种类、模板里用了没声明的参数都是 `SIR-FEATURE-006`）；`use` 时检查实参（不认识的功能 `SIR-FEATURE-001`，缺参数或多参数 `SIR-FEATURE-002`，值不合种类或范围 `SIR-FEATURE-003`）；展开后的声明按普通规则检查，错误报在 `use` 这一行。
 
 一个功能可以 `use` 多次，只要没有默认值的参数取值不同：`use Crud { entity: Note; }` 和 `use Crud { entity: Tag; }` 是两次不同的使用；对同一组取值用两次是 `SIR-FEATURE-005`。
+
+字段列表参数例如 `parameter hidden: names = [];`，在 `${for f in entity.fields except secret, hidden}` 中使用；名字必须属于该实体（含 extend），重复项、未知项定位到具体元素。实体、字段和枚举参数依正式符号绑定改名；路径文字、模式值和另一个实体的同名字段不会被顺便改动。省略的默认引用在改名后会按需写为显式参数。
 
 #### 按实体的字段展开
 
@@ -1635,9 +1637,21 @@ use Crud {
 }
 ```
 
-**路径**：`use Crud { entity: Note; path: notes; }` 用 REST 风格的路径：`POST /api/notes` 创建、`GET /api/notes/{id}` 查看、`GET /api/notes` 列表、`PUT /api/notes/{id}` 修改（带版本号的实体是 `PATCH`）、`DELETE /api/notes/{id}` 删除。`path` 是小写的名字；不写时每个能力按自己的名字（`/api/create-note` 等）。
+**路径**：`use Crud { entity: Note; path: notes; }` 用 REST 风格的路径：`POST /api/notes` 创建、`GET /api/notes/{id}` 查看、`GET /api/notes` 列表、`PUT /api/notes/{id}` 修改（带版本号的实体是 `PATCH`）、`DELETE /api/notes/{id}` 删除。`path` 接受小写名字或多段字符串，如 `path: "my/posts";`；拒绝空段、前后斜杠、`..` 和参数占位段。不写时每个能力按自己的名字（`/api/create-note` 等）。
 
-需要不同的规则时，就不用 `Crud`，自己写这几个能力（或者用 `feature` 定义自己的版本）。
+**写权限和写保护（G9）**：原三个参数和省略时的行为不变，增加以下可选组合。角色比较和归属检查仍展开成普通 `actor`／`validate`，没有 Crud 专属运行时。
+
+| 参数 | 含义 |
+| --- | --- |
+| `writer: User` | 创建、更新、删除要求这个账号的认证；单独使用只要求登录。与 owner 共用时，账号类型必须一致。 |
+| `writeRole: LIBRARIAN` | 必须同时给 writer；三个写能力要求角色匹配，生成 `${entity}Forbidden`（403），且先验角色、后加载业务行。 |
+| `roleField: role` | 默认 role；writeRole 所读的 writer 字段，须为非可选枚举，其类型决定成员属于哪个枚举。 |
+| `writeExclude: [status, createdAt]` | 同时从创建／普通更新／PATCH 的输入与赋值排除这些字段，不从视图隐藏、不自动赋值。不允许排除无默认值的创建必填字段，或得到没有可写字段的更新。 |
+| `read: public` | Get／List 不要求 owner 认证、也不追加本人条件，仍应用实体 scope。省略时保留原读权限。 |
+
+例如 `use Crud { entity: Book; writer: User; writeRole: LIBRARIAN; }` 保持目录公开读、仅馆员可写。`use Crud { entity: Item; owner: seller; read: public; writeExclude: [status, createdAt]; }` 公开符合 scope 的商品，并仅让本人写可写字段；**不自动筛选在售商品**。角色与归属为 AND，不给予管理员越权；未登录 401、角色错误 403、别人行 404，版本冲突保持 409。完整可编译样例见 [crud-access.sir](../sir-toolchain-application/src/test/resources/valid/crud-access.sir)。
+
+排除字段沿用既有请求未知字段策略（忽略或拒绝），但不能向这些字段赋值。它不是并发锁：未带 Version／guard 的普通更新仍遵循原持久化语义，不据此宣称解决并发写覆盖。需要不同的权限或并发规则时，写普通能力（或者用 `feature` 定义自己的版本）。
 
 ## 8. 多文件工程
 

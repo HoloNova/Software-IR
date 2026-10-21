@@ -6,6 +6,7 @@ import java.util.EnumSet;
 import java.util.Set;
 
 public enum ReferenceRole {
+   FEATURE_ARGUMENT(SymbolKind.values()),
    NAMED_TYPE(SymbolKind.PRIMITIVE, SymbolKind.ENUM, SymbolKind.ENTITY, SymbolKind.INPUT, SymbolKind.VIEW),
    REF_TYPE_TARGET(SymbolKind.ENTITY),
    CAPABILITY_FAILS_ERROR(SymbolKind.ERROR),

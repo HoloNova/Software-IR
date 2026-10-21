@@ -91,13 +91,11 @@ final class Renamer {
          }
       }
 
-      Map<String, String> argumentNames = new LinkedHashMap<>();
-      oldNames.forEach((id, old) -> argumentNames.put(old, names.get(id)));
-      Map<String, String> entityOfField = entitiesOfFields(model, oldNames.keySet());
+
       List<NormalizedDeclaration> declarations = new ArrayList<>();
       for (NormalizedDeclaration declaration : model.declarations()) {
          declarations.add(declaration instanceof NormalizedFeatureUse use
-            ? (NormalizedDeclaration) rename(use, names, oldNames, argumentNames, entityOfField)
+            ? (NormalizedDeclaration) rename(use, names, oldNames)
             : (NormalizedDeclaration) rewrite(declaration, names, oldNames));
       }
 
@@ -164,28 +162,8 @@ final class Renamer {
       return followers;
    }
 
-   /** For each renamed entity field, by its old name, the name of its entity. */
-   private static Map<String, String> entitiesOfFields(NormalizedSemanticModel model, java.util.Set<SymbolId> renamed) {
-      Map<String, String> entities = new LinkedHashMap<>();
-      for (NormalizedDeclaration declaration : model.declarations()) {
-         if (declaration instanceof NormalizedEntity entity) {
-            for (NormalizedField field : entity.fields()) {
-               if (renamed.contains(field.id())) {
-                  entities.put(field.name(), entity.name());
-               }
-            }
-         }
-      }
-
-      return entities;
-   }
-
-   /**
-    * A use names things by their written names: a renamed declaration by its old name, and a renamed entity field when
-    * the use also names the field's entity.
-    */
-   private static NormalizedFeatureUse rename(NormalizedFeatureUse use, Map<SymbolId, String> names, Map<SymbolId, String> oldNames,
-         Map<String, String> argumentNames, Map<String, String> entityOfField) {
+   /** Rename parameter reference ranges by their resolved identities, never by matching another argument's text. */
+   private static NormalizedFeatureUse rename(NormalizedFeatureUse use, Map<SymbolId, String> names, Map<SymbolId, String> oldNames) {
       String name = use.name();
       for (var entry : oldNames.entrySet()) {
          if (entry.getValue().equals(use.name()) && isFeatureDefinition(entry.getKey())) {
@@ -193,17 +171,24 @@ final class Renamer {
          }
       }
 
-      List<String> values = use.arguments().stream().map(NormalizedFeatureArgument::value).toList();
-      List<NormalizedFeatureArgument> arguments = new ArrayList<>();
-      for (NormalizedFeatureArgument argument : use.arguments()) {
-         String renamed = argumentNames.get(argument.value());
-         String entity = entityOfField.get(argument.value());
-         boolean applies = renamed != null && (entity == null || values.contains(entity));
-         arguments.add(applies ? new NormalizedFeatureArgument(argument.name(), renamed) : argument);
-      }
+       List<NormalizedFeatureArgument> arguments = new ArrayList<>();
+       for (var argument : use.arguments()) arguments.add(renameArgument(argument, names));
+       for (var argument : use.defaults()) {
+          if (argument.references().stream().anyMatch(r -> names.containsKey(r.target()))) arguments.add(renameArgument(argument, names));
+       }
+       return new NormalizedFeatureUse(use.id(), name, use.span(), use.sourceNodeId(), arguments, use.defaults());
+    }
 
-      return new NormalizedFeatureUse(use.id(), name, use.span(), use.sourceNodeId(), arguments);
-   }
+    private static NormalizedFeatureArgument renameArgument(NormalizedFeatureArgument argument, Map<SymbolId, String> names) {
+       String value = argument.value();
+       var references = argument.references().stream().sorted(java.util.Comparator.comparingInt(
+               io.kcg.sir.semantic.model.FeatureArgumentReference::start).reversed()).toList();
+       for (var reference : references) {
+          String replacement = names.get(reference.target());
+          if (replacement != null) value = value.substring(0, reference.start()) + replacement + value.substring(reference.end());
+       }
+       return value.equals(argument.value()) ? argument : new NormalizedFeatureArgument(argument.name(), value);
+    }
 
    private static boolean isFeatureDefinition(SymbolId id) {
       return id.value().contains("/feature-definition/");

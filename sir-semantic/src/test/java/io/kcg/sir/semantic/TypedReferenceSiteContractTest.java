@@ -197,7 +197,23 @@ class TypedReferenceSiteContractTest {
 
     @Test
     void everyReferenceRoleIsCoveredByAtLeastOneBinding() {
-        NormalizedSemanticModel model = analyzeContract().model().orElseThrow();
+        var withFeature = TestSources.analyze(TestSources.sir(SOFTWARE_DECLARATIONS + """
+                feature VisibleHandle {
+                  parameter entity: name;
+                  parameter hidden: names = [];
+                  template ```
+                view ${entity}Public from ${entity} {
+                  field ${entity.identity.name}: ${entity.identity.type};
+                ${for f in entity.fields except hidden}
+                  field ${f.name}: ${f.type};
+                ${end}
+                }
+                ```;
+                }
+                use VisibleHandle { entity: Handle; hidden: [label]; }
+                """));
+        assertTrue(withFeature.isSuccess(), () -> withFeature.diagnostics().toString());
+        NormalizedSemanticModel model = withFeature.model().orElseThrow();
         ReferenceSiteBindings bindings = model.referenceSiteBindings();
         assertFalse(bindings.all().isEmpty(), "ReferenceSiteBindings must not be empty");
 

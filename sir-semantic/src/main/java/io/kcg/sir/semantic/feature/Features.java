@@ -22,7 +22,7 @@ public final class Features {
     private Features() {}
 
     /** What a parameter's value is written as. */
-    public enum Kind { NAME, DURATION }
+    public enum Kind { NAME, DURATION, TEXT, NAMES }
 
     /**
      * One parameter. A name must match {@code pattern}; a duration must lie within the bounds, in seconds. Without a
@@ -40,7 +40,8 @@ public final class Features {
 
         /** Why {@code value} is not acceptable, or empty. Durations come as an amount and a unit in seconds. */
         public Optional<String> problem(String text, BigInteger seconds) {
-            if (kind == Kind.NAME) return pattern.matcher(text).matches() ? Optional.empty() : Optional.of(rule);
+            if (kind == Kind.NAMES) return Optional.empty();
+            if (kind != Kind.DURATION) return pattern.matcher(text).matches() ? Optional.empty() : Optional.of(rule);
             boolean inRange = seconds.compareTo(BigInteger.valueOf(minSeconds)) >= 0 && seconds.compareTo(BigInteger.valueOf(maxSeconds)) <= 0;
             return inRange ? Optional.empty() : Optional.of(rule);
         }
@@ -82,8 +83,17 @@ public final class Features {
          * @throws FeatureTemplate.Problem when a value the template reads as an entity names none
          */
         public String expand(Map<String, String> values, java.util.function.Function<String, Optional<FeatureTemplate.Entity>> entities) {
-            for (Parameter parameter : parameters) Objects.requireNonNull(values.get(parameter.name()), parameter.name());
-            return parsed().render(values, entities);
+            var scalars = new java.util.LinkedHashMap<String, String>();
+            var groups = new java.util.LinkedHashMap<String, List<String>>();
+            for (Parameter parameter : parameters) {
+                String value = values.getOrDefault(parameter.name(), parameter.defaultValue().orElse(null));
+                Objects.requireNonNull(value, parameter.name());
+                if (parameter.kind() == Kind.NAMES) {
+                    if (!value.equals("[]")) throw new IllegalArgumentException("name lists require typed feature values");
+                    groups.put(parameter.name(), List.of());
+                } else scalars.put(parameter.name(), parameter.kind() == Kind.TEXT && value.equals("\"\"") ? "" : value);
+            }
+            return parsed().renderDetailed(new FeatureValues(scalars, groups, Map.of()), entities).text();
         }
     }
 
@@ -130,8 +140,13 @@ public final class Features {
         new Parameter("entity", Kind.NAME, Optional.empty(), NAME, 0, 0, "entity must name the entity whose rows are managed"),
         new Parameter("owner", Kind.NAME, Optional.of(""), Pattern.compile("([A-Za-z][A-Za-z0-9]{0,63})?"), 0, 0,
             "owner must name the entity's reference field to the account that owns a row"),
-        new Parameter("path", Kind.NAME, Optional.of(""), Pattern.compile("([a-z][a-z0-9]{0,63})?"), 0, 0,
-            "path must be a lower-case name such as notes")),
+        new Parameter("path", Kind.TEXT, Optional.of("\"\""), Pattern.compile("([a-z][a-z0-9]{0,63}(/[a-z][a-z0-9]{0,63})*)?"), 0, 0,
+            "path must contain lower-case static segments such as my/posts"),
+        new Parameter("writer", Kind.NAME, Optional.of(""), Pattern.compile("([A-Za-z][A-Za-z0-9]{0,63})?"), 0, 0, "writer must name the writing account"),
+        new Parameter("writeRole", Kind.NAME, Optional.of(""), Pattern.compile("([A-Za-z][A-Za-z0-9]{0,63})?"), 0, 0, "writeRole must name an enum member"),
+        new Parameter("roleField", Kind.NAME, Optional.of("role"), NAME, 0, 0, "roleField must name the account's enum field"),
+        new Parameter("writeExclude", Kind.NAMES, Optional.of("[]"), NAME, 0, 0, "writeExclude must be a list of fields"),
+        new Parameter("read", Kind.NAME, Optional.of(""), Pattern.compile("(public)?"), 0, 0, "read must be public or omitted")),
         "/io/kcg/sir/semantic/feature/crud.sir");
 
     private static final Map<String, Feature> ALL = Map.of(DUAL_TOKEN_LOGIN.name(), DUAL_TOKEN_LOGIN, CRUD.name(), CRUD);

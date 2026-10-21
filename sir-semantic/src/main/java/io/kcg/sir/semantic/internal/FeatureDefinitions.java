@@ -81,7 +81,9 @@ final class FeatureDefinitions {
       try {
          Set<String> entityParameters = new HashSet<>();
          parameters.stream().filter(p -> p.kind() == Features.Kind.NAME).forEach(p -> entityParameters.add(p.name()));
-         for (String problem : io.kcg.sir.semantic.feature.FeatureTemplate.parse(definition.template()).problems(names, entityParameters)) {
+         Set<String> namesParameters = new HashSet<>();
+          parameters.stream().filter(p -> p.kind() == Features.Kind.NAMES).forEach(p -> namesParameters.add(p.name()));
+          for (String problem : io.kcg.sir.semantic.feature.FeatureTemplate.parse(definition.template()).problems(names, entityParameters, namesParameters)) {
             diagnostics.add(DiagnosticBuilder.error("SIR-FEATURE-006", "模板有误: " + problem, definition.templateSpan()));
             valid = false;
          }
@@ -123,7 +125,19 @@ final class FeatureDefinitions {
             name + " 必须是名字" + (parameter.emptyDefault() ? "或留空" : "")));
       }
 
-      if (kind.equals("duration")) {
+             if (kind.equals("text") || kind.equals("names")) {
+          var value = parameter.defaultValue();
+          if ((parameter.emptyDefault() && kind.equals("names")) || (value.isPresent() && !(kind.equals("text")
+                  ? value.get() instanceof AstFeatureArgument.Text : value.get() instanceof AstFeatureArgument.Names))) {
+             diagnostics.add(DiagnosticBuilder.error("SIR-FEATURE-006", "parameter " + name + " requires a " + kind + " default", parameter.span()));
+             return Optional.empty();
+          }
+          Optional<String> text = parameter.emptyDefault() ? Optional.of("\"\"") : value.map(AstFeatureArgument.Value::text);
+          return Optional.of(new Features.Parameter(name, kind.equals("text") ? Features.Kind.TEXT : Features.Kind.NAMES, text,
+                  Pattern.compile("[\\s\\S]*"), 0, 0, name + " must be " + kind));
+       }
+
+       if (kind.equals("duration")) {
          Optional<String> defaultValue = Optional.empty();
          if (parameter.emptyDefault() || parameter.defaultValue().isPresent() && !(parameter.defaultValue().get() instanceof AstFeatureArgument.Duration)) {
             diagnostics.add(DiagnosticBuilder.error("SIR-FEATURE-006", "参数 " + name + " 是时长，默认值必须是时长，例如 15 minutes", parameter.span()));

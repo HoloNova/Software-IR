@@ -18,6 +18,11 @@ public interface SirParser {
      */
     ExpansionParseResult parseExpansion(String declarations, io.kcg.sir.ast.AstNodeId under, io.kcg.sir.source.SourceSpan at);
 
+    default ExpansionParseResult parseExpansion(String declarations, io.kcg.sir.ast.AstNodeId under,
+            io.kcg.sir.source.SourceSpan at, java.util.List<ExpansionOrigin> origins) {
+        return parseExpansion(declarations, under, at);
+    }
+
     static SirParser create() {
         return new DefaultSirParser();
     }

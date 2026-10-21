@@ -36,7 +36,7 @@
 
 ## 3.1 当前 CI 阻塞（先于 G9）
 
-负责人要求检查后已核验：#136（33f960b）全量门通过、部署 HTTP 失败，根因为 DTO Optional 被按 nullable 标量直接比较并传入 JDBC；#137（00e3ce9）应用层 5 项失败、部署跳过，根因为旧非法夹具已被 G4 合法化，以及 SCALAR_QUERY_ENTITY 缺少跨文件实例。负责人随后授权修复，本提交已增加明确的 OptionalPayloadValue 取值计划、真实生成 DTO 回归、有效非法夹具和跨文件正反例；58 项定向通过。原文件导出集成、真库、全量门与同源码 CI 尚待验证，未放宽 Windows 安全读源边界。详见验证说明第 8 节。负责人随后明确授权提交并推送本轮修复、继续工作；可继续 G9 代码核对与方案，不把本轮 CI 提前记为通过，也不把 192 项旧定向结果当成 CI 通过。G9 核心业务实现仍按项目规范先说明方案。
+负责人要求检查后已核验：#136（33f960b）全量门通过、部署 HTTP 失败，根因为 DTO Optional 被按 nullable 标量直接比较并传入 JDBC；#137（00e3ce9）应用层 5 项失败、部署跳过，根因为旧非法夹具已被 G4 合法化，以及 SCALAR_QUERY_ENTITY 缺少跨文件实例。负责人随后授权修复，本提交已增加明确的 OptionalPayloadValue 取值计划、真实生成 DTO 回归、有效非法夹具和跨文件正反例；58 项定向通过。原文件导出集成、真库、全量门与同源码 CI 尚待验证，未放宽 Windows 安全读源边界。详见验证说明第 8 节。负责人随后明确授权提交并推送本轮修复、继续工作；可继续 G9 代码核对与方案，不把本轮 CI 提前记为通过，也不把 192 项旧定向结果当成 CI 通过。G9 方案此后已获负责人确认并实现，结果见 4.4；#138 的后续失败与本轮冒烟断言修复见验证记录第 9 节。
 
 ## 4. 待办（按建议顺序）
 
@@ -54,11 +54,13 @@ tasks、market 已更新；本机语义、降级、生成真值表、源往返�
 
 ### 4.3 G4 按请求里的值穿过关联过滤（已实现，真库待 CI）
 
-已用 `ExistsArgument.Value` 把外部字段、actor 和已加载值保留为类型化表达式并参数绑定，博客样例恢复 PostTag。不会放开缺少根行关联的 any 或嵌套 any。部署 v3 冒烟已补文本注入、scope、可选参数及账号隔离断言，V1..V11 不变；Windows 没有启动业务服务。下一项仍是 4.4 的 G9，先说明设计再实现。
+已用 `ExistsArgument.Value` 把外部字段、actor 和已加载值保留为类型化表达式并参数绑定，博客样例恢复 PostTag。不会放开缺少根行关联的 any 或嵌套 any。部署 v3 冒烟已补文本注入、scope、可选参数及账号隔离断言，V1..V11 不变；Windows 没有启动业务服务。后续 G9 实施结果见 4.4；本轮不自动扩展到 G10。
 
-### 4.4 G9 Crud 不够用
+### 4.4 G9 Crud 已实现，待同源码 CI
 
-内置 `use Crud` 的参数只有 `entity`、`owner`、`path`：不能按角色限制、不能排除字段（卖家能把商品直接改成已售出）、路径只能一段、没有"公开读、本人写"。需要设计参数。注意 Crud 会把实体的**所有**字段放进更新输入，所以实体上凡是"只能由系统改"的字段（计数器、状态）都会被客户端改到——这也是上一个 Agent 没把计数器放到 `Note` 上、改放 `User` 的原因（见 `dual-token-v3` 样例）。
+负责人确认[设计 12 第 19 节](../design/12-feature-semantics-and-semantic-types.md#g9-crud)后已在工作区贯通 text／names、字段集合选择、正式参数 binding、精确 rename／源回写及 Crud 的 writer、writeRole、roleField、writeExclude、read: public 和多段路径。旧 use 默认行为不变。library Book 只允许馆员写；market Item 从输入与赋值排除 status／createdAt，保留手写的在售浏览。此排除不是并发锁，普通非版本持久化并未重定义。
+
+89 项定向测试通过，真实 CRLF、旧手写展开等价、跨文件正反例、角色与字段错误均有覆盖。真库 `CrudAccessBusinessConformanceIT` 已复用既有 harness 并接入 verify.yml，尚未执行；不增加八题完成数，不把本机报告当作全量 CI。#138（ee6ddeb）的全量门通过，部署因 `/favorites/raise` 更新成功被脚本误期待 201 而失败；本轮修为 200 并补控制器契约断言。详见[验证记录第 9 节](../qualification/README.md#g9-crud-local)。负责人已授权阶段性成果直接提交，本次未推送；同源码 CI 仍待验收。
 
 ### 4.5 G10 `Money` 交付不了
 

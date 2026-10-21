@@ -44,12 +44,14 @@ public final class ProjectSourceResolver {
         List<AstFeatureUseDecl> uses = new ArrayList<>();
         Map<AstNodeId, String> useKeys = new HashMap<>();
         Map<AstNodeId, FeatureExpander.Expansion> expanded = new HashMap<>();
+        var featureSelections = new ArrayList<io.kcg.sir.semantic.feature.FeatureTemplate.FieldSelection>();
         for (var unit : units.values()) {
             var result = FeatureExpander.expand(unit.declarations(), featureDefinitions, Optional.empty(), diagnostics);
             featured.put(unit.span().source(), result.declarations());
             uses.addAll(result.uses());
             useKeys.putAll(result.keys());
             expanded.putAll(result.expanded());
+            featureSelections.addAll(result.selections());
         }
         // The semantic types the software declares are known to every file, like the language's own; the fields of every
         // file (an expanded feature's too) then get the rules their type brings.
@@ -65,6 +67,7 @@ public final class ProjectSourceResolver {
             uses.addAll(result.uses());
             useKeys.putAll(result.keys());
             expanded.putAll(result.expanded());
+            featureSelections.addAll(result.selections());
         }
         Map<SourceId, List<AstDeclaration>> effective = new HashMap<>();
         for (var unit : units.values())
@@ -129,7 +132,7 @@ public final class ProjectSourceResolver {
                 .sorted(Comparator.comparingInt(ProjectSourceResolver::category).thenComparing(ProjectSourceResolver::name)).toList();
         var original = root.document().software();
         var software = new AstSoftware(original.id(), original.span(), original.name(), original.metadata(), original.target(), ordered);
-        var resolved = new ResolvePass(software, semanticTypes.types(), semanticTypes.spans()).run();
+        var resolved = new ResolvePass(software, semanticTypes.types(), semanticTypes.spans(), featureSelections).run();
         // Resolution reports what it can and the later passes still run, so one check shows the type and validation errors
         // as well. Only a broken identity stops here: nothing after it can trust the symbols.
         if (resolved.diagnostics().stream().anyMatch(d -> d.code().value().equals("SIR-IDENTITY-002"))) return failure(resolved.diagnostics());

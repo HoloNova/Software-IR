@@ -85,6 +85,28 @@ public final class HttpAssertionClient {
         return new Response(response.statusCode(), response.body());
     }
 
+    /** Send a normal update, distinct from a versioned PATCH. */
+    public Response putJson(String url, Map<String, String> headers, String jsonBody)
+            throws IOException, InterruptedException {
+        return sendJson("PUT", url, headers, jsonBody);
+    }
+
+    public Response delete(String url, Map<String, String> headers) throws IOException, InterruptedException {
+        return sendJson("DELETE", url, headers, "");
+    }
+
+    private Response sendJson(String method, String url, Map<String, String> headers, String body)
+            throws IOException, InterruptedException {
+        Objects.requireNonNull(url, "url");
+        Objects.requireNonNull(headers, "headers");
+        Objects.requireNonNull(body, "body");
+        var builder = HttpRequest.newBuilder().uri(URI.create(url)).timeout(Duration.ofSeconds(10))
+                .header("Content-Type", "application/json").method(method, HttpRequest.BodyPublishers.ofString(body));
+        headers.forEach(builder::header);
+        var response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+        return new Response(response.statusCode(), response.body());
+    }
+
     /**
      * One HTTP response.
      *

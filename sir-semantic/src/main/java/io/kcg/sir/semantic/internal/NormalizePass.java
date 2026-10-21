@@ -133,7 +133,8 @@ final class NormalizePass {
       for (io.kcg.sir.ast.AstFeatureUseDecl use : this.uses.stream().sorted(java.util.Comparator.comparing(u -> this.useKeys.get(u.id()))).toList()) {
          SymbolId feature = this.featureUse(this.useKeys.get(use.id()));
          declarations.add(new io.kcg.sir.semantic.model.NormalizedFeatureUse(feature, use.name().text(), use.span(), use.id(),
-            use.arguments().stream().map(a -> new io.kcg.sir.semantic.model.NormalizedFeatureArgument(a.parameter().text(), a.value().text())).toList()));
+            use.arguments().stream().filter(a -> !a.defaulted()).map(this::featureArgument).toList(),
+             use.arguments().stream().filter(io.kcg.sir.ast.AstFeatureArgument::defaulted).map(this::featureArgument).toList()));
       }
       for (io.kcg.sir.ast.AstFeatureDefinitionDecl definition : this.featureDefinitions.stream().sorted(java.util.Comparator.comparing(d -> d.name().text())).toList()) {
          declarations.add(new io.kcg.sir.semantic.model.NormalizedFeatureDefinition(
@@ -218,6 +219,22 @@ final class NormalizePass {
       }
    }
 
+   private io.kcg.sir.semantic.model.NormalizedFeatureArgument featureArgument(io.kcg.sir.ast.AstFeatureArgument argument) {
+        var references = new ArrayList<io.kcg.sir.semantic.model.FeatureArgumentReference>();
+        var items = switch (argument.value()) {
+            case io.kcg.sir.ast.AstFeatureArgument.Word word -> word.reference() == null ? List.<io.kcg.sir.ast.AstNameRef>of() : List.of(word.reference());
+            case io.kcg.sir.ast.AstFeatureArgument.Names names -> names.items();
+            default -> List.<io.kcg.sir.ast.AstNameRef>of();
+        };
+        int start = argument.value() instanceof io.kcg.sir.ast.AstFeatureArgument.Names ? 1 : 0;
+        for (var item : items) {
+            SymbolId target = this.validated.referenceBindings().get(item.id());
+            if (target != null) references.add(new io.kcg.sir.semantic.model.FeatureArgumentReference(start, start + item.text().length(), target));
+            start += item.text().length() + 2;
+        }
+        return new io.kcg.sir.semantic.model.NormalizedFeatureArgument(argument.parameter().text(), argument.value().text(), references);
+    }
+
    /**
     * The identity of a use: the feature's name, then the values that tell its uses apart, each a segment
     * ({@code feature/Crud/Note}).
@@ -225,7 +242,7 @@ final class NormalizePass {
    private SymbolId featureUse(String key) {
       String[] parts = key.split("/");
       StringBuilder id = new StringBuilder(SymbolIdFactory.declaration(this.softwareName, "feature", parts[0]).value());
-      for (int i = 1; i < parts.length; i++) id.append('/').append(SymbolIdFactory.encode(parts[i]));
+      for (int i = 1; i < parts.length; i++) id.append('/').append(parts[i]);
       return new SymbolId(id.toString());
    }
 

@@ -15,12 +15,21 @@ final class SourceText {
     private final int[] columns;
     /** When present, every span is this one: text expanded from a feature is located at the feature's declaration. */
     private final SourceSpan borrowed;
+    private final java.util.List<io.kcg.sir.api.ExpansionOrigin> origins;
+    private final int originOffset;
 
     SourceText(SourceId sourceId, String content) {
         this(sourceId, content, null);
     }
 
     SourceText(SourceId sourceId, String content, SourceSpan borrowed) {
+        this(sourceId, content, borrowed, java.util.List.of(), 0);
+    }
+
+    SourceText(SourceId sourceId, String content, SourceSpan borrowed,
+            java.util.List<io.kcg.sir.api.ExpansionOrigin> origins, int originOffset) {
+        this.origins = java.util.List.copyOf(origins);
+        this.originOffset = originOffset;
         this.borrowed = borrowed;
         this.sourceId = Objects.requireNonNull(sourceId, "sourceId");
         this.content = Objects.requireNonNull(content, "content");
@@ -57,7 +66,15 @@ final class SourceText {
         return position(codePoints.length);
     }
 
+    java.util.Optional<io.kcg.sir.ast.AstNameRef> argument(Token token) {
+        if (token == null) return java.util.Optional.empty();
+        return origins.stream().filter(o -> o.start() + originOffset == token.getStartIndex()
+                && o.end() + originOffset == token.getStopIndex() + 1).map(io.kcg.sir.api.ExpansionOrigin::reference).findFirst();
+    }
+
     SourceSpan span(Token token) {
+        var argument = argument(token);
+        if (argument.isPresent()) return argument.get().span();
         if (borrowed != null) {
             return borrowed;
         }

@@ -82,6 +82,7 @@ final class ResolvePass {
    private static final Pattern DECLARED_ID_PATTERN = Pattern.compile("[A-Za-z0-9][A-Za-z0-9._-]{0,63}");
 
    private final AstSoftware software;
+   private final List<io.kcg.sir.semantic.feature.FeatureTemplate.FieldSelection> featureSelections;
    private final String softwareName;
    private final SymbolId projectScopeId;
    private final List<Symbol> allSymbols = new ArrayList<>();
@@ -129,6 +130,12 @@ final class ResolvePass {
    }
 
    ResolvePass(AstSoftware software, io.kcg.sir.semantic.feature.SemanticTypes semanticTypes, Map<String, SourceSpan> semanticTypeSpans) {
+      this(software, semanticTypes, semanticTypeSpans, List.of());
+   }
+
+   ResolvePass(AstSoftware software, io.kcg.sir.semantic.feature.SemanticTypes semanticTypes, Map<String, SourceSpan> semanticTypeSpans,
+         List<io.kcg.sir.semantic.feature.FeatureTemplate.FieldSelection> featureSelections) {
+      this.featureSelections = List.copyOf(featureSelections);
       this.semanticTypes = semanticTypes;
       this.semanticTypeSpans = Map.copyOf(semanticTypeSpans);
       this.software = software;
@@ -144,6 +151,10 @@ final class ResolvePass {
       this.resolveMembersAndTypes();
       if (this.hasIdentityCollision()) return this.identityFailureContext();
       this.resolvePatchPayloadBindings();
+      for (var selection : this.featureSelections) {
+         SymbolId target = this.entityFieldSymbols.getOrDefault(selection.entity(), Map.of()).get(selection.reference().text());
+         if (target != null) this.bindArgument(selection.reference().id(), selection.reference().span(), selection.reference().text(), target);
+      }
       this.resolveFieldDefaults();
       this.resolveCapabilities();
       SymbolTable table = this.buildSymbolTable();
@@ -1283,6 +1294,16 @@ final class ResolvePass {
 
    private void bindReference(AstNameRef ref, ReferenceRole role, SymbolId targetSymbolId) {
       this.bindReference(ref.id(), ref.span(), ref.text(), role, targetSymbolId);
+      ref.argumentId().ifPresent(id -> this.bindArgument(id, ref.span(), ref.text(), targetSymbolId));
+   }
+
+   private void bindArgument(AstNodeId id, SourceSpan span, String text, SymbolId target) {
+      SymbolId previous = this.referenceBindings.get(id);
+      if (previous != null) {
+         if (!previous.equals(target)) this.diagnostics.add(DiagnosticBuilder.error("SIR-FEATURE-003", "parameter refers to different symbols: " + text, span));
+         return;
+      }
+      this.bindReference(id, span, text, ReferenceRole.FEATURE_ARGUMENT, target);
    }
 
    private void bindReference(AstNodeId siteId, SourceSpan span, String text, ReferenceRole role, SymbolId targetSymbolId) {

@@ -84,6 +84,8 @@ software CampusLibrary {
     use Crud {
       entity: Book;
       path: books;
+      writer: User;
+      writeRole: LIBRARIAN;
     }
     view CopyView from Copy {
       field id: Id;

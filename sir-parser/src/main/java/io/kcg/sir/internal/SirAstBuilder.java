@@ -153,6 +153,11 @@ final class SirAstBuilder {
             } else if (parameter.defaultWord != null) {
                 defaultValue = java.util.Optional.of(new AstFeatureArgument.Word(name(parameter.defaultWord)));
             }
+            if (parameter.defaultNames != null) {
+                defaultValue = Optional.of(featureNames(parameter.defaultNames, path + "/defaults/" + parameter.parameterName.getText()));
+            } else if (parameter.defaultEmpty != null && !SirStringDecoder.decode(parameter.defaultEmpty.getText()).isEmpty()) {
+                defaultValue = Optional.of(new AstFeatureArgument.Text(source.span(parameter.defaultEmpty), parameter.defaultEmpty.getText(), SirStringDecoder.decode(parameter.defaultEmpty.getText())));
+            }
             boolean empty = parameter.defaultEmpty != null && SirStringDecoder.decode(parameter.defaultEmpty.getText()).isEmpty();
             return new AstFeatureDefinitionDecl.Parameter(source.span(parameter), name(parameter.parameterName.start), name(parameter.parameterKind), defaultValue, empty);
         }).toList();
@@ -181,12 +186,22 @@ final class SirAstBuilder {
                 SirParser.DurationOperandContext duration = argument.durationOperand();
                 value = new AstFeatureArgument.Duration(source.span(duration), new BigInteger(duration.INT().getText()),
                         timeUnit(duration.durationUnit().IDENT().getText()));
+            } else if (argument.textValue != null) {
+                value = new AstFeatureArgument.Text(source.span(argument.textValue), argument.textValue.getText(), SirStringDecoder.decode(argument.textValue.getText()));
+            } else if (argument.namesValue != null) {
+                value = featureNames(argument.namesValue, ids.named(path, "argument", argument.parameter.getText()));
             } else {
-                value = new AstFeatureArgument.Word(name(argument.value));
+                value = new AstFeatureArgument.Word(name(argument.value), nameRef(argument.value, ids.named(path, "argument", argument.parameter.getText()), "value"));
             }
             return new AstFeatureArgument(source.span(argument), name(argument.parameter.start), value);
         }).toList();
         return new AstFeatureUseDecl(ids.id(path), source.span(context), name, arguments);
+    }
+
+    private AstFeatureArgument.Names featureNames(SirParser.FeatureNamesContext context, String path) {
+        var items = new ArrayList<AstNameRef>();
+        for (var token : context.IDENT()) items.add(nameRef(token, ids.indexed(path, "element"), "name"));
+        return new AstFeatureArgument.Names(source.span(context), items);
     }
 
     private AstEnumDecl enumDeclaration(SirParser.EnumDeclContext context, String parent) {
@@ -781,7 +796,7 @@ final class SirAstBuilder {
 
     private AstNameRef nameRef(Token token, String parent, String role) {
         String path = ids.fixed(parent, role);
-        return new AstNameRef(ids.id(path), source.span(token), token.getText());
+        return new AstNameRef(ids.id(path), source.span(token), token.getText(), source.argument(token).map(AstNameRef::id));
     }
 
     private SourceSpan combine(Token start, Token end) {

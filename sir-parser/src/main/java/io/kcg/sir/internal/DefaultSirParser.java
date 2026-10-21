@@ -24,11 +24,17 @@ public final class DefaultSirParser implements SirParser {
     @Override
     public io.kcg.sir.api.ExpansionParseResult parseExpansion(String declarations, io.kcg.sir.ast.AstNodeId under,
             io.kcg.sir.source.SourceSpan at) {
+        return parseExpansion(declarations, under, at, java.util.List.of());
+    }
+
+    @Override
+    public io.kcg.sir.api.ExpansionParseResult parseExpansion(String declarations, io.kcg.sir.ast.AstNodeId under,
+            io.kcg.sir.source.SourceSpan at, java.util.List<io.kcg.sir.api.ExpansionOrigin> origins) {
         Objects.requireNonNull(declarations, "declarations");
         Objects.requireNonNull(under, "under");
         Objects.requireNonNull(at, "at");
         String text = "sir 0.3\nimports { }\ndeclarations {\n" + declarations + "\n}\n";
-        SourceText source = new SourceText(io.kcg.sir.source.SourceId.of("feature-expansion.sir"), text, at);
+        SourceText source = new SourceText(io.kcg.sir.source.SourceId.of("feature-expansion.sir"), text, at, origins, "sir 0.3\nimports { }\ndeclarations {\n".length());
         DiagnosticCollector diagnostics = new DiagnosticCollector();
         try {
             SirLexer lexer = new SirLexer(CharStreams.fromString(text, "feature-expansion.sir"));

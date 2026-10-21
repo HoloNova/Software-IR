@@ -500,3 +500,101 @@ validate not hasOpenLoans else HasOpenLoans;
 后续读取 #136（`33f960b`）与 #137（`00e3ce9`）的日志，证实 G7 的真实 HTTP 路径会把输入 DTO 的 Optional 传到 JDBC，且 `is none` 错把 Optional.empty 当成有值。原 DTO 的容器和实体字段的可空值是两种物理表示，不能只靠语义 Optional 类型统一输出 `== null`。当前工作区增加 `SpringExpression.OptionalPayloadValue`：由 Lowering 在比较、空值判断、关联参数消费处标记 DTO Optional 的 nullable 读值，Generator 按计划解包（兼容 null 容器）；实体列不加解包，原 DTO 容器校验、返回和写入／PATCH 协议不改。IR Validator 拒绝在这些位置缺失或类型不符的取值计划。真实生成 DTO 的 Java 编译／执行测试覆盖了旧测试替换 getter 后遗漏的问题。
 
 #137 另外暴露旧非法语料被 G4 合法化，以及 `SCALAR_QUERY_ENTITY` 缺少跨文件例子；分别保留原写法为正例、换用仍不支持的关联时钟表达式作负例，并补 exists／count 的跨文件绑定与缺失 import 的精确位置检查。58 项定向通过不代表真实 HTTP、原文件导出集成或全量 CI 已通过；完整命令和待验边界见[验证说明第 8 节](../qualification/README.md#ci-136-137-fix)。负责人随后已授权将本修复提交并推送；同源码 CI 结果另行核验。
+
+<a id="g9-crud"></a>
+
+## 19. G9：Crud 的写保护与访问组合（已实现，待同源码 CI）
+
+负责人已确认本节方案，工作区已实现；以下 19.1 保留实施前核对的边界，其余接口以语言参考为准。基线 `ee6ddeb458aa6ad572a97dccefb58af2bde50131` 的 CI #138 全量门通过、部署在更新能力误期待 201 处失败，本轮已修正冒烟断言，尚未重新 CI。见[验证记录](../qualification/README.md#g9-crud-local)。本轮不提前增加八题需求完成数。
+
+### 19.1 已核对的边界与原因
+
+| 已有实现 | 事实及影响 |
+| --- | --- |
+| `Features.CRUD`／`crud.sir` | 参数只有 entity、owner、path；owner 同时约束五个能力。创建排除 defaulted／versioned／owner，更新只排除 secret／versioned／owner，因此默认状态、创建时间和计数器仍能经更新输入被客户端覆盖。不是“所有字段都进入更新”。 |
+| `Sir.g4:featureArgument`／`AstFeatureArgument` | 值仅有 IDENT 和 duration；`path: my/posts` 不能解析，字段列表也没有 AST 载体。 |
+| `FeatureTemplate` | 已有按实体字段循环、按参数 only／except 和 if；named 选择器目前只表示一个字段。功能最终展开为普通 SIR，不存在 Crud 专属运行时。 |
+| 现有角色授权 | library 的 AddCopy 已写 `validate actor.role == Role.LIBRARIAN else Forbidden`；基础语言、Lowering、ActorBinding 和 401／403 已具备，不需要新权限框架。 |
+| library／market 题目 | Book Crud 没有 actor 或角色检查，与其旁边“馆员维护目录”的注释不符；Item Crud 没有排除 status、createdAt。二者是明确的 G9 场景，不以已有注释代替实现。 |
+| `Renamer.rename(NormalizedFeatureUse, ...)` | 目前按整个参数字符串和同 use 中的实体名字匹配。新增列表不能直接沿用，否则字段改名会漏改列表；更不能简单替换所有同名字符串，把另一个实体的同名字段、枚举成员或路径一起改掉。 |
+| `NormalizedFeatureArgument`／`SirDeclarationWriter.writeFeatureUse` | 参数以 name／value 两个事实保存，writer 原样输出 value；新字面量必须同时贯通正式分析、规范化、编辑回写，不能只改模板。 |
+
+### 19.2 接口：普通需求只填少数参数
+
+保留现有三个参数及默认行为，增加以下可选参数；编译器已支持：
+
+| 参数 | 提议含义与默认 |
+| --- | --- |
+| `writer: User` | 三个写能力要求这个账号类型的认证；单独使用表示“登录后可写”，不表示管理员。未给时沿用 owner 推导账号或原有公开写行为。 |
+| `writeRole: LIBRARIAN` | 写能力要求当前账号的角色等于这一枚举成员；必须同时给 writer。默认不加角色门。首轮只支持一个枚举值，不新增角色集合或任意权限表达式。 |
+| `roleField: role` | writer 实体的非可选枚举字段，默认 role；仅在 writeRole 给出时消费。不是假定所有账号都有 role。 |
+| `writeExclude: [status, createdAt]` | 创建和更新的输入及赋值都排除这些实体字段，视图不因此隐藏字段；默认空列表。它不是 secret，也不自动赋值。 |
+| `read: public` | Get／List 不因 owner 要求认证或追加本人条件；默认不填，保持原规则。只改变模板自己的归属门，不绕过实体 scope。 |
+| 既有 `path` | 增加字符串形式 `path: "my/posts"`，并继续接受单段名字；只接受静态小写段，不接受空段、前后斜杠、`..`、查询串或占位参数。各能力仍共用一个基础路径。 |
+
+图书目录写为（library 样例已采用）：
+
+```text
+use Crud {
+  entity: Book;
+  path: books;
+  writer: User;
+  writeRole: LIBRARIAN;
+}
+```
+
+Book 原来没有 owner，Get／List 继续公开；创建／修改／删除必须已登录且角色为 LIBRARIAN。当前账号不存在仍按现有 ActorBinding 返回 401，角色错误为生成的 BookForbidden（403）。角色检查先于业务行加载，不能由未获写权限的用户探测目标行是否存在。角色比较的枚举类型取自 roleField 的正式类型，作者不用重复写一个可能不一致的 roleType。
+
+公开读、本人写且保护系统字段的组合：
+
+```text
+use Crud {
+  entity: Item;
+  owner: seller;
+  path: "market/items";
+  read: public;
+  writeExclude: [status, createdAt];
+}
+```
+
+这表示公开 Get／List 的所有符合实体 scope 的行，**不等于只公开 ON_SALE 的商品**。market 已有带状态条件的 BrowseItems／详情能力不应直接删掉或替换；公开读组合用独立验收夹具覆盖。market 本轮实际只需要加 writeExclude，保留已有接口和浏览业务。
+
+writer 和 owner 同时给出时必须指向同一账号类型；写角色与归属按 AND 组合，不提供“管理员绕过 owner”。角色正确但不是所有者仍沿用原 Crud 的 404，原 owner 使用者未配置 read: public 时，读权限不变。
+
+### 19.3 字段排除不是悄悄丢数据
+
+字段名必须属于 entity 的合并字段集合（含 extend），重复或未知项要定位到具体元素并拒绝。若排除了创建必填、无默认值的字段，创建仍必须被正式分析拒绝，不能补零、空串或放宽实体约束；有默认值的字段沿用默认值，可选字段沿用原创建规则。owner 自动赋值、版本乐观锁、secret 的读隐藏与 PATCH 三态保持原协议。系统字段只由显式业务工作流改变。
+
+writeExclude 生效后，客户端无论在普通更新还是 PATCH 中夹带 status，都不得改变持久化状态；未知请求字段是忽略还是拒绝沿用现有 DTO 协议，本轮不顺带全局改变 Jackson 行为。没有可写字段时不制造空 update，返回定位到 use 的结构化拒绝，要求作者手写其实际需要的能力。
+
+### 19.4 两个通用补点，而不是一个更大的特例
+
+1. **功能参数有明确的文本／名字列表载体。** 在现有 name、duration 外增加通用 text、names；字符串、列表和值元素有独立的 AST 表示与 span，绑定后的值保持类型与不可变顺序，不通过字符串首字符猜种类或按逗号手拆。path 兼容旧名字写法；自定义 feature 也能使用文本参数和字段列表选择器。模板只增加 names 参数作为 only／except 字段集合的能力，不增加业务循环、任意表达式求值或递归 feature。
+2. **功能参数引用也按正式 binding 改名。** entity、writer、owner、roleField、writeRole、writeExclude 的真实引用点需要稳定 ID、相应 ReferenceRole 和唯一 Resolve binding；列表元素带所属实体，角色值带枚举身份，模式词 public 和路径文本不是符号引用。绑定从参数契约和模板消费位置取得，不能在 Rename 或 Normalize 里重新搜名字。SourceEditor 仍只改 use 本身并重新正式分析，不写展开声明。此修正服务内置与作者自定义 feature，不给 Change 添加 Crud 专用命令。
+
+保持现有参数事实的编辑协议兼容；新值的 canonical 源码形式必须能经 inspect／add／update／rename／回读恢复相同的类型和值。新增引用角色时同步补跨文件正例、逐个删除 import 的同位置反例，不能再次用 allOf(ReferenceRole) 排除新角色来“修测试”。
+
+### 19.5 为什么不采用其他办法
+
+| 方案 | 好处 | 不选择的原因 |
+| --- | --- | --- |
+| 每题手写五个能力或复制一个专用 Crud 模板 | 不改编译器 | library、market 等重复授权和字段规则；同一漏洞要逐题修，普通需求重新变成长样板。复杂规则仍允许走这个出口，但不作为标准写保护的唯一办法。 |
+| 只改 Crud 模板，字段名列表塞进普通字符串 | 改动小 | 解析、类型、准确诊断、改名和编辑协议都会漂移；不会真正解决一类业务的共同问题。 |
+| 新增权限框架或在 Generator 识别 Crud | 看似少写 SIR | 已有 actor／validate／scope 能表达；另造权限语义及目标端分支违反展开与分层规则。 |
+| 显式参数 + 通用值载体／绑定（本方案） | 常见需求短；默认兼容；全部权限落到已有 SIR；字段与引用机制可复用 | 需同时贯通 Parser、Semantic 与 Change，不能假装是模板微调。复杂多角色、逐操作例外仍退回普通 SIR。 |
+
+### 19.6 实施与验收边界
+
+先做通用参数载体、模板集合选择和绑定／回写的 RED→GREEN；再让 Crud 组合现有 actor、角色 validate、归属检查及字段选择，最后改 library／market。核心原则是：旧 use 的展开语义与生成文件必须不变；不在 Lowering／Generator 内引入 Crud 分支，不新增依赖，不修改迁移历史。
+
+定向验收必须包含：旧 `CrudFeatureTest` 的手写展开 byte-identical；字符串与名字列表的分析、错误元素位置及自定义 feature；默认 read 与 public read、未认证／错误角色／正确角色／别人行；writer 与 owner 类型冲突、角色字段与枚举成员错误；secret／version／PATCH 保真；排除必填字段和没有可写字段；多段路径正反例及原路由冲突检测；两个实体同名字段／两个枚举同名成员的精确 rename（路径与不相关参数不动）；跨文件引用、缺少 import、源编辑重读与确定性。
+
+真库验收交给同源码 CI：角色写权限、公开读与所有权、夹带被排除字段仍不改库、PATCH 版本冲突、既有部署行为及八题生成工程离线编译。本机不跑全量门，不用实现通过推导业务通过；未验收前不增加八题需求完成数。没有 UI 改动。
+
+### 19.7 实施结果与剩余验收
+
+已增加 text／names 的 AST 载体、默认值与集合选择。参数词的来源随模板渲染传给 Parser；Resolve 建立 `FEATURE_ARGUMENT` 的正式 binding，Normalize 只保留绑定后的目标身份与替换范围，Rename 不再使用同名字符串／同 use 里出现实体名的启发式。默认 roleField 的引用改名后按需写成显式参数；编辑协议仍以 canonical 参数源码作为 value，原有客户端不变。未在 Lowering 或 Generator 增加 Crud 分支，未增加依赖。
+
+library 的 Book 增加 writer／LIBRARIAN，market 的 Item 排除 status／createdAt，保留原浏览接口。`writeExclude` 保护请求输入和赋值，不新增并发保证；非版本普通更新仍沿用原持久化语义，不能把它称为并发锁或部分列原子更新。已有 Version、guard 和 secret 规则不变。
+
+本机 13 类定向测试共 89 项通过，包括旧 Crud 手写展开的产物等价、参数载体、精确改名、跨文件绑定与缺失 import、源编辑重读、真实 CRLF 编辑和语言参考例子。原全角色文件导出测试本机仍因 Windows 安全读源限制受阻，不删除、不放宽。新增 `CrudAccessBusinessConformanceIT` 复用既有隔离 MySQL／生成工程／HTTP／清理／证据 harness，接入 verify.yml 的业务 IT 步骤，默认不在本机执行。完整真库用例、生成工程编译和同源码全量 CI 均为 NOT_RUN。没有 UI 改动，无浏览器验收。负责人已授权阶段性成果直接提交，本次未推送；同源码 CI 仍待验收。

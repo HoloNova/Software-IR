@@ -27,6 +27,12 @@ class OptionalDeploymentFixtureTest {
         assertTrue(compiled.isPresent(), () -> diagnostics.toString());
         var project = compiled.orElseThrow();
         new SpringBootDeploymentPlanner().plan(project.semanticModel(), project.loweredModel());
+        String raise = project.generatedFiles().stream().filter(f -> f.relativePath().endsWith("/RaiseFavoriteScoreController.java"))
+                .findFirst().orElseThrow().content();
+        String create = project.generatedFiles().stream().filter(f -> f.relativePath().endsWith("/FavoriteNoteController.java"))
+                .findFirst().orElseThrow().content();
+        assertFalse(raise.contains("HttpStatus.CREATED"), "a Unit update uses the default 200, not creation's 201");
+        assertTrue(create.contains("HttpStatus.CREATED"), "the create-and-persist command still returns 201");
         for (String capability : java.util.List.of("FilterFavorites", "MissingFavoriteScores", "DifferentFavoriteScores",
                 "NotEqualFavoriteScores", "RaiseFavoriteScore", "CheckFavoriteScore", "CheckFavoriteCount", "CheckVisibleNoteCount", "FavoritedNotes")) {
             assertTrue(project.generatedFiles().stream().anyMatch(file -> file.relativePath().endsWith("/" + capability + "Service.java")), capability);

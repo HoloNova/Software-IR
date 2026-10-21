@@ -5,7 +5,7 @@ ${for f in entity.fields except secret}
 ${end}
     }
     input Create${entity}Input {
-${for f in entity.fields except defaulted, versioned, owner}
+${for f in entity.fields except defaulted, versioned, owner, writeExclude}
       field ${f.name}: ${f.type}${f.rules};
 ${end}
     }
@@ -19,7 +19,7 @@ ${end}
 ${if entity.versioned}
     input Update${entity}Input patch of ${entity} {
       field ${entity.identity.name}: ${entity.identity.type};
-${for f in entity.fields except secret, versioned, owner}
+${for f in entity.fields except secret, versioned, owner, writeExclude}
       field ${f.name}: ${f.base};
 ${end}
     }
@@ -27,27 +27,46 @@ ${end}
 ${else}
     input Update${entity}Input {
       field ${entity.identity.name}: ${entity.identity.type};
-${for f in entity.fields except secret, versioned, owner}
+${for f in entity.fields except secret, versioned, owner, writeExclude}
       field ${f.name}: ${f.type}${f.rules};
 ${end}
     }
 ${end}
+${if writeRole}
+    error ${entity}Forbidden http 403;
+${end}
     error ${entity}NotFound http 404;
     error Invalid${entity}Page;
     capability Create${entity} {
+${if writer}
+      actor Ref<${writer}>;
+${else}
 ${for f in entity.fields only owner}
       actor ${f.type};
 ${end}
+${end}
       input Create${entity}Input;
       output ${entity}View;
+${if writeRole}
+      fails ${entity}Forbidden;
+${end}
 ${if owner}
       requires authenticated;
+${else}
+${if writer}
+      requires authenticated;
+${end}
 ${end}
       requires atomic;
       expose command${if path} at "/${path}"${end};
       workflow {
+${if writeRole}
+${for r in writer.fields only roleField}
+        validate actor.${r.name} == ${r.type}.${writeRole} else ${entity}Forbidden;
+${end}
+${end}
         create ${entity} as row {
-${for f in entity.fields except defaulted, versioned, owner}
+${for f in entity.fields except defaulted, versioned, owner, writeExclude}
           ${f.name}: input.${f.name};
 ${end}
 ${if owner}
@@ -59,68 +78,98 @@ ${end}
       }
     }
     capability Get${entity} {
+${if not read}
 ${for f in entity.fields only owner}
       actor ${f.type};
+${end}
 ${end}
       input ${entity}IdInput;
       output ${entity}View;
       fails ${entity}NotFound;
+${if not read}
 ${if owner}
       requires authenticated;
+${end}
 ${end}
       requires readonly;
       expose query${if path} at "/${path}/{${entity.identity.name}}"${end};
       workflow {
         load ${entity} by input.${entity.identity.name} as row else ${entity}NotFound;
+${if not read}
 ${if owner}
         validate row.${owner} == actor else ${entity}NotFound;
+${end}
 ${end}
         return row;
       }
     }
     capability List${entity} {
+${if not read}
 ${for f in entity.fields only owner}
       actor ${f.type};
+${end}
 ${end}
       input List${entity}Input;
       output Page<${entity}View>;
       fails Invalid${entity}Page;
+${if not read}
 ${if owner}
       requires authenticated;
+${end}
 ${end}
       requires readonly;
       expose query${if path} at "/${path}"${end};
       workflow {
+${if read}
+        find ${entity} where true order by ${entity.identity.name} ascending Page input.page, input.size else Invalid${entity}Page as rows;
+${else}
 ${if owner}
         find ${entity} where item.${owner} == actor order by ${entity.identity.name} ascending Page input.page, input.size else Invalid${entity}Page as rows;
 ${else}
         find ${entity} where true order by ${entity.identity.name} ascending Page input.page, input.size else Invalid${entity}Page as rows;
 ${end}
+${end}
         return rows;
       }
     }
     capability Update${entity} {
+${if writer}
+      actor Ref<${writer}>;
+${else}
 ${for f in entity.fields only owner}
       actor ${f.type};
 ${end}
+${end}
       input Update${entity}Input;
       output ${entity}View;
+${if writeRole}
+      fails ${entity}Forbidden;
+${end}
       fails ${entity}NotFound;
 ${if entity.versioned}
       fails Stale${entity};
 ${end}
 ${if owner}
       requires authenticated;
+${else}
+${if writer}
+      requires authenticated;
+${end}
 ${end}
       requires atomic;
       expose command${if path}${if not entity.versioned} put${end} at "/${path}/{${entity.identity.name}}"${end};
       workflow {
+${if writeRole}
+${for r in writer.fields only roleField}
+        validate actor.${r.name} == ${r.type}.${writeRole} else ${entity}Forbidden;
+${end}
+${end}
         load ${entity} by input.${entity.identity.name} as row else ${entity}NotFound;
 ${if owner}
         validate row.${owner} == actor else ${entity}NotFound;
 ${end}
         update row {
-${for f in entity.fields except secret, versioned, owner}
+${for f in entity.fields except secret, versioned, owner, writeExclude}
           ${f.name}: input.${f.name};
 ${end}
         }
@@ -133,18 +182,34 @@ ${end}
       }
     }
     capability Delete${entity} {
+${if writer}
+      actor Ref<${writer}>;
+${else}
 ${for f in entity.fields only owner}
       actor ${f.type};
 ${end}
+${end}
       input ${entity}IdInput;
       output Unit;
+${if writeRole}
+      fails ${entity}Forbidden;
+${end}
       fails ${entity}NotFound;
 ${if owner}
       requires authenticated;
+${else}
+${if writer}
+      requires authenticated;
+${end}
 ${end}
       requires atomic;
       expose command${if path} delete at "/${path}/{${entity.identity.name}}"${end};
       workflow {
+${if writeRole}
+${for r in writer.fields only roleField}
+        validate actor.${r.name} == ${r.type}.${writeRole} else ${entity}Forbidden;
+${end}
+${end}
         load ${entity} by input.${entity.identity.name} as row else ${entity}NotFound;
 ${if owner}
         validate row.${owner} == actor else ${entity}NotFound;

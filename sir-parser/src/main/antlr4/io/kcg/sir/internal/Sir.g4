@@ -75,7 +75,7 @@ featureDefinitionDecl
 
 featureParameterDecl
     : {_input.LT(1).getText().equals("parameter")}? IDENT parameterName=featureParameterName COLON parameterKind=IDENT
-      (ASSIGN (durationOperand | defaultWord=IDENT | defaultEmpty=STRING))? SEMI
+      (ASSIGN (durationOperand | defaultWord=IDENT | defaultEmpty=STRING | defaultNames=featureNames))? SEMI
     ;
 
 featureTemplate
@@ -104,7 +104,11 @@ featureUseDecl
     ;
 
 featureArgument
-    : parameter=featureParameterName COLON (durationOperand | value=IDENT) SEMI
+    : parameter=featureParameterName COLON (durationOperand | value=IDENT | textValue=STRING | namesValue=featureNames) SEMI
+    ;
+
+featureNames
+    : LBRACK (IDENT (COMMA IDENT)*)? RBRACK
     ;
 
 // A parameter may be called entity: "use Crud { entity: Note; }" reads as what it means, though entity is a keyword.
@@ -555,6 +559,8 @@ COMMA           : ',';
 DOT             : '.';
 LPAREN          : '(';
 RPAREN          : ')';
+LBRACK          : '[';
+RBRACK          : ']';
 LBRACE          : '{';
 RBRACE          : '}';
 

@@ -22,6 +22,7 @@ class ProjectVisibilityTest {
         addKeyedLookup(source);
         addGuardedUpdate(source);
         addScalarQueries(source);
+        addFeatureSelections(source);
         moveContracts(source);
         var positive = generate(source, temp.resolve("positive"));
         var model = model(positive.sources());
@@ -63,6 +64,24 @@ class ProjectVisibilityTest {
             Files.writeString(file, original);
         }
         assertEquals(before, tree(temp));
+    }
+
+    @Test void featureArgumentsRequireTheirOwnersImportWithoutFileExport() throws Exception {
+        Path source = fixture(temp), root = source.resolve("project.sir");
+        addFeatureSelections(source);
+        var positive = new SirSemanticAnalyzer().analyzeProject(parsedSources(source));
+        assertTrue(positive.isSuccess(), () -> positive.diagnostics().toString());
+        var arguments = positive.model().orElseThrow().referenceSiteBindings().all().stream()
+                .filter(binding -> binding.site().role() == ReferenceRole.FEATURE_ARGUMENT).toList();
+        assertEquals(2, arguments.size(), "entity and selected field both require the Course import");
+        String original = Files.readString(root);
+        String imported = "import Course from \"modules/course.sir\";";
+        Files.writeString(root, original.replace(imported, " ".repeat(imported.length())));
+        var negative = new SirSemanticAnalyzer().analyzeProject(parsedSources(source));
+        assertFalse(negative.isSuccess());
+        for (var argument : arguments) assertTrue(negative.diagnostics().stream().anyMatch(d ->
+                d.code().value().equals("SIR-SOURCE-VISIBILITY-001") && d.primarySpan().equals(argument.site().span())),
+                () -> negative.diagnostics().toString());
     }
 
     @Test void scalarQuerySourcesRequireExplicitImportsWithoutFileExport() throws Exception {
@@ -219,6 +238,28 @@ class ProjectVisibilityTest {
                         + "        update student when student.name != input.name else CourseNotFound { name: input.name; }\n"
                         + "        persist student;\n        return student;\n      }\n    }\n"
                         + anchor));
+    }
+
+    private static void addFeatureSelections(Path source) throws Exception {
+        Path root = source.resolve("project.sir");
+        String project = Files.readString(root);
+        String anchor = "    capability CreateCourse {";
+        assertTrue(project.contains(anchor));
+        Files.writeString(root, project.replace(anchor, """
+                    feature PublicSummary {
+                      parameter entity: name;
+                      parameter hidden: names = [];
+                      template ```
+                    view ${entity}Public from ${entity} {
+                      field ${entity.identity.name}: ${entity.identity.type};
+                    ${for f in entity.fields except hidden}
+                      field ${f.name}: ${f.type};
+                    ${end}
+                    }
+                    ```;
+                    }
+                    use PublicSummary { entity: Course; hidden: [code]; }
+                """ + anchor));
     }
 
     private static void addScalarQueries(Path source) throws Exception {

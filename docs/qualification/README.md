@@ -231,3 +231,42 @@ mvn -B -q -o -pl sir-toolchain-application -am test '-Dtest=OptionalPayloadRunti
 本机可见的非法夹具仍精确在 LOWERING 报 `SIR-LOWER-FEATURE-001: this target cannot express the existence condition: NowExpression`，语义阶段可以提前停止并成功。报告位于各模块 `target/surefire-reports/TEST-*.xml`。AFT Java/JDTLS 初始化仍失败，诊断为 PARTIAL；以实际 Maven 编译和上述测试为准。代码覆盖率未测量，不声明 80%。
 
 **NOT_RUN：**本修复的全量门、八题生成工程离线编译、原 ProjectVisibilityTest 文件导出集成方法、ToolchainStageFailureTest 文件读写边界、真实 MySQL／HTTP 与同源码 CI。Windows 安全读源限制不变，不重复运行已知被阻断的测试；这些测试未删除、未加跳过条件，待 Linux CI 验收。既有部署 v3 HTTP 断言保留，不变更迁移链。未启动项目进程，无 UI 改动或浏览器测试。
+
+<a id="g9-crud-local"></a>
+
+## 9. G9 Crud 本机定向结果与 CI #138 后续（2026-10-21）
+
+**源码范围：**本批验证采集于 `ee6ddeb458aa6ad572a97dccefb58af2bde50131` 之上的工作区；负责人随后授权阶段性成果直接提交，本机结果不代表同源码 CI。负责人确认设计 12 第 19 节后，实现 text／names 参数、字段集合选择、正式 `FEATURE_ARGUMENT` binding、精确改名及默认引用显式化，并组合 Crud 的角色写权限、系统字段输入／赋值排除、公开读／本人写、多段路径。library 和 market 已采用；八题需求数仍为 64／5／15，不提前上调。
+
+**为何这样实现：**权限仍是普通 actor／validate／owner 检查，排除仍是普通字段选择；不在 Lowering／Generator 引入 Crud 分支。参数类型与来源贯通 Parser／Resolve／Normalize／SourceEditor，避免把列表塞进字符串、依同名文本改错实体字段或枚举。字段排除不是并发锁，普通非版本持久化没有改成部分列原子更新。
+
+**CI #138：**[run](https://github.com/HoloNova/Software-IR/actions/runs/39516345752)，SHA `ee6ddeb458aa6ad572a97dccefb58af2bde50131`。`gates-and-business-it` success，`standalone-deployment` failure。产物为 `conformance-evidence`、`surefire-reports`、`deployment-evidence`、`backend-source-delivery` 和 `standalone-cli`。部署已通过先前失败的 Optional 筛选，随后 `POST /api/favorites/raise` 实际 200、脚本期待 201 而停止；该接口更新已有行且返回 Unit，不创建记录。本轮只把这两处冒烟期待修正为 200，并在 OptionalDeploymentFixtureTest 对照真实生成的控制器验证 Raise 不标 CREATED、FavoriteNote 创建仍标 CREATED。没有为断言修改生产 HTTP 契约；后续断言仍需重新部署验证，不能将 #138 或本批记为 CI 通过。
+
+**RED→GREEN：**最初新参数无法解析；精确名字列表、角色字段和默认字段改名按真实源回写检验。最终包括非法组合、重复／未知列表元素的精确位置、两个实体的同名字段与两个枚举的同名成员、路径不被改名、作者自定义 feature、文本／列表的 add／update／回读、旧 Crud 产物与手写展开等价。旧测试的 LF 字符串替换假设在夹具入口统一换行，另保留真正 CRLF 源编辑的精确文本回归；不放宽文件安全读源。
+
+以下 13 类指定方法的最新 XML 合计 **89 tests / 0 failures / 0 errors / 0 skipped**，不累计重跑次数：
+
+| 测试 | 项数 |
+| --- | --- |
+| FeatureGrammarTest | 5 |
+| TypedReferenceSiteContractTest | 18 |
+| DraftEditTest／SourceEditorTest | 8／16 |
+| CrudAccessContractTest | 12 |
+| CrudFeatureTest／FeatureUseTest／UserFeatureTest | 5／5／5 |
+| RenameTest | 8 |
+| ProjectVisibilityTest | 仅 featureArgumentsRequireTheirOwnersImportWithoutFileExport、scalarQuerySourcesRequireExplicitImportsWithoutFileExport，2 |
+| OptionalDeploymentFixtureTest／TopicSamplesTest | 1／1 |
+| LanguageReferenceExamplesTest | 3 |
+
+实际命令（Windows、Java 21.0.11／Maven 3.9.14，单构建，Maven JVM 512m／测试 fork 384m）：
+
+```powershell
+$env:MAVEN_OPTS = '-Xmx512m'
+mvn -B -o -pl sir-toolchain-application -am '-Dtest=CrudAccessContractTest,CrudFeatureTest,FeatureGrammarTest,FeatureUseTest,UserFeatureTest,ProjectVisibilityTest#featureArgumentsRequireTheirOwnersImportWithoutFileExport+scalarQuerySourcesRequireExplicitImportsWithoutFileExport,TypedReferenceSiteContractTest,OptionalDeploymentFixtureTest,TopicSamplesTest,SourceEditorTest,DraftEditTest,RenameTest,LanguageReferenceExamplesTest' '-DfailIfNoTests=false' '-Dsurefire.failIfNoSpecifiedTests=false' '-DargLine=-Xmx384m' test
+# 随后补充错误列表元素位置断言，只重跑该受影响类（12 项）；其余报告不重跑。
+mvn -B -o -pl sir-toolchain-application -am '-Dtest=CrudAccessContractTest' '-DfailIfNoTests=false' '-Dsurefire.failIfNoSpecifiedTests=false' '-DargLine=-Xmx384m' test
+```
+
+报告在各模块 `target/surefire-reports/TEST-*.xml`，并封存到根目录 `target/g9-verification/`（含本批文件 SHA-256 清单与 local-result.json）。AFT Java/JDTLS 初始化失败，诊断 PARTIAL，以实际 Maven 编译与测试为准；未测覆盖率，不声明 80%。一次扩大回归中，原 ProjectVisibilityTest 的 4 个物理文件导出方法仍被 Windows 的 `SIR-APP-SOURCES-READ-001` 阻断；不作为产品回归失败或成功替代证据。这些方法保留在 Linux CI，纯语义正反例另行通过。
+
+**CI 待验收：**新增 CrudAccessBusinessConformanceIT 复用现有 BusinessSliceHarness，verify.yml 业务 IT 已加 `kcg.crud-conformance.enabled=true`，按现有单构建顺序执行，不在本机启动。覆盖真实认证的 401／403、角色先于行加载、三个写操作、字段夹带不改库、公开读仍应用 scope、角色不能越过 owner、Version PATCH 与冲突，并独立 JDBC 查库与既有进程／schema 清理、证据报告。此 IT、八题生成工程离线编译、全量门、完整部署及本批同源码 CI 均 **NOT_RUN**；基线 #138 的通过不能外推到本批。未启动应用或容器，无 UI 改动，不需浏览器／UI 测试；负责人已授权阶段性成果直接提交，本次未推送；同源码 CI 仍待验收。

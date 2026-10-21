@@ -82,6 +82,7 @@ public final class FeatureTemplate {
     /** A template that cannot be read, or a use whose values do not fit it. {@code parameter} is the value at fault. */
     public static final class Problem extends RuntimeException {
         private final String parameter;
+        private final io.kcg.sir.source.SourceSpan at;
 
         Problem(String message) {
             this(message, null);
@@ -90,7 +91,14 @@ public final class FeatureTemplate {
         Problem(String message, String parameter) {
             super(message);
             this.parameter = parameter;
+            this.at = null;
         }
+
+        Problem(String message, String parameter, io.kcg.sir.source.SourceSpan at) {
+            super(message); this.parameter = parameter; this.at = at;
+        }
+
+        public Optional<io.kcg.sir.source.SourceSpan> at() { return Optional.ofNullable(at); }
 
         public Optional<String> parameter() {
             return Optional.ofNullable(parameter);
@@ -136,8 +144,14 @@ public final class FeatureTemplate {
      * parameters whose value is a name, the only ones that can name an entity.
      */
     public List<String> problems(Set<String> parameters, Set<String> entityParameters) {
+        return problems(parameters, entityParameters, Set.of());
+    }
+
+    public List<String> problems(Set<String> parameters, Set<String> entityParameters, Set<String> namesParameters) {
+        Set<String> fieldParameters = new java.util.LinkedHashSet<>(entityParameters);
+        fieldParameters.addAll(namesParameters);
         List<String> problems = new ArrayList<>();
-        check(nodes, parameters, entityParameters, Map.of(), problems);
+        check(nodes, parameters, entityParameters, fieldParameters, Map.of(), problems);
         return problems;
     }
 
@@ -152,12 +166,23 @@ public final class FeatureTemplate {
      * @throws Problem when a value the template reads as an entity names none
      */
     public String render(Map<String, String> values, Function<String, Optional<Entity>> entities) {
-        StringBuilder out = new StringBuilder();
-        render(nodes, values, entities, Map.of(), out);
-        return out.toString();
+        return renderDetailed(new FeatureValues(values, Map.of(), Map.of()), entities).text();
     }
 
-    private static void check(List<Node> nodes, Set<String> parameters, Set<String> entityParameters, Map<String, String> loops,
+    public record FieldSelection(io.kcg.sir.ast.AstNameRef reference, String entity) {}
+    public record Rendered(String text, List<io.kcg.sir.api.ExpansionOrigin> origins, List<FieldSelection> selections) {
+        public Rendered { origins = List.copyOf(origins); selections = List.copyOf(selections); }
+    }
+
+    public Rendered renderDetailed(FeatureValues values, Function<String, Optional<Entity>> entities) {
+        var out = new StringBuilder();
+        var origins = new ArrayList<io.kcg.sir.api.ExpansionOrigin>();
+        var selections = new ArrayList<FieldSelection>();
+        render(nodes, values, entities, Map.of(), out, origins, selections);
+        return new Rendered(out.toString(), origins, selections);
+    }
+
+    private static void check(List<Node> nodes, Set<String> parameters, Set<String> entityParameters, Set<String> fieldParameters, Map<String, String> loops,
             List<String> problems) {
         for (Node node : nodes) {
             switch (node) {
@@ -169,6 +194,8 @@ public final class FeatureTemplate {
                         }
                     } else if (!parameters.contains(value.root())) {
                         problems.add("${" + text(value) + "}: " + value.root() + " is not a parameter of this feature");
+                    } else if (fieldParameters.contains(value.root()) && !entityParameters.contains(value.root())) {
+                        problems.add("${" + text(value) + "}: name lists may only select fields");
                     } else if (!value.members().isEmpty()) {
                         if (value.members().size() != 2 || !value.members().get(0).equals("identity") || !IDENTITY_MEMBERS.contains(value.members().get(1))) {
                             problems.add("${" + text(value) + "}: an entity has identity.name and identity.type");
@@ -187,13 +214,13 @@ public final class FeatureTemplate {
                         problems.add("for " + loop.variable() + ": the name is already taken by a parameter or an enclosing loop");
                     }
                     for (String named : names(loop)) {
-                        if (!entityParameters.contains(named)) {
+                        if (!fieldParameters.contains(named)) {
                             problems.add("for " + loop.variable() + ": " + named + " is not a name parameter, so it cannot name a field");
                         }
                     }
                     Map<String, String> inner = new LinkedHashMap<>(loops);
                     inner.put(loop.variable(), loop.parameter());
-                    check(loop.body(), parameters, entityParameters, inner, problems);
+                    check(loop.body(), parameters, entityParameters, fieldParameters, inner, problems);
                 }
                 case When when -> {
                     String head = "if " + when.parameter() + (when.condition() == Condition.VERSIONED ? ".versioned" : "");
@@ -202,8 +229,8 @@ public final class FeatureTemplate {
                     } else if (when.condition() == Condition.VERSIONED && !entityParameters.contains(when.parameter())) {
                         problems.add(head + ": " + when.parameter() + " is not a name, so it cannot name an entity");
                     }
-                    check(when.then(), parameters, entityParameters, loops, problems);
-                    check(when.otherwise(), parameters, entityParameters, loops, problems);
+                    check(when.then(), parameters, entityParameters, fieldParameters, loops, problems);
+                    check(when.otherwise(), parameters, entityParameters, fieldParameters, loops, problems);
                 }
             }
         }
@@ -228,41 +255,52 @@ public final class FeatureTemplate {
         return names;
     }
 
-    private static void render(List<Node> nodes, Map<String, String> values, Function<String, Optional<Entity>> entities,
-            Map<String, Field> loops, StringBuilder out) {
+    private static void render(List<Node> nodes, FeatureValues values, Function<String, Optional<Entity>> entities,
+            Map<String, Field> loops, StringBuilder out, List<io.kcg.sir.api.ExpansionOrigin> origins, List<FieldSelection> selections) {
         for (Node node : nodes) {
             switch (node) {
                 case Text text -> out.append(text.text());
-                case Value value -> out.append(value(value, values, entities, loops));
+                case Value value -> {
+                    int start = out.codePointCount(0, out.length());
+                    out.append(value(value, values, entities, loops));
+                    if (value.members().isEmpty() && !loops.containsKey(value.root()) && values.references().containsKey(value.root())
+                            && !values.groups().containsKey(value.root())) {
+                        origins.add(new io.kcg.sir.api.ExpansionOrigin(start, out.codePointCount(0, out.length()), values.references().get(value.root()).getFirst()));
+                    }
+                }
                 case ForEach loop -> {
                     Entity entity = entity(loop.parameter(), values, entities);
                     // A field named by a parameter must be a field of the entity, unless the parameter was left empty.
                     for (String named : names(loop)) {
-                        String field = values.get(named);
-                        if (!field.isEmpty() && entity.fields().stream().noneMatch(f -> f.name().equals(field))) {
-                            throw new Problem(named + " must name a field of " + entity.name() + ", and " + field + " is none", named);
+                        for (String field : values.names(named)) {
+                            if (entity.fields().stream().noneMatch(f -> f.name().equals(field))) {
+                                var ref = values.references().getOrDefault(named, List.of()).stream().filter(r -> r.text().equals(field)).findFirst();
+                                throw new Problem(named + " must name a field of " + entity.name() + ", and " + field + " is none", named,
+                                        ref.map(io.kcg.sir.ast.AstNameRef::span).orElse(null));
+                            }
                         }
+                        values.references().getOrDefault(named, List.of()).forEach(r -> selections.add(new FieldSelection(r, entity.name())));
                     }
                     for (Field field : entity.fields()) {
                         if (field.excludedBy(loop.except())) continue;
-                        if (loop.exceptNamed().stream().anyMatch(named -> values.get(named).equals(field.name()))) continue;
-                        if (loop.onlyNamed().isPresent() && !values.get(loop.onlyNamed().get()).equals(field.name())) continue;
+                        if (loop.exceptNamed().stream().anyMatch(named -> values.names(named).contains(field.name()))) continue;
+                        if (loop.onlyNamed().isPresent() && !values.names(loop.onlyNamed().get()).contains(field.name())) continue;
                         Map<String, Field> inner = new LinkedHashMap<>(loops);
                         inner.put(loop.variable(), field);
-                        render(loop.body(), values, entities, inner, out);
+                        render(loop.body(), values, entities, inner, out, origins, selections);
                     }
                 }
                 case When when -> {
                     boolean holds = (when.condition() == Condition.VERSIONED
                         ? entity(when.parameter(), values, entities).versioned()
-                        : !values.get(when.parameter()).isEmpty()) != when.negated();
-                    render(holds ? when.then() : when.otherwise(), values, entities, loops, out);
+                        : values.given(when.parameter())) != when.negated();
+                    render(holds ? when.then() : when.otherwise(), values, entities, loops, out, origins, selections);
                 }
             }
         }
     }
 
-    private static String value(Value value, Map<String, String> values, Function<String, Optional<Entity>> entities, Map<String, Field> loops) {
+    private static String value(Value value, FeatureValues values, Function<String, Optional<Entity>> entities, Map<String, Field> loops) {
         Field field = loops.get(value.root());
         if (field != null) {
             return switch (value.members().get(0)) {
@@ -274,14 +312,14 @@ public final class FeatureTemplate {
             };
         }
         if (value.members().isEmpty()) {
-            return Objects.requireNonNull(values.get(value.root()), value.root());
+            return values.scalar(value.root());
         }
         Entity entity = entity(value.root(), values, entities);
         return value.members().get(1).equals("name") ? entity.identityName() : entity.identityType();
     }
 
-    private static Entity entity(String parameter, Map<String, String> values, Function<String, Optional<Entity>> entities) {
-        String name = Objects.requireNonNull(values.get(parameter), parameter);
+    private static Entity entity(String parameter, FeatureValues values, Function<String, Optional<Entity>> entities) {
+        String name = values.scalar(parameter);
         return entities.apply(name).orElseThrow(() -> new Problem(parameter + " must name an entity, and " + name + " is none", parameter));
     }
 

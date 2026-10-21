@@ -196,7 +196,7 @@ class FeatureUseTest {
 
     private static String resource(String name) throws IOException {
         try (InputStream in = FeatureUseTest.class.getResourceAsStream(name)) {
-            return new String(Objects.requireNonNull(in, name).readAllBytes(), StandardCharsets.UTF_8);
+            return new String(Objects.requireNonNull(in, name).readAllBytes(), StandardCharsets.UTF_8).replace("\r\n", "\n");
         }
     }
 }

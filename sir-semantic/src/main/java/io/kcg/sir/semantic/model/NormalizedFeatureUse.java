@@ -17,12 +17,17 @@ import java.util.Objects;
  * writer writes back; the expanded declarations are never written as source text.
  */
 public record NormalizedFeatureUse(@Identity SymbolId id, @Fact String name, @Source SourceSpan span, @Source AstNodeId sourceNodeId,
-      @Fact List<NormalizedFeatureArgument> arguments) implements NormalizedDeclaration {
+      @Fact List<NormalizedFeatureArgument> arguments,
+      @io.kcg.sir.semantic.schema.Derived List<NormalizedFeatureArgument> defaults) implements NormalizedDeclaration {
+   public NormalizedFeatureUse(SymbolId id, String name, SourceSpan span, AstNodeId sourceNodeId, List<NormalizedFeatureArgument> arguments) {
+      this(id, name, span, sourceNodeId, arguments, List.of());
+   }
    public NormalizedFeatureUse {
       Objects.requireNonNull(id, "id");
       Objects.requireNonNull(name, "name");
       Objects.requireNonNull(span, "span");
       Objects.requireNonNull(sourceNodeId, "sourceNodeId");
+      defaults = List.copyOf(defaults);
       arguments = List.copyOf(Objects.requireNonNull(arguments, "arguments"));
    }
 }

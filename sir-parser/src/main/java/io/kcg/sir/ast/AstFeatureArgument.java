@@ -5,7 +5,8 @@ import java.math.BigInteger;
 import java.util.Objects;
 
 /** One {@code parameter: value;} of a {@code use} declaration; the value is a name or a duration. */
-public record AstFeatureArgument(SourceSpan span, AstName parameter, Value value) {
+public record AstFeatureArgument(SourceSpan span, AstName parameter, Value value, boolean defaulted) {
+    public AstFeatureArgument(SourceSpan span, AstName parameter, Value value) { this(span, parameter, value, false); }
     public AstFeatureArgument {
         Objects.requireNonNull(span, "span");
         Objects.requireNonNull(parameter, "parameter");
@@ -20,7 +21,8 @@ public record AstFeatureArgument(SourceSpan span, AstName parameter, Value value
     }
 
     /** A name: an entity, a field, or a word the feature defines. */
-    public record Word(AstName name) implements Value {
+    public record Word(AstName name, AstNameRef reference) implements Value {
+        public Word(AstName name) { this(name, null); }
         public Word {
             Objects.requireNonNull(name, "name");
         }
@@ -34,6 +36,15 @@ public record AstFeatureArgument(SourceSpan span, AstName parameter, Value value
         public String text() {
             return name.text();
         }
+    }
+
+    public record Text(SourceSpan span, String text, String value) implements Value {
+        public Text { Objects.requireNonNull(span); Objects.requireNonNull(text); Objects.requireNonNull(value); }
+    }
+
+    public record Names(SourceSpan span, java.util.List<AstNameRef> items) implements Value {
+        public Names { Objects.requireNonNull(span); items = java.util.List.copyOf(items); }
+        public String text() { return "[" + items.stream().map(AstNameRef::text).collect(java.util.stream.Collectors.joining(", ")) + "]"; }
     }
 
     /** A duration such as {@code 15 minutes}; the amount keeps an out-of-range literal reportable. */

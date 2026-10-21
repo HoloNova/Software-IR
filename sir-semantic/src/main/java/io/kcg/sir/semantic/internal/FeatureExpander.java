@@ -42,7 +42,7 @@ final class FeatureExpander {
     record Expansion(AstFeatureUseDecl use, String key, String role) {}
 
     /** @param keys what tells each use apart, by the use declaration's id */
-    record Result(List<AstDeclaration> declarations, List<AstFeatureUseDecl> uses, Map<AstNodeId, String> keys, Map<AstNodeId, Expansion> expanded) {}
+    record Result(List<AstDeclaration> declarations, List<AstFeatureUseDecl> uses, Map<AstNodeId, String> keys, Map<AstNodeId, Expansion> expanded, List<FeatureTemplate.FieldSelection> selections) {}
 
     /**
      * @param defined the features the software defines itself; the language's own are always available
@@ -55,6 +55,7 @@ final class FeatureExpander {
         List<AstFeatureUseDecl> uses = new ArrayList<>();
         Map<AstNodeId, String> keys = new LinkedHashMap<>();
         Map<AstNodeId, Expansion> expanded = new LinkedHashMap<>();
+        List<FeatureTemplate.FieldSelection> selections = new ArrayList<>();
         for (AstDeclaration declaration : written) {
             if (declaration instanceof io.kcg.sir.ast.AstFeatureDefinitionDecl) {
                 continue; // a definition is not something to implement; it is what a use expands by
@@ -69,7 +70,7 @@ final class FeatureExpander {
                 declarations.add(use); // expanded by the second run, once the entities are known
                 continue;
             }
-            uses.add(use);
+
             keys.put(use.id(), use.name().text());
             if (feature.isEmpty()) {
                 // A definition that was refused has said what is wrong with it; its uses add nothing to that.
@@ -78,20 +79,23 @@ final class FeatureExpander {
                 }
                 continue;
             }
-            Optional<Map<String, String>> values = values(use, feature.get(), diagnostics);
+            Optional<List<AstFeatureArgument>> values = values(use, feature.get(), diagnostics);
             if (values.isEmpty()) continue;
-            String key = key(feature.get(), values.get());
+            uses.add(new AstFeatureUseDecl(use.id(), use.span(), use.name(), values.get()));
+            var canonical = new LinkedHashMap<String, String>();
+            values.get().forEach(a -> canonical.put(a.parameter().text(), a.value().text()));
+            String key = key(feature.get(), canonical);
             keys.put(use.id(), key);
-            String text;
+            FeatureTemplate.Rendered rendered;
             try {
-                text = feature.get().expand(values.get(), entities.orElse(name -> Optional.empty()));
+                rendered = feature.get().parsed().renderDetailed(io.kcg.sir.semantic.feature.FeatureValues.of(values.get(), feature.get().parameters()), entities.orElse(name -> Optional.empty()));
             } catch (FeatureTemplate.Problem problem) {
                 var at = problem.parameter().flatMap(p -> use.arguments().stream().filter(a -> a.parameter().text().equals(p)).findFirst())
                     .map(a -> a.value().span()).orElse(use.span());
-                diagnostics.add(DiagnosticBuilder.error("SIR-FEATURE-003", problem.getMessage(), at));
+                diagnostics.add(DiagnosticBuilder.error("SIR-FEATURE-003", problem.getMessage(), problem.at().orElse(at)));
                 continue;
             }
-            var parsed = SirParser.create().parseExpansion(text, use.id(), use.span());
+            var parsed = SirParser.create().parseExpansion(rendered.text(), use.id(), use.span(), rendered.origins());
             if (parsed.declarations().isEmpty()) {
                 String why = parsed.diagnostics().stream().filter(Diagnostic::isError).findFirst().map(d -> ": " + d.message()).orElse("");
                 diagnostics.add(DiagnosticBuilder.error("SIR-FEATURE-004", "feature " + use.name().text() + " could not be expanded" + why, use.span()));
@@ -107,66 +111,82 @@ final class FeatureExpander {
                     "feature " + use.name().text() + " goes through an entity's fields, so it cannot declare types: the types are known before it expands", use.span()));
                 continue;
             }
-            String prefix = values.get().getOrDefault("prefix", "");
+            selections.addAll(rendered.selections());
+            String prefix = io.kcg.sir.semantic.feature.FeatureValues.of(values.get(), feature.get().parameters()).scalars().getOrDefault("prefix", "");
             for (AstDeclaration produced : parsed.declarations().get()) {
                 declarations.add(produced);
                 String name = ProjectSourceResolver.name(produced);
                 expanded.put(produced.id(), new Expansion(use, key, name.startsWith(prefix) ? name.substring(prefix.length()) : name));
             }
         }
-        return new Result(List.copyOf(declarations), List.copyOf(uses), keys, expanded);
+        return new Result(List.copyOf(declarations), List.copyOf(uses), keys, expanded, List.copyOf(selections));
     }
 
     /** The feature's name and, in order, the values of its parameters that have no default. */
     private static String key(Features.Feature feature, Map<String, String> values) {
         StringBuilder key = new StringBuilder(feature.name());
         for (Features.Parameter parameter : feature.parameters()) {
-            if (parameter.defaultValue().isEmpty()) key.append('/').append(values.get(parameter.name()));
+            if (parameter.defaultValue().isEmpty()) key.append('/').append(SymbolIdFactory.encode(values.get(parameter.name())));
         }
         return key.toString();
     }
 
     /** Every parameter's text with defaults applied, or empty after reporting why not. */
-    private static Optional<Map<String, String>> values(AstFeatureUseDecl use, Features.Feature feature, List<Diagnostic> diagnostics) {
-        Map<String, String> values = new LinkedHashMap<>();
+    private static Optional<List<AstFeatureArgument>> values(AstFeatureUseDecl use, Features.Feature feature, List<Diagnostic> diagnostics) {
+        var arguments = new LinkedHashMap<String, AstFeatureArgument>();
         boolean refused = false;
         for (AstFeatureArgument argument : use.arguments()) {
             String name = argument.parameter().text();
-            Optional<Features.Parameter> parameter = feature.parameter(name);
+            var parameter = feature.parameter(name);
             if (parameter.isEmpty()) {
                 diagnostics.add(DiagnosticBuilder.error("SIR-FEATURE-002", feature.name() + " has no parameter " + name, argument.parameter().span()));
-                refused = true;
-                continue;
+                refused = true; continue;
             }
-            if (values.containsKey(name)) {
+            if (arguments.putIfAbsent(name, argument) != null) {
                 diagnostics.add(DiagnosticBuilder.error("SIR-FEATURE-002", "parameter " + name + " is written twice", argument.parameter().span()));
-                refused = true;
-                continue;
+                refused = true; continue;
             }
-            boolean duration = argument.value() instanceof AstFeatureArgument.Duration;
-            if (duration != (parameter.get().kind() == Features.Kind.DURATION)) {
-                diagnostics.add(DiagnosticBuilder.error("SIR-FEATURE-003",
-                    name + " must be " + (duration ? "a name" : "a duration such as 15 minutes"), argument.value().span()));
-                refused = true;
-                continue;
+            boolean fits = switch (parameter.get().kind()) {
+                case NAME -> argument.value() instanceof AstFeatureArgument.Word;
+                case DURATION -> argument.value() instanceof AstFeatureArgument.Duration;
+                case TEXT -> argument.value() instanceof AstFeatureArgument.Text || argument.value() instanceof AstFeatureArgument.Word;
+                case NAMES -> argument.value() instanceof AstFeatureArgument.Names;
+            };
+            if (!fits) {
+                diagnostics.add(DiagnosticBuilder.error("SIR-FEATURE-003", name + " must be " + parameter.get().kind().name().toLowerCase(java.util.Locale.ROOT), argument.value().span()));
+                refused = true; continue;
             }
-            Optional<String> problem = parameter.get().problem(argument.value().text(), seconds(argument.value()));
+            String text = argument.value() instanceof AstFeatureArgument.Text literal ? literal.value() : argument.value().text();
+            var problem = parameter.get().problem(text, seconds(argument.value()));
             if (problem.isPresent()) {
-                diagnostics.add(DiagnosticBuilder.error("SIR-FEATURE-003", problem.get(), argument.value().span()));
-                refused = true;
-                continue;
+                diagnostics.add(DiagnosticBuilder.error("SIR-FEATURE-003", problem.get(), argument.value().span())); refused = true;
             }
-            values.put(name, argument.value().text());
-        }
-        for (Features.Parameter parameter : feature.parameters()) {
-            if (values.containsKey(parameter.name()) || refused) continue;
-            if (parameter.defaultValue().isPresent()) values.put(parameter.name(), parameter.defaultValue().get());
-            else {
-                diagnostics.add(DiagnosticBuilder.error("SIR-FEATURE-002", feature.name() + " needs parameter " + parameter.name(), use.span()));
-                refused = true;
+            if (argument.value() instanceof AstFeatureArgument.Names list) {
+                var seen = new java.util.HashSet<String>();
+                for (var item : list.items()) if (!seen.add(item.text())) {
+                    diagnostics.add(DiagnosticBuilder.error("SIR-FEATURE-003", "duplicate field: " + item.text(), item.span())); refused = true;
+                }
             }
         }
-        return refused ? Optional.empty() : Optional.of(values);
+        var defaults = new StringBuilder();
+        for (var parameter : feature.parameters()) {
+            if (arguments.containsKey(parameter.name()) || refused) continue;
+            if (parameter.defaultValue().isEmpty()) {
+                diagnostics.add(DiagnosticBuilder.error("SIR-FEATURE-002", feature.name() + " needs parameter " + parameter.name(), use.span())); refused = true;
+            } else {
+                String literal = parameter.defaultValue().get();
+                defaults.append(parameter.name()).append(": ").append(literal.isEmpty() ? "\"\"" : literal).append(";\n");
+            }
+        }
+        if (refused) return Optional.empty();
+        if (!defaults.isEmpty()) {
+            var parsed = SirParser.create().parseExpansion("use Defaults {" + defaults + "}",
+                    new AstNodeId(use.id().value() + "/argument-defaults"), use.span());
+            var defaultUse = (AstFeatureUseDecl) parsed.declarations().orElseThrow().getFirst();
+            for (var argument : defaultUse.arguments()) arguments.put(argument.parameter().text(),
+                    new AstFeatureArgument(argument.span(), argument.parameter(), argument.value(), true));
+        }
+        return Optional.of(List.copyOf(arguments.values()));
     }
 
     private static BigInteger seconds(AstFeatureArgument.Value value) {

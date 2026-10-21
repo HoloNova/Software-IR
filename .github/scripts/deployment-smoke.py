@@ -306,8 +306,8 @@ try:
     assert favorite_rows('different') == []
     assert len(favorite_rows('not-equal')) == 7
     first, second = favorites[0]['id'], favorites[1]['id']
-    exchange('/api/favorites/raise', {'id': first, 'score': 1000}, owner, 201, base=server)
-    exchange('/api/favorites/raise', {'id': second, 'score': 1001}, owner, 201, base=server)
+    exchange('/api/favorites/raise', {'id': first, 'score': 1000}, owner, 200, base=server)
+    exchange('/api/favorites/raise', {'id': second, 'score': 1001}, owner, 200, base=server)
     assert {row['score'] for row in favorite_rows('filter', '&minimum=1000')} == {1000, 1001}
     assert [row['score'] for row in favorite_rows('filter', '&maximum=1000')] == [1000]
     assert favorite_rows('filter', '&minimum=1002') == []
