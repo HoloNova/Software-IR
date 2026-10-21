@@ -403,6 +403,13 @@ final class BusinessSliceHarness {
     /** Fixed test-only session setup; never alters endpoint/schema validation or the server's global mode. */
     void useNonStrictSqlModeFixture() { this.nonStrictSqlModeFixture = true; }
 
+    static Map<String, String> sessionInitializationEnvironment(boolean nonStrict) {
+        // Boot maps dots to underscores but removes dashes: connection-init-sql -> CONNECTIONINITSQL.
+        return nonStrict
+                ? Map.of("SPRING_DATASOURCE_HIKARI_CONNECTIONINITSQL", "SET SESSION sql_mode=''")
+                : Map.of();
+    }
+
     Path buildAndLocateJar(MysqlRuntimeJdbcUrl runtimeUrl) throws IOException, InterruptedException {
         ChildEnvironmentBuilder childEnvironment = new ChildEnvironmentBuilder()
                 .copyOsAllowlist()
@@ -417,10 +424,8 @@ final class BusinessSliceHarness {
         }
 
         Map<String, String> childEnv = new java.util.LinkedHashMap<>(childEnvironment.build());
-        if (this.nonStrictSqlModeFixture) {
-            // Hikari runs this on every new physical connection, after Connector/J initialization.
-            childEnv.put("SPRING_DATASOURCE_HIKARI_CONNECTION_INIT_SQL", "SET SESSION sql_mode=''");
-        }
+        // Hikari runs this on every new physical connection, after Connector/J initialization.
+        childEnv.putAll(sessionInitializationEnvironment(this.nonStrictSqlModeFixture));
         // ChildEnvironmentBuilder deliberately drops inherited MAVEN_OPTS; limits must be explicit.
         List<String> mavenLimits = ConformanceJvmLimits.arguments("maven");
         if (!mavenLimits.isEmpty()) childEnv.put("MAVEN_OPTS", childEnv.get("MAVEN_OPTS") + " " + String.join(" ", mavenLimits));

@@ -56,6 +56,13 @@
             <artifactId>junit-jupiter</artifactId>
             <scope>test</scope>
         </dependency>
+        <!-- Exercise the target's real relaxed environment binding without starting an application. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot</artifactId>
+            <version>3.5.3</version>
+            <scope>test</scope>
+        </dependency>
         <!--
             MySQL Connector/J (test scope only) for the Stage E Conformance Harness.
             The harness opens dedicated control connections (MysqlControlSession,

@@ -121,7 +121,7 @@ class MoneyBusinessConformanceIT {
     }
 
     private void nonStrict(BusinessSliceHarness s, MysqlObserver observer, HttpAssertionClient http) throws Exception {
-        s.reportLine("nonStrictSetup=HIKARI_CONNECTION_INIT_SQL SET SESSION sql_mode='' on every actual application connection");
+        s.reportLine("nonStrictSetup=SPRING_DATASOURCE_HIKARI_CONNECTIONINITSQL SET SESSION sql_mode='' on every actual application connection");
         post(s, http, "/wallet/set", "{\"id\":1,\"amount\":1.2300}", 200);
         s.fixtureStatement("UPDATE wallet SET rebate=7.77 WHERE id=2");
         var before = s.rowsNow(observer);

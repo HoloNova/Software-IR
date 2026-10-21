@@ -68,7 +68,7 @@ tasks、market 已更新；本机语义、降级、生成真值表、源往返�
 
 已按[设计 12 第 20 节](../design/12-feature-semantics-and-semantic-types.md#g10-money-proposal)实现默认 precision(19,2)、显式覆写、精确校验与 DECIMAL 物理合同；接受无损尾随零、不隐式舍入。原子金额仍基于数据库当前值加减；实际事务连接必须严格 SQL mode，最终溢出回滚。PATCH 精度来自实体，未放宽其他业务约束禁令；语义类型继续全项目可见，实体仍须 import。
 
-15 类最新定向报告共 105 项通过，market／shop／ledger 已改 Money，八题内存生成／交付规划通过。金额 MySQL／HTTP、非严格模式与并发、八题生成工程编译和独立部署已接 CI，本机均未执行；不重定义普通非版本持久化的全行／NULL 策略。详见[验证记录](../qualification/README.md#g10-money-local)。随后 `a54c351` 的 #141 因 DecimalPrecision 辅助 record 误入模型包，以及 DTO 旧注解断言失配失败；后续真库和部署被跳过。本轮移到 feature 包并补齐完整 DTO 契约，七类 65 项定向通过，不改精度算法、不豁免架构门，待修复提交的新 CI。见[验证记录第 13 节](../qualification/README.md#ci-141-fix)。先闭环此阻塞，再评审 G6／G11，不擅自开始循环与聚合。
+15 类最新定向报告共 105 项通过，market／shop／ledger 已改 Money，八题内存生成／交付规划通过。金额 MySQL／HTTP、非严格模式与并发、八题生成工程编译和独立部署已接 CI，本机均未执行；不重定义普通非版本持久化的全行／NULL 策略。详见[验证记录](../qualification/README.md#g10-money-local)。随后 `a54c351` 的 #141 因 DecimalPrecision 辅助 record 误入模型包，以及 DTO 旧注解断言失配失败；后续真库和部署被跳过。本轮移到 feature 包并补齐完整 DTO 契约，七类 65 项定向通过，不改精度算法、不豁免架构门，随后已推送 `303a139`。#142 双全量门通过，金额 IT 已有 53 项检查通过，但在非严格模式重启因测试环境键错误而失败，后续部署被跳过。本轮修正环境绑定，5 项定向通过，完整真库与部署仍待新 CI；见[验证记录第 13 节](../qualification/README.md#ci-141-fix)和[第 14 节](../qualification/README.md#ci-142-session-fix)。先闭环此阻塞，再评审 G6／G11，不擅自开始循环与聚合。
 
 ### 4.6 G6 乘法、G11 视图计算字段
 

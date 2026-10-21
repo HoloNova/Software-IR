@@ -347,6 +347,8 @@ AFT Java/JDTLS 初始化退出，诊断 PARTIAL／unknown，以实际 javac 与�
 <a id="ci-141-fix"></a>
 ## 13. CI #141：精度辅助类型归属与 DTO 契约回归修复
 
+本修复已推送 `303a139`；#142 双全量门通过，后续金额 IT 的环境绑定失败与修复见[第 14 节](#ci-142-session-fix)。本节保留该次修复的本机证据。
+
 失败提交：`a54c351fec7ca5770635f698195689218d84e79d`，[verify #141](https://github.com/HoloNova/Software-IR/actions/runs/39557106745)。冻结门在 semantic 模块停止，完成门、业务 IT、独立验证和部署被跳过。另查允许失败的预热门及上传的 Surefire XML，共确认两个失败用例；不能只看 `--log-failed` 而漏掉预热门中的后续模块。
 
 - `SoftwareSchemaCompletenessTest.everyRecordInTheModelPackagesIsReachableFromTheRoot`：新增 `semantic.type.DecimalPrecision` 是计算精度规则的辅助 record，不属于模型根图，却进入了模型包扫描。将其移到已有 `semantic.feature` 包，更新全部调用；精度事实仍留在 `NormalizedConstraint`，不改变模型、算法，不给架构门加豁免。
@@ -375,3 +377,30 @@ mvn -B -o -pl sir-generator-spring-boot -am '-Dtest=SoftwareSchemaCompletenessTe
 ```
 
 此前第 12 节的 105 项没有选中上述两个既有契约，属于回归选择遗漏；不把旧数量与本批数量累加。Java/JDTLS 初始化仍失败，AFT 为 PARTIAL，实际 javac 与定向执行通过；覆盖率未测，不声明 80%。本批无 UI 改动，不启动应用、MySQL 或容器。差异自审与 `git diff --check` 通过；全量门、金额真库／HTTP、并发／非严格模式及部署仍需修复提交的同 SHA CI，不能用 #140 或本机结果代替。按负责人授权，本修复阶段完成后 commit + push 触发新 CI。
+
+
+<a id="ci-142-session-fix"></a>
+## 14. CI #142：非严格模式验收的环境绑定修复
+
+失败提交：`303a13943bde22b00733099d7c5d20ef326fdf5c`，[verify #142](https://github.com/HoloNova/Software-IR/actions/runs/39581448890)。冻结／完成双全量门均 success；业务 IT 共 9 项、1 failure、0 errors、0 skipped，唯一失败是 `MoneyBusinessConformanceIT.moneyAgainstRealMysql`。独立验证、CLI 和部署被跳过，不算通过。正式报告产物为 `surefire-reports`（12338831530）与 `conformance-evidence`（12338536666），本机下载副本在 `target/g10-ci-142-reports/`、`target/g10-ci-142-evidence/`。
+
+Money 报告已有 **53 checks passed / 1 failed**：真实 DTO／Optional、PATCH null／版本、并发精确增量、最终溢出与事务回滚均执行通过。失败是切到非严格 SQL 模式之后重启应用未就绪；第二轮构建成功，但启动输出显示：
+
+```text
+Property: spring.datasource.hikari.connection-init-sql
+Origin: System Environment Property "SPRING_DATASOURCE_HIKARI_CONNECTION_INIT_SQL"
+Reason: java.lang.IllegalStateException: The configuration of the pool is sealed once started.
+```
+
+**原因与修复。** [Spring Boot 环境变量协议](https://github.com/spring-projects/spring-boot/blob/v3.5.3/spring-boot-project/spring-boot-docs/src/docs/antora/modules/reference/pages/features/external-config.adoc)要求点换下划线、删去连字符并大写。旧键把 `connection-init-sql` 错写为 `CONNECTION_INIT_SQL`，使 Binder 尝试遍历 `connection.init.sql`，访问懒连接属性。改为 `SPRING_DATASOURCE_HIKARI_CONNECTIONINITSQL`，仍在每条真实 Hikari 连接创建后执行固定的 `SET SESSION sql_mode=''`，不 SET GLOBAL，不使用探针连接替代写事务连接。实际环境映射提成不可变 map，普通轮次不加任何覆盖；IT 报告同步真实键名。金额生产代码、严格模式拒写和回滚断言均未改，非严格验收仍完整保留。
+
+**本机 RED→GREEN。** `MoneySessionConfigurationTest` 使用与目标相同的 Spring Boot 3.5.3 Binder 和 `SystemEnvironmentPropertySource`，直接消费 harness 的实际 map。3 个用例验证初始化 SQL 正确绑定且不访问连接、普通轮次配置不变、错误键确实触发懒连接 getter。getter 是抛错的测试探针，不建立真实池或数据库。新增的 Boot core 仅为 test-scope，不进入产品运行时或生成项目依赖。
+
+首次探针把属性源命名为自定义名字，Boot 未选择 OS 环境映射，控制反例失败；这次运行不是有效 RED。核对 v3.5.3 官方 `SpringConfigurationPropertySource.isSystemEnvironmentPropertySource` 后，改用实际标准名 `systemEnvironment`，原 harness 映射产生 **3 tests / 1 failure / 0 errors**，失败点为读取 `spring.datasource.hikari.connection`。修正键名后，两类最新 XML 合计 **5 tests / 0 failures / 0 errors / 0 skipped**：配置回归 3 项，`ConformanceJvmLimitsTest` 2 项。有效 RED 与 GREEN 报告封存在 `target/ci-142-fix/{red,green}/`，不累加重复运行。
+
+```powershell
+$env:MAVEN_OPTS='-Xmx512m'
+mvn -B -o -pl sir-toolchain-application -am '-Dtest=MoneySessionConfigurationTest,ConformanceJvmLimitsTest' '-DfailIfNoTests=false' '-Dsurefire.failIfNoSpecifiedTests=false' '-DargLine=-Xmx384m' test
+```
+
+AFT Java/JDTLS 仍初始化失败，诊断 PARTIAL，以实际 javac 与定向结果为准；覆盖率未测，不声明 80%。本机未启动应用、MySQL、连接池或容器，不运行全量门；无 UI 改动。差异自审后按授权提交推送本修复，G6 设计草案不混入。本修复提交的真实非严格连接拒写／回滚、完整 Money IT、独立验证和部署仍待同 SHA CI；#142 已通过的部分不代表整条金额验收闭环，也不提前上调八题计数。
