@@ -67,14 +67,22 @@ class CrudAccessBusinessConformanceIT {
                 "{\"title\":\"denied\"}"), 403);
         status(s, "reader delete refused before load", http.delete(url + "/999999", READER), 403);
         status(s, "anonymous delete refused", http.delete(url + "/1", Map.of()), 401);
-        var created = http.postJson(url, OWNER, "{\"title\":\"published\",\"stock\":999}");
+        var beforeCreate = sliceBooks(s, observer);
+        status(s, "excluded field in create is refused", http.postJson(url, OWNER,
+                "{\"title\":\"tampered\",\"stock\":999}"), 400);
+        s.check("rejected create wrote nothing", beforeCreate.equals(sliceBooks(s, observer)), sliceBooks(s, observer).toString());
+        var created = http.postJson(url, OWNER, "{\"title\":\"published\"}");
         status(s, "admin creates book", created, 201);
         s.check("excluded stock keeps its server default", sliceBooks(s, observer).stream().anyMatch(row -> row.endsWith("|published|5")),
                 sliceBooks(s, observer).toString());
         s.check("refused creates wrote nothing", sliceBooks(s, observer).size() == 2, sliceBooks(s, observer).toString());
         String id = BusinessSliceHarness.field(created.body(), "id");
+        var beforeUpdate = sliceBooks(s, observer);
+        status(s, "excluded field in update is refused", http.putJson(url + "/" + id, OWNER,
+                "{\"title\":\"tampered\",\"stock\":999}"), 400);
+        s.check("rejected update wrote nothing", beforeUpdate.equals(sliceBooks(s, observer)), sliceBooks(s, observer).toString());
         status(s, "admin updates without writing excluded stock", http.putJson(url + "/" + id, OWNER,
-                "{\"title\":\"edited\",\"stock\":999}"), 200);
+                "{\"title\":\"edited\"}"), 200);
         s.check("update preserved stock", sliceBooks(s, observer).contains(id + "|edited|5"), sliceBooks(s, observer).toString());
         status(s, "admin deletes", http.delete(url + "/" + id, OWNER), 200);
         s.check("only the seed book remains", sliceBooks(s, observer).size() == 1, sliceBooks(s, observer).toString());
@@ -93,20 +101,17 @@ class CrudAccessBusinessConformanceIT {
 
     private void ownerPatch(BusinessSliceHarness s, MysqlObserver observer, HttpAssertionClient http) throws Exception {
         String url = s.baseUrl() + "/api/public/posts/1";
-        String change = "{\"expectedVersion\":1,\"changes\":{\"body\":\"edited\",\"state\":\"hidden\"}}";
+        String change = "{\"expectedVersion\":1,\"changes\":{\"body\":\"edited\"}}";
         var initial = s.rowsOf(observer, "post");
         status(s, "anonymous patch refused", http.patchJson(url, Map.of(), change), 401);
         status(s, "wrong role refused", http.patchJson(url, READER, change), 403);
         status(s, "correct role cannot bypass owner", http.patchJson(url, OTHER_ADMIN, change), 404);
         s.check("denied patches wrote nothing", initial.equals(s.rowsOf(observer, "post")), s.rowsOf(observer, "post").toString());
-        var patched = http.patchJson(url, OWNER, change);
-        s.record("owner patch with an excluded field", patched);
-        // Unknown-field handling is the target's existing JSON policy, not a new global Crud policy.
-        s.check("excluded input is ignored or rejected", patched.statusCode() == 200 || patched.statusCode() == 400, patched.body());
-        if (patched.statusCode() == 400) {
-            s.check("rejected patch wrote nothing", initial.equals(s.rowsOf(observer, "post")), s.rowsOf(observer, "post").toString());
-            status(s, "owner clean patch", http.patchJson(url, OWNER, "{\"expectedVersion\":1,\"changes\":{\"body\":\"edited\"}}"), 200);
-        }
+        // This target rejects unknown request properties before the workflow; do not test authorization with an invalid body.
+        status(s, "owner patch with an excluded field is refused", http.patchJson(url, OWNER,
+                "{\"expectedVersion\":1,\"changes\":{\"body\":\"edited\",\"state\":\"hidden\"}}"), 400);
+        s.check("rejected patch wrote nothing", initial.equals(s.rowsOf(observer, "post")), s.rowsOf(observer, "post").toString());
+        status(s, "owner clean patch", http.patchJson(url, OWNER, change), 200);
         s.check("the stored state stays open and the version advances once", s.rowsOf(observer, "post").contains("1|1|edited|open|2"),
                 s.rowsOf(observer, "post").toString());
         status(s, "stale patch is a conflict", http.patchJson(url, OWNER, "{\"expectedVersion\":1,\"changes\":{\"body\":\"stale\"}}"), 409);

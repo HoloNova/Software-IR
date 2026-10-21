@@ -60,7 +60,7 @@ tasks、market 已更新；本机语义、降级、生成真值表、源往返�
 
 负责人确认[设计 12 第 19 节](../design/12-feature-semantics-and-semantic-types.md#g9-crud)后已在工作区贯通 text／names、字段集合选择、正式参数 binding、精确 rename／源回写及 Crud 的 writer、writeRole、roleField、writeExclude、read: public 和多段路径。旧 use 默认行为不变。library Book 只允许馆员写；market Item 从输入与赋值排除 status／createdAt，保留手写的在售浏览。此排除不是并发锁，普通非版本持久化并未重定义。
 
-89 项定向测试通过，真实 CRLF、旧手写展开等价、跨文件正反例、角色与字段错误均有覆盖。真库 `CrudAccessBusinessConformanceIT` 已复用既有 harness 并接入 verify.yml，尚未执行；不增加八题完成数，不把本机报告当作全量 CI。#138（ee6ddeb）的全量门通过，部署因 `/favorites/raise` 更新成功被脚本误期待 201 而失败；本轮修为 200 并补控制器契约断言。详见[验证记录第 9 节](../qualification/README.md#g9-crud-local)。负责人已授权阶段性成果直接提交，本次未推送；同源码 CI 仍待验收。
+89 项定向测试通过，真实 CRLF、旧手写展开等价、跨文件正反例、角色与字段错误均有覆盖。真库 `CrudAccessBusinessConformanceIT` 已复用既有 harness 并接入 verify.yml，尚未执行；不增加八题完成数，不把本机报告当作全量 CI。#138（ee6ddeb）的全量门通过，部署因 `/favorites/raise` 更新成功被脚本误期待 201 而失败；本轮修为 200 并补控制器契约断言。详见[验证记录第 9 节](../qualification/README.md#g9-crud-local)。随后已提交推送 f82cb94；#139 双全量门通过，新增真库 IT 因错误地用夹带排除字段的请求测试正常写入／权限而失败。修复只分开测试请求与断言，13 项相关定向通过，待新 CI 复验；见[验证记录第 10 节](../qualification/README.md#ci-139-fixture-fix)。阶段完成按负责人授权直接 commit + push 触发 CI。
 
 ### 4.5 G10 `Money` 交付不了
 

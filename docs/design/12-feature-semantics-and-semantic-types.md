@@ -597,4 +597,4 @@ writeExclude 生效后，客户端无论在普通更新还是 PATCH 中夹带 st
 
 library 的 Book 增加 writer／LIBRARIAN，market 的 Item 排除 status／createdAt，保留原浏览接口。`writeExclude` 保护请求输入和赋值，不新增并发保证；非版本普通更新仍沿用原持久化语义，不能把它称为并发锁或部分列原子更新。已有 Version、guard 和 secret 规则不变。
 
-本机 13 类定向测试共 89 项通过，包括旧 Crud 手写展开的产物等价、参数载体、精确改名、跨文件绑定与缺失 import、源编辑重读、真实 CRLF 编辑和语言参考例子。原全角色文件导出测试本机仍因 Windows 安全读源限制受阻，不删除、不放宽。新增 `CrudAccessBusinessConformanceIT` 复用既有隔离 MySQL／生成工程／HTTP／清理／证据 harness，接入 verify.yml 的业务 IT 步骤，默认不在本机执行。完整真库用例、生成工程编译和同源码全量 CI 均为 NOT_RUN。没有 UI 改动，无浏览器验收。负责人已授权阶段性成果直接提交，本次未推送；同源码 CI 仍待验收。
+本机 13 类定向测试共 89 项通过，包括旧 Crud 手写展开的产物等价、参数载体、精确改名、跨文件绑定与缺失 import、源编辑重读、真实 CRLF 编辑和语言参考例子。原全角色文件导出测试本机仍因 Windows 安全读源限制受阻，不删除、不放宽。新增 `CrudAccessBusinessConformanceIT` 复用既有隔离 MySQL／生成工程／HTTP／清理／证据 harness，接入 verify.yml 的业务 IT 步骤，默认不在本机执行。完整真库用例、生成工程编译和同源码全量 CI 均为 NOT_RUN。没有 UI 改动，无浏览器验收。随后已推送 f82cb94；#139 双全量门通过，新增 G9 真库 IT 因混用合法请求与字段篡改请求而失败。本轮仅修正测试请求，未放宽生产解码与授权；13 项相关定向通过，完整 IT 仍待新 CI。见[修复记录](../qualification/README.md#ci-139-fixture-fix)。

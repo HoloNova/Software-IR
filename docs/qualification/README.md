@@ -270,3 +270,23 @@ mvn -B -o -pl sir-toolchain-application -am '-Dtest=CrudAccessContractTest' '-Df
 报告在各模块 `target/surefire-reports/TEST-*.xml`，并封存到根目录 `target/g9-verification/`（含本批文件 SHA-256 清单与 local-result.json）。AFT Java/JDTLS 初始化失败，诊断 PARTIAL，以实际 Maven 编译与测试为准；未测覆盖率，不声明 80%。一次扩大回归中，原 ProjectVisibilityTest 的 4 个物理文件导出方法仍被 Windows 的 `SIR-APP-SOURCES-READ-001` 阻断；不作为产品回归失败或成功替代证据。这些方法保留在 Linux CI，纯语义正反例另行通过。
 
 **CI 待验收：**新增 CrudAccessBusinessConformanceIT 复用现有 BusinessSliceHarness，verify.yml 业务 IT 已加 `kcg.crud-conformance.enabled=true`，按现有单构建顺序执行，不在本机启动。覆盖真实认证的 401／403、角色先于行加载、三个写操作、字段夹带不改库、公开读仍应用 scope、角色不能越过 owner、Version PATCH 与冲突，并独立 JDBC 查库与既有进程／schema 清理、证据报告。此 IT、八题生成工程离线编译、全量门、完整部署及本批同源码 CI 均 **NOT_RUN**；基线 #138 的通过不能外推到本批。未启动应用或容器，无 UI 改动，不需浏览器／UI 测试；负责人已授权阶段性成果直接提交，本次未推送；同源码 CI 仍待验收。
+
+<a id="ci-139-fixture-fix"></a>
+## 10. CI #139：G9 真库测试请求契约修复
+
+失败源码 `f82cb94d01be6754ce56e37ff1bbc835ccf433f9`；[CI #139](https://github.com/HoloNova/Software-IR/actions/runs/39525420836)。`Frozen full gate` 与 `Completion full gate` 均通过；8 个业务 IT 中新增的 `CrudAccessBusinessConformanceIT` 失败，其余 7 个通过。后续独立验证、CLI 和 standalone deployment 被跳过，不得据此确认 #138 的部署修复已验收。该次 run 已上传 `conformance-evidence`、`surefire-reports`，G9 报告为 35 个检查通过、8 个失败。
+
+**根因及 RED。** 真实生成工程编译通过。现有目标在进入工作流之前拒绝未知 JSON 属性：管理员创建请求夹带已排除的 `stock`，实际返回 `400 INVALID_REQUEST`，测试却期待 201，继而使用空 id 测试更新／删除；两项权限检查夹带已排除的 `changes.state`，实际返回 400，尚未进入应返回 403／404 的授权路径。owner 的干净 PATCH 已在该 run 返回 200，版本仅递增一次，陈旧版本返回 409。上述 CI HTTP／数据库日志是本次 RED，不把 Windows 环境跳过的 IT 当作复现通过。
+
+**修复范围。** 仅调整 IT：正常创建／更新使用合法 body；单列夹带 `stock` 的 create／update 及夹带 `state` 的 PATCH，按既有严格解码协议期待 400，并检查数据库整行保持不变；匿名／错角色／非 owner 检查使用合法 PATCH，避免请求格式错误遮住授权检查。所有正常写入仍要求原成功状态；没有放宽为“任意 2xx／4xx”，没有修改生产解码、权限、默认值或事务规则。
+
+**本机检查。**
+
+```powershell
+$env:MAVEN_OPTS='-Xmx512m'
+mvn -B -o -pl sir-toolchain-application -am '-Dtest=CrudAccessContractTest,OptionalDeploymentFixtureTest' '-DfailIfNoTests=false' '-Dsurefire.failIfNoSpecifiedTests=false' '-DargLine=-Xmx384m' test
+```
+
+结果：13 项定向测试通过（12 + 1，0 failure/error/skip）；修改后的 IT 随模块测试源码编译通过。AFT Java/JDTLS 初始化失败，静态诊断为未知，以本次 javac 编译为准。不把这 13 项内存／生成契约测试称为真实 HTTP／MySQL GREEN。
+
+**仍待 CI。** 修复源码的 `CrudAccessBusinessConformanceIT`、双全量门、独立验证和部署门均待推送后执行。本机未启动 MySQL、生成应用或执行业务 IT；不更新八题完成数。后续完整结果必须绑定修复 commit SHA 与对应 run。
