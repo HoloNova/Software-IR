@@ -92,6 +92,8 @@ verify新增`standalone-deployment` job，消费同SHA全量门产出的CLI，�
 sh deploy/deploy.sh contract-test --instance demo --state-root /absolute/path/to/demo-state
 ```
 
+联网构建阶段会用 JUnit 5 的 dry-run 解析生成合同测试的 Surefire provider／launcher 依赖，不执行测试方法或 HTTP 请求，也不作为验收通过证据。实际 `contract-test` 显式关闭 dry-run，并用 Maven 离线模式复用同一实例的 `/m2` 缓存；依赖缺失时明确失败，不临时下载。外部业务验收包仍是普通 Maven 工程，不假设其测试框架、不在构建阶段运行，执行协议保持不变。
+
 `contract-test`要求实例在运行；在受限Maven容器内经Compose网络请求`http://app:8080`，运行生成的`app/src/test/java/<基础包>/contract/HttpContractIT.java`。它只发出会在业务代码前被拒绝的请求，不写数据，可对任一实例运行：Swagger UI与OpenAPI可达、文档中的操作/认证/错误响应与导出时的接口表一致、认证接口对无凭据/畸形/未签发令牌回401、非认证请求体接口对畸形JSON/未知属性/`notBlank`/`length`违例回400错误信封。成功调用、声明业务错误和认证后的校验需要业务数据，记为`NOT_VERIFIED`，合同通过不等于业务验收。
 
 结果在`<state>/reports/contract/`：`contract-report.tsv`逐项给出PASSED/FAILED/NOT_VERIFIED及原因，另有Surefire报告。成功输出`KCG_CONTRACT_PASSED`，失败以退出码5结束。普通`mvn test`不选中该类，也不需要运行中的服务。

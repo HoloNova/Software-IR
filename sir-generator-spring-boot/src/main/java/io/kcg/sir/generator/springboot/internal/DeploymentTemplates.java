@@ -313,7 +313,10 @@ final class DeploymentTemplates {
         cp -R /package/app /tmp/kcg-build/app
         cp -R /package/deploy/tools /tmp/kcg-build/tools
         cd /tmp/kcg-build/app
-        mvn -B -ntp -Dmaven.repo.local=/m2 -Dmaven.test.skip=true package
+        # Resolve the actual Surefire provider and launcher while this build still has dependency access.
+        # JUnit dry-run discovers tests but never executes their lifecycle or HTTP requests.
+        mvn -B -ntp -Dmaven.repo.local=/m2 -Dtest=HttpContractIT -Dsurefire.failIfNoSpecifiedTests=false \\
+          -DargLine=-Xmx256m -Djunit.platform.execution.dryRun.enabled=true package
         APP=$(find target -maxdepth 1 -type f -name '*.jar')
         [ -n "$APP" ] || { echo 'build produced no application jar' >&2; exit 3; }
         cp "$APP" /artifacts/app.jar
@@ -332,7 +335,8 @@ final class DeploymentTemplates {
         cp -R /package/app /tmp/kcg-contract/app
         cd /tmp/kcg-contract/app
         STATUS=0
-        mvn -B -ntp -Dmaven.repo.local=/m2 -Dtest=HttpContractIT -Dsurefire.failIfNoSpecifiedTests=false -DargLine=-Xmx256m \\
+        mvn -B -o -ntp -Dmaven.repo.local=/m2 -Djunit.platform.execution.dryRun.enabled=false \\
+          -Dtest=HttpContractIT -Dsurefire.failIfNoSpecifiedTests=false -DargLine=-Xmx256m \\
           -Dkcg.baseUrl=http://app:8080 -Dkcg.reportFile=/reports/contract-report.tsv test || STATUS=$?
         if [ -d target/surefire-reports ]; then cp -R target/surefire-reports /reports/surefire-reports; fi
         exit "$STATUS"

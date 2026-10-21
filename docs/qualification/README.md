@@ -424,3 +424,21 @@ python -m py_compile .github/scripts/deployment-smoke.py .github/scripts/test_de
 ```
 
 生命周期模型不是实际 Docker／MySQL GREEN；本机不启动服务，不重跑全量 Java 构建。AFT 可分析这三个文件，但仍报原有 `expected=None` 的两处 Pyright 推断错误，本次未改其运行协议；以 Python 语法检查和实际 unittest 为定向证据，覆盖率未测。独立部署漂移拒绝／恢复与新实例完整迁移链仍待修复提交的同 SHA CI；此前已经通过的门也不直接外推到修复 SHA。无 UI 改动，八题完成数不变。本次按阶段授权单独 commit + push 触发 CI。
+
+
+<a id="ci-144-dependency-fix"></a>
+## 16. CI #144：合同测试运行器依赖预热缺口
+
+失败 SHA `024be760bb9c90db9e170178efa2af394a9e9732`，[verify #144](https://github.com/HoloNova/Software-IR/actions/runs/39593858819)。双全量门、业务 IT、独立验证与 CLI 均 success；独立部署在初次 `contract-test` 以 5 失败，尚未进入金额精度漂移复验。下载的 `deployment-evidence/07-process.log` 显示 `surefire-junit-platform:3.5.3` 的 POM 尚未缓存，向 Maven Central 下载时报 `Network is unreachable`，并非合同断言、金额运算或数据库失败。副本保存在 `target/ci-investigation/144/`。
+
+构建阶段原来使用 `maven.test.skip=true`，没有解析 Surefire 动态选择的 provider／launcher。合同容器接入 Compose 网络，不是模板显式 `--network=none`；本轮访问依赖仓库不可达，不能推广成所有测试容器必定禁网。修复在原本允许下载依赖的构建阶段显式选择生成的 HttpContractIT，使用 JUnit 5.12.2 官方 `junit.platform.execution.dryRun.enabled=true`，只发现测试并预热运行器，不执行生命周期或 HTTP 请求。真正的合同测试显式关闭 dry-run，并使用 `mvn -o` 和同一个 `/m2`，不把临时下载作为验收前提，也不将 dry-run 的跳过计为通过。
+
+已核对 JUnit 官方 r5.12.2 的 [LauncherConstants](https://github.com/junit-team/junit-framework/blob/r5.12.2/junit-platform-launcher/src/main/java/org/junit/platform/launcher/LauncherConstants.java) 和 [EngineExecutionOrchestrator](https://github.com/junit-team/junit-framework/blob/r5.12.2/junit-platform-launcher/src/main/java/org/junit/platform/launcher/core/EngineExecutionOrchestrator.java)，固定源码 blob 分别为 `a2af5d187a581591398b74dbe334765cfb58e2a8`、`aedf22950cc1a25473193e63104c8ef7748301e4`。外部 acceptance 是普通 Maven 工程，不能假设它使用 JUnit 5；未在构建时运行它、未修改其现有执行命令及确认一次性实例协议。
+
+本机最终 **8 项通过、0 失败／错误／跳过**：DeploymentDependencyPrimingTest 3 项验证生成合同运行器的预热、外部验收不成为构建副作用、真正合同的离线与显式关闭 dry-run；MoneyDeliveryTest 5 项回归精度、默认值与迁移限制。预热缺失和离线合同断言已先取得 RED。另从实际编译后的模板导出 build／contract／acceptance 三份脚本，`sh -n` 均通过。没有启动 Docker、MySQL、应用，也没有构建生成工程。AFT 的 Java LSP 初始化失败，诊断为 PARTIAL；以实际 Maven 编译与定向结果为依据，不宣称 LSP 已干净。
+
+```powershell
+mvn -B -q -o -pl sir-generator-spring-boot -am test '-Dtest=DeploymentDependencyPrimingTest,MoneyDeliveryTest' '-Dsurefire.failIfNoSpecifiedTests=false' '-DargLine=-Xmx512m -XX:ActiveProcessorCount=2'
+```
+
+Maven 本身限制 384 MiB／2 个可见处理器；测试 fork 限制 512 MiB／2 个可见处理器。定向在含未提交 G6 的工作区执行；本修复单独提交，不把本机结果当成独立修复 SHA 的完整证据。真实依赖预热、离线合同与部署漂移闭环均等待后续同 SHA CI，未提前验收 G10。
