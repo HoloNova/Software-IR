@@ -220,6 +220,8 @@ jobs:
         with:
           name: standalone-cli
           path: ${{ runner.temp }}/delivery-cli
+      - name: Deployment smoke lifecycle regression
+        run: python3 -m unittest discover -s .github/scripts -p test_deployment_smoke.py -v
       - name: Export a standalone delivery with the public CLI
         run: |
           set -euo pipefail

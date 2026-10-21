@@ -382,6 +382,8 @@ mvn -B -o -pl sir-generator-spring-boot -am '-Dtest=SoftwareSchemaCompletenessTe
 <a id="ci-142-session-fix"></a>
 ## 14. CI #142：非严格模式验收的环境绑定修复
 
+后续 `1d13c54` 的 #143 已通过双全量门与完整 Money IT（57 检查通过）；独立部署另有夹具生命周期失败，见[第 15 节](#ci-143-drift-lifecycle-fix)。
+
 失败提交：`303a13943bde22b00733099d7c5d20ef326fdf5c`，[verify #142](https://github.com/HoloNova/Software-IR/actions/runs/39581448890)。冻结／完成双全量门均 success；业务 IT 共 9 项、1 failure、0 errors、0 skipped，唯一失败是 `MoneyBusinessConformanceIT.moneyAgainstRealMysql`。独立验证、CLI 和部署被跳过，不算通过。正式报告产物为 `surefire-reports`（12338831530）与 `conformance-evidence`（12338536666），本机下载副本在 `target/g10-ci-142-reports/`、`target/g10-ci-142-evidence/`。
 
 Money 报告已有 **53 checks passed / 1 failed**：真实 DTO／Optional、PATCH null／版本、并发精确增量、最终溢出与事务回滚均执行通过。失败是切到非严格 SQL 模式之后重启应用未就绪；第二轮构建成功，但启动输出显示：
@@ -404,3 +406,21 @@ mvn -B -o -pl sir-toolchain-application -am '-Dtest=MoneySessionConfigurationTes
 ```
 
 AFT Java/JDTLS 仍初始化失败，诊断 PARTIAL，以实际 javac 与定向结果为准；覆盖率未测，不声明 80%。本机未启动应用、MySQL、连接池或容器，不运行全量门；无 UI 改动。差异自审后按授权提交推送本修复，G6 设计草案不混入。本修复提交的真实非严格连接拒写／回滚、完整 Money IT、独立验证和部署仍待同 SHA CI；#142 已通过的部分不代表整条金额验收闭环，也不提前上调八题计数。
+
+<a id="ci-143-drift-lifecycle-fix"></a>
+## 15. CI #143：部署精度漂移夹具的生命周期修复
+
+失败 SHA `1d13c5495434753a0284d372224fd51ee51e2747`，[verify #143](https://github.com/HoloNova/Software-IR/actions/runs/39588013132)。`gates-and-business-it` 全部通过：双全量门、业务 IT、独立验证和 standalone CLI 均 success。已下载 `conformance-evidence` 并核对 `money-1a15e273225-48156/money-report.txt`，**57 checks passed / 0 failed**，包括每条应用连接的非严格模式覆盖、实际写入拒绝和同事务其他行回滚，前一项 Binder 修复已得到真库验证。不能将这一部分成功写成整条 CI 成功。
+
+**新的失败及直接证据。** `standalone-deployment` 的基础部署、HTTP、持久化、权限、契约、业务和更新已通过；`dataUpdate` 失败，`decimalShape`、`freshChain` 尚未完成。`deployment-evidence/64-process.log` 显示应用与数据库均被停止；`65-process.log` 为 `invalid container name or ID: value is empty`。`deployment-evidence/report.json` 的堆栈指向漂移测试第一次 ALTER TABLE。该夹具先调用公开 stop（按产品协议停 app 和 db），再用只查询运行容器的 docker ps 查数据库，因此获得空 ID。此前产品导出的金额 precision／scale／默认值查询已执行，但漂移拒绝与恢复尚不能记为通过。本机证据副本在 `target/ci-143-analysis/`。
+
+**修复边界。** 仅在 CI 夹具增加按 Compose 项目与 app 服务标签定位的 `stop_application`，验证恰有一个运行应用容器，再停掉它，保留数据库供受控漂移 SQL 使用。仍通过公开 start 验证两次精度／标度拒绝并在恢复后重启，未删除断言、放宽预期退出码或使用替代 schema。产品 stop 继续停两个服务，金额、事务、部署和漂移校验的生产逻辑均未改变。没有混入正在实现的 G6 工作区代码。
+
+**本机 RED→GREEN。** `test_deployment_smoke.py` 从真实脚本提取 SQL 辅助函数和漂移语句段，在生命周期模型上执行，不复制一段改好后的流程作为测试。旧段调用 stop 后数据库关闭，第一条 SQL 恰因空容器 ID 失败；修复后验证只停写应用、四次 ALTER、两次 start 以 3 拒绝、恢复后 start 以 0 成功，以及应用容器缺失／多实例时明确失败且不执行 SQL。两项 unittest 方法通过（含缺失／多实例两个子例），Python 语法及差异检查通过。回归已加入部署 job，在真实部署之前执行。
+
+```powershell
+python -m unittest discover -s .github/scripts -p test_deployment_smoke.py -v
+python -m py_compile .github/scripts/deployment-smoke.py .github/scripts/test_deployment_smoke.py
+```
+
+生命周期模型不是实际 Docker／MySQL GREEN；本机不启动服务，不重跑全量 Java 构建。AFT 可分析这三个文件，但仍报原有 `expected=None` 的两处 Pyright 推断错误，本次未改其运行协议；以 Python 语法检查和实际 unittest 为定向证据，覆盖率未测。独立部署漂移拒绝／恢复与新实例完整迁移链仍待修复提交的同 SHA CI；此前已经通过的门也不直接外推到修复 SHA。无 UI 改动，八题完成数不变。本次按阶段授权单独 commit + push 触发 CI。

@@ -107,6 +107,16 @@ def database_container(instance=None):
                                     '--filter', 'label=com.docker.compose.service=db'], text=True).strip()
 
 
+def stop_application(instance):
+    """Quiesce only this fixture's writer; drift SQL still needs its running database."""
+    containers = subprocess.check_output(
+        ['docker', 'ps', '-q', '--filter', f'label=com.docker.compose.project={instance}',
+         '--filter', 'label=com.docker.compose.service=app'], text=True).strip().splitlines()
+    if len(containers) != 1:
+        raise AssertionError(f'expected one running application container for {instance}, got {len(containers)}')
+    return run(['docker', 'stop', containers[0]])
+
+
 def sql(statement, app=False, expected=0, instance=None):
     role, secret = ('kcg_app', 'app-password') if app else ('root', 'root-password')
     command = f'MYSQL_PWD=$(cat /run/secrets/{secret}) mysql --protocol=socket -u{role} -Dkcg -N -B -e "$1"'
@@ -368,7 +378,7 @@ try:
     assert sql('SELECT DISTINCT amount FROM favorite', instance=acceptance_instance).strip() == '0.00'
     # Precision drift preserves the same default; scale drift uses a nullable column without a default.
     # Thus neither refusal can be satisfied only by the pre-existing default/type/nullability checks.
-    deploy('stop', instance=acceptance_instance, state=acceptance_state, package=a.v3_package)
+    stop_application(acceptance_instance)
     sql('ALTER TABLE favorite MODIFY amount DECIMAL(20,2) NOT NULL DEFAULT 0.00', instance=acceptance_instance)
     drift = deploy('start', expected=3, instance=acceptance_instance, state=acceptance_state, port=acceptance_port, package=a.v3_package)
     assert 'decimal precision/scale mismatch' in drift, drift
