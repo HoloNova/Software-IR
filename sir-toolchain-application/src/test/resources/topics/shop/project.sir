@@ -152,12 +152,11 @@ software OnlineShop {
       }
     }
 
-    // GAP: an order has several lines in real life, but a request cannot carry a list that the workflow walks, and a
-    // line's amount (quantity times price) cannot be computed (only + and -). So one request buys one unit of one
-    // product; the unit is taken by one statement that checks the stock and takes one, so two buyers of the last unit
-    // cannot both succeed.
+    // One request buys several units of one product; quantity drives both the exact total and atomic stock delta.
+    // GAP: multiple products, walking order lines and restoring cancelled stock still need list iteration.
     input BuyRequest {
       field productId: Id;
+      field quantity: Quantity;
     }
     error OutOfStock http 409;
     error ProductNotFound http 404;
@@ -173,21 +172,21 @@ software OnlineShop {
       workflow {
         load Product by input.productId as product else ProductNotFound;
         validate product.state == ProductState.ON_SHELF else ProductNotFound;
-        update product when product.stock > 0 else OutOfStock {
-          stock: product.stock - 1;
+        update product when product.stock >= input.quantity else OutOfStock {
+          stock: product.stock - input.quantity;
         }
         create PurchaseOrder as purchase {
           buyer: actor;
-          total: product.price;
-        }
-        create OrderLine as line {
-          purchase: purchase;
-          product: product;
-          quantity: 1;
-          unitPrice: product.price;
+          total: product.price * input.quantity;
         }
         persist product;
         persist purchase;
+        create OrderLine as line {
+          purchase: purchase;
+          product: product;
+          quantity: input.quantity;
+          unitPrice: product.price;
+        }
         persist line;
         return purchase;
       }

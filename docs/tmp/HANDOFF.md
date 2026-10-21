@@ -42,7 +42,7 @@
 
 ## 4. 待办（按建议顺序）
 
-当前试写数字（G2/G4 后）：84 条需求，64 条（76%）完整写出，5 条（6%）带折扣，15 条（18%）尚未写出。每补一个缺口，都要更新 `TOPIC_TRIALS.md` 的表和数字、`PROJECT_STATUS.md` 里那一句、语言参考、设计 12 新增一节。
+当前试写数字（G6 本机后）：84 条需求，64 条（76%）完整写出，6 条（7%）带折扣，14 条（17%）尚未写出。仅把 shop 金额乘数量一条 ✗ 转 △，真库验收待 CI，完整数未提前增加。每补一个缺口，都要更新 `TOPIC_TRIALS.md` 的表和数字、`PROJECT_STATUS.md` 里那一句、语言参考、设计 12 新增一节。
 
 ### 4.1 G7 可选值比较与空值判断（已确认并实现，后续 #140 回归通过）
 
@@ -68,11 +68,11 @@ tasks、market 已更新；本机语义、降级、生成真值表、源往返�
 
 已按[设计 12 第 20 节](../design/12-feature-semantics-and-semantic-types.md#g10-money-proposal)实现默认 precision(19,2)、显式覆写、精确校验与 DECIMAL 物理合同；接受无损尾随零、不隐式舍入。原子金额仍基于数据库当前值加减；实际事务连接必须严格 SQL mode，最终溢出回滚。PATCH 精度来自实体，未放宽其他业务约束禁令；语义类型继续全项目可见，实体仍须 import。
 
-15 类最新定向报告共 105 项通过，market／shop／ledger 已改 Money，八题内存生成／交付规划通过。金额 MySQL／HTTP、非严格模式与并发、八题生成工程编译和独立部署已接 CI，本机均未执行；不重定义普通非版本持久化的全行／NULL 策略。详见[验证记录](../qualification/README.md#g10-money-local)。随后 `a54c351` 的 #141 因 DecimalPrecision 辅助 record 误入模型包，以及 DTO 旧注解断言失配失败；后续真库和部署被跳过。本轮移到 feature 包并补齐完整 DTO 契约，七类 65 项定向通过，不改精度算法、不豁免架构门，随后已推送 `303a139`。#142 双全量门通过，金额 IT 已有 53 项检查通过，但在非严格模式重启因测试环境键错误而失败，后续部署被跳过。本轮修正环境绑定，5 项定向通过，完整真库与部署仍待新 CI；见[验证记录第 13 节](../qualification/README.md#ci-141-fix)和[第 14 节](../qualification/README.md#ci-142-session-fix)。先闭环此阻塞，再评审 G6／G11，不擅自开始循环与聚合。
+15 类最新定向报告共 105 项通过，market／shop／ledger 已改 Money，八题内存生成／交付规划通过。金额 MySQL／HTTP、非严格模式与并发、八题生成工程编译和独立部署已接 CI，本机均未执行；不重定义普通非版本持久化的全行／NULL 策略。详见[验证记录](../qualification/README.md#g10-money-local)。随后 `a54c351` 的 #141 因 DecimalPrecision 辅助 record 误入模型包，以及 DTO 旧注解断言失配失败；后续真库和部署被跳过。本轮移到 feature 包并补齐完整 DTO 契约，七类 65 项定向通过，不改精度算法、不豁免架构门，随后已推送 `303a139`。#142 双全量门通过，金额 IT 已有 53 项检查通过，但在非严格模式重启因测试环境键错误而失败，后续部署被跳过。本轮修正环境绑定，5 项定向通过，完整真库与部署仍待新 CI；见[验证记录第 13 节](../qualification/README.md#ci-141-fix)和[第 14 节](../qualification/README.md#ci-142-session-fix)。随后 #143 金额真库 57 项通过，部署生命周期修复已推送；#144 在更早的合同阶段缺运行器依赖，独立修复 `b8f2cf0` 预热并离线执行真正合同，见[第 16 节](../qualification/README.md#ci-144-dependency-fix)。G10 部署仍待新 CI，G6 按负责人要求已继续实现，见 4.6；不擅自开始循环与聚合。
 
 ### 4.6 G6 乘法、G11 视图计算字段
 
-- G6：只有 `+`、`-`；金额 = 单价 × 数量、罚款 = 天数 × 费率写不出。放在 G10 之后更有意义。
+- G6：负责人要求继续下一阶段后，已按[设计第 21 节](../design/12-feature-semantics-and-semantic-types.md#g6-multiplication-proposal)实现精确乘法、显式整数转 Decimal 和能力级算术输入检查；分页默认、Optional／PATCH 不变，Ref.id 的错误路径按真实 DTO 属性。shop 按数量计价扣库存、订单持久化后再创建明细，28 类 223 项主回归通过。真库并发、精度回滚和明细一致性已接 CI，本机未运行；library 罚款仍缺日期差，未记完成。见[验证第 17 节](../qualification/README.md#g6-multiplication-local)。#143 金额真库 57 项通过，但部署漂移未闭环；#144 在初次合同测试缺失运行器依赖，已单独修复 `b8f2cf0`，见[第 16 节](../qualification/README.md#ci-144-dependency-fix)。下一项评审 G11，不顺带循环／聚合。
 - G11：视图字段必须是实体字段，`剩余名额 = 容量 − 已选` 写不出（`SIR-SYMBOL-002`）。
 
 ### 4.7 G5 列表循环、G8 聚合（两个大块，**先和负责人确认要不要做**）

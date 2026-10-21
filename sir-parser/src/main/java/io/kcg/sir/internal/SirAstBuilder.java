@@ -669,7 +669,7 @@ final class SirAstBuilder {
 
     /** Plus and minus chain to the left; a time shift is built where the operand is "integer unit". */
     private AstExpression additiveExpression(SirParser.AdditiveExpressionContext context, String parent) {
-        AstExpression result = unaryExpression(context.unaryExpression(), parent);
+        AstExpression result = multiplicativeExpression(context.multiplicativeExpression(), parent);
         for (SirParser.AdditiveStepContext step : context.additiveStep()) {
             boolean plus = step.PLUS() != null;
             if (step.durationOperand() != null) {
@@ -680,9 +680,18 @@ final class SirAstBuilder {
                         plus ? AstShiftDirection.ADD : AstShiftDirection.SUBTRACT,
                         new BigInteger(duration.INT().getText()), timeUnit(duration.durationUnit().IDENT().getText()));
             } else {
-                AstExpression right = unaryExpression(step.unaryExpression(), parent);
+                AstExpression right = multiplicativeExpression(step.multiplicativeExpression(), parent);
                 result = binary(result, plus ? AstBinaryOperator.ADD : AstBinaryOperator.SUB, right, parent);
             }
+        }
+        return result;
+    }
+
+    private AstExpression multiplicativeExpression(SirParser.MultiplicativeExpressionContext context, String parent) {
+        var operands = context.unaryExpression();
+        AstExpression result = unaryExpression(operands.getFirst(), parent);
+        for (int index = 1; index < operands.size(); index++) {
+            result = binary(result, AstBinaryOperator.MUL, unaryExpression(operands.get(index), parent), parent);
         }
         return result;
     }

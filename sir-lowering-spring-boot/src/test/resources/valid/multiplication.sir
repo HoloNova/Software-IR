@@ -1,0 +1,100 @@
+sir 0.3
+software Multiplication {
+  metadata { displayName "Exact Multiplication"; namespace "example.multiplication"; }
+  target { language java 21; framework spring_boot; persistence mybatis_plus;
+    database mysql; build maven; interface rest; }
+  sources { } imports { }
+  declarations {
+    type UnitPrice = Money where precision(21, 4);
+    entity Calculation persistent {
+      identity id: Id generated auto;
+      field amount: Money;
+      field count: Count;
+      field wide: Id;
+    }
+    view CalculationView from Calculation {
+      field id: Id; field amount: Money; field count: Count; field wide: Id;
+    }
+    input Numbers {
+      field price: UnitPrice; field quantity: Count;
+      field left: Count; field right: Count; field wide: Id;
+    }
+    capability Multiply {
+      input Numbers; output CalculationView; requires atomic; expose command;
+      workflow {
+        create Calculation as result {
+          amount: input.price * input.quantity;
+          count: input.left * input.right;
+          wide: input.wide * 2;
+        }
+        persist result;
+        return result;
+      }
+    }
+    capability Wide {
+      input Numbers; output CalculationView; requires atomic; expose command;
+      workflow {
+        create Calculation as result {
+          amount: input.price * input.wide;
+          count: 0;
+          wide: input.wide;
+        }
+        persist result;
+        return result;
+      }
+    }
+    capability Reverse {
+      input Numbers; output CalculationView; requires atomic; expose command;
+      workflow {
+        create Calculation as result {
+          amount: input.quantity * input.price;
+          count: input.left * (input.right + 1);
+          wide: input.wide * (2 * input.wide);
+        }
+        persist result;
+        return result;
+      }
+    }
+    entity Product persistent {
+      identity id: Id generated auto;
+      field price: UnitPrice;
+      field stock: Count where min(0);
+    }
+    entity Receipt persistent {
+      identity id: Id generated auto;
+      field product: Ref<Product>;
+      field total: Money;
+      field quantity: Quantity;
+    }
+    entity ReceiptLine persistent {
+      identity id: Id generated auto;
+      field receipt: Ref<Receipt>;
+      field quantity: Quantity;
+      field unitPrice: UnitPrice;
+    }
+    view ProductView from Product { field id: Id; field price: UnitPrice; field stock: Count; }
+    view ReceiptView from Receipt { field id: Id; field total: Money; field quantity: Quantity; }
+    input Purchase { field id: Id; field quantity: Quantity; }
+    input ProductRef { field id: Id; }
+    error Missing http 404;
+    error OutOfStock http 409;
+    capability PurchaseProduct {
+      input Purchase; output ReceiptView; fails Missing; fails OutOfStock; requires atomic; expose command at "/purchase";
+      workflow {
+        load Product by input.id as product else Missing;
+        update product when product.stock >= input.quantity else OutOfStock { stock: product.stock - input.quantity; }
+        // An early SQL mutation deliberately proves whole-transaction rollback on a later invalid amount.
+        persist product;
+        create Receipt as receipt { product: product; total: product.price * input.quantity; quantity: input.quantity; }
+        persist receipt;
+        create ReceiptLine as line { receipt: receipt; quantity: input.quantity; unitPrice: product.price; }
+        persist line;
+        return receipt;
+      }
+    }
+    capability ShowProduct {
+      input ProductRef; output ProductView; fails Missing; requires readonly; expose query at "/products/show";
+      workflow { load Product by input.id as product else Missing; return product; }
+    }
+  }
+}

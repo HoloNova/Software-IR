@@ -37,6 +37,7 @@ final class ValidationSupportRenderer {
         out.append("public final class ").append(artifact.simpleName()).append(" {\n\n");
         out.append("    private ").append(artifact.simpleName()).append("() {\n");
         out.append("    }\n\n");
+        renderNotNull(out, fieldError);
         renderNotBlank(out, fieldError);
         renderEmail(out, fieldError);
         renderLength(out, fieldError);
@@ -48,6 +49,12 @@ final class ValidationSupportRenderer {
         out.append("    }\n");
         out.append("}\n");
         return out.toString();
+    }
+
+    private static void renderNotNull(StringBuilder out, String fieldError) {
+        out.append("    public static void notNull(List<").append(fieldError).append("> violations, String path, Object value) {\n");
+        out.append("        if (value == null) reject(violations, path, \"NotNull\", \"must not be null\");\n");
+        out.append("    }\n\n");
     }
 
     private static void renderNotBlank(StringBuilder out, String fieldError) {

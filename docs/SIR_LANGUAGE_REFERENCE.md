@@ -149,7 +149,7 @@ capability Ping {
 }
 ```
 
-**整数字面量的宽度。** 字面量默认是 32 位整数；和 64 位整数（`Id`、`Serial`、`Version`）比较或相加减时，字面量按 64 位理解（`item.qty > 0` 里 `qty` 是 `Serial` 也能写）。但 32 位的字段不会自动变成 64 位。字面量必须放得进它的类型，`5000000000` 单独用在 32 位整数上会被拒绝：
+**整数字面量的宽度。** 字面量默认是 32 位整数；和 64 位整数（`Id`、`Serial`、`Version`）比较或作同型加减、乘法时，字面量按 64 位理解（`item.qty > 0` 里 `qty` 是 `Serial` 也能写）。但 32 位的字段不会自动变成 64 位。字面量必须放得进它的类型，`5000000000` 单独用在 32 位整数上会被拒绝：
 
 ```sir-error SIR-TYPE-001
 entity Gauge persistent {
@@ -1035,7 +1035,7 @@ capability ItemOfLine {
 find 实体 where 谓词 [order by 字段 [ascending|descending], ...] [Page 页码, 页大小 else 错误] as 变量;
 ```
 
-谓词里用 `item` 表示正在被检查的那一行。**比较的左边必须是 `item.字段`，右边必须是不读取 `item` 的值**（`SIR-VALID-001`）；对列做加减或时间平移也不行。
+谓词里用 `item` 表示正在被检查的那一行。**比较的左边必须是 `item.字段`，右边必须是不读取 `item` 的值**（`SIR-VALID-001`）；对列做加减乘或时间平移也不行。
 
 ```sir-declarations
 entity Ticket persistent {
@@ -1105,7 +1105,7 @@ capability Wrong {
 }
 ```
 
-对列做加减也不行，要把运算挪到右边：
+对列做加减乘也不行，要把运算挪到右边：
 
 ```sir-error SIR-VALID-001
 entity Ticket persistent {
@@ -1211,7 +1211,7 @@ capability ActiveCourses {
 create 实体 as 变量 { 字段: 值; ... }
 ```
 
-必须给出所有**必填**字段：除了主键（系统生成）、`versioned` 字段（框架初始化）、`Optional<...>` 字段和带 `default` 的字段之外的每一个，漏了报 `SIR-FLOW-001`。不能绑定主键或 `versioned` 字段，同一个字段也不能绑两次。创建后要 `persist` 才会写入。
+必须给出所有**必填**字段：除了主键（系统生成）、`versioned` 字段（框架初始化）、`Optional<...>` 字段和带 `default` 的字段之外的每一个，漏了报 `SIR-FLOW-001`。不能绑定主键或 `versioned` 字段，同一个字段也不能绑两次。创建后要 `persist` 才会写入。若另一行要引用这条新建的自增主键行，应先 `persist` 生成主键，再创建引用它的行；引用绑定读取当时的主键，不会在稍后自动重绑。
 
 ### 5.5 `update` 与 `persist`
 
@@ -1352,7 +1352,7 @@ capability Take {
 
 一个常见的搭配是“新建一行并给被引用的行计数”（选课：新建选课记录，课程的已选人数加一）。**先 `persist` 被计数的行，再 `persist` 新建的行**：在 MySQL（InnoDB）里，插入引用了某一行的记录会先给被引用的行加读锁，两个请求若各自拿着读锁再去改同一行，会互相等待而死锁；先改被计数的行，后到的请求在这里排队，就不会。
 
-没有加守卫、又不是这个形式的“读自己的字段再写回”（例如 `ratio: row.total / ...` 一类，或 `a: row.b + 1`）仍然合法，但那是“读、改、写”，并发下会丢更新；要并发安全就按这一节写。只支持加减，没有乘法。Money 的 delta 必须能精确表示到目标小数位；实际原子写事务连接必须处于 `STRICT_TRANS_TABLES` 或 `STRICT_ALL_TABLES`。最终金额溢出属于数据库执行失败并回滚，不冒充作者的 guard 错误；缺少严格模式时也拒写，不修改服务器全局配置。非负余额等业务边界仍显式写 guard。
+没有加守卫、又不是这个形式的“读自己的字段再写回”（例如 `ratio: row.total / ...` 一类，或 `a: row.b + 1`）仍然合法，但那是“读、改、写”，并发下会丢更新；要并发安全就按这一节写。原子写只支持本字段加减一个独立值，不支持本字段乘一个值；这个独立 delta 可以用精确乘法计算，但不能读取目标行。Money 的 delta 必须能精确表示到目标小数位；实际原子写事务连接必须处于 `STRICT_TRANS_TABLES` 或 `STRICT_ALL_TABLES`。最终金额溢出属于数据库执行失败并回滚，不冒充作者的 guard 错误；缺少严格模式时也拒写，不修改服务器全局配置。非负余额等业务边界仍显式写 guard。
 
 ### 5.7 `delete`
 
@@ -1463,6 +1463,7 @@ capability WrongCount {
 | `now()` | 现在（`Moment`） |
 | `- x`、`not x` | 负号、非 |
 | `a + b`、`a - b` | 同底层的整数（32 位或 64 位）或 `Money` 加减；整数溢出会抛错而不是回绕 |
+| `a * b` | 同型整数精确乘法，或 Decimal 底层值乘 Decimal／整数；金额乘整数无损转换，不经浮点数 |
 | `时刻 + N unit` | 时间平移，`unit` 是 `second(s)`、`minute(s)`、`hour(s)`、`day(s)` |
 | `a < b`、`<=`、`>`、`>=` | 比较，两边同类型 |
 | `a == b`、`a != b` | 相等 |
@@ -1471,9 +1472,32 @@ capability WrongCount {
 | `a and b`、`a or b` | 逻辑 |
 | `( ... )` | 括号 |
 
-**优先级**（从紧到松）：一元（`-`、`not`）→ `+`／`-` → 比较（`<` 等）→ `containsLiteral`／`matches` → `==`／`!=` → `and` → `or`。
+**优先级**（从紧到松）：一元（`-`、`not`）→ `*` → `+`／`-` → 比较（`<` 等）→ `containsLiteral`／`matches` → `==`／`!=` → `and` → `or`。乘法同级向左结合；`a * (b * c)` 保留括号指定的求值树，整数中间溢出的时点不会被重排。
 
-**可选值（G7）。** `is none`／`is present` 只用于 `Optional<T>`，作用于查询、工作流校验和更新守卫；优先级与大小比较相同。要否定空值判断，写 `not (x is none)`。普通比较要求去掉可选包装后的类型兼容，任意一侧为空均为 false（包括 `!=`，两个空值也不相等）；`not (x == y)` 则是普通取反，有空值时为 true，因此不等同于 `x != y`。查询和 Java 工作流遵守同一规则。空值判断不改变静态类型，不允许借此访问可选引用的成员、做可选值加减或时间平移；`containsLiteral` 的右侧仍要求非可选文本。`is none` 不表示“PATCH 没传”，缺席和显式 null 在普通可选输入中都按空值处理，PATCH 是否传过字段仍问 `.present`。
+**精确乘法（G6）。** `Count * Count` 得到 32 位整数，`Serial * Serial` 得到 64 位整数；两个不同宽度的整数字段不能直接相乘。`Money * Quantity`、`Quantity * Money`、金额乘 64 位整数、两个 Decimal 底层值相乘都得到精确 Decimal 中间值。没有隐式舍入，也不自动继承两边约束的并集；最终写入仍按目标字段检查。四位单价 `0.1250 * 3` 不能写入默认两位 Money，`0.1250 * 8` 可以精确写成 `1.00`。整数溢出沿用执行失败与事务回滚，不回绕，不假装为作者的业务错误。没有新增混合整数加减、除法、取模、日期乘法或日期差。
+
+```sir-declarations
+entity Sale persistent {
+  identity id: Id generated auto;
+  field total: Money;
+}
+input SaleInput { field unitPrice: Money; field quantity: Quantity; }
+capability RecordSale {
+  input SaleInput;
+  output Unit;
+  requires atomic;
+  expose command;
+  workflow {
+    create Sale as sale { total: input.unitPrice * input.quantity; }
+    persist sale;
+    return unit;
+  }
+}
+```
+
+**算术输入缺值。** 本能力实际用于加、减、乘和数值取负的非 Optional 数值输入，在执行工作流之前检查；缺省或显式 null 返回 `400 INVALID_REQUEST`，字段错误码为 `NotNull`，不补零。短路分支也遵守此必需值约定；同一共享输入用于纯分页的另一个能力时不因此变必填，分页仍保留 page／size 默认。若作者把 page 另用于算术，它必须显式传入。PATCH 的 changes 仍保留 absent／null，不提升成必需数值；直接对 changes 值做数值运算仍被目标拒绝，主键信封值不属于 changes。Optional 不参与算术，即使先判空也不自动解包。引用本身不参与算术；整数主键的显式 `input.ref.id` 可按 Id 运算，缺值路径使用实际 DTO 字段名 `refId`。乘法仍不能作用于查询列；请求侧独立算式可以作普通查询参数，any 内算术不在本轮放开。
+
+**可选值（G7）。** `is none`／`is present` 只用于 `Optional<T>`，作用于查询、工作流校验和更新守卫；优先级与大小比较相同。要否定空值判断，写 `not (x is none)`。普通比较要求去掉可选包装后的类型兼容，任意一侧为空均为 false（包括 `!=`，两个空值也不相等）；`not (x == y)` 则是普通取反，有空值时为 true，因此不等同于 `x != y`。查询和 Java 工作流遵守同一规则。空值判断不改变静态类型，不允许借此访问可选引用的成员、做可选值加减乘或时间平移；`containsLiteral` 的右侧仍要求非可选文本。`is none` 不表示“PATCH 没传”，缺席和显式 null 在普通可选输入中都按空值处理，PATCH 是否传过字段仍问 `.present`。
 
 | 左值 | 右值 | `==` | `!=` | `not (==)` |
 | --- | --- | --- | --- | --- |
@@ -1688,7 +1712,7 @@ use Crud {
 | `SIR-SYMBOL-002` | 引用了不存在的名字或字段 |
 | `SIR-SYMBOL-003` | 视图嵌套另一个视图时，两个实体之间有不止一个 `Ref`，关联不唯一 |
 | `SIR-IDENTITY-001`／`002` | `@id` 的取值格式不对／重复 |
-| `SIR-TYPE-001` | 类型不一致：比较或加减两边类型不同、返回类型不匹配、字面量超出范围、状态码不在 400／401／403／404／409 里、`secret`／`unique` 用在不允许的类型上 |
+| `SIR-TYPE-001` | 类型不一致：比较或数值运算的操作数不兼容、返回类型不匹配、字面量超出范围、状态码不在 400／401／403／404／409 里、`secret`／`unique` 用在不允许的类型上 |
 | `SIR-TYPE-002` | `Ref<...>` 的目标不是实体 |
 | `SIR-TYPE-003` | `Optional<Optional<T>>` |
 | `SIR-TYPE-004` | `any` 的条件里没有“指向根实体的 Ref 字段 `== item`” |

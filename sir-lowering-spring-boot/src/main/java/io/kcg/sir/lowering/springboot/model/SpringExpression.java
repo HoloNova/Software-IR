@@ -22,7 +22,8 @@ public sealed interface SpringExpression
    SpringExpression.TimeShiftExpression,
    SpringExpression.DigestExpression,
    SpringExpression.PayloadPresence,
-   SpringExpression.OptionalPayloadValue,
+    SpringExpression.OptionalPayloadValue,
+    SpringExpression.IntegralToDecimal,
    SpringExpression.ExistsPredicate {
    LoweredNodeId id();
 
@@ -82,7 +83,8 @@ public sealed interface SpringExpression
       CONTAINS_LITERAL,
       MATCHES,
       ADD,
-      SUB;
+       SUB,
+       MUL;
    }
 
    /**
@@ -216,7 +218,16 @@ public sealed interface SpringExpression
       }
    }
 
-   record NowExpression(LoweredNodeId id, LoweredOrigin origin, LoweredJavaType type) implements SpringExpression {
+    /** A target-decided exact conversion; renderers must not infer numeric promotion. */
+    record IntegralToDecimal(LoweredNodeId id, LoweredOrigin origin, LoweredJavaType type, SpringExpression operand)
+       implements SpringExpression {
+       public IntegralToDecimal {
+          SpringExpression.requireNode(id, origin, type);
+          Objects.requireNonNull(operand, "operand");
+       }
+    }
+
+    record NowExpression(LoweredNodeId id, LoweredOrigin origin, LoweredJavaType type) implements SpringExpression {
       public NowExpression {
          SpringExpression.requireNode(id, origin, type);
       }

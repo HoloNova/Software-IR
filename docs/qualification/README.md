@@ -442,3 +442,37 @@ mvn -B -q -o -pl sir-generator-spring-boot -am test '-Dtest=DeploymentDependency
 ```
 
 Maven 本身限制 384 MiB／2 个可见处理器；测试 fork 限制 512 MiB／2 个可见处理器。定向在含未提交 G6 的工作区执行；本修复单独提交，不把本机结果当成独立修复 SHA 的完整证据。真实依赖预热、离线合同与部署漂移闭环均等待后续同 SHA CI，未提前验收 G10。
+
+
+<a id="g6-multiplication-local"></a>
+## 17. G6：精确乘法、算术输入计划与按数量购买（本机定向）
+
+按负责人“继续下一阶段”的指令实施[设计第 21 节](../design/12-feature-semantics-and-semantic-types.md#g6-multiplication-proposal)。Parser／AST 增加独立乘法优先级；整数用 Math.multiplyExact、Decimal 用无 MathContext 的 multiply，整数到 Decimal 是显式目标节点。既有加减、比较及整数宽度、Optional 拒绝、查询列／any 算术拒绝与原子写边界不放宽。Generator 只消费有来源的转换及能力级必需值计划；分页仍可缺省，不全局给共享 DTO 数字加 NotNull，PATCH changes 保留 absent／null。`input.ref.id` 的必需值检查按实际 DTO 属性 `refId` 报错，不拿 SIR 字段名冒充 HTTP 字段。
+
+**RED→GREEN。** 新语法、类型和声明往返先失败再贯通；真实生成 DTO／服务先复现缺失整数的拆箱 NPE，再验证结构化 INVALID_REQUEST／NotNull。畸形转换和缺失、重复、乱序、错误 owner／属性／路径计划均由独立 IR Validator 拒绝。Ref.id 边界也先复现 SIR-LOWER-IR-001，再验证正确字段错误与合法整数值。SourceEditor 验证 add／update／rename、回读的表达式树和绑定保持；没有只对生成字符串做“看起来正确”的判断。
+
+28 类各自最新 Surefire XML 去重合计 **223 tests，0 failures／errors／skips**。主批原为 221 项，最后为 Ref.id 增加 2 项并定向复测受影响类；不把重复执行累加。
+
+| 范围 | 类数 | 最新报告 tests |
+| --- | ---: | ---: |
+| 语义、整数宽度、G7／G10、Schema、结构／引用与声明往返 | 9 | 104 |
+| 乘法降级、原子计数、既有算术与独立 IR 硬化 | 5 | 40 |
+| 源编辑与旧编辑回归 | 2 | 18 |
+| 真实生成 DTO／服务、分页／路径、Optional、金额与乘法 delta | 9 | 54 |
+| 工具链合同、八题内存生成／交付规划、全部语言参考示例 | 3 | 7 |
+| 合计 | 28 | 223 |
+
+真实 Java 通过 javac 编译全部生成的 .java 文件，以正式目标依赖运行，不起 Spring Boot 或数据库。覆盖优先级／结合树、左右混合、Int32／Int64 溢出、负数／零、尾随零、只对最终值检查精度、缺失／null、短路分支、纯分页与共享输入、路径注入和 PATCH 边界。独立乘法 delta 仍生成 setDecrBy 并保留严格事务连接和目标 scale 检查，没有增加 SET column = column * ?。
+
+shop 现在让同一 quantity 进入库存守卫、原子扣减、订单总额和明细；库存先落库，订单 persist 生成主键后再创建明细，修正旧样例提前捕获 null 外键的问题，不改通用引用语义。新增 MultiplicationBusinessConformanceIT 已编译并接入 verify.yml，覆盖非法数量不写库、精确总额、库存 SQL 之后的精度失败回滚、12 请求按总购买数量防超卖、明细关联与金额一致。**本机未执行该 IT**，也未执行任何全量门、MySQL／HTTP、生成工程 Maven 构建或部署；这些均待同 SHA CI。
+
+八题新规模由 TopicSamplesTest 纯内存重新测量；只有 shop 金额一条 ✗ 转为“已写出待真库”的 △，总账为 **64／6／14**，没有增加完整条数。library 罚款仍缺日期差；多商品、购物车、取消退库存、循环、聚合和 G11 都未扩范围。无 UI 修改、无浏览器验收。
+
+本机证据与源码 SHA256 在 `target/g6-verification/`；最新 XML 含更新时间，31 个生产／测试／夹具／workflow 文件已封存哈希。AFT Java LSP 初始化失败，诊断 PARTIAL，不当作干净的编译证据；实际 Maven 编译和上述定向通过。未测覆盖率，不声称达到某个比例。Maven JVM 限制 384 MiB／2 个可见处理器，测试 fork 512 MiB／2 个可见处理器，串行执行。
+
+```powershell
+$tests = 'MultiplicationSemanticsTest,ArithmeticSemanticsTest,IntegerWidthSemanticsTest,MoneyPrecisionSemanticsTest,OptionalValueSemanticsTest,SoftwareSchemaCompletenessTest,SirDeclarationWriterRoundTripTest,StructureViewCoverageTest,TypedReferenceSiteContractTest,MultiplicationLoweringTest,ArithmeticLoweringTest,LoweredIrHardeningTest,SpringBootLoweredIrValidatorTest,AtomicCounterLoweringTest,MultiplicationEditingTest,SourceEditorTest,MultiplicationRuntimeTest,ArithmeticInputRuntimeTest,GeneratorArithmeticContractTest,GeneratorEntityDtoContractTest,GeneratorQuerySliceContractTest,GeneratorOptionalValueContractTest,OptionalPayloadRuntimeTest,MoneyRuntimeTest,MoneyAtomicContractTest,MultiplicationToolchainContractTest,TopicSamplesTest,LanguageReferenceExamplesTest'
+mvn -B -q -o -pl sir-toolchain-application -am test "-Dtest=$tests" '-Dsurefire.failIfNoSpecifiedTests=false' '-DargLine=-Xmx512m -XX:ActiveProcessorCount=2' '-DforkCount=1' '-DreuseForks=true'
+```
+
+#144 的合同依赖修复已独立提交并推送 `b8f2cf0`，8 项定向不计入本节 223 项。G6 按阶段授权另行 commit + push，依赖修复的验证也以最终源码 CI 为准，不能将旧全量门或 dry-run 作为本批验收。

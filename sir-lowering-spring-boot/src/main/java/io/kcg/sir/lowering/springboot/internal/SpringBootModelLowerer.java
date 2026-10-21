@@ -227,10 +227,8 @@ public final class SpringBootModelLowerer {
                 : declaration instanceof NormalizedInput i ? i.fields() : List.of();
             return fields.stream().anyMatch(field -> field.constraints().stream().anyMatch(c -> c.name().equals("precision")));
         });
-        List<String> codes = decimal
-            ? java.util.stream.Stream.concat(SpringBootWritePolicy.V0_1.validatedConstraintCodes().stream(),
-                java.util.stream.Stream.of("precision", "notNull")).toList()
-            : SpringBootWritePolicy.V0_1.validatedConstraintCodes();
+        List<String> codes = java.util.stream.Stream.concat(SpringBootWritePolicy.V0_1.validatedConstraintCodes().stream(),
+                decimal ? java.util.stream.Stream.of("precision", "notNull") : java.util.stream.Stream.of("notNull")).toList();
         return new ProjectArtifact.ValidationSupport(
                 this.nodeId("project", "validation-support"), this.projectOrigin(),
                 packagePath + "ValidationSupport.java", packageName, "ValidationSupport",
@@ -627,7 +625,13 @@ public final class SpringBootModelLowerer {
         Optional<SpringBootWorkflow.Variable> input = value.inputSymbol().map(this::variable);
         Optional<ActorBinding> actorBinding = value.actorSymbol().map(this::lowerActorBinding);
         TransportPlan transportPlan = this.lowerTransportPlan(value, httpMethod, input.isPresent());
-        return new SpringBootDeclaration.CapabilityDeclaration(this.symbolId(value.id(), "capability"), this.origin(value.id(), value.sourceNodeId(), value.span()), value.id(), value.name(), value.name() + "Service", value.name() + "Controller", this.lowerFirst(value.name()), httpMethod, "/api" + value.path().orElse("/" + this.kebab(value.name())), kind, transactionMode, authenticated, actor, input, actorBinding, transportPlan, this.lowerType(value.outputType()), value.fails(), this.lowerWorkflow(value));
+        SpringBootWorkflow workflow = this.lowerWorkflow(value);
+        var arithmeticInputs = input.map(variable -> ArithmeticInputs.members(workflow, variable.symbol()).stream()
+                .map(member -> new SpringBootDeclaration.RequiredArithmeticInput(
+                        this.nodeId(value.id().value() + "/" + member.resolvedMember().value(), "arithmetic-input"),
+                        member.origin(), variable.symbol(), member.resolvedMember(), member.targetMember(),
+                        member.targetMember())).toList()).orElse(List.of());
+        return new SpringBootDeclaration.CapabilityDeclaration(this.symbolId(value.id(), "capability"), this.origin(value.id(), value.sourceNodeId(), value.span()), value.id(), value.name(), value.name() + "Service", value.name() + "Controller", this.lowerFirst(value.name()), httpMethod, "/api" + value.path().orElse("/" + this.kebab(value.name())), kind, transactionMode, authenticated, actor, input, actorBinding, transportPlan, this.lowerType(value.outputType()), value.fails(), workflow, arithmeticInputs);
     }
 
     private ActorBinding lowerActorBinding(SymbolId actorSymbol) {
@@ -1273,10 +1277,16 @@ public final class SpringBootModelLowerer {
             case NormalizedExpression.UnaryExpression value -> new SpringExpression.UnaryExpression(
                     id, origin, type, SpringExpression.UnaryOperator.valueOf(value.operator().name()),
                     nullablePayloadValue(lowerExpression(value.operand(), owner, actorSymbol, itemSymbol)));
-            case NormalizedExpression.BinaryExpression value -> new SpringExpression.BinaryExpression(
-                    id, origin, type, nullablePayloadValue(lowerExpression(value.left(), owner, actorSymbol, itemSymbol)),
-                    SpringExpression.BinaryOperator.valueOf(value.operator().name()),
-                    nullablePayloadValue(lowerExpression(value.right(), owner, actorSymbol, itemSymbol)), presentComparison(value));
+            case NormalizedExpression.BinaryExpression value -> {
+                SpringExpression left = nullablePayloadValue(lowerExpression(value.left(), owner, actorSymbol, itemSymbol));
+                SpringExpression right = nullablePayloadValue(lowerExpression(value.right(), owner, actorSymbol, itemSymbol));
+                if (value.operator() == io.kcg.sir.ast.AstBinaryOperator.MUL && value.type() == PrimitiveType.DECIMAL) {
+                    left = this.decimalOperand(left, type);
+                    right = this.decimalOperand(right, type);
+                }
+                yield new SpringExpression.BinaryExpression(id, origin, type, left,
+                        SpringExpression.BinaryOperator.valueOf(value.operator().name()), right, presentComparison(value));
+            }
             case NormalizedExpression.TimeShiftExpression value -> new SpringExpression.TimeShiftExpression(
                     id, origin, type, lowerExpression(value.base(), owner, actorSymbol, itemSymbol),
                     SpringExpression.ShiftDirection.valueOf(value.direction().name()),
@@ -1286,6 +1296,13 @@ public final class SpringBootModelLowerer {
                     id, origin, type, this.presencePropertyName(value));
             case NormalizedExpression.ExistsExpression value -> this.lowerExistsPredicate(value, id, origin, type, itemSymbol);
         };
+    }
+
+    private SpringExpression decimalOperand(SpringExpression expression, LoweredJavaType resultType) {
+        return ArithmeticInputs.integral(expression.type())
+                ? new SpringExpression.IntegralToDecimal(this.nodeId(expression.id().value(), "integral-to-decimal"),
+                        expression.origin(), resultType, expression)
+                : expression;
     }
 
     private SpringExpression nullablePayloadValue(SpringExpression expression) {

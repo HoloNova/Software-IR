@@ -906,8 +906,16 @@ final class TypePass {
 
                   return PrimitiveType.BOOLEAN;
                }
-            case ADD:
-            case SUB:
+             case MUL:
+                if (TypeRules.isNumeric(leftType) && TypeRules.isNumeric(rightType)
+                      && (leftType.equals(rightType) || leftType == PrimitiveType.DECIMAL || rightType == PrimitiveType.DECIMAL)) {
+                   return leftType == PrimitiveType.DECIMAL || rightType == PrimitiveType.DECIMAL ? PrimitiveType.DECIMAL : leftType;
+                }
+                this.diagnostics.add(DiagnosticBuilder.error("SIR-TYPE-001",
+                   "乘法需要同类数值，或 Decimal 与整数；不自动提升 Int32 字段到 Int64", expr.span()));
+                return null;
+             case ADD:
+             case SUB:
                if (!leftType.equals(rightType) || !TypeRules.isNumeric(leftType)) {
                   this.diagnostics.add(DiagnosticBuilder.error(
                      "SIR-TYPE-001", "加减的两侧必须是同一种数值类型（Int32、Int64 或 Decimal）", expr.span()));
@@ -953,7 +961,7 @@ final class TypePass {
 
    private boolean mixesInt32AndInt64(AstBinaryOperator operator) {
       return switch (operator) {
-         case EQ, NE, GT, GE, LT, LE, ADD, SUB -> true;
+         case EQ, NE, GT, GE, LT, LE, ADD, SUB, MUL -> true;
          default -> false;
       };
    }

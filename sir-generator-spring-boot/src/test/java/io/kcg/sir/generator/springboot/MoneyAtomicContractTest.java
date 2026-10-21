@@ -6,6 +6,17 @@ import org.junit.jupiter.api.Test;
 
 class MoneyAtomicContractTest {
     @Test
+    void multiplicationComputesAnIndependentDeltaWithoutMultiplyingTheStoredColumn() {
+        String source = GeneratorTestSupport.resourceText("valid/money.sir")
+                .replace("balance: wallet.balance - input.amount;", "balance: wallet.balance - (input.amount * 2);");
+        var files = GeneratorTestSupport.generateSuccessFromText(source);
+        String service = GeneratorTestSupport.contentEndingWith(files, "/DebitBalanceService.java");
+        assertTrue(service.contains(".setDecrBy(Wallet::getBalance, (input.getAmount()).multiply(java.math.BigDecimal.valueOf(2)))"), service);
+        assertTrue(service.contains(".decimalScale("), service);
+        assertTrue(service.contains(".requireStrictDecimalSession(Wallet.class)"), service);
+    }
+
+    @Test
     void atomicMoneyKeepsSqlDeltaAndChecksTheTransactionConnectionAndTargetScale() {
         var files = GeneratorTestSupport.generateSuccess("valid/money.sir");
         String service = GeneratorTestSupport.contentEndingWith(files, "/CreditBalanceService.java");

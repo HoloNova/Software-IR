@@ -416,11 +416,15 @@ nullTest
 // After an operator, "INT unit" is a time shift; a plain operand is arithmetic. The two are told apart by
 // the unit word that follows the integer, which no expression is otherwise followed by.
 additiveExpression
-    : unaryExpression additiveStep*
+    : multiplicativeExpression additiveStep*
     ;
 
 additiveStep
-    : (PLUS | MINUS) (durationOperand | unaryExpression)
+    : (PLUS | MINUS) (durationOperand | multiplicativeExpression)
+    ;
+
+multiplicativeExpression
+    : unaryExpression (STAR unaryExpression)*
     ;
 
 durationOperand
@@ -550,6 +554,7 @@ GT              : '>';
 LT              : '<';
 MINUS           : '-';
 PLUS            : '+';
+STAR            : '*';
 // The persistent declaration-id annotation. '@' appears nowhere else in the language, so this
 // token cannot collide with IDENT.
 ID_ANNOTATION   : '@id';

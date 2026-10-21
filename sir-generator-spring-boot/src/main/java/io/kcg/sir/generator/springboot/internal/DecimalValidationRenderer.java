@@ -38,10 +38,6 @@ final class DecimalValidationRenderer {
                             reject(violations, path, "precision", "must be exactly representable at precision " + precision + " and scale " + scale);
                     }
 
-                    public static void notNull(List<%s> violations, String path, Object value) {
-                        if (value == null) reject(violations, path, "NotNull", "must not be null");
-                    }
-
                     public static void decimalScale(List<%s> violations, String path, BigDecimal value, int scale) {
                         if (value != null && value.signum() != 0 && value.scale() > scale && value.stripTrailingZeros().scale() > scale)
                             reject(violations, path, "precision", "amount must be exactly representable at scale " + scale);
@@ -71,6 +67,6 @@ final class DecimalValidationRenderer {
                         }
                     }
 
-                """.formatted(fieldError, fieldError, fieldError);
+                """.formatted(fieldError, fieldError);
     }
 }

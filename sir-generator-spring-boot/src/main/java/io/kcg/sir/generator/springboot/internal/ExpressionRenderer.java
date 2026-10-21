@@ -61,6 +61,8 @@ final class ExpressionRenderer {
             String payload = renderExpression(value.payloadMember(), variableNames, presence);
             yield "(" + payload + " == null ? null : " + payload + ".orElse(null))";
          }
+         case SpringExpression.IntegralToDecimal value ->
+            "java.math.BigDecimal.valueOf(" + renderExpression(value.operand(), variableNames, presence) + ")";
          case UnaryExpression unary -> renderUnary(unary, variableNames, presence);
          case SpringExpression.DigestExpression digest ->
             "SecretDigest.digest(" + renderExpression(digest.operand(), variableNames, presence) + ")";
@@ -146,6 +148,7 @@ final class ExpressionRenderer {
          case GE -> renderOrdering(left, right, operandType, ">=");
          case ADD -> renderArithmetic(left, right, binary.type(), "add", "addExact");
          case SUB -> renderArithmetic(left, right, binary.type(), "subtract", "subtractExact");
+         case MUL -> renderArithmetic(left, right, binary.type(), "multiply", "multiplyExact");
          case MATCHES -> "SecretDigest.matches(" + right + ", " + left + ")";
          case CONTAINS_LITERAL -> throw new IllegalStateException(
                  "literal matching is a query predicate, not a value expression: " + binary.id());

@@ -55,8 +55,20 @@ public sealed interface SpringBootDeclaration
       TransportPlan transportPlan,
       LoweredJavaType outputType,
       List<SymbolId> failures,
-      SpringBootWorkflow workflow
+      SpringBootWorkflow workflow,
+       List<RequiredArithmeticInput> arithmeticInputs
    ) implements SpringBootDeclaration {
+      public CapabilityDeclaration(LoweredNodeId id, LoweredOrigin origin, SymbolId sourceSymbol, String javaName,
+            String serviceName, String controllerName, String methodName, HttpMethod httpMethod, String route,
+            CapabilityKind kind, TransactionMode transactionMode, boolean authenticated,
+            Optional<SpringBootWorkflow.Variable> actor, Optional<SpringBootWorkflow.Variable> input,
+            Optional<ActorBinding> actorBinding, TransportPlan transportPlan, LoweredJavaType outputType,
+            List<SymbolId> failures, SpringBootWorkflow workflow) {
+         this(id, origin, sourceSymbol, javaName, serviceName, controllerName, methodName, httpMethod, route,
+            kind, transactionMode, authenticated, actor, input, actorBinding, transportPlan, outputType,
+            failures, workflow, List.of());
+      }
+
       public CapabilityDeclaration {
          SpringBootDeclaration.requireDeclaration(id, origin, sourceSymbol, javaName);
          SpringBootDeclaration.requireText(serviceName, "serviceName");
@@ -73,6 +85,20 @@ public sealed interface SpringBootDeclaration
          Objects.requireNonNull(outputType, "outputType");
          failures = List.copyOf(Objects.requireNonNull(failures, "failures"));
          Objects.requireNonNull(workflow, "workflow");
+         arithmeticInputs = List.copyOf(Objects.requireNonNull(arithmeticInputs, "arithmeticInputs"));
+      }
+   }
+
+   /** A formally bound input field required by this capability's numeric operations. */
+   record RequiredArithmeticInput(LoweredNodeId id, LoweredOrigin origin, SymbolId inputSymbol,
+         SymbolId fieldSymbol, String propertyName, String fieldPath) {
+      public RequiredArithmeticInput {
+         Objects.requireNonNull(id, "id");
+         Objects.requireNonNull(origin, "origin");
+         Objects.requireNonNull(inputSymbol, "inputSymbol");
+         Objects.requireNonNull(fieldSymbol, "fieldSymbol");
+         requireText(propertyName, "propertyName");
+         requireText(fieldPath, "fieldPath");
       }
    }
 

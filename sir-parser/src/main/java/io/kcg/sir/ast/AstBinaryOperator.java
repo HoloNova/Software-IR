@@ -12,5 +12,6 @@ public enum AstBinaryOperator {
     CONTAINS_LITERAL,
     MATCHES,
     ADD,
-    SUB
+    SUB,
+    MUL
 }

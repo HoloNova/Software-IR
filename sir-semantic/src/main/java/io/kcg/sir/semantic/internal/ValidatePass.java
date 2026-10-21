@@ -510,7 +510,7 @@ final class ValidatePass {
             }
          }
          case AstBinaryExpression e -> {
-            boolean arithmetic = e.operator() == AstBinaryOperator.ADD || e.operator() == AstBinaryOperator.SUB;
+            boolean arithmetic = e.operator() == AstBinaryOperator.ADD || e.operator() == AstBinaryOperator.SUB || e.operator() == AstBinaryOperator.MUL;
             if (arithmetic && (insideAny || this.mentionsItem(e))) {
                this.diagnostics.add(DiagnosticBuilder.error("SIR-VALID-001", ARITHMETIC_ON_COLUMN, e.span()));
             } else {
@@ -524,7 +524,7 @@ final class ValidatePass {
    }
 
    private static final String ARITHMETIC_ON_COLUMN =
-      "find 谓词里对列做加减或时间平移无法翻译成查询；请把运算放到不依赖 item 的一侧";
+      "find 谓词里对列做加减乘或时间平移无法翻译成查询；请把运算放到不依赖 item 的一侧";
 
    private boolean mentionsItem(AstExpression expression) {
       return switch (expression) {

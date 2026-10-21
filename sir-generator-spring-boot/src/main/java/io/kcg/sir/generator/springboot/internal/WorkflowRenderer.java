@@ -52,12 +52,28 @@ final class WorkflowRenderer {
       List<SpringExpression.StringMatch> stringMatches = new ArrayList<>();
       SpringBootWorkflow workflow = capability.workflow();
       String inputName = capability.input().map(Variable::targetName).orElse(null);
+      renderArithmeticInputs(ctx, capability, inputName, lines);
 
       for (Step step : workflow.steps()) {
          renderStep(ctx, workflow, capability, step, capability.transportPlan().responseRepresentation(), inputName, variableNames, imports, currentPackage, lines, mappers, stringMatches);
       }
 
       return new WorkflowRenderer.RenderedWorkflow(List.copyOf(lines), List.copyOf(mappers.values()), List.copyOf(stringMatches));
+   }
+
+   private static void renderArithmeticInputs(GenerationContext ctx, CapabilityDeclaration capability,
+         String inputName, List<String> lines) {
+      if (capability.arithmeticInputs().isEmpty()) return;
+      WriteSupport support = WriteSupport.of(ctx.model());
+      lines.add("        {");
+      lines.add("            if (" + inputName + " == null) throw " + support.exceptionBaseFqn() + ".missingMember(\"input\");");
+      lines.add("            var arithmeticInputErrors = new java.util.ArrayList<" + support.fieldErrorFqn() + ">();");
+      for (var field : capability.arithmeticInputs()) {
+         lines.add("            " + support.validationSupportFqn() + ".notNull(arithmeticInputErrors, "
+               + StringEscape.javaString(field.fieldPath()) + ", " + inputName + "." + getterName(field.propertyName()) + "());");
+      }
+      lines.add("            if (!arithmeticInputErrors.isEmpty()) throw " + support.exceptionBaseFqn() + ".invalidRequest(arithmeticInputErrors);");
+      lines.add("        }");
    }
 
    private static void renderStep(
@@ -1345,6 +1361,9 @@ final class WorkflowRenderer {
             }
 
             collectExpressionImports(ctx, receiver, variableNames, imports, currentPackage);
+            break;
+         case SpringExpression.IntegralToDecimal value:
+            collectExpressionImports(ctx, value.operand(), variableNames, imports, currentPackage);
             break;
          case SpringExpression.OptionalPayloadValue value:
             collectExpressionImports(ctx, value.payloadMember(), variableNames, imports, currentPackage);

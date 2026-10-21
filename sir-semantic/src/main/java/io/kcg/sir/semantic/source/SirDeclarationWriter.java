@@ -30,18 +30,19 @@ public final class SirDeclarationWriter {
    private static final int CONTAINS = 4;
    private static final int RELATIONAL = 5;
    private static final int ADDITIVE = 6;
-   private static final int UNARY = 7;
-   private static final int POSTFIX = 8;
+   private static final int MULTIPLICATIVE = 7;
+   private static final int UNARY = 8;
+   private static final int POSTFIX = 9;
 
    private static final Map<String, String> OPERATOR_TEXT = Map.ofEntries(
       Map.entry("OR", "or"), Map.entry("AND", "and"), Map.entry("EQ", "=="), Map.entry("NE", "!="),
       Map.entry("GT", ">"), Map.entry("GE", ">="), Map.entry("LT", "<"), Map.entry("LE", "<="),
-      Map.entry("CONTAINS_LITERAL", "containsLiteral"), Map.entry("MATCHES", "matches"), Map.entry("ADD", "+"), Map.entry("SUB", "-")
+      Map.entry("CONTAINS_LITERAL", "containsLiteral"), Map.entry("MATCHES", "matches"), Map.entry("ADD", "+"), Map.entry("SUB", "-"), Map.entry("MUL", "*")
    );
    private static final Map<String, Integer> OPERATOR_LEVEL = Map.ofEntries(
       Map.entry("OR", OR), Map.entry("AND", AND), Map.entry("EQ", EQUALITY), Map.entry("NE", EQUALITY),
       Map.entry("GT", RELATIONAL), Map.entry("GE", RELATIONAL), Map.entry("LT", RELATIONAL), Map.entry("LE", RELATIONAL),
-      Map.entry("CONTAINS_LITERAL", CONTAINS), Map.entry("MATCHES", CONTAINS), Map.entry("ADD", ADDITIVE), Map.entry("SUB", ADDITIVE)
+      Map.entry("CONTAINS_LITERAL", CONTAINS), Map.entry("MATCHES", CONTAINS), Map.entry("ADD", ADDITIVE), Map.entry("SUB", ADDITIVE), Map.entry("MUL", MULTIPLICATIVE)
    );
    private static final Map<String, String> PRIMITIVE_TEXT = Map.of(
       "UNIT", "Unit"
@@ -446,8 +447,8 @@ public final class SirDeclarationWriter {
          throw new IllegalArgumentException("unknown binary operator " + operator);
       }
 
-      // or/and and plus/minus chain to the left; every other operator takes exactly one operand per side.
-      boolean chains = level == OR || level == AND || level == ADDITIVE;
+      // Boolean, additive and multiplicative operators chain left; other operators take one operand per side.
+      boolean chains = level == OR || level == AND || level == ADDITIVE || level == MULTIPLICATIVE;
       int leftNeeds = chains ? level : level + 1;
       return expression(child(node, "left"), leftNeeds) + " " + OPERATOR_TEXT.get(operator) + " " + expression(child(node, "right"), level + 1);
    }

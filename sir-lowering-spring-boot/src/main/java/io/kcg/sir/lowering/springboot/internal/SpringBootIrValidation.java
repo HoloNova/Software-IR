@@ -700,8 +700,35 @@ public final class SpringBootIrValidation {
       this.validateActorBinding(capability);
       this.validateTransportPlan(capability);
       this.validateWorkflow(capability);
+      this.validateArithmeticInputs(capability);
       this.validatePageDemand(capability);
       this.validateWriteWorkflow(capability);
+   }
+
+   /** Required arithmetic inputs are validated against the formal payload and workflow dependencies. */
+   private void validateArithmeticInputs(SpringBootDeclaration.CapabilityDeclaration capability) {
+      var expected = capability.input().map(input -> ArithmeticInputs.members(capability.workflow(), input.symbol())).orElse(List.of());
+      var actual = capability.arithmeticInputs();
+      if (expected.size() != actual.size()) this.error(capability, "arithmetic input checks must cover exactly the bound numeric dependencies");
+      var payload = this.payloadOf(capability);
+      for (int index = 0; index < actual.size(); index++) {
+         var plan = actual.get(index);
+         this.addNode(plan.id(), plan.origin(), "arithmetic input check");
+         this.requireKnown(plan.fieldSymbol(), capability, "arithmetic input field");
+         boolean matches = index < expected.size() && capability.input().isPresent()
+            && plan.inputSymbol().equals(capability.input().orElseThrow().symbol())
+            && plan.fieldSymbol().equals(expected.get(index).resolvedMember())
+            && plan.propertyName().equals(expected.get(index).targetMember())
+            && plan.origin().equals(expected.get(index).origin())
+            && payload.isPresent() && payload.orElseThrow().fields().stream().anyMatch(field ->
+               field.sourceSymbol().equals(plan.fieldSymbol()) && field.javaName().equals(plan.fieldPath())
+                  && !(field.type() instanceof LoweredJavaType.OptionalValue));
+         if (!matches) this.error(capability, "arithmetic input plan does not match its formal INPUT field and origin");
+         if (payload.isPresent() && payload.orElseThrow().patch().isPresent()
+               && !payload.orElseThrow().patch().orElseThrow().identityFieldSymbol().equals(plan.fieldSymbol())) {
+            this.error(capability, "PATCH changes preserve absence and cannot supply required arithmetic operands");
+         }
+      }
    }
 
    /**
@@ -1238,8 +1265,16 @@ public final class SpringBootIrValidation {
             this.validateExpression(value.receiver(), owner);
             this.requireKnown(value.resolvedMember(), owner, "member expression");
             break;
-         case SpringExpression.OptionalPayloadValue value:
-            this.validateExpression(value.payloadMember(), owner);
+          case SpringExpression.IntegralToDecimal value:
+             this.validateExpression(value.operand(), owner);
+             if (!ArithmeticInputs.integral(value.operand().type())
+                   || !(value.type() instanceof LoweredJavaType.Scalar scalar)
+                   || scalar.kind() != LoweredJavaType.ScalarKind.BIG_DECIMAL) {
+                this.error(owner, "integral-to-decimal requires a non-optional integer and a decimal result");
+             }
+             break;
+          case SpringExpression.OptionalPayloadValue value:
+             this.validateExpression(value.payloadMember(), owner);
             if (!this.isRawOptionalPayload(value.payloadMember()) || !value.type().equals(value.payloadMember().type())) {
                this.error(owner, "an optional payload read must unwrap its typed INPUT member");
             }
@@ -1373,9 +1408,10 @@ public final class SpringBootIrValidation {
       }
    }
 
-   /** Plus and minus take two operands of one numeric Java type and answer in that type. */
+   /** After explicit conversions, arithmetic takes two operands of one numeric Java type and answers in that type. */
    private void validateArithmetic(SpringExpression.BinaryExpression value, SpringBootDeclaration owner) {
-      if (value.operator() != SpringExpression.BinaryOperator.ADD && value.operator() != SpringExpression.BinaryOperator.SUB) {
+      if (value.operator() != SpringExpression.BinaryOperator.ADD && value.operator() != SpringExpression.BinaryOperator.SUB
+             && value.operator() != SpringExpression.BinaryOperator.MUL) {
          return;
       }
 

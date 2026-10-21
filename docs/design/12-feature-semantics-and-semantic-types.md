@@ -682,6 +682,83 @@ Core 增加 precision 的正式规则、参数／类型／默认值检查；Lowe
 
 DECIMAL 合同行追加两列，非金额仍为原 11 列；默认值由列计划在验证物理上限后精确规范到 scale，现场核验比较 precision／scale，任何已有金额精度变化均拒绝自动迁移。原子金额保留 SQL delta、guard、加载行与非 version 边界；先检查 delta scale，再检查实际 Spring 事务绑定的 MyBatis 连接严格模式，由数据库判定最终溢出并回滚。普通非版本持久化的全行／NULL 写策略未重设计。
 
-market／shop／ledger 已改为 Money，账目最小正金额为 0.01；乘法、多商品、统计仍未补。15 类最新定向报告合计 105 项通过（迁移类最新报告仅含新增两方法，不累加早前 15 项），真实 DTO／服务通过动态 javac 编译和执行；八题内存生成与交付规划通过。详见[验证记录](../qualification/README.md#g10-money-local)。
+G10 完成时 market／shop／ledger 已改为 Money，账目最小正金额为 0.01；当时乘法、多商品、统计未补，后续乘法实现见第 21 节。15 类最新定向报告合计 105 项通过（迁移类最新报告仅含新增两方法，不累加早前 15 项），真实 DTO／服务通过动态 javac 编译和执行；八题内存生成与交付规划通过。详见[验证记录](../qualification/README.md#g10-money-local)。
 
 `MoneyBusinessConformanceIT` 与 DECIMAL 部署漂移断言已接入 CI；本机未执行真实 MySQL／HTTP、并发业务 IT、生成工程 Maven 构建或全量门，均为 NOT_RUN，不沿用 #140 结果。无 UI 改动。阶段完成按授权直接 commit + push。
+
+
+<a id="g6-multiplication-proposal"></a>
+## 21. G6：精确乘法与金额乘数量（已实现，待同源码 CI）
+
+本节最初以 `303a139` 勘察；负责人随后要求继续下一阶段，已按下述范围实现。G10 金额真库在 #143 的 57 项检查通过，但部署仍未闭环；#144 在初次合同测试缺少 provider 下载失败，已单独由 `b8f2cf0` 修复，见[验证第 16 节](../qualification/README.md#ci-144-dependency-fix)。本节的 G6 完成情况见 21.6，不将旧 CI 成功外推到新源码。
+
+### 21.1 实施前核对的缺口，不只是补一个符号
+
+- `Sir.g4` 没有 `*` token，additiveExpression 直接接 unaryExpression；AstBinaryOperator、目标 BinaryOperator 与 ExpressionRenderer 只有 ADD／SUB。需要增加独立的乘法优先级，而不是把 `*` 塞进加减层。
+- `TypePass.typeBinaryExpression` 的加减要求两侧同类数值；Int64 与整数常量已有上下文定宽，但 Int32 字段不自动变 Int64。Money／自定义金额别名的底层是 Decimal，Quantity 是带 min(1) 的 Int32。只支持同型乘法仍表达不了 `product.price * input.quantity`。
+- 目标算术 IR 的校验要求两操作数与结果类型一致。Generator 根据结果类型选择 BigDecimal 方法或 Math 精确整数方法；必须由 Lowering 明确插入整数到 Decimal 的无损转换，不能让 Generator 根据字段名字或 Money 文本猜测。
+- `ValidatePass.rejectArithmeticTheQueryCannotCarry` 目前只识别 ADD／SUB；find／exists／count 的列运算与 any 内运算有既有拒绝边界。新增运算必须纳入检查，不能出现解析通过却生成不了 SQL 的 D 类缺陷。
+- `SirDeclarationWriter` 单独维护优先级、结合方向与操作符表；SourceEditor 使用该链写回。仅改 Parser／Generator 会破坏 inspect／edit／rename 后的表达式结构。
+- `lowerProperty` 目前只为带 precision 的非 Optional 字段补 NOT_NULL；Quantity 的 min 不表达必填。与此同时，`WorkflowRenderer.renderFind` 明确把未传 page／size 默认成 1／defaultSize。因此不能为了新数量字段，直接给所有数值 DTO 字段铺 `@NotNull`，破坏已有分页缺省协议。
+
+### 21.2 作者侧语法与类型规则
+
+使用普通表达式 `a * b`。优先级为成员访问、一元操作、乘法、加减／时间平移、比较与布尔组合，乘法同级向左结合；括号保留作者指定的求值树。`a + b * c` 与 `(a + b) * c` 不等价，`a * (b * c)` 也不能因“数学上可结合”被改写：精确整数的中间溢出点可能不同。时长仍是现有常量时间平移，不新增“日期 × 数量”或动态时长。
+
+| 两侧实际类型 | 结果与规则 |
+| --- | --- |
+| Int32 × Int32 | Int32；精确整数乘法，溢出失败，不能回绕 |
+| Int64 × Int64 | Int64；沿用同类精确运算的溢出协议 |
+| Decimal × Decimal | Decimal；精确乘积，无隐式舍入 |
+| Decimal × Int32／Int64，以及左右互换 | Decimal；整数先无损转 Decimal，再乘 |
+| Int32 字段 × Int64 字段 | 拒绝；不借本轮放开所有整数自动提升 |
+| Optional、文本、布尔、日期／时间、枚举、Ref、列表等 | 拒绝；不补零、不展开列表、不因判空条件自动解包 |
+
+整数常量沿用现有定宽和越界检查，Int64 另一侧可使整数常量定宽为 Int64；Decimal 的出现不使任意大整数常量自动成为无限宽整数。原加减、比较、赋值的混合类型规则不变，不顺带增加显式 cast、除法或取模。Money 并不是带币种的量纲类型，乘法结果只具有底层数值类型，不自动继承左右两边规则的并集。
+
+金额中间值使用无 MathContext 的 BigDecimal.multiply，整数转换用 BigDecimal.valueOf(long)，不经 double；写入时继续按目标字段的 precision／min／max 检查。比如四位单价乘整数，结果能精确写入两位 Money 才成功；`0.1250 * 3` 写默认 Money 要拒绝，`0.1250 * 8` 可精确写为 1.00，不能各子表达式提前四舍五入。整数乘法沿用既有加减的 ArithmeticException／执行失败回滚协议，不冒充作者声明的业务错误；BigDecimal 自身指数或 scale 超界也必须失败，不宣称无限资源。
+
+已从 OpenJDK 21 GA 第一方源码核对 [BigDecimal](https://github.com/openjdk/jdk/blob/jdk-21%2B35/src/java.base/share/classes/java/math/BigDecimal.java) 的 valueOf(long) 与无 MathContext 的 multiply，以及 [Math](https://github.com/openjdk/jdk/blob/jdk-21%2B35/src/java.base/share/classes/java/lang/Math.java) 的 multiplyExact(int,int)／(long,long)。源 blob 分别为 `094c48bc02fbed4d5b7e371aaade9cd9b3ea0fd7`、`fd5c8bb0491e6bfd894e3517e73c96f4661b5c06`；无 MathContext 的乘法保留精确值，目标字段校验负责是否能存储。不新增数学或金额依赖。
+
+### 21.3 必须有值的算术参数，不改变分页缺省
+
+复用现有结构化字段错误，在 Lowering 为能力中的数值算术（加、减、乘、数值取负）收集其实际引用的非 Optional 数值 input 字段，按正式 INPUT binding 产出不可变的必需值检查计划。执行工作流前统一检查；缺省／显式 null 返回 400 INVALID_REQUEST 并带字段路径，不把 null 当成零，也不让自动拆箱／valueOf 首次发现问题。只检查本能力实际算术所依赖的字段，不给整个共享 DTO 全局改变约束；字段 ID、属性名、来源与顺序由计划提供，不在 Generator 扫源码或重建引用。
+
+纯分页的 page／size 不因此变必填，保留现有局部默认值。若作者另把同一请求字段直接用于算术，其取值必须显式传入；分页步骤的局部默认不是修改整个 input 对象的隐式赋值。不在本轮统一所有非数值字段的必填政策，不改变 PATCH 的 absent／null 协议。检查计划与现有 ValidationSupport 的 notNull／字段错误机制共用；readonly 能力若需要此检查也必须拥有对应支持产物，不能依赖软件恰好有金额列或写能力。
+
+这会使过去可能在算术自动拆箱时报错的缺失数值提前成为字段错误，属于明确的输入边界收敛；实现前必须用实际生成 DTO／服务复现并验证。它不放开 Optional 算术。短路表达式中的非 Optional 算术输入也按此必需值契约处理；不能依赖未执行分支，把已声明为必需的数值当作可选值。
+
+### 21.4 显式降级与原子写边界
+
+Core 在 BinaryExpression 上记录 MUL 和正式结果类型；不改绑定字段的类型来伪装转换。Spring Boot Lowering 对 Decimal 与整数的乘法插入明确的 `IntegralToDecimal` 表达式，携带新节点 ID、origin、整数操作数与 Decimal 结果；目标 Validator 拒绝非整数／Optional 操作数、错误结果类型和缺失来源，遍历、来源图与审查入口同步覆盖。Generator 只渲染该节点和 MUL，不自行决定提升。Schema 完整性门、IR 硬化用例与通用 DTO 契约必须纳入受影响定向，不能再次只选新金额测试。
+
+复用普通 validate、create、update 的表达式和 G10 候选校验。请求／actor／其他已加载行算出的独立数值可以作为查询参数、守卫右侧或原子增减的 amount；仍不得把 `item.price * item.quantity` 翻成 SQL。any 内算术继续沿用已有拒绝，不顺带扩展 SQL 表达式系统。
+
+`balance: wallet.balance - (product.price * input.quantity)` 可沿用已有的 `SET balance = balance - ?`，但 amount 不能读取 wallet 自身；guard、加载行、非 version、同事务严格连接与回滚规则不变。不增加 `SET balance = balance * ?` 的原子乘法。无 guard 的普通更新仍沿用已有非版本持久化语义，不能把新增 `row.field * factor` 的普通赋值宣称为并发安全。
+
+### 21.5 业务落点、取舍与验收
+
+shop 仍只买一种商品，BuyRequest 已增加 Quantity 数量，库存守卫改为 `stock >= input.quantity`、原子减该数量，订单 total 写 `product.price * input.quantity`，OrderLine 保存同一数量与价格。保留先 persist 库存行再写有外键的订单／明细的现有顺序，不顺带做多商品、购物车、循环或取消退库存。乘法只补 library 罚款公式中的乘号，**没有日期差／逾期天数计算，不能把整个罚款需求记为完成**。G11 视图计算仍需另案，G5／G8 也未获扩范围授权。
+
+| 替代方案 | 不选择的原因 |
+| --- | --- |
+| 只有同类型乘法 | 金额乘 Quantity 仍写不出，普通需求依然绕口 |
+| 所有算术一律 Decimal 或 double | 改变既有整数协议；double 损失精确性 |
+| 广泛自动数值提升，同时放开混合加减比较 | 超出本轮需求，改变大量已确认类型错误的含义 |
+| 只让 Generator 根据 Java 类型加 valueOf | 转换决定脱离 Lowering，缺少 IR 可验证的执行计划 |
+| DTO 所有数字统一加 NotNull | 会破坏现有 page／size 缺省默认；没有区分能力的实际数值需求 |
+| 乘法立即舍入到左右类型的精度 | 中间截断会改变最终金额，违背 G10 的目标字段精确校验 |
+| 一次扩展 SQL 乘法、日期差、聚合和视图 | 把独立能力绑成大改，无法单独核验原子写与查询边界 |
+
+实施分三段：Parser／AST、类型与源码往返的 RED→GREEN；显式转换和必需值计划、目标 IR 校验、真实生成代码的编译执行；最后修改 shop 并扩展既有隔离真库／HTTP 验收。定向覆盖优先级、左右混合、负数与零、整数宽度边界及溢出、Decimal 尾随零／精度不够／只在最终值校验、缺省／null／Optional 拒绝、纯分页默认和共享输入、路径变量注入后检查、SourceEditor add／update／rename／回读的树与绑定一致、结构完整性和畸形目标 IR。旧加减、时间平移、G7、G10、DTO 与分页契约必须回归。
+
+真实 MySQL／HTTP 要证明合法数量精确写入、缺失／null／0／负数量不写库、总额不可精确存储整事务拒写、库存不足走原业务错误，以及竞争请求按总购买数量扣库存、不超卖；金额 delta 的同连接严格模式和回滚仍沿用既有验收。本机只跑受影响定向，不起应用／MySQL，不跑全量门或生成工程全构建；重活交同 SHA CI。无 UI 改动，不使用浏览器。阶段完成按授权 commit + push；是否真正通过以本批同源码 CI 为准。
+
+
+### 21.6 实施与本机定向结果
+
+Parser／AST、类型、声明写回与 SourceEditor 已贯通 `*`，整数宽度与 Optional 拒绝边界不变。Lowering 显式插入 IntegralToDecimal，并按正式 INPUT binding 给出不可变的算术必需值计划；独立 IR 校验核对字段、来源、属性、顺序与覆盖。生成器只渲染计划，通用 NotNull 从金额专属渲染器移到共享支持，不给 DTO 全局加数值必填。引用输入的整数 `ref.id` 缺值采用真实 DTO 属性 `refId`，已补合法取值与字段错误的真实运行回归；PATCH changes 仍保留缺省／null，不作为必需算术输入。
+
+shop 已用同一 quantity 守卫库存、原子减库存、计算订单金额并保存明细；明细创建移到订单 persist 之后，避免在自增主键尚未生成时取到 null 外键。未改变通用引用捕获语义、非版本普通更新的并发语义、只支持原子加减的边界。乘法的独立 delta 仍生成 setDecrBy，保留 G10 同事务严格连接和精度检查。
+
+主回归 28 类最新报告共 **223 项通过、0 失败／错误／跳过**，含真实 javac 编译／执行、分页默认、共享输入、路径注入、算术缺值／溢出／最终精度、结构完整性、IR 硬化、源 add／update／rename 与往返；八题内存生成及交付规划通过。shop 的金额需求已写出但真实事务与并发仍待验收，账本仅将这一条 ✗ 转 △，总数为 64／6／14，不增加完整条数。生成工程离线构建、真实 MySQL／HTTP、全量门与部署交同 SHA CI，均未在本机运行。新增 MultiplicationBusinessConformanceIT 验证正／非法数量、精确总额、早期库存写之后的失败回滚、12 请求竞争扣数量、明细外键与金额一致；它已接入 CI，不把编译通过写成真库通过。完整证据见[验证第 17 节](../qualification/README.md#g6-multiplication-local)。
