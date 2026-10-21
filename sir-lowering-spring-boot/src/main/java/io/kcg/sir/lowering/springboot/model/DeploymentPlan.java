@@ -105,7 +105,7 @@ public record DeploymentPlan(LoweredNodeId id, ProjectArtifact.MavenProject appl
             if (decimalShape.isPresent() && defaultValue.isPresent()) {
                 var shape = decimalShape.orElseThrow();
                 var number = new java.math.BigDecimal(defaultValue.orElseThrow());
-                if (!new io.kcg.sir.semantic.type.DecimalPrecision(shape.precision(), shape.scale()).accepts(number))
+                if (!new io.kcg.sir.semantic.feature.DecimalPrecision(shape.precision(), shape.scale()).accepts(number))
                     throw new IllegalArgumentException("decimal default cannot be represented exactly: " + name);
                 // Bound the physical shape before setScale/toPlainString can expand its representation.
                 defaultValue = Optional.of(number.setScale(shape.scale(), java.math.RoundingMode.UNNECESSARY).toPlainString());

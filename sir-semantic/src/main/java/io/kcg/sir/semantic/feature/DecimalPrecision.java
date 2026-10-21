@@ -1,10 +1,13 @@
-package io.kcg.sir.semantic.type;
+package io.kcg.sir.semantic.feature;
 
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
-/** An exact decimal value domain; no target-specific storage limit or rounding policy. */
+/**
+ * Evaluates a declared precision rule without adding a node to the normalized model.
+ * The rule's facts remain in NormalizedConstraint; this helper never rounds or sets storage limits.
+ */
 public record DecimalPrecision(int precision, int scale) {
     public static final int MONEY_PRECISION = 19;
     public static final int MONEY_SCALE = 2;

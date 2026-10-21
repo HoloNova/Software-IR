@@ -182,7 +182,7 @@ final class SemanticTypeDeclarations {
          }
       }
 
-      if (name.equals("precision") && io.kcg.sir.semantic.type.DecimalPrecision.parse(arguments).isEmpty()) {
+      if (name.equals("precision") && io.kcg.sir.semantic.feature.DecimalPrecision.parse(arguments).isEmpty()) {
          diagnostics.add(DiagnosticBuilder.error("SIR-TYPE-001", "precision 参数必须为整数，且 p >= 1、0 <= s <= p", span));
          return Optional.empty();
       }

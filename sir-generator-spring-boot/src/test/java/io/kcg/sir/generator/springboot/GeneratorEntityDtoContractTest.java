@@ -168,11 +168,19 @@ class GeneratorEntityDtoContractTest {
                 + "    private String fullName;"), source);
         assertTrue(source.contains("    @Email\n"
                 + "    private String email;"), source);
-        assertTrue(source.contains("    @DecimalMin(\"-10.50\")\n"
+        assertEquals(List.of("PRECISION", "DECIMAL_MIN", "DECIMAL_MAX", "NOT_NULL"),
+                input.fields().stream().filter(field -> field.javaName().equals("creditLimit"))
+                        .findFirst().orElseThrow().constraints().stream()
+                        .map(constraint -> constraint.kind().name()).toList());
+        assertTrue(source.contains("    @ExactDecimal(precision = 19, scale = 2)\n"
+                + "    @DecimalMin(\"-10.50\")\n"
                 + "    @DecimalMax(\"999.99\")\n"
+                + "    @NotNull\n"
                 + "    private java.math.BigDecimal creditLimit;"), source);
 
         assertContainsImports(source, List.of(
+                "com.example.entitydto.api.ValidationSupport.ExactDecimal",
+                "jakarta.validation.constraints.NotNull",
                 "jakarta.validation.constraints.DecimalMax",
                 "jakarta.validation.constraints.DecimalMin",
                 "jakarta.validation.constraints.Email",
@@ -183,14 +191,18 @@ class GeneratorEntityDtoContractTest {
         assertEquals(1, occurrences(source, "@Size("), source);
         assertEquals(1, occurrences(source, "@DecimalMin("), source);
         assertEquals(1, occurrences(source, "@DecimalMax("), source);
+        assertEquals(1, occurrences(source, "@ExactDecimal("), source);
+        assertEquals(1, occurrences(source, "@NotNull"), source);
         assertOrdered(source, List.of(
                 "@NotBlank",
                 "@Size(min = 1, max = 80)",
                 "private String fullName;",
                 "@Email",
                 "private String email;",
+                "@ExactDecimal(precision = 19, scale = 2)",
                 "@DecimalMin(\"-10.50\")",
                 "@DecimalMax(\"999.99\")",
+                "@NotNull",
                 "private java.math.BigDecimal creditLimit;"));
     }
 

@@ -430,7 +430,7 @@ public final class SpringBootInputValidator {
          case "length" -> constraint.arguments().size() == 2 && constraint.arguments().stream().allMatch(IntegerLiteral.class::isInstance);
          case "precision" -> constraint.arguments().size() == 2
             && constraint.arguments().stream().allMatch(IntegerLiteral.class::isInstance)
-            && io.kcg.sir.semantic.type.DecimalPrecision.parse(constraint.arguments().stream()
+            && io.kcg.sir.semantic.feature.DecimalPrecision.parse(constraint.arguments().stream()
                 .map(a -> ((IntegerLiteral) a).value().toString()).toList()).isPresent();
          case "min", "max" -> constraint.arguments().size() == 1 && this.isNumericConstant(constraint.arguments().get(0));
          default -> true;

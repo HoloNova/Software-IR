@@ -300,7 +300,9 @@ mvn -B -o -pl sir-toolchain-application -am '-Dtest=CrudAccessContractTest,Optio
 已核对产物索引：`conformance-evidence`（12314706243）、`surefire-reports`（12314751145）、`deployment-evidence`（12315206741）、`backend-source-delivery`（12314847105）、`standalone-cli`（12314716218）。本次没有重新下载报告计数，不据 job 成功推算新的需求覆盖数量。
 
 <a id="g10-money-local"></a>
-## 12. G10：精确金额、写入校验与 DECIMAL 交付（本机定向，待本批 CI）
+## 12. G10：精确金额、写入校验与 DECIMAL 交付（初次实现定向）
+
+后续 `a54c351` 的 #141 在架构门和 DTO 旧契约失败，当前修复及未验收范围见[第 13 节](#ci-141-fix)；本节保留初次实现时的执行证据。
 
 负责人已确认默认 `precision(19,2)`、允许同名规则覆写、接受无损尾随零且拒绝隐式舍入。[设计 12 第 20 节](../design/12-feature-semantics-and-semantic-types.md#g10-money-proposal)记录原因与边界；[语言参考](../SIR_LANGUAGE_REFERENCE.md#2-类型)是作者侧规则。Money 不隐含非负、币种或汇率，旧整数分不自动换算，现存 precision／scale 变化不自动迁移。
 
@@ -340,3 +342,36 @@ AFT Java/JDTLS 初始化退出，诊断 PARTIAL／unknown，以实际 javac 与�
 **已接入但尚未验收。** `MoneyBusinessConformanceIT` 复用 BusinessSliceHarness，接入 verify.yml 的串行业务 IT 与 `kcg.money-conformance.enabled=true`。覆盖真实 JSON 尾随零／指数／精度错误、必填 null、PATCH absent／null／版本冲突、原子金额并发、guard 不成立、溢出回滚，以及非严格池连接拒写；由独立 JDBC 核对行和值。部署 v3 增加金额和默认值，不增加迁移版本；独立部署烟测核对 DECIMAL precision／scale／默认值，并篡改精度确认公开 start 拒绝，再恢复，沿用既有清理与脱敏证据。
 
 本批真实 MySQL／HTTP、并发／非严格模式 IT、八题生成工程 Maven 编译、双全量门及完整部署均 **NOT_RUN**，留给本批 commit + push 后的 CI。必须以该 SHA、run URL 和上传的 conformance-evidence／surefire-reports／deployment-evidence 为准，不能沿用 #140。阶段提交按负责人授权直接推送；84 条需求账本仍为 64 完整／5 折扣／15 尚未写出，不将新原语直接换算为需求通过。
+
+
+<a id="ci-141-fix"></a>
+## 13. CI #141：精度辅助类型归属与 DTO 契约回归修复
+
+失败提交：`a54c351fec7ca5770635f698195689218d84e79d`，[verify #141](https://github.com/HoloNova/Software-IR/actions/runs/39557106745)。冻结门在 semantic 模块停止，完成门、业务 IT、独立验证和部署被跳过。另查允许失败的预热门及上传的 Surefire XML，共确认两个失败用例；不能只看 `--log-failed` 而漏掉预热门中的后续模块。
+
+- `SoftwareSchemaCompletenessTest.everyRecordInTheModelPackagesIsReachableFromTheRoot`：新增 `semantic.type.DecimalPrecision` 是计算精度规则的辅助 record，不属于模型根图，却进入了模型包扫描。将其移到已有 `semantic.feature` 包，更新全部调用；精度事实仍留在 `NormalizedConstraint`，不改变模型、算法，不给架构门加豁免。
+- `GeneratorEntityDtoContractTest.dtoRendersEveryValidationConstraintInLoweredOrderOnItsOwningField`：旧断言要求 `@DecimalMax` 后立即接字段，遗漏 G10 的必填 `@NotNull`。现同时核对降级约束序列、完整 `@ExactDecimal`／min／max／`@NotNull` 注解块、导入及各注解仅出现一次；生成器与生产校验不变。
+
+**RED→GREEN。** 本机先运行原两个测试类，13 项中恰有上述两项断言失败、0 errors，XML 封存 `target/ci-141-fix/red/`。RED 临时使用 `maven.test.failure.ignore=true`，让依赖模块失败后仍执行 DTO 测试，按 XML 判断失败而不是把 Maven 的成功退出误认为通过；不修改任何 POM 或 CI 设置。移动后只清除旧包下那一个遗留的 `target/classes/.../DecimalPrecision.class`，避免增量构建扫描到过期类，CI 的 clean 构建不需要此步骤。
+
+随后取消 failure-ignore，七类最新报告共 **65 tests / 0 failures / 0 errors / 0 skipped**，封存到 `target/ci-141-fix/green/`，汇总 `target/ci-141-fix/local-result.json`：
+
+| 测试 | 项数 |
+| --- | --- |
+| SoftwareSchemaCompletenessTest | 8 |
+| MoneyPrecisionSemanticsTest | 24 |
+| SemanticTypeSemanticsTest | 10 |
+| DeploymentPlannerTest | 6 |
+| GeneratorEntityDtoContractTest | 5 |
+| MoneyDeliveryTest | 5 |
+| MoneyRuntimeTest | 7 |
+
+实际命令（Windows、Java 21、离线单构建，不用 `-T`）：
+
+```powershell
+$env:MAVEN_OPTS='-Xmx512m'
+mvn -B -o -pl sir-generator-spring-boot -am '-Dtest=SoftwareSchemaCompletenessTest,GeneratorEntityDtoContractTest' '-DfailIfNoTests=false' '-Dsurefire.failIfNoSpecifiedTests=false' '-Dmaven.test.failure.ignore=true' '-DargLine=-Xmx384m' test
+mvn -B -o -pl sir-generator-spring-boot -am '-Dtest=SoftwareSchemaCompletenessTest,GeneratorEntityDtoContractTest,MoneyPrecisionSemanticsTest,SemanticTypeSemanticsTest,DeploymentPlannerTest,MoneyDeliveryTest,MoneyRuntimeTest' '-DfailIfNoTests=false' '-Dsurefire.failIfNoSpecifiedTests=false' '-DargLine=-Xmx384m' test
+```
+
+此前第 12 节的 105 项没有选中上述两个既有契约，属于回归选择遗漏；不把旧数量与本批数量累加。Java/JDTLS 初始化仍失败，AFT 为 PARTIAL，实际 javac 与定向执行通过；覆盖率未测，不声明 80%。本批无 UI 改动，不启动应用、MySQL 或容器。差异自审与 `git diff --check` 通过；全量门、金额真库／HTTP、并发／非严格模式及部署仍需修复提交的同 SHA CI，不能用 #140 或本机结果代替。按负责人授权，本修复阶段完成后 commit + push 触发新 CI。
