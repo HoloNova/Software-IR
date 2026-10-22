@@ -5,9 +5,10 @@ name: verify
 # ten-module reactor plus a real MySQL and a generated Spring Boot application.
 #
 # What this workflow produces, in one job so the Maven repository stays coherent:
-#   1. an online priming pass (the frozen repository must exist before an offline run)
-#   2. the frozen full gate:        mvn -o clean verify
-#   3. the completion full gate:    mvn -o clean verify -Dmaven.test.failure.ignore=true
+#   1. online build/provider priming with JUnit dry-run, never acceptance evidence
+#   2. the authoritative frozen full gate: mvn -o clean verify
+#   3. only after a frozen-gate failure: a completion pass to collect remaining diagnostics
+#      (the frozen failure still fails the job; its original reports are kept separately)
 #   4. the query, write and relation business ITs against real MySQL 8.4
 #   5. the R5 independent verification IT: real Maven build, real application, real MySQL, separate
 #      static/build/start/business results for a correct sample, a static-valid wrong sample, a candidate
@@ -98,12 +99,13 @@ jobs:
       # The repository starts empty on a fresh runner: the offline gates cannot run until the
       # reactor's plugins and dependencies are present, and the generated project's own
       # dependencies (spring-boot-starter-parent, mybatis-plus, mysql-connector-j) are not in
-      # the reactor's closure at all. Hence one online pass with failures tolerated — the
-      # offline gates below are what must actually pass.
-      - name: Priming pass (online, failures tolerated)
+      # the reactor's closure at all. Discover tests to resolve the dynamic Surefire provider,
+      # but do not execute test bodies three times. Dry-run is NOT a passing verification gate.
+      - name: Prime reactor build and test providers (online, dry-run)
         run: |
           set -euo pipefail
-          mvn -B clean verify -Dmaven.test.failure.ignore=true -Dmaven.repo.local="$MAVEN_REPO"
+          mvn -B clean verify -Dmaven.test.failure.ignore=true \
+            -Djunit.platform.execution.dryRun.enabled=true -Dmaven.repo.local="$MAVEN_REPO"
 
       - name: Prime the generated project dependencies (one online IT)
         run: |
@@ -119,14 +121,26 @@ jobs:
             test
 
       - name: Frozen full gate
+        id: frozen
         run: |
           set -euo pipefail
-          mvn -B -o clean verify -Dmaven.repo.local="$MAVEN_REPO"
+          mvn -B -o clean verify -Djunit.platform.execution.dryRun.enabled=false -Dmaven.repo.local="$MAVEN_REPO"
 
-      - name: Completion full gate
+      # The diagnostic pass cleans targets, so preserve the first failure before it overwrites reports.
+      - name: Upload original frozen-gate failure reports
+        if: failure() && steps.frozen.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: frozen-failure-surefire-reports
+          path: '**/target/surefire-reports/**'
+          if-no-files-found: warn
+
+      - name: Completion diagnostics (only after frozen-gate failure)
+        if: failure() && steps.frozen.outcome == 'failure'
         run: |
           set -euo pipefail
-          mvn -B -o clean verify -Dmaven.test.failure.ignore=true -Dmaven.repo.local="$MAVEN_REPO"
+          mvn -B -o clean verify -Dmaven.test.failure.ignore=true \
+            -Djunit.platform.execution.dryRun.enabled=false -Dmaven.repo.local="$MAVEN_REPO"
 
       - name: Business conformance ITs
         run: |
@@ -168,7 +182,7 @@ jobs:
       # The runnable jar must start with nothing but the JDK: every sir-* module and antlr4-runtime are
       # inside it. A class missing from the jar shows up here as NoClassDefFoundError, which no test that
       # runs on the reactor's own classpath can show. It sits after the business evidence so that a failure
-      # here cannot hide the results above. The jar comes from the completion gate's `clean verify`; the
+      # here cannot hide the results above. The jar comes from the frozen gate's `clean verify`; the
       # steps in between do not clean.
       - name: Standalone CLI smoke
         run: |

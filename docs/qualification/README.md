@@ -629,3 +629,29 @@ mvn -B -q -o -pl sir-toolchain-application -am test '-Dtest=ReferenceIdentityLow
 ```
 
 AFT Java LSP 初始化仍失败，诊断 PARTIAL；以实际 Maven 编译及测试为依据。无新增依赖，未启动数据库、应用或浏览器，未在本机重复全量／生成工程构建；无覆盖率测量。所有预约并发、区间及 performance_schema 锁屏障断言保留不变，等待修复 SHA 的 CI。账本继续保持 66／5／13；此修复与对应文档同批提交，无纯文档 CI。
+
+
+<a id="ci-runtime-optimization"></a>
+## 24. CI 时长优化：取消重复执行，不删除覆盖（待新 CI 测量）
+
+负责人要求缩短 CI。先从 GitHub 步骤时间与成功报告定位，不按“从未失败”等同“不会失败”删除测试。现状基线如下；时长不含等待其他运行释放并发组的排队时间。
+
+| 成功运行 | 主验证 job | 在线预热 | Frozen 全量 | Completion 全量 | 业务 IT | 独立验证 IT | 部署 job／冷部署步骤 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| [#150](https://github.com/HoloNova/Software-IR/actions/runs/39724155367) | 12:55 | 3:11 | 3:05 | 3:04 | 1:43 | 0:51 | 10:26／10:09 |
+| [#152](https://github.com/HoloNova/Software-IR/actions/runs/39729460418) | 13:24 | 3:23 | 3:13 | 3:04 | 1:45 | 0:52 | 13:01／12:44 |
+
+这两个 job 串行，因此原运行约 23:21／26:25。同一源码的全量测试体在在线预热、Frozen、Completion 各执行一次，成功路径重复三遍。#150 最终报告中，WorkspaceVersionApplicationTest 39.199s、GeneratedProjectOfflineCompilationTest 31.501s、TopicSamplesOfflineCompilationTest 29.117s；这些含真实工作区链路与生成工程编译，不是可以凭稳定性删掉的“无用断言”。#153 的主键绑定缺陷还说明真库验收与静态／编译合同并不重复。
+
+**本批只改执行编排，不改测试列表或业务代码：**
+
+1. Reactor 在线预热保留 `clean verify` 的实际编译、插件和动态 Surefire provider／launcher 解析，传 JUnit 5.12.2 的 `junit.platform.execution.dryRun.enabled=true`，不执行测试体／生命周期。它的跳过报告不算通过证据；生成工程依赖仍由原在线 QuerySliceBusinessConformanceIT 真实预热。不能用 `maven.test.skip=true` 冒充完整 provider 预热。
+2. Frozen 离线全量门保留全部测试，明确 `dryRun.enabled=false`，失败不容忍，是正常路径唯一的 Reactor 全量测试执行。没有新增跳过项。
+3. Completion 仅 `failure() && steps.frozen.outcome == 'failure'` 时执行，用 `maven.test.failure.ignore=true` 收集后续模块诊断；不会将 Frozen 失败改成 success。补跑前上传 `frozen-failure-surefire-reports` 保留首次失败 XML，避免 clean／重跑覆盖首发证据。原最终 surefire-reports 与业务证据 artifact 保留。
+4. 业务真库、独立验证、CLI、离线生成工程与冷部署链全部保留；并发组仍 `cancel-in-progress: false`，不擅自取消尚在验收的源码运行。纯文档过滤与 workflow_dispatch 不变。CLI jar 来自 Frozen 成功构建，不再依赖成功路径中多余的 Completion。
+
+**本机验证：**已有 YAML 解析器核验结构、显式的真实测试模式、诊断触发条件、先上传首次失败再清理的顺序、不可容忍 Frozen 失败与原文档过滤。未为这种可逆配置改动添加镜像实现的仓库单元测试。另建 `target/ci-dry-run-probe` 单类隔离 Maven 探针，用与 Reactor 相同 JUnit 5.12.2／Surefire 3.5.6 验证 dry-run 与正式执行：测试生命周期写 marker，测试体故意失败；dry-run XML 为 1 test／1 skipped／0 failures 且 marker 不存在，关闭 dry-run 后为 1 test／0 skipped／1 failure，Maven 退出 1 且 marker 出现。后者是预期的反向控制，不是仓库回归失败。该探针不用应用、数据库或网络；Maven 256 MiB／2 个处理器，fork 256 MiB／2 个处理器。未本机跑 Reactor 全量或生成工程全构建。
+
+基线步骤时间保存在 `target/ci-investigation/{150,152}-timing.json`；探针两份原始 XML 在 `target/ci-dry-run-probe/{dry-run-result,real-run-result}.xml`。本地只证明配置与 dry-run 机制，不宣称已验证 Actions 上的完整失败分支或冷依赖环境。
+
+**预期而非实测：**正常路径直接移除约 3:04 的重复 Completion，在线预热另减少测试体耗时，合计目标约 5～6 分钟；总时长仍受网络／容器启动波动影响，需新 CI 对比。冷部署本身仍约 10～13 分钟，未在本批冒险改交付协议或删漂移／权限／迁移验收。后续可进一步评估将独立部署与业务 IT 并行，以及 Maven／容器缓存；须先验证依赖、缓存隔离和证据归属，不把这些优化记成已完成。
