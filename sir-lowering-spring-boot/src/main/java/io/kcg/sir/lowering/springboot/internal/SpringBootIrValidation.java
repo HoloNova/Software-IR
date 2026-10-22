@@ -756,7 +756,18 @@ public final class SpringBootIrValidation {
       long conditionalUpdates = 0L;
       for (SpringBootWorkflow.Step step : capability.workflow().steps()) {
          if (!(step instanceof SpringBootWorkflow.UpdateStep update)) {
-            if (step instanceof SpringBootWorkflow.LoadStep load && load.forUpdate()) {
+            if (step instanceof SpringBootWorkflow.LoadStep load && load.explicitLock()) {
+                if (!load.forUpdate() || load.keyField().isPresent()
+                      || capability.transactionMode() != SpringBootDeclaration.TransactionMode.READ_COMMITTED
+                      || capability.httpMethod() == SpringBootDeclaration.HttpMethod.GET)
+                   this.error(capability, "explicit lock requires atomic READ_COMMITTED identity load");
+                long cachePlans = this.model.projectArtifacts().stream()
+                   .filter(ProjectArtifact.ApplicationConfig.class::isInstance)
+                   .map(ProjectArtifact.ApplicationConfig.class::cast)
+                   .filter(ProjectArtifact.ApplicationConfig::statementScopedQueryCache).count();
+                if (cachePlans != 1)
+                   this.error(capability, "explicit lock requires statement-scoped query cache");
+             } else if (step instanceof SpringBootWorkflow.LoadStep load && load.forUpdate()) {
                if (this.versionedEntity(load.entitySymbol()) == null) {
                   this.error(capability, "only a versioned entity is loaded for update: " + load.entitySymbol());
                }

@@ -505,7 +505,7 @@ final class SirAstBuilder {
                     expression(value.expression(), path),
                     Optional.ofNullable(value.key).map(key -> nameRef(key, path, "key")),
                     name(value.result),
-                    nameRef(value.error, path, "error"));
+                    nameRef(value.error, path, "error"), value.lockClause() != null);
         }
         if (context.findStep() != null) {
             var value = context.findStep();

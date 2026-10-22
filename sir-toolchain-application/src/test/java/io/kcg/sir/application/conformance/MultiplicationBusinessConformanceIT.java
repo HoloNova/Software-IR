@@ -50,6 +50,7 @@ class MultiplicationBusinessConformanceIT {
             verifyLinesAndTotals(s, observer);
             computedResponses(s, observer, http);
             courseCapacityCounters(s, observer, http);
+            IntervalBookingChecks.verify(s, observer, http);
             s.setRowsAfter(s.rowsNow(observer));
         }
     }

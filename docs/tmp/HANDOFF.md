@@ -76,6 +76,12 @@ tasks、market 已更新；本机语义、降级、生成真值表、源往返�
 - G11：已按第22节实现并由 #150 验收：`field remaining: Count = item.capacity - item.enrolled;`，计算输出独立命名、当前行正式绑定，互斥 Column／Related／Computed 分支与共用投影渲染，不新增 SQL／DDL。course 增加 remaining／full；关系与乘法真库均含计算断言。库可借数量仍需跨行聚合，不在本轮。见[验证第21节](../qualification/README.md#ci-150-accepted)。下一项回到 G2 业务组合。
 - 最新 CI：`4a1d8c8c2f28fd0d5678f65bfd4494cf163d8321` 的 #150 全部门 success，G11 闭环：关系真库 40 项（含根行 doubledCapacity 60／40、嵌套 label 逐行、枚举 active 逐行）、乘法真库 56 项（含 8 并发选课仅 3 成功、满额后 remaining／full）、八题生成工程、双全量门及独立部署均通过，见[验证第21节](../qualification/README.md#ci-150-accepted)。#149 三项失败已确认是测试假设错误（借用只认夹具主表的 expectRow、视图未声明 capacity），已由 `4a1d8c8` 修正。计算仅基于本行、三个投影路径共用计划，不新增SQL／DDL，不自动舍入Money，也不补跨行可借数量。
 
+### 4.6.1 G2 第一批（已实现，待新 CI）
+
+显式 `load … as row for update else Error;` 仅 atomic command／主键允许；Scope、结构和源编辑保留事实。Spring Boot 目标明确 READ_COMMITTED，工程级 MyBatis 本地缓存 STATEMENT；显式锁用既有 BaseMapper identity locking query，不因能力变化修改实体 Mapper。原版本自动锁不变。booking 改为 `[startsAt,endsAt)`，Room 锁后执行重叠 exists。15 类 147 项定向通过，见[验证第 22 节](../qualification/README.md#g2-locking-local)。真库屏障检查复用 MultiplicationBusinessConformanceIT，未在本机执行，需求账本不变。
+
+复核修正：课程冲突也需要学生锁；旧草案先修课片段的 required 并未取得，任意集合需要反关联方案，不用单门限制冒充完成。下一批先处理 library 的限额及借／还一致性；课程冲突、先修课与排队仍未完成。verify 的 push 已忽略 docs/** 和 **/*.md，纯文档更新不触发 CI，文档尽量随源码提交。
+
 ### 4.7 G5 列表循环、G8 聚合（两个大块，**先和负责人确认要不要做**）
 
 - G5：请求里带列表、工作流逐项处理；对一批行统一改或删（订单行、级联删除）。商城的"一个订单多个商品"、取消订单退库存都卡在这里。

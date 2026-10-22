@@ -524,6 +524,14 @@ final class BusinessSliceHarness {
         }
     }
 
+    /** Fixed fixture SQL only; lets an IT observe its own lock barrier without application hooks. */
+    long fixtureScalar(String sql) throws SQLException {
+        try (Statement statement = this.control.createStatement(); var rows = statement.executeQuery(sql)) {
+            if (!rows.next()) throw new SQLException("fixture scalar returned no row");
+            return rows.getLong(1);
+        }
+    }
+
     List<String> rowsNow(MysqlObserver observer) throws SQLException {
         return observer.queryRows(this.environment.schemaName(), this.fixture.table(), "id");
     }

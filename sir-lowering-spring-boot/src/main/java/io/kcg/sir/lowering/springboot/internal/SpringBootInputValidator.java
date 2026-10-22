@@ -504,6 +504,10 @@ public final class SpringBootInputValidator {
             this.validateDeclarationKind(value.errorSymbol(), NormalizedError.class, capability);
             break;
          case LoadStep value:
+            if (value.forUpdate() && (value.keyField().isPresent()
+                  || !capability.requires().contains(io.kcg.sir.ast.AstRequirementKind.ATOMIC)
+                  || capability.requires().contains(io.kcg.sir.ast.AstRequirementKind.READONLY)))
+               this.error("SIR-LOWER-001", "explicit lock requires atomic identity load", value.span(), capability.id(), value.sourceNodeId());
             this.validateDeclarationKind(value.entitySymbol(), NormalizedEntity.class, capability);
             this.validateExpression(value.idExpression(), capability.id(), actorAccess);
             this.validateVariable(value.resultVariable(), capability);

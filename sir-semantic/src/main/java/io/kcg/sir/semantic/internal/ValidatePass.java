@@ -405,6 +405,9 @@ final class ValidatePass {
                   this.diagnostics.add(DiagnosticBuilder.error("SIR-FLOW-003", "load 引用未声明的 Error: " + s.error().text(), s.error().span()));
                }
 
+               if (s.forUpdate() && (!isAtomic || isReadonly || isQuery || s.keyField().isPresent())) {
+                  this.diagnostics.add(DiagnosticBuilder.error("SIR-FLOW-004", "for update requires an atomic command and an identity lookup", s.span()));
+               }
                s.keyField().ifPresent(key -> this.validateKeyedLoad(s, key, capDecl));
                break;
             case AstCreateStep s:

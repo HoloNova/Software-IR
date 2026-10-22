@@ -236,7 +236,8 @@ public record SpringBootWorkflow(LoweredNodeId id, LoweredOrigin origin, List<Sp
       SpringBootWorkflow.Variable result,
       SymbolId errorSymbol,
       boolean forUpdate,
-      java.util.Optional<SymbolId> keyField
+      java.util.Optional<SymbolId> keyField,
+      boolean explicitLock
    ) implements SpringBootWorkflow.Step {
       public LoadStep {
          SpringBootWorkflow.requireStep(id, origin);
@@ -245,6 +246,13 @@ public record SpringBootWorkflow(LoweredNodeId id, LoweredOrigin origin, List<Sp
          Objects.requireNonNull(result, "result");
          Objects.requireNonNull(errorSymbol, "errorSymbol");
          Objects.requireNonNull(keyField, "keyField");
+      }
+
+      public LoadStep(
+         LoweredNodeId id, LoweredOrigin origin, SymbolId entitySymbol, SpringExpression idExpression,
+         SpringBootWorkflow.Variable result, SymbolId errorSymbol, boolean forUpdate, java.util.Optional<SymbolId> keyField
+      ) {
+         this(id, origin, entitySymbol, idExpression, result, errorSymbol, forUpdate, keyField, false);
       }
 
       public LoadStep(

@@ -243,7 +243,10 @@ public final class SpringBootModelLowerer {
     private ProjectArtifact.ApplicationConfig applicationConfigArtifact() {
         return new ProjectArtifact.ApplicationConfig(
                 this.nodeId("project", "application-config"), this.projectOrigin(), "src/main/resources/application.yml",
-                this.kebab(this.softwareName()), true);
+                this.kebab(this.softwareName()), true, this.source.declarations().stream()
+                    .filter(NormalizedCapability.class::isInstance).map(NormalizedCapability.class::cast)
+                    .flatMap(cap -> cap.workflow().steps().stream())
+                    .anyMatch(s -> s instanceof NormalizedStep.LoadStep load && load.forUpdate()));
     }
 
     /**
@@ -625,7 +628,8 @@ public final class SpringBootModelLowerer {
 
     private SpringBootDeclaration.CapabilityDeclaration lowerCapability(NormalizedCapability value) {
         boolean authenticated = value.requires().contains(AstRequirementKind.AUTHENTICATED);
-        SpringBootDeclaration.TransactionMode transactionMode = value.requires().contains(AstRequirementKind.READONLY) ? SpringBootDeclaration.TransactionMode.READ_ONLY : (value.requires().contains(AstRequirementKind.ATOMIC) ? SpringBootDeclaration.TransactionMode.REQUIRED : SpringBootDeclaration.TransactionMode.NONE);
+        SpringBootDeclaration.TransactionMode transactionMode = value.requires().contains(AstRequirementKind.READONLY) ? SpringBootDeclaration.TransactionMode.READ_ONLY : (value.requires().contains(AstRequirementKind.ATOMIC) ? (value.workflow().steps().stream().anyMatch(s -> s instanceof NormalizedStep.LoadStep load && load.forUpdate())
+                 ? SpringBootDeclaration.TransactionMode.READ_COMMITTED : SpringBootDeclaration.TransactionMode.REQUIRED) : SpringBootDeclaration.TransactionMode.NONE);
         SpringBootDeclaration.CapabilityKind kind = switch (value.exposure()) {
             default -> throw new MatchException(null, null);
             case AstExposureKind.COMMAND -> SpringBootDeclaration.CapabilityKind.COMMAND;
@@ -814,7 +818,7 @@ public final class SpringBootModelLowerer {
                     id, origin, lowerExpression(value.condition(), owner, actorSymbol), value.errorSymbol());
             case NormalizedStep.LoadStep value -> new SpringBootWorkflow.LoadStep(
                     id, origin, value.entitySymbol(), this.asIdentity(lowerExpression(value.idExpression(), owner, actorSymbol)),
-                    variable(value.resultVariable()), value.errorSymbol(), this.locksRow(value, owner), value.keyField());
+                    variable(value.resultVariable()), value.errorSymbol(), value.forUpdate() || this.locksRow(value, owner), value.keyField(), value.forUpdate());
             case NormalizedStep.FindStep value -> new SpringBootWorkflow.FindStep(
                     id, origin, value.entitySymbol(),
                     lowerExpression(value.predicate(), owner, actorSymbol, this.findItemSymbol(value)),

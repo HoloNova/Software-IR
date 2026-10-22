@@ -130,5 +130,43 @@ software Multiplication {
       input ProductRef; output ProductView; fails Missing; requires readonly; expose query at "/products/show";
       workflow { load Product by input.id as product else Missing; return product; }
     }
+    entity Room persistent { identity id: Id generated auto; field name: Text unique; }
+    entity Booking persistent {
+      identity id: Id generated auto;
+      field room: Ref<Room>; field startsAt: Moment; field endsAt: Moment;
+    }
+    input NewBooking { field roomId: Id; field startsAt: Moment; field endsAt: Moment; }
+    view BookingView from Booking { field id: Id; field startsAt: Moment; field endsAt: Moment; }
+    error RoomMissing http 404; error SlotTaken http 409; error InvalidInterval http 400;
+    capability Book {
+      input NewBooking; output BookingView;
+      fails InvalidInterval; fails RoomMissing; fails SlotTaken;
+      requires atomic; expose command at "/bookings";
+      workflow {
+        validate input.startsAt < input.endsAt else InvalidInterval;
+        load Room by input.roomId as room for update else RoomMissing;
+        exists Booking where item.room == room and item.startsAt < input.endsAt and item.endsAt > input.startsAt as taken;
+        validate not taken else SlotTaken;
+        create Booking as made { room: room; startsAt: input.startsAt; endsAt: input.endsAt; }
+        persist made;
+        return made;
+      }
+    }
+    capability BookAfterRead {
+      input NewBooking; output BookingView;
+      fails InvalidInterval; fails RoomMissing; fails SlotTaken;
+      requires atomic; expose command at "/bookings/after-read";
+      workflow {
+        validate input.startsAt < input.endsAt else InvalidInterval;
+        load Room by input.roomId as preview else RoomMissing;
+        exists Booking where item.room == preview and item.startsAt < input.endsAt and item.endsAt > input.startsAt as beforeLock;
+        load Room by input.roomId as room for update else RoomMissing;
+        exists Booking where item.room == room and item.startsAt < input.endsAt and item.endsAt > input.startsAt as taken;
+        validate not taken else SlotTaken;
+        create Booking as made { room: room; startsAt: input.startsAt; endsAt: input.endsAt; }
+        persist made;
+        return made;
+      }
+    }
   }
 }

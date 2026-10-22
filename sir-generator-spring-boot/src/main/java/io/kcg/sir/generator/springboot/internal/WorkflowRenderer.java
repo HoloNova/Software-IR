@@ -166,8 +166,15 @@ final class WorkflowRenderer {
          return;
       }
 
-      String readMethod = step.forUpdate() ? "selectByIdForUpdate" : "selectById";
-      lines.add("        var " + resultName + " = " + mapper.mapperFieldName() + "." + readMethod + "(" + idExpr + ");");
+      if (step.explicitLock()) {
+         imports.add("com.baomidou.mybatisplus.core.toolkit.Wrappers");
+         lines.add("        var " + resultName + " = " + mapper.mapperFieldName()
+            + ".selectOne(Wrappers.<" + entity.javaName() + ">lambdaQuery().eq(" + entity.javaName() + "::"
+            + getterName(entity.identity().javaName()) + ", " + idExpr + ").last(\"FOR UPDATE\"));");
+      } else {
+         String readMethod = step.forUpdate() ? "selectByIdForUpdate" : "selectById";
+         lines.add("        var " + resultName + " = " + mapper.mapperFieldName() + "." + readMethod + "(" + idExpr + ");");
+      }
       lines.add("        if (" + resultName + " == null) {");
       lines.add("            throw new " + errorName + "();");
       lines.add("        }");

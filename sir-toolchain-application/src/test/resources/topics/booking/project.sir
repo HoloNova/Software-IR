@@ -64,17 +64,16 @@ software RoomBooking {
       field location: Name;
       field capacity: Quantity;
     }
-    // A booking is one hour of one room. The (room, day, hour) triple is unique, so the database refuses a second
-    // booking of the same hour even when two people ask at the same moment. GAP: a meeting of several hours is
-    // several bookings (a request cannot carry a list the workflow walks).
+    // A booking is the half-open interval [startsAt, endsAt). Every writer locks Room first;
+    // uniqueness alone cannot reject overlapping intervals with different starts.
     entity Booking persistent {
       identity id: Id generated auto;
       field room: Ref<Room>;
       field booker: Ref<User>;
-      field day: Day;
-      field hour: Count where min(0), max(23);
+      field startsAt: Moment;
+      field endsAt: Moment;
       field purpose: Remark;
-      unique (room, day, hour);
+      unique (room, startsAt);
     }
     view RoomView from Room {
       field id: Id;
@@ -85,8 +84,8 @@ software RoomBooking {
     view BookingView from Booking {
       field id: Id;
       field room: RoomView;
-      field day: Day;
-      field hour: Count;
+      field startsAt: Moment;
+      field endsAt: Moment;
       field purpose: Remark;
     }
 
@@ -128,28 +127,33 @@ software RoomBooking {
 
     input NewBooking {
       field roomId: Id;
-      field day: Day;
-      field hour: Count where min(0), max(23);
+      field startsAt: Moment;
+      field endsAt: Moment;
       field purpose: Remark where notBlank;
     }
     error HourTaken http 409;
+    error InvalidInterval http 400;
     error RoomNotFound http 404;
     capability Book {
       actor Ref<User>;
       input NewBooking;
       output BookingView;
       fails HourTaken;
+      fails InvalidInterval;
       fails RoomNotFound;
       requires authenticated;
       requires atomic;
       expose command at "/bookings";
       workflow {
-        load Room by input.roomId as room else RoomNotFound;
+        validate input.startsAt < input.endsAt else InvalidInterval;
+        load Room by input.roomId as room for update else RoomNotFound;
+        exists Booking where item.room == room and item.startsAt < input.endsAt and item.endsAt > input.startsAt as taken;
+        validate not taken else HourTaken;
         create Booking as made {
           room: room;
           booker: actor;
-          day: input.day;
-          hour: input.hour;
+          startsAt: input.startsAt;
+          endsAt: input.endsAt;
           purpose: input.purpose;
         }
         persist made else HourTaken;
@@ -160,8 +164,7 @@ software RoomBooking {
       field id: Id;
     }
     error BookingNotFound http 404;
-    // Cancelling takes the booking away, so the hour is free again. GAP: whether the hour is already past cannot be
-    // asked (a Day cannot be compared with now()).
+    // Cancelling takes the booking away, so this interval is free again; past bookings are unchanged.
     capability CancelBooking {
       actor Ref<User>;
       input BookingRef;
@@ -189,7 +192,7 @@ software RoomBooking {
       workflow {
         find Booking
           where item.booker == actor
-          order by day ascending, hour ascending, id ascending
+          order by startsAt ascending, id ascending
           Page input.page, input.size else BadPage
         as rows;
         return rows;
@@ -197,7 +200,8 @@ software RoomBooking {
     }
     input Schedule {
       field roomId: Id;
-      field day: Day;
+      field startsAt: Moment;
+      field endsAt: Moment;
       field page: PageNo;
       field size: PageSize;
     }
@@ -205,14 +209,16 @@ software RoomBooking {
       input Schedule;
       output Page<BookingView>;
       fails BadPage;
+      fails InvalidInterval;
       fails RoomNotFound;
       requires readonly;
       expose query at "/rooms/{roomId}/bookings";
       workflow {
+        validate input.startsAt < input.endsAt else InvalidInterval;
         load Room by input.roomId as room else RoomNotFound;
         find Booking
-          where item.room == room and item.day == input.day
-          order by hour ascending, id ascending
+          where item.room == room and item.startsAt < input.endsAt and item.endsAt > input.startsAt
+          order by startsAt ascending, id ascending
           Page input.page, input.size else BadPage
         as rows;
         return rows;

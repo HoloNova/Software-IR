@@ -1,0 +1,30 @@
+sir 0.3
+software Locking {
+  metadata { displayName "Locking"; namespace "example.locking"; }
+  target { language java 21; framework spring_boot; persistence mybatis_plus; database mysql; build maven; interface rest; }
+  sources {} imports {}
+  declarations {
+    entity Room persistent { identity id: Id generated auto; field name: Text unique; }
+    entity Booking persistent {
+      identity id: Id generated auto;
+      field room: Ref<Room>; field startsAt: Moment; field endsAt: Moment;
+    }
+    input NewBooking { field roomId: Id; field startsAt: Moment; field endsAt: Moment; }
+    view BookingView from Booking { field id: Id; field startsAt: Moment; field endsAt: Moment; }
+    error RoomMissing http 404; error SlotTaken http 409; error InvalidInterval http 400;
+    capability Book {
+      input NewBooking; output BookingView;
+      fails InvalidInterval; fails RoomMissing; fails SlotTaken;
+      requires atomic; expose command at "/bookings";
+      workflow {
+        validate input.startsAt < input.endsAt else InvalidInterval;
+        load Room by input.roomId as room for update else RoomMissing;
+        exists Booking where item.room == room and item.startsAt < input.endsAt and item.endsAt > input.startsAt as taken;
+        validate not taken else SlotTaken;
+        create Booking as made { room: room; startsAt: input.startsAt; endsAt: input.endsAt; }
+        persist made;
+        return made;
+      }
+    }
+  }
+}

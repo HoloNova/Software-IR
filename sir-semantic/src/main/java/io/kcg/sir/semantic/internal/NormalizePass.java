@@ -571,7 +571,7 @@ final class NormalizePass {
             SymbolId errorSym = this.siteTargetOrUnknown(s.error().id());
             NormalizedExpression idExpr = this.normalizeExpression(s.idExpression());
             Optional<SymbolId> keyField = s.keyField().map(key -> this.siteTargetOrUnknown(key.id()));
-            yield new NormalizedStep.LoadStep(s.id(), s.span(), entitySym, idExpr != null ? idExpr : this.unitExpr(s.span()), keyField, resultVar, errorSym);
+            yield new NormalizedStep.LoadStep(s.id(), s.span(), entitySym, idExpr != null ? idExpr : this.unitExpr(s.span()), keyField, resultVar, errorSym, s.forUpdate());
          }
          case AstFindStep s -> {
             SymbolId entitySym = this.siteTargetOrUnknown(s.entity().id());

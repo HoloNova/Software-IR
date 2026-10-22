@@ -475,6 +475,7 @@ public sealed interface SpringBootDeclaration
    enum TransactionMode {
       NONE,
       REQUIRED,
+      READ_COMMITTED,
       READ_ONLY;
    }
 }

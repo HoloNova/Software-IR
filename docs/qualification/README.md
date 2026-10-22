@@ -570,3 +570,41 @@ mvn -B -q -o -pl sir-toolchain-application -am test `
 #149 的三项失败已由 `4a1d8c8` 修正：课程视图补上 `capacity`，课程行改用按表读取的 `expectCounters`，不再借用只认夹具主表的 `expectRow`。原子选课在 #149 就已通过，说明那三项是测试假设错误，不是计算逻辑缺陷。
 
 据此把 course “显示剩余名额”由 ✗ 改 ✓，账本更新为 **84 条：66 完整（79%）、5 带折扣（6%）、13 未写出（15%）**。library 可借数量仍需跨行计数、罚款仍缺日期差，均未升级；G5／G8 未获扩范围授权。本机未重跑构建、测试或服务；该基线不覆盖后续 G2 业务组合的新源码。
+
+
+<a id="g2-locking-local"></a>
+## 22. G2 第一批：显式行锁与区间预约（待同源码 CI）
+
+基线 `359a45a82f8d8896c7e41c47b33cc506835524c3` 的 [#152](https://github.com/HoloNova/Software-IR/actions/runs/39729460418) success 已核对；本批不能沿用该结果宣称新锁能力已通过真库。设计第 23 节同步纠正旧草案：课程冲突需学生锁，先修课集合中的 `required` 尚无取得／遍历路径，均不是已实现业务。
+
+**RED → GREEN：**新增 ExplicitLockSemanticsTest 六项先因 `for update` 尚无法解析而失败；修复后均通过。测试误用的 service 包名、exists 所调用的 selectObjs 与 MyBatis lambda 元数据已对齐既有产物／接口，没有为测试改变生产 SQL。
+
+| 实际定向类 | tests | 范围 |
+| --- | ---: | --- |
+| ExplicitLockSemanticsTest | 7 | atomic identity 合法；readonly／query、非 atomic、非主键拒绝 |
+| ExplicitLockEditingTest | 1 | 普通 Update 命令加锁／解锁；实体改名后保留绑定与锁 |
+| ExplicitLockLoweringTest | 8 | 明确锁与 READ_COMMITTED；Scope 保留事实；独立 Core／目标 IR 反例，含缓存计划缺失 |
+| ExplicitLockRuntimeTest | 2 | 真实生成 Java 编译执行，锁在查询与插入之前；占用拒写；实际 YAML 绑定 MybatisPlusProperties 得到 STATEMENT；非版本及版本实体均执行；Mapper 与普通能力版本相同 |
+| ExplicitLockToolchainContractTest | 2 | 预约样例与实际 IT 源码内存贯通；确认先读、再锁、同查询再读的真实路径 |
+| WriteSliceSemanticsTest | 29 | 旧 PATCH／版本业务 |
+| SoftwareSchemaCompletenessTest | 8 | 唯一结构完整性门 |
+| StructureViewSensitivityTest | 23 | 现有结构变化可见性 |
+| SirDeclarationWriterRoundTripTest | 2 | 多份源码声明往返，包含显式锁夹具 |
+| WriteSliceLoweringTest | 21 | 原版本条件写入、自动锁与目标计划 |
+| LoweredIrHardeningTest | 19 | 旧目标 IR 硬化 |
+| GeneratorEntityArtifactInvarianceTest | 4 | 实体 Mapper 不依赖能力集合 |
+| GeneratorWriteSliceContractTest | 17 | 原写入生成合同 |
+| MultiplicationToolchainContractTest | 3 | 扩展后的真实 IT 源码及旧数量购买 |
+| TopicSamplesTest | 1 | 八题内存编译／生成／交付规划；非生成工程构建 |
+| **合计** | **147** | **0 failures／errors／skips** |
+
+```powershell
+$env:MAVEN_OPTS='-Xmx384m -XX:ActiveProcessorCount=2'
+mvn -B -q -o -pl sir-toolchain-application -am test '-Dtest=ExplicitLockSemanticsTest,ExplicitLockEditingTest,ExplicitLockLoweringTest,ExplicitLockRuntimeTest,ExplicitLockToolchainContractTest,WriteSliceSemanticsTest,SoftwareSchemaCompletenessTest,StructureViewSensitivityTest,SirDeclarationWriterRoundTripTest,WriteSliceLoweringTest,LoweredIrHardeningTest,GeneratorEntityArtifactInvarianceTest,GeneratorWriteSliceContractTest,MultiplicationToolchainContractTest,TopicSamplesTest' '-Dsurefire.failIfNoSpecifiedTests=false' '-DargLine=-Xmx512m -XX:ActiveProcessorCount=2'
+```
+
+计数从本次各类最新 Surefire XML 去重取得；副本及索引封存于 `target/g2-lock-verification/`。AFT Java LSP 初始化失败，诊断为 PARTIAL；不把它记成“无编译错误”，编译与验证依据实际 Maven 结果。没有启动 MySQL、应用或浏览器，没有本机全量门／生成工程全构建，也没有新覆盖率测量，不能将定向通过换算成 80% 覆盖率。
+
+**真库 NOT_RUN（本机）：**复用现有 MultiplicationBusinessConformanceIT 应用，IntervalBookingChecks 增加 8 并发重叠区间、相邻／包含／相交、空／逆序区间、不同房间、缺失父行及拒写检查。另由控制连接锁 Room，等 performance_schema.data_lock_waits 证明 HTTP 请求确实先读后等待，再提交冲突预约；请求应在得到父锁后重新查询并返回 409，且库中只有控制夹具插入的一行。这同时检验 READ_COMMITTED 与 STATEMENT 缓存，不能靠普通并发跑快慢碰运气。IT 只编译，未执行，等待本批同 SHA CI。
+
+**CI 触发：**verify 的 push.paths-ignore 增加 `docs/**` 与 `**/*.md`，纯文档 push 不创建 CI 运行，workflow_dispatch 仍可手动使用；混合源码／文档提交正常触发。已有 YAML 解析器核验配置通过，未制造纯文档提交来测试过滤器。以后文档优先随对应代码提交。本批账本保持 66／5／13；library 限额、课程冲突／先修课及排队均未完成。

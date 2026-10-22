@@ -25,6 +25,10 @@ final class ApplicationConfigRenderer {
             out.append("      fail-on-unknown-properties: true\n");
         }
 
+        if (artifact.statementScopedQueryCache()) {
+            out.append("mybatis-plus:\n  configuration:\n    local-cache-scope: STATEMENT\n");
+        }
+
         return new GeneratedFile(artifact.path(), out.toString(), artifact.id(), Optional.empty());
     }
 }

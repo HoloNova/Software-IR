@@ -98,7 +98,7 @@ final class EntityScopes {
          }
          case NormalizedStep.ValidateStep s -> new NormalizedStep.ValidateStep(s.sourceNodeId(), s.span(), this.expression(s.condition(), at), s.errorSymbol());
          case NormalizedStep.LoadStep s -> new NormalizedStep.LoadStep(s.sourceNodeId(), s.span(), s.entitySymbol(), this.expression(s.idExpression(), at),
-            s.keyField(), s.resultVariable(), s.errorSymbol());
+            s.keyField(), s.resultVariable(), s.errorSymbol(), s.forUpdate());
          case NormalizedStep.CreateStep s -> new NormalizedStep.CreateStep(s.sourceNodeId(), s.span(), s.entitySymbol(), s.resultVariable(), this.bindings(s.bindings(), at));
          case NormalizedStep.UpdateStep s -> new NormalizedStep.UpdateStep(s.sourceNodeId(), s.span(), s.targetVariable(),
             s.guard().map(g -> this.expression(g, at)), s.guardError(), this.bindings(s.bindings(), at));

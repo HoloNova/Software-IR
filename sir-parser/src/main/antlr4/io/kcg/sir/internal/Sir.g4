@@ -304,7 +304,12 @@ validateStep
 // identity, as before. A key field is told apart from an expression by its colon, which no expression
 // contains.
 loadStep
-    : LOAD entity=IDENT BY (key=IDENT COLON)? expression AS result=IDENT ELSE error=IDENT SEMI
+    : LOAD entity=IDENT BY (key=IDENT COLON)? expression AS result=IDENT lockClause? ELSE error=IDENT SEMI
+    ;
+
+// Context words: do not reserve for/update as new global identifiers.
+lockClause
+    : {_input.LT(1).getText().equals("for")}? IDENT UPDATE
     ;
 
 findStep

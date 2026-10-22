@@ -15,7 +15,8 @@ public record AstLoadStep(
         AstExpression idExpression,
         Optional<AstNameRef> keyField,
         AstName result,
-        AstNameRef error) implements AstStep {
+        AstNameRef error,
+        boolean forUpdate) implements AstStep {
 
     public AstLoadStep {
         Objects.requireNonNull(id, "id");

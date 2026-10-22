@@ -101,7 +101,7 @@ public sealed interface NormalizedStep
    * {@code keyField} is empty, otherwise the value of the unique field {@code keyField} names.
    */
    record LoadStep(
-      @Source AstNodeId sourceNodeId, @Source SourceSpan span, @Reference SymbolId entitySymbol, @Fact NormalizedExpression idExpression, @Reference Optional<SymbolId> keyField, @Reference SymbolId resultVariable, @Reference SymbolId errorSymbol
+      @Source AstNodeId sourceNodeId, @Source SourceSpan span, @Reference SymbolId entitySymbol, @Fact NormalizedExpression idExpression, @Reference Optional<SymbolId> keyField, @Reference SymbolId resultVariable, @Reference SymbolId errorSymbol, @Fact boolean forUpdate
    ) implements NormalizedStep {
       public LoadStep {
          Objects.requireNonNull(sourceNodeId, "sourceNodeId");
@@ -113,8 +113,12 @@ public sealed interface NormalizedStep
          Objects.requireNonNull(errorSymbol, "errorSymbol");
       }
 
+      public LoadStep(AstNodeId sourceNodeId, SourceSpan span, SymbolId entitySymbol, NormalizedExpression idExpression, Optional<SymbolId> keyField, SymbolId resultVariable, SymbolId errorSymbol) {
+          this(sourceNodeId, span, entitySymbol, idExpression, keyField, resultVariable, errorSymbol, false);
+       }
+
       public LoadStep(AstNodeId sourceNodeId, SourceSpan span, SymbolId entitySymbol, NormalizedExpression idExpression, SymbolId resultVariable, SymbolId errorSymbol) {
-         this(sourceNodeId, span, entitySymbol, idExpression, Optional.empty(), resultVariable, errorSymbol);
+         this(sourceNodeId, span, entitySymbol, idExpression, Optional.empty(), resultVariable, errorSymbol, false);
       }
    }
 

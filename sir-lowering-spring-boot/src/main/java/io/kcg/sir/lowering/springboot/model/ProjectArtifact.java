@@ -259,8 +259,14 @@ public sealed interface ProjectArtifact
       LoweredOrigin origin,
       String path,
       String applicationName,
-      boolean rejectUnknownRequestProperties
+      boolean rejectUnknownRequestProperties,
+      boolean statementScopedQueryCache
    ) implements ProjectArtifact {
+      public ApplicationConfig(LoweredNodeId id, LoweredOrigin origin, String path, String applicationName,
+            boolean rejectUnknownRequestProperties) {
+         this(id, origin, path, applicationName, rejectUnknownRequestProperties, false);
+      }
+
       public ApplicationConfig {
          Objects.requireNonNull(id, "id");
          Objects.requireNonNull(origin, "origin");
