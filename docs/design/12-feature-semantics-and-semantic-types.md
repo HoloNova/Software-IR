@@ -855,3 +855,90 @@ Lowering 复用 G6 的 IntegralToDecimal 与 G7 的空值比较计划；明确�
 真实生成Java必须编译并执行普通load／create／update返回、分页、嵌套一对一／一对多以及同一view的多处使用；用不同来源行值验证没有串行符号／重复Optional包装，并证明计算不增加SQL。旧视图、DTO、G6/G7/G10、关系读取和源编辑需回归，未使用计算字段的旧源码生成工程应保持逐字节不变。本机仅跑受影响定向，不全量构建、不启动应用或MySQL；八题生成工程、真实HTTP／MySQL投影和原子选课后的显示由同SHA CI承担。
 
 course增加remaining与full，仍用原子守卫控制名额。只有实际实现与验收后才能重判“显示剩余名额”这一条；library可借数量需要跨行计数，不因本轮本行计算就算完成。G5／G8、日期差、界面和小模型评估都不在本轮范围。本机实现证据见下节；同源码 CI 仍待运行，不把新增写法直接当作真库验收结果。
+
+<a id="g2-business-combinations-proposal"></a>
+## 23. G2 业务组合：借阅上限、课程冲突与先修课、任意时段防重叠（方案，待负责人确认）
+
+基线是已由 #150 验收的 `4a1d8c8`。本节只形成方案，不改核心代码，不增加需求完成数。目标是把三条真实的行业务写成普通 SIR，并且在真实 MySQL 并发下成立，而不是“读一次、判断一次、然后假设没人同时来”。
+
+### 23.1 先分清：哪些已写得下，哪些真的缺语言
+
+已逐条核对语法、类型规则、`exists`／`count`、`any(...)` 与现有生成路径，结论是四条需求里只有两条真缺能力：
+
+| 需求 | 现有原语能否表达 | 真正的缺口 |
+| --- | --- | --- |
+| 每人最多借 5 本 | 能：读者行放 `activeLoans`，用既有的守卫增量 `update reader when reader.activeLoans < 5 { activeLoans: reader.activeLoans + 1; }` | 无。**但不能**用 `count Loan …` 再判断：那是先读后写，两个并发借阅会都看到 4 |
+| 课程时间冲突 | 能，但要改建模：谓词左边只能是 `item.字段`（`SIR-VALID-001`），不能在谓词里穿一层引用写 `item.course.startsAt` | 建模取舍：选课时把时段**快照**到选课行上 |
+| 先修课 | 能：`Prerequisite` 行 + `exists Enrollment where item.student == … and item.course == … and item.status == COMPLETED` | 无 |
+| 任意时段防重叠 | 判断本身能写（区间重叠是 `exists Booking where item.room == room and item.startsAt < input.endsAt and item.endsAt > input.startsAt`，`Moment` 已是可比较类型） | **并发**：两个重叠区间同时通过 `exists` 后各自插入，互不冲突也不会被唯一约束拦住 |
+
+因此缺的两项能力是：**作者显式要求的行锁**，和**把“排在最前的待处理行”取回来的步骤**。第一项本轮必须补；第二项属于排队，单独定。
+
+### 23.2 提议一：`load … for update`
+
+```sir
+load Room by input.roomId as room for update else RoomNotFound;
+```
+
+- 语义：这条 `load` 在事务内对目标行加 `SELECT … FOR UPDATE`，锁持有到事务结束；同一房间的并发预约因此在数据库层串行，后来的请求会在拿到锁之后重新执行重叠检查。
+- 现状：`selectByIdForUpdate` 已经存在，但只有“版本实体的条件更新”会自动触发（`locksRow` 只在版本实体上返回 true）。本轮把“作者显式写 `for update`”也变成合法来源，而不是新增一套锁机制。
+- 约束：`for update` 只能出现在 `requires atomic` 的能力里（否则锁立即释放、毫无意义，属于会骗人的写法）；只能配 `load … by identity`（按其它字段加载本来就不持有行锁）；`requires readonly` 里禁止。对已自动加锁的版本实体重复写 `for update` 不报错，保持兼容。
+- 降级与生成：`LoadStep.forUpdate` 已有字段，Lowering 按“作者显式要求 ∨ 既有版本自动判定”取值；Mapper 原本只为版本实体渲染 `selectByIdForUpdate`，需改成“被任何能力锁定的实体也渲染”。IR 校验继续核对“锁只在原子能力内、只按 identity”。
+- SQL 预算不变：仍是那一条 `load`，只是 SQL 末尾多 `FOR UPDATE`；不新增查询。
+
+### 23.3 提议二：三条业务的写法（样例改动，不是新语法）
+
+**图书：借阅上限。** `User` 增 `activeLoans: Count default 0`；`Borrow` 在 `Copy` 守卫之后、`create Loan` 之前加读者行守卫：
+
+```sir
+load User by id: actor.id as reader else ReaderNotFound;
+update reader when reader.activeLoans < 5 { activeLoans: reader.activeLoans + 1; } else TooManyLoans;
+update copy when copy.status == CopyStatus.AVAILABLE { status: CopyStatus.BORROWED; } else CopyNotAvailable;
+create Loan as loan { reader: actor; copy: copy; dueAt: now() + 30 days; }
+persist copy; persist loan; persist reader;
+```
+
+还书时递减（`when reader.activeLoans > 0`）。并发 8 个请求抢同一个读者的第 5 个名额时，只有 5 个成功，其余走 `TooManyLoans`——因为守卫增量是单行原子更新，不是先读后写。代价是计数器需要与 `Loan` 保持一致；这一点必须写进语言参考和样例注释，且本轮不提供“自动对账”。**不**声称这是通用的一致性机制。
+
+**选课：时间冲突与先修课。** `Course` 增 `startsAt`／`endsAt: Moment`；`Enrollment` 增 `day`／`startsAt`／`endsAt` 快照（选课时从 `course` 复制）。冲突检查：
+
+```sir
+exists Enrollment where item.student == actor and item.startsAt < course.endsAt and item.endsAt > course.startsAt as clash;
+validate clash == false else ScheduleClash;
+```
+
+先修课：`Prerequisite` 行（`course` + `required`），选课前 `exists Enrollment where item.student == actor and item.course == required and item.status == EnrollmentStatus.COMPLETED as done;`，未完成则 `MissingPrerequisite`。两者都在 `create Enrollment` 之前、在 `requires atomic` 内。
+
+快照的代价要说清楚：课程表改时间不会回写已选记录；这正是“按选课当时的时段判定冲突”的语义，但也意味着**改课表需要另行处理已选数据**，本轮不做。若以后要动态时段，需要让谓词能穿一层引用（`item.course.startsAt`），那是独立能力，不在本轮。
+
+**预约：任意时段防重叠。**
+
+```sir
+load Room by input.roomId as room for update else RoomNotFound;
+exists Booking where item.room == room and item.startsAt < input.endsAt and item.endsAt > input.startsAt as taken;
+validate taken == false else SlotTaken;
+create Booking as made { room: room; booker: actor; startsAt: input.startsAt; endsAt: input.endsAt; purpose: input.purpose; }
+persist made;
+```
+
+`Booking` 由 `day`／`hour` 改为 `startsAt`／`endsAt: Moment`；原有“整点唯一”约束仍保留在同一时段的场景（`unique (room, startsAt)`）。`for update` 让同一房间的并发区间检查串行，因此两个重叠区间不会同时通过。**不**声称跨房间或跨实体的并发也被解决。
+
+### 23.4 明确不做
+
+- **排队提升**（预约已借出的书、还书时自动把名额给下一位）：需要“取排在最前的待处理行”的步骤，而工作流的 `find` 只产出 `Page`，没有首行取值。这是一个独立语法能力（例如 `first Reservation where … order by createdAt ascending as next;` 得到可空行），连同“还书触发提升”的流程一起另案，不与本轮捆绑。
+- 谓词里穿引用取字段（`item.course.startsAt`）、列表循环、分组聚合、日期差（罚款天数）都不做。日期差仍缺，library 的罚款需求不因本轮完成。
+- 不做自动对账、不做触发器、不为计数器生成补偿任务。
+
+### 23.5 验收与风险
+
+| 项 | 计划证据 |
+| --- | --- |
+| 借阅上限 | 真实 MySQL：8 并发借同一读者的第 5 个名额，恰 5 个成功、其余按声明冲突；还书后名额恢复；计数器与 `Loan` 行数一致 |
+| 课程冲突 | 同一学生选两个重叠时段 → 声明冲突且不写行；不重叠 → 成功；先修课未完成 → 声明冲突 |
+| 预约防重叠 | 同一房间 8 个重叠区间并发 → 恰 1 个成功、其余冲突；非重叠区间可同时成功；被拒请求不写行 |
+| 行锁 | IR 校验拒绝：只读能力里的 `for update`、非原子能力里的 `for update`、按非 identity 字段的 `for update`；生成器只在被锁实体上渲染 `selectByIdForUpdate`；旧样例生成文件逐字节不变 |
+| 兼容 | 未写 `for update` 的既有样例不受影响；版本实体的自动锁行为不变；窄的 `SELECT … FOR UPDATE` 不改变读预算 |
+
+风险：`FOR UPDATE` 在冲突时按 MySQL 的 `innodb_lock_wait_timeout` 等待，超时是执行失败而非业务错误；本轮沿用既有执行失败协议，不把它包装成 4xx。样例表结构有新增列，属于新实例建表，不涉及既有库迁移。
+
+本机只跑受影响定向，不启动 MySQL／应用；三条业务的并发断言交同源码 CI。阶段完成后按授权 commit + push。本节待负责人确认：**先做 23.2 的 `for update` 与 23.3 的三条业务，排队提升另案**。
