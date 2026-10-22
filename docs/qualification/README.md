@@ -694,3 +694,24 @@ mvn -B -q -o -pl sir-toolchain-application -am test '-Dtest=LibraryBorrowingRunt
 **真实 HTTP／MySQL：NOT_RUN（本机）。**新增 LibraryBorrowingBusinessConformanceIT 用实际题目源而非复制近似业务，复用已有隔离 schema／构建／进程／观察连接 harness，由 verify 的业务阶段启用。本机只编译 IT。检查 8 借争最后一额、8 还同一 Loan 恰一成功、归还后再借、旧归还不能释放新借阅的副本、同读者借还两种有效串行结果、不同读者争同一副本、晚失败整事务回滚、缺省回填计数拒写及续借不占额；独立 JDBC 每轮比较 activeLoans 与未归还 Loan 数，最终不超 5。夹具错误 SQL 必须真正失败，不能误作环境 NOT_RUN；仅 SQLState 08 的连接不可达按既有基础设施口径处理。
 
 此次新增一个实际 library 应用验收，而不是再建一套 harness／服务；原有业务测试全部保留，沿用 #155 的一次正式全量与失败才补诊断编排。账本只把新借阅上限记为待真库的△，不提前转✓；结合 #154 已验收的预约，当前 **67 完整／5 带折扣／12 尚未写出**。剩余课程冲突、任意先修课集合、排队、日期差、循环／聚合不随本批宣称完成。配套文档随源码提交，不另触发纯文档 CI。
+
+
+<a id="ci-156-error-contract-fix"></a>
+## 27. #156：借阅 IT 错误码预期未按声明名保留大小写
+
+失败源码 `152db3346e0271a6a2db0e06a18c4153edef0ccd`，[verify #156](https://github.com/HoloNova/Software-IR/actions/runs/39761800367)。正式 Frozen 全量门通过，成功路径 Completion 按预期跳过；11 个业务 IT 中其他 10 个通过，LibraryBorrowingBusinessConformanceIT 失败。后续独立验证、CLI 和部署被跳过，不记整轮通过。
+
+**根因是测试预期而非借还生产行为：**实际 library 声明 `error BorrowLimitExceeded http 409;`，生成异常的 code 保留原名 `BorrowLimitExceeded`；新 IT 却期待通用大写下划线 `BORROW_LIMIT_EXCEEDED`。Forbidden、AlreadyReturned、CopyNotAvailable、LoanCounterMismatch、NotRenewable 同类失配。语言参考的错误声明一节及 ExceptionRenderer 已明确 code 来自声明名，不能因为框架的 INVALID_REQUEST 使用大写就改变业务错误协议。
+
+下载报告 `library-borrowing-1a163246826-51037/library-borrowing-report.txt` 显示 **60 checks passed／22 failed**，22 项全部是错误码比较；HTTP 状态均符合预期。8 借争最后名额恰一成功、8 还恰一成功、重放旧归还、同读者借还竞争、不同读者争同一本、晚失败回滚、异常计数拒写和续借均有真实数据库证据通过。只据此确认这些检查，不将整份 FAILED 报告转为 PASSED。原始日志、conformance-evidence 与 surefire-reports 在 `target/ci-investigation/156/`，UTF-16 原始日志另存 UTF-8 供检索，未改内容。
+
+**修复：**IT 的固定错误预期集中到类型化 Failure，所有错误检查仍比较精确状态与 code，不从响应反推预期、不忽略大小写、不删除或跳过任一并发／回滚检查。新增 LibraryBorrowingErrorContractTest 直接编译实际 `topics/library/project.sir`，逐项将这六种固定预期与正式 NormalizedError 名称／状态、实际生成的异常构造值核对。真实生成服务的原负例也补验异常公开的 `code()`，不只看异常类名。library SIR、Parser／Semantic／Lowering／Generator 生产代码、HTTP 状态、SQL、锁及工作流均未改。
+
+**RED → GREEN：**先保留原六种错误值，将它们统一供 IT 与新契约使用；六项契约全部以 `IT expects an undeclared error code` 失败。随后只修正六个 code 常量。最终 **3 类 17 项，0 failures／errors／skips**：LibraryBorrowingErrorContractTest 6、LibraryBorrowingRuntimeTest 8、LibraryBorrowingToolchainContractTest 3。原始 RED XML、最终各类 XML、源哈希索引位于 `target/ci-156-verification/`。没有重跑其余已通过范围，没有启动 MySQL、应用或浏览器，没有本机全量构建。AFT Java LSP 初始化失败，结果 PARTIAL；编译与定向结论以实际 Maven 为依据，没有新覆盖率统计。
+
+```powershell
+$env:MAVEN_OPTS='-Xmx384m -XX:ActiveProcessorCount=2'
+mvn -B -q -o -pl sir-toolchain-application -am test '-Dtest=LibraryBorrowingErrorContractTest,LibraryBorrowingRuntimeTest,LibraryBorrowingToolchainContractTest' '-Dsurefire.failIfNoSpecifiedTests=false' '-DargLine=-Xmx512m -XX:ActiveProcessorCount=2'
+```
+
+工作区另有未提交的课程阶段测试，本次定向未选择它们，修复提交也不包含它们。当前需求账本保持 **67／5／12**，新借阅仍为待验收△；完整 IT 和部署须修复 SHA 的 CI，未复跑前不宣称通过。按负责人要求推送后不等待或轮询 CI 结果，由负责人通知；配套记录随修复代码提交，不单独触发文档 CI。

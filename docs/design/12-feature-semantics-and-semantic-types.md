@@ -949,3 +949,5 @@ WHERE u.active_loans <> COALESCE(totals.actual, 0);
 未回填导致的 0 计数不会在还书时被减成负数，而是 LoanCounterMismatch；它不是对任意手工破坏数据的通用对账器。必须先回填所有读者，不能只依赖这条下溢检查：错误的低计数仍会错误增加可借额。
 
 **验收：**本机 7 类 31 项通过；实际 library 题目生成的 Java 编译执行，不复制近似业务；真实代理只证明调用、边界和异常传播，不证明事务回滚。新增 LibraryBorrowingBusinessConformanceIT 复用现有 harness，直接编译 `topics/library/project.sir` 并独立观察三张业务表，覆盖最后一额、重复归还、重借后重放旧归还、同副本竞争、同读者借还竞争、晚失败回滚及回填边界；本机只编译，等同 SHA CI。详见[验证第 26 节](../qualification/README.md#g2-library-local)。没有加入排队、跨行可借总数、罚款／日期差、课程或循环／聚合。
+
+后续 #156 已实际执行本题真库，60 项业务／生命周期检查通过；22 项因新 IT 把原样声明名误期待为大写错误码而失败。修复只更正固定预期并补独立契约，3 类 17 项定向通过，不改任何业务／编译器生产行为；[验证第 27 节](../qualification/README.md#ci-156-error-contract-fix)保留 RED／GREEN 和 CI 证据。借阅不提前转✓，完整验收仍待修复 SHA CI。

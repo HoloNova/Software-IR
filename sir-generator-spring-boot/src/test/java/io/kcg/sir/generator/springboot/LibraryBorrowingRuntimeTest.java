@@ -204,5 +204,8 @@ class LibraryBorrowingRuntimeTest {
     private static void assertFailure(String name, org.junit.jupiter.api.function.Executable invocation) {
         var failure = assertThrows(InvocationTargetException.class, invocation);
         assertEquals(name, failure.getCause().getClass().getSimpleName(), failure.getCause().toString());
+        String code = assertDoesNotThrow(() -> (String) failure.getCause().getClass().getMethod("code").invoke(failure.getCause()));
+        assertEquals(name.substring(0, name.length() - "Exception".length()), code,
+                "declared failures expose their exact SIR name, not an uppercase framework error code");
     }
 }
