@@ -156,7 +156,7 @@ class MultiplicationBusinessConformanceIT {
         s.check("the atomic guard admits exactly the remaining seats, not the displayed value", enrolled == 3
                 && results.stream().allMatch(response -> response.statusCode() < 300 || response.statusCode() == 409),
                 results.stream().map(HttpAssertionClient.Response::statusCode).toList().toString());
-        s.expectRow("enrollment is one atomic counter, never a separate stored remaining column", observer, 1, "1|3|3");
+        expectCounters(s, observer, "enrollment is one atomic counter, never a separate stored remaining column", "1|3|3");
         var full = http.get(s.baseUrl() + "/api/courses/show?id=1", Map.of());
         if (s.expectStatus("a committed full course is served", full, 200)) {
             s.expectFields("the response derives zero remaining and full from the same committed row", full,
@@ -170,7 +170,13 @@ class MultiplicationBusinessConformanceIT {
         var rejected = http.postJson(s.baseUrl() + "/api/courses/enroll", Map.of(), "{\"id\":1}");
         s.check("a full course rejects further enrollment with the declared conflict", rejected.statusCode() == 409,
                 Integer.toString(rejected.statusCode()));
-        s.expectRow("a rejected enrollment leaves the counter untouched", observer, 1, "1|3|3");
+        expectCounters(s, observer, "a rejected enrollment leaves the counter untouched", "1|3|3");
+    }
+
+    private static void expectCounters(BusinessSliceHarness s, MysqlObserver observer, String label, String expected) throws Exception {
+        var rows = s.rowsOf(observer, "course");
+        var actual = rows.stream().filter(row -> row.startsWith("1|")).toList();
+        s.check(label, actual.equals(List.of(expected)), "course=" + rows);
     }
 
     private static void expectDecimal(BusinessSliceHarness s, String label, HttpAssertionClient.Response response,

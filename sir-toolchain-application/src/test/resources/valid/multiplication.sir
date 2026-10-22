@@ -105,7 +105,7 @@ software Multiplication {
       field enrolled: Count default 0;
     }
     view CourseCounterView from Course {
-      field id: Id; field enrolled: Count;
+      field id: Id; field capacity: Quantity; field enrolled: Count;
       field remaining: Count = item.capacity - item.enrolled;
       field full: Flag = item.enrolled >= item.capacity;
     }
