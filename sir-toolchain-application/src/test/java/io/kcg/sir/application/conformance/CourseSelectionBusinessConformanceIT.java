@@ -7,10 +7,10 @@ import org.junit.jupiter.api.Test;
 
 /** Uses the actual topic source and the existing isolated business harness, with no production test hooks. */
 class CourseSelectionBusinessConformanceIT {
-    private static final BusinessSliceHarness.Fixture FIXTURE = new BusinessSliceHarness.Fixture(
+    static final BusinessSliceHarness.Fixture FIXTURE = new BusinessSliceHarness.Fixture(
             "Course selection, complete prerequisites, weekly conflicts and consistent seats",
             "/topics/course/project.sir", "/conformance/mysql/course-ddl.sql", "/conformance/mysql/course-seed.sql",
-            "enrollment", "/api/courses/10", "course-selection-report.txt", "course-selection", "kcg.course-conformance.enabled");
+            "enrollment", "/api/courses?keyword=TARGET&page=1&size=1", "course-selection-report.txt", "course-selection", "kcg.course-conformance.enabled");
 
     @Test void actualCourseTopicChecksSchedulePrerequisitesAndSeatTransactions() throws Exception {
         var environment = BusinessSliceHarness.Environment.read(System::getProperty, System::getenv, FIXTURE.enabledProperty());

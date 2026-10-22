@@ -34,6 +34,37 @@ class CourseSelectionContractTest {
         assertEquals(error.httpStatus(),expected.status());
         assertTrue(file(error.name()+"Exception.java").contains("super(\""+expected.code()+"\", HttpStatus."));
     }
+    @Test void readinessProbeTargetsAnExistingAnonymousGetOperation() {
+        var path=java.net.URI.create(CourseSelectionBusinessConformanceIT.FIXTURE.readinessPath());
+        var plan=new SpringBootDeploymentPlanner().plan(compiled.semanticModel(),compiled.loweredModel());
+        var endpoint=plan.api().endpoints().stream().filter(e->e.method().equals("GET") && e.route().equals(path.getPath()))
+                .findFirst().orElseThrow(()->new AssertionError("readiness probe has no generated GET route: "+path));
+        assertFalse(endpoint.authenticated(),"the readiness client sends no credentials");
+        assertEquals(io.kcg.sir.lowering.springboot.model.DeploymentPlan.Binding.QUERY,endpoint.binding());
+    }
+
+    @Test void readinessProbeSuppliesTheActualSearchInputWithValidPagination() {
+        var path=java.net.URI.create(CourseSelectionBusinessConformanceIT.FIXTURE.readinessPath());
+        assertNotNull(path.getRawQuery(),"readiness must pass the search keyword and pagination");
+        var parameters=java.util.Arrays.stream(path.getRawQuery().split("&")).map(p->p.split("=",2))
+                .collect(java.util.stream.Collectors.toUnmodifiableMap(p->p[0],p->p[1]));
+        var capability=compiled.loweredModel().declarations().stream()
+                .filter(io.kcg.sir.lowering.springboot.model.SpringBootDeclaration.CapabilityDeclaration.class::isInstance)
+                .map(io.kcg.sir.lowering.springboot.model.SpringBootDeclaration.CapabilityDeclaration.class::cast)
+                .filter(c->c.javaName().equals("SearchCourses")).findFirst().orElseThrow();
+        assertEquals(capability.route(),path.getPath());
+        var inputType=assertInstanceOf(io.kcg.sir.lowering.springboot.model.LoweredJavaType.Declared.class,
+                capability.input().orElseThrow().type());
+        var input=compiled.loweredModel().declarations().stream()
+                .filter(io.kcg.sir.lowering.springboot.model.SpringBootDeclaration.InputDeclaration.class::isInstance)
+                .map(io.kcg.sir.lowering.springboot.model.SpringBootDeclaration.InputDeclaration.class::cast)
+                .filter(i->i.sourceSymbol().equals(inputType.symbolId())).findFirst().orElseThrow();
+        assertEquals(input.fields().stream().map(f->f.javaName()).collect(java.util.stream.Collectors.toSet()),parameters.keySet());
+        assertFalse(parameters.get("keyword").isBlank());
+        assertEquals("1",parameters.get("page"));
+        assertEquals("1",parameters.get("size"));
+    }
+
     @Test void actualRoutesAndCreationStatusesMatchTheIt() {
         for(String name:java.util.List.of("Enroll", "CreateCourse", "AddPrerequisite", "RecordCompletion"))
             assertTrue(file(name+"Controller.java").contains("HttpStatus.CREATED"),file(name+"Controller.java"));

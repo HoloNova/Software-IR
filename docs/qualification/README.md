@@ -754,3 +754,27 @@ mvn -B -q -o -pl sir-toolchain-application -am test '-Dtest=CourseSelectionContr
 该 IT 仅通过编译，以上结果都等待本批源码的 CI，尚无 run URL／artifact，不能使用早期G11课程计数的报告替代本题真库证据。旧库的真实课表、发布、先修、通过记录和座位账本不能自动猜测回填；交付拒绝无默认增加必填课表列。范围未增加多时段／多学期、递归先修、成绩撤销、排队、循环、聚合或日期差。
 
 当前源码 course 为 **384 行SIR／3379 行生成Java／14个显式接口**。两条新表达按待真库△记账，完整数仍67；当前 **67／7／10**。配套文档随本批代码提交，不单独触发文档CI；推送后不轮询或等待结果。
+
+
+<a id="ci-158-readiness-fix"></a>
+## 29. CI #158：课程 IT 就绪地址不属于实际接口
+
+失败 SHA `7c0017adc75b37f4462f6126fb9ff0bda78d1fc2`，[verify #158](https://github.com/HoloNova/Software-IR/actions/runs/39771833507)。正式 Frozen 全量门通过、Completion 按预期跳过，失败仅在新 CourseSelectionBusinessConformanceIT。生成工程已 `mvn clean verify` 成功，进程仍活着，但就绪请求 `/api/courses/10` 持续返回 HTTP 404。course 题目只公开搜索 `/api/courses`，没有按 id 的公开详情接口；本次不能误诊为应用启动崩溃或课程运算错误。报告的7项通过均为编译／构建／清理等基础检查，**课程业务、并发与回滚尚未执行**。独立验证、CLI、部署均因上游失败跳过，仍未验收。原始日志、报告及 XML 在 `target/ci-investigation/158/`。
+
+修复仅改 IT：就绪地址改为已存在的公开 GET `/api/courses?keyword=TARGET&page=1&size=1`，保持原 harness 要求成功响应的判定，不接受404作为READY、不加重试时长、不新增生产详情路由。FIXTURE 在同测试包可读，使契约检查引用同一个实际地址而非另一份常量。新增两项先取得 RED：其一对照实际 DeploymentPlan.Api.endpoints，要求路径对应 GET、匿名可用且为 QUERY 绑定；其二对照 SearchCourses 的正式输入类型，检查查询参数集合和有效分页。随后修改地址取得 GREEN。
+
+| 最新定向类 | tests | 结果 |
+| --- | ---: | --- |
+| CourseSelectionContractTest | 18 | 含两项就绪契约、声明错误、路由状态、数据库合同与发布冻结 |
+| CourseSelectionRuntimeTest | 14 | 实际课程样例生成 Java 的锁顺序、错误、座位与缺省数值检查 |
+| CourseQueryCompositionTest | 2 | 同级先修关联与真实 MyBatis 参数绑定 |
+| **合计** | **34** | **0 failures／errors／skips** |
+
+```powershell
+$env:MAVEN_OPTS='-Xmx384m -XX:ActiveProcessorCount=2'
+mvn -B -q -o -pl sir-toolchain-application -am test '-Dtest=CourseSelectionContractTest,CourseSelectionRuntimeTest,CourseQueryCompositionTest' '-Dsurefire.failIfNoSpecifiedTests=false' '-DargLine=-Xmx512m -XX:ActiveProcessorCount=2'
+```
+
+本机未启动应用、MySQL或浏览器，未执行真库IT或全量门；AFT Java LSP 初始化失败为 PARTIAL，以 Maven 实际编译及最新 XML 为依据，不宣称覆盖率。RED／GREEN 与源码清单封存于 `target/ci-158-verification/`。排队可行性探针及第23.8节草案在工作区另行保留，不计入34项、不混入本修复。课程两条仍标待真库△，账本不因修探针提前上调。
+
+同时核实前次借阅错误码修复 `9d31a82` 的 [#157](https://github.com/HoloNova/Software-IR/actions/runs/39765191920) conclusion=success；#158 的借阅 IT 亦通过。与本次尚未执行的课程业务分开记录，不借用借阅结果证明课程通过。修复将单独提交推送，新的完整验收仍由负责人通知，不主动查询或等待。
