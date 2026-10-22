@@ -72,8 +72,15 @@ software Multiplication {
       field quantity: Quantity;
       field unitPrice: UnitPrice;
     }
-    view ProductView from Product { field id: Id; field price: UnitPrice; field stock: Count; }
-    view ReceiptView from Receipt { field id: Id; field total: Money; field quantity: Quantity; }
+    view ProductView from Product {
+      field id: Id; field price: UnitPrice; field stock: Count;
+      field inventoryValue: Money = item.price * item.stock;
+      field soldOut: Flag = item.stock == 0;
+    }
+    view ReceiptView from Receipt {
+      field id: Id; field total: Money; field quantity: Quantity;
+      field doubledTotal: Money = item.total * 2;
+    }
     input Purchase { field id: Id; field quantity: Quantity; }
     input ProductRef { field id: Id; }
     error Missing http 404;
@@ -91,6 +98,33 @@ software Multiplication {
         persist line;
         return receipt;
       }
+    }
+    entity Course persistent {
+      identity id: Id generated auto;
+      field capacity: Quantity;
+      field enrolled: Count default 0;
+    }
+    view CourseCounterView from Course {
+      field id: Id; field enrolled: Count;
+      field remaining: Count = item.capacity - item.enrolled;
+      field full: Flag = item.enrolled >= item.capacity;
+    }
+    input CourseKey { field id: Id; }
+    error Full http 409;
+    capability EnrollCourse {
+      input CourseKey; output CourseCounterView; fails Full; fails Missing;
+      requires atomic; expose command at "/courses/enroll";
+      workflow {
+        load Course by input.id as course else Missing;
+        update course when course.enrolled < course.capacity else Full { enrolled: course.enrolled + 1; }
+        persist course;
+        return course;
+      }
+    }
+    capability ShowCourse {
+      input CourseKey; output CourseCounterView; fails Missing;
+      requires readonly; expose query at "/courses/show";
+      workflow { load Course by input.id as course else Missing; return course; }
     }
     capability ShowProduct {
       input ProductRef; output ProductView; fails Missing; requires readonly; expose query at "/products/show";

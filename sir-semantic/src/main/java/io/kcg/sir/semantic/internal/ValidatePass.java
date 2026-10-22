@@ -1013,7 +1013,18 @@ final class ValidatePass {
 
    private void validateViewFields(AstViewDecl viewDecl) {
       for (AstViewField field : viewDecl.fields()) {
-         SymbolId projected = this.typed.referenceSiteBindings().targetFor(field.name().id()).orElse(null);
+         field.expression().ifPresent(expression -> {
+             this.checkSecretReads(expression, false);
+             ComputedViewRules.validate(expression, this.typed,
+                SymbolIdFactory.viewSourceRow(this.typed.declarationBindings().get(viewDecl.id())),
+                Set.copyOf(this.entityIdentitySymbolIds.values()), this.diagnostics);
+             SirType type = this.typed.typeRefTypes().get(field.type().id());
+             SirType scalar = type instanceof OptionalType optional ? optional.element() : type;
+             if (!(scalar instanceof PrimitiveType primitive && primitive != PrimitiveType.UNIT)
+                   && !(scalar instanceof DeclaredType declared && declared.kind() == DeclaredType.DeclaredKind.ENUM))
+                this.diagnostics.add(DiagnosticBuilder.error("SIR-VALID-001", "计算投影只能返回标量", field.span()));
+          });
+          SymbolId projected = this.typed.referenceSiteBindings().targetFor(field.name().id()).orElse(null);
          if (projected != null && this.secretFields.contains(projected)) {
             this.diagnostics.add(DiagnosticBuilder.error(
                SECRET_CODE, "secret 字段不能出现在响应投影里: " + viewDecl.name().text() + "." + field.name().text(), field.name().span()));

@@ -1,73 +1,82 @@
 package io.kcg.sir.semantic.model;
 
+import io.kcg.sir.ast.AstNodeId;
 import io.kcg.sir.semantic.schema.Derived;
 import io.kcg.sir.semantic.schema.Fact;
 import io.kcg.sir.semantic.schema.Identity;
 import io.kcg.sir.semantic.schema.Reference;
 import io.kcg.sir.semantic.schema.Source;
-import io.kcg.sir.ast.AstNodeId;
 import io.kcg.sir.semantic.symbol.SymbolId;
 import io.kcg.sir.semantic.type.SirType;
 import io.kcg.sir.source.SourceSpan;
 import java.util.Objects;
 import java.util.Optional;
 
-/**
- * One projected field of a {@link NormalizedView}.
- *
- * <p>{@link #id()} identifies the projected field itself, while
- * {@link #sourceField()} identifies the entity field it reads. Keeping both
- * means the projection has its own stable identity without losing the column it
- * came from.
- *
- * <p>A column projection and a relation projection are told apart by
- * {@link #relation()}. A column projection reads {@code sourceField} as its own
- * value; a relation projection reads {@code sourceField} as the reference that
- * connects the two entities — on this side for {@code TO_ONE}, on the related
- * side for {@code TO_MANY} — and {@link Relation#targetView()} is the view the
- * related rows are projected with. The target therefore renders a relation by
- * reading the recorded reference, never by searching the model for one.
- */
+/** A response field owns its name and exactly one bound source of values. */
 public record NormalizedViewField(
-   @Identity SymbolId id,
-   @Fact String name,
-   @Source SourceSpan span,
-   @Source AstNodeId sourceNodeId,
-   @Fact SirType type,
-   @Derived SymbolId sourceField,
-   @Derived Optional<Relation> relation,
-   @Source Optional<AstNodeId> directNamedTypeReferenceSiteId
+    @Identity SymbolId id,
+    @Fact String name,
+    @Source SourceSpan span,
+    @Source AstNodeId sourceNodeId,
+    @Fact SirType type,
+    @Fact Value value,
+    @Source Optional<AstNodeId> directNamedTypeReferenceSiteId
 ) {
-   public NormalizedViewField {
-      Objects.requireNonNull(id, "id");
-      Objects.requireNonNull(name, "name");
-      Objects.requireNonNull(span, "span");
-      Objects.requireNonNull(sourceNodeId, "sourceNodeId");
-      Objects.requireNonNull(type, "type");
-      Objects.requireNonNull(sourceField, "sourceField");
-      Objects.requireNonNull(relation, "relation");
-      Objects.requireNonNull(directNamedTypeReferenceSiteId, "directNamedTypeReferenceSiteId");
-   }
+    public NormalizedViewField {
+        Objects.requireNonNull(id, "id");
+        Objects.requireNonNull(name, "name");
+        Objects.requireNonNull(span, "span");
+        Objects.requireNonNull(sourceNodeId, "sourceNodeId");
+        Objects.requireNonNull(type, "type");
+        Objects.requireNonNull(value, "value");
+        Objects.requireNonNull(directNamedTypeReferenceSiteId, "directNamedTypeReferenceSiteId");
+    }
 
-   /** How many related rows a nested projection reads. */
-   public enum Cardinality {
-      /** At most one related row, reached through a reference on this entity. */
-      TO_ONE,
-      /** A collection of related rows, reached through the reference they hold. */
-      TO_MANY
-   }
+    /** Compatibility for existing column and relation projections; no synthetic column for expressions. */
+    public NormalizedViewField(SymbolId id, String name, SourceSpan span, AstNodeId sourceNodeId, SirType type,
+            SymbolId sourceField, Optional<Relation> relation, Optional<AstNodeId> typeSite) {
+        this(id, name, span, sourceNodeId, type,
+                relation.<Value>map(r -> new Related(sourceField, r)).orElseGet(() -> new Column(sourceField)), typeSite);
+    }
 
-   /**
-   * The relation a nested projection reads.
-   *
-   * <p>{@link #targetView()} is the view that projects the related rows; the reference field
-   * itself stays in {@link NormalizedViewField#sourceField()}, so a target asks the field for the
-   * join column and the relation for the projection to render.
-   */
-   public record Relation(@Fact Cardinality cardinality, @Reference SymbolId targetView) {
-      public Relation {
-         Objects.requireNonNull(cardinality, "cardinality");
-         Objects.requireNonNull(targetView, "targetView");
-      }
-   }
+    public sealed interface Value permits Column, Related, Computed {}
+
+    public record Column(@Derived SymbolId sourceField) implements Value {
+        public Column { Objects.requireNonNull(sourceField, "sourceField"); }
+    }
+
+    public record Related(@Derived SymbolId sourceField, @Derived Relation relation) implements Value {
+        public Related {
+            Objects.requireNonNull(sourceField, "sourceField");
+            Objects.requireNonNull(relation, "relation");
+        }
+    }
+
+    public record Computed(@Derived SymbolId rowSymbol, @Fact NormalizedExpression expression) implements Value {
+        public Computed {
+            Objects.requireNonNull(rowSymbol, "rowSymbol");
+            Objects.requireNonNull(expression, "expression");
+        }
+    }
+
+    public SymbolId sourceField() {
+        return switch (value) {
+            case Column column -> column.sourceField();
+            case Related related -> related.sourceField();
+            case Computed ignored -> throw new IllegalStateException("computed projection has no source column");
+        };
+    }
+
+    public Optional<Relation> relation() {
+        return value instanceof Related related ? Optional.of(related.relation()) : Optional.empty();
+    }
+
+    public enum Cardinality { TO_ONE, TO_MANY }
+
+    public record Relation(@Fact Cardinality cardinality, @Reference SymbolId targetView) {
+        public Relation {
+            Objects.requireNonNull(cardinality, "cardinality");
+            Objects.requireNonNull(targetView, "targetView");
+        }
+    }
 }

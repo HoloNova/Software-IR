@@ -268,8 +268,15 @@ public final class SpringBootInputValidator {
       NormalizedDeclaration source = this.declarationsById.get(view.sourceEntity());
       for (NormalizedViewField field : view.fields()) {
          this.validateBound(field.id(), field.span(), field.sourceNodeId(), FieldSymbol.class);
-         this.validateBound(field.sourceField(), field.span(), field.sourceNodeId(), FieldSymbol.class);
          this.validateType(field.type(), field.span(), field.id(), field.sourceNodeId());
+         if (field.value() instanceof NormalizedViewField.Computed computed) {
+             this.validateExpression(computed.expression(), view.id());
+             for (String problem : NormalizedViewExpressions.validate(view, field, computed, this.model)) {
+                this.error("SIR-LOWER-BINDING-001", problem, field.span(), field.id(), field.sourceNodeId());
+             }
+             continue;
+          }
+         this.validateBound(field.sourceField(), field.span(), field.sourceNodeId(), FieldSymbol.class);
          if (!(source instanceof NormalizedEntity entity)) {
          continue;
          }

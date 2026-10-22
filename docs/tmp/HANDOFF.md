@@ -73,8 +73,8 @@ tasks、market 已更新；本机语义、降级、生成真值表、源往返�
 ### 4.6 G6 乘法、G11 视图计算字段
 
 - G6：负责人要求继续下一阶段后，已按[设计第 21 节](../design/12-feature-semantics-and-semantic-types.md#g6-multiplication-proposal)实现精确乘法、显式整数转 Decimal 和能力级算术输入检查；分页默认、Optional／PATCH 不变，Ref.id 的错误路径按真实 DTO 属性。shop 按数量计价扣库存、订单持久化后再创建明细，28 类 223 项主回归通过。真库并发、精度回滚和明细一致性已接 CI，本机未运行；library 罚款仍缺日期差，未记完成。见[验证第 17 节](../qualification/README.md#g6-multiplication-local)。#143 金额真库 57 项通过，但部署漂移未闭环；#144 在初次合同测试缺失运行器依赖，已单独修复 `b8f2cf0`，见[第 16 节](../qualification/README.md#ci-144-dependency-fix)。下一项评审 G11，不顺带循环／聚合。
-- G11：视图字段必须是实体字段，`剩余名额 = 容量 − 已选` 写不出（`SIR-SYMBOL-002`）。已核对绑定、类型、普通／分页／嵌套投影链，尚未写设计定稿或改核心代码；负责人指出最新 CI 失败后已暂停 G11，优先闭环 #146。
-- 最新 CI：`997794c4524ba726c9e864d2826d060093b66a89` 的 #147 全部门 success；Money57项、乘法37项，精度漂移拒绝、恢复、新实例V1..V11及八题生成工程编译全部通过，阻塞已闭环。见[验证第19节](../qualification/README.md#ci-147-accepted)。该基线不覆盖未来G11源码；下一阶段继续计算视图方案。
+- G11：已按第22节贯通 `field remaining: Count = item.capacity - item.enrolled;`；计算输出独立命名，当前行正式绑定，互斥 Column／Related／Computed 分支与共用投影渲染，不新增 SQL／DDL。普通返回、分页、嵌套、精确金额、Optional、类型／枚举及跨文件改名、首次添加与类别切换已定向覆盖。27类183项通过；course增加remaining／full，物理schema对照不变。真库断言扩展原关系与乘法IT，不再起一套应用，本机未运行。Windows另4项旧目录读取测试受SecureDirectoryStream限制阻断，不放宽读取边界、不并入通过数。见[验证第20节](../qualification/README.md#g11-computed-view-local)。
+- 最新 CI：`997794c4524ba726c9e864d2826d060093b66a89` 的 #147 全部门 success；Money57项、乘法37项，精度漂移拒绝、恢复、新实例V1..V11及八题生成工程编译全部通过，阻塞已闭环。见[验证第19节](../qualification/README.md#ci-147-accepted)。该基线不覆盖未来G11源码；后续 #148 的文档基线也通过；负责人确认继续后已实现[第22节](../design/12-feature-semantics-and-semantic-types.md#g11-computed-view-proposal)，本批同源码 CI 尚待验收。计算仅基于本行、三个投影路径共用计划，不新增SQL／DDL，不自动舍入Money，也不补跨行可借数量。
 
 ### 4.7 G5 列表循环、G8 聚合（两个大块，**先和负责人确认要不要做**）
 

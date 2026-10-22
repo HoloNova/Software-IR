@@ -34,6 +34,7 @@ class StructureViewSensitivityTest {
 
     static List<Edit> factEdits() {
         return List.of(
+            new Edit("computed value operator", "valid/computed-views.sir", "item.capacity - item.enrolled", "item.capacity + item.enrolled"),
             new Edit("error http status", ADMIN, "error CourseNotFound http 404;", "error CourseNotFound http 409;"),
             new Edit("error status dropped to default", ADMIN, "error CourseNotFound http 404;", "error CourseNotFound;"),
             new Edit("constraint argument", ADMIN, "field code: Code;\n      field name: Name;\n      field description: Optional<Remark>;\n      field capacity: Quantity;\n      field version", "field code: Name where length(1, 64);\n      field name: Name;\n      field description: Optional<Remark>;\n      field capacity: Quantity;\n      field version"),
@@ -58,7 +59,7 @@ class StructureViewSensitivityTest {
     @ParameterizedTest(name = "{0}")
     @MethodSource("factEdits")
     void aFactEditChangesTheFactView(Edit edit) {
-        String base = TestSources.resource(edit.resource());
+        String base = lfSource(edit.resource());
         assertTrue(base.contains(edit.from()), "edit anchor not found: " + edit.name());
 
         StructNode before = StructureView.facts(model(base));
@@ -69,7 +70,7 @@ class StructureViewSensitivityTest {
 
     @Test
     void commentsBlankLinesAndIndentationAreNotFacts() {
-        String base = TestSources.resource(ADMIN);
+        String base = lfSource(ADMIN);
         String noisy = "// leading comment\n"
             + base.replace("    error EmptyChange;", "\n\n    /* why */   error EmptyChange;   // trailing\n")
                 .replace("  declarations {", "  declarations {\n\n")
@@ -84,7 +85,7 @@ class StructureViewSensitivityTest {
 
     @Test
     void reorderingDeclarationsIsNotAChangeBecauseTheyAreMatchedByIdentity() {
-        String base = TestSources.resource(ADMIN);
+        String base = lfSource(ADMIN);
         String swapped = base.replace("    error CourseNotFound http 404;\n    error EmptyChange;\n", "    error EmptyChange;\n    error CourseNotFound http 404;\n");
         assertNotEquals(base, swapped);
 
@@ -93,18 +94,22 @@ class StructureViewSensitivityTest {
 
     @Test
     void viewIsDeterministic() {
-        String base = TestSources.resource(ENROLLMENT);
+        String base = lfSource(ENROLLMENT);
 
         assertEquals(StructureView.facts(model(base)).render(), StructureView.facts(model(base)).render());
     }
 
     @Test
     void derivedAnalysisNeverAppearsInAnyView() {
-        String rendered = StructureView.withSource(model(TestSources.resource(ADMIN))).render();
+        String rendered = StructureView.withSource(model(lfSource(ADMIN))).render();
 
         for (String derived : List.of("symbols", "referenceBindings", "findItemBindings", "expressionTypes", "diagnostics", "referenceSiteBindings")) {
             assertTrue(!rendered.contains(derived + " ["), derived + " is analysis output and must not be in the view");
         }
+    }
+
+    private static String lfSource(String resource) {
+        return TestSources.resource(resource).replace("\r\n", "\n");
     }
 
     private static NormalizedSemanticModel model(String source) {

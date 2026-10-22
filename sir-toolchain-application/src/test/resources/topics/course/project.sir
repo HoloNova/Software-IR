@@ -80,6 +80,8 @@ software CourseSelection {
       field teacher: UserView;
       field capacity: Quantity;
       field enrolled: Count;
+      field remaining: Count = item.capacity - item.enrolled;
+      field full: Flag = item.enrolled >= item.capacity;
     }
     view EnrollmentView from Enrollment {
       field id: Id;

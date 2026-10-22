@@ -438,10 +438,7 @@ final class WorkflowRenderer {
 
          SpringBootDeclaration.ViewRelationPlan plan = field.relation().orElse(null);
          if (plan == null) {
-            String member = row + "." + getterName(field.sourcePropertyName()) + "()";
-            out.append(GenerationContext.isNullable(field.type())
-               ? "java.util.Optional.ofNullable(" + member + ")"
-               : member);
+            out.append(renderProjectionValue(ctx, view, field, row, imports, currentPackage));
             continue;
          }
 
@@ -1061,15 +1058,25 @@ final class WorkflowRenderer {
             out.append(", ");
          }
 
-         String member = value + "." + getterName(field.sourcePropertyName()) + "()";
-         // A nullable view field is an Optional, the entity property behind it is plain: the value is
-         // wrapped as it crosses over.
-         out.append(GenerationContext.isNullable(field.type())
-            ? "java.util.Optional.ofNullable(" + member + ")"
-            : member);
+         out.append(renderProjectionValue(ctx, view, field, value, imports, currentPackage));
       }
 
       return out.append(')').toString();
+   }
+
+   /** Both ordinary and batched projections cross the same nullable-value boundary exactly once. */
+   private static String renderProjectionValue(GenerationContext ctx, ViewDeclaration view,
+         SpringBootDeclaration.ViewField field, String row, ImportSorter imports, String currentPackage) {
+      String value;
+      if (field.value() instanceof SpringBootDeclaration.ComputedViewValue computed) {
+         var binding = view.sourceRow().orElseThrow(() -> new IllegalStateException("computed view has no row binding"));
+         Map<SymbolId, String> names = Map.of(binding.symbol(), row);
+         collectExpressionImports(ctx, computed.expression(), names, imports, currentPackage);
+         value = ExpressionRenderer.renderExpression(computed.expression(), names);
+      } else {
+         value = row + "." + getterName(field.sourcePropertyName()) + "()";
+      }
+      return GenerationContext.isNullable(field.type()) ? "java.util.Optional.ofNullable(" + value + ")" : value;
    }
 
    private static String renderPredicateChain(

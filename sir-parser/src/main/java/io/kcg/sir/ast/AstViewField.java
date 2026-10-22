@@ -3,14 +3,16 @@ package io.kcg.sir.ast;
 import io.kcg.sir.source.SourceSpan;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * One projected field of a {@code view} declaration.
  *
  * <p>The name is an {@link AstNameRef} rather than a plain {@link AstName}
- * because a projected name is a reference site: it must bind once to the field
- * of the source entity it reads. The declared type is checked against that
- * bound field, and constraints are parsed so that a later phase can reject them
+ * because a plain projected name binds to the source field it reads. With an
+ * explicit expression the name is an independent output definition, and the
+ * members of the expression are the reference sites. The declared type is checked
+ * against the bound field or expression; constraints are parsed so a later phase can reject them
  * instead of the grammar silently dropping them.
  */
 public record AstViewField(
@@ -19,7 +21,13 @@ public record AstViewField(
         AstNameRef name,
         AstTypeRef type,
         List<AstConstraint> constraints,
-        boolean versioned) implements AstNode {
+        boolean versioned,
+        Optional<AstExpression> expression) implements AstNode {
+
+    public AstViewField(AstNodeId id, SourceSpan span, AstNameRef name, AstTypeRef type,
+            List<AstConstraint> constraints, boolean versioned) {
+        this(id, span, name, type, constraints, versioned, Optional.empty());
+    }
 
     public AstViewField(
             AstNodeId id,
@@ -35,6 +43,7 @@ public record AstViewField(
         Objects.requireNonNull(span, "span");
         Objects.requireNonNull(name, "name");
         Objects.requireNonNull(type, "type");
+        Objects.requireNonNull(expression, "expression");
         constraints = List.copyOf(Objects.requireNonNull(constraints, "constraints"));
     }
 }

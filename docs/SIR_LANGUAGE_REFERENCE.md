@@ -386,7 +386,7 @@ entity AccessToken persistent {
 
 ### 3.3 输入（`input`）
 
-输入描述一个能力接收的请求内容。输入（和视图）的字段只有名字、类型和可选的约束：`unique`、`secret`、`@id` 是实体字段才有的修饰，写在输入或视图里是语法错误。
+输入描述一个能力接收的请求内容。输入字段有名字、类型和可选约束；视图可以直接投影或显式计算（见第 3.4 节），不能自行添加约束。`unique`、`secret`、`@id` 是实体字段才有的修饰，写在输入或视图里是语法错误。
 
 ```sir-declarations
 input RegisterInput {
@@ -443,7 +443,29 @@ capability UpdateCourse {
 
 ### 3.4 视图（`view`）
 
-视图描述返回给客户端的内容，是某个实体的**投影**：`view 名字 from 实体 { field 同名字段: 类型; }`。字段名和类型必须和实体字段一致，**视图字段不能带约束**，也不能出现 `secret` 字段。一个视图字段还可以是关联实体的视图（嵌套）：
+视图描述返回给客户端的内容，是某个实体的**投影**。普通字段 `field 同名字段: 类型;` 读取同名实体字段，类型必须与来源字段的底层类型一致。显式写 `field 输出名: 类型 = 表达式;` 则计算独立的输出值，不要求实体有这个字段。两者都**不能带约束**，也不能读取 `secret` 字段。
+
+计算中的 `item` 只指当前来源行；可以用标量字段、主键、枚举常量、精确加减乘、比较与布尔组合、显式判空及常量时间平移。字段类型必须与表达式一致（含 Optional），不隐式补零或拆开 Optional。不能读 input／actor／其它视图字段，不能调用 `now()`、查询或沿引用读取另一行；读取已有引用的 `.id` 不产生查询。计算之间不互相引用，因此不需要计算顺序或环检测。
+
+```sir-declarations
+entity Course persistent {
+  identity id: Id generated auto;
+  field capacity: Quantity;
+  field enrolled: Count default 0;
+  field note: Optional<Text>;
+}
+view CourseView from Course {
+  field id: Id;
+  field remaining: Count = item.capacity - item.enrolled;
+  field full: Flag = item.enrolled >= item.capacity;
+  field note: Optional<Text> = item.note;
+  field missingNote: Flag = item.note is none;
+}
+```
+
+这些值在构造响应时从实际来源行计算，普通 return、分页和嵌套投影使用同一取值计划，不增加存储列、迁移或 SQL。来源字段不必同时出现在响应中。整数溢出仍失败，不回绕；Money／Decimal 计算保持精确值，不自动按 Money 的存储精度舍入展示结果。where／order 仍针对实体字段，不能把计算输出名当成 SQL 列。跨行可借数量、聚合和时间差不因此获得支持。
+
+一个视图字段还可以是关联实体的视图（嵌套）：
 
 ```sir-declarations
 entity Author persistent {

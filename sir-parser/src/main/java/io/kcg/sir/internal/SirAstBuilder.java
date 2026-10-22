@@ -246,11 +246,11 @@ final class SirAstBuilder {
         AstName name = name(context.viewName);
         String path = ids.named(parent, "view", name.text());
         AstNameRef sourceEntity = nameRef(context.sourceEntity, path, "from");
-        List<AstViewField> fields = context.fieldDecl().stream().map(value -> viewField(value, path)).toList();
+        List<AstViewField> fields = context.viewFieldDecl().stream().map(value -> viewField(value, path)).toList();
         return new AstViewDecl(ids.id(path), source.span(context), name, sourceEntity, fields);
     }
 
-    private AstViewField viewField(SirParser.FieldDeclContext context, String parent) {
+    private AstViewField viewField(SirParser.ViewFieldDeclContext context, String parent) {
         String path = ids.named(parent, "field", context.IDENT().getText());
         List<AstConstraint> constraints = context.constraintList() == null
                 ? List.of()
@@ -259,7 +259,8 @@ final class SirAstBuilder {
                         .toList();
         return new AstViewField(
                 ids.id(path), source.span(context), nameRef(context.IDENT(), path, "name"),
-                type(context.typeRef(), path), constraints, context.VERSIONED() != null);
+                type(context.typeRef(), path), constraints, context.VERSIONED() != null,
+                context.expression() == null ? Optional.empty() : Optional.of(expression(context.expression(), path)));
     }
 
     private AstErrorDecl errorDeclaration(SirParser.ErrorDeclContext context, String parent) {

@@ -155,6 +155,7 @@ final class ResolvePass {
          SymbolId target = this.entityFieldSymbols.getOrDefault(selection.entity(), Map.of()).get(selection.reference().text());
          if (target != null) this.bindArgument(selection.reference().id(), selection.reference().span(), selection.reference().text(), target);
       }
+      this.resolveViewComputations();
       this.resolveFieldDefaults();
       this.resolveCapabilities();
       SymbolTable table = this.buildSymbolTable();
@@ -553,7 +554,7 @@ final class ResolvePass {
          SymbolId fieldSymId = SymbolIdFactory.viewField(this.softwareName, viewName, fieldName);
          Symbol.FieldSymbol fieldSym = new Symbol.FieldSymbol(fieldSymId, fieldName, field.span(), declaredType, viewScopeId);
          this.addSymbol(fieldSym, viewScopeId);
-         if (declaredType != null) {
+         if (declaredType != null && field.expression().isEmpty()) {
             String nestedView = this.nestedViewName(field.type());
             if (nestedView != null) {
                this.bindProjectedRelation(field, entityName, nestedView, field.type() instanceof AstListTypeRef);
@@ -563,6 +564,21 @@ final class ResolvePass {
          }
       }
    }
+
+   /** Installs a view-owned row binding before resolving its computed values. */
+   private void resolveViewComputations() {
+       for (AstViewDecl view : this.viewDecls.values()) {
+          if (view.fields().stream().noneMatch(field -> field.expression().isPresent())) continue;
+          SymbolId scope = this.declarationBindings.get(view.id());
+          SymbolId row = SymbolIdFactory.viewSourceRow(scope);
+          this.addSymbol(new Symbol.VariableSymbol(row, "item", view.span(),
+                this.buildRefType(view.sourceEntity().text()), null), scope);
+          for (AstViewField field : view.fields()) {
+             field.expression().ifPresent(expression ->
+                this.resolveExpression(expression, null, scope, Set.of("item"), row, null));
+          }
+       }
+    }
 
    /**
    * The view a projected field nests, or {@code null} when the field names a column.

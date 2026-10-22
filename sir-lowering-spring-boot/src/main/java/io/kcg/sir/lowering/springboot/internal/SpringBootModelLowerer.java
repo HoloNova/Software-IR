@@ -401,7 +401,24 @@ public final class SpringBootModelLowerer {
         }
 
         String entityJavaName = entity.name();
-        List<SpringBootDeclaration.ViewField> fields = value.fields().stream().map(field -> new SpringBootDeclaration.ViewField(
+        List<SpringBootDeclaration.ViewField> fields = value.fields().stream().map(field -> lowerViewField(value, field)).toList();
+        Optional<SpringBootWorkflow.Variable> row = value.fields().stream().map(NormalizedViewField::value)
+            .filter(NormalizedViewField.Computed.class::isInstance).map(NormalizedViewField.Computed.class::cast)
+            .findFirst().map(computed -> new SpringBootWorkflow.Variable(computed.rowSymbol(), "item",
+                this.lowerType(new RefType(entity.name(), entity.id()))));
+        return new SpringBootDeclaration.ViewDeclaration(
+                this.symbolId(value.id(), "view"),
+                this.origin(value.id(), value.sourceNodeId(), value.span()),
+                value.id(), value.name(), value.sourceEntity(), entityJavaName, fields, row);
+    }
+
+    private SpringBootDeclaration.ViewField lowerViewField(NormalizedView value, NormalizedViewField field) {
+        if (field.value() instanceof NormalizedViewField.Computed computed) {
+            return new SpringBootDeclaration.ViewField(this.symbolId(field.id(), "view-field"),
+                this.origin(value.id(), field.sourceNodeId(), field.span()), field.id(), field.name(), this.lowerType(field.type()),
+                new SpringBootDeclaration.ComputedViewValue(this.lowerExpression(computed.expression(), value.id())));
+        }
+        return new SpringBootDeclaration.ViewField(
                 this.symbolId(field.id(), "view-field"),
                 this.origin(value.id(), field.sourceNodeId(), field.span()),
                 field.id(),
@@ -409,11 +426,7 @@ public final class SpringBootModelLowerer {
                 this.lowerType(field.type()),
                 field.sourceField(),
                 this.targetMemberName(field.sourceField(), field.name()),
-                this.lowerViewRelation(value, field))).toList();
-        return new SpringBootDeclaration.ViewDeclaration(
-                this.symbolId(value.id(), "view"),
-                this.origin(value.id(), value.sourceNodeId(), value.span()),
-                value.id(), value.name(), value.sourceEntity(), entityJavaName, fields);
+                this.lowerViewRelation(value, field));
     }
 
     /**

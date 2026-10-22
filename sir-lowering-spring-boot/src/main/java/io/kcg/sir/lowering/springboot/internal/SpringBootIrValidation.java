@@ -371,9 +371,11 @@ public final class SpringBootIrValidation {
          case SpringBootDeclaration.ErrorDeclaration ignored:
             break;
          case SpringBootDeclaration.ViewDeclaration value:
+         value.sourceRow().ifPresent(row -> this.knownSymbols.add(row.symbol()));
          value.fields().forEach(field -> {
                this.knownSymbols.add(field.sourceSymbol());
-               this.knownSymbols.add(field.sourceFieldSymbol());
+               if (!(field.value() instanceof SpringBootDeclaration.ComputedViewValue))
+                   this.knownSymbols.add(field.sourceFieldSymbol());
          });
          break;
          case SpringBootDeclaration.CapabilityDeclaration value:
@@ -520,8 +522,15 @@ public final class SpringBootIrValidation {
       for (SpringBootDeclaration.ViewField field : view.fields()) {
          this.addNode(field.id(), field.origin(), "view field");
          this.knownSymbols.add(field.sourceSymbol());
-         this.knownSymbols.add(field.sourceFieldSymbol());
+         if (!(field.value() instanceof SpringBootDeclaration.ComputedViewValue))
+                   this.knownSymbols.add(field.sourceFieldSymbol());
          this.validateType(field.type(), view);
+         if (field.value() instanceof SpringBootDeclaration.ComputedViewValue computed) {
+            this.validateExpression(computed.expression(), view);
+            for (String problem : ViewExpressionValidation.validate(view, field, computed.expression(), this.declarations))
+               this.error(view, problem);
+            continue;
+         }
          if (field.relation().isPresent()) {
             this.validateViewRelation(view, field, entity);
             continue;

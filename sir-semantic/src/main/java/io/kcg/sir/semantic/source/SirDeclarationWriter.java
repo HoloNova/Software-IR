@@ -202,7 +202,9 @@ public final class SirDeclarationWriter {
    private void writeView(StructNode node, Lines out) {
       out.line(0, "view " + text(node, "name") + " from " + text(node, "sourceEntity") + " {");
       for (StructNode field : nodes(node, "fields")) {
-         out.line(1, "field " + text(field, "name") + ": " + type(child(field, "type")) + ";");
+         StructNode value = child(field, "value");
+         String computed = value.kind().equals("Computed") ? " = " + expression(child(value, "expression"), 0) : "";
+         out.line(1, "field " + text(field, "name") + ": " + type(child(field, "type")) + computed + ";");
       }
 
       out.line(0, "}");

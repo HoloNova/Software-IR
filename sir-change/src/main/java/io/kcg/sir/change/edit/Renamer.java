@@ -153,7 +153,8 @@ final class Renamer {
       List<SymbolId> followers = new ArrayList<>();
       for (NormalizedDeclaration declaration : model.declarations()) {
          if (declaration instanceof NormalizedView view) {
-            view.fields().stream().filter(f -> f.sourceField().equals(field)).map(NormalizedViewField::id).forEach(followers::add);
+            view.fields().stream().filter(f -> !(f.value() instanceof NormalizedViewField.Computed))
+                   .filter(f -> f.sourceField().equals(field)).map(NormalizedViewField::id).forEach(followers::add);
          } else if (declaration instanceof NormalizedInput input) {
             input.fields().stream().filter(f -> f.patchSourceField().equals(Optional.of(field))).map(NormalizedField::id).forEach(followers::add);
          }

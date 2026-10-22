@@ -71,6 +71,10 @@ final class SymbolIdFactory {
        return new SymbolId("sir://" + encode(softwareName) + "/view/" + encode(viewName) + "/field/" + encode(fieldName));
    }
 
+   static SymbolId viewSourceRow(SymbolId view) {
+      return new SymbolId(view.value() + "/source-row");
+   }
+
    static SymbolId enumMember(String softwareName, String enumName, String memberName) {
       return new SymbolId("sir://" + encode(softwareName) + "/enum/" + encode(enumName) + "/member/" + encode(memberName));
    }

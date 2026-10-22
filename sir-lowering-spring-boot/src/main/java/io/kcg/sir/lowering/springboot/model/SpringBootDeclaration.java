@@ -321,53 +321,80 @@ public sealed interface SpringBootDeclaration
    * property name of that entity field, so the generator maps a row to a response DTO without
    * re-deriving anything from names.
    */
-   record ViewDeclaration(
-      LoweredNodeId id,
-      LoweredOrigin origin,
-      SymbolId sourceSymbol,
-      String javaName,
-      SymbolId sourceEntitySymbol,
-      String sourceEntityJavaName,
-      List<SpringBootDeclaration.ViewField> fields
-   ) implements SpringBootDeclaration {
-      public ViewDeclaration {
-         SpringBootDeclaration.requireDeclaration(id, origin, sourceSymbol, javaName);
-         Objects.requireNonNull(sourceEntitySymbol, "sourceEntitySymbol");
-         SpringBootDeclaration.requireText(sourceEntityJavaName, "sourceEntityJavaName");
-         fields = List.copyOf(Objects.requireNonNull(fields, "fields"));
-      }
-   }
+    record ViewDeclaration(
+       LoweredNodeId id, LoweredOrigin origin, SymbolId sourceSymbol, String javaName,
+       SymbolId sourceEntitySymbol, String sourceEntityJavaName, List<ViewField> fields,
+       Optional<SpringBootWorkflow.Variable> sourceRow
+    ) implements SpringBootDeclaration {
+       public ViewDeclaration {
+          SpringBootDeclaration.requireDeclaration(id, origin, sourceSymbol, javaName);
+          Objects.requireNonNull(sourceEntitySymbol, "sourceEntitySymbol");
+          SpringBootDeclaration.requireText(sourceEntityJavaName, "sourceEntityJavaName");
+          fields = List.copyOf(Objects.requireNonNull(fields, "fields"));
+          Objects.requireNonNull(sourceRow, "sourceRow");
+       }
+       public ViewDeclaration(LoweredNodeId id, LoweredOrigin origin, SymbolId sourceSymbol, String javaName,
+             SymbolId sourceEntitySymbol, String sourceEntityJavaName, List<ViewField> fields) {
+          this(id, origin, sourceSymbol, javaName, sourceEntitySymbol, sourceEntityJavaName, fields, Optional.empty());
+       }
+    }
 
-   record ViewField(
-      LoweredNodeId id,
-      LoweredOrigin origin,
-      SymbolId sourceSymbol,
-      String javaName,
-      LoweredJavaType type,
-      SymbolId sourceFieldSymbol,
-      String sourcePropertyName,
-      Optional<SpringBootDeclaration.ViewRelationPlan> relation
-   ) {
-      public ViewField {
-         SpringBootDeclaration.requireDeclaration(id, origin, sourceSymbol, javaName);
-         Objects.requireNonNull(type, "type");
-         Objects.requireNonNull(sourceFieldSymbol, "sourceFieldSymbol");
-         SpringBootDeclaration.requireText(sourcePropertyName, "sourcePropertyName");
-         Objects.requireNonNull(relation, "relation");
-      }
+    record ViewField(
+       LoweredNodeId id, LoweredOrigin origin, SymbolId sourceSymbol, String javaName,
+       LoweredJavaType type, ViewValue value
+    ) {
+       public ViewField {
+          SpringBootDeclaration.requireDeclaration(id, origin, sourceSymbol, javaName);
+          Objects.requireNonNull(type, "type");
+          Objects.requireNonNull(value, "value");
+       }
+       public ViewField(LoweredNodeId id, LoweredOrigin origin, SymbolId sourceSymbol, String javaName,
+             LoweredJavaType type, SymbolId sourceFieldSymbol, String sourcePropertyName, Optional<ViewRelationPlan> relation) {
+          this(id, origin, sourceSymbol, javaName, type,
+             relation.<ViewValue>map(plan -> new RelatedViewValue(sourceFieldSymbol, sourcePropertyName, plan))
+                .orElseGet(() -> new ColumnViewValue(sourceFieldSymbol, sourcePropertyName)));
+       }
+       public ViewField(LoweredNodeId id, LoweredOrigin origin, SymbolId sourceSymbol, String javaName,
+             LoweredJavaType type, SymbolId sourceFieldSymbol, String sourcePropertyName) {
+          this(id, origin, sourceSymbol, javaName, type, sourceFieldSymbol, sourcePropertyName, Optional.empty());
+       }
+       public SymbolId sourceFieldSymbol() {
+          return switch (value) {
+             case ColumnViewValue column -> column.sourceFieldSymbol();
+             case RelatedViewValue related -> related.sourceFieldSymbol();
+             case ComputedViewValue ignored -> throw new IllegalStateException("computed projection has no column");
+          };
+       }
+       public String sourcePropertyName() {
+          return switch (value) {
+             case ColumnViewValue column -> column.sourcePropertyName();
+             case RelatedViewValue related -> related.sourcePropertyName();
+             case ComputedViewValue ignored -> throw new IllegalStateException("computed projection has no column");
+          };
+       }
+       public Optional<ViewRelationPlan> relation() {
+          return value instanceof RelatedViewValue related ? Optional.of(related.plan()) : Optional.empty();
+       }
+    }
 
-      public ViewField(
-         LoweredNodeId id,
-         LoweredOrigin origin,
-         SymbolId sourceSymbol,
-         String javaName,
-         LoweredJavaType type,
-         SymbolId sourceFieldSymbol,
-         String sourcePropertyName
-      ) {
-         this(id, origin, sourceSymbol, javaName, type, sourceFieldSymbol, sourcePropertyName, Optional.empty());
-      }
-   }
+    sealed interface ViewValue permits ColumnViewValue, RelatedViewValue, ComputedViewValue {}
+
+    record ColumnViewValue(SymbolId sourceFieldSymbol, String sourcePropertyName) implements ViewValue {
+       public ColumnViewValue {
+          Objects.requireNonNull(sourceFieldSymbol, "sourceFieldSymbol");
+          SpringBootDeclaration.requireText(sourcePropertyName, "sourcePropertyName");
+       }
+    }
+    record RelatedViewValue(SymbolId sourceFieldSymbol, String sourcePropertyName, ViewRelationPlan plan) implements ViewValue {
+       public RelatedViewValue {
+          Objects.requireNonNull(sourceFieldSymbol, "sourceFieldSymbol");
+          SpringBootDeclaration.requireText(sourcePropertyName, "sourcePropertyName");
+          Objects.requireNonNull(plan, "plan");
+       }
+    }
+    record ComputedViewValue(SpringExpression expression) implements ViewValue {
+       public ComputedViewValue { Objects.requireNonNull(expression, "expression"); }
+    }
 
    /** How many related rows a nested projection reads. */
    enum RelationCardinality {

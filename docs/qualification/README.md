@@ -528,3 +528,26 @@ Maven JVM 384 MiB／2 个可见处理器，测试 fork 512 MiB／2 个可见处�
 本轮只将八题账本中 shop 的“金额＝单价×数量”由待验收 △ 改为 ✓：参考样例已经使用该表达式、八题生成工程构建通过，独立真库场景验证同一金额／数量／库存及明细组合。其余折扣项和未写出项不自动升级。总账现为 **84条：65完整（77%）、5带折扣（6%）、14未写出（17%）**；多商品、退库存、逾期天数、聚合与计算视图仍未因此实现。
 
 没有重跑本机构建、测试或服务。纯文档收尾只做差异与链接检查；该验收基线不覆盖后续 G11 的新源码。下一阶段先形成计算视图方案，核心实现待负责人介入确认。
+
+
+<a id="g11-computed-view-local"></a>
+## 20. G11：来源行计算视图字段（本机定向）
+
+负责人确认[设计 12 第 22 节](../design/12-feature-semantics-and-semantic-types.md#g11-computed-view-proposal)后实现。基线上一次完整验收仍是 `997794c` 的 #147；`d6f03e7` 的 #148 只覆盖文档提交，两者都不覆盖本批源码，因此本节只报本机定向结果。
+
+**通过数（本机 27 类 183 项，0 失败／错误／跳过）**：语义 17＋结构门与草稿 43＋源写回 2；源编辑 7；降级与 IR 硬化 49；生成 46；应用层 7。含新增 `ComputedViewSemanticsTest`、`ComputedViewEditingTest`、`ComputedViewLoweringTest`、`ComputedViewRuntimeTest`、`ComputedViewToolchainContractTest` 与 G6/G7/G10 旧回归、`LanguageReferenceExamplesTest`。
+
+**已证明**：计算字段只读来源行；普通返回、分页和嵌套一对一／一对多共用同一取值实现（`renderProjectionValue`）；精确金额不按存储精度舍入；`item.x` 与输出同名互不干扰；类型／枚举／跨文件成员沿正式绑定改名；首次新增计算与普通字段转计算均可写回；构造出的畸形 IR（错行、跨视图、错属性、错类型、`Unit`、字符串冒充整数）被独立校验拒绝；物理 schema 与非计算字段的生成文件不变。
+
+**兼容性对照**：以 `git show HEAD:` 取出上一基线 `WorkflowRenderer`，与当前渲染器分别生成八题（去掉本批 `= …` 字段后），83／91／69／117／89／80／66／105 个文件逐字节相同。此对照只覆盖“无计算字段时不变”，不作为 G11 功能通过证据。
+
+**未执行／不计通过**：真实 MySQL＋HTTP（包括新增的原子选课与满额后 `remaining`／`full` 断言，已接入 `MultiplicationBusinessConformanceIT` 与 `relation` IT 的既有夹具；`course` 表加入同一 DDL／seed）、八题生成工程构建、双全量门、独立部署均未在本机运行，交同源码 CI。`ProjectVisibilityTest` 有 4 项在本机因 Windows 不支持安全目录相对读取而报 `SIR-APP-SOURCES-READ-001`，未放宽生产读取边界、不折成通过，交 Linux CI 执行。
+
+```powershell
+$env:MAVEN_OPTS='-Xmx384m -XX:ActiveProcessorCount=2'
+mvn -B -q -o -pl sir-toolchain-application -am test `
+  '-Dtest=ComputedViewSemanticsTest,ComputedViewEditingTest,ComputedViewLoweringTest,ComputedViewRuntimeTest,ComputedViewToolchainContractTest,LanguageReferenceExamplesTest' `
+  '-Dsurefire.failIfNoSpecifiedTests=false' '-DargLine=-Xmx512m -XX:ActiveProcessorCount=2'
+```
+
+结果汇总按类去重读取各模块最新 `TEST-*.xml`，副本与索引在 `target/g11-verification/`；渲染器兼容对照脚本为 `target/G11BaselineCompare.java`。需求账本未上调（仍 **65／5／14**）：“显示剩余名额”要等同源码真库证据才改判；library 可借数量是跨行聚合，不因本行计算完成。本节不表示 G11 已验收。

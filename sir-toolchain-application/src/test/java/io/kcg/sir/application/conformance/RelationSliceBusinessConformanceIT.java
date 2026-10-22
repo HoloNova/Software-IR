@@ -200,6 +200,11 @@ class RelationSliceBusinessConformanceIT {
                 firstCourse.contains("\"name\":\"Alice\"") && firstCourse.contains("\"name\":\"Bob\""),
                 "CS101=" + firstCourse);
 
+        slice.check("computed root reads its own capacity without a stored column",
+                BusinessSliceHarness.field(firstCourse, "doubledCapacity").equals("60"), firstCourse);
+        slice.check("computed nested scalar reads the related student rather than the root",
+                firstCourse.contains("\"label\":\"Alice\"") && firstCourse.contains("\"label\":\"Bob\""), firstCourse);
+
         // A3: an existence filter on the root does not filter the projection: the cancelled
         // enrollment of a matching course is still one of that course's enrollments.
         String secondCourse = recordFor(first.response().body(), "CS102");
@@ -209,6 +214,12 @@ class RelationSliceBusinessConformanceIT {
         slice.check("the projected row carries the status it was stored with",
                 secondCourse.contains("\"status\":\"CANCELLED\"") && secondCourse.contains("\"name\":\"Cara\""),
                 "CS102=" + secondCourse);
+
+        slice.check("computed enum comparison follows each enrollment row, including cancelled rows",
+                occurrences(secondCourse, "\"active\":true") == 1 && occurrences(secondCourse, "\"active\":false") == 1,
+                secondCourse);
+        slice.check("computed paged roots use different row bindings",
+                BusinessSliceHarness.field(secondCourse, "doubledCapacity").equals("40"), secondCourse);
 
         // A4: thirty related rows cost the same reads as one, and all of them are projected.
         String bulkCourse = recordFor(first.response().body(), "ZOO101");

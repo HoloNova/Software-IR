@@ -394,14 +394,19 @@ final class NormalizePass {
          continue;
          }
 
+         NormalizedExpression computed = field.expression().map(this::normalizeExpression).orElse(null);
+         if (field.expression().isPresent() && computed == null) continue;
          fields.add(new NormalizedViewField(
          SymbolIdFactory.viewField(this.softwareName, decl.name().text(), fieldName),
          fieldName,
          field.span(),
          field.id(),
          type,
-         this.siteTargetOrUnknown(field.name().id()),
-         this.relationOf(type),
+         field.expression().<NormalizedViewField.Value>map(expression -> new NormalizedViewField.Computed(
+             SymbolIdFactory.viewSourceRow(id), computed))
+             .orElseGet(() -> this.relationOf(type).<NormalizedViewField.Value>map(relation ->
+                new NormalizedViewField.Related(this.siteTargetOrUnknown(field.name().id()), relation))
+                .orElseGet(() -> new NormalizedViewField.Column(this.siteTargetOrUnknown(field.name().id())))),
          field.type() instanceof AstNamedTypeRef named ? Optional.of(named.name().id()) : Optional.empty()));
       }
 

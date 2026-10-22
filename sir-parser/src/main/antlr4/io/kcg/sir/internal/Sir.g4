@@ -147,15 +147,20 @@ inputDecl
     ;
 
 viewDecl
-    : VIEW viewName=IDENT FROM sourceEntity=IDENT LBRACE fieldDecl* RBRACE
+    : VIEW viewName=IDENT FROM sourceEntity=IDENT LBRACE viewFieldDecl* RBRACE
     ;
 
 fieldDecl
     : FIELD IDENT COLON typeRef constraintList? VERSIONED? SEMI
     ;
 
+// Only response projections may compute a value. Inputs and stored fields keep their own rules.
+viewFieldDecl
+    : FIELD IDENT COLON typeRef constraintList? VERSIONED? (ASSIGN expression)? SEMI
+    ;
+
 // An entity member is the only field the language lets carry a persistent declaration id.
-// input/view fields deliberately keep the plain fieldDecl rule: a stray @id there is a parse
+// input/view fields deliberately omit persistent-id annotations: a stray @id there is a parse
 // error rather than a silently ignored annotation.
 entityMemberDecl
     : FIELD IDENT COLON typeRef constraintList? VERSIONED? uniqueModifier? secretModifier? defaultModifier? idAnnotation? SEMI

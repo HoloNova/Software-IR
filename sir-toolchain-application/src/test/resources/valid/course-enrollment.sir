@@ -47,12 +47,14 @@ software CourseEnrollment {
       field id: Id;
       field studentNo: Text;
       field name: Text;
+      field label: Text = item.name;
     }
 
     view EnrollmentSummary from Enrollment {
       field id: Id;
       field student: StudentSummary;
       field status: EnrollmentStatus;
+      field active: Flag = item.status == EnrollmentStatus.ACTIVE;
     }
 
     view CourseEnrollmentItem from Course {
@@ -60,6 +62,7 @@ software CourseEnrollment {
       field code: Text;
       field name: Text;
       field capacity: Count;
+      field doubledCapacity: Count = item.capacity * 2;
       field enrollments: List<EnrollmentSummary>;
     }
 

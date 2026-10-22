@@ -183,11 +183,23 @@ final class TypePass {
    /**
      * A projected field must declare exactly the type of the entity field it reads. Anything else
      * would let the response contract drift away from the column it claims to project.
+     * An explicit calculation instead declares exactly its expression's type.
      */
    private void typeViewFields(AstViewDecl view) {
       for (AstViewField field : view.fields()) {
          SirType declaredType = this.resolved.typeRefTypes().get(field.type().id());
-         SymbolId boundFieldId = this.resolved.referenceSiteBindings().targetFor(field.name().id()).orElse(null);
+         if (field.expression().isPresent()) {
+             AstExpression expression = field.expression().orElseThrow();
+             SirType actual = this.typeExpression(expression, this.resolved.declarationBindings().get(view.id()), Set.of("item"));
+             if (actual == PrimitiveType.INT32 && declaredType == PrimitiveType.INT64 && this.widenIntegerLiteral(expression))
+                actual = PrimitiveType.INT64;
+             if (actual != null && declaredType != null && !declaredType.equals(actual)) {
+                this.diagnostics.add(DiagnosticBuilder.error("SIR-TYPE-001",
+                   "计算投影类型与表达式不一致: " + field.name().text(), field.span()));
+             }
+             continue;
+          }
+          SymbolId boundFieldId = this.resolved.referenceSiteBindings().targetFor(field.name().id()).orElse(null);
          Symbol boundField = boundFieldId == null ? null : this.resolved.symbols().byId(boundFieldId).orElse(null);
          if (declaredType == null || !(boundField instanceof Symbol.FieldSymbol fieldSymbol)) {
             continue;
