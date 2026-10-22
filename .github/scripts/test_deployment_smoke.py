@@ -16,6 +16,8 @@ class DeploymentLifecycleTest(unittest.TestCase):
         self.shapes = {'amount': (19, 2), 'rebate': (19, 2)}
         self.operations = []
         self.filters = []
+        self.drift_output = 'KCG_DB_BLOCKED: DRIFT: the live schema is not the V11 contract; nothing was changed'
+        self.repair_on_refusal = False
         self.context = {
             'a': SimpleNamespace(instance='control-instance', v3_package='delivery-v3'),
             'acceptance_instance': 'acceptance-instance', 'acceptance_state': 'acceptance-state',
@@ -25,8 +27,12 @@ class DeploymentLifecycleTest(unittest.TestCase):
         }
         self.tree = ast.parse(SOURCE.read_text(encoding='utf-8-sig'))
         functions = [node for node in self.tree.body if isinstance(node, ast.FunctionDef)
-                     and node.name in ('database_container', 'sql', 'stop_application')]
+                     and node.name in ('database_container', 'sql', 'stop_application', 'assert_drift_refusal')]
         exec(compile(ast.Module(body=functions, type_ignores=[]), str(SOURCE), 'exec'), self.context)
+        main = next(node for node in self.tree.body if isinstance(node, ast.Try))
+        shape_query = next(node for node in main.body if isinstance(node, ast.Assign)
+                           and any(isinstance(target, ast.Name) and target.id == 'shape_query' for target in node.targets))
+        exec(compile(ast.Module(body=[shape_query], type_ignores=[]), str(SOURCE), 'exec'), self.context)
 
     def check_output(self, command, text):
         self.assertTrue(text)
@@ -49,6 +55,9 @@ class DeploymentLifecycleTest(unittest.TestCase):
         self.assertTrue(self.database_running)
         self.assertFalse(self.application_running, 'stop the writer before altering its schema')
         sql = command[-1]
+        if sql.startswith('SELECT CONCAT(NUMERIC_PRECISION'):
+            column = sql.split("COLUMN_NAME='", 1)[1].split("'", 1)[0]
+            return ','.join(map(str, self.shapes[column]))
         self.assertTrue(sql.startswith('ALTER TABLE favorite MODIFY '), sql)
         column = sql.split()[4]
         precision, scale = sql.split('DECIMAL(', 1)[1].split(')', 1)[0].split(',')
@@ -67,7 +76,9 @@ class DeploymentLifecycleTest(unittest.TestCase):
         drifted = any(shape != (19, 2) for shape in self.shapes.values())
         self.assertEqual(3 if drifted else 0, expected)
         self.application_running = not drifted
-        return 'decimal precision/scale mismatch' if drifted else 'RUNNING'
+        if drifted and self.repair_on_refusal:
+            self.shapes = {'amount': (19, 2), 'rebate': (19, 2)}
+        return self.drift_output if drifted else 'RUNNING'
 
     def drift_sequence(self):
         main = next(node for node in self.tree.body if isinstance(node, ast.Try))
@@ -89,7 +100,29 @@ class DeploymentLifecycleTest(unittest.TestCase):
         self.assertTrue(self.application_running)
         self.assertEqual([('deploy', 'start', 3), ('deploy', 'start', 3), ('deploy', 'start', 0)],
                          [operation for operation in self.operations if operation[0] == 'deploy'])
-        self.assertEqual(4, sum(operation[:2] == ['docker', 'exec'] for operation in self.operations))
+        self.assertEqual(4, sum(operation[:2] == ['docker', 'exec'] and operation[-1].startswith('ALTER TABLE')
+                                for operation in self.operations))
+        self.assertEqual(2, sum(operation[:2] == ['docker', 'exec'] and operation[-1].startswith('SELECT CONCAT')
+                                for operation in self.operations))
+
+    def test_unrelated_or_internal_errors_do_not_satisfy_drift_acceptance(self):
+        for output in ('KCG_DB_BLOCKED: UNMANAGED_SCHEMA: unrelated; nothing was changed',
+                       'KCG_DB_BLOCKED: DRIFT: missing the no-change guarantee',
+                       'decimal precision/scale mismatch: favorite.amount'):
+            with self.subTest(output=output):
+                with self.assertRaises(AssertionError):
+                    self.context['assert_drift_refusal'](output, 'acceptance-instance')
+                self.assertEqual('NOT_RUN', self.context['report']['decimalShape'])
+
+    def test_a_refusal_that_still_starts_the_application_is_rejected(self):
+        with self.assertRaisesRegex(AssertionError, 'must not start the application'):
+            self.context['assert_drift_refusal'](self.drift_output, 'acceptance-instance')
+
+    def test_drift_must_not_be_automatically_repaired(self):
+        self.repair_on_refusal = True
+        with self.assertRaisesRegex(AssertionError, 'must not repair precision drift'):
+            exec(compile(self.drift_sequence(), str(SOURCE), 'exec'), self.context)
+        self.assertEqual('NOT_RUN', self.context['report']['decimalShape'])
 
     def test_missing_or_ambiguous_application_is_not_silently_accepted(self):
         for ids in ('', 'app-id\nother-app-id'):

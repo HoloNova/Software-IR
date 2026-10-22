@@ -123,6 +123,15 @@ def sql(statement, app=False, expected=0, instance=None):
     return run(['docker', 'exec', database_container(instance), 'sh', '-c', command, 'sh', statement], expected)
 
 
+def assert_drift_refusal(output, instance):
+    """The public start protocol classifies schema drift; internal verifier messages are not exported."""
+    assert 'KCG_DB_BLOCKED: DRIFT:' in output and '; nothing was changed' in output, output
+    running = subprocess.check_output(
+        ['docker', 'ps', '-q', '--filter', f'label=com.docker.compose.project={instance}',
+         '--filter', 'label=com.docker.compose.service=app'], text=True).strip()
+    assert not running, f'drift refusal must not start the application: {running}'
+
+
 try:
     deploy('deploy')
     report['deployment'] = 'PASSED'
@@ -381,11 +390,13 @@ try:
     stop_application(acceptance_instance)
     sql('ALTER TABLE favorite MODIFY amount DECIMAL(20,2) NOT NULL DEFAULT 0.00', instance=acceptance_instance)
     drift = deploy('start', expected=3, instance=acceptance_instance, state=acceptance_state, port=acceptance_port, package=a.v3_package)
-    assert 'decimal precision/scale mismatch' in drift, drift
+    assert_drift_refusal(drift, acceptance_instance)
+    assert sql(shape_query.format('amount'), instance=acceptance_instance).strip() == '20,2', 'start must not repair precision drift'
     sql('ALTER TABLE favorite MODIFY amount DECIMAL(19,2) NOT NULL DEFAULT 0.00', instance=acceptance_instance)
     sql('ALTER TABLE favorite MODIFY rebate DECIMAL(19,3) NULL', instance=acceptance_instance)
     drift = deploy('start', expected=3, instance=acceptance_instance, state=acceptance_state, port=acceptance_port, package=a.v3_package)
-    assert 'decimal precision/scale mismatch' in drift, drift
+    assert_drift_refusal(drift, acceptance_instance)
+    assert sql(shape_query.format('rebate'), instance=acceptance_instance).strip() == '19,3', 'start must not repair scale drift'
     sql('ALTER TABLE favorite MODIFY rebate DECIMAL(19,2) NULL', instance=acceptance_instance)
     deploy('start', instance=acceptance_instance, state=acceptance_state, port=acceptance_port, package=a.v3_package)
     report['decimalShape'] = 'PASSED'

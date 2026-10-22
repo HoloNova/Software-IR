@@ -74,8 +74,8 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 ## 4. 验证状态
 
 - 当前验收基线：`484a8a792c3ec6a7b9f5a7b7171b009e981a8ce3` 的 [CI #140](https://github.com/HoloNova/Software-IR/actions/runs/39527408701) 全部 success，双全量门、业务 IT、独立验证、CLI、独立部署均通过，闭环 #136～#139；[证据索引](qualification/README.md#ci-140-accepted)。该基线不覆盖本批 G10，前文旧 NOT_RUN 描述属于历史执行点。
-- G10：初次本机定向 105 项、两处 #141 修复定向 65 项及 #142 环境绑定修复 5 项通过；#143 金额真库 **57 项通过**，#144 双全量门和业务门均 success。部署仍未闭环：#143 的漂移生命周期夹具已修复，但 #144 在更早的合同阶段缺少 Surefire provider 下载失败；已单独提交 `b8f2cf0`，构建预热生成合同的运行器，真正合同离线执行，外部验收协议不变。见[第 12～16 节](qualification/README.md#ci-144-dependency-fix)，不宣称金额部署已经验收。
-- G6：精确乘法、金额乘整数与能力级必需值计划已实现，28 类最新报告 **223 项通过**；shop 数量购买、原子扣库与明细顺序已同步。真实并发、事务回滚与本批生成工程构建由新 CI 承担，当前 NOT_RUN；[第 17 节](qualification/README.md#g6-multiplication-local)。
+- G10：初次本机定向 105 项、两处 #141 修复定向 65 项及 #142 环境绑定修复 5 项通过；#143 金额真库 **57 项通过**，#144 双全量门和业务门均 success。部署仍未闭环：#144 的合同依赖修复 `b8f2cf0` 已由 #146 的真实合同通过验证；#146 金额真库 57 项通过，精度漂移也实际以公开 DRIFT 协议拒绝，但烟测误期待内部异常文本而失败。本轮仅修验收断言并增加未启动应用／未自动修复检查，16 项定向通过；恢复启动和新实例迁移仍待修复 CI。见[第 18 节](qualification/README.md#ci-146-drift-protocol-fix)，不宣称金额部署已经验收。
+- G6：精确乘法、金额乘整数与能力级必需值计划已实现，28 类最新报告 **223 项通过**；shop 数量购买、原子扣库与明细顺序已同步。已提交推送 `85bfc8f`，#146 的双全量门与业务门通过；乘法真库 37 项全过，覆盖生成工程构建、真实并发与回滚。独立部署仍因漂移烟测协议失配失败，修复见[第 18 节](qualification/README.md#ci-146-drift-protocol-fix)，不把部分门通过写成完整 CI 通过；本机实现记录在[第 17 节](qualification/README.md#g6-multiplication-local)。
 
 - 最新核验：`b56ce16`（改名）的[verify #124](https://github.com/HoloNova/Software-IR/actions/runs/39362618814)通过；此前路由 `b5d6c25` 的 [#122](https://github.com/HoloNova/Software-IR/actions/runs/39361622833)、归属与授权冒烟 `5c7b1fb` 的 [#121](https://github.com/HoloNova/Software-IR/actions/runs/39116237645) 通过（#123 因 #124 的推送被取消，其改动由 #124 覆盖）。核对时只读了运行状态。
 - 部署交付：`a7cba11` 的 [verify #93](https://github.com/HoloNova/Software-IR/actions/runs/39002409782) 曾因验收脚本失败，之后由 #94～#98 验收，见[部署报告](DEPLOYMENT_DELIVERY_REPORT.md)。

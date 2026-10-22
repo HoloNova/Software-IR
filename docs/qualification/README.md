@@ -476,3 +476,31 @@ mvn -B -q -o -pl sir-toolchain-application -am test "-Dtest=$tests" '-Dsurefire.
 ```
 
 #144 的合同依赖修复已独立提交并推送 `b8f2cf0`，8 项定向不计入本节 223 项。G6 按阶段授权另行 commit + push，依赖修复的验证也以最终源码 CI 为准，不能将旧全量门或 dry-run 作为本批验收。
+
+
+<a id="ci-146-drift-protocol-fix"></a>
+## 18. CI #146：精度漂移验收误依赖内部异常文本
+
+失败提交 `85bfc8f9e7da3cf25c28e905766601a7c1f4b861`，[verify #146](https://github.com/HoloNova/Software-IR/actions/runs/39611291980)。双全量门、业务 IT、独立验证和 CLI 均 success；下载的 conformance-evidence 中 Money **57 checks passed / 0 failed**，Multiplication **37 checks passed / 0 failed**，含缺省／null 数量拒写、计算后精度失败回滚、整数溢出、12 请求竞争扣数量与明细外键一致性。G6 的通用能力有该 SHA 的真库证据，但不据此宣称整条 CI 成功，八题需求账本本轮不重判。
+
+`deployment-evidence/report.json` 的 deployment／HTTP／persistence／privileges／Swagger／contract／business／update 均 PASSED，故 `b8f2cf0` 的合同运行器预热与离线真实合同已生效。失败在 dataUpdate 的第一条金额漂移断言：`66-process.log` 显示 11 条 Flyway 迁移校验成功，随后以 3 拒绝：
+
+```text
+KCG_DB_BLOCKED: DRIFT: the live schema is not the V11 contract; nothing was changed
+```
+
+烟测却期待 `decimal precision/scale mismatch`。实际调用链是 `classify -> matches -> verify`：verify 内部检测精度差异并抛异常，matches 将不匹配返回 false，classify 按既有公开协议输出 DRIFT。因此不能把烟测当作产品没有检测漂移，也不能为测试改掉公开的分类协议。旧生命周期模型恰好返回了虚构的内部文字，漏检这个接口失配。证据副本在 `target/ci-investigation/146/`。
+
+**修复仅限验收与测试。** 烟测仍要求 start 以 3 拒绝，并核对公开 `KCG_DB_BLOCKED: DRIFT` 与无修改声明；新增检查确认应用没有运行，information_schema 中被篡改的 precision／scale 保持原样、未被自动修复。仍分别篡改非空带默认值的金额 precision 与可空无默认值的 scale，恢复后再次启动，未删除独立精度断言或放宽拒绝码。生产校验、Money 算术与迁移代码均未改。
+
+**本机 RED→GREEN 和定向。** 将生命周期模型换成 CI 的真实公开输出后，旧脚本在同一断言失败。修复后 Python **5 项通过**（另含子例）：完整漂移／恢复流程；应用缺失或多实例拒绝；无关错误、内部文字或缺少无修改声明不能冒充正确 DRIFT；拒绝后仍启动应用不能通过；自动修复精度不能通过。Python 语法检查通过。
+
+新增 DecimalSchemaVerifierRuntimeTest 从实际导出的 Migrate.java **原样截取** validColumnShape、verify、matches 及其唯一键表声明，用 JDK 编译执行；只模拟 JDBC 返回的 metadata，不重写判断或 SQL，不增加 Flyway 依赖，不启动工具进程。3 项验证精确默认值和可空列的正常快照通过，以及仅 precision 或 scale 改变时的专门拒绝、matches 返回 false。它不覆盖 Flyway 或完整 Migrate.main；公开分类的证据来自上述真实 CI 日志。连同 MoneyDeliveryTest 5 项和 DeploymentDependencyPrimingTest 3 项，Java 最新 XML 共 **11 项通过、0 failures／errors／skips**，本轮合计 **16 项定向**，不累加重复运行。
+
+```powershell
+python -m unittest discover -s .github/scripts -p test_deployment_smoke.py -v
+python -m py_compile .github/scripts/deployment-smoke.py .github/scripts/test_deployment_smoke.py
+mvn -B -q -o -pl sir-generator-spring-boot -am test '-Dtest=DecimalSchemaVerifierRuntimeTest,MoneyDeliveryTest,DeploymentDependencyPrimingTest' '-Dsurefire.failIfNoSpecifiedTests=false' '-DargLine=-Xmx512m -XX:ActiveProcessorCount=2' '-DforkCount=1'
+```
+
+Maven JVM 384 MiB／2 个可见处理器，测试 fork 512 MiB／2 个可见处理器。未跑全量、生成工程 Maven 构建、Docker、MySQL 或 HTTP，未启动应用。AFT Java LSP 初始化失败，诊断 PARTIAL；Python 两处 expected=None 的旧类型推断诊断未改，以实际编译和定向为据。覆盖率未测，无 UI 改动。漂移拒绝后的精度恢复和新实例 V1..V11 重放仍待修复源码 CI，不提前验收 G10 部署。按阶段授权独立提交推送，不与 G11 设计混合。

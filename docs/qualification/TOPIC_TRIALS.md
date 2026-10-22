@@ -65,11 +65,11 @@
 | G3（已补） | **联合唯一**：几个字段合起来不重复（一人一课、一人一赞、一间房一个时段）。原来语法里没有；现在实体可写 `unique (a, b);`，新建的行撞上时用 `persist 变量 else 错误` 报声明的错误 | course、blog、booking | 试写时 `unique (a, b)` 是语法错误；见[设计 12 第 15 节](../design/12-feature-semantics-and-semantic-types.md) | 已补 |
 | G4（已补，真库待 CI） | **按用户选的值穿过关联过滤**：关联条件的请求字段、actor 和已加载值按有类型的 Lowered 参数计划绑定，不拼接 SQL；保留关联根行要求 | blog | 原 `SIR-LOWER-FEATURE-001` 的 RED 已转绿；博客标签样例内存编译与生成通过，文本注入样本和账号隔离留给 CI | 已补 |
 | G5 | **对列表循环**：请求里带一个列表、工作流逐项处理；对一批行统一改或删（订单行、级联删除、重复预约）。输入可以声明 `List<Id>`，但没有办法遍历它；也没有 `delete ... where` | shop、booking | 试写：`load` 用列表当主键报类型不兼容；`delete Comment where ...` 是语法错误 | 高（对商城） |
-| G6（已实现，待同源码 CI） | **精确乘法**：同型整数、Decimal 与整数混合乘法；Lowering 显式转换与能力级算术缺值检查，保留分页默认、Optional／PATCH 和原子加减边界。shop 已按数量计价扣库存，未增加日期差 | shop、library | [设计第 21 节](../design/12-feature-semantics-and-semantic-types.md#g6-multiplication-proposal)；28 类 221 项主回归通过，真库并发与回滚待 CI | 待验收 |
+| G6（已实现，待同源码 CI） | **精确乘法**：同型整数、Decimal 与整数混合乘法；Lowering 显式转换与能力级算术缺值检查，保留分页默认、Optional／PATCH 和原子加减边界。shop 已按数量计价扣库存，未增加日期差 | shop、library | [设计第 21 节](../design/12-feature-semantics-and-semantic-types.md#g6-multiplication-proposal)；28 类 223 项本机主回归通过；`85bfc8f` 的 #146 乘法真库37项通过，完整部署仍待修复烟测协议后验收 | 待验收 |
 | G7（已补，真库待 CI） | **可选值**：`is none`／`is present` 判断空值；兼容类型可比较，任意一侧为空均为 false（包括 `!=`），`not` 仍普通取反。用 `input.x is none or item.x == input.x` 明确省略未传的筛选条件；PATCH `.present` 不变 | tasks、market | [设计 12 第 17 节](../design/12-feature-semantics-and-semantic-types.md)；语义、降级、生成 Java 真值表与题目内存生成已验证 | 已补 |
 | G8 | **分组聚合**：求和、平均、分组。普通条件行计数已由 G2 提供，但没有分组统计与视图计算字段，记账核心仍受影响 | ledger、library | 没有对应语法 | 高（对记账） |
 | G9 | **通用能力已由 #140 验收**：角色写权限、字段输入／赋值排除、字符串多段路径、公开读／本人写，复用普通 SIR；完整验收与计数不提前变更 | library、market、blog | 已加 text／names、正式引用 binding 与精确改名；不是并发锁；未逐题重判需求账本 | 已验收通用能力 |
-| G10 | **已实现、待本批 CI**：Money 默认 precision(19,2)，可覆写、精确校验、显式 DECIMAL 交付与原子金额；不隐式舍入或自动迁移精度 | market、shop、ledger | 三题已改 Money；#143 金额真库 57 项通过，#144 部署被合同依赖下载阻断，精度漂移仍未闭环；[设计 12 第 20 节](../design/12-feature-semantics-and-semantic-types.md#g10-money-proposal) | 待验收 |
+| G10 | **已实现、待本批 CI**：Money 默认 precision(19,2)，可覆写、精确校验、显式 DECIMAL 交付与原子金额；不隐式舍入或自动迁移精度 | market、shop、ledger | 三题已改 Money；#146 金额真库57项与真实合同通过，精度漂移被公开DRIFT协议拒绝；烟测误期待内部异常文本而失败，恢复与新实例链仍未闭环；[设计 12 第 20 节](../design/12-feature-semantics-and-semantic-types.md#g10-money-proposal) | 待验收 |
 | G11 | **视图里的计算字段**：剩余名额 = 容量 − 已选 这类展示值，视图字段必须是实体字段 | course、library | `SIR-SYMBOL-002` | 低 |
 | G12 | **重复的账号样板**：每个题目都要写 `Register`、`UserView`、`use DualTokenLogin` 共约 35 行，八题一模一样 | 全部 | — | 低 |
 | G13 | **写作上的小磕绊**：`fails` 必须按错误名排序；`order`、`item`、`from` 是关键字不能当名字；这些让模型更容易写错，却不影响能做什么 | 全部 | `SIR-VALID-001`、`SIR-PARSE-001` | 低 |
