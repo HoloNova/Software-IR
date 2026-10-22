@@ -953,6 +953,8 @@ load Room by input.roomId as room for update else RoomNotFound;
 
 `for update` 只允许在 `requires atomic` 的 command 中按主键使用；不能用于 readonly／query、非原子能力或 `by 字段:`。拿不到行时仍按声明错误失败；scope 过滤也保留。锁持有到整个事务结束，不要求修改或 persist 这条父行。
 
+业务组合例见实际 [library 样例](../sir-toolchain-application/src/test/resources/topics/library/project.sir)：借／还先锁读者，`activeLoans < 5` 的条件增量占额；首次归还减一，重复归还必须在减额前拒绝。固定 User → Loan → Copy 锁顺序，副本冲突抛错后整个事务回滚，不能吞掉错误继续写。计数不是瞬时 `count` 的自动维护结果；所有写路径必须遵循协议，旧库须先按真实未归还 Loan 回填，不能直接用新列默认 0 启用业务。续借不改变名额。
+
 Spring Boot／MySQL 目标用带 identity 条件的 `SELECT … FOR UPDATE`，并为包含显式锁的能力计划 `READ_COMMITTED`；生成工程的 MyBatis 本地查询缓存使用 `STATEMENT`，防止前一次相同查询被事务内缓存复用。未写显式锁的既有能力保持原事务模式；版本条件更新原有的自动锁不变。Generator 不重新推导锁与隔离方案。
 
 行锁不是自动识别的业务互斥：**所有可能创建冲突记录的路径都必须先锁同一父行，再执行判定和写入**。例如房间预约用半开区间 `[startsAt, endsAt)`，重叠条件为 `item.startsAt < input.endsAt and item.endsAt > input.startsAt`，端点相邻不冲突；只写 `exists` 再插入、或只声明 `requires atomic`，不能保证并发防重叠。多父行锁仍需作者保持统一顺序；死锁／锁等待超时沿用执行失败协议，没有自动重试或 4xx 映射。运行时覆盖隔离级别、缓存或数据库协议不属于该保证。

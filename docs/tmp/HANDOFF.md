@@ -42,7 +42,7 @@
 
 ## 4. 待办（按建议顺序）
 
-当前试写数字（#150 验收后）：84条需求，66条（79%）完整写出，5条（6%）带折扣，13条（15%）尚未写出。#150 只把 course 剩余名额一条转✓，其余不自动重判。每补一个缺口，都要更新 `TOPIC_TRIALS.md` 的表和数字、`PROJECT_STATUS.md` 里那一句、语言参考、设计 12 新增一节。
+当前试写数字：84条需求，67条（80%）完整写出，5条（6%）带折扣，12条（14%）尚未写出。#154 已把 booking 重叠由△转✓；本批 library 限额只从✗转待真库△，不提前转✓。每补一个缺口，都要更新 `TOPIC_TRIALS.md` 的表和数字、`PROJECT_STATUS.md` 里那一句、语言参考、设计 12 新增一节。
 
 ### 4.1 G7 可选值比较与空值判断（已确认并实现，后续 #140 回归通过）
 
@@ -76,11 +76,17 @@ tasks、market 已更新；本机语义、降级、生成真值表、源往返�
 - G11：已按第22节实现并由 #150 验收：`field remaining: Count = item.capacity - item.enrolled;`，计算输出独立命名、当前行正式绑定，互斥 Column／Related／Computed 分支与共用投影渲染，不新增 SQL／DDL。course 增加 remaining／full；关系与乘法真库均含计算断言。库可借数量仍需跨行聚合，不在本轮。见[验证第21节](../qualification/README.md#ci-150-accepted)。下一项回到 G2 业务组合。
 - 最新 CI：`4a1d8c8c2f28fd0d5678f65bfd4494cf163d8321` 的 #150 全部门 success，G11 闭环：关系真库 40 项（含根行 doubledCapacity 60／40、嵌套 label 逐行、枚举 active 逐行）、乘法真库 56 项（含 8 并发选课仅 3 成功、满额后 remaining／full）、八题生成工程、双全量门及独立部署均通过，见[验证第21节](../qualification/README.md#ci-150-accepted)。#149 三项失败已确认是测试假设错误（借用只认夹具主表的 expectRow、视图未声明 capacity），已由 `4a1d8c8` 修正。计算仅基于本行、三个投影路径共用计划，不新增SQL／DDL，不自动舍入Money，也不补跨行可借数量。
 
-### 4.6.1 G2 第一批（已实现，待新 CI）
+### 4.6.1 G2 第一批（#154 已验收）
 
-显式 `load … as row for update else Error;` 仅 atomic command／主键允许；Scope、结构和源编辑保留事实。Spring Boot 目标明确 READ_COMMITTED，工程级 MyBatis 本地缓存 STATEMENT；显式锁用既有 BaseMapper identity locking query，不因能力变化修改实体 Mapper。原版本自动锁不变。booking 改为 `[startsAt,endsAt)`，Room 锁后执行重叠 exists。15 类 147 项定向通过，见[验证第 22 节](../qualification/README.md#g2-locking-local)。真库屏障检查复用 MultiplicationBusinessConformanceIT，未在本机执行，需求账本不变。首轮 #153 双全量门通过，但新增预约比较把 Room 对象绑定到 room_id 而返回 500，未能走到锁屏障；已修复 Lowering 的 identity 取值并补真实 MyBatis 参数回归，21 类 89 项定向通过，待修复 SHA CI；见[验证第 23 节](../qualification/README.md#ci-153-reference-identity-fix)。
+显式 `load … as row for update else Error;` 仅 atomic command／主键允许；Scope、结构和源编辑保留事实。Spring Boot 目标明确 READ_COMMITTED，工程级 MyBatis 本地缓存 STATEMENT；显式锁用既有 BaseMapper identity locking query，不因能力变化修改实体 Mapper。原版本自动锁不变。booking 改为 `[startsAt,endsAt)`，Room 锁后执行重叠 exists。15 类 147 项定向通过，见[验证第 22 节](../qualification/README.md#g2-locking-local)。真库屏障检查复用 MultiplicationBusinessConformanceIT，未在本机执行，需求账本不变。首轮 #153 双全量门通过，但新增预约比较把 Room 对象绑定到 room_id 而返回 500，未能走到锁屏障；已修复 Lowering 的 identity 取值并补真实 MyBatis 参数回归，21 类 89 项定向通过；随后 bf14d90 的 #154 全门成功，乘法／预约真库 72 项通过，含先读后等锁屏障，见[验证第 25 节](../qualification/README.md#ci-154-accepted)。
 
-复核修正：课程冲突也需要学生锁；旧草案先修课片段的 required 并未取得，任意集合需要反关联方案，不用单门限制冒充完成。下一批先处理 library 的限额及借／还一致性；课程冲突、先修课与排队仍未完成。verify 的 push 已忽略 docs/** 和 **/*.md，纯文档更新不触发 CI，文档尽量随源码提交。
+复核修正：课程冲突也需要学生锁；旧草案先修课片段的 required 并未取得，任意集合需要反关联方案，不用单门限制冒充完成。library 的限额及借／还一致性已实施待 CI（下节）；课程冲突、先修课与排队仍未完成。verify 的 push 已忽略 docs/** 和 **/*.md，纯文档更新不触发 CI，文档尽量随源码提交。
+
+### 4.6.2 G2 第二批：library 限额（已实现，待本批 CI）
+
+不改语言或生成器生产代码：User.activeLoans 默认 0，Borrow 先锁读者，以 <5 的条件增量占额后再改副本／建 Loan；GiveBack 锁 User → Loan → Copy，首次归还减一，重复／外人／计数异常拒写，晚失败要求整事务回滚。续借不占额。7 类 31 项定向通过；新的真库 IT 直接用实际 topics/library 源，已编译但未在本机执行。旧库需回填真实在借数，不能把 DEFAULT 0 当业务迁移；已有超限数保持真实值，可归还而不可继续借。见设计 23.6 与[验证第 26 节](../qualification/README.md#g2-library-local)。下一批评审课程冲突的学生锁与任意先修课的反关联，排队另案，不重做已有读取／金额／投影原语。
+
+CI 提速版 #155 主验证 8:18，正常路径 Completion 跳过，实际测试保留；部署被取消，不记整轮通过。完整基线仍为 #154。后续部署并行／缓存尚未实施，不必因已完成本轮提速重复修改工作流。文档随本批源码，不额外触发文档 CI。
 
 ### 4.7 G5 列表循环、G8 聚合（两个大块，**先和负责人确认要不要做**）
 

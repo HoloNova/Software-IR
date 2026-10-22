@@ -857,13 +857,13 @@ Lowering 复用 G6 的 IntegralToDecimal 与 G7 的空值比较计划；明确�
 course增加remaining与full，仍用原子守卫控制名额。只有实际实现与验收后才能重判“显示剩余名额”这一条；library可借数量需要跨行计数，不因本轮本行计算就算完成。G5／G8、日期差、界面和小模型评估都不在本轮范围。本机实现证据见下节；同源码 CI 仍待运行，不把新增写法直接当作真库验收结果。
 
 <a id="g2-business-combinations-proposal"></a>
-## 23. G2 业务组合：显式行锁与区间预约（第一批已实现，待同源码 CI）
+## 23. G2 业务组合：行锁／区间预约已验收，借阅限额待 CI
 
-负责人确认继续后进入实施，基线 `359a45a` 的 #152 success。本节修正实施前草案中未闭合的取值与并发假设，不把草案当实现。第一批交付显式行锁及预约防重叠；借阅限额、课程冲突与先修课仍须后续完成。
+负责人确认继续后进入实施，基线 `359a45a` 的 #152 success。本节修正实施前草案中未闭合的取值与并发假设，不把草案当实现。第一批显式行锁及预约防重叠已由 #154 验收；第二批借阅限额见 23.6，课程冲突与先修课仍未完成。
 
 ### 23.1 复核后修正的边界
 
-- `count Loan` 后比较不是并发借阅限额；需要读者行上的原子计数，并把借／还／重复还书的计数与 Loan 一致性共同验证。本批未改 library。
+- `count Loan` 后比较不是并发借阅限额；需要读者行上的原子计数，并把借／还／重复还书的计数与 Loan 一致性共同验证。第一批未改 library；第二批用现有能力组合，见 23.6。
 - 课程冲突即使用时段快照，也必须先锁学生行，才不会让同一学生并发选入重叠课程。旧草案只说“atomic 内先查再写”不足以保证这点。
 - 旧草案的先修课片段引用了尚未取得的 `required`。`Prerequisite` 是集合，现有单行 load／exists 不能自动遍历它；必须先设计“是否存在尚未完成的必修先修记录”的受支持反关联检查。不用单门限制、客户端传入先修课或一份时段快照冒充任意集合检查。
 - 排队提升仍缺稳定的首行取得及其并发归属；跨引用谓词、循环、聚合与日期差不随本批增加。
@@ -903,8 +903,49 @@ validate not taken else HourTaken;
 
 本机 15 类 147 项定向通过；Schema 完整性、声明往返、源编辑加锁／解锁／改名、Scope、构造 Core／目标 IR 的反例、真实生成 Java 编译执行与 MyBatis 配置 Binder 均覆盖。旧版本写入与实体 Mapper 不变性回归通过；八题只做内存生成／交付规划。证据见[验证第 22 节](../qualification/README.md#g2-locking-local)。
 
-真库检查复用 MultiplicationBusinessConformanceIT 的既有隔离应用，增加 8 重叠请求恰一成功、左右相邻区间成功、包含及相交均拒绝、逆序／空区间不写、不同房间独立。另用测试控制连接持有 Room 锁，并通过 performance_schema.data_lock_waits 确认 HTTP 已先读后等待，再插入并提交冲突，验证该请求取得锁后仍返回 409，不能依赖线程碰巧先后完成。该检查本机未执行，待同 SHA CI。账本保持 **66／5／13**，不把已改写样例当成已验收。
+真库检查复用 MultiplicationBusinessConformanceIT 的既有隔离应用，增加 8 重叠请求恰一成功、左右相邻区间成功、包含及相交均拒绝、逆序／空区间不写、不同房间独立。另用测试控制连接持有 Room 锁，并通过 performance_schema.data_lock_waits 确认 HTTP 已先读后等待，再插入并提交冲突，验证该请求取得锁后仍返回 409，不能依赖线程碰巧先后完成。该检查本机未执行，随后已由 #154 同源码真库验收；乘法／预约报告 72 项通过，包含先读后锁屏障。账本只据该证据将预约重叠一条由△转✓。
 
-首轮 #153 双全量门通过，但普通引用比较把整个 Room 当作 SQL 参数，预约均返回 500，锁屏障尚未验证。修复集中在 Lowering：在相等／不等、load 与关联外部参数中明确投影实体主键；input／actor 已是主键载体时不重复解引用，Optional 和 PresentComparison 同步使用物理类型。Generator、锁计划及真库断言均未改。新增真实 MyBatis 参数处理器回归后，21 类 89 项定向通过；修复源码仍待 CI，见[验证第 23 节](../qualification/README.md#ci-153-reference-identity-fix)。
+首轮 #153 双全量门通过，但普通引用比较把整个 Room 当作 SQL 参数，预约均返回 500，锁屏障尚未验证。修复集中在 Lowering：在相等／不等、load 与关联外部参数中明确投影实体主键；input／actor 已是主键载体时不重复解引用，Optional 和 PresentComparison 同步使用物理类型。Generator、锁计划及真库断言均未改。新增真实 MyBatis 参数处理器回归后，21 类 89 项定向通过；修复 `bf14d90` 已由 #154 全门验收，见[验证第 25 节](../qualification/README.md#ci-154-accepted)；[第 23 节](../qualification/README.md#ci-153-reference-identity-fix)保留修复经过。
 
-下一批：借阅限额与借／还一致性；课程冲突需固定学生锁顺序，任意先修课集合检查需补齐反关联方案；排队提升另案。本批没有宣称这三项已完成。
+第二批实现借阅限额与借／还一致性（23.6）。后续课程冲突仍需固定学生锁顺序，任意先修课集合检查需补齐反关联方案；排队提升另案，不宣称已完成。
+
+### 23.6 第二批：借阅限额与借／还一致性（实现，待本批 CI）
+
+**场景与复用：**每人最多 5 本在借。只用现有 User 身份锁、条件增减、Loan 状态守卫和 atomic 事务；不增加借书专用语法，不在编译器按 User／Loan 名字写业务。`User.activeLoans: Count default 0` 是服务端维护的状态，注册输入不接受它，续借不增加它。它不是 `count Loan` 的瞬时读取结果；先数后判断无法防止两个并发请求同时看到 4。
+
+**写入与锁顺序：**Borrow 先按 actor 主键锁 User，再按条码读取 Copy；用 `activeLoans < 5` 的 SQL 守卫增一并 persist User，然后守卫 Copy.AVAILABLE → BORROWED，最后 persist Loan。GiveBack 固定锁 User → Loan → Copy，先验证归属、尚未归还、计数大于零，再依次 persist 计数减一、Loan.returned／returnedAt 和 Copy.AVAILABLE。Loan 的数据库未归还守卫仍保留；重复归还先被 AlreadyReturned 拒绝，不会因为计数为 0 误报回填错误。Copy 必须仍为 BORROWED；LOST 明确返回 CopyNotAvailable，不能隐式把丢失副本恢复可借，丢失找回流程未增加。
+
+所有拒绝都抛声明错误并离开同一事务。Copy 的冲突即使发生在计数或 Loan 已写入之后，也必须整体回滚。锁 User 使同一人的借还串行，Copy 的条件更新再保护不同读者争同一本；续借不触碰 User，只用原 Loan 未归还／续借次数守卫，因而不增加相反的 Loan → User 写锁。此保证要求所有维护该账本的写路径遵守协议，不能涵盖绕过应用的手工改库。锁等待／死锁不自动重试。
+
+**旧库不是默认值迁移：**新注册用户为 0。已有借阅记录的库须在业务入口停止写入时先完成结构变更和计数回填，再恢复借还；产品没有自动理解历史 Loan 并回填。不能仅把新增列 DEFAULT 0 当成旧数据已完成迁移。回填保留真实数目，已有 8 本时写 8，而不是截成 5；此后可还到 7、6……，低于 5 才能再借。Count 的物理 INT 上限仍适用。下列是负责人可在自有库维护窗口执行的业务数据模板，**不是工具自动执行的迁移**：
+
+```sql
+USE `TARGET_SCHEMA`;
+-- Back up first and keep application writes disabled throughout this operation.
+-- The active_loans column must already exist. Abort if this preflight returns any row.
+SELECT reader_id, COUNT(*) AS actual
+FROM loan WHERE returned = 0
+GROUP BY reader_id HAVING COUNT(*) > 2147483647;
+
+START TRANSACTION;
+UPDATE `user` AS u
+LEFT JOIN (
+  SELECT reader_id, COUNT(*) AS actual
+  FROM loan WHERE returned = 0 GROUP BY reader_id
+) AS totals ON totals.reader_id = u.id
+SET u.active_loans = COALESCE(totals.actual, 0);
+COMMIT;
+
+-- Must return no rows before enabling application writes again.
+SELECT u.id, u.active_loans, COALESCE(totals.actual, 0) AS actual
+FROM `user` AS u
+LEFT JOIN (
+  SELECT reader_id, COUNT(*) AS actual
+  FROM loan WHERE returned = 0 GROUP BY reader_id
+) AS totals ON totals.reader_id = u.id
+WHERE u.active_loans <> COALESCE(totals.actual, 0);
+```
+
+未回填导致的 0 计数不会在还书时被减成负数，而是 LoanCounterMismatch；它不是对任意手工破坏数据的通用对账器。必须先回填所有读者，不能只依赖这条下溢检查：错误的低计数仍会错误增加可借额。
+
+**验收：**本机 7 类 31 项通过；实际 library 题目生成的 Java 编译执行，不复制近似业务；真实代理只证明调用、边界和异常传播，不证明事务回滚。新增 LibraryBorrowingBusinessConformanceIT 复用现有 harness，直接编译 `topics/library/project.sir` 并独立观察三张业务表，覆盖最后一额、重复归还、重借后重放旧归还、同副本竞争、同读者借还竞争、晚失败回滚及回填边界；本机只编译，等同 SHA CI。详见[验证第 26 节](../qualification/README.md#g2-library-local)。没有加入排队、跨行可借总数、罚款／日期差、课程或循环／聚合。

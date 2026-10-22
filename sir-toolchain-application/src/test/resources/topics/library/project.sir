@@ -22,6 +22,7 @@ software CampusLibrary {
     entity User persistent {
       identity id: Id generated auto;
       field role: Role default Role.READER;
+      field activeLoans: Count default 0;
     }
     use DualTokenLogin {
       account: User;
@@ -153,17 +154,28 @@ software CampusLibrary {
     }
     error CopyNotFound http 404;
     error CopyNotAvailable http 409;
+    error ReaderNotFound http 404;
+    error BorrowLimitExceeded http 409;
+    error LoanCounterMismatch http 409;
     capability Borrow {
       actor Ref<User>;
       input BorrowInput;
       output LoanView;
+      fails BorrowLimitExceeded;
       fails CopyNotAvailable;
       fails CopyNotFound;
+      fails ReaderNotFound;
       requires authenticated;
       requires atomic;
       expose command at "/loans";
       workflow {
+        // All borrowing and returning take the reader lock before any loan or copy lock.
+        load User by actor as reader for update else ReaderNotFound;
         load Copy by barcode: input.barcode as copy else CopyNotFound;
+        update reader when reader.activeLoans < 5 else BorrowLimitExceeded {
+          activeLoans: reader.activeLoans + 1;
+        }
+        persist reader;
         update copy when copy.status == CopyStatus.AVAILABLE else CopyNotAvailable {
           status: CopyStatus.BORROWED;
         }
@@ -188,24 +200,35 @@ software CampusLibrary {
       input LoanRef;
       output LoanView;
       fails AlreadyReturned;
+      fails CopyNotAvailable;
       fails CopyNotFound;
       fails Forbidden;
+      fails LoanCounterMismatch;
       fails LoanNotFound;
+      fails ReaderNotFound;
       requires authenticated;
       requires atomic;
       expose command at "/loans/{id}/return";
       workflow {
-        load Loan by input.id as loan else LoanNotFound;
+        load User by actor as reader for update else ReaderNotFound;
+        load Loan by input.id as loan for update else LoanNotFound;
         validate loan.reader == actor else Forbidden;
+        validate loan.returned == false else AlreadyReturned;
+        // Refuse stale or uninitialised counters; never silently decrement below zero.
+        validate reader.activeLoans > 0 else LoanCounterMismatch;
+        load Copy by loan.copy as copy for update else CopyNotFound;
+        update reader when reader.activeLoans > 0 else LoanCounterMismatch {
+          activeLoans: reader.activeLoans - 1;
+        }
+        persist reader;
         update loan when loan.returned == false else AlreadyReturned {
           returned: true;
           returnedAt: now();
         }
-        load Copy by loan.copy as copy else CopyNotFound;
-        update copy {
+        persist loan;
+        update copy when copy.status == CopyStatus.BORROWED else CopyNotAvailable {
           status: CopyStatus.AVAILABLE;
         }
-        persist loan;
         persist copy;
         return loan;
       }

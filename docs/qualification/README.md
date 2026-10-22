@@ -7,14 +7,14 @@
 | 层 | 做什么 | 在哪里跑 |
 | --- | --- | --- |
 | 定向测试 | 单模块、`-Dtest=...`，覆盖本次改动影响的类 | 本机（受限资源） |
-| 全量闸门 | `mvn -o clean verify`，冻结形式与完成形式（`-Dmaven.test.failure.ignore=true`）各一次 | GitHub CI |
+| 全量闸门 | 一次正式 `mvn -o clean verify`；仅失败时补跑 Completion 诊断，首发失败仍阻断 | GitHub CI |
 | 业务／独立验证 IT | 真实 MySQL 8.4 + 生成工程构建／启动 + HTTP 断言 | GitHub CI |
 
 本机资源很小（见 [AGENTS.md](../../AGENTS.md)「测试资源约束」），所以重活交给 CI；Claude 会话环境的约定见 [CLAUDE_EXECUTION_POLICY](../CLAUDE_EXECUTION_POLICY.md)。同一批改动只在 CI 上验证一次，本机不重复跑全量。
 
 ## 2. CI 工作流（`.github/workflows/verify.yml`）
 
-每次 push 触发，一个 job 内依次：在线预热 Maven 仓库 → 预热生成工程依赖 → 冻结全量闸门 → 完成全量闸门 → 三个业务场景 IT（查询／写入／关系，真实 MySQL 8.4）→ 独立验证 IT → 上传证据。
+源码 push 触发（纯文档过滤），一个 job 内依次：在线 JUnit dry-run 预热插件与 provider → 预热生成工程依赖 → 一次正式离线 Frozen 全量门 → 业务 IT（查询／写入／关系及后续业务，真实 MySQL 8.4）→ 独立验证 IT／CLI → 上传证据。Completion 仅 Frozen 失败后收集其余诊断，先上传首发失败报告；不会把失败转为通过。独立部署接续运行，实际测试列表以 verify.yml 为准。
 
 | 步骤 | 内容 |
 | --- | --- |
@@ -32,7 +32,7 @@
 
 ## 4. 当前证据
 
-**当前验收基线：** `4a1d8c8c2f28fd0d5678f65bfd4494cf163d8321` 的 [verify #150](https://github.com/HoloNova/Software-IR/actions/runs/39724155367) 全部门 success，覆盖 G11 计算视图的关系／乘法真库断言与完整部署；证据见[第 21 节](#ci-150-accepted)。#147 仍是 G10／G6 的验收点，见[第 19 节](#ci-147-accepted)。下文旧运行保留为历史证据，不作为当前状态。
+**当前完整验收基线：** `bf14d905b2edce5b67bc0ddf39ed189be2c10aa1` 的 [verify #154](https://github.com/HoloNova/Software-IR/actions/runs/39749656260) 全部门 success，显式锁与区间预约、G10／G6／G11、完整部署均闭环，见[第 25 节](#ci-154-accepted)。#155 主验证成功、部署被取消，不计整轮通过；新借阅限额源码待本批 CI，不能借用旧绿灯。下文旧运行保留为历史证据。
 
 **历史运行：** [verify #88](https://github.com/HoloNova/Software-IR/actions/runs/38901782044)，受测提交 `fe40836`（`main`，feat(cli): kcg scaffold dual-token），success。冻结与完成两条全量闸门、业务场景 IT（含新的 `DualTokenScaffoldBusinessConformanceIT`：用脚手架输出作夹具，逐条验证双 Token 七条行为，含过期的访问令牌与 6 路同时刷新的竞争）、独立验证 IT、Standalone CLI smoke 均成功；核对时读了业务场景 IT 的日志，确认新 IT 运行并全部通过。
 
@@ -632,7 +632,7 @@ AFT Java LSP 初始化仍失败，诊断 PARTIAL；以实际 Maven 编译及测�
 
 
 <a id="ci-runtime-optimization"></a>
-## 24. CI 时长优化：取消重复执行，不删除覆盖（待新 CI 测量）
+## 24. CI 时长优化：取消重复执行，不删除覆盖（主验证已测，部署被取消）
 
 负责人要求缩短 CI。先从 GitHub 步骤时间与成功报告定位，不按“从未失败”等同“不会失败”删除测试。现状基线如下；时长不含等待其他运行释放并发组的排队时间。
 
@@ -655,3 +655,42 @@ AFT Java LSP 初始化仍失败，诊断 PARTIAL；以实际 Maven 编译及测�
 基线步骤时间保存在 `target/ci-investigation/{150,152}-timing.json`；探针两份原始 XML 在 `target/ci-dry-run-probe/{dry-run-result,real-run-result}.xml`。本地只证明配置与 dry-run 机制，不宣称已验证 Actions 上的完整失败分支或冷依赖环境。
 
 **预期而非实测：**正常路径直接移除约 3:04 的重复 Completion，在线预热另减少测试体耗时，合计目标约 5～6 分钟；总时长仍受网络／容器启动波动影响，需新 CI 对比。冷部署本身仍约 10～13 分钟，未在本批冒险改交付协议或删漂移／权限／迁移验收。后续可进一步评估将独立部署与业务 IT 并行，以及 Maven／容器缓存；须先验证依赖、缓存隔离和证据归属，不把这些优化记成已完成。
+
+
+<a id="ci-154-accepted"></a>
+## 25. #154 区间预约验收与 #155 主验证提速实测
+
+`bf14d905b2edce5b67bc0ddf39ed189be2c10aa1` 的 [verify #154](https://github.com/HoloNova/Software-IR/actions/runs/39749656260) 两个 job 及实际门均 success。已下载 conformance-evidence，`multiplication-1a162d5e95d-5444/multiplication-report.txt` 明确 `verdict=PASSED`、72 checks passed／0 failed；8 个重叠预约恰一成功，锁等待屏障在 performance_schema 中真实出现，等锁后重新查询拒绝已提交冲突。报告 SIR SHA-256 为 `d404f6581ad775240346ad6b55715dcaa5ad7675adbd6866bf9e2ade560ead36`。首轮 #153 的 Room 对象绑定缺陷因此闭环；本地证据副本位于 `target/ci-investigation/154/`，不依赖 #155 的部署结论。需求账本仅据此把预约重叠一条由△转✓，不认为所有八题业务都已经真实验收。
+
+`57b0ee588b99af34ad01da98c41d09d991bacba6` 的 [verify #155](https://github.com/HoloNova/Software-IR/actions/runs/39751981905) 最终 **cancelled**：主验证 success，独立部署 cancelled，不能写成整轮 success。它与 #154 的业务源码相同，差异是 CI 编排及配套文档；主验证实测如下：
+
+| 步骤 | #154 旧编排 | #155 新编排 |
+| --- | ---: | ---: |
+| 在线 Reactor 预热 | 4:51（真实执行测试） | 0:27（dry-run） |
+| Frozen 正式全量 | 4:49 | 3:37 |
+| Completion | 4:52（成功路径重复） | SKIPPED（按预期） |
+| 主验证 job 合计 | 19:51 | 8:18 |
+
+主验证观测缩短 11:33；其中预热与重复 Completion 的变化符合优化目的，Frozen 本身也有 runner／缓存波动，不能把全部收益当作可重复的净优化基准。#155 的业务 IT、独立验证及 CLI 等主 job 步骤仍真实执行成功，乘法／预约仍 72 项通过。部署在运行 6:33 时被取消，没有完整结果，**不比较整轮时长、不将取消算提速**。首次失败上传及 Completion 失败分支在本轮未触发。原始 job／step JSON 在 `target/ci-investigation/{154-timing,155-final-timing}.json`；后续并行／缓存优化尚未实施。
+
+<a id="g2-library-local"></a>
+## 26. G2 第二批：借阅上限与借／还一致性（待新 CI）
+
+本批不改 Parser、Semantic、Lowering 或 Generator 的生产代码，只组合已有的身份行锁、READ_COMMITTED、STATEMENT 缓存、条件增减与状态守卫。实际 `topics/library/project.sir` 新增 User.activeLoans 默认 0；Borrow 先锁读者、用 `< 5` 的数据库条件占名额，再守卫修改 Copy 并插入 Loan；GiveBack 固定 User → Loan → Copy 的锁顺序，验证归属及未归还状态，计数大于零才减一，随后标记归还并释放副本。晚发生的副本状态失败必须连前面的计数和 Loan 更新一起回滚；Renew 不修改名额。旧数据需业务回填，不能将 DEFAULT 0 当作历史借阅迁移；方案与可执行 SQL 模板见设计第 23.6 节。
+
+**RED：**LibraryBorrowingRuntimeTest 直接从仓库实际 library 题目读取源码，生成 Java 并编译；首项契约因缺少读者锁／计数条件写入而失败。随后只改 SIR。新增 fails 排序错误由原语义规则拒绝，已排序，不放宽规则；新 HTTP 合同误要求显式 HttpStatus.OK，已改为验证原 PostMapping／默认 200，不改生产状态码。
+
+**本机最终 7 类、31 项，0 failures／errors／skips：**LibraryBorrowingRuntimeTest 8、LibraryBorrowingToolchainContractTest 3、ExplicitLockRuntimeTest 2、ReferenceQueryRuntimeTest 1、GeneratorEntityArtifactInvarianceTest 4、TopicSamplesTest 1、CrudAccessContractTest 12。新增旧库超限用例后仅补验该类，其余已通过范围没有重复运行；计数按各类最后一次完整报告去重。原始 XML 与索引封存于 `target/library-borrowing-verification/`。
+
+- 真实生成服务：4→5、满额拒借、首次归还减一及重放不减、外人归还／未回填计数拒写、借与还的晚失败传播、续借不占额；历史真实回填为 8 本时可还到 7 本但不能再借。此层直接调用服务而非 Spring 代理，不将内存代理当作数据库锁或回滚证据。
+- 工具链：系统计数不出现在 RegisterInput，新账号服务赋默认 0；旧 HTTP 路径及 201／默认 200 不变，物理 INT／NOT NULL／DEFAULT 0 与引用表完整；八题仅内存生成和交付规划。library 为 300 行 SIR／3354 行生成 Java／16 个接口，其余七题规模不变。
+- AFT Java LSP 初始化失败为 PARTIAL；以实际 Maven 编译／执行为依据。没有本机应用、MySQL、浏览器、全量门或生成工程全构建；没有新覆盖率测量，不宣称 80% 覆盖率。
+
+```powershell
+$env:MAVEN_OPTS='-Xmx384m -XX:ActiveProcessorCount=2'
+mvn -B -q -o -pl sir-toolchain-application -am test '-Dtest=LibraryBorrowingRuntimeTest,LibraryBorrowingToolchainContractTest,ExplicitLockRuntimeTest,ReferenceQueryRuntimeTest,GeneratorEntityArtifactInvarianceTest,TopicSamplesTest,CrudAccessContractTest' '-Dsurefire.failIfNoSpecifiedTests=false' '-DargLine=-Xmx512m -XX:ActiveProcessorCount=2'
+```
+
+**真实 HTTP／MySQL：NOT_RUN（本机）。**新增 LibraryBorrowingBusinessConformanceIT 用实际题目源而非复制近似业务，复用已有隔离 schema／构建／进程／观察连接 harness，由 verify 的业务阶段启用。本机只编译 IT。检查 8 借争最后一额、8 还同一 Loan 恰一成功、归还后再借、旧归还不能释放新借阅的副本、同读者借还两种有效串行结果、不同读者争同一副本、晚失败整事务回滚、缺省回填计数拒写及续借不占额；独立 JDBC 每轮比较 activeLoans 与未归还 Loan 数，最终不超 5。夹具错误 SQL 必须真正失败，不能误作环境 NOT_RUN；仅 SQLState 08 的连接不可达按既有基础设施口径处理。
+
+此次新增一个实际 library 应用验收，而不是再建一套 harness／服务；原有业务测试全部保留，沿用 #155 的一次正式全量与失败才补诊断编排。账本只把新借阅上限记为待真库的△，不提前转✓；结合 #154 已验收的预约，当前 **67 完整／5 带折扣／12 尚未写出**。剩余课程冲突、任意先修课集合、排队、日期差、循环／聚合不随本批宣称完成。配套文档随源码提交，不另触发纯文档 CI。
