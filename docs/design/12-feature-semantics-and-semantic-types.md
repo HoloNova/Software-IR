@@ -905,4 +905,6 @@ validate not taken else HourTaken;
 
 真库检查复用 MultiplicationBusinessConformanceIT 的既有隔离应用，增加 8 重叠请求恰一成功、左右相邻区间成功、包含及相交均拒绝、逆序／空区间不写、不同房间独立。另用测试控制连接持有 Room 锁，并通过 performance_schema.data_lock_waits 确认 HTTP 已先读后等待，再插入并提交冲突，验证该请求取得锁后仍返回 409，不能依赖线程碰巧先后完成。该检查本机未执行，待同 SHA CI。账本保持 **66／5／13**，不把已改写样例当成已验收。
 
+首轮 #153 双全量门通过，但普通引用比较把整个 Room 当作 SQL 参数，预约均返回 500，锁屏障尚未验证。修复集中在 Lowering：在相等／不等、load 与关联外部参数中明确投影实体主键；input／actor 已是主键载体时不重复解引用，Optional 和 PresentComparison 同步使用物理类型。Generator、锁计划及真库断言均未改。新增真实 MyBatis 参数处理器回归后，21 类 89 项定向通过；修复源码仍待 CI，见[验证第 23 节](../qualification/README.md#ci-153-reference-identity-fix)。
+
 下一批：借阅限额与借／还一致性；课程冲突需固定学生锁顺序，任意先修课集合检查需补齐反关联方案；排队提升另案。本批没有宣称这三项已完成。

@@ -817,7 +817,7 @@ public final class SpringBootModelLowerer {
             case NormalizedStep.ValidateStep value -> new SpringBootWorkflow.ValidateStep(
                     id, origin, lowerExpression(value.condition(), owner, actorSymbol), value.errorSymbol());
             case NormalizedStep.LoadStep value -> new SpringBootWorkflow.LoadStep(
-                    id, origin, value.entitySymbol(), this.asIdentity(lowerExpression(value.idExpression(), owner, actorSymbol)),
+                    id, origin, value.entitySymbol(), this.asIdentity(lowerExpression(value.idExpression(), owner, actorSymbol), actorSymbol),
                     variable(value.resultVariable()), value.errorSymbol(), value.forUpdate() || this.locksRow(value, owner), value.keyField(), value.forUpdate());
             case NormalizedStep.FindStep value -> new SpringBootWorkflow.FindStep(
                     id, origin, value.entitySymbol(),
@@ -1168,19 +1168,28 @@ public final class SpringBootModelLowerer {
         return new SpringBootWorkflow.Binding(binding.fieldSymbol(), targetName, value, this.sourcePropertyName(value, owner));
     }
 
-    /** A reference to a row stores that row's identity, so wherever an identity is wanted it stands for it. */
-    private SpringExpression asIdentity(SpringExpression expression) {
-        if (!(expression.type() instanceof LoweredJavaType.EntityReference reference)) {
-            return expression;
-        }
-
-        LoweredJavaType identity = reference.identityStorageType();
-        return switch (expression) {
+    /** Identity-valued contexts must project row variables, not merely relabel their Java objects. */
+    private SpringExpression asIdentity(SpringExpression expression, Optional<SymbolId> actorSymbol) {
+        SpringExpression value = this.referencedIdentity(expression, actorSymbol);
+        LoweredJavaType identity = this.identityStorageType(value.type());
+        if (identity.equals(value.type())) return value;
+        return switch (value) {
             case SpringExpression.MemberExpression member -> new SpringExpression.MemberExpression(
                     member.id(), member.origin(), identity, member.receiver(), member.resolvedMember(), member.targetMember());
             case SpringExpression.NameExpression name -> new SpringExpression.NameExpression(
                     name.id(), name.origin(), identity, name.resolvedSymbol(), name.targetName());
-            default -> expression;
+            case SpringExpression.OptionalPayloadValue payload -> new SpringExpression.OptionalPayloadValue(
+                    payload.id(), payload.origin(), identity,
+                    (SpringExpression.MemberExpression) this.asIdentity(payload.payloadMember(), actorSymbol));
+            default -> throw new IllegalStateException("unsupported reference identity expression: " + value.id());
+        };
+    }
+
+    private LoweredJavaType identityStorageType(LoweredJavaType type) {
+        return switch (type) {
+            case LoweredJavaType.EntityReference reference -> reference.identityStorageType();
+            case LoweredJavaType.OptionalValue optional -> new LoweredJavaType.OptionalValue(this.identityStorageType(optional.elementType()));
+            default -> type;
         };
     }
 
@@ -1297,12 +1306,16 @@ public final class SpringBootModelLowerer {
             case NormalizedExpression.BinaryExpression value -> {
                 SpringExpression left = nullablePayloadValue(lowerExpression(value.left(), owner, actorSymbol, itemSymbol));
                 SpringExpression right = nullablePayloadValue(lowerExpression(value.right(), owner, actorSymbol, itemSymbol));
+                if (value.operator() == io.kcg.sir.ast.AstBinaryOperator.EQ || value.operator() == io.kcg.sir.ast.AstBinaryOperator.NE) {
+                    left = this.asIdentity(left, actorSymbol);
+                    right = this.asIdentity(right, actorSymbol);
+                }
                 if (value.operator() == io.kcg.sir.ast.AstBinaryOperator.MUL && value.type() == PrimitiveType.DECIMAL) {
                     left = this.decimalOperand(left, type);
                     right = this.decimalOperand(right, type);
                 }
                 yield new SpringExpression.BinaryExpression(id, origin, type, left,
-                        SpringExpression.BinaryOperator.valueOf(value.operator().name()), right, presentComparison(value));
+                        SpringExpression.BinaryOperator.valueOf(value.operator().name()), right, presentComparison(value, left));
             }
             case NormalizedExpression.TimeShiftExpression value -> new SpringExpression.TimeShiftExpression(
                     id, origin, type, lowerExpression(value.base(), owner, actorSymbol, itemSymbol),
@@ -1333,7 +1346,7 @@ public final class SpringBootModelLowerer {
         return expression;
     }
 
-    private Optional<SpringExpression.PresentComparison> presentComparison(NormalizedExpression.BinaryExpression value) {
+    private Optional<SpringExpression.PresentComparison> presentComparison(NormalizedExpression.BinaryExpression value, SpringExpression left) {
         boolean comparison = switch (value.operator()) {
             case EQ, NE, LT, LE, GT, GE -> true;
             default -> false;
@@ -1341,8 +1354,8 @@ public final class SpringBootModelLowerer {
         boolean leftOptional = value.left().type() instanceof OptionalType;
         boolean rightOptional = value.right().type() instanceof OptionalType;
         if (!comparison || (!leftOptional && !rightOptional)) return Optional.empty();
-        SirType operand = value.left().type() instanceof OptionalType optional ? optional.element() : value.left().type();
-        return Optional.of(new SpringExpression.PresentComparison(lowerType(operand), leftOptional, rightOptional));
+        LoweredJavaType operand = left.type() instanceof LoweredJavaType.OptionalValue optional ? optional.elementType() : left.type();
+        return Optional.of(new SpringExpression.PresentComparison(operand, leftOptional, rightOptional));
     }
 
     private Optional<SymbolId> findItemSymbol(NormalizedStep.FindStep step) {
@@ -1543,7 +1556,8 @@ public final class SpringBootModelLowerer {
     }
 
     private SpringExpression externalValue(NormalizedExpression expression, SymbolId owner) {
-        return this.asIdentity(this.nullablePayloadValue(this.lowerExpression(expression, owner, this.capability(owner).actorSymbol())));
+        Optional<SymbolId> actor = this.capability(owner).actorSymbol();
+        return this.asIdentity(this.nullablePayloadValue(this.lowerExpression(expression, owner, actor)), actor);
     }
 
     private ExistenceSql boundValue(SpringExpression.ExistsArgument value, List<SpringExpression.ExistsArgument> arguments) {

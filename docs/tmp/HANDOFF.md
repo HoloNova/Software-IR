@@ -78,7 +78,7 @@ tasks、market 已更新；本机语义、降级、生成真值表、源往返�
 
 ### 4.6.1 G2 第一批（已实现，待新 CI）
 
-显式 `load … as row for update else Error;` 仅 atomic command／主键允许；Scope、结构和源编辑保留事实。Spring Boot 目标明确 READ_COMMITTED，工程级 MyBatis 本地缓存 STATEMENT；显式锁用既有 BaseMapper identity locking query，不因能力变化修改实体 Mapper。原版本自动锁不变。booking 改为 `[startsAt,endsAt)`，Room 锁后执行重叠 exists。15 类 147 项定向通过，见[验证第 22 节](../qualification/README.md#g2-locking-local)。真库屏障检查复用 MultiplicationBusinessConformanceIT，未在本机执行，需求账本不变。
+显式 `load … as row for update else Error;` 仅 atomic command／主键允许；Scope、结构和源编辑保留事实。Spring Boot 目标明确 READ_COMMITTED，工程级 MyBatis 本地缓存 STATEMENT；显式锁用既有 BaseMapper identity locking query，不因能力变化修改实体 Mapper。原版本自动锁不变。booking 改为 `[startsAt,endsAt)`，Room 锁后执行重叠 exists。15 类 147 项定向通过，见[验证第 22 节](../qualification/README.md#g2-locking-local)。真库屏障检查复用 MultiplicationBusinessConformanceIT，未在本机执行，需求账本不变。首轮 #153 双全量门通过，但新增预约比较把 Room 对象绑定到 room_id 而返回 500，未能走到锁屏障；已修复 Lowering 的 identity 取值并补真实 MyBatis 参数回归，21 类 89 项定向通过，待修复 SHA CI；见[验证第 23 节](../qualification/README.md#ci-153-reference-identity-fix)。
 
 复核修正：课程冲突也需要学生锁；旧草案先修课片段的 required 并未取得，任意集合需要反关联方案，不用单门限制冒充完成。下一批先处理 library 的限额及借／还一致性；课程冲突、先修课与排队仍未完成。verify 的 push 已忽略 docs/** 和 **/*.md，纯文档更新不触发 CI，文档尽量随源码提交。
 

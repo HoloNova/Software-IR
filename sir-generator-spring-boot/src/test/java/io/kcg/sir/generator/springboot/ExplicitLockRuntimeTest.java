@@ -57,7 +57,16 @@ class ExplicitLockRuntimeTest {
             });
             var bm = Proxy.newProxyInstance(loader, new Class<?>[]{bookingMapper}, (p,m,a) -> {
                 events.add("booking." + m.getName());
-                if (m.getName().equals("selectObjs")) return occupied.get() ? List.of(new Object()) : List.of();
+                if (m.getName().equals("selectObjs")) {
+                    var wrapper = (com.baomidou.mybatisplus.core.conditions.AbstractWrapper<?, ?, ?>) a[0];
+                    wrapper.getSqlSegment();
+                    assertEquals(List.of(1L, java.time.Instant.parse("2030-01-01T11:00:00Z"),
+                            java.time.Instant.parse("2030-01-01T10:00:00Z")),
+                            wrapper.getParamNameValuePairs().entrySet().stream()
+                                    .sorted(java.util.Map.Entry.comparingByKey()).map(java.util.Map.Entry::getValue).toList(),
+                            "room_id must bind the loaded row's identity, never its Room object");
+                    return occupied.get() ? List.of(new Object()) : List.of();
+                }
                 if (m.getName().equals("insert")) { writes.incrementAndGet(); return 1; }
                 throw new AssertionError(m);
             });

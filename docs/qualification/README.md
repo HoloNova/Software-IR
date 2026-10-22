@@ -608,3 +608,24 @@ mvn -B -q -o -pl sir-toolchain-application -am test '-Dtest=ExplicitLockSemantic
 **真库 NOT_RUN（本机）：**复用现有 MultiplicationBusinessConformanceIT 应用，IntervalBookingChecks 增加 8 并发重叠区间、相邻／包含／相交、空／逆序区间、不同房间、缺失父行及拒写检查。另由控制连接锁 Room，等 performance_schema.data_lock_waits 证明 HTTP 请求确实先读后等待，再提交冲突预约；请求应在得到父锁后重新查询并返回 409，且库中只有控制夹具插入的一行。这同时检验 READ_COMMITTED 与 STATEMENT 缓存，不能靠普通并发跑快慢碰运气。IT 只编译，未执行，等待本批同 SHA CI。
 
 **CI 触发：**verify 的 push.paths-ignore 增加 `docs/**` 与 `**/*.md`，纯文档 push 不创建 CI 运行，workflow_dispatch 仍可手动使用；混合源码／文档提交正常触发。已有 YAML 解析器核验配置通过，未制造纯文档提交来测试过滤器。以后文档优先随对应代码提交。本批账本保持 66／5／13；library 限额、课程冲突／先修课及排队均未完成。
+
+
+<a id="ci-153-reference-identity-fix"></a>
+## 23. CI #153：引用值误以整个实体绑定 SQL（已修复，待新 CI）
+
+失败 SHA `1997408e4a563a9fad58d48c7d51d1cd88cbc7b8`，[verify #153](https://github.com/HoloNova/Software-IR/actions/runs/39744030964)。Frozen／Completion 双全量门均 success，Business conformance ITs 失败；独立验证、CLI、部署均 skipped。唯一失败用例是 MultiplicationBusinessConformanceIT：61 项检查通过、11 项失败。原有金额／乘法／名额逻辑通过，新增预约请求返回 500；不能据此确认锁等待及重叠拒绝已经生效。
+
+**真实错误，而非夹具期待错误：**`spring.stdout.log` 显示 `SELECT id FROM booking WHERE room_id = ? … LIMIT 1` 设置第一个参数时抛 `java.io.NotSerializableException: example.multiplication.domain.Room`。`item.room == room` 中右侧变量是已加载的实体对象；旧 Lowering 把它原样留在普通比较中，关联参数／再次 load 的 asIdentity 又只改类型标签，不生成 getter，因此整个 Room 被交给 MyBatis。等待锁测试在第一次查询就退出，未走到等待，不是已证明的并发缺陷或环境波动。下载证据保存在 `target/ci-investigation/153/`。
+
+**本次修复：**集中在 SpringBootModelLowerer 的主键取值计划。需要 identity 的 load、引用相等／不等及关联外部参数统一复用 referencedIdentity：loaded／created 行用正式身份字段的 MemberExpression，已是主键载体的 input 引用／actor 不重复 getId。Optional 引用保留可空结构与输入 Optional 解包；PresentComparison 使用降级后的真实物理类型，避免 Long 参数与 Ref 标签不一致。没有 Generator 特判，没有 Serializable 补丁，也未把 SIR 改成手写 room.id 来绕过合法引用比较。
+
+**RED → GREEN：**原 ExplicitLockRuntimeTest 增加查询 Wrapper 参数检查后，两种版本形态均复现“期待 1L，实际 Room 对象”。ReferenceQueryRuntimeTest 还复现 `load Room by room` 生成的 `selectById(Room)` 无法编译。修复后实际生成服务编译执行，并用真实 MyBatis DefaultParameterHandler 与 PreparedStatement 探针检查参数：exists／count／find、相关 any、普通／Optional 引用输入、nullable 列与 loaded row 比较均只绑定主键或 SQL NULL；再次 load 也使用 7L。扩展测试最初误写 Unit 作为 find 输出、fails 顺序及 Optional 引用 setter，均对齐既有 Page／输入协议，未为测试改变这些规则。
+
+本机 **21 类 89 项，0 failures／errors／skips**：ReferenceIdentityLoweringTest 2、ExplicitLockLoweringTest 8、ScalarQueryLoweringTest 5、RelatedQueryParametersTest 2、OptionalValueLoweringTest 2、ActorRowLoweringTest 2、KeyedLoadLoweringTest 3、GuardedUpdateLoweringTest 3、ComputedViewLoweringTest 15、ExplicitLockRuntimeTest 2、ReferenceQueryRuntimeTest 1、OptionalPayloadRuntimeTest 3、GeneratorOptionalValueContractTest 13、GeneratorScalarQueryContractTest 2、GeneratorGuardedUpdateContractTest 4、GeneratorKeyedLoadContractTest 5、GeneratorCredentialContractTest 4、ComputedViewRuntimeTest 7、GeneratorUuidStorageContractTest 3、ExplicitLockToolchainContractTest 2、TopicSamplesTest 1。计数以最新 XML 为准，副本与索引在 `target/ci-153-verification/`。
+
+```powershell
+$env:MAVEN_OPTS='-Xmx384m -XX:ActiveProcessorCount=2'
+mvn -B -q -o -pl sir-toolchain-application -am test '-Dtest=ReferenceIdentityLoweringTest,ExplicitLockLoweringTest,ScalarQueryLoweringTest,RelatedQueryParametersTest,OptionalValueLoweringTest,ActorRowLoweringTest,KeyedLoadLoweringTest,GuardedUpdateLoweringTest,ComputedViewLoweringTest,ExplicitLockRuntimeTest,ReferenceQueryRuntimeTest,OptionalPayloadRuntimeTest,GeneratorOptionalValueContractTest,GeneratorScalarQueryContractTest,GeneratorGuardedUpdateContractTest,GeneratorKeyedLoadContractTest,GeneratorCredentialContractTest,ComputedViewRuntimeTest,GeneratorUuidStorageContractTest,ExplicitLockToolchainContractTest,TopicSamplesTest' '-Dsurefire.failIfNoSpecifiedTests=false' '-DargLine=-Xmx512m -XX:ActiveProcessorCount=2'
+```
+
+AFT Java LSP 初始化仍失败，诊断 PARTIAL；以实际 Maven 编译及测试为依据。无新增依赖，未启动数据库、应用或浏览器，未在本机重复全量／生成工程构建；无覆盖率测量。所有预约并发、区间及 performance_schema 锁屏障断言保留不变，等待修复 SHA 的 CI。账本继续保持 66／5／13；此修复与对应文档同批提交，无纯文档 CI。
