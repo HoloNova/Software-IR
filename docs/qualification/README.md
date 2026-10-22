@@ -715,3 +715,42 @@ mvn -B -q -o -pl sir-toolchain-application -am test '-Dtest=LibraryBorrowingErro
 ```
 
 工作区另有未提交的课程阶段测试，本次定向未选择它们，修复提交也不包含它们。当前需求账本保持 **67／5／12**，新借阅仍为待验收△；完整 IT 和部署须修复 SHA 的 CI，未复跑前不宣称通过。按负责人要求推送后不等待或轮询 CI 结果，由负责人通知；配套记录随修复代码提交，不单独触发文档 CI。
+
+
+<a id="g2-course-local"></a>
+## 28. G2 第三批：课程冲突、全部直接先修与座位事务（待同源码 CI）
+
+基线 `9d31a82a24a738c8c635ea511cb44e114f501c8d`。负责人要求继续、不等待或查询上一轮 CI，结果由负责人通知；本轮没有读取新运行状态。业务实现只在实际 `topics/course/project.sir`，未改 Parser／Semantic／Lowering／Generator 生产代码；为什么以 Course 为根、为何冻结发布及选择 User 锁，见[设计 23.7](../design/12-feature-semantics-and-semantic-types.md#g2-course-combinations)。
+
+**RED → GREEN：**CourseSelectionRuntimeTest 在修改题目前实际编译执行并失败，原 Enroll 没有学生锁、显式课程锁或冲突／先修查询。修改后同目标转绿；过程中测试误期待源码字符串 NOT EXISTS，实际生成的是 wrapper.not，运行时 SQL 才成为 NOT(EXISTS)，已按真实协议分别核对。新 IT 的请求路径曾误写为 /enrollments，本机自审发现后修正为原 /courses/{id}/enroll，加入消费端常量到实际控制器的契约，不改生产路由。
+
+| 最新定向报告 | tests | 真实证明的范围 |
+| --- | ---: | --- |
+| CourseQueryCompositionTest | 2 | 两个同级相关子查询可表达任意直接先修；实际生成 Java 编译执行，MyBatis DefaultParameterHandler 验证 selected／actor 只绑定 Long |
+| CourseSelectionRuntimeTest | 14 | 实际题目所有 Java 编译；锁／查询／写入顺序，草稿／重复／冲突／缺先修／满额拒写；归属与零计数；重复退课；晚插入异常传播；四个数字缺省的真实 NotNull 字段路径 |
+| CourseSelectionContractTest | 16 | 13 种 IT 固定业务错误与实际声明／生成异常；原路由和201创建、公开分页默认；管理员发布边界；实际交付表／DDL及 observer 列顺序 |
+| TopicSamplesTest | 1 | 八题内存编译、生成、交付规划；非生成工程全构建 |
+| ExplicitLockToolchainContractTest | 2 | 旧预约及锁等待场景源码内存规划 |
+| MultiplicationToolchainContractTest | 3 | 原数量购买／原子库存／已有课程计数夹具 |
+| **合计** | **38** | **0 failures／errors／skips** |
+
+```powershell
+$env:MAVEN_OPTS='-Xmx384m -XX:ActiveProcessorCount=2'
+mvn -B -q -o -pl sir-generator-spring-boot -am test '-Dtest=CourseSelectionRuntimeTest,CourseQueryCompositionTest' '-Dsurefire.failIfNoSpecifiedTests=false' '-DargLine=-Xmx512m -XX:ActiveProcessorCount=2'
+mvn -B -q -o -pl sir-toolchain-application -am test '-Dtest=CourseSelectionContractTest,TopicSamplesTest,ExplicitLockToolchainContractTest,MultiplicationToolchainContractTest' '-Dsurefire.failIfNoSpecifiedTests=false' '-DargLine=-Xmx512m -XX:ActiveProcessorCount=2'
+```
+
+以上是实际执行过的定向范围；契约／运行时在修正新测试后又分别仅复测受影响类，计数按各类最终 XML 去重，不把重复运行相加。RED XML、最终6类XML和索引保存在 `target/course-verification/`。AFT Java LSP 初始化失败，状态 PARTIAL，编译依据实际 Maven 结果；没有新覆盖率测量，不将38项通过换算成80%覆盖。没有本机全量门、生成工程Maven构建、数据库、HTTP应用进程或浏览器；真实服务是在测试JVM中编译加载并直接调用，不冒称事务回滚已验收。
+
+**真库 NOT_RUN（本机）：**新增 CourseSelectionBusinessConformanceIT，直接编译实际 course 题目，沿用已存在的隔离实例／日志／凭据／超时／清理 harness。工作流在原 Business conformance ITs 中显式选择它并启用 `kcg.course-conformance.enabled`，无额外 job、不删原验收。测试包括：
+
+- 缺少、部分、同数量但不同集合、四门直接先修；空要求集合照常允许；管理员追加已通过记录后可选，普通用户不能伪造。
+- 每周半开节次的重叠拒绝与端点相邻成功，不同星期独立；发布前管理员可增删要求，发布后冻结；未知课程、草稿、重复选课及外人退课拒写。
+- 四个数值 missing／null 各自400且必须带实际 NotNull path，避免把坏JSON返回400当作通过；范围、空／逆序区间拒写，最后有效节次可建草稿。
+- 同一用户并发选择重叠课程恰一成功；八人抢三席、八次退同一记录只释放一次；所有 course.enrolled 与真实 Enrollment 独立观察对账。
+- 控制连接先锁 User，通过 performance_schema.data_lock_waits 证明 HTTP 在等学生锁，再提交一条冲突课程；请求拿锁后必须重查并拒绝。
+- 明确标注的 owned-schema 测试触发器只制造晚插入唯一冲突；临时外键只制造晚删除失败，分别核对增座／减座与记录整体回滚。控制夹具最后恢复，非产品测试钩子；还检查错误旧计数不下溢、不静默修复。
+
+该 IT 仅通过编译，以上结果都等待本批源码的 CI，尚无 run URL／artifact，不能使用早期G11课程计数的报告替代本题真库证据。旧库的真实课表、发布、先修、通过记录和座位账本不能自动猜测回填；交付拒绝无默认增加必填课表列。范围未增加多时段／多学期、递归先修、成绩撤销、排队、循环、聚合或日期差。
+
+当前源码 course 为 **384 行SIR／3379 行生成Java／14个显式接口**。两条新表达按待真库△记账，完整数仍67；当前 **67／7／10**。配套文档随本批代码提交，不单独触发文档CI；推送后不轮询或等待结果。

@@ -80,15 +80,23 @@ tasks、market 已更新；本机语义、降级、生成真值表、源往返�
 
 显式 `load … as row for update else Error;` 仅 atomic command／主键允许；Scope、结构和源编辑保留事实。Spring Boot 目标明确 READ_COMMITTED，工程级 MyBatis 本地缓存 STATEMENT；显式锁用既有 BaseMapper identity locking query，不因能力变化修改实体 Mapper。原版本自动锁不变。booking 改为 `[startsAt,endsAt)`，Room 锁后执行重叠 exists。15 类 147 项定向通过，见[验证第 22 节](../qualification/README.md#g2-locking-local)。真库屏障检查复用 MultiplicationBusinessConformanceIT，未在本机执行，需求账本不变。首轮 #153 双全量门通过，但新增预约比较把 Room 对象绑定到 room_id 而返回 500，未能走到锁屏障；已修复 Lowering 的 identity 取值并补真实 MyBatis 参数回归，21 类 89 项定向通过；随后 bf14d90 的 #154 全门成功，乘法／预约真库 72 项通过，含先读后等锁屏障，见[验证第 25 节](../qualification/README.md#ci-154-accepted)。
 
-复核修正：课程冲突也需要学生锁；旧草案先修课片段的 required 并未取得，任意集合需要反关联方案，不用单门限制冒充完成。library 的限额及借／还一致性已实施待 CI（下节）；课程冲突、先修课与排队仍未完成。verify 的 push 已忽略 docs/** 和 **/*.md，纯文档更新不触发 CI，文档尽量随源码提交。
+复核修正：课程冲突也需要学生锁；旧草案先修课片段的 required 并未取得，任意集合的反关联后来已用Course根的两个同级any表达，不用单门限制冒充完成。library 的限额及借／还一致性已实施待 CI（下节）；课程组合已实现见第三批，排队未完成。verify 的 push 已忽略 docs/** 和 **/*.md，纯文档更新不触发 CI，文档尽量随源码提交。
 
 ### 4.6.2 G2 第二批：library 限额（已实现，待本批 CI）
 
-不改语言或生成器生产代码：User.activeLoans 默认 0，Borrow 先锁读者，以 <5 的条件增量占额后再改副本／建 Loan；GiveBack 锁 User → Loan → Copy，首次归还减一，重复／外人／计数异常拒写，晚失败要求整事务回滚。续借不占额。7 类 31 项定向通过；新的真库 IT 直接用实际 topics/library 源，已编译但未在本机执行。旧库需回填真实在借数，不能把 DEFAULT 0 当业务迁移；已有超限数保持真实值，可归还而不可继续借。见设计 23.6 与[验证第 26 节](../qualification/README.md#g2-library-local)。下一批评审课程冲突的学生锁与任意先修课的反关联，排队另案，不重做已有读取／金额／投影原语。
+不改语言或生成器生产代码：User.activeLoans 默认 0，Borrow 先锁读者，以 <5 的条件增量占额后再改副本／建 Loan；GiveBack 锁 User → Loan → Copy，首次归还减一，重复／外人／计数异常拒写，晚失败要求整事务回滚。续借不占额。7 类 31 项定向通过；新的真库 IT 直接用实际 topics/library 源，已编译但未在本机执行。旧库需回填真实在借数，不能把 DEFAULT 0 当业务迁移；已有超限数保持真实值，可归还而不可继续借。见设计 23.6 与[验证第 26 节](../qualification/README.md#g2-library-local)。随后第三批已实现课程冲突的学生锁与任意先修课的反关联，排队另案，不重做已有读取／金额／投影原语。
 
-随后 #156 正式全量通过，但新 IT 把 SIR 声明错误名误期待为大写下划线，借阅真库 60 项通过、22 项错误码比较失败。修复只改测试预期并补固定错误码到实际 SIR／生成异常的契约，3 类 17 项定向通过；library SIR 和编译器生产代码未改。完整验收待修复 SHA CI，见[验证第 27 节](../qualification/README.md#ci-156-error-contract-fix)。课程阶段仅有本地未提交测试，未混入该修复；负责人会通知 CI 结果，不等待或轮询。
+随后 #156 正式全量通过，但新 IT 把 SIR 声明错误名误期待为大写下划线，借阅真库 60 项通过、22 项错误码比较失败。修复只改测试预期并补固定错误码到实际 SIR／生成异常的契约，3 类 17 项定向通过；library SIR 和编译器生产代码未改。完整验收待修复 SHA CI，见[验证第 27 节](../qualification/README.md#ci-156-error-contract-fix)。当时课程阶段仅有本地未提交测试，未混入该修复；负责人会通知 CI 结果，不等待或轮询。
 
 CI 提速版 #155 主验证 8:18，正常路径 Completion 跳过，实际测试保留；部署被取消，不记整轮通过。完整基线仍为 #154。后续部署并行／缓存尚未实施，不必因已完成本轮提速重复修改工作流。文档随本批源码，不额外触发文档 CI。
+
+### 4.6.3 G2 第三批：课程组合（实现，待本批CI）
+
+实际 topics/course 已实现周课表半开区间、学生锁冲突检查、任意直接先修集合；关键是把Course作为根，组合同级 any(Prerequisite) 与 not any(CompletedCourse)，不用新语法、循环或时段快照。先修只在草稿增删、发布后冻结；成绩由管理员追加，学生不能自报通过。选课先User后Course；退课User→Enrollment→Course，座位仍按SQL守卫增减。原POST /courses/{id}/enroll、DELETE /enrollments/{id}不改路由。数值missing/null用既有G6检查，分页默认保留。
+
+6类38项定向通过；新CourseSelectionBusinessConformanceIT直接用该题目，已编译接现有业务CI，真库/HTTP/锁等待/晚失败回滚本机未执行。源384行SIR／3379行Java／14个显式接口，完整数不升，账本67／7／10。见[设计23.7](../design/12-feature-semantics-and-semantic-types.md#g2-course-combinations)和[验证28](../qualification/README.md#g2-course-local)。旧库课表、发布、先修、成绩和座位账本须所有者维护窗口核验，不做自动迁移；不提供成绩撤销、递归闭包或多时段/多学期。文档随本批源码，CI结果仍由负责人通知，不查询/等待。
+
+下一步排队首行取得与提升的范围设计；循环/聚合/日期差仍另案，不能借此扩大。
 
 ### 4.7 G5 列表循环、G8 聚合（两个大块，**先和负责人确认要不要做**）
 

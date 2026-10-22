@@ -865,7 +865,7 @@ course增加remaining与full，仍用原子守卫控制名额。只有实际实�
 
 - `count Loan` 后比较不是并发借阅限额；需要读者行上的原子计数，并把借／还／重复还书的计数与 Loan 一致性共同验证。第一批未改 library；第二批用现有能力组合，见 23.6。
 - 课程冲突即使用时段快照，也必须先锁学生行，才不会让同一学生并发选入重叠课程。旧草案只说“atomic 内先查再写”不足以保证这点。
-- 旧草案的先修课片段引用了尚未取得的 `required`。`Prerequisite` 是集合，现有单行 load／exists 不能自动遍历它；必须先设计“是否存在尚未完成的必修先修记录”的受支持反关联检查。不用单门限制、客户端传入先修课或一份时段快照冒充任意集合检查。
+- 旧草案的先修课片段引用了尚未取得的 `required`。第三批复核确认无需遍历集合或新增语法：以 Course 为查询根，组合“被要求”与“尚未通过”两个同级 any 即可，见 23.7。不用单门限制、客户端传入先修课或一份时段快照冒充任意集合检查。
 - 排队提升仍缺稳定的首行取得及其并发归属；跨引用谓词、循环、聚合与日期差不随本批增加。
 
 ### 23.2 作者显式锁定共同父行
@@ -907,7 +907,7 @@ validate not taken else HourTaken;
 
 首轮 #153 双全量门通过，但普通引用比较把整个 Room 当作 SQL 参数，预约均返回 500，锁屏障尚未验证。修复集中在 Lowering：在相等／不等、load 与关联外部参数中明确投影实体主键；input／actor 已是主键载体时不重复解引用，Optional 和 PresentComparison 同步使用物理类型。Generator、锁计划及真库断言均未改。新增真实 MyBatis 参数处理器回归后，21 类 89 项定向通过；修复 `bf14d90` 已由 #154 全门验收，见[验证第 25 节](../qualification/README.md#ci-154-accepted)；[第 23 节](../qualification/README.md#ci-153-reference-identity-fix)保留修复经过。
 
-第二批实现借阅限额与借／还一致性（23.6）。后续课程冲突仍需固定学生锁顺序，任意先修课集合检查需补齐反关联方案；排队提升另案，不宣称已完成。
+第二批实现借阅限额与借／还一致性（23.6）；第三批按学生锁和同级 any 实现课程冲突／先修集合（23.7），尚待真库 CI。排队提升另案，不宣称已完成。
 
 ### 23.6 第二批：借阅限额与借／还一致性（实现，待本批 CI）
 
@@ -951,3 +951,35 @@ WHERE u.active_loans <> COALESCE(totals.actual, 0);
 **验收：**本机 7 类 31 项通过；实际 library 题目生成的 Java 编译执行，不复制近似业务；真实代理只证明调用、边界和异常传播，不证明事务回滚。新增 LibraryBorrowingBusinessConformanceIT 复用现有 harness，直接编译 `topics/library/project.sir` 并独立观察三张业务表，覆盖最后一额、重复归还、重借后重放旧归还、同副本竞争、同读者借还竞争、晚失败回滚及回填边界；本机只编译，等同 SHA CI。详见[验证第 26 节](../qualification/README.md#g2-library-local)。没有加入排队、跨行可借总数、罚款／日期差、课程或循环／聚合。
 
 后续 #156 已实际执行本题真库，60 项业务／生命周期检查通过；22 项因新 IT 把原样声明名误期待为大写错误码而失败。修复只更正固定预期并补独立契约，3 类 17 项定向通过，不改任何业务／编译器生产行为；[验证第 27 节](../qualification/README.md#ci-156-error-contract-fix)保留 RED／GREEN 和 CI 证据。借阅不提前转✓，完整验收仍待修复 SHA CI。
+
+
+<a id="g2-course-combinations"></a>
+### 23.7 第三批：课程冲突与任意直接先修集合（实现，待同源码 CI）
+
+基线 `9d31a82`；按负责人要求不查询或等待新 CI。实现直接修改实际 `topics/course/project.sir`，没有 Parser／Semantic／Lowering／Generator 生产改动。
+
+**不必增加语法的关键：**此前用 Prerequisite 为根会需要在 any 内引用其 required 字段或继续嵌套。改以 Course 为根后，以下查询返回“有要求、但该用户未通过”的任意一门课程；两个子查询同级，不是嵌套，不限制先修数量，也不靠比较总条数代替集合包含：
+
+```text
+exists Course where any(Prerequisite, required == item and targetCourse == selected)
+  and not any(CompletedCourse, course == item and student == actor) as missing;
+validate not missing else MissingPrerequisites;
+```
+
+实际生成服务编译执行，并用 MyBatis DefaultParameterHandler 证明 selected 与 actor 绑定物理 Long，而非实体对象。任意指**当前课程直接声明的集合**，不新增递归闭包。通过记录来自可信管理员的追加写入，不接受学生提交的“已经通过课程列表”，不提供撤销成绩操作。
+
+**每周时间与发布边界：**一个课程有一个周课表区间，weekday 1～7、startPeriod 1～12、endPeriod 2～13，以 `[startPeriod,endPeriod)` 表示；相邻端点不冲突，必须 startPeriod < endPeriod。不是任意日期／多节次课表或学期系统，不新增日期差。容量仍必须为正。NewCourse 的数值先通过类型范围，再由正常的整数范围／差值校验检查；现有 G6 算术输入计划负责 missing／null 的 NotNull 字段错误，不假设非 Optional 自动拥有全局必填，也不改变分页默认。
+
+课程创建为未发布；周课表只在创建时写入，未新增修改课表 API。管理员可在草稿上增删 Prerequisite，必修课程必须已发布且不能为自身；发布后目标课程的要求不能再变，也没有取消发布入口。因此不必把时段快照复制到 Enrollment，不会出现选课检查之后课表或先修集合又被普通 API 改写的情况。要求只能指向先前已发布、规则不再变化的课程，也避免通过这些新建路径形成环。不能将此保证推广到旧库坏数据或绕过应用的 SQL。
+
+**锁与座位一致性：**Enroll 先锁 actor 对应 User，再锁目标 Course，依次检查已发布、重复、时段冲突、缺少先修，再按数据库 `enrolled < capacity` 守卫增座并插入 Enrollment。冲突查询同样以 Course 为根，按当前锁定目标的时段过滤，再 `any(Enrollment, course == item and student == actor)`。Drop 固定 User → Enrollment → Course，先验归属，再按 enrolled > 0 减座并删除记录；重复退课返回 EnrollmentNotFound，不会再次减座。RecordCompletion 也锁对应学生 User，与选课串行。课程配置操作先锁目标 Course，成绩写入不再反向锁课程；所有路径保留 READ_COMMITTED／STATEMENT 缓存，不自动重试死锁。数据库唯一对 `(student,course)` 的保护仍保留，晚失败须回滚整个事务。
+
+**接口：**原 `POST /api/courses/{id}/enroll` 与 `DELETE /api/enrollments/{id}` 不改路径；只新增管理员配置／发布／成绩接口。所有声明错误保留 SIR 原名与大小写。普通用户不能增删先修、发布课程或追加成绩；只有可信管理员可写成绩。角色、凭据、公开单课详情和教师名单机制沿用原实现，未顺带改变既有选课用户角色策略。
+
+**验收：**6 类 38 项定向通过，包含真实生成服务、反关联 JDBC 参数、实际 IT 路由／状态／声明错误码、DDL 及八题内存生成。首个锁计划测试先得到 RED；初版探针误期待 SQL 字面 NOT EXISTS，现按实际 wrapper.not 和运行时 SQL 分别验证。IT 路由误写为 /enrollments 已在本机自审修正，消费端常量与真实控制器核对，未改生产路由。见[验证第 28 节](../qualification/README.md#g2-course-local)。
+
+CourseSelectionBusinessConformanceIT 直接使用实际题目，复用现有隔离 harness，覆盖空／部分／同数量错误集合及四门先修、半开时段、管理员发布冻结、数字缺省／null、同一用户并发重叠课、不同星期独立、多人抢三席、重复退课。另以 performance_schema 观测学生锁等待，再提交冲突课程，验证等待后拒绝；测试专用触发器／外键在拥有的 schema 中制造晚插入／晚删除失败以检查整事务回滚，不是产品钩子。该 IT 本机仅编译，真库、HTTP 和整轮门均 NOT_RUN，待同 SHA CI。
+
+**旧库边界：**旧课程没有周课表，不能编造默认星期／节次，也不默认把旧课发布或把旧 Enrollment 当作已通过。没有自动数据迁移；已有系统须停写、由所有者补齐并核验真实课表、发布状态、先修与通过记录，以及 enrolled 与实际 Enrollment 的账实一致，再恢复入口。交付计划会拒绝直接给旧表无默认增加这些必填字段。
+
+本批源码规模为 384 行 SIR／3379 行生成 Java／14 个显式接口；账本只将两条“尚未写出”转为“实现待真库△”，完整数不变：**67 完整／7 带折扣／10 未写出**。未加入排队、批量、聚合、日期差或成绩撤销。下一项仍是排队首行取得与提升的范围设计，不把它混入本批。
