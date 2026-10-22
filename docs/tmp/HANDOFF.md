@@ -98,7 +98,13 @@ CI 提速版 #155 主验证 8:18，正常路径 Completion 跳过，实际测试
 
 #158正式全量门及生成工程构建通过，新课程IT却用不存在的 `/api/courses/10` 判定就绪，404导致全部课程业务未运行、部署跳过。现只将探针改为已有公开搜索，并用实际 Api 端点与输入模型守契约，3类34项定向通过；未修改生产接口／业务，不接受404为READY。见[验证29](../qualification/README.md#ci-158-readiness-fix)，等新源码CI，结果仍由负责人通知。
 
-下一步排队首行取得与提升的范围设计；本地待确认草案与3项技术探针保留未提交、不混入CI修复。循环/聚合/日期差仍另案，不能借此扩大。
+上述CI修复已单独推送7d13a2d，排队没有混入；随后按负责人继续指示完成第四批，见下文。循环/聚合/日期差仍另案，不能借此扩大。
+
+### 4.6.4 G2 第四批：书目FIFO与本人扫码领取（实现，待CI）
+
+实际library增加Reservation及ReserveBook／ClaimReservation／CancelReservation／MyReservations，无新增语法／编译器生产分支。先取得User→Book等共同锁，再查同书更早预约；不能加全局owner scope，私有列表单独过滤。普通Borrow有队列即拒绝，GiveBack仅释放，AddCopy也锁Book；领取成功才扣名额、改Copy、建Loan并删预约，同事务共同提交。满额不自动跳过，所有者或馆员可明确取消；馆员锁预约所有者而不是自身，避免反向User锁。旧续借规则未改，无过期／通知／自动分配。
+
+8类58项定向通过，实际源443行SIR／4086行Java／20个接口。原借阅8项和错误／路由／DDL合同、Mapper不变性保留。原library IT复用一个应用，新增重复入队／领取、多副本、取消／领取竞争、可观察Book锁等待和外键／触发器晚失败的四表快照检查。仅已编译、本机NOT_RUN；不查询CI，负责人通知。见[设计23.8](../design/12-feature-semantics-and-semantic-types.md#library-reservation-proposal)和[验证30](../qualification/README.md#g2-reservation-local)。账本只把预约从✗改待真库△，**67／8／9**。升级新增空队列表，维护窗口同时切换全部写入口、旧Borrow不能与新锁协议混跑，原activeLoans须真实回填。后续G5／G8及日期差先定范围，不静默扩展。
 
 ### 4.7 G5 列表循环、G8 聚合（两个大块，**先和负责人确认要不要做**）
 

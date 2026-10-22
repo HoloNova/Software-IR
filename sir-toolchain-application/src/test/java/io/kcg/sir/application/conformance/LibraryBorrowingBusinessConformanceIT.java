@@ -7,8 +7,8 @@ import org.junit.jupiter.api.Test;
 
 /** Uses the actual topic source and the existing isolated business harness, with no production test hooks. */
 class LibraryBorrowingBusinessConformanceIT {
-    private static final BusinessSliceHarness.Fixture FIXTURE = new BusinessSliceHarness.Fixture(
-            "Library borrowing limit and loan/copy/counter transaction consistency",
+    static final BusinessSliceHarness.Fixture FIXTURE = new BusinessSliceHarness.Fixture(
+            "Library borrowing limit, FIFO reservations and transaction consistency",
             "/topics/library/project.sir", "/conformance/mysql/library-ddl.sql", "/conformance/mysql/library-seed.sql",
             "loan", "/api/books/1", "library-borrowing-report.txt", "library-borrowing", "kcg.library-conformance.enabled");
 
@@ -51,7 +51,9 @@ class LibraryBorrowingBusinessConformanceIT {
         slice.setHttpStatus("READY (actual topic public book route)");
         try (var observer = slice.openObserver(url)) {
             slice.setRowsBefore(slice.rowsNow(observer));
-            LibraryBorrowingChecks.verify(slice, observer, new HttpAssertionClient());
+            var http = new HttpAssertionClient();
+            LibraryBorrowingChecks.verify(slice, observer, http);
+            LibraryReservationChecks.verify(slice, observer, http);
             slice.setRowsAfter(slice.rowsNow(observer));
         }
     }

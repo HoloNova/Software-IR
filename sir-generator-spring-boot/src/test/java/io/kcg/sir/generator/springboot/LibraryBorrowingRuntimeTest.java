@@ -31,7 +31,7 @@ class LibraryBorrowingRuntimeTest {
         var assistant = new org.apache.ibatis.builder.MapperBuilderAssistant(
                 new com.baomidou.mybatisplus.core.MybatisConfiguration(), "library-sample");
         assistant.setCurrentNamespace("library.test");
-        for (String entity : List.of("User", "Copy", "Loan"))
+        for (String entity : List.of("User", "Book", "Copy", "Loan", "Reservation"))
             com.baomidou.mybatisplus.core.metadata.TableInfoHelper.initTableInfo(assistant, type("domain." + entity));
     }
     @AfterAll static void close() throws Exception { if (loader != null) loader.close(); }
@@ -54,7 +54,7 @@ class LibraryBorrowingRuntimeTest {
         assertEquals(5, state.counter);
         assertEquals(1, state.inserts);
         assertEquals(501L, view.getClass().getMethod("getId").invoke(view));
-        assertBefore(state, "User.lock", "User.update", "Copy.update", "Loan.insert");
+        assertBefore(state, "User.lock", "Book.lock", "Copy.lock", "User.update", "Copy.update", "Loan.insert");
     }
 
     @Test void aFullReaderCannotWriteACopyOrInsertALoan() throws Exception {
@@ -69,7 +69,7 @@ class LibraryBorrowingRuntimeTest {
         State state = new State(5, true);
         state.invoke("GiveBack", "id", 31L);
         assertEquals(4, state.counter);
-        assertBefore(state, "User.lock", "Loan.lock", "Copy.lock", "User.update", "Loan.update", "Copy.update");
+        assertBefore(state, "User.lock", "Loan.lock", "Book.lock", "Copy.lock", "User.update", "Loan.update", "Copy.update");
         long writes = state.calls.stream().filter(c -> c.endsWith(".update")).count();
         assertFailure("AlreadyReturnedException", () -> state.invoke("GiveBack", "id", 31L));
         assertEquals(4, state.counter);
@@ -150,11 +150,14 @@ class LibraryBorrowingRuntimeTest {
                     var wrapper = (com.baomidou.mybatisplus.core.conditions.Wrapper<?>) args[0];
                     assertTrue(wrapper.getSqlSegment().contains("FOR UPDATE"), wrapper.getSqlSegment());
                     calls.add(entity + ".lock");
-                    return entity.equals("User") ? user() : entity.equals("Loan") ? loan : copy;
+                    return entity.equals("User") ? user() : entity.equals("Loan") ? loan
+                            : entity.equals("Book") ? row("Book", Map.of("Id", 11L)) : copy;
                 }
                 calls.add(entity + "." + name);
                 return switch (name) {
-                    case "selectById" -> entity.equals("User") ? user() : entity.equals("Loan") ? loan : copy;
+                    case "selectById" -> entity.equals("User") ? user() : entity.equals("Loan") ? loan
+                            : entity.equals("Book") ? row("Book", Map.of("Id", 11L)) : copy;
+                    case "selectObjs" -> List.of();
                     case "selectList", "selectByIds", "selectBatchIds" -> List.of(copy);
                     case "insert" -> { inserts++; set(args[0], "Id", 501L); yield 1; }
                     case "update" -> update(entity, args);

@@ -778,3 +778,38 @@ mvn -B -q -o -pl sir-toolchain-application -am test '-Dtest=CourseSelectionContr
 本机未启动应用、MySQL或浏览器，未执行真库IT或全量门；AFT Java LSP 初始化失败为 PARTIAL，以 Maven 实际编译及最新 XML 为依据，不宣称覆盖率。RED／GREEN 与源码清单封存于 `target/ci-158-verification/`。排队可行性探针及第23.8节草案在工作区另行保留，不计入34项、不混入本修复。课程两条仍标待真库△，账本不因修探针提前上调。
 
 同时核实前次借阅错误码修复 `9d31a82` 的 [#157](https://github.com/HoloNova/Software-IR/actions/runs/39765191920) conclusion=success；#158 的借阅 IT 亦通过。与本次尚未执行的课程业务分开记录，不借用借阅结果证明课程通过。修复将单独提交推送，新的完整验收仍由负责人通知，不主动查询或等待。
+
+
+<a id="g2-reservation-local"></a>
+## 30. G2 第四批：实际书目预约与队首主动领取（待同源码CI）
+
+以课程就绪修复 `7d13a2dcaf10df999f4c5b0af7d9d829a31c2975` 为基线；负责人继续后实施设计23.8的本人扫码领取，不是还书自动分配。没有查询或等待新CI。实际 topics/library 新增待办实体和四个操作，用更早同书id的exists判FIFO；普通Borrow、GiveBack、AddCopy也纳入Book锁。未增加first、条件分支、定时器、语法或编译器生产分支。
+
+**有效RED：**LibraryReservationContractTest 两项在旧实际样例下编译运行，分别因缺ReserveBook等能力、Borrow无共同Book锁而失败；报告在 `target/reservation-verification/red/`。随后修改实际SIR。新增运行时探针最初未接受Boolean JDBC值，导致合法的returned=false参数被探针误拒；只修探针，不改生产参数或查询。补验不可借副本、更新参数与返回的BORROWED状态后转绿。遵守同一任务只提交一次的仓库约定，RED/GREEN报告随本批封存，不制造失败checkpoint提交。
+
+| 最新定向类 | tests | 保障 |
+| --- | ---: | --- |
+| LibraryReservationRuntimeTest | 19 | 实际生成Java编译执行；队首／外人／满额／错书／重放；同书更早预约检查不带owner过滤；真实DefaultParameterHandler验证查询与更新参数为JDBC标量；入队条件、本人／馆员取消锁顺序、私有分页、晚删除错误向外传播 |
+| LibraryBorrowingRuntimeTest | 8 | 原借／还／重复／越权／续借和旧超限计数；仅代理适配共同Book锁，旧断言保留 |
+| ReservationHeadCompositionTest | 3 | 初始同书前序检查、非本人拒绝和真实Long绑定；不是业务IT替代 |
+| GeneratorEntityArtifactInvarianceTest | 4 | 实体Mapper不因能力集合变化 |
+| LibraryReservationContractTest | 14 | 两项原RED转绿，10种IT固定错误码与实际声明／异常一致；实际路由、鉴权、就绪地址和全局scope／私有列表边界 |
+| LibraryBorrowingToolchainContractTest | 3 | 原接口／计数、真实交付表和扩展后的DDL |
+| LibraryBorrowingErrorContractTest | 6 | 原借还IT的固定声明错误名／状态不漂移 |
+| TopicSamplesTest | 1 | 八题内存编译、生成、交付规划；非生成工程构建 |
+| **合计** | **58** | **0 failures／errors／skips** |
+
+按各类最新Surefire XML去重，不累计先前重复执行。实际分批完成：旧借还8项先通过；修布尔探针后跑新服务与原合同；IT扩展后跑应用合同／八题；最后只补新服务、初始探针和Mapper不变性。成功命令如下，未为收口再重复全套：
+
+```powershell
+$env:MAVEN_OPTS='-Xmx384m -XX:ActiveProcessorCount=2'
+mvn -B -q -o -pl sir-toolchain-application -am test '-Dtest=LibraryReservationRuntimeTest,LibraryReservationContractTest,LibraryBorrowingToolchainContractTest,LibraryBorrowingErrorContractTest' '-Dsurefire.failIfNoSpecifiedTests=false' '-DargLine=-Xmx512m -XX:ActiveProcessorCount=2'
+mvn -B -q -o -pl sir-toolchain-application -am test '-Dtest=LibraryReservationContractTest,LibraryBorrowingToolchainContractTest,LibraryBorrowingErrorContractTest,TopicSamplesTest' '-Dsurefire.failIfNoSpecifiedTests=false' '-DargLine=-Xmx512m -XX:ActiveProcessorCount=2'
+mvn -B -q -o -pl sir-generator-spring-boot -am test '-Dtest=LibraryReservationRuntimeTest,ReservationHeadCompositionTest,GeneratorEntityArtifactInvarianceTest' '-Dsurefire.failIfNoSpecifiedTests=false' '-DargLine=-Xmx512m -XX:ActiveProcessorCount=2'
+```
+
+**本机NOT_RUN：**扩展同一个LibraryBorrowingBusinessConformanceIT，先保留原借阅全套检查，再运行LibraryReservationChecks；没有新增应用／MySQL构建。包括无副本／全LOST／已借同书的拒绝、入队不占名额、私有分页与伪造owner拒绝、严格FIFO防普通借书插队、还书不自动分配、满额不跳队、取消提升、多／新增副本、8并发重复入队与领取、取消／领取竞争、不同书目、同连接可观察锁等待后的重新判队首。另用外键阻止最后预约删除、触发器使借阅插入失败，要求四表完整快照一致，再证明原预约仍可成功领取。测试控制SQL明确标为fixture，不增加生产测试钩子。所有新IT已由testCompile编译，本机未执行；真实回滚与完整部署只能看后续同SHA CI。
+
+新接口路径和就绪地址均对照实际DeploymentPlan，不复用#158不存在的详情探针；10种错误预期保留SIR大小写，不重复#156的错误码假设。既有User／Copy／Loan账本检查仍执行，新队列检查额外逐行核对计数与物理副本当前持有人。
+
+本机没有启动服务／数据库／浏览器或跑全量门；AFT Java LSP初始化失败为PARTIAL，以Maven实际编译和XML为依据，未测覆盖率。证据与源码哈希在 `target/reservation-verification/`。library规模443行SIR／4086行Java／20个接口；预约只从✗转待真库△，总数 **67／8／9**，不把未通知的CI认作通过。新增空队列表且须维护窗口同时切换全部写入口，不猜历史队列、不让旧版本Borrow绕过新Book锁；原activeLoans须真实回填，满额／弃领不自动跳过。通知、过期、续借限制及自动替下一读者借阅均未扩范围。文档随本批代码提交，不单独触发文档CI。
