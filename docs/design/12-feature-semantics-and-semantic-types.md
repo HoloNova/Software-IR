@@ -601,7 +601,7 @@ library 的 Book 增加 writer／LIBRARIAN，market 的 Item 排除 status／cre
 
 
 <a id="g10-money-proposal"></a>
-## 20. G10：Money 的精度、交付与金额加减（已确认并实现，待本批 CI）
+## 20. G10：Money 的精度、交付与金额加减（#147 已验收）
 
 负责人已确认本节金额规则，现已实现，结果见 20.7。基线 `484a8a792c3ec6a7b9f5a7b7171b009e981a8ce3` 的 [CI #140](https://github.com/HoloNova/Software-IR/actions/runs/39527408701) 已全部通过，闭环前述 G9 与部署修复；该结果不覆盖本批 G10。八题需求完成数本轮不提前上调。
 
@@ -678,6 +678,8 @@ DDL 必须生成 `DECIMAL(p,s)`，合法数字默认值先验证，再用目标 
 
 ### 20.7 实施结果与验收边界
 
+**当前结论：**`997794c4524ba726c9e864d2826d060093b66a89` 的 [#147](https://github.com/HoloNova/Software-IR/actions/runs/39700702739) 全部门通过，Money真库57项、显式DECIMAL交付、precision／scale漂移拒绝及恢复、新实例迁移链均有同SHA证据；[验证第19节](../qualification/README.md#ci-147-accepted)。以下是实施时的本机证据，不再作为当前待验收项；既定不自动迁移精度等边界不变。
+
 Core 增加 precision 的正式规则、参数／类型／默认值检查；Lowering 产出不可变 `DecimalShape`，精度约束、相对写和交付列消费明确计划。真实 DTO 使用共享的精确判定，修正 Optional 内限定类名的类型注解位置；普通 update 也检查目标候选，BigDecimal 取负使用 negate。PATCH 仅不展开继承的 precision，实体掌握实际精度；显式 precision 和 Quantity 等带入的业务约束仍拒绝，未放宽旧 PATCH 协议。
 
 DECIMAL 合同行追加两列，非金额仍为原 11 列；默认值由列计划在验证物理上限后精确规范到 scale，现场核验比较 precision／scale，任何已有金额精度变化均拒绝自动迁移。原子金额保留 SQL delta、guard、加载行与非 version 边界；先检查 delta scale，再检查实际 Spring 事务绑定的 MyBatis 连接严格模式，由数据库判定最终溢出并回滚。普通非版本持久化的全行／NULL 写策略未重设计。
@@ -688,7 +690,7 @@ G10 完成时 market／shop／ledger 已改为 Money，账目最小正金额为 
 
 
 <a id="g6-multiplication-proposal"></a>
-## 21. G6：精确乘法与金额乘数量（已实现，待同源码 CI）
+## 21. G6：精确乘法与金额乘数量（#147 已验收）
 
 本节最初以 `303a139` 勘察；负责人随后要求继续下一阶段，已按下述范围实现。G10 金额真库在 #143 的 57 项检查通过，但部署仍未闭环；#144 在初次合同测试缺少 provider 下载失败，已单独由 `b8f2cf0` 修复，见[验证第 16 节](../qualification/README.md#ci-144-dependency-fix)。本节的 G6 完成情况见 21.6，不将旧 CI 成功外推到新源码。
 
@@ -756,6 +758,8 @@ shop 仍只买一种商品，BuyRequest 已增加 Quantity 数量，库存守卫
 
 
 ### 21.6 实施与本机定向结果
+
+**当前结论：**上述 #147 的乘法真库37项、双全量门、八题生成工程离线编译及独立部署均通过，G6 的待验收阻塞闭环；[验证第19节](../qualification/README.md#ci-147-accepted)。金额乘数量一条由待验收△转✓，当前账本65／5／14；以下保留实施时的223项本机记录，不以旧NOT_RUN覆盖新证据。
 
 Parser／AST、类型、声明写回与 SourceEditor 已贯通 `*`，整数宽度与 Optional 拒绝边界不变。Lowering 显式插入 IntegralToDecimal，并按正式 INPUT binding 给出不可变的算术必需值计划；独立 IR 校验核对字段、来源、属性、顺序与覆盖。生成器只渲染计划，通用 NotNull 从金额专属渲染器移到共享支持，不给 DTO 全局加数值必填。引用输入的整数 `ref.id` 缺值采用真实 DTO 属性 `refId`，已补合法取值与字段错误的真实运行回归；PATCH changes 仍保留缺省／null，不作为必需算术输入。
 

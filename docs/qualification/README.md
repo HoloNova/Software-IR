@@ -32,7 +32,9 @@
 
 ## 4. 当前证据
 
-**最近一次已核验的 CI 运行：** [verify #88](https://github.com/HoloNova/Software-IR/actions/runs/38901782044)，受测提交 `fe40836`（`main`，feat(cli): kcg scaffold dual-token），success。冻结与完成两条全量闸门、业务场景 IT（含新的 `DualTokenScaffoldBusinessConformanceIT`：用脚手架输出作夹具，逐条验证双 Token 七条行为，含过期的访问令牌与 6 路同时刷新的竞争）、独立验证 IT、Standalone CLI smoke 均成功；核对时读了业务场景 IT 的日志，确认新 IT 运行并全部通过。
+**当前验收基线：** `997794c4524ba726c9e864d2826d060093b66a89` 的 [verify #147](https://github.com/HoloNova/Software-IR/actions/runs/39700702739) 全部门 success，G10／G6、独立部署精度漂移与恢复闭环；实际报告与边界见[第 19 节](#ci-147-accepted)。下文旧运行保留为历史证据，不作为当前状态。
+
+**历史运行：** [verify #88](https://github.com/HoloNova/Software-IR/actions/runs/38901782044)，受测提交 `fe40836`（`main`，feat(cli): kcg scaffold dual-token），success。冻结与完成两条全量闸门、业务场景 IT（含新的 `DualTokenScaffoldBusinessConformanceIT`：用脚手架输出作夹具，逐条验证双 Token 七条行为，含过期的访问令牌与 6 路同时刷新的竞争）、独立验证 IT、Standalone CLI smoke 均成功；核对时读了业务场景 IT 的日志，确认新 IT 运行并全部通过。
 
 **再上一次运行：** [verify #79](https://github.com/HoloNova/Software-IR/actions/runs/38884618786)，受测提交 `6f244fa`（`main`，fix: 真实库核验发现的四个缺陷），success。冻结全量闸门、完成全量闸门、业务场景 IT（含新的 `TokenDeskBusinessConformanceIT`：`Uuid` 主键轮换、“设成同值”的守卫更新、重复行的唯一加载）、独立验证 IT、Standalone CLI smoke 均成功；核对时读了业务场景 IT 步骤的日志，确认新 IT 运行并通过。
 
@@ -504,3 +506,25 @@ mvn -B -q -o -pl sir-generator-spring-boot -am test '-Dtest=DecimalSchemaVerifie
 ```
 
 Maven JVM 384 MiB／2 个可见处理器，测试 fork 512 MiB／2 个可见处理器。未跑全量、生成工程 Maven 构建、Docker、MySQL 或 HTTP，未启动应用。AFT Java LSP 初始化失败，诊断 PARTIAL；Python 两处 expected=None 的旧类型推断诊断未改，以实际编译和定向为据。覆盖率未测，无 UI 改动。漂移拒绝后的精度恢复和新实例 V1..V11 重放仍待修复源码 CI，不提前验收 G10 部署。按阶段授权独立提交推送，不与 G11 设计混合。
+
+
+<a id="ci-147-accepted"></a>
+## 19. CI #147：G10／G6 与部署精度漂移验收闭环
+
+受测提交 **`997794c4524ba726c9e864d2826d060093b66a89`**，[verify #147](https://github.com/HoloNova/Software-IR/actions/runs/39700702739)，2026-10-22 完成，两个 job 全部 success。已读取步骤状态并下载 deployment-evidence、conformance-evidence 与 surefire-reports，不仅依据运行总状态。证据本机副本位于 `target/ci-investigation/147/`，权威产物仍为该运行 artifacts。
+
+| 范围 | 同 SHA 实际证据 |
+| --- | --- |
+| 双全量门 | Frozen full gate、Completion full gate 均 success |
+| 业务、独立验证、CLI | Business conformance ITs、Independent verification IT、Standalone CLI smoke 均 success |
+| G10 Money | `conformance-evidence/money-1a16118365c-22747/money-report.txt`：57 checks passed、0 failed；实际应用连接非严格模式拒写、PATCH、并发金额与回滚均包含 |
+| G6 乘法 | `conformance-evidence/multiplication-1a161193de8-17641/multiplication-report.txt`：37 checks passed、0 failed；精确乘积、非法数量拒写、整数溢出、数量扣库并发、精度失败回滚及明细一致性均包含 |
+| 八题生成工程 | `surefire-reports/sir-toolchain-application/target/surefire-reports/` 中 TopicSamplesOfflineCompilationTest：1 test、0 failures/errors/skips；其测试遍历八题，不误写成8个JUnit用例。TopicSamplesTest 同样1项通过 |
+| 独立部署 | `deployment-evidence/report.json` 绑定上述 SHA／run URL，deployment、httpSmoke、persistence、privileges、swagger、contract、missingVolume、business、update、dataUpdate、decimalShape、freshChain、cleanup 全部 PASSED |
+| 随包网络与独立业务 | 同报告合同13 PASSED／0 FAILED／7 NOT_VERIFIED；双Token独立业务26 PASSED／0 FAILED。NOT_VERIFIED 不计入通过 |
+
+#141／#142 的模型包、DTO断言、连接环境绑定修复，以及 #143／#144／#146 的生命周期、合同依赖预热和漂移公开协议修复，均由该 SHA 的完整执行闭环。这里验收的是已有受控场景：不扩称任意 MySQL 环境、任意金额迁移或生产就绪。部署报告仍明确排除 interruptedMigration 与 schemaDriftOtherThanDecimalShape；Money 不自动迁移旧整数分或已有精度，G6 不自动升级整数宽度、不支持 Optional 算术、SQL列乘法或原子列乘法。
+
+本轮只将八题账本中 shop 的“金额＝单价×数量”由待验收 △ 改为 ✓：参考样例已经使用该表达式、八题生成工程构建通过，独立真库场景验证同一金额／数量／库存及明细组合。其余折扣项和未写出项不自动升级。总账现为 **84条：65完整（77%）、5带折扣（6%）、14未写出（17%）**；多商品、退库存、逾期天数、聚合与计算视图仍未因此实现。
+
+没有重跑本机构建、测试或服务。纯文档收尾只做差异与链接检查；该验收基线不覆盖后续 G11 的新源码。下一阶段先形成计算视图方案，核心实现待负责人介入确认。
