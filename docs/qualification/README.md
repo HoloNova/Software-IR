@@ -32,7 +32,7 @@
 
 ## 4. 当前证据
 
-**当前验收基线：** `997794c4524ba726c9e864d2826d060093b66a89` 的 [verify #147](https://github.com/HoloNova/Software-IR/actions/runs/39700702739) 全部门 success，G10／G6、独立部署精度漂移与恢复闭环；实际报告与边界见[第 19 节](#ci-147-accepted)。下文旧运行保留为历史证据，不作为当前状态。
+**当前验收基线：** `4a1d8c8c2f28fd0d5678f65bfd4494cf163d8321` 的 [verify #150](https://github.com/HoloNova/Software-IR/actions/runs/39724155367) 全部门 success，覆盖 G11 计算视图的关系／乘法真库断言与完整部署；证据见[第 21 节](#ci-150-accepted)。#147 仍是 G10／G6 的验收点，见[第 19 节](#ci-147-accepted)。下文旧运行保留为历史证据，不作为当前状态。
 
 **历史运行：** [verify #88](https://github.com/HoloNova/Software-IR/actions/runs/38901782044)，受测提交 `fe40836`（`main`，feat(cli): kcg scaffold dual-token），success。冻结与完成两条全量闸门、业务场景 IT（含新的 `DualTokenScaffoldBusinessConformanceIT`：用脚手架输出作夹具，逐条验证双 Token 七条行为，含过期的访问令牌与 6 路同时刷新的竞争）、独立验证 IT、Standalone CLI smoke 均成功；核对时读了业务场景 IT 的日志，确认新 IT 运行并全部通过。
 
@@ -550,4 +550,23 @@ mvn -B -q -o -pl sir-toolchain-application -am test `
   '-Dsurefire.failIfNoSpecifiedTests=false' '-DargLine=-Xmx512m -XX:ActiveProcessorCount=2'
 ```
 
-结果汇总按类去重读取各模块最新 `TEST-*.xml`，副本与索引在 `target/g11-verification/`；渲染器兼容对照脚本为 `target/G11BaselineCompare.java`。需求账本未上调（仍 **65／5／14**）：“显示剩余名额”要等同源码真库证据才改判；library 可借数量是跨行聚合，不因本行计算完成。本节不表示 G11 已验收。
+结果汇总按类去重读取各模块最新 `TEST-*.xml`，副本与索引在 `target/g11-verification/`；渲染器兼容对照脚本为 `target/G11BaselineCompare.java`。本节的账本数字（当时 65／5／14）已被同源码 #150 验收取代：“显示剩余名额”转✓，总账 66／5／13，见[第 21 节](#ci-150-accepted)；library 可借数量是跨行聚合，仍不因本行计算完成。
+
+
+<a id="ci-150-accepted"></a>
+## 21. CI #150：G11 计算视图真库与部署验收闭环
+
+受测提交 **`4a1d8c8c2f28fd0d5678f65bfd4494cf163d8321`**，[verify #150](https://github.com/HoloNova/Software-IR/actions/runs/39724155367)，两个 job 全部 success，19 个步骤无失败。已下载 `conformance-evidence`、`deployment-evidence`、`surefire-reports` 核对，不只依据运行总状态；本机副本在 `target/ci-investigation/150/`。
+
+| 范围 | 同 SHA 实际证据 |
+| --- | --- |
+| 双全量门 | Frozen full gate、Completion full gate 均 success |
+| 关系场景（计算字段主证据） | `relation-slice-report.txt`：40 checks 通过、0 失败。`doubledCapacity` 对根行分別为 60／40（不同行、不同页），嵌套 `label` 逐行取各自 student，`active` 按枚举逐行 true／false；读语句仅为 `SELECT id,code,name,capacity FROM course` 加既有批量关联读取，没有虚构列、没有逐行查询 |
+| 乘法场景 | `multiplication-report.txt`：56 checks 通过、0 失败。8 个并发选课仅 `[200,200,200,409,…]` 三次成功，`course=[1|3|3, 2|1|1]`；满额响应 `{capacity=3, enrolled=3, remaining=0, full=true}`，预满行 `{remaining=0, enrolled=1, full=true}`；拒课后计数未变 |
+| 其余真库场景 | money 57、write 61、crud-access 47、query 40、guard 24、bearer 35、dual-token 34、token-slice 33，均 0 失败 |
+| 八题生成工程 | `surefire-reports` 中 TopicSamplesOfflineCompilationTest 与 TopicSamplesTest 各 1 项通过、0 失败／跳过 |
+| 独立部署 | `deployment-evidence/report.json` 的 `commit` 即上述 SHA；deployment、httpSmoke、persistence、privileges、swagger、contract、missingVolume、business、update、dataUpdate、decimalShape、freshChain、cleanup 全部 PASSED；合同 13 PASSED／0 FAILED／7 NOT_VERIFIED，业务 26 PASSED／0 FAILED |
+
+#149 的三项失败已由 `4a1d8c8` 修正：课程视图补上 `capacity`，课程行改用按表读取的 `expectCounters`，不再借用只认夹具主表的 `expectRow`。原子选课在 #149 就已通过，说明那三项是测试假设错误，不是计算逻辑缺陷。
+
+据此把 course “显示剩余名额”由 ✗ 改 ✓，账本更新为 **84 条：66 完整（79%）、5 带折扣（6%）、13 未写出（15%）**。library 可借数量仍需跨行计数、罚款仍缺日期差，均未升级；G5／G8 未获扩范围授权。本机未重跑构建、测试或服务；该基线不覆盖后续 G2 业务组合的新源码。
