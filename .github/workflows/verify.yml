@@ -20,6 +20,9 @@ name: verify
 
 on:
   push:
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
   workflow_dispatch:
 
 concurrency:
