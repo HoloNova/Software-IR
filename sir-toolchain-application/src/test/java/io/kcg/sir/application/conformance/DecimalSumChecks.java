@@ -23,6 +23,9 @@ final class DecimalSumChecks {
         var path = s.projectRoot().resolve("src/main/java/example/money/fixture/ExactAggregateWarningFixture.java");
         Files.createDirectories(path.getParent());
         Files.write(path, source);
+        // The run's evidence directory is created by whoever first writes into it, not by the constructor:
+        // the installer runs before the build, so it must not assume the later log writers created it.
+        Files.createDirectories(s.evidenceRoot());
         Files.write(s.evidenceRoot().resolve("ExactAggregateWarningFixture.java.txt"), source);
         s.reportLine("TEST_FIXTURE_ONLY aggregate warning probe sha256="
                 + HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(source))

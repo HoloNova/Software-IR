@@ -25,7 +25,7 @@ class MoneyBusinessConformanceIT {
             return;
         }
         var slice = new BusinessSliceHarness(FIXTURE, environment);
-        try { execute(slice); }
+        try { slice.verify(() -> execute(slice)); }
         finally { slice.teardown(); slice.writeReport(); }
         System.out.println(slice.report());
         assertTrue(slice.passed(), slice::report);

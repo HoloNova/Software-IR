@@ -277,6 +277,31 @@ final class BusinessSliceHarness {
         this.reportLines.append(line).append('\n');
     }
 
+    /** One verification body; declared so {@link #verify} can record a failure and still rethrow it. */
+    @FunctionalInterface
+    interface Body {
+        void run() throws Exception;
+    }
+
+    /**
+     * Runs the verification body and records an unexpected error in the same channel as a failed check.
+     *
+     * <p>An IT whose body throws before its first assertion has verified nothing. Without this record the
+     * evidence report would still say PASSED, because only explicit checks and declared failures move the
+     * verdict; the error is rethrown unchanged so JUnit still fails the test.
+     */
+    void verify(Body body) throws Exception {
+        try {
+            body.run();
+        } catch (Throwable error) {
+            if (this.failure == null) {
+                this.failure = "unexpected error before the run completed: " + describe(error);
+            }
+
+            throw error;
+        }
+    }
+
     void check(String what, boolean ok, String observed) {
         (ok ? this.passedChecks : this.failedChecks).add((ok ? "PASS " : "FAIL ") + what + " (" + observed + ")");
     }

@@ -111,7 +111,9 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 
 **CI 提速实测：**#155 主验证 8:18（同业务源码 #154 为 19:51），在线预热 0:27、Frozen 3:37，Completion 按预期跳过；真实业务／独立验证／CLI 保留。部署被取消，不能比较整轮时长，也不将全部观测改善归因为编排。详见[验证第 25 节](qualification/README.md#ci-154-accepted)。
 
-**当前阻塞修复（#162）：**SUM参考示例把声明片段标成完整sir且漏实体，LanguageReferenceExamplesTest因此在PARSE阶段失败；业务IT和部署未验收。已补完整可执行声明片段及正式绑定／精确SUM计划契约，23项定向通过，Parser／SUM生产逻辑未改，见[验证32](qualification/README.md#ci-162-sum-reference-fix)。修复随测试单批提交推送后继续分组方案，不等待新CI，结果由负责人通知。
+**当前阻塞修复（#163）：**Money IT 在构建前写告警探针副本，但证据目录要到构建写日志时才创建，故 #163 以 `NoSuchFileException` 中止，SUM 真库与告警断言未执行；同一运行的 `money-report.txt` 还把中止写成 PASSED。已让写入方创建证据目录，并给 harness 加异常记录守卫，14 项定向通过，未改生产逻辑，见[验证33](qualification/README.md#ci-163-evidence-dir-fix)。修复随测试与文档单批提交推送后继续后续工作，不等待新 CI，结果由负责人通知。
+
+**上一轮修复（#162）：**SUM参考示例把声明片段标成完整sir且漏实体，LanguageReferenceExamplesTest因此在PARSE阶段失败；业务IT和部署未验收。已补完整可执行声明片段及正式绑定／精确SUM计划契约，23项定向通过，Parser／SUM生产逻辑未改，见[验证32](qualification/README.md#ci-162-sum-reference-fix)。修复随测试单批提交推送后继续分组方案，不等待新CI，结果由负责人通知。
 
 **最新阶段（G8首批，待同源码CI）：**[条件Decimal求和](design/12-feature-semantics-and-semantic-types.md#g8-decimal-sum-proposal)已贯通语法／正式绑定／scope／源编辑／目标计划与图谱。空集／全空为0，总额不套单笔Money精度；当前Statement告警明确拒绝，普通查询不变，实体Mapper不变。ledger增加本人区间／本人分类总额（195行SIR／3949行Java／23个显式接口）；30类187项定向通过。实际ledger生成服务已编译执行，隔离CAST探针仅编译；真库复用原Money IT，无新增应用。真实SQL告警及所有IT本机NOT_RUN，结果由负责人通知，不查询CI。分组、平均、自然月／预算语义和G5另案；账本仍67／8／9。见[验证31](qualification/README.md#g8-decimal-sum-local)。
 

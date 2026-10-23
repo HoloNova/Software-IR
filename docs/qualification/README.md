@@ -867,3 +867,30 @@ mvn -B -q -o -pl sir-generator-spring-boot -am test '-Dtest=ExactAggregateWarnin
 ```
 
 首条展示实际执行到的四类；上述正确命令未为汇报再次运行。Maven 384MiB／fork 512MiB，各 2 个可见处理器。AFT Java LSP 初始化失败为 PARTIAL，编译证据以 Maven 为准；未测覆盖率。没有本机全量门、生成工程 Maven 构建、服务／数据库或浏览器。测试与修复文档同批提交，CI 不为纯文档单独触发。完整金额 IT（含 SUM 真库告警）与部署待修复 SHA CI；推送后不查询或等待结果，由负责人通知，随即继续分组方案。账本仍 67／8／9。
+
+
+<a id="ci-163-evidence-dir-fix"></a>
+## 33. CI #163：证据目录未创建，且中止的运行仍报 PASSED
+
+失败源码 **`93f9a7a713bf9547230a7427c822f3382664ef66`**，[verify #163](https://github.com/HoloNova/Software-IR/actions/runs/39886437029)。正式 Frozen full gate 成功，LanguageReferenceExamplesTest 4 项通过，#162 的修复有效。业务 IT 12 项里只有 MoneyBusinessConformanceIT 出错：
+
+```text
+java.nio.file.NoSuchFileException: …/ci-evidence/money-1a1667c6fee-25773/ExactAggregateWarningFixture.java.txt
+  at DecimalSumChecks.installWarningFixture(DecimalSumChecks.java:26)
+  at MoneyBusinessConformanceIT.execute(MoneyBusinessConformanceIT.java:39)
+```
+
+根因是写入方假设目录已存在：`BusinessSliceHarness` 构造时只记录 `evidenceParent/runToken`，该目录要到 `buildAndLocateJar → runMavenBuild` 里写 Maven 日志时才被创建，而告警探针副本在构建**之前**安装。因此探针资源本身没有缺失，应用既未构建也未启动，SUM 及告警断言一项都没执行；独立验证、CLI 与部署被跳过。
+
+同一次运行还暴露证据报告不可信：`money-report.txt` 写着 `verdict=PASSED`、`checksPassed=4 checksFailed=0`，同时 `generatedProjectBuild=NOT_RUN`、`httpReadiness=NOT_RUN`。原因是该 IT 把 `writeReport()` 放在 `finally`，而未经检查的异常只向 JUnit 传播，没有进入 harness 的 `failure` 字段；`passed()` 只看 `failure` 与 `failedChecks`，于是中止的运行被写成通过，失败工作目录也会按“通过”删除。JUnit 本身正确报了 error，所以 CI 没有误绿。230 份正式 XML 中失败套件恰好 1 个（Money，1 error）。
+
+**RED → GREEN：**新增 BusinessSliceHarnessEvidenceTest，三条都用真实实现而不是复制其逻辑。第一条在**不预先创建**的临时父目录上调用实际安装方法，先复现与 CI 同型的 `NoSuchFileException`（报告存 `target/ci-163-verification/red/`），修复后断言副本落在 `evidenceRoot()` 内且内容与资源一致；第二条让验证体在首次检查前抛错，断言异常原样抛出、`passed()` 为假、`verdict()` 为 FAILED、报告含该错误；第三条保证正常完成的运行仍判 PASSED，避免守卫把所有运行一律判失败。修复只改测试侧：写入方先创建自己的证据目录；harness 增加 `verify(Body)`，在把异常原样抛给 JUnit 之前记入同一失败通道；Money 与 Multiplication 两个“报告写在 finally”的 IT 改经它执行。没有吞异常、没有跳过 IT、没有移动探针安装顺序（那会让探针漏编进 jar），也没有放宽任何生产校验。
+
+六类最新报告 **14 tests，0 failures／errors／skips**：BusinessSliceHarnessEvidenceTest 3、DecimalSumToolchainContractTest 4、LanguageReferenceExamplesTest 4、MoneyAggregateFixtureCompilationTest 1，以及 Money／Multiplication 两个 IT 各 1。**后两个在本机是 NOT_RUN（无参考库），只在编译与前置分支层面通过，不能记作真库验收。**
+
+```powershell
+$env:MAVEN_OPTS='-Xmx384m -XX:ActiveProcessorCount=2'
+mvn -B -q -o -pl sir-toolchain-application -am test '-Dtest=BusinessSliceHarnessEvidenceTest,MoneyBusinessConformanceIT,MultiplicationBusinessConformanceIT,MoneyAggregateFixtureCompilationTest,DecimalSumToolchainContractTest,LanguageReferenceExamplesTest' '-Dsurefire.failIfNoSpecifiedTests=false' '-DargLine=-Xmx512m -XX:ActiveProcessorCount=2'
+```
+
+Maven 384MiB／fork 512MiB，各 2 个可见处理器；AFT Java LSP 初始化失败记为 PARTIAL，编译以 Maven 为准；未测覆盖率。没有启动 MySQL、应用或浏览器，没有本机全量门与生成工程构建。RED、GREEN 与源码哈希封存在 `target/ci-163-verification/`。G8 条件 SUM 的真库部分（含严格／非严格会话的当前语句告警对照）仍待修复 SHA 的 CI；本轮不查询或等待结果，由负责人通知。

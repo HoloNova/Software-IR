@@ -114,6 +114,8 @@ CI 提速版 #155 主验证 8:18，正常路径 Completion 跳过，实际测试
 
 #### G8 首批已实现（待同源码CI）
 
+#163的Money IT在构建前写探针副本时因证据目录未建而NoSuchFile中止，且报告将中止写成PASSED。已让写入方建档、harness异常入失败通道，14项定向通过，见[验证33](../qualification/README.md#ci-163-evidence-dir-fix)。两IT在本机为NOT_RUN（无参考库），真库SUM／告警仍待新CI；修复推送后直接继续。
+
 #162在语言参考门发现第5.10节的声明片段误标完整sir且漏User／Entry。本批已改为包含依赖的可执行sir-declarations；新增文档到SUM计划、owner及actor正式绑定的契约，不绕开文档门、不改生产实现，23项定向通过，见[验证32](../qualification/README.md#ci-162-sum-reference-fix)。真实SUM IT和部署仍未验收，修复单独提交推送后继续分组方案，不查询或等待CI，由负责人通知。
 
 负责人已确认并实现[设计24](../design/12-feature-semantics-and-semantic-types.md#g8-decimal-sum-proposal)的条件Decimal单列SUM：独立步骤／字段绑定／scope／源编辑与IR硬化；空／全空0，总额不继承单笔精度；复用Lambda谓词和BaseMapper。按需标记及当前Statement告警插件、STATEMENT缓存防绕过，普通查询不改；真实ParamMap缺ew与合法变量名冲突均有RED→GREEN。ledger本人范围／本人分类合计已用上，195／3949／23；不推断分类方向净额或月份预算。30类187项定向通过，见[验证31](../qualification/README.md#g8-decimal-sum-local)；旧Windows目录读取10项受阻，新的内存SUM图谱完整构建通过。Money原IT复用同一应用／构建，加Optional、scope、参数、any和固定CAST告警对照；仅已编译、本机NOT_RUN。方案／文档同源码提交，账本67／8／9不变。group-by、AVG、期间／时区／结果DTO及G5另案；CI结果仍由负责人通知，不查询。
