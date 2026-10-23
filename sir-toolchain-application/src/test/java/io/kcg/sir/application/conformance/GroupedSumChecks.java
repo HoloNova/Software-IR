@@ -26,7 +26,7 @@ final class GroupedSumChecks {
             trace.start();
             page(s,http,range(1)+"&page=1&size=2",3,List.of(101L,102L),List.of("3.00","0"));
             var observed=trace.stop();
-            s.check("group page executes exactly count plus current page",observed.selectCount()==2,observed.toString());
+            checkQueryBudget(s,observed);
         }
         page(s,http,range(1)+"&page=2&size=2",3,List.of(103L),List.of("199999999999999999.98"));
         page(s,http,range(1)+"&page=20&size=2",3,List.of(),List.of());
@@ -41,6 +41,10 @@ final class GroupedSumChecks {
             &&categories.equals(s.rowsOf(observer,"summary_category")),"snapshot before controlled concurrency fixture");
         snapshot(s,http);
         warnings(s,http,"strict session");
+    }
+
+    static void checkQueryBudget(BusinessSliceHarness s,MysqlRuntimeTrace.Trace observed) throws Exception {
+        GroupedSumReadBudget.check(s,observed);
     }
 
     static void warnings(BusinessSliceHarness s,HttpAssertionClient http,String mode) throws Exception {

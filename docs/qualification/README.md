@@ -976,3 +976,39 @@ mvn -B -q -o -pl sir-toolchain-application -am test '-Dtest=MoneyAggregateFixtur
 ```
 
 没有本机全量门、生成工程Maven构建、应用／MySQL／浏览器，未测覆盖率；Maven384MiB、fork512MiB，各2个可见处理器。AFT Java LSP初始化失败为PARTIAL，以实际Maven编译及XML为据。纯容器装配通过不是HTTP／真库通过，Money的严格／非严格会话、count后提交新组的同快照检查及部署仍待修复SHA CI。月度／预算设计26草案不混入本批；修复测试与状态文档单批提交推送，不查／等新运行，负责人通知结果，账本67／8／9不变。
+
+
+<a id="ci-167-grouped-read-budget-fix"></a>
+## 37. CI #167：分组SQL预算把驱动会话探测算成业务读取
+
+失败源码 **`74bd393d641d8bcf4776ceb30ee7a661773e6f70`**，[verify #167](https://github.com/HoloNova/Software-IR/actions/runs/39921191961)。Frozen full gate 成功，#165／#166 的修复都有效；独立解析 237 份原始 XML 只有 `MoneyBusinessConformanceIT` **1 failure / 0 errors**，其余 11 项业务 IT 通过，独立验证／CLI／部署因前序失败被跳过，仍不算验收。
+
+Money 的生成工程 `mvn clean verify` 通过、应用就绪，真实分组业务已执行：分组金额、`total` 为组数、分页与越界、精确大额、本人／分类隔离、计数完成后提交新组仍读旧快照、严格与非严格会话下 count／data 两条语句各自的告警拒绝全部 PASS。唯一失败是新增的读取预算断言：
+
+```text
+FAIL group page executes exactly count plus current page
+  (Trace[selectCount=7, selectDigests=[SELECT @@SESSION . `transaction_read_only`, …])
+```
+
+`GroupedSumChecks` 直接断言 `observed.selectCount()==2`，而 `MysqlRuntimeTrace.digestCounts()` 按 schema 收集**所有** SELECT digest；Connector/J 的连接初始化与只读探测本身也是 SELECT，因此 7 = 2 条业务读取 + 5 条会话探测。这是验收度量写错，不是生产多发查询；旧 `RelationSliceBusinessConformanceIT` 早已区分业务表读取与会话探针，新增分组用例没有复用这条策略。
+
+按原始文件字节逐条提取这 7 条（不依赖读工具的长行显示）确认服务端把 `DISTINCT` 规范化成 **`DISTINCTROW`**，同时保留完整会话探测投影。该真实记录固化为 `src/test/resources/conformance/mysql/ci-167-grouped-read-digests.json`；报告文件本身未截断，上一轮“证据被裁剪”的判断已纠正。
+
+**RED → GREEN：**先新建 `GroupedSumSqlBudgetTest`，28 项中 13 项失败，分别对应驱动探测误计数、两次计数／两次分页／只有探测被误放行、以及完整证据缺失；XML 存 `target/ci-167-verification/red/`。随后把 #167 的真实 7 条 digest 固化为回归，又单独取得 1 项 RED（`DISTINCTROW` 被当成不可识别语句），存 `red-server-digest/`，证明手写样例通过不足以代表真实服务端格式。
+
+修复只动验收代码：
+
+- 新增 `GroupedSumReadBudget` 按角色分类每条 digest：业务计数（`COUNT(DISTINCT …)` 且无 GROUP BY／ORDER BY／LIMIT）、业务分页（固定投影、`GROUP BY` 键、键升序、带 LIMIT／OFFSET）、会话探测（整个投影只能是已登记的系统变量，不得出现表、子查询、UNION 或字符串字面量）。要求**业务计数恰 1 条、业务分页恰 1 条、不可识别语句 0 条**，且 `selectCount` 必须等于实际捕获条数，防止 summary 与 log 不一致时侥幸通过。
+- 把完整 `selectDigests`、`rawSelects`、事务计数及分类结果写入 `grouped-sum-query-trace.json` 并在报告里指明，失败时不再只有一行拼接文本；证据写失败会经既有 `verify()` 通道让运行判失败，不静默丢弃。
+- 移除已修复写法的 `SELECT @@SESSION.transaction_isolation` 特例放行：只有登记表中的变量才算探测，未知 `@@` 变量、带表／子查询／UNION 的探测形状一律拒绝。
+
+没有把期望值改成 7、没有放宽为 `<=7`、没有删断言或靠预热掩盖，也未改生产聚合、事务或告警逻辑。上一轮 #166 的 `ObjectProvider` 延迟解析和计数后屏障保持原样。
+
+最终 7 类最新报告去重 **59 tests，0 failures／errors／skips**：GroupedSumSqlBudgetTest 30（含真实 #167 digest 与证据完整性）、MoneyAggregateFixtureCompilationTest 1、ExactAggregateWarningRuntimeTest 6、GroupedSumRuntimeTest 13、BusinessSliceHarnessEvidenceTest 4、GroupedSumContractTest 3、GroupedSumChecksTest 2。GREEN 与逐类方法索引在 `target/ci-167-verification/green/`、`local-result.json`。
+
+```powershell
+$env:MAVEN_OPTS='-Xmx384m -XX:ActiveProcessorCount=2'
+mvn -B -q -o -pl sir-toolchain-application -am test '-Dtest=GroupedSumSqlBudgetTest,MoneyAggregateFixtureCompilationTest,ExactAggregateWarningRuntimeTest,GroupedSumRuntimeTest,BusinessSliceHarnessEvidenceTest,GroupedSumContractTest,GroupedSumChecksTest' '-Dsurefire.failIfNoSpecifiedTests=false' '-DargLine=-Xmx512m -XX:ActiveProcessorCount=2'
+```
+
+**边界：**本机没有全量门、生成工程 Maven 构建、应用、MySQL 或浏览器，未测覆盖率；真实读取预算、同快照与告警仍须修复 SHA 的 CI 实际执行，本机 59 项不能替代真库验收。AFT Java LSP 初始化失败记为 PARTIAL，编译以实际 Maven 与 XML 为据。月度／预算设计 26 草案仍未提交、不混入本批；修复测试与状态文档单批提交推送，不查询或等待结果，由负责人通知；账本仍 67／8／9。

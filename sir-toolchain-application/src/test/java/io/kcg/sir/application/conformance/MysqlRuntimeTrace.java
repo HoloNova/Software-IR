@@ -17,8 +17,9 @@ import java.util.Properties;
  *
  * <p>Two independent views of the same window are collected. The count comes from
  * {@code performance_schema.events_statements_summary_by_digest}, taken as the growth of the
- * normalized {@code SELECT} digests attributed to the owning schema, so transaction bookkeeping
- * ({@code SET autocommit}, {@code COMMIT}) and connection validation cannot inflate it. The literal
+     * normalized {@code SELECT} digests attributed to the owning schema. Transaction commands such as
+     * {@code SET autocommit} and {@code COMMIT} are excluded, but Connector/J's session-variable reads
+     * are SELECTs too: callers must distinguish those from business reads when enforcing a budget. The literal
  * statements come from the general log, filtered to the runtime account, so the evidence shows what
  * the application actually sent rather than a summary of it.
  *
