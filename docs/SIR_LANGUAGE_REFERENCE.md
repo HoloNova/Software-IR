@@ -1239,7 +1239,7 @@ capability ActiveCourses {
 }
 ```
 
-`any` 只能出现在查询步骤的谓词里，不能嵌套，条件里必须有 `指向根实体的Ref字段 == item`。
+`any` 只能出现在查询步骤的谓词里，不能嵌套。关联条件必须是顶层合取中的 `被查实体的Ref字段 == item`，或反方向的 `被查实体的身份字段 == item.指向该实体的Ref字段`（两侧可交换）。例如以 Entry 为根时，`any(Category, id == item.category and owner == actor)` 按分类身份与根行外键关联；不是按字段名字猜 JOIN，也不允许无关联条件、任意跨表列比较或嵌套 `any`。
 
 ### 5.4 `create`
 
@@ -1484,7 +1484,7 @@ capability WrongCount {
 }
 ```
 
-**不是并发保护。** `count < 5` 或“不存在”后插入，两个请求仍可能同时通过；`requires atomic` 不会自动锁住查询范围。硬限额继续组合行内原子计数和守卫；区间防重叠须按第 5.2 节的显式父行锁协议组织检查及写入，不由这些查询自动获得。条件金额求和见第 5.10 节；AVG／分组仍不支持，也没有把 `any`／`count`／`sum` 放进任意表达式或更新守卫。
+**不是并发保护。** `count < 5` 或“不存在”后插入，两个请求仍可能同时通过；`requires atomic` 不会自动锁住查询范围。硬限额继续组合行内原子计数和守卫；区间防重叠须按第 5.2 节的显式父行锁协议组织检查及写入，不由这些查询自动获得。条件金额求和见第 5.10 节；AVG仍不支持，分组分页见第5.11节；没有把 `any`／`count`／`sum` 放进任意表达式或更新守卫。
 
 ### 5.10 `sum`：条件精确金额求和
 
@@ -1513,7 +1513,7 @@ capability TotalOfMine {
 }
 ```
 
-`sum 实体.字段 where 条件 as 结果;` 是独立步骤，`sum` 为上下文词。仅 `requires readonly` 的 query 允许；测量列必须直接属于实体且底层为 Decimal，可为 Money、自定义金额别名或 Optional。整数、secret、跨 Ref 取列、算术投影、DISTINCT、JOIN、GROUP BY、AVG 及排序／分页不支持。`item` 只在该步谓词内有效，结果变量只能在本步之后使用；测量列和实体都按正式绑定进行跨文件可见性检查及精确改名。
+`sum 实体.字段 where 条件 as 结果;` 是独立步骤，`sum` 为上下文词。仅 `requires readonly` 的 query 允许；测量列必须直接属于实体且底层为 Decimal，可为 Money、自定义金额别名或 Optional。该标量形式不支持整数、secret、跨Ref取列、算术投影、用户指定DISTINCT、JOIN、AVG或分页；引用单键分组分页使用第5.11节的独立形式。`item` 只在该步谓词内有效，结果变量只能在本步之后使用；测量列和实体都按正式绑定进行跨文件可见性检查及精确改名。
 
 空集／全空返回数值 0，Optional 列空值由 SUM 忽略；负数和尾随零保持精确，不经过 double、不隐式舍入、不把源字段 precision／min／max 套到总额。结果核心类型为 Decimal，可超过单笔 Money 的精度。示例用已有 Money 语义类型的别名命名标量输出，不新增裸 Decimal 声明语法；这不表示合计要符合单笔 Money 的存储规则。零的 JSON 小数位不承诺固定格式。
 
@@ -1522,6 +1522,58 @@ capability TotalOfMine {
 Spring Boot 目标每步计划一条 `COALESCE(SUM(固定物理列), 0)`，继续使用原 BaseMapper，不拉回所有行，也不改实体 Mapper。只有计划过的聚合携带精确标记：在同一 JDBC Statement 未关闭时清理旧告警、执行、检查本语句 SQLWarning；有告警或无法检查就失败，不能把服务器饱和值当成功结果。严格 SQL 模式本身不足以保证 SELECT 聚合精确。普通查询的告警政策不变；包含 SUM 的工程计划 MyBatis STATEMENT 级缓存，避免会话缓存绕过本次执行／告警检查。驱动读取诊断可能额外通信，单条聚合 SELECT 不代表错误路径只作一次网络往返。不得覆盖该缓存／插件配置后仍宣称此保证。
 
 SUM 是只读能力，不参与原子写限额；最终写入其它字段仍须目标字段精度校验。计算视图仍不能引用工作流合计变量，不因此新增分组结果 DTO、批量读取或循环。实现与边界见[设计第 24 节](design/12-feature-semantics-and-semantic-types.md#g8-decimal-sum-proposal)，真库状态见[验证第 31 节](qualification/README.md#g8-decimal-sum-local)。
+
+### 5.11 `sum … by …`：按引用分组的精确金额分页
+
+```sir-declarations
+entity User persistent { identity id: Id generated auto; }
+entity Category persistent {
+  identity id: Id generated auto;
+  field owner: Ref<User>;
+}
+entity Entry persistent {
+  identity id: Id generated auto;
+  field owner: Ref<User>;
+  field category: Ref<Category>;
+  field amount: Optional<Money>;
+  field occurredAt: Moment;
+}
+input GroupRange {
+  field since: Optional<Moment>;
+  field until: Optional<Moment>;
+  field page: PageNo;
+  field size: PageSize;
+}
+error BadPage;
+error BadRange;
+capability TotalsByCategory {
+  actor Ref<User>;
+  input GroupRange;
+  output Page<SumGroup<Ref<Category>>>;
+  fails BadPage;
+  fails BadRange;
+  requires authenticated;
+  requires readonly;
+  expose query at "/entries/totals-by-category";
+  workflow {
+    validate input.until > input.since else BadRange;
+    sum Entry.amount by category
+      where item.owner == actor and any(Category, id == item.category and owner == actor)
+        and item.occurredAt >= input.since and item.occurredAt < input.until
+      Page input.page, input.size else BadPage
+    as totals;
+    return totals;
+  }
+}
+```
+
+分组键只能是同一实体上直接、非 Optional、非 secret 的 Ref 字段；测量列仍是 Decimal／Optional Decimal。`SumGroup<Ref<Category>>` 是只用于 Page 输出的类型，不是实体列、输入、任意 record 或可遍历列表。每项固定为 `{key,total}`：key 是分类的 Long／UUID 身份载体，不是实体或分类名称；total 是不套单笔 Money 精度的精确 Decimal。
+
+外层沿用 `{total,page,size,records}`；外层 total 为**组数**，不是账目行数。按键身份固定升序；无匹配账目的分类不返回，存在账目但金额全空的组为0，空集为total=0／records=[]，越界页保留正确组数。page／size复用既有默认和限额，必须是两个不同的直接input字段，分页错误须列入fails。必需时间缺省／null／反序在查询前拒绝，区间为 `[since,until)`。
+
+每步两条聚合读取（COUNT DISTINCT＋当前页的GROUP BY），不拉全明细、不逐分类查询、不隐式补零。筛选值只求值一次，两次读取在同一显式只读REPEATABLE_READ快照内；两条语句都检查自身告警，继续使用STATEMENT本地缓存。任意一步失败不返回部分页。不同HTTP翻页请求不保证同一快照，不能据此做并发写入限额。
+
+owner和相关实体归属须由作者明确筛选；scope自动保留，但Crud的owner不等于任意统计的授权。ledger现在提供本人显式区间内的本人分类合计，**不是自然月、历史净收支或预算超支**。AVG／舍入、多键、Optional键、文本／枚举键、HAVING、按总额排序及零组补齐不在本批范围。
 
 ## 6. 表达式
 
@@ -1788,7 +1840,7 @@ use Crud {
 | `SIR-TYPE-001` | 类型不一致：比较或数值运算的操作数不兼容、返回类型不匹配、字面量超出范围、状态码不在 400／401／403／404／409 里、`secret`／`unique` 用在不允许的类型上 |
 | `SIR-TYPE-002` | `Ref<...>` 的目标不是实体 |
 | `SIR-TYPE-003` | `Optional<Optional<T>>` |
-| `SIR-TYPE-004` | `any` 的条件里没有“指向根实体的 Ref 字段 `== item`” |
+| `SIR-TYPE-004` | `any` 的条件没有受支持的根行外键／身份关联，或根行／关联目标不匹配 |
 | `SIR-VALID-001` | 通用规则：`fails` 没排序、`requires` 顺序不对、`query` 没有 `readonly`、多个写步骤没有 `atomic`、`find` 谓词的比较方向不对、视图字段带了约束等 |
 | `SIR-VALID-002` | `versioned` 的规则：每个实体最多一个、版本字段不能带约束或 `unique`、只能用在实体字段上 |
 | `SIR-VALID-003` | 局部更新输入（`patch of`）的规则 |

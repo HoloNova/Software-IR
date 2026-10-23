@@ -1,0 +1,57 @@
+// TEST_FIXTURE_ONLY: observable after-count barrier and warning SQL, never emitted in product delivery.
+package example.money.fixture;
+
+@org.springframework.web.bind.annotation.RestController
+@org.apache.ibatis.plugin.Intercepts(@org.apache.ibatis.plugin.Signature(type=org.apache.ibatis.executor.statement.StatementHandler.class,
+    method="query",args={java.sql.Statement.class,org.apache.ibatis.session.ResultHandler.class}))
+public final class GroupedSumFixture implements org.apache.ibatis.plugin.Interceptor {
+    private final example.money.persistence.SummaryEntryMapper mapper;
+    private final java.util.concurrent.atomic.AtomicBoolean armed=new java.util.concurrent.atomic.AtomicBoolean();
+    private volatile boolean ready;
+    private volatile java.util.concurrent.CountDownLatch release=new java.util.concurrent.CountDownLatch(0);
+    public GroupedSumFixture(example.money.persistence.SummaryEntryMapper mapper) { this.mapper=mapper; }
+
+    @org.springframework.web.bind.annotation.PostMapping("/api/fixture/group-barrier/arm")
+    public String arm() {
+        release=new java.util.concurrent.CountDownLatch(1); ready=false; armed.set(true); return "armed";
+    }
+    @org.springframework.web.bind.annotation.GetMapping("/api/fixture/group-barrier/status")
+    public String status() { return ready?"ready":"waiting"; }
+    @org.springframework.web.bind.annotation.PostMapping("/api/fixture/group-barrier/release")
+    public String release() { armed.set(false); release.countDown(); return "released"; }
+
+    @Override public Object intercept(org.apache.ibatis.plugin.Invocation invocation) throws Throwable {
+        var handler=(org.apache.ibatis.executor.statement.StatementHandler)invocation.getTarget();
+        Object parameters=handler.getParameterHandler().getParameterObject();
+        boolean target=parameters instanceof java.util.Map<?,?> map && map.containsKey("ew")
+            && map.get("ew") instanceof example.money.persistence.ExactAggregate.Query<?> query
+            && query.getParamNameValuePairs().containsValue(99L)
+            && handler.getBoundSql().getSql().matches("(?is).*COUNT\\s*\\(\\s*DISTINCT\\b.*");
+        Object result=invocation.proceed();
+        if (target && armed.compareAndSet(true,false)) {
+            var gate=release; ready=true;
+            try {
+                if (!gate.await(20,java.util.concurrent.TimeUnit.SECONDS))
+                    throw new java.sql.SQLTimeoutException("fixture after-count barrier timed out");
+            } finally { ready=false; }
+        }
+        return result;
+    }
+
+    @org.springframework.web.bind.annotation.GetMapping("/api/fixture/group-warning")
+    public Object warning(@org.springframework.web.bind.annotation.RequestParam("stage") String stage) {
+        if (!stage.equals("count") && !stage.equals("data")) throw new IllegalArgumentException("fixture stage");
+        var query=example.money.persistence.ExactAggregate.query(example.money.domain.SummaryEntry.class,"DISTINCT `category_id`");
+        return example.money.persistence.ExactAggregate.grouped(query,w -> w.eq(example.money.domain.SummaryEntry::getOwner,1L),
+            1,20,20,100,100000,IllegalArgumentException::new,"`category_id`",
+            "`category_id` AS g_key,COALESCE(SUM(`amount`),0) AS g_total",example.money.persistence.ExactAggregate::longKey,
+            q -> {
+                if (stage.equals("count")) {
+                    mapper.selectObjs(q.select("CAST(SUM(`amount`) AS DECIMAL(3,2))"));
+                    return 1L;
+                }
+                return mapper.selectCount(q);
+            },
+            q -> mapper.selectMaps(q.select("`category_id` AS g_key,CAST(SUM(`amount`) AS DECIMAL(3,2)) AS g_total")));
+    }
+}

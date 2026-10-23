@@ -121,7 +121,8 @@ public final class SpringBootIrValidation {
          .filter(SpringBootDeclaration.CapabilityDeclaration.class::isInstance)
          .map(SpringBootDeclaration.CapabilityDeclaration.class::cast)
          .flatMap(capability -> capability.workflow().steps().stream())
-         .anyMatch(step -> step instanceof SpringBootWorkflow.FindStep find && find.page().isPresent());
+         .anyMatch(step -> step instanceof SpringBootWorkflow.GroupedSumStep
+                || step instanceof SpringBootWorkflow.FindStep find && find.page().isPresent());
 
       for (ProjectArtifact artifact : this.model.projectArtifacts()) {
          this.addNode(artifact.id(), artifact.origin(), "project artifact");
@@ -680,7 +681,8 @@ public final class SpringBootIrValidation {
       }
 
       if (capability.kind() == SpringBootDeclaration.CapabilityKind.QUERY
-         && (capability.httpMethod() != SpringBootDeclaration.HttpMethod.GET || capability.transactionMode() != SpringBootDeclaration.TransactionMode.READ_ONLY)
+         && (capability.httpMethod() != SpringBootDeclaration.HttpMethod.GET || capability.transactionMode() != SpringBootDeclaration.TransactionMode.READ_ONLY
+              && capability.transactionMode() != SpringBootDeclaration.TransactionMode.REPEATABLE_READ)
          )
        {
          this.error(capability, "query capability must use GET and a read-only transaction");
@@ -1009,7 +1011,8 @@ public final class SpringBootIrValidation {
          .map(SpringBootWorkflow.FindStep.class::cast)
          .filter(find -> find.page().isPresent())
          .count();
-      boolean pageOutput = capability.outputType() instanceof LoweredJavaType.PageValue;
+      paged += capability.workflow().steps().stream().filter(SpringBootWorkflow.GroupedSumStep.class::isInstance).count();
+       boolean pageOutput = capability.outputType() instanceof LoweredJavaType.PageValue;
       if (pageOutput && paged != 1L) {
          this.error(capability, "Page output requires exactly one paged find step, found " + paged);
       }
@@ -1054,7 +1057,13 @@ public final class SpringBootIrValidation {
                this.error(owner, "only a capability with an actor can read the actor's row");
             }
             break;
-         case SpringBootWorkflow.SumStep value:
+         case SpringBootWorkflow.GroupedSumStep value:
+             this.validateExpression(value.predicate(), owner);
+             this.validateStringMatches(value.stringMatches(), value.predicate(), owner);
+             this.validatePageSpec(owner, value.page());
+             for (String problem : GroupedSumValidation.validate(this.model, owner, value)) this.error(owner, problem);
+             break;
+          case SpringBootWorkflow.SumStep value:
             this.requireDeclaration(value.entitySymbol(), SpringBootDeclaration.EntityDeclaration.class, owner);
             this.validateExpression(value.predicate(), owner);
             this.requireKnown(value.result().symbol(), owner, "sum result");
@@ -1130,12 +1139,18 @@ public final class SpringBootIrValidation {
              || !query.predicate().type().equals(new LoweredJavaType.Scalar(LoweredJavaType.ScalarKind.BOOLEAN))
              || !query.plan().emptyAsZero() || !query.plan().rejectWarnings()
             || !query.plan().mapperMethod().equals("selectObjs") || query.plan().statements() != 1
-             || owner.transactionMode() != SpringBootDeclaration.TransactionMode.READ_ONLY
+             || (owner.transactionMode() != SpringBootDeclaration.TransactionMode.READ_ONLY
+                  && owner.transactionMode() != SpringBootDeclaration.TransactionMode.REPEATABLE_READ)
              || owner.kind() != SpringBootDeclaration.CapabilityKind.QUERY)
          this.error(owner, "sum requires exact Decimal, empty zero, current statement warnings and one readonly SELECT");
       var support = this.model.projectArtifacts().stream().filter(ProjectArtifact.ExactAggregate.class::isInstance)
             .map(ProjectArtifact.ExactAggregate.class::cast).toList();
-      if (support.size() != 1 || !support.getFirst().packageName().equals(this.model.basePackage() + ".persistence")
+       var groupPage = this.model.declarations().stream().filter(SpringBootDeclaration.CapabilityDeclaration.class::isInstance)
+             .map(SpringBootDeclaration.CapabilityDeclaration.class::cast).flatMap(c -> c.workflow().steps().stream())
+             .anyMatch(SpringBootWorkflow.GroupedSumStep.class::isInstance)
+             ? Optional.of(this.model.basePackage()+".api.PageResponse") : Optional.<String>empty();
+       if (support.size() != 1 || !support.getFirst().groupPageType().equals(groupPage)
+             || !support.getFirst().packageName().equals(this.model.basePackage() + ".persistence")
             || !support.getFirst().simpleName().equals("ExactAggregate")
             || !support.getFirst().path().equals("src/main/java/" + (this.model.basePackage() + ".persistence").replace('.', '/') + "/ExactAggregate.java"))
          this.error(owner, "sum requires its exact aggregate support artifact");
@@ -1532,7 +1547,13 @@ public final class SpringBootIrValidation {
 
    private void validateType(LoweredJavaType type, SpringBootDeclaration owner) {
       switch (type) {
-         case LoweredJavaType.Scalar ignored:
+          case LoweredJavaType.SumGroupValue group:
+             if (!(owner instanceof SpringBootDeclaration.CapabilityDeclaration capability
+                   && capability.outputType() instanceof LoweredJavaType.PageValue page && page.elementType().equals(group)))
+                this.error(owner, "group carriers are direct Page outputs, never storage or request members");
+             this.validateType(group.keyType(), owner);
+             break;
+          case LoweredJavaType.Scalar ignored:
             break;
          case LoweredJavaType.OptionalValue value:
             this.validateType(value.elementType(), owner);

@@ -21,6 +21,7 @@ public enum ReferenceRole {
    SCALAR_QUERY_ENTITY(SymbolKind.ENTITY),
    SUM_ENTITY(SymbolKind.ENTITY),
    SUM_FIELD(SymbolKind.FIELD),
+   GROUP_KEY_FIELD(SymbolKind.FIELD),
    CREATE_ENTITY(SymbolKind.ENTITY),
    UPDATE_TARGET(SymbolKind.VARIABLE),
    PERSIST_TARGET(SymbolKind.VARIABLE),

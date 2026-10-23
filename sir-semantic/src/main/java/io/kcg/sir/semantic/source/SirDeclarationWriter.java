@@ -336,6 +336,15 @@ public final class SirDeclarationWriter {
          case "FindStep" -> this.writeFind(step, out);
          case "SumStep" -> out.line(2, "sum " + text(step, "entitySymbol") + "." + text(step, "fieldSymbol")
              + " where " + expression(child(step, "predicate"), 0) + " as " + text(step, "resultVariable") + ";");
+          case "GroupedSumStep" -> {
+             out.line(2, "sum " + text(step, "entitySymbol") + "." + text(step, "fieldSymbol")
+                 + " by " + text(step, "keySymbol"));
+             out.line(3, "where " + expression(child(step, "predicate"), 0));
+             StructNode page = child(step, "page");
+             out.line(3, "Page input." + text(page, "pageField") + ", input." + text(page, "sizeField")
+                 + " else " + text(page, "errorSymbol"));
+             out.line(3, "as " + text(step, "resultVariable") + ";");
+          }
           case "ScalarQueryStep" -> out.line(2, text(step, "kind").toLowerCase(java.util.Locale.ROOT) + " " + text(step, "entitySymbol")
             + " where " + expression(child(step, "predicate"), 0) + " as " + text(step, "resultVariable") + ";");
          case "CreateStep" -> {
@@ -403,7 +412,8 @@ public final class SirDeclarationWriter {
          case "RefType" -> "Ref<" + text(node, "entityName") + ">";
          case "OptionalType" -> "Optional<" + type(child(node, "element")) + ">";
          case "ListType" -> "List<" + type(child(node, "element")) + ">";
-         case "PageType" -> "Page<" + type(child(node, "element")) + ">";
+          case "PageType" -> "Page<" + type(child(node, "element")) + ">";
+          case "SumGroupType" -> "SumGroup<" + type(child(node, "key")) + ">";
          default -> throw new IllegalArgumentException("not a type kind: " + node.kind());
       };
    }

@@ -189,7 +189,32 @@ software PersonalLedger {
         return total;
       }
     }
-    // GAP: explicit range totals now exist. Grouping all categories and natural-month budget semantics
-    // remain separate work; a caller-supplied range is not automatically a monthly budget period.
+    input GroupRange {
+      field since: Optional<Moment>;
+      field until: Optional<Moment>;
+      field page: PageNo;
+      field size: PageSize;
+    }
+    capability TotalsByCategory {
+      actor Ref<User>;
+      input GroupRange;
+      output Page<SumGroup<Ref<Category>>>;
+      fails BadPage;
+      fails BadRange;
+      requires authenticated;
+      requires readonly;
+      expose query at "/entries/totals-by-category";
+      workflow {
+        validate input.until > input.since else BadRange;
+        sum Entry.amount by category
+          where item.owner == actor and any(Category, id == item.category and owner == actor)
+            and item.occurredAt >= input.since and item.occurredAt < input.until
+          Page input.page, input.size else BadPage
+        as totals;
+        return totals;
+      }
+    }
+    // GAP: category totals use an explicit half-open range, not a natural month or a budget period.
+    // Zero-entry categories are absent; mutable directions are not historical net-income facts.
   }
 }

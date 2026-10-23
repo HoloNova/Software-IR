@@ -17,21 +17,21 @@ final class ResponseTypeRenderer {
         LoweredJavaType outputType = capability.outputType();
         return switch (capability.transportPlan().responseRepresentation()) {
             case VOID -> "void";
-            case VALUE -> renderPayloadType(outputType);
+            case VALUE -> renderPayloadType(ctx, outputType);
             case ENTITY_BODY -> renderEntityBody(outputType);
             case LIST -> {
                 LoweredJavaType.ListValue list = requireList(outputType);
-                yield "java.util.List<" + renderPayloadType(list.elementType()) + ">";
+                yield "java.util.List<" + renderPayloadType(ctx, list.elementType()) + ">";
             }
             case OPTIONAL -> {
                 LoweredJavaType.OptionalValue optional = requireOptional(outputType);
-                yield "java.util.Optional<" + renderPayloadType(optional.elementType()) + ">";
+                yield "java.util.Optional<" + renderPayloadType(ctx, optional.elementType()) + ">";
             }
             case PAGE -> {
                 LoweredJavaType.PageValue page = requirePage(outputType);
-                yield "PageResponse<" + renderPayloadType(page.elementType()) + ">";
+                yield (page.elementType() instanceof LoweredJavaType.SumGroupValue ? ctx.model().basePackage()+".api.PageResponse" : "PageResponse") + "<" + renderPayloadType(ctx, page.elementType()) + ">";
             }
-            case PROJECTION -> renderPayloadType(outputType);
+            case PROJECTION -> renderPayloadType(ctx, outputType);
         };
     }
 
@@ -58,7 +58,8 @@ final class ResponseTypeRenderer {
             }
             case PROJECTION -> collectPayloadImports(ctx, imports, outputType, currentPackage);
             case PAGE -> {
-                imports.add(ctx.model().basePackage() + ".api.PageResponse");
+                if (!(requirePage(outputType).elementType() instanceof LoweredJavaType.SumGroupValue))
+                    imports.add(ctx.model().basePackage() + ".api.PageResponse");
                 collectPayloadImports(ctx, imports, requirePage(outputType).elementType(), currentPackage);
             }
         }
@@ -74,17 +75,18 @@ final class ResponseTypeRenderer {
         };
     }
 
-    private static String renderPayloadType(LoweredJavaType type) {
+    private static String renderPayloadType(GenerationContext ctx, LoweredJavaType type) {
         return switch (type) {
             case LoweredJavaType.Scalar scalar -> TypeRenderer.renderBoxedType(scalar);
+            case LoweredJavaType.SumGroupValue group -> ctx.model().basePackage()+".persistence.ExactAggregate.Group<" + TypeRenderer.renderBoxedType(group.keyType()) + ">";
             case LoweredJavaType.Declared declared -> declared.javaName();
             case LoweredJavaType.EntityReference reference -> reference.entityJavaName();
             case LoweredJavaType.ListValue list ->
-                    "java.util.List<" + renderPayloadType(list.elementType()) + ">";
+                    "java.util.List<" + renderPayloadType(ctx, list.elementType()) + ">";
             case LoweredJavaType.OptionalValue optional ->
-                    "java.util.Optional<" + renderPayloadType(optional.elementType()) + ">";
+                    "java.util.Optional<" + renderPayloadType(ctx, optional.elementType()) + ">";
             case LoweredJavaType.PageValue page ->
-                    "PageResponse<" + renderPayloadType(page.elementType()) + ">";
+                    "PageResponse<" + renderPayloadType(ctx, page.elementType()) + ">";
         };
     }
 
@@ -95,6 +97,7 @@ final class ResponseTypeRenderer {
             String currentPackage
     ) {
         switch (type) {
+            case LoweredJavaType.SumGroupValue group -> { }
             case LoweredJavaType.Scalar scalar -> TypeRenderer.importFor(scalar).ifPresent(imports::add);
             case LoweredJavaType.Declared declared -> {
                 String packageName = ctx.declaredPackage(declared);

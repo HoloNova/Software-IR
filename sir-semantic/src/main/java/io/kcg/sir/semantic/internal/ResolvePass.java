@@ -39,6 +39,7 @@ import io.kcg.sir.ast.AstPageTypeRef;
 import io.kcg.sir.ast.AstPersistStep;
 import io.kcg.sir.ast.AstPresentExpression;
 import io.kcg.sir.ast.AstRefTypeRef;
+import io.kcg.sir.ast.AstSumGroupTypeRef;
 import io.kcg.sir.ast.AstReturnStep;
 import io.kcg.sir.ast.AstSoftware;
 import io.kcg.sir.ast.AstStep;
@@ -829,6 +830,24 @@ final class ResolvePass {
                   PrimitiveType.DECIMAL);
                break;
             }
+             case io.kcg.sir.ast.AstGroupedSumStep s: {
+                this.resolveEntityRef(s.entity(), ReferenceRole.SUM_ENTITY);
+                this.resolveEntityFieldRef(s.field(), s.entity().text(), ReferenceRole.SUM_FIELD);
+                this.resolveEntityFieldRef(s.key(), s.entity().text(), ReferenceRole.GROUP_KEY_FIELD);
+                SymbolId groupedScope = SymbolIdFactory.capabilityStepScope(capScopeId, s.id().value());
+                this.scopeSymbols.put(groupedScope, new ArrayList<>());
+                this.scopeParents.put(groupedScope, capScopeId);
+                SymbolId groupedItem = SymbolIdFactory.capabilityStepVariable(capScopeId, s.id().value(), "item");
+                this.addSymbol(new Symbol.VariableSymbol(groupedItem, "item", s.span(), this.buildRefType(s.entity().text()), null), groupedScope);
+                this.findItemBindings.put(s.id(), groupedItem);
+                Set<String> groupedVars = new LinkedHashSet<>(visibleVars);
+                groupedVars.add("item");
+                this.resolveExpression(s.predicate(), capName, groupedScope, groupedVars, groupedItem, null);
+                this.resolvePage(s.page(), capName, capScopeId, visibleVars);
+                this.registerStepResultVar(s.result(), s.id(), capScopeId, visibleVars,
+                        this.groupedSumResultType(s.entity().text(), s.key().text()));
+                break;
+             }
              case io.kcg.sir.ast.AstScalarQueryStep s:
                this.resolveEntityRef(s.entity(), ReferenceRole.SCALAR_QUERY_ENTITY);
                SymbolId queryScope = SymbolIdFactory.capabilityStepScope(capScopeId, s.id().value());
@@ -925,6 +944,13 @@ final class ResolvePass {
    private SymbolId referenceSiteBindingsTarget(AstNodeId siteId) {
       ReferenceSiteBinding binding = this.referenceSiteBindings.get(siteId);
       return binding == null ? null : binding.targetSymbol();
+   }
+
+      private SirType groupedSumResultType(String entityName, String keyName) {
+      SymbolId fieldId = this.entityFieldSymbols.getOrDefault(entityName, Map.of()).get(keyName);
+      Symbol field = this.symbolsById.get(fieldId);
+      return field instanceof Symbol.FieldSymbol member && member.type() instanceof RefType key
+         ? new PageType(new io.kcg.sir.semantic.type.SumGroupType(key)) : null;
    }
 
    private RefType buildRefType(String entityName) {
@@ -1071,7 +1097,9 @@ final class ResolvePass {
           } else {
              this.diagnostics.add(DiagnosticBuilder.error("SIR-FLOW-001", "item 仅在 find/exists/count 谓词内可用: " + name, expr.span()));
           }
-       } else if (anyEntityName != null && this.entityFieldSymbols.getOrDefault(anyEntityName, Map.of()).containsKey(name)) {
+       } else if (anyEntityName != null && this.entityDecls.get(anyEntityName).identity().name().text().equals(name)) {
+           this.bindReference(expr.name(), ReferenceRole.EXISTS_CONDITION_FIELD, this.entityIdentitySymbols.get(anyEntityName));
+        } else if (anyEntityName != null && this.entityFieldSymbols.getOrDefault(anyEntityName, Map.of()).containsKey(name)) {
           this.bindReference(
              expr.name(), ReferenceRole.EXISTS_CONDITION_FIELD, this.entityFieldSymbols.get(anyEntityName).get(name));
        } else {
@@ -1298,6 +1326,22 @@ final class ResolvePass {
                this.diagnostics.add(DiagnosticBuilder.error("SIR-TYPE-002", "Ref 目标必须是 Entity: " + name, ref.span()));
                return null;
             }
+         case AstSumGroupTypeRef ref: {
+            SirType element = this.resolveTypeRef(ref.elementType(), ownerName, "SumGroup");
+            if (element == null) {
+               return null;
+            }
+
+            if (!(element instanceof io.kcg.sir.semantic.type.RefType key)) {
+               this.diagnostics.add(DiagnosticBuilder.error("SIR-TYPE-002",
+                       "SumGroup 的键必须是 Ref<Entity>", ref.span()));
+               return null;
+            }
+
+            io.kcg.sir.semantic.type.SumGroupType grouped = new io.kcg.sir.semantic.type.SumGroupType(key);
+            this.typeRefTypes.put(ref.id(), grouped);
+            return grouped;
+         }
          default:
             throw new IllegalStateException("unexpected type ref: " + typeRef);
       }

@@ -894,3 +894,39 @@ mvn -B -q -o -pl sir-toolchain-application -am test '-Dtest=BusinessSliceHarness
 ```
 
 Maven 384MiB／fork 512MiB，各 2 个可见处理器；AFT Java LSP 初始化失败记为 PARTIAL，编译以 Maven 为准；未测覆盖率。没有启动 MySQL、应用或浏览器，没有本机全量门与生成工程构建。RED、GREEN 与源码哈希封存在 `target/ci-163-verification/`。G8 条件 SUM 的真库部分（含严格／非严格会话的当前语句告警对照）仍待修复 SHA 的 CI；本轮不查询或等待结果，由负责人通知。
+
+
+<a id="g8-grouped-sum-local"></a>
+## 34. G8 第二批：引用单键精确分组分页（待同源码 CI）
+
+基线 **`0bebfcdf8fcfb5219d40e53a8d026b0416cd9a46`**，负责人已通知该修复 CI 通过并确认[设计25](../design/12-feature-semantics-and-semantic-types.md#g8-grouped-sum-proposal)。本批不重新查询旧CI、不把旧结果当作新分组已验收；新真库和部署须覆盖本批实际提交。
+
+**交付：**`sum Entity.amount by reference where predicate Page input.page,input.size else Error as result;`，只读query，固定Page<SumGroup<Ref<Entity>>>输出。仅直接非Optional／secret的Ref键及Decimal／Optional Decimal测量；键和测量实体／字段／结果类型正式绑定。空集零组、全空金额组为0，键固定升序、不补无账目分类；外层total为组数，越界页保留组数。COUNT DISTINCT与selectMaps共享一次筛选求值、显式只读RR事务／STATEMENT缓存，每条语句自己的告警均拒绝，无部分页。没有新增存储列、实体Mapper方法或通用JOIN。
+
+实施时发现草案的any反方向不是既有能力。本批补齐“相关行身份＝根行直接Ref外键”的正式关联；支持交换等号两边，错误目标、非身份及无关联条件仍拒绝。新Core／目标载体也拒绝存储或input位置、secret／Optional键、伪造列／投影／Mapper／隔离／支持产物／分页，不能靠生成器临时防御兜底。17种目标计划损坏＋3种直接构造Core反例保留。原query／count／sum与正向any回归不放宽。
+
+**RED → GREEN：**先取得新语法／类型／源往返和缺少目标计划的RED，再贯通各层。scope＋本人分类夹具先报不受支持的反向关联，而不是删掉归属筛选；新增合法／错误关联方向用例。真实生成类编译执行Long／UUID键、精确值／分页／错误载体、一次筛选求值；q0/q1/entryMapper和实体ExactAggregate／PageResponse不能与支持代码冲突。新增命名测试误用了保留字item，Maven因此在Parser处拒绝；已改测试为合法q1，不改变保留字或旧PageResponse的getTotal/getRecords接口。
+
+最终按测试类去重 **27类236项，0 failures／errors／skips**：
+
+| 模块 | suites | tests | 实际范围 |
+| --- | ---: | ---: | --- |
+| semantic | 8 | 109 | GroupedSum 19、RelationSlice 17、ScalarQuery 8、QuerySlice 28、Schema完整性8、结构覆盖1／敏感性26、声明往返2 |
+| change | 2 | 6 | 分组与原单值SUM的增删改、实体／字段／类型及跨文件精确改名 |
+| lowering | 3 | 56 | 分组21、单值SUM16、原IR硬化19 |
+| generator | 8 | 47 | 分组13、单值SUM5、Statement告警6、真实探针编译与屏障1、实体不变性4、查询8／关联6、ledger4 |
+| application | 6 | 18 | 分组合约3、精确HTTP断言2、冷目录证据4、旧SUM工具链4、语言示例4、八题内存生成1 |
+| **合计** | **27** | **236** | **不累计先前重跑或三项早期依赖探针** |
+
+```powershell
+$env:MAVEN_OPTS='-Xmx384m -XX:ActiveProcessorCount=2'
+mvn -B -q -o -pl sir-toolchain-application -am test '-Dtest=GroupedSumSemanticsTest,RelationSliceSemanticsTest,ScalarQuerySemanticsTest,QuerySliceSemanticsTest,SoftwareSchemaCompletenessTest,StructureViewCoverageTest,StructureViewSensitivityTest,SirDeclarationWriterRoundTripTest,GroupedSumEditingTest,DecimalSumEditingTest,GroupedSumLoweringTest,DecimalSumLoweringTest,LoweredIrHardeningTest,GroupedSumRuntimeTest,DecimalSumRuntimeTest,ExactAggregateWarningRuntimeTest,MoneyAggregateFixtureCompilationTest,GeneratorEntityArtifactInvarianceTest,GeneratorQuerySliceContractTest,GeneratorRelationSliceContractTest,LedgerSumRuntimeTest,GroupedSumContractTest,GroupedSumChecksTest,BusinessSliceHarnessEvidenceTest,DecimalSumToolchainContractTest,LanguageReferenceExamplesTest,TopicSamplesTest' '-Dsurefire.failIfNoSpecifiedTests=false' '-DargLine=-Xmx512m -XX:ActiveProcessorCount=2'
+```
+
+这批命令最初被上述item夹具错误阻断在Generator；修正后只补跑GroupedSumRuntimeTest及6类未完成应用测试，不重复已通过项。源XML及实际最后执行的类去重封存在 `target/g8-group-verification/green/`、索引local-result.json。早期3项依赖探针归档 `target/g8-group-investigation/DecimalGroupQueryFeasibilityTest.java`，实际实现测试已覆盖它们的契约，不再纳入正式CI增加重复执行。新夹具五处副本以源码哈希比对，避免当前批次分叉。
+
+**真实IT NOT_RUN（本机）：**复用MoneyBusinessConformanceIT同一生成应用／构建。GroupedSumFixture只装入隔离生成目录，两个真实探针源码一起编译；计数完成后的可观察屏障通过实际编译拦截器执行验证，确认先有count结果、后等控制连接提交、再读页。新Money检查覆盖空集／全空组、相同名称不同身份、scope／本人分类、注入字符／字面匹配、混合正负大额、页界和两条语句各自的告警；严格／非严格会话均走真实Connector/J。快照并发与数据库告警仍须CI，不能用本地代理称为真库通过。生成代码及探针用javac实编，但没有本机生成工程Maven构建。
+
+**资源／诊断：**Maven384MiB、fork512MiB，均2个可见处理器；一次仅一个定向构建。AFT Java LSP初始化失败为PARTIAL，编译以实际Maven为据；覆盖率未测量。本机无应用／数据库／浏览器和全量门；旧Windows安全目录门保留Linux CI，未通过放宽读取规则消除环境限制。Jackson2.19.4仅test-scope，以BigDecimal树读取真实HTTP金额，不引入生产依赖；第一方精确数值契约来源在g8-group-investigation。SQL列／别名／分页均来自校验后的计划或整数，用户值绑定，不拼请求字符串。
+
+ledger的当前切片为本人显式半开区间／本人分类分页总额，220行SIR／4106行Java／24项能力。自然月／时区、预算历史、AVG／舍入、多键／零组、循环和UI仍未实现；账本67／8／9不变。配套文档与代码同批提交，正常触发同源码CI；不为纯文档造CI，不查询或等待结果，负责人通知。

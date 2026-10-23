@@ -172,7 +172,10 @@ public final class SpringBootModelLowerer {
         if (hasSum()) {
             String pkg = this.source.metadata().namespace() + ".persistence";
             projectArtifacts.add(new ProjectArtifact.ExactAggregate(this.nodeId("project", "exact-aggregate"), this.projectOrigin(),
-                "src/main/java/" + pkg.replace('.', '/') + "/ExactAggregate.java", pkg, "ExactAggregate"));
+                "src/main/java/" + pkg.replace('.', '/') + "/ExactAggregate.java", pkg, "ExactAggregate", this.source.declarations().stream()
+                     .filter(NormalizedCapability.class::isInstance).map(NormalizedCapability.class::cast)
+                     .flatMap(c -> c.workflow().steps().stream()).anyMatch(NormalizedStep.GroupedSumStep.class::isInstance)
+                     ? Optional.of(this.source.metadata().namespace()+".api.PageResponse") : Optional.empty()));
         }
 
         return new SpringBootLoweredModel(LoweredIrVersion.V0_2, SpringBootTargetProfile.V0_2, this.source.softwareName(), this.source.metadata().displayName(), this.source.metadata().namespace(), declarations, artifacts, this.lowerMavenProject(), this.lowerApplicationMain(transportPlan), projectArtifacts);
@@ -243,7 +246,7 @@ public final class SpringBootModelLowerer {
     private boolean hasSum() {
         return this.source.declarations().stream().filter(NormalizedCapability.class::isInstance)
             .map(NormalizedCapability.class::cast).flatMap(c -> c.workflow().steps().stream())
-            .anyMatch(NormalizedStep.SumStep.class::isInstance);
+            .anyMatch(s -> s instanceof NormalizedStep.SumStep || s instanceof NormalizedStep.GroupedSumStep);
     }
 
     private String softwareName() {
@@ -257,7 +260,7 @@ public final class SpringBootModelLowerer {
                 this.kebab(this.softwareName()), true, this.source.declarations().stream()
                     .filter(NormalizedCapability.class::isInstance).map(NormalizedCapability.class::cast)
                     .flatMap(cap -> cap.workflow().steps().stream())
-                    .anyMatch(s -> s instanceof NormalizedStep.SumStep || s instanceof NormalizedStep.LoadStep load && load.forUpdate()));
+                    .anyMatch(s -> s instanceof NormalizedStep.SumStep || s instanceof NormalizedStep.GroupedSumStep || s instanceof NormalizedStep.LoadStep load && load.forUpdate()));
     }
 
     /**
@@ -335,7 +338,8 @@ public final class SpringBootModelLowerer {
             if (!(declaration instanceof SpringBootDeclaration.CapabilityDeclaration)) continue;
             SpringBootDeclaration.CapabilityDeclaration capability = (SpringBootDeclaration.CapabilityDeclaration)declaration;
             for (SpringBootWorkflow.Step step : capability.workflow().steps()) {
-                if (step instanceof SpringBootWorkflow.FindStep findStep && findStep.page().isPresent()) {
+                if (step instanceof SpringBootWorkflow.GroupedSumStep
+                      || step instanceof SpringBootWorkflow.FindStep findStep && findStep.page().isPresent()) {
                     return true;
                 }
             }
@@ -639,7 +643,8 @@ public final class SpringBootModelLowerer {
 
     private SpringBootDeclaration.CapabilityDeclaration lowerCapability(NormalizedCapability value) {
         boolean authenticated = value.requires().contains(AstRequirementKind.AUTHENTICATED);
-        SpringBootDeclaration.TransactionMode transactionMode = value.requires().contains(AstRequirementKind.READONLY) ? SpringBootDeclaration.TransactionMode.READ_ONLY : (value.requires().contains(AstRequirementKind.ATOMIC) ? (value.workflow().steps().stream().anyMatch(s -> s instanceof NormalizedStep.LoadStep load && load.forUpdate())
+        SpringBootDeclaration.TransactionMode transactionMode = value.requires().contains(AstRequirementKind.READONLY) ? (value.workflow().steps().stream().anyMatch(NormalizedStep.GroupedSumStep.class::isInstance)
+             ? SpringBootDeclaration.TransactionMode.REPEATABLE_READ : SpringBootDeclaration.TransactionMode.READ_ONLY) : (value.requires().contains(AstRequirementKind.ATOMIC) ? (value.workflow().steps().stream().anyMatch(s -> s instanceof NormalizedStep.LoadStep load && load.forUpdate())
                  ? SpringBootDeclaration.TransactionMode.READ_COMMITTED : SpringBootDeclaration.TransactionMode.REQUIRED) : SpringBootDeclaration.TransactionMode.NONE);
         SpringBootDeclaration.CapabilityKind kind = switch (value.exposure()) {
             default -> throw new MatchException(null, null);
@@ -721,6 +726,7 @@ public final class SpringBootModelLowerer {
             case OptionalType ignored -> TransportPlan.ResponseRepresentation.OPTIONAL;
             case ListType ignored -> TransportPlan.ResponseRepresentation.LIST;
             case PageType ignored -> TransportPlan.ResponseRepresentation.PAGE;
+            case io.kcg.sir.semantic.type.SumGroupType ignored -> TransportPlan.ResponseRepresentation.VALUE;
         };
     }
 
@@ -836,6 +842,10 @@ public final class SpringBootModelLowerer {
                     this.lowerOrderKeys(value), this.lowerPageSpec(value), this.lowerStringMatches(value, owner),
                     this.lowerStatementBudget(value),
                     variable(value.resultVariable()), variable(value.itemVariable()));
+            case NormalizedStep.GroupedSumStep value -> new SpringBootWorkflow.GroupedSumStep(
+                     id, origin, value.entitySymbol(), lowerExpression(value.predicate(), owner, actorSymbol, Optional.of(value.itemVariable())),
+                     this.lowerStringMatches(value.predicate(), owner), this.groupedSumPlan(value), this.groupPage(value.page()),
+                     variable(value.resultVariable()), variable(value.itemVariable()));
             case NormalizedStep.SumStep value -> new SpringBootWorkflow.SumStep(
                     id, origin, value.entitySymbol(), lowerExpression(value.predicate(), owner, actorSymbol, Optional.of(value.itemVariable())),
                     this.lowerStringMatches(value.predicate(), owner), new SpringBootWorkflow.SumPlan(value.fieldSymbol(),
@@ -1022,6 +1032,22 @@ public final class SpringBootModelLowerer {
     private List<SpringBootWorkflow.OrderKey> lowerOrderKeys(NormalizedStep.FindStep step) {
         return step.orderKeys().stream().map(key -> new SpringBootWorkflow.OrderKey(
                 key.fieldSymbol(), this.targetMemberName(key.fieldSymbol(), "unknown"), key.descending())).toList();
+    }
+
+    private SpringBootWorkflow.GroupedSumPlan groupedSumPlan(NormalizedStep.GroupedSumStep step) {
+        String key=this.columns.get(step.keySymbol());
+        String amount=this.columns.get(step.fieldSymbol());
+        String quotedKey="`"+key.replace("`", "``")+"`";
+        String quotedAmount="`"+amount.replace("`", "``")+"`";
+        return new SpringBootWorkflow.GroupedSumPlan(step.fieldSymbol(), step.keySymbol(), amount, key,
+                "DISTINCT "+quotedKey, quotedKey+" AS g_key,COALESCE(SUM("+quotedAmount+"), 0) AS g_total",
+                "selectCount", "selectMaps", 2, true);
+    }
+
+    private SpringBootWorkflow.PageSpec groupPage(NormalizedStep.PageSpec page) {
+        return new SpringBootWorkflow.PageSpec(page.pageField(), page.sizeField(),
+                this.targetMemberName(page.pageField(), "page"), this.targetMemberName(page.sizeField(), "size"),
+                this.queryPolicy.pageDefaultSize(), this.queryPolicy.pageMaxSize(), this.queryPolicy.pageMaxNumber(), page.errorSymbol());
     }
 
     private Optional<SpringBootWorkflow.PageSpec> lowerPageSpec(NormalizedStep.FindStep step) {
@@ -1399,7 +1425,14 @@ public final class SpringBootModelLowerer {
             throw new IllegalStateException("an existence predicate must relate two lowered entities: " + value.entity());
         }
 
-        String alias = this.snake(related.name()) + EXISTENCE_ALIAS_SUFFIX;
+        boolean inverse = ReverseExistence.contains(value.conditions(), value.connectionField(), related.identity().id());
+         if (inverse && connectionSymbol instanceof Symbol.FieldSymbol f) root = this.entities.get(f.ownerId());
+         String alias = this.snake(related.name()) + EXISTENCE_ALIAS_SUFFIX;
+         if (inverse) {
+             ExistenceSql condition = this.existenceSql(value.conditions(), related, root, alias, itemSymbol, List.of(), origin.ownerSymbol().orElseThrow());
+             return new SpringExpression.ExistsPredicate(id, origin, type,
+                     "SELECT 1 FROM " + this.snake(related.name()) + " " + alias + " WHERE " + condition.text(), condition.arguments());
+         }
         String relatedColumn = this.columns.getOrDefault(value.connectionField(), this.snake(connectionSymbol.name()));
         NormalizedExpression conditions = this.withoutConnection(value.conditions(), value.connectionField(), itemSymbol);
         ExistenceSql condition = conditions == null
@@ -1525,7 +1558,8 @@ public final class SpringBootModelLowerer {
             return this.snake(root.name()) + "." + this.snake(root.identity().name());
         }
 
-        boolean relatedField = related.fields().stream().anyMatch(field -> field.id().equals(resolvedSymbol));
+        boolean relatedField = related.identity().id().equals(resolvedSymbol)
+                 || related.fields().stream().anyMatch(field -> field.id().equals(resolvedSymbol));
         Symbol symbol = this.source.symbols().byId(resolvedSymbol).orElse(null);
         if (!relatedField || !(symbol instanceof Symbol.FieldSymbol field)) {
             throw new IllegalStateException("unsupported existence-predicate reference: " + symbol);
@@ -1678,6 +1712,7 @@ public final class SpringBootModelLowerer {
                 case NormalizedStep.LoadStep s -> ids.add(s.resultVariable());
                 case NormalizedStep.CreateStep s -> ids.add(s.resultVariable());
                 case NormalizedStep.SumStep s -> ids.add(s.itemVariable());
+                case NormalizedStep.GroupedSumStep s -> ids.add(s.itemVariable());
                 case NormalizedStep.ScalarQueryStep s -> ids.add(s.itemVariable());
                 case NormalizedStep.FindStep s -> {
                     ids.add(s.resultVariable());
@@ -1705,6 +1740,8 @@ public final class SpringBootModelLowerer {
             case OptionalType value -> new LoweredJavaType.OptionalValue(lowerType(value.element()));
             case ListType value -> new LoweredJavaType.ListValue(lowerType(value.element()));
             case PageType value -> new LoweredJavaType.PageValue(lowerType(value.element()));
+            case io.kcg.sir.semantic.type.SumGroupType value -> new LoweredJavaType.SumGroupValue(
+                    (LoweredJavaType.EntityReference)lowerType(value.key()));
             case DeclaredType value -> new LoweredJavaType.Declared(
                     LoweredJavaType.DeclaredKind.valueOf(value.kind().name()), value.symbolId(), value.name());
             case RefType value -> {

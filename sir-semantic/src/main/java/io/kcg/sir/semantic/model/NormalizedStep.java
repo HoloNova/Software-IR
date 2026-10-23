@@ -17,6 +17,7 @@ public sealed interface NormalizedStep
    NormalizedStep.FindStep,
    NormalizedStep.ScalarQueryStep,
     NormalizedStep.SumStep,
+    NormalizedStep.GroupedSumStep,
    NormalizedStep.CreateStep,
    NormalizedStep.UpdateStep,
    NormalizedStep.PersistStep,
@@ -38,6 +39,29 @@ public sealed interface NormalizedStep
           Objects.requireNonNull(resultVariable, "resultVariable");
           Objects.requireNonNull(itemVariable, "itemVariable");
        }
+    }
+
+    /**
+     * One exact total per distinct value of {@code keySymbol}, bounded to one page.
+     *
+     * <p>The key is a field of the same entity, never an expression: the two statements that read the page (the
+     * group count and the page itself) must group by the very same physical column.
+     */
+    record GroupedSumStep(@Source AstNodeId sourceNodeId, @Source SourceSpan span,
+        @Reference SymbolId entitySymbol, @Reference SymbolId fieldSymbol, @Reference SymbolId keySymbol,
+        @Fact NormalizedExpression predicate, @Fact PageSpec page,
+        @Reference SymbolId resultVariable, @Derived SymbolId itemVariable) implements NormalizedStep {
+        public GroupedSumStep {
+           Objects.requireNonNull(sourceNodeId, "sourceNodeId");
+           Objects.requireNonNull(span, "span");
+           Objects.requireNonNull(entitySymbol, "entitySymbol");
+           Objects.requireNonNull(fieldSymbol, "fieldSymbol");
+           Objects.requireNonNull(keySymbol, "keySymbol");
+           Objects.requireNonNull(predicate, "predicate");
+           Objects.requireNonNull(page, "page");
+           Objects.requireNonNull(resultVariable, "resultVariable");
+           Objects.requireNonNull(itemVariable, "itemVariable");
+        }
     }
 
     record ScalarQueryStep(@Source AstNodeId sourceNodeId, @Source SourceSpan span,

@@ -1,0 +1,55 @@
+sir 0.3
+software DecimalGroup {
+  metadata { displayName "Decimal Group"; namespace "example.group"; }
+  target { language java 21; framework spring_boot; persistence mybatis_plus;
+    database mysql; build maven; interface rest; }
+  sources {} imports {}
+  declarations {
+    entity Account persistent {
+      identity id: Id generated auto;
+    }
+    entity Category persistent {
+      identity id: Id generated auto;
+      field owner: Ref<Account>;
+      field label: Text;
+      field removed: Flag default false;
+      scope removed == false;
+    }
+    entity Entry persistent {
+      identity id: Id generated auto;
+      field owner: Ref<Account>;
+      field category: Ref<Category>;
+      field amount: Optional<Money>;
+      field occurredAt: Moment;
+    }
+    input TotalsInput {
+      field page: PageNo;
+      field size: PageSize;
+      field since: Optional<Moment>;
+      field until: Optional<Moment>;
+    }
+    error BadPage;
+    error BadRange;
+    capability TotalsByCategory {
+      actor Ref<Account>;
+      input TotalsInput;
+      output Page<SumGroup<Ref<Category>>>;
+      fails BadPage;
+      fails BadRange;
+      requires authenticated;
+      requires readonly;
+      expose query at "/entries/totals-by-category";
+      workflow {
+        validate input.until is none or input.since is none or input.until > input.since else BadRange;
+        sum Entry.amount by category
+          where item.owner == actor
+            and any(Category, id == item.category and owner == actor)
+            and (input.since is none or item.occurredAt >= input.since)
+            and (input.until is none or item.occurredAt < input.until)
+          Page input.page, input.size else BadPage
+        as totals;
+        return totals;
+      }
+    }
+  }
+}

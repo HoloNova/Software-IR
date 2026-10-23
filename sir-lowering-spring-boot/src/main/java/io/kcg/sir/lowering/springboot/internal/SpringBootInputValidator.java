@@ -514,7 +514,20 @@ public final class SpringBootInputValidator {
             this.validateDeclarationKind(value.errorSymbol(), NormalizedError.class, capability);
             value.keyField().ifPresent(key -> this.validateLoadKey(value, key, capability));
             break;
-         case NormalizedStep.SumStep value: {
+         case NormalizedStep.GroupedSumStep value: {
+             this.validateStep(new NormalizedStep.SumStep(value.sourceNodeId(), value.span(), value.entitySymbol(),
+                 value.fieldSymbol(), value.predicate(), value.resultVariable(), value.itemVariable()), capability, actorAccess);
+             var entity=this.declarationsById.get(value.entitySymbol());
+             var key=entity instanceof NormalizedEntity e ? e.fields().stream().filter(f -> f.id().equals(value.keySymbol())).findFirst().orElse(null) : null;
+             SirType result=this.model.symbols().byId(value.resultVariable()).filter(VariableSymbol.class::isInstance)
+                 .map(VariableSymbol.class::cast).map(VariableSymbol::type).orElse(null);
+             if (key==null || key.secret() || !(key.type() instanceof RefType ref)
+                   || !new PageType(new io.kcg.sir.semantic.type.SumGroupType(ref)).equals(result))
+                this.error("SIR-LOWER-001", "grouped sum requires a direct non-secret reference key and matching Page result", value.span(), capability.id(), value.sourceNodeId());
+             this.validatePageSpec(value, value.page(), capability);
+             break;
+          }
+          case NormalizedStep.SumStep value: {
             this.validateDeclarationKind(value.entitySymbol(), NormalizedEntity.class, capability);
             var entity = this.declarationsById.get(value.entitySymbol());
             var field = entity instanceof NormalizedEntity e ? e.fields().stream()
@@ -611,7 +624,10 @@ public final class SpringBootInputValidator {
          return;
       }
 
-      NormalizedStep.PageSpec page = step.page().get();
+      this.validatePageSpec(step, step.page().get(), capability);
+    }
+
+    private void validatePageSpec(NormalizedStep step, NormalizedStep.PageSpec page, NormalizedCapability capability) {
       this.validateDeclarationKind(page.errorSymbol(), NormalizedError.class, capability);
       if (page.pageField().equals(page.sizeField())) {
          this.error(
@@ -696,7 +712,13 @@ public final class SpringBootInputValidator {
       NormalizedDeclaration related = this.declarationsById.get(exists.entity());
       Symbol connection = this.model.symbols().byId(exists.connectionField()).orElse(null);
       RefType reference = connection instanceof FieldSymbol field && field.type() instanceof RefType ref ? ref : null;
-      NormalizedDeclaration root = reference == null ? null : this.declarationsById.get(reference.entityId());
+      boolean inverse = related instanceof NormalizedEntity e
+           && ReverseExistence.contains(exists.conditions(), exists.connectionField(), e.identity().id());
+       SymbolId rootId = inverse && connection instanceof FieldSymbol f ? f.ownerId() : reference == null ? null : reference.entityId();
+       if (inverse && (!(connection instanceof FieldSymbol f) || !(f.type() instanceof RefType ref)
+             || !(related instanceof NormalizedEntity e) || !ref.entityId().equals(e.id())))
+          this.error("SIR-LOWER-FEATURE-001", "inverse existence must join its related identity to a direct root reference", exists.span(), owner, exists.sourceNodeId());
+       NormalizedDeclaration root = this.declarationsById.get(rootId);
       if (!(related instanceof NormalizedEntity relatedEntity) || !(root instanceof NormalizedEntity rootEntity)) {
          this.error(
             "SIR-LOWER-FEATURE-001",
@@ -806,7 +828,13 @@ public final class SpringBootInputValidator {
          case ListType value:
             this.validateType(value.element(), span, owner, nodeId);
             break;
-         case PageType value:
+          case io.kcg.sir.semantic.type.SumGroupType value:
+             if (!(this.declarationsById.get(owner) instanceof NormalizedCapability capability
+                   && capability.outputType() instanceof PageType page && page.element().equals(value)))
+                this.error("SIR-LOWER-TYPE-001", "SumGroup must be a direct Page output, not storage or input", span, owner, nodeId);
+             this.validateType(value.key(), span, owner, nodeId);
+             break;
+          case PageType value:
          this.validateType(value.element(), span, owner, nodeId);
          break;
          case RefType value:

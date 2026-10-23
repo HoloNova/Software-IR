@@ -78,7 +78,28 @@ public record SpringBootWorkflow(LoweredNodeId id, LoweredOrigin origin, List<Sp
       }
    }
 
-   public record SumPlan(SymbolId fieldSymbol, String columnName, String projectionSql, String mapperMethod,
+   public record GroupedSumPlan(SymbolId fieldSymbol, SymbolId keySymbol, String columnName, String keyColumn,
+       String countProjection, String dataProjection, String countMethod, String dataMethod,
+       int statements, boolean rejectWarnings) {
+       public GroupedSumPlan {
+          Objects.requireNonNull(fieldSymbol, "fieldSymbol"); Objects.requireNonNull(keySymbol, "keySymbol");
+          for (String value : List.of(columnName, keyColumn, countProjection, dataProjection, countMethod, dataMethod))
+             requireText(value, "group query plan");
+       }
+    }
+
+    public record GroupedSumStep(LoweredNodeId id, LoweredOrigin origin, SymbolId entitySymbol,
+       SpringExpression predicate, List<SpringExpression.StringMatch> stringMatches, GroupedSumPlan plan,
+       PageSpec page, Variable result, Variable itemVariable) implements Step {
+       public GroupedSumStep {
+          requireStep(id, origin); Objects.requireNonNull(entitySymbol, "entitySymbol");
+          Objects.requireNonNull(predicate, "predicate"); stringMatches=List.copyOf(stringMatches);
+          Objects.requireNonNull(plan, "plan"); Objects.requireNonNull(page, "page");
+          Objects.requireNonNull(result, "result"); Objects.requireNonNull(itemVariable, "itemVariable");
+       }
+    }
+
+    public record SumPlan(SymbolId fieldSymbol, String columnName, String projectionSql, String mapperMethod,
                           int statements, boolean emptyAsZero, boolean rejectWarnings) {
        public SumPlan {
           Objects.requireNonNull(fieldSymbol, "fieldSymbol");
@@ -345,6 +366,7 @@ public record SpringBootWorkflow(LoweredNodeId id, LoweredOrigin origin, List<Sp
       SpringBootWorkflow.FindStep,
       SpringBootWorkflow.ScalarQueryStep,
        SpringBootWorkflow.SumStep,
+       SpringBootWorkflow.GroupedSumStep,
       SpringBootWorkflow.CreateStep,
       SpringBootWorkflow.UpdateStep,
       SpringBootWorkflow.PersistStep,

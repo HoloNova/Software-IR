@@ -317,9 +317,16 @@ findStep
     : FIND entity=IDENT WHERE predicate=expression findOrderClause? findPageClause? AS result=IDENT SEMI
     ;
 
+// "sum A.f by k where <pred> Page p,s else E as r;" groups by one direct reference column. `by` is the same
+// token a load uses, so it stays contextual: without it the step keeps its single-value meaning.
 sumStep
     : {_input.LT(1).getText().equals("sum")}? IDENT entity=IDENT DOT field=IDENT
-      WHERE predicate=expression AS result=IDENT SEMI
+      (groupByClause WHERE predicate=expression findPageClause | WHERE predicate=expression)
+      AS result=IDENT SEMI
+    ;
+
+groupByClause
+    : BY key=IDENT
     ;
 
 scalarQueryStep
@@ -377,6 +384,7 @@ typeRef
     | LIST LT typeRef GT
     | PAGE LT typeRef GT
     | REF LT IDENT GT
+    | {_input.LT(1).getText().equals("SumGroup")}? IDENT LT typeRef GT
     | IDENT
     ;
 

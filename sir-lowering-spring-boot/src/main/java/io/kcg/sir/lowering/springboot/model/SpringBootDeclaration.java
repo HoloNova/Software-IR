@@ -476,6 +476,7 @@ public sealed interface SpringBootDeclaration
       NONE,
       REQUIRED,
       READ_COMMITTED,
-      READ_ONLY;
+      READ_ONLY,
+      REPEATABLE_READ;
    }
 }

@@ -1,6 +1,6 @@
 # KCG-Code 当前项目状态
 
-> 更新：2026-10-22。状态：正常开发中的工程，不宣称生产就绪。本文说明**现在能做什么**；验证口径与证据在[验证说明](qualification/README.md)；已完成或退役的材料在 [history](history/README.md)。
+> 更新：2026-10-23。状态：正常开发中的工程，不宣称生产就绪。本文说明**现在能做什么**；验证口径与证据在[验证说明](qualification/README.md)；已完成或退役的材料在 [history](history/README.md)。
 
 ## 1. 定位
 
@@ -111,11 +111,13 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 
 **CI 提速实测：**#155 主验证 8:18（同业务源码 #154 为 19:51），在线预热 0:27、Frozen 3:37，Completion 按预期跳过；真实业务／独立验证／CLI 保留。部署被取消，不能比较整轮时长，也不将全部观测改善归因为编排。详见[验证第 25 节](qualification/README.md#ci-154-accepted)。
 
-**当前阻塞修复（#163）：**Money IT 在构建前写告警探针副本，但证据目录要到构建写日志时才创建，故 #163 以 `NoSuchFileException` 中止，SUM 真库与告警断言未执行；同一运行的 `money-report.txt` 还把中止写成 PASSED。已让写入方创建证据目录，并给 harness 加异常记录守卫，14 项定向通过，未改生产逻辑，见[验证33](qualification/README.md#ci-163-evidence-dir-fix)。修复随测试与文档单批提交推送后继续后续工作，不等待新 CI，结果由负责人通知。
+**最新阶段（G8引用分组分页，待同源码CI）：**[设计25](design/12-feature-semantics-and-semantic-types.md#g8-grouped-sum-proposal)已按确认实施：非Optional Ref单键、精确Decimal SUM、Page<SumGroup<Ref<Entity>>>固定key/total与稳定键顺序。COUNT DISTINCT及当前页共两次读取，复用一次筛选求值，明确只读REPEATABLE_READ及每语句告警／STATEMENT缓存；补齐any身份到根行外键的正式关联方向，不是通用JOIN。ledger增加本人区间／本人分类分页汇总（220行SIR／4106行Java／24项能力），不新增存储列、Mapper方法或应用构建。27类236项定向通过，两个CI探针实编并验证计数后屏障；真实HTTP／SQL快照和告警待原Money IT验证，本机NOT_RUN，见[验证34](qualification/README.md#g8-grouped-sum-local)。自然月／时区、预算历史、AVG／多键／零组未实现，账本仍67／8／9。配套文档随实现提交，不查询CI。
+
+**上一轮修复（#163，0bebfcd，负责人已通知通过）：**Money IT 在构建前写告警探针副本，但证据目录要到构建写日志时才创建，故 #163 以 `NoSuchFileException` 中止，SUM 真库与告警断言未执行；同一运行的 `money-report.txt` 还把中止写成 PASSED。已让写入方创建证据目录，并给 harness 加异常记录守卫，14 项定向通过，未改生产逻辑，见[验证33](qualification/README.md#ci-163-evidence-dir-fix)。修复随测试与文档单批提交推送后继续后续工作，不等待新 CI，结果由负责人通知。
 
 **上一轮修复（#162）：**SUM参考示例把声明片段标成完整sir且漏实体，LanguageReferenceExamplesTest因此在PARSE阶段失败；业务IT和部署未验收。已补完整可执行声明片段及正式绑定／精确SUM计划契约，23项定向通过，Parser／SUM生产逻辑未改，见[验证32](qualification/README.md#ci-162-sum-reference-fix)。修复随测试单批提交推送后继续分组方案，不等待新CI，结果由负责人通知。
 
-**最新阶段（G8首批，待同源码CI）：**[条件Decimal求和](design/12-feature-semantics-and-semantic-types.md#g8-decimal-sum-proposal)已贯通语法／正式绑定／scope／源编辑／目标计划与图谱。空集／全空为0，总额不套单笔Money精度；当前Statement告警明确拒绝，普通查询不变，实体Mapper不变。ledger增加本人区间／本人分类总额（195行SIR／3949行Java／23个显式接口）；30类187项定向通过。实际ledger生成服务已编译执行，隔离CAST探针仅编译；真库复用原Money IT，无新增应用。真实SQL告警及所有IT本机NOT_RUN，结果由负责人通知，不查询CI。分组、平均、自然月／预算语义和G5另案；账本仍67／8／9。见[验证31](qualification/README.md#g8-decimal-sum-local)。
+**上一实现阶段（G8首批，历史本机验证）：**[条件Decimal求和](design/12-feature-semantics-and-semantic-types.md#g8-decimal-sum-proposal)已贯通语法／正式绑定／scope／源编辑／目标计划与图谱。空集／全空为0，总额不套单笔Money精度；当前Statement告警明确拒绝，普通查询不变，实体Mapper不变。ledger增加本人区间／本人分类总额（195行SIR／3949行Java／23个显式接口）；30类187项定向通过。实际ledger生成服务已编译执行，隔离CAST探针仅编译；真库复用原Money IT，无新增应用。真实SQL告警及所有IT本机NOT_RUN，结果由负责人通知，不查询CI。当时尚未包含分组；本批已推进上述分组切片，平均、自然月／预算和G5仍另案，账本不变。见[验证31](qualification/README.md#g8-decimal-sum-local)。
 
 **最新业务阶段（G2 第四批，书目预约待CI）：**实际library已实现书目FIFO、本人扫码领取、本人／馆员取消及私有列表。普通借书、归还、添加副本和排队共同遵守Book锁；入队不占借阅名额，满额不跳过，领取在一笔事务内增名额／占副本／建Loan／删预约。没有新增语法或编译器生产分支。8类58项定向通过；原library IT复用同一应用，新增并发、取消竞争、可观察锁等待及晚失败四表回滚检查，仅编译、本机未运行，见[验证30](qualification/README.md#g2-reservation-local)。预约从未写出转待真库△，当前 **67／8／9**，完整数不升。没有查询或等待新CI。升级须新增空队列表并同时停用旧写入口，避免新旧协议混跑；不自动分配、过期或跳过。后续循环／聚合、日期差等仍需另案范围。
 

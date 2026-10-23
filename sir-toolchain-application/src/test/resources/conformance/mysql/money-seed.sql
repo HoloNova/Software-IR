@@ -9,3 +9,19 @@ INSERT INTO measurement (id,owner,amount,label) VALUES
 INSERT INTO measurement_tag (id,measurement_id,name) VALUES (1,1,'target'),(2,1,'target'),(3,2,'target'),(4,5,'target');
 
 INSERT INTO measurement (id,owner,amount,label,removed) VALUES (10,1,1234567.89,'hidden',1);
+
+INSERT INTO summary_category(id,owner,removed) VALUES (101,1,0),(102,1,0),(103,1,0),(104,2,0),(105,1,1),(106,1,0),(901,99,0),(902,99,0);
+INSERT INTO summary_entry(id,owner,category_id,amount,occurred_at,label,removed) VALUES
+(1001,1,101,1.23,'2026-01-01 00:00:00','target',0),
+(1002,1,101,2.34,'2026-01-10 00:00:00','target',0),
+(1003,1,101,-0.57,'2026-01-20 00:00:00','target',0),
+(1004,1,102,NULL,'2026-01-10 00:00:00','target',0),
+(1005,1,103,99999999999999999.99,'2026-01-10 00:00:00','target',0),
+(1006,1,103,99999999999999999.99,'2026-01-10 00:00:00','target',0),
+(1007,1,104,999.99,'2026-01-10 00:00:00','target',0),
+(1008,1,105,999.99,'2026-01-10 00:00:00','target',0),
+(1009,2,101,999.99,'2026-01-10 00:00:00','target',0),
+(1010,1,101,999.99,'2026-01-10 00:00:00','target',1),
+(1011,1,101,999.99,'2026-02-01 00:00:00','target',0),
+(1012,1,101,999.99,'2025-12-31 23:59:59','target',0),
+(9001,99,901,1.00,'2026-01-10 00:00:00','snapshot',0);

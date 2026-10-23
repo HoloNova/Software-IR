@@ -56,6 +56,13 @@
             <artifactId>junit-jupiter</artifactId>
             <scope>test</scope>
         </dependency>
+        <!-- Exact HTTP aggregate assertions: tree parsing must not round JSON decimals through double. -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.19.4</version>
+            <scope>test</scope>
+        </dependency>
         <!-- Exercise the target's real relaxed environment binding without starting an application. -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

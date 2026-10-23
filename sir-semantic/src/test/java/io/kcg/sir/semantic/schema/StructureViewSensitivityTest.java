@@ -34,6 +34,8 @@ class StructureViewSensitivityTest {
 
     static List<Edit> factEdits() {
         return List.of(
+            new Edit("grouped sum predicate", "valid/decimal-group.sir", "item.owner == actor", "item.owner != actor"),
+            new Edit("grouped sum page sources", "valid/decimal-group.sir", "Page input.page, input.size", "Page input.size, input.page"),
             new Edit("sum predicate", "valid/decimal-sum.sir", "item.amount >= input.minimum", "item.amount > input.minimum"),
             new Edit("computed value operator", "valid/computed-views.sir", "item.capacity - item.enrolled", "item.capacity + item.enrolled"),
             new Edit("error http status", ADMIN, "error CourseNotFound http 404;", "error CourseNotFound http 409;"),

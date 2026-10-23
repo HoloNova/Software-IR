@@ -28,7 +28,7 @@ final class ServiceRenderer {
    static GeneratedFile render(GenerationContext ctx, SpringArtifact artifact, CapabilityDeclaration decl) {
       String packageName = artifact.packageName();
       ImportSorter imports = new ImportSorter();
-      if (decl.transactionMode() == TransactionMode.READ_COMMITTED) {
+      if (decl.transactionMode() == TransactionMode.READ_COMMITTED || decl.transactionMode() == TransactionMode.REPEATABLE_READ) {
          imports.add("org.springframework.transaction.annotation.Isolation");
       }
       Map<SymbolId, String> variableNames = buildVariableNames(decl);
@@ -83,7 +83,9 @@ final class ServiceRenderer {
    ) {
       StringBuilder out = new StringBuilder();
       out.append("@Service\n");
-      if (decl.transactionMode() == TransactionMode.READ_ONLY) {
+      if (decl.transactionMode() == TransactionMode.REPEATABLE_READ) {
+         out.append("@Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)\n");
+      } else if (decl.transactionMode() == TransactionMode.READ_ONLY) {
          out.append("@Transactional(readOnly = true)\n");
       } else if (decl.transactionMode() == TransactionMode.READ_COMMITTED) {
          out.append("@Transactional(isolation = Isolation.READ_COMMITTED)\n");

@@ -5,5 +5,6 @@ public sealed interface AstTypeRef extends AstNode permits
         AstOptionalTypeRef,
         AstListTypeRef,
         AstPageTypeRef,
-        AstRefTypeRef {
+        AstRefTypeRef,
+        AstSumGroupTypeRef {
 }

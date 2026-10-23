@@ -70,6 +70,9 @@ final class ExactAggregateRenderer {
                     }
                 }
                 """;
+        if (artifact.groupPageType().isPresent()) {
+            content = content.replace("    @Override\n", GroupedAggregateMethods.render(artifact.groupPageType().orElseThrow()) + "    @Override\n");
+        }
         return new GeneratedFile(artifact.path(), content, artifact.id(), Optional.empty());
     }
 }

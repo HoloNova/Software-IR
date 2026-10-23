@@ -59,9 +59,15 @@ final class ExistenceConnection {
 
    private static SymbolId connection(
          AstExpression fieldSide, AstExpression itemSide, ReferenceSiteBindings bindings, Map<AstNodeId, SymbolId> findItemBindings) {
-      if (!(fieldSide instanceof AstNameExpression field) || !(itemSide instanceof AstNameExpression item)) {
-         return null;
-      }
+       if (!(fieldSide instanceof AstNameExpression field)) return null;
+       if (itemSide instanceof io.kcg.sir.ast.AstMemberExpression member
+             && member.receiver() instanceof AstNameExpression root
+             && bindings.targetFor(root.name().id()).filter(findItemBindings::containsValue).isPresent()
+             && bindings.bindingFor(field.name().id())
+                   .filter(b -> b.site().role() == ReferenceRole.EXISTS_CONDITION_FIELD).isPresent()) {
+          return bindings.targetFor(member.member().id()).orElse(null);
+       }
+       if (!(itemSide instanceof AstNameExpression item)) return null;
 
       boolean isConditionField = bindings
             .bindingFor(field.name().id())

@@ -9,6 +9,7 @@ public sealed interface LoweredJavaType
    LoweredJavaType.OptionalValue,
    LoweredJavaType.ListValue,
    LoweredJavaType.PageValue,
+    LoweredJavaType.SumGroupValue,
    LoweredJavaType.EntityReference {
    private static void requireText(String value, String name) {
       Objects.requireNonNull(value, name);
@@ -53,7 +54,12 @@ public sealed interface LoweredJavaType
       }
    }
 
-   record OptionalValue(LoweredJavaType elementType) implements LoweredJavaType {
+   /** An output-only group, with an explicit reference key's physical identity carrier. */
+    record SumGroupValue(EntityReference keyType) implements LoweredJavaType {
+       public SumGroupValue { Objects.requireNonNull(keyType, "keyType"); }
+    }
+
+    record OptionalValue(LoweredJavaType elementType) implements LoweredJavaType {
       public OptionalValue {
          Objects.requireNonNull(elementType, "elementType");
       }

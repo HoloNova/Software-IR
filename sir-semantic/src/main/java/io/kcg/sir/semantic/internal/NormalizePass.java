@@ -592,6 +592,13 @@ final class NormalizePass {
                resultVar,
                itemVar);
          }
+          case io.kcg.sir.ast.AstGroupedSumStep s -> {
+             NormalizedExpression predicate = this.normalizeExpression(s.predicate());
+             yield new NormalizedStep.GroupedSumStep(s.id(), s.span(), this.siteTargetOrUnknown(s.entity().id()),
+                this.siteTargetOrUnknown(s.field().id()), this.siteTargetOrUnknown(s.key().id()),
+                predicate != null ? predicate : this.unitExpr(s.span()), this.normalizePageSpec(s.page()),
+                this.definitionBindingOrUnknown(s.id()), this.validated.findItemBindings().get(s.id()));
+          }
           case io.kcg.sir.ast.AstScalarQueryStep s -> {
              NormalizedExpression predicate = this.normalizeExpression(s.predicate());
              yield new NormalizedStep.ScalarQueryStep(s.id(), s.span(), s.kind(),

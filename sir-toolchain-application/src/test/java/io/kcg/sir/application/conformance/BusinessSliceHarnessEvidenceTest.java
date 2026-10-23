@@ -21,19 +21,22 @@ class BusinessSliceHarnessEvidenceTest {
             "/conformance/mysql/money-seed.sql", "wallet", "/api/wallet/show?id=1",
             "evidence-report.txt", "evidence", "kcg.evidence-conformance.enabled");
 
-    @Test void warningProbeIsWrittenWhenTheRunHasNotCreatedItsEvidenceDirectoryYet(@TempDir Path root) throws Exception {
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(strings={"ExactAggregateWarningFixture","GroupedSumFixture"})
+    void warningProbeIsWrittenWhenTheRunHasNotCreatedItsEvidenceDirectoryYet(String name,@TempDir Path root) throws Exception {
         var work = root.resolve("work-absent");
         var evidence = root.resolve("evidence-absent");
         assertFalse(Files.exists(evidence), "the fixture must start without the directory CI failed to create");
         var harness = harness(work, evidence);
 
-        DecimalSumChecks.installWarningFixture(harness);
+        if (name.equals("GroupedSumFixture")) GroupedSumChecks.install(harness);
+        else DecimalSumChecks.installWarningFixture(harness);
 
-        var copy = harness.evidenceRoot().resolve("ExactAggregateWarningFixture.java.txt");
+        var copy = harness.evidenceRoot().resolve(name+".java.txt");
         assertTrue(harness.evidenceRoot().startsWith(evidence), harness.evidenceRoot().toString());
         assertTrue(Files.isRegularFile(copy), "the probe copy is part of the run evidence: " + copy);
-        assertArrayEquals(Files.readAllBytes(Path.of("src/test/resources" + DecimalSumChecks.FIXTURE_RESOURCE)), Files.readAllBytes(copy));
-        assertTrue(Files.isRegularFile(harness.projectRoot().resolve("src/main/java/example/money/fixture/ExactAggregateWarningFixture.java")));
+        assertArrayEquals(Files.readAllBytes(Path.of("src/test/resources/conformance/mysql/"+name+".java.txt")), Files.readAllBytes(copy));
+        assertTrue(Files.isRegularFile(harness.projectRoot().resolve("src/main/java/example/money/fixture/"+name+".java")));
     }
 
     @Test void anErrorBeforeTheFirstCheckCannotLeaveAReportClaimingSuccess(@TempDir Path root) {
@@ -58,7 +61,7 @@ class BusinessSliceHarnessEvidenceTest {
         assertEquals("PASSED", harness.verdict());
     }
 
-    private static BusinessSliceHarness harness(Path work, Path evidence) {
+    static BusinessSliceHarness harness(Path work, Path evidence) {
         Map<String, String> properties = Map.of(
                 "kcg.evidence-conformance.enabled", "true",
                 "kcg.conformance.work-parent", work.toAbsolutePath().toString(),

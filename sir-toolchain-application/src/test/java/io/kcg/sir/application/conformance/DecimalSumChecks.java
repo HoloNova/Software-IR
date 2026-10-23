@@ -15,18 +15,22 @@ final class DecimalSumChecks {
     private DecimalSumChecks() {}
 
     static void installWarningFixture(BusinessSliceHarness s) throws Exception {
+        installFixture(s, FIXTURE_RESOURCE, "ExactAggregateWarningFixture.java");
+    }
+
+    static void installFixture(BusinessSliceHarness s, String resource, String fileName) throws Exception {
         byte[] source;
-        try (var input = DecimalSumChecks.class.getResourceAsStream(FIXTURE_RESOURCE)) {
+        try (var input = DecimalSumChecks.class.getResourceAsStream(resource)) {
             if (input == null) throw new IllegalStateException("missing aggregate warning fixture");
             source = input.readAllBytes();
         }
-        var path = s.projectRoot().resolve("src/main/java/example/money/fixture/ExactAggregateWarningFixture.java");
+        var path = s.projectRoot().resolve("src/main/java/example/money/fixture/" + fileName);
         Files.createDirectories(path.getParent());
         Files.write(path, source);
         // The run's evidence directory is created by whoever first writes into it, not by the constructor:
         // the installer runs before the build, so it must not assume the later log writers created it.
         Files.createDirectories(s.evidenceRoot());
-        Files.write(s.evidenceRoot().resolve("ExactAggregateWarningFixture.java.txt"), source);
+        Files.write(s.evidenceRoot().resolve(fileName + ".txt"), source);
         s.reportLine("TEST_FIXTURE_ONLY aggregate warning probe sha256="
                 + HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(source))
                 + "; not part of the source/digest of normal product generation");

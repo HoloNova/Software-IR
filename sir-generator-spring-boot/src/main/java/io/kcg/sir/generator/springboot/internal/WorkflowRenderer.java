@@ -100,6 +100,9 @@ final class WorkflowRenderer {
          case SpringBootWorkflow.LoadActorStep load:
             renderLoadActor(ctx, load, variableNames, imports, currentPackage, lines, mappers);
             break;
+          case SpringBootWorkflow.GroupedSumStep query:
+             renderGroupedSum(ctx, query, inputName, variableNames, imports, currentPackage, lines, mappers, stringMatches);
+             break;
           case SpringBootWorkflow.SumStep query:
              renderSum(ctx, query, variableNames, imports, currentPackage, lines, mappers, stringMatches);
              break;
@@ -284,6 +287,31 @@ final class WorkflowRenderer {
       lines.add("        if (!java.util.Objects.equals(" + loadedName + "." + versionGetter + "(), " + expected + ")) {");
       lines.add("            throw new " + errorName + "();");
       lines.add("        }");
+   }
+
+   private static void renderGroupedSum(GenerationContext ctx, SpringBootWorkflow.GroupedSumStep step, String input,
+       Map<SymbolId, String> variables, ImportSorter imports, String pkg, List<String> lines,
+       Map<SymbolId, WorkflowRenderer.MapperReference> mappers, List<SpringExpression.StringMatch> matches) {
+       var entity = ctx.entity(step.entitySymbol());
+       registerEntityImport(ctx, entity, imports, pkg);
+       var mapper = ensureMapper(ctx, step.entitySymbol(), entity.javaName(), mappers);
+       String helper = ctx.model().basePackage() + ".persistence.ExactAggregate";
+       matches.addAll(step.stringMatches());
+       Map<LoweredNodeId, SpringExpression.StringMatch> indexed = new LinkedHashMap<>();
+       for (var match : step.stringMatches()) indexed.put(match.expressionId(), match);
+       String predicate = renderPredicateChain(ctx, step.predicate(), step.itemVariable(), entity, indexed,
+           variables, imports, pkg, "$filter", true);
+       var key = ((LoweredJavaType.SumGroupValue)((LoweredJavaType.PageValue)step.result().type()).elementType()).keyType();
+       String decoder = key.identityStorageType().kind() == LoweredJavaType.ScalarKind.UUID ? "uuidKey" : "longKey";
+       var page = step.page();
+       lines.add("        var " + step.result().targetName() + " = " + helper + ".grouped(" + helper + ".query("
+           + entity.javaName() + ".class, " + StringEscape.javaString(step.plan().countProjection()) + "), $filter -> " + predicate
+           + ", " + input + "." + getterName(page.pagePropertyName()) + "(), " + input + "." + getterName(page.sizePropertyName()) + "(), "
+           + page.defaultSize() + ", " + page.maxSize() + ", " + page.maxPageNumber() + ", "
+           + errorJavaName(ctx, page.errorSymbol(), imports, pkg) + "::new, "
+           + StringEscape.javaString("`" + step.plan().keyColumn().replace("`", "``") + "`") + ", "
+           + StringEscape.javaString(step.plan().dataProjection()) + ", " + helper + "::" + decoder + ", "
+           + "this." + mapper.mapperFieldName() + "::" + step.plan().countMethod() + ", this." + mapper.mapperFieldName() + "::" + step.plan().dataMethod() + ");");
    }
 
    private static void renderSum(GenerationContext ctx, SpringBootWorkflow.SumStep step,

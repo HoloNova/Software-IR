@@ -457,6 +457,17 @@ final class ValidatePass {
                 this.validateStringMatchShape(s.predicate());
                 this.rejectArithmeticTheQueryCannotCarry(s.predicate(), false);
                 break;
+         case io.kcg.sir.ast.AstGroupedSumStep s:
+                if (!isReadonly || !isQuery)
+                   this.diagnostics.add(DiagnosticBuilder.error("SIR-FLOW-004", "sum by requires a readonly query", s.span()));
+                if (this.typed.referenceSiteBindings().targetFor(s.field().id()).filter(this.secretFields::contains).isPresent())
+                   this.diagnostics.add(DiagnosticBuilder.error("SIR-VALID-001", "sum cannot expose a secret", s.field().span()));
+                this.validateStringMatchShape(s.predicate());
+                this.rejectArithmeticTheQueryCannotCarry(s.predicate(), false);
+                this.rejectArithmeticTheQueryCannotCarry(s.page().page(), false);
+                this.rejectArithmeticTheQueryCannotCarry(s.page().size(), false);
+                this.validateGroupPage(s.page(), failsSet);
+                break;
           case io.kcg.sir.ast.AstScalarQueryStep s:
                this.validateStringMatchShape(s.predicate());
                this.rejectArithmeticTheQueryCannotCarry(s.predicate(), false);
@@ -581,7 +592,22 @@ final class ValidatePass {
       }
    }
 
-   private void validateOrderKeys(List<AstFindOrderKey> keys) {
+    private void validateGroupPage(AstFindPage page, Set<SymbolId> fails) {
+       for (AstExpression expression : List.of(page.page(), page.size())) {
+          if (!(expression instanceof AstMemberExpression member)
+                || !(member.receiver() instanceof AstNameExpression name) || !name.name().text().equals("input"))
+             this.diagnostics.add(DiagnosticBuilder.error("SIR-VALID-001", "分页参数必须是 input 的直接字段", expression.span()));
+       }
+       SymbolId pageField = this.memberTarget(page.page());
+       SymbolId sizeField = this.memberTarget(page.size());
+       if (pageField != null && pageField.equals(sizeField))
+          this.diagnostics.add(DiagnosticBuilder.error("SIR-VALID-001", "page 与 size 必须使用两个不同的字段", page.size().span()));
+       SymbolId error = this.typed.referenceSiteBindings().targetFor(page.error().id()).orElse(null);
+       if (error != null && fails != null && !fails.contains(error))
+          this.diagnostics.add(DiagnosticBuilder.error("SIR-FLOW-003", "分页引用未声明的 Error: " + page.error().text(), page.error().span()));
+    }
+
+    private void validateOrderKeys(List<AstFindOrderKey> keys) {
       Set<SymbolId> seen = new LinkedHashSet<>();
       for (AstFindOrderKey key : keys) {
          SymbolId fieldSymbol = this.typed.referenceSiteBindings().targetFor(key.field().id()).orElse(null);
@@ -913,6 +939,11 @@ final class ValidatePass {
             case AstValidateStep s -> this.checkSecretReads(s.condition(), false);
             case AstLoadStep s -> this.checkSecretReads(s.idExpression(), false);
             case io.kcg.sir.ast.AstSumStep s -> this.checkSecretReads(s.predicate(), true);
+            case io.kcg.sir.ast.AstGroupedSumStep s -> {
+               this.checkSecretReads(s.predicate(), true);
+               this.checkSecretReads(s.page().page(), true);
+               this.checkSecretReads(s.page().size(), true);
+            }
              case io.kcg.sir.ast.AstScalarQueryStep s -> this.checkSecretReads(s.predicate(), true);
             case AstFindStep s -> {
                this.checkSecretReads(s.predicate(), true);
@@ -1547,6 +1578,11 @@ final class ValidatePass {
          case AstLoadStep s -> walkPresent(s.idExpression(), action);
          case AstFindStep s -> walkPresent(s.predicate(), action);
          case io.kcg.sir.ast.AstSumStep s -> walkPresent(s.predicate(), action);
+         case io.kcg.sir.ast.AstGroupedSumStep s -> {
+            walkPresent(s.predicate(), action);
+            walkPresent(s.page().page(), action);
+            walkPresent(s.page().size(), action);
+         }
           case io.kcg.sir.ast.AstScalarQueryStep s -> walkPresent(s.predicate(), action);
          case AstCreateStep s -> s.bindings().forEach(binding -> walkPresent(binding.value(), action));
          case AstUpdateStep s -> {
@@ -1596,6 +1632,10 @@ final class ValidatePass {
             });
          } else if (step instanceof io.kcg.sir.ast.AstSumStep query) {
              this.validateExistenceUsage(query.predicate(), ExistenceUsage.ALLOWED);
+          } else if (step instanceof io.kcg.sir.ast.AstGroupedSumStep query) {
+             this.validateExistenceUsage(query.predicate(), ExistenceUsage.ALLOWED);
+             this.validateExistenceUsage(query.page().page(), ExistenceUsage.REJECTED);
+             this.validateExistenceUsage(query.page().size(), ExistenceUsage.REJECTED);
           } else if (step instanceof io.kcg.sir.ast.AstScalarQueryStep query) {
             this.validateExistenceUsage(query.predicate(), ExistenceUsage.ALLOWED);
          } else if (step instanceof AstValidateStep validateStep) {

@@ -33,17 +33,20 @@ public sealed interface ProjectArtifact
       }
    }
 
-   /** Marker and current-Statement warning guard, emitted only when a sum is planned. */
    record ExactAggregate(LoweredNodeId id, LoweredOrigin origin, String path, String packageName,
-         String simpleName) implements ProjectArtifact {
-      public ExactAggregate {
-         Objects.requireNonNull(id, "id");
-         Objects.requireNonNull(origin, "origin");
-         requireText(path, "path");
-         requireText(packageName, "packageName");
-         requireText(simpleName, "simpleName");
-      }
+      String simpleName, java.util.Optional<String> groupPageType) implements ProjectArtifact {
+   public ExactAggregate(LoweredNodeId id, LoweredOrigin origin, String path, String packageName, String simpleName) {
+      this(id, origin, path, packageName, simpleName, java.util.Optional.empty());
    }
+   public ExactAggregate {
+      Objects.requireNonNull(id, "id");
+      Objects.requireNonNull(origin, "origin");
+      requireText(path, "path");
+      requireText(packageName, "packageName");
+      requireText(simpleName, "simpleName");
+      Objects.requireNonNull(groupPageType, "groupPageType");
+   }
+}
 
    record ApplicationMain(
       LoweredNodeId id,

@@ -109,16 +109,22 @@ CI 提速版 #155 主验证 8:18，正常路径 Completion 跳过，实际测试
 ### 4.7 G5 列表循环、G8 后续聚合（新增范围先确认）
 
 - G5：请求里带列表、工作流逐项处理；对一批行统一改或删（订单行、级联删除）。商城的"一个订单多个商品"、取消订单退库存都卡在这里。
-- G8：首批条件金额SUM已确认实现，见下；平均、分组及月度预算仍另案。普通条件行计数已由 G2 提供，不重做。
+- G8：条件金额SUM与第二批引用分组分页均已实现，见下；平均、自然月及预算仍另案。普通条件行计数已由 G2 提供，不重做。
 - 两者都会让语言明显变复杂。上一个 Agent 的建议：等 G7、G2、G4、G9、G10 补完，看还剩多少需求写不下，再决定。
 
 #### G8 首批已实现（待同源码CI）
 
-#163的Money IT在构建前写探针副本时因证据目录未建而NoSuchFile中止，且报告将中止写成PASSED。已让写入方建档、harness异常入失败通道，14项定向通过，见[验证33](../qualification/README.md#ci-163-evidence-dir-fix)。两IT在本机为NOT_RUN（无参考库），真库SUM／告警仍待新CI；修复推送后直接继续。
+负责人已通知0bebfcd的修复CI通过；本批不再次查询或借其冒充新分组快照证据。#163的Money IT在构建前写探针副本时因证据目录未建而NoSuchFile中止，且报告将中止写成PASSED。已让写入方建档、harness异常入失败通道，14项定向通过，见[验证33](../qualification/README.md#ci-163-evidence-dir-fix)。两IT在本机为NOT_RUN（无参考库），真库SUM／告警仍待新CI；修复推送后直接继续。
 
 #162在语言参考门发现第5.10节的声明片段误标完整sir且漏User／Entry。本批已改为包含依赖的可执行sir-declarations；新增文档到SUM计划、owner及actor正式绑定的契约，不绕开文档门、不改生产实现，23项定向通过，见[验证32](../qualification/README.md#ci-162-sum-reference-fix)。真实SUM IT和部署仍未验收，修复单独提交推送后继续分组方案，不查询或等待CI，由负责人通知。
 
-负责人已确认并实现[设计24](../design/12-feature-semantics-and-semantic-types.md#g8-decimal-sum-proposal)的条件Decimal单列SUM：独立步骤／字段绑定／scope／源编辑与IR硬化；空／全空0，总额不继承单笔精度；复用Lambda谓词和BaseMapper。按需标记及当前Statement告警插件、STATEMENT缓存防绕过，普通查询不改；真实ParamMap缺ew与合法变量名冲突均有RED→GREEN。ledger本人范围／本人分类合计已用上，195／3949／23；不推断分类方向净额或月份预算。30类187项定向通过，见[验证31](../qualification/README.md#g8-decimal-sum-local)；旧Windows目录读取10项受阻，新的内存SUM图谱完整构建通过。Money原IT复用同一应用／构建，加Optional、scope、参数、any和固定CAST告警对照；仅已编译、本机NOT_RUN。方案／文档同源码提交，账本67／8／9不变。group-by、AVG、期间／时区／结果DTO及G5另案；CI结果仍由负责人通知，不查询。
+负责人已确认并实现[设计24](../design/12-feature-semantics-and-semantic-types.md#g8-decimal-sum-proposal)的条件Decimal单列SUM：独立步骤／字段绑定／scope／源编辑与IR硬化；空／全空0，总额不继承单笔精度；复用Lambda谓词和BaseMapper。按需标记及当前Statement告警插件、STATEMENT缓存防绕过，普通查询不改；真实ParamMap缺ew与合法变量名冲突均有RED→GREEN。ledger本人范围／本人分类合计已用上，195／3949／23；不推断分类方向净额或月份预算。30类187项定向通过，见[验证31](../qualification/README.md#g8-decimal-sum-local)；旧Windows目录读取10项受阻，新的内存SUM图谱完整构建通过。Money原IT复用同一应用／构建，加Optional、scope、参数、any和固定CAST告警对照；仅已编译、本机NOT_RUN。方案／文档同源码提交，账本67／8／9不变。当时尚无group-by；其后分组及结果载体已按下节实现。AVG、期间／时区与G5仍另案，CI结果由负责人通知，不查询。
+
+#### G8 第二批：引用分组分页已实现，待同源码CI
+
+[设计25](../design/12-feature-semantics-and-semantic-types.md#g8-grouped-sum-proposal)已按确认完成，27类236项定向通过，见[验证34](../qualification/README.md#g8-grouped-sum-local)。Page<SumGroup<Ref<Entity>>>只有key和精确total；Ref单键非Optional／secret，按身份升序、不补零组。COUNT DISTINCT和selectMaps用同一筛选求值，显式只读RR快照、两次当前Statement告警及STATEMENT缓存；任何一步失败不返回部分页。补齐any相关身份与根行外键的正式关联方向，不放开通用JOIN。源增删改、跨文件精确改名、结构门、Core／目标IR、Long／UUID、Mapper和支持载体命名冲突均覆盖。旧Mapper和分页协议不变。
+
+Money IT复用原应用，增加GroupedSumFixture：计数真正完成后在可观察屏障等待，控制连接提交新组，再检验同页仍是旧快照。严格／非严格会话均覆盖数据和计数告警；两个实际探针编译／冷目录安装／屏障执行定向通过，本机未运行真库。ledger只有本人显式区间内的本人分类分页合计，220／4106／24；月份／时区、预算历史、AVG／多键／零组和G5仍未做，账本67／8／9不变。JSON精确断言增加Jackson2.19.4仅test依赖；三项早期可行性探针源码归档target，实际实现回归替代它们，不再向CI增加重复探针测试。文档随源码提交，不查／等CI，负责人通知结果。
 
 ### 4.8 G12、G13 小项（低优先）
 

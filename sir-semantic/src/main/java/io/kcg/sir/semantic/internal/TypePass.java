@@ -34,6 +34,7 @@ import io.kcg.sir.ast.AstStringLiteral;
 import io.kcg.sir.ast.AstTimeShiftExpression;
 import io.kcg.sir.ast.AstTimeUnit;
 import io.kcg.sir.ast.AstBinaryOperator;
+import io.kcg.sir.ast.AstTypeRef;
 import io.kcg.sir.ast.AstUnaryExpression;
 import io.kcg.sir.ast.AstUnaryOperator;
 import io.kcg.sir.ast.AstUnitLiteral;
@@ -169,11 +170,42 @@ final class TypePass {
          }
       }
 
-      this.checkIntegerLiteralRanges();
+       this.restrictGroupCarriers();
+       this.checkIntegerLiteralRanges();
       return TypedContext.from(this.resolved, this.expressionTypes, List.copyOf(this.diagnostics));
    }
 
-   private void typeFieldConstraints(List<AstField> fields, SymbolId scopeId) {
+    private void restrictGroupCarriers() {
+       for (AstDeclaration declaration : this.software.declarations()) {
+          List<AstTypeRef> types = switch (declaration) {
+             case AstEntityDecl entity -> entity.fields().stream().map(AstField::type).toList();
+             case AstInputDecl input -> input.fields().stream().map(AstField::type).toList();
+             case AstViewDecl view -> view.fields().stream().map(AstViewField::type).toList();
+             case AstCapabilityDecl capability -> {
+                AstTypeRef output = capability.output().type();
+                if (output instanceof io.kcg.sir.ast.AstPageTypeRef page
+                      && page.elementType() instanceof io.kcg.sir.ast.AstSumGroupTypeRef) yield List.of();
+                yield List.of(output);
+             }
+             default -> List.of();
+          };
+          for (AstTypeRef type : types) if (this.containsGroup(type))
+             this.diagnostics.add(DiagnosticBuilder.error("SIR-TYPE-001",
+                   "SumGroup 只能作为 Page 的直接输出元素", type.span()));
+       }
+    }
+
+    private boolean containsGroup(AstTypeRef type) {
+       return switch (type) {
+          case io.kcg.sir.ast.AstSumGroupTypeRef ignored -> true;
+          case io.kcg.sir.ast.AstPageTypeRef page -> this.containsGroup(page.elementType());
+          case io.kcg.sir.ast.AstListTypeRef list -> this.containsGroup(list.elementType());
+          case io.kcg.sir.ast.AstOptionalTypeRef optional -> this.containsGroup(optional.elementType());
+          default -> false;
+       };
+    }
+
+    private void typeFieldConstraints(List<AstField> fields, SymbolId scopeId) {
       for (AstField field : fields) {
          field.constraints().forEach(constraint -> constraint.arguments()
             .forEach(argument -> this.typeExpression(argument, scopeId, Set.of())));
@@ -266,7 +298,8 @@ final class TypePass {
       if (sourceEntity != null) {
          SymbolId connectionField = ExistenceConnection.fieldOf(
             expr.conditions(), this.resolved.referenceSiteBindings(), this.resolved.findItemBindings());
-         if (connectionField == null || !this.referencesItemEntity(connectionField, expr)) {
+         if (connectionField == null || !(this.referencesItemEntity(connectionField, expr)
+                || this.reverseConnection(expr.conditions(), sourceEntity))) {
             this.diagnostics.add(DiagnosticBuilder.error(
                "SIR-TYPE-004", "any 的条件必须包含与根实体的连接比较: <Ref 字段> == item", expr.span()));
          }
@@ -282,13 +315,43 @@ final class TypePass {
    * happens to be compared with the item but points somewhere else would produce a subquery that
    * joins on the wrong key.
    */
+   private boolean reverseConnection(AstExpression condition, SymbolId related) {
+      if (condition instanceof AstGroupedExpression group) return this.reverseConnection(group.inner(), related);
+      if (!(condition instanceof AstBinaryExpression binary)) return false;
+      if (binary.operator() == AstBinaryOperator.AND)
+         return this.reverseConnection(binary.left(), related) || this.reverseConnection(binary.right(), related);
+      return binary.operator() == AstBinaryOperator.EQ
+         && (this.reverseIdentityPair(binary.left(), binary.right(), related)
+             || this.reverseIdentityPair(binary.right(), binary.left(), related));
+   }
+
+   private boolean reverseIdentityPair(AstExpression left, AstExpression right, SymbolId related) {
+      if (!(left instanceof AstNameExpression name) || !(right instanceof AstMemberExpression member)
+            || !(member.receiver() instanceof AstNameExpression root)) return false;
+      SymbolId identity = this.resolved.referenceSiteBindings().targetFor(name.name().id()).orElse(null);
+      Symbol target = this.resolved.referenceSiteBindings().targetFor(member.member().id())
+            .flatMap(this.resolved.symbols()::byId).orElse(null);
+      Symbol item = this.resolved.referenceSiteBindings().targetFor(root.name().id())
+            .flatMap(this.resolved.symbols()::byId).orElse(null);
+      if (this.resolved.referenceSiteBindings().bindingFor(name.name().id())
+            .filter(b -> b.site().role() == io.kcg.sir.semantic.api.ReferenceRole.EXISTS_CONDITION_FIELD).isEmpty()) return false;
+      boolean relatedIdentity = this.entityDeclarations().stream()
+         .filter(e -> related.equals(this.resolved.declarationBindings().get(e.id())))
+         .anyMatch(e -> java.util.Objects.equals(identity, this.resolved.referenceBindings().get(e.identity().id())));
+      return relatedIdentity && target instanceof Symbol.FieldSymbol field && field.type() instanceof RefType ref
+         && ref.entityId().equals(related) && item instanceof Symbol.VariableSymbol variable
+         && variable.type() instanceof RefType row && field.ownerId().equals(row.entityId())
+         && this.resolved.findItemBindings().containsValue(item.id());
+   }
+
    private boolean referencesItemEntity(SymbolId connectionField, AstAnyExpression expr) {
       Symbol field = this.resolved.symbols().byId(connectionField).orElse(null);
       if (!(field instanceof Symbol.FieldSymbol fieldSymbol) || !(fieldSymbol.type() instanceof RefType fieldRef)) {
          return false;
       }
 
-      return this.resolved.findItemBindings().values().stream()
+       if (!fieldSymbol.ownerId().equals(this.resolved.referenceSiteBindings().targetFor(expr.entity().id()).orElse(null))) return false;
+       return this.resolved.findItemBindings().values().stream()
          .map(this.resolved.symbols()::byId)
          .flatMap(java.util.Optional::stream)
          .filter(Symbol.VariableSymbol.class::isInstance)
@@ -561,6 +624,36 @@ final class TypePass {
                 visibleVars.add(s.result().text());
                break;
             }
+             case io.kcg.sir.ast.AstGroupedSumStep s: {
+                Set<String> groupedVars = new LinkedHashSet<>(visibleVars);
+                groupedVars.add("item");
+                SirType groupedPredicate = this.typeExpression(s.predicate(),
+                        SymbolIdFactory.capabilityStepScope(capScopeId, s.id().value()), groupedVars);
+                if (groupedPredicate != null && !TypeRules.isBoolean(groupedPredicate)) {
+                   this.diagnostics.add(DiagnosticBuilder.error("SIR-TYPE-001", "查询谓词必须是 Boolean", s.predicate().span()));
+                }
+                var groupedField = this.resolved.referenceSiteBindings().targetFor(s.field().id())
+                      .flatMap(this.resolved.symbols()::byId).orElse(null);
+                SirType measurement = groupedField instanceof Symbol.FieldSymbol f ? f.type() : null;
+                if (measurement instanceof OptionalType optional) {
+                   measurement = optional.element();
+                }
+                if (measurement != null && measurement != PrimitiveType.DECIMAL) {
+                   this.diagnostics.add(DiagnosticBuilder.error("SIR-TYPE-001", "sum requires a Decimal field", s.field().span()));
+                }
+                var groupedKey = this.resolved.referenceSiteBindings().targetFor(s.key().id())
+                      .flatMap(this.resolved.symbols()::byId).orElse(null);
+                SirType keyType = groupedKey instanceof Symbol.FieldSymbol f ? f.type() : null;
+                // An optional key would produce a SQL NULL bucket that COUNT(DISTINCT key) and GROUP BY disagree on,
+                // so only a direct reference is accepted.
+                if (keyType != null && !(keyType instanceof io.kcg.sir.semantic.type.RefType)) {
+                   this.diagnostics.add(DiagnosticBuilder.error("SIR-TYPE-001",
+                           "sum by 的分组键必须是 Ref<Entity> 字段", s.key().span()));
+                }
+                this.typePageClause(s.page(), capScopeId, visibleVars);
+                visibleVars.add(s.result().text());
+                break;
+             }
              case io.kcg.sir.ast.AstScalarQueryStep s:
                Set<String> queryVars = new LinkedHashSet<>(visibleVars);
                queryVars.add("item");
@@ -746,12 +839,26 @@ final class TypePass {
       }
    }
 
-   private void typePageOutput(AstCapabilityDecl capDecl, SirType outputType) {
-       if (outputType instanceof PageType page && !(page.element() instanceof DeclaredType element && element.kind() == DeclaredType.DeclaredKind.VIEW)) {
-          this.diagnostics.add(DiagnosticBuilder.error(
-             "SIR-TYPE-001", "Page 的元素类型必须是 view: " + page.element(), capDecl.output().type().span()));
-       }
+      private void typePageOutput(AstCapabilityDecl capDecl, SirType outputType) {
+      if (!(outputType instanceof PageType page)) {
+         return;
+      }
+
+      // A page either holds a projection (what find returns) or the groups of a grouped exact total. The latter is
+      // never a stored row, so it can appear in no other declaration than an output type.
+      if (page.element() instanceof DeclaredType element && element.kind() == DeclaredType.DeclaredKind.VIEW) {
+         return;
+      }
+
+      if (page.element() instanceof io.kcg.sir.semantic.type.SumGroupType) {
+         return;
+      }
+
+      this.diagnostics.add(DiagnosticBuilder.error(
+         "SIR-TYPE-001", "Page 的元素类型必须是 view 或 SumGroup<Ref<Entity>>: " + page.element(),
+         capDecl.output().type().span()));
    }
+
 
    /**
      * An order key must name a field the database can order by. Nullable comparable columns are
@@ -912,9 +1019,22 @@ final class TypePass {
                }
 
                return PrimitiveType.BOOLEAN;
-            case EQ:
-            case NE:
-               if (!leftType.equals(rightType)) {
+             case EQ:
+             case NE:
+                if (expr.operator() == AstBinaryOperator.EQ) {
+                   SymbolId related = expr.left() instanceof AstNameExpression name
+                         ? this.resolved.referenceSiteBindings().targetFor(name.name().id())
+                               .flatMap(this.resolved.symbols()::byId).filter(Symbol.FieldSymbol.class::isInstance)
+                               .map(Symbol.FieldSymbol.class::cast).map(Symbol.FieldSymbol::ownerId).orElse(null) : null;
+                   SymbolId reverseRelated = expr.right() instanceof AstNameExpression name
+                         ? this.resolved.referenceSiteBindings().targetFor(name.name().id())
+                               .flatMap(this.resolved.symbols()::byId).filter(Symbol.FieldSymbol.class::isInstance)
+                               .map(Symbol.FieldSymbol.class::cast).map(Symbol.FieldSymbol::ownerId).orElse(null) : null;
+                   if (related != null && this.reverseIdentityPair(expr.left(), expr.right(), related)
+                         || reverseRelated != null && this.reverseIdentityPair(expr.right(), expr.left(), reverseRelated))
+                      return PrimitiveType.BOOLEAN;
+                }
+                if (!leftType.equals(rightType)) {
                   this.diagnostics.add(DiagnosticBuilder.error("SIR-TYPE-001", "比较操作数类型不一致", expr.span()));
                   return null;
                }

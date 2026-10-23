@@ -412,6 +412,11 @@ final class SirAstBuilder {
             return new AstRefTypeRef(
                     ids.id(path), source.span(context), nameRef(context.IDENT(), path, "target"));
         }
+        if (context.LT() != null) {
+            // Only the SumGroup alternative carries a bracket after a plain name; the four containers above are
+            // matched first, so a named type is never mistaken for it.
+            return new AstSumGroupTypeRef(ids.id(path), source.span(context), type(context.typeRef(), path));
+        }
         return new AstNamedTypeRef(
                 ids.id(path), source.span(context), nameRef(context.IDENT(), path, "name"));
     }
@@ -525,8 +530,17 @@ final class SirAstBuilder {
         }
         if (context.sumStep() != null) {
             var value = context.sumStep();
-            return new AstSumStep(ids.id(path), source.span(value), nameRef(value.entity, path, "entity"),
-                    nameRef(value.field, path, "field"), expression(value.predicate, path), name(value.result));
+            AstExpression predicate = expression(value.predicate, path);
+            AstNameRef entity = nameRef(value.entity, path, "entity");
+            AstNameRef field = nameRef(value.field, path, "field");
+            if (value.groupByClause() != null) {
+                var page = value.findPageClause();
+
+                return new AstGroupedSumStep(ids.id(path), source.span(value), entity, field,
+                        nameRef(value.groupByClause().key, path, "key"), predicate, findPage(page, path),
+                        name(value.result));
+            }
+            return new AstSumStep(ids.id(path), source.span(value), entity, field, predicate, name(value.result));
         }
         if (context.scalarQueryStep() != null) {
             var value = context.scalarQueryStep();

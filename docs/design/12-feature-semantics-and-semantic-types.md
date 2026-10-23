@@ -1155,3 +1155,106 @@ MyBatis-Plus 3.5.12的QueryWrapper.select能承载Lowering生成的固定聚合�
 ### 24.7 CI #162 文档生成门修复
 
 `93804e1` 的 [#162](https://github.com/HoloNova/Software-IR/actions/runs/39883793969) 在 LanguageReferenceExamplesTest 失败：第5.10节把以type开头的声明片段标为完整sir，还缺User／Entry。首发与后续诊断各218份XML仅这一失败，真库和部署仍未执行。已补完整依赖并使用仍会包装根文档且贯通生成的sir-declarations，新增契约验证真实文档的SUM精确计划、owner／item／actor正式绑定。五类23项定向通过，Parser、类型与SUM执行代码未改，见[验证32](../qualification/README.md#ci-162-sum-reference-fix)。187项旧定向漏选现有语言参考门，不能把旧单测通过误称文档门已覆盖。修复源码仍须新CI；不查询／等待结果，修复推送后继续G8分组方案，账本不变。
+
+
+<a id="g8-grouped-sum-proposal"></a>
+## 25. G8 第二批：按引用分组的精确金额分页（已实现，待同源码 CI）
+
+基线为修复 #163 后的 `0bebfcdf8fcfb5219d40e53a8d026b0416cd9a46`，负责人通知 CI 已通过并确认本节范围。现已贯通语法、正式绑定、类型／结构、源编辑、目标计划和真实生成服务；本批真实 HTTP／MySQL 仍须同源码 CI。本节及配套语言参考、验收记录随代码提交，不单独触发文档 CI。
+
+### 25.1 实际缺口与最小业务切片
+
+当前 `sum` 只返回一个 Decimal；`find` 返回实体投影的 Page；G11 计算视图只能读取来源行，不能读工作流聚合变量。现有 `SirType` 也没有“分组键＋精确合计”的结果类型。不能往 view 里塞 sum 变量、持久化临时统计行、逐分类发 N 次查询，或把多列结果交给只取首列的 selectObjs。
+
+本批只交付：单个非 Optional、非 secret 的直接持久化 Ref 列分组，测量列仍是直接 Decimal／Optional Decimal，返回有界分页。ledger 落点是**本人显式时间区间内、按本人分类分组的金额总和**；它不是自然月协议，也不因分组就上调“月度每类合计”或预算需求的完成数。只读 query、scope、G7 参数绑定和当前 Statement 告警协议复用第一批，不扩展写入聚合、AVG、HAVING、多键、任意表达式键或通用 JOIN。
+
+### 25.2 作者接口与结果类型
+
+以下语法已实现，完整可执行声明示例由语言参考第5.11节的生成门验证：
+
+```text
+capability TotalsByCategory {
+  actor Ref<User>;
+  input GroupRange;
+  output Page<SumGroup<Ref<Category>>>;
+  fails BadPage;
+  fails BadRange;
+  requires authenticated;
+  requires readonly;
+  expose query at "/entries/totals-by-category";
+  workflow {
+    validate input.until > input.since else BadRange;
+    sum Entry.amount by category
+      where item.owner == actor
+        and any(Category, id == item.category and owner == actor)
+        and item.occurredAt >= input.since and item.occurredAt < input.until
+      Page input.page, input.size else BadPage
+    as totals;
+    return totals;
+  }
+}
+```
+
+GroupRange 的时间采用现有 Optional<Moment>，缺省／null／反序通过 G7 在查询前拒绝；page／size 复用现有默认及范围，不新增另一套分页政策。固定键升序，按数据库身份列排序；不支持由请求选择 SQL 列、排序表达式或按总额排行。不同 HTTP 翻页请求各有自己的快照，不承诺跨请求结果冻结。
+
+`SumGroup<K>` 是只用于本步骤结果的明确类型构造器，第一批 K 必须是该分组列的 Ref<Entity>；不引入自由 record 定义或可写输入，不把名字变成全局保留字。其固定字段是 `key` 和 `total`：key 的公开载体按引用目标的既有身份类型决定（例如 Long／UUID 对应载体），不是实体对象；total 是 Decimal，不继承源 Money 的单笔 precision。key 不等同于分类名字，不为显示分类名字隐式查库。它不作为实体字段、input、独立 G11 view 或任意容器嵌套开放；结果变量先只允许按匹配类型返回。
+
+外层沿用现有 `{total,page,size,records}`，不换成技能示例中的其它 JSON 信封。比如 `records:[{key:7,total:123.45}]` 中的 7 是分类身份，外层 total 是符合条件的**组数**而非账目行数。分类存在但无匹配账目时不返回该组；存在匹配账目但金额全空时该组 total 为数值零。全空集返回 total=0／records=[]；越过最后一页返回空 records 但保留正确组数。不额外补零组、不拉全表或截断分组列表。
+
+仅非 Optional Ref 键是有意的范围限制：这样直接 COUNT(DISTINCT key) 与 GROUP BY 的组数语义一致，不漏掉 SQL NULL 桶；文本／枚举键的 collation、NULL 策略另案。本轮不是宣称这些键永远不能支持。
+
+### 25.3 正式绑定、来源与互斥计划
+
+新增独立 GroupedSumStep（Ast、Normalized、目标各一层），不把旧 SumStep 改成多个可空 key／page／output 分支。复用 SUM_ENTITY／SUM_FIELD 的相同含义，为分组键增加正式字段引用角色；结果类型里的 Ref 仍绑定目标实体。唯一 Resolve、跨文件可见性、语义类型、EntityScopes、声明写出、SourceEditor 的增删改与精确改名、结构完整性／敏感性及来源图一并覆盖；响应类型渲染、OpenAPI及合同 schema 也必须认识新结果，不用 raw Map 逃避类型检查。
+
+新的结果类型是真正由 Page.element／能力输出可达的模型事实，不是放入模型包的不可达辅助 record；不可重演 DecimalPrecision 的架构门失败。目标计划分别携带测量／键字段符号和正确引用的物理列、固定 count/data 投影、固定别名、键载体、分页限额／稳定排序、两条 SQL 预算、空集／全空规则和告警／缓存／事务事实。Generator 只渲染，不依据名字猜外键、列、结果 Java 类型或事务策略。
+
+独立输入校验拒绝 secret、Optional key、跨实体列、错误键 Ref、非只读输出及不匹配结果类型。目标 IR 另验物理列归属、直接标量存储、COUNT DISTINCT 与 SUM／GROUP BY 同一键、固定别名、正确 Mapper／结果载体、变量 owner、分页、谓词、支持产物与事务；不假定目标层已携带源 secret 事实。
+
+### 25.4 两次查询、一次参数求值、同一个快照
+
+沿用 BaseMapper，不增加按能力变化的 Mapper 方法：
+
+1. 在同一标记根 Wrapper 上只执行一次 predicate 构建；先用固定 `DISTINCT 键列` 投影调用 selectCount，得到带原 scope／owner／时间条件的 `COUNT(DISTINCT 键列)`。此时不能有 GROUP BY、ORDER BY 或 LIMIT。
+2. 同一 Wrapper 保留已求值的过滤参数，改为固定 `键列 AS g_key, COALESCE(SUM(金额列),0) AS g_total`；追加 GROUP BY、键升序及已校验的 LIMIT／OFFSET，调用 selectMaps。只取当前页的组，不逐组执行 SUM。查询 Wrapper 的变化属于执行支持的局部构建，不改变源模型或作者输入。
+
+不能复制旧 find 的 `selectCount(groupedWrapper)`：它产生每组一行 COUNT，不是一个组数；也不能假设分页插件会自动给出正确聚合 count。列／别名／SQL 只来自计划，所有用户值仍绑定参数。COUNT 返回目标已有的 Long 载体，精确拒绝非法值；数据 Map 的键名、键载体和 BigDecimal 必须严格验证，不输出 raw Map，不使用 Number.doubleValue／不受检查的窄化。selectObjs 可以做标量 count 的替代，但不是两列分组结果的读取方式。
+
+只复用一次谓词求值，而不是在 count/data 各重新渲染执行一遍，保证动态右值或输入取值不会变化；不因此放开现有非法谓词。两条读取均用 ExactAggregate 标记，在各自当前 Statement 上清旧告警、执行后拒绝任何 SQLWarning；继续计划 STATEMENT 缓存，普通查询和无聚合软件不获新政策。任意一条失败都不返回部分页；驱动诊断通信不包含在“两条聚合读取 SQL”的口径内。
+
+为此新增**明确只读 REPEATABLE_READ 模式**。原 ServiceRenderer 的 READ_ONLY 只有 readOnly=true，没有固定隔离；新模式渲染 readOnly=true、isolation=Isolation.REPEATABLE_READ，不能依赖服务器恰好采用 MySQL 默认 RR。新模式只由包含分组步骤的 readonly 能力选择，确保 count 与 data 在同一 InnoDB 事务的同一一致性快照；旧显式行锁能力的 READ_COMMITTED 不改。普通 SUM 可以与分组步骤组合在同一 readonly 能力，校验应识别新的只读模式，不能仍只接受旧枚举值。HTTP 服务入口由既有 Spring 事务代理开启事务；不为自定义外部 Java 绕开代理或加入不兼容的外层事务作保证，也不把这个读快照当写限额保护。
+
+### 25.5 ledger 的权限与尚未定义的月度／预算
+
+聚合必须显式保留 Entry.owner==actor，不能假设 Crud owner 约束所有新查询。新 ledger 切片还要用同级 any 验证 Category.owner==actor，两个计数／数据读取共享相同条件。当前普通 Entry Crud 并没有在创建／换分类时 load 并校验 Category.owner，不能把这一事实假定为已经成立；历史不一致行不因此暴露外人分类信息，也不在此只读切片中静默修复。Category 的 scope 若参与 any，仍复用原相关查询改写，不读外人名称或方向。
+
+本批先只按分类身份统计存储金额，分类改名不会拆组；Category.direction 目前可变，不能据它重算可靠的历史净收支。没有账目的分类不补零，是从 Entry 出发的分组；若后续要所有分类和预算并列，就要设计以分类／预算为根的批量结果与归属，不能逐组查询冒充批量。
+
+自然月和超支**不在当前分组确认中偷渡决定**。ledger 的 Moment、任意 [since,until) 和没有月份的 monthlyLimit，尚不能唯一决定 UTC 月、用户时区月、预算是每月复用的当前规则还是每期快照。后续建议先明确一个业务时区及后台从“年月”取得完整边界，再定义预算期间／唯一性与变更历史；不能用30天、客户端随意传范围或新增一张必须手工维护的月历表冒充普通月报。当前没有 YearMonth 输入、取月边界表达式或已确认时区，以上都不是既有能力。AVG 的精度／舍入、SUM 多键、循环与导出继续另案。
+
+### 25.6 取舍与可验证的下一步
+
+| 备选 | 本次不采用的原因 |
+| --- | --- |
+| N 次调用现有单分类 SUM | 延迟和读快照不同，不是一次分组查询 |
+| 拉明细后 Java 分组 | 无界传输；不是数据库聚合 |
+| 给 G11 view 开工作流变量 | 破坏来源行独立性，引入隐式执行／上下文 |
+| 不分页，或先取前 N 组 | 不能证明分组数有界；截断不等于完整统计 |
+| 分页插件自动改写 count | 未定义组数、空组和复杂筛选，不依赖隐式重写 |
+| 一次加入任意 record、键表达式、零组、排序、HAVING | 结果类型、NULL、权限和结果补齐一起膨胀，超过当前分类汇总切片 |
+
+**依赖探针：**MyBatis-Plus v3.5.12 的 SelectMaps／SelectCount／BaseMapper／QueryWrapper 第一方源码与 blob／SHA256 在 `target/g8-group-investigation/`。DecimalGroupQueryFeasibilityTest 当前3项使用真实 DefaultSqlInjector 与 DefaultParameterHandler，验证 selectMaps 为 Map 结果、count／page 的物理 SQL 和参数共享，带引号请求值仍绑定，动态阈值只求值一次；确认普通 grouped selectCount 不是组数，并证明 DISTINCT 投影能复用已有类型化 selectCount。它们**没有执行 SQL、没有证明 Connector/J 的 Map 载体或快照／并发**，更没有 SIR 分组语法／类型／执行实现。没有新增依赖或 Mapper 方法。
+
+本批验证顺序：语法／正式绑定／新类型与源码往返 RED→GREEN；独立 Core／目标 IR 的键、投影、页与隔离损坏拒绝；真实生成服务＋MyBatis 参数和结果载体，q0/q1/item/结果名冲突及语言参考门；最后复用金额 IT 验证空集、全空组、正负大额、owner/scope／本人分类、跨页稳定顺序与总组数、越界页、恶意参数、同语句告警／失败不返回部分页。必须有可观察的 count 已完成屏障，再让另一连接插入新组并提交、放行读页，证明同页快照一致，不能用普通压力测试碰运气。屏障只在隔离验收 fixture，不进入交付模板。若工程重用不再合适，要先说明新增 CI 成本，不静默再启一轮应用。
+
+本机最终27类236项定向通过；没有启动应用／MySQL、UI或浏览器，没有全量／生成工程Maven构建。AFT LSP初始化失败为PARTIAL，编译与计数以实际Maven／最新XML为据；覆盖率未测量。三项依赖探针的原源码／报告归档 `target/g8-group-investigation/`，最终正式回归已验证实际生成实现，不再把依赖探针加入CI重复执行。最终报告与哈希在 `target/g8-group-verification/`，详见[验证34](../qualification/README.md#g8-grouped-sum-local)。不将旧SUM真库或负责人尚未通知的CI当本批证据，账本保持67／8／9。
+
+
+### 25.7 实施发现与收口边界
+
+- 草案中 `any(Category, id == item.category and owner == actor)` 并非旧能力：旧 any 只支持相关行外键指向根行。本批补齐“相关行身份＝根行直接Ref外键”这个明确方向，按正式字段／身份／根变量绑定检查，两侧可交换；错误目标、非身份、无关联或嵌套仍拒绝。Core独立校验和 Lowering 的 ReverseExistence 给出正确外键列关联；没有添加通用JOIN或任意跨表比较。既有正方向语义和查询生成回归保持通过。
+- 新 SumGroupType／LoweredJavaType.SumGroupValue 只允许直接Page输出，不允许存储或请求字段；独立Core和目标IR也拒绝伪造位置，不只依赖Parser。分组计划校验器独立在 GroupedSumValidation，生成执行支持在 GroupedAggregateMethods，未把业务选择推到Generator。单值SUM与分组共存时支持产物、缓存及新只读事务模式一致。
+- Mapper字段用this明确访问，lambda临时名用作者不能声明的$前缀；分组响应载体使用明确限定类名。q0/q1/entryMapper、实体ExactAggregate／PageResponse均实编通过。item本身是保留字，新增测试曾误把它当合法名字，已改测试为q1，没有放开关键字。旧PageResponse仍用既有getTotal/getRecords，不改变旧分页协议。
+- 正式生成服务覆盖Long／UUID键、同筛选参数求值一次、两次SQL与严格载体校验。语言参考的新sir-declarations代码块经过现有生成门，避免重演#162。新探针与旧告警探针均验证冷目录安装及实际生成Java编译；计数完成屏障还用真实编译后的拦截器执行，确认“count体已完成、页尚未读”才显示ready。
+- 真库仍复用Money IT，包含本人账目／本人分类／scope、相同名称的不同分类、全空组、空集／越界、混合正负与大额、SQL参数注入字符、计数和读页各自告警；等待屏障后由控制连接提交新组，当前页须继续读旧快照。严格和非严格会话都执行。当前只编译、未在本机运行；没有新增一轮应用构建。工具链新增Jackson 2.19.4仅test scope用于BigDecimal JSON树断言，不改变生产或交付工程依赖。
+- ledger的显式区间分组合计本机规模为SIR 220行、生成Java 4106行、24项能力；分类名不在分组响应，不隐式读关联名称。尚无自然月／时区、预算历史、AVG／舍入、多键、零组或分组表达式。需求账本未因语言能力或待验收样例提前上调。

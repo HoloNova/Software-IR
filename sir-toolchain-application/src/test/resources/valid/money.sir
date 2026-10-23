@@ -153,5 +153,44 @@ software MoneyLedger {
         return total;
       }
     }
+    // Grouped reads share this application's lifecycle, not the mutable wallet rows.
+    entity SummaryCategory persistent {
+      identity id: Id generated auto;
+      field owner: Id;
+      field removed: Flag default false;
+      scope removed == false;
+    }
+    entity SummaryEntry persistent {
+      identity id: Id generated auto;
+      field owner: Id;
+      field category: Ref<SummaryCategory>;
+      field amount: Optional<Money>;
+      field occurredAt: Moment;
+      field label: Text;
+      field removed: Flag default false;
+      scope removed == false;
+    }
+    input GroupProbe {
+      field owner: Id; field page: PageNo; field size: PageSize;
+      field since: Optional<Moment>; field until: Optional<Moment>; field label: Optional<Text>;
+    }
+    error BadGroupPage;
+    error BadGroupRange;
+    capability GroupMeasured {
+      input GroupProbe; output Page<SumGroup<Ref<SummaryCategory>>>;
+      fails BadGroupPage; fails BadGroupRange;
+      requires readonly; expose query at "/measurements/groups";
+      workflow {
+        validate input.until > input.since else BadGroupRange;
+        sum SummaryEntry.amount by category
+          where item.owner == input.owner
+            and any(SummaryCategory, id == item.category and owner == input.owner)
+            and item.occurredAt >= input.since and item.occurredAt < input.until
+            and (input.label is none or item.label == input.label)
+          Page input.page, input.size else BadGroupPage
+        as totals;
+        return totals;
+      }
+    }
   }
 }
