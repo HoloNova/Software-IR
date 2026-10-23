@@ -847,3 +847,23 @@ mvn -B -q -o -pl sir-toolchain-application -am test '-Dtest=DecimalSumSemanticsT
 **真实MySQL／HTTP：本机NOT_RUN。** 扩展原 MoneyBusinessConformanceIT，同一次应用构建／启动、同一schema；不增加新的业务IT应用或重活作业。保留旧金额／PATCH／并发／严格连接用例。新增Optional Measurement、静态软删除scope、owner条件、空集／全空／正负／大额（超过单笔19位）／尾随零、相关any重复标签不重复求和、请求值防SQL拼接、字面匹配转义以及读不改表。
 
 另把 `ExactAggregateWarningFixture.java.txt` 只复制到该隔离生成目录，记录独立源码副本和SHA；它不是生成模板、SIR或正常交付文件。固定 `CAST(SUM(amount) AS DECIMAL(3,2))` 先用普通Wrapper证明服务器实际返回9.99饱和值，再用标记Wrapper要求HTTP500且不暴露SQL／表名，随后合法合计仍成功。严格与非严格会话均执行；不靠另开连接的SHOW WARNINGS，不吞告警，不把代理链或编译成功当真库通过。真实生成的Money全源码和附加控制器已在本机编译，但数据库与HTTP只待同SHA CI。没有启动本机应用／MySQL／浏览器，没有跑全量门或生成工程全构建；本批没有UI改动。
+
+
+<a id="ci-162-sum-reference-fix"></a>
+## 32. CI #162：SUM 参考示例没有遵守文档块契约
+
+失败源码 **`93804e1b3427388e583bfcd7c127708cb049bda2`**，[verify #162](https://github.com/HoloNova/Software-IR/actions/runs/39883793969)。Frozen full gate 失败；首发 `frozen-failure-surefire-reports` 和后续 `surefire-reports` 各 218 份 XML 都只有 LanguageReferenceExamplesTest 的 everyAcceptedExampleCompilesThroughGeneration 一项失败：`sir @line 1491: PARSE / SIR-PARSE-001 … type @1:1`。本机原始副本在 `target/ci-investigation/162/`。业务 IT 未执行，独立部署被跳过，不能凭其它单测通过宣称 SUM 真库已验收。
+
+原因是第 5.10 节把以 `type` 开头的声明片段标成 `sir`（该标签要求完整根文档），还漏了片段依赖的 User／Entry。上一轮 187 项定向没有选中现有 LanguageReferenceExamplesTest，遗漏了这条文档生成门。修复将其正确标为仍被该门执行的 `sir-declarations`，补齐实体和 Optional Money 测量列，保持 actor owner 筛选。不改成普通 text、不加白名单，也不改变 Parser 或 SUM 生产实现。
+
+**RED → GREEN：**先原样复现 CI 的一项 PARSE 失败；再增加 SUM 专用契约，同一坏示例令两项测试失败。修复后全部正例仍经过完整生成，反例仍按声明诊断码拒绝。新增契约读取实际文档，不复制独立夹具；检查它仍在可执行块集合中、产生一项只读 SUM、BigDecimal 结果、单条 selectObjs、空集零、拒绝告警，以及 owner 成员／当前 item／actor 的正式符号绑定，不能把示例换成无隔离或非聚合查询后仍判绿。
+
+五类最新报告去重共 **23 tests，0 failures／errors／skips**：LanguageReferenceExamplesTest 4、DecimalSumToolchainContractTest 4、DecimalSumRuntimeTest 5、LedgerSumRuntimeTest 4、ExactAggregateWarningRuntimeTest 6。实际 SUM／ledger Java 编译执行、当前 Statement 告警与 ParamMap 回归保留。最初命令的告警类误写为不存在的 ExactAggregateRuntimeTest；XML 清点发现后只补跑正确的 ExactAggregateWarningRuntimeTest，不把漏选类当通过、不重复累加。RED、GREEN 与源码哈希封存于 `target/ci-162-verification/`。
+
+```powershell
+$env:MAVEN_OPTS='-Xmx384m -XX:ActiveProcessorCount=2'
+mvn -B -q -o -pl sir-toolchain-application -am test '-Dtest=LanguageReferenceExamplesTest,DecimalSumToolchainContractTest,DecimalSumRuntimeTest,LedgerSumRuntimeTest' '-Dsurefire.failIfNoSpecifiedTests=false' '-DargLine=-Xmx512m -XX:ActiveProcessorCount=2'
+mvn -B -q -o -pl sir-generator-spring-boot -am test '-Dtest=ExactAggregateWarningRuntimeTest' '-Dsurefire.failIfNoSpecifiedTests=false' '-DargLine=-Xmx512m -XX:ActiveProcessorCount=2'
+```
+
+首条展示实际执行到的四类；上述正确命令未为汇报再次运行。Maven 384MiB／fork 512MiB，各 2 个可见处理器。AFT Java LSP 初始化失败为 PARTIAL，编译证据以 Maven 为准；未测覆盖率。没有本机全量门、生成工程 Maven 构建、服务／数据库或浏览器。测试与修复文档同批提交，CI 不为纯文档单独触发。完整金额 IT（含 SUM 真库告警）与部署待修复 SHA CI；推送后不查询或等待结果，由负责人通知，随即继续分组方案。账本仍 67／8／9。

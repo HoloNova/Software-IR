@@ -111,6 +111,8 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 
 **CI 提速实测：**#155 主验证 8:18（同业务源码 #154 为 19:51），在线预热 0:27、Frozen 3:37，Completion 按预期跳过；真实业务／独立验证／CLI 保留。部署被取消，不能比较整轮时长，也不将全部观测改善归因为编排。详见[验证第 25 节](qualification/README.md#ci-154-accepted)。
 
+**当前阻塞修复（#162）：**SUM参考示例把声明片段标成完整sir且漏实体，LanguageReferenceExamplesTest因此在PARSE阶段失败；业务IT和部署未验收。已补完整可执行声明片段及正式绑定／精确SUM计划契约，23项定向通过，Parser／SUM生产逻辑未改，见[验证32](qualification/README.md#ci-162-sum-reference-fix)。修复随测试单批提交推送后继续分组方案，不等待新CI，结果由负责人通知。
+
 **最新阶段（G8首批，待同源码CI）：**[条件Decimal求和](design/12-feature-semantics-and-semantic-types.md#g8-decimal-sum-proposal)已贯通语法／正式绑定／scope／源编辑／目标计划与图谱。空集／全空为0，总额不套单笔Money精度；当前Statement告警明确拒绝，普通查询不变，实体Mapper不变。ledger增加本人区间／本人分类总额（195行SIR／3949行Java／23个显式接口）；30类187项定向通过。实际ledger生成服务已编译执行，隔离CAST探针仅编译；真库复用原Money IT，无新增应用。真实SQL告警及所有IT本机NOT_RUN，结果由负责人通知，不查询CI。分组、平均、自然月／预算语义和G5另案；账本仍67／8／9。见[验证31](qualification/README.md#g8-decimal-sum-local)。
 
 **最新业务阶段（G2 第四批，书目预约待CI）：**实际library已实现书目FIFO、本人扫码领取、本人／馆员取消及私有列表。普通借书、归还、添加副本和排队共同遵守Book锁；入队不占借阅名额，满额不跳过，领取在一笔事务内增名额／占副本／建Loan／删预约。没有新增语法或编译器生产分支。8类58项定向通过；原library IT复用同一应用，新增并发、取消竞争、可观察锁等待及晚失败四表回滚检查，仅编译、本机未运行，见[验证30](qualification/README.md#g2-reservation-local)。预约从未写出转待真库△，当前 **67／8／9**，完整数不升。没有查询或等待新CI。升级须新增空队列表并同时停用旧写入口，避免新旧协议混跑；不自动分配、过期或跳过。后续循环／聚合、日期差等仍需另案范围。

@@ -1488,7 +1488,17 @@ capability WrongCount {
 
 ### 5.10 `sum`：条件精确金额求和
 
-```sir
+下面是可放入根文档 `declarations` 的完整声明片段，包含本例所需的实体：
+
+```sir-declarations
+entity User persistent {
+  identity id: Id generated auto;
+}
+entity Entry persistent {
+  identity id: Id generated auto;
+  field owner: Ref<User>;
+  field amount: Optional<Money>;
+}
 type TotalAmount = Money;
 capability TotalOfMine {
   actor Ref<User>;

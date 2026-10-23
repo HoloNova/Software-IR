@@ -1,6 +1,13 @@
 package io.kcg.sir.application;
 
 import io.kcg.sir.application.api.*;
+import io.kcg.sir.application.internal.ProjectCompilation;
+import io.kcg.sir.generator.springboot.api.SpringBootGenerator;
+import io.kcg.sir.lowering.springboot.model.LoweredJavaType;
+import io.kcg.sir.lowering.springboot.model.SpringBootDeclaration;
+import io.kcg.sir.lowering.springboot.model.SpringBootWorkflow;
+import io.kcg.sir.lowering.springboot.model.SpringExpression;
+import io.kcg.sir.semantic.model.NormalizedCapability;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.*;
@@ -85,6 +92,44 @@ class LanguageReferenceExamplesTest {
             if (!result.ok() || result.stage() != ValidationStopAfter.GENERATION) failures.add(example.label() + ": " + result.stage() + " " + describe(result));
         }
         assertTrue(failures.isEmpty(), () -> String.join("\n", failures));
+    }
+
+    @Test void sumExampleReallyAggregatesOnlyTheActorsRowsWithTheExactPlan() throws Exception {
+        var examples = examples().stream().filter(e -> e.body().contains("capability TotalOfMine {")).toList();
+        assertEquals(1, examples.size(), "the accepted SUM example must remain in the executable reference corpus");
+        var example = examples.getFirst();
+        assertTrue(List.of("sir", "sir-declarations").contains(example.kind()), example.label());
+        var diagnostics = new ArrayList<ExecutionDiagnostic>();
+        var compiled = ProjectCompilation.compile(ProjectTestSupport.oneFile("reference.sir", example.document()),
+                new SpringBootGenerator()::generate, diagnostics);
+        assertTrue(compiled.isPresent(), () -> example.label() + ": " + diagnostics);
+        var model = compiled.orElseThrow();
+        var source = model.semanticModel().declarations().stream().filter(NormalizedCapability.class::isInstance)
+                .map(NormalizedCapability.class::cast).filter(c -> c.name().equals("TotalOfMine")).findFirst().orElseThrow();
+        var capability = model.loweredModel().declarations().stream()
+                .filter(SpringBootDeclaration.CapabilityDeclaration.class::isInstance)
+                .map(SpringBootDeclaration.CapabilityDeclaration.class::cast)
+                .filter(c -> c.sourceSymbol().equals(source.id())).findFirst().orElseThrow();
+        var sums = capability.workflow().steps().stream().filter(SpringBootWorkflow.SumStep.class::isInstance)
+                .map(SpringBootWorkflow.SumStep.class::cast).toList();
+        assertEquals(1, sums.size());
+        var sum = sums.getFirst();
+        assertEquals(SpringBootDeclaration.TransactionMode.READ_ONLY, capability.transactionMode());
+        assertEquals(new LoweredJavaType.Scalar(LoweredJavaType.ScalarKind.BIG_DECIMAL), sum.result().type());
+        assertEquals("selectObjs", sum.plan().mapperMethod());
+        assertEquals(1, sum.plan().statements());
+        assertTrue(sum.plan().emptyAsZero());
+        assertTrue(sum.plan().rejectWarnings());
+        var entity = model.loweredModel().declarations().stream().filter(SpringBootDeclaration.EntityDeclaration.class::isInstance)
+                .map(SpringBootDeclaration.EntityDeclaration.class::cast)
+                .filter(e -> e.sourceSymbol().equals(sum.entitySymbol())).findFirst().orElseThrow();
+        var owner = entity.fields().stream().filter(f -> f.javaName().equals("ownerId")).findFirst().orElseThrow();
+        var equality = assertInstanceOf(SpringExpression.BinaryExpression.class, sum.predicate());
+        assertEquals(SpringExpression.BinaryOperator.EQ, equality.operator());
+        var member = assertInstanceOf(SpringExpression.MemberExpression.class, equality.left());
+        assertEquals(owner.sourceSymbol(), member.resolvedMember());
+        assertEquals(sum.itemVariable().symbol(), assertInstanceOf(SpringExpression.NameExpression.class, member.receiver()).resolvedSymbol());
+        assertEquals(source.actorSymbol().orElseThrow(), assertInstanceOf(SpringExpression.NameExpression.class, equality.right()).resolvedSymbol());
     }
 
     @Test void everyRejectedExampleIsRejectedWithItsDeclaredCode() throws Exception {

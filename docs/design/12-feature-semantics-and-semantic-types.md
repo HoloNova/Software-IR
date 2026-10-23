@@ -1150,3 +1150,8 @@ MyBatis-Plus 3.5.12的QueryWrapper.select能承载Lowering生成的固定聚合�
 本机 **30类187项，0失败／错误／跳过**，含实际ledger生成Java的4项执行、当前Statement告警6项、构造IR／secret输入16项、所有新IT源码与固定告警控制器编译，原exists/count/G7/G10/G11和Mapper不变性回归；八题只内存生成／交付规划。ledger变为 **195行SIR／3949行Java／23个显式接口**。10项旧目录读取／图谱集成测试在Windows的安全相对读取入口受阻，未计通过、不放宽边界；新的SUM图谱在SourceSnapshot内存路径完整构建通过。证据在[验证31](../qualification/README.md#g8-decimal-sum-local)。未启动应用／MySQL／浏览器，未跑本机全量或生成工程构建，未测覆盖率。
 
 为不新增一轮应用构建／启动，真库复用 MoneyBusinessConformanceIT：Measurement 的 Optional 金额、静态软删除scope、owner参数、空／全空／负数／大额／尾随零、重复Tag不重复求和、相关输入防拼接、containsLiteral转义、读不改表。固定CAST探针只复制到该隔离生成目录，源码及SHA另存证据，不属于正常生成或交付；同一固定SQL用普通Wrapper对照9.99饱和值，再要求标记查询500且无SQL泄漏，后续正常聚合仍成功。严格和非严格会话均检查，不能仅靠严格模式或代理证明。只编译、未在本机执行，仍待同SHA CI，由负责人通知；没有为了此切片增加独立应用或新的重活作业。分组、AVG、月度预算及G5继续另案，账本不变。
+
+
+### 24.7 CI #162 文档生成门修复
+
+`93804e1` 的 [#162](https://github.com/HoloNova/Software-IR/actions/runs/39883793969) 在 LanguageReferenceExamplesTest 失败：第5.10节把以type开头的声明片段标为完整sir，还缺User／Entry。首发与后续诊断各218份XML仅这一失败，真库和部署仍未执行。已补完整依赖并使用仍会包装根文档且贯通生成的sir-declarations，新增契约验证真实文档的SUM精确计划、owner／item／actor正式绑定。五类23项定向通过，Parser、类型与SUM执行代码未改，见[验证32](../qualification/README.md#ci-162-sum-reference-fix)。187项旧定向漏选现有语言参考门，不能把旧单测通过误称文档门已覆盖。修复源码仍须新CI；不查询／等待结果，修复推送后继续G8分组方案，账本不变。
