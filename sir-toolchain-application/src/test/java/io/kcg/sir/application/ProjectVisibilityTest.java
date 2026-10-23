@@ -84,6 +84,40 @@ class ProjectVisibilityTest {
                 () -> negative.diagnostics().toString());
     }
 
+    @Test void groupKeyRequiresItsOwnersImportBeforeAnyFileExport() throws Exception {
+        Path source = fixture(temp), root = source.resolve("project.sir");
+        addScalarQueries(source);
+        var positive = new SirSemanticAnalyzer().analyzeProject(parsedSources(source));
+        assertTrue(positive.isSuccess(), () -> positive.diagnostics().toString());
+        var model = positive.model().orElseThrow();
+        var keys = model.referenceSiteBindings().all().stream()
+                .filter(b -> b.site().role() == ReferenceRole.GROUP_KEY_FIELD).toList();
+        assertEquals(1, keys.size(), "the cross-file contract fixture must exercise its grouped key");
+        var key = keys.getFirst();
+        var field = assertInstanceOf(Symbol.FieldSymbol.class, model.symbols().byId(key.targetSymbol()).orElseThrow());
+        var keyOwner = model.declarations().stream().filter(d -> d.id().equals(field.ownerId())).findFirst().orElseThrow();
+        assertEquals("Enrollment", keyOwner.name());
+        assertEquals("student", field.name());
+        assertEquals(ENTRY, key.site().span().source());
+        assertNotEquals(ENTRY, keyOwner.span().source());
+
+        String original = Files.readString(root), imported = "import Enrollment from \"modules/enrollment.sir\";";
+        assertTrue(original.contains(imported));
+        Files.writeString(root, original.replace(imported, " ".repeat(imported.length())));
+        var before = tree(temp);
+        var negative = new SirSemanticAnalyzer().analyzeProject(parsedSources(source));
+        assertFalse(negative.isSuccess());
+        var errors = negative.diagnostics().stream().filter(d -> d.isError()).toList();
+        var declarations = model.declarations().stream().collect(Collectors.toMap(d -> d.id(), d -> d));
+        var illegalSites = model.referenceSiteBindings().all().stream().filter(b -> b.site().span().source().equals(ENTRY))
+                .filter(b -> Objects.equals(owner(model, declarations, b), keyOwner)).map(b -> b.site().span()).collect(Collectors.toSet());
+        assertEquals(illegalSites, errors.stream().map(d -> d.primarySpan()).collect(Collectors.toSet()));
+        assertEquals(illegalSites.size(), errors.size(), "exactly one Resolve visibility diagnostic per illegal site");
+        assertTrue(errors.stream().allMatch(d -> d.code().value().equals("SIR-SOURCE-VISIBILITY-001")), errors::toString);
+        assertTrue(errors.stream().anyMatch(d -> d.primarySpan().equals(key.site().span())), errors::toString);
+        assertEquals(before, tree(temp));
+    }
+
     @Test void scalarQuerySourcesRequireExplicitImportsWithoutFileExport() throws Exception {
         Path source = fixture(temp), root = source.resolve("project.sir");
         addScalarQueries(source);
@@ -268,8 +302,24 @@ class ProjectVisibilityTest {
         String anchor = "    capability CreateCourse {";
         Path course = source.resolve("modules/course.sir");
         Files.writeString(course, Files.readString(course).replace("field code: Code", "field measurement: Money default 0.0; field code: Code"));
+        Path enrollment = source.resolve("modules/enrollment.sir");
+        String entity = Files.readString(enrollment), status = "field status: EnrollmentStatus;";
+        assertTrue(entity.contains(status), "the grouped query fixture anchor must exist");
+        Files.writeString(enrollment, entity.replace(status, "field measurement: Money default 0.0; " + status));
         assertTrue(project.contains(anchor), "the scalar query fixture anchor must exist");
         Files.writeString(root, project.replace(anchor, """
+                    capability SumImportedEnrollments {
+                      input SearchCourseEnrollmentsInput;
+                      output Page<SumGroup<Ref<Student>>>;
+                      fails InvalidPage;
+                      requires readonly;
+                      expose query;
+                      workflow {
+                        sum Enrollment.measurement by student where true
+                          Page input.page, input.size else InvalidPage as groups;
+                        return groups;
+                      }
+                    }
                     capability InspectImportedRows {
                       output Unit;
                       requires readonly;

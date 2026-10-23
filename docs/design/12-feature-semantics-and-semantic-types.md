@@ -1258,3 +1258,8 @@ GroupRange 的时间采用现有 Optional<Moment>，缺省／null／反序通过
 - 正式生成服务覆盖Long／UUID键、同筛选参数求值一次、两次SQL与严格载体校验。语言参考的新sir-declarations代码块经过现有生成门，避免重演#162。新探针与旧告警探针均验证冷目录安装及实际生成Java编译；计数完成屏障还用真实编译后的拦截器执行，确认“count体已完成、页尚未读”才显示ready。
 - 真库仍复用Money IT，包含本人账目／本人分类／scope、相同名称的不同分类、全空组、空集／越界、混合正负与大额、SQL参数注入字符、计数和读页各自告警；等待屏障后由控制连接提交新组，当前页须继续读旧快照。严格和非严格会话都执行。当前只编译、未在本机运行；没有新增一轮应用构建。工具链新增Jackson 2.19.4仅test scope用于BigDecimal JSON树断言，不改变生产或交付工程依赖。
 - ledger的显式区间分组合计本机规模为SIR 220行、生成Java 4106行、24项能力；分类名不在分组响应，不隐式读关联名称。尚无自然月／时区、预算历史、AVG／舍入、多键、零组或分组表达式。需求账本未因语言能力或待验收样例提前上调。
+
+
+### 25.8 CI #165：分组键的穷尽引用契约补齐
+
+[e270436的#165](https://github.com/HoloNova/Software-IR/actions/runs/39912848967)首次冻结门仅TypedReferenceSiteContractTest遗漏GROUP_KEY_FIELD；后续完成诊断还在ProjectVisibilityTest的跨文件全角色门发现同一遗漏。原门都必须保留，不以放宽枚举、把键视为local或跳过新角色解决。已在私有真实fixture中加入分组能力，补全测试的AstSumGroupTypeRef／AstGroupedSumStep遍历，并以同一跨文件fixture验证Enrollment.student绑定及准确缺import位置的单一Resolve诊断。6类53项定向通过，生产代码未改，见[验证35](../qualification/README.md#ci-165-group-reference-coverage-fix)。本机3个无导出可见性方法不是完整全角色导出门，后者仍交Linux CI。业务IT／独立验证／CLI／部署在#165被跳过，仍待修复SHA，账本不变；推送修复后直接继续月度／预算核对，不查／等CI。

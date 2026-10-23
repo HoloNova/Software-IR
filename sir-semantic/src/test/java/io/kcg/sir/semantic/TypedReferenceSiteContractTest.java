@@ -67,6 +67,18 @@ class TypedReferenceSiteContractTest {
               output Money; requires readonly; expose query;
               workflow { sum Account.amount where true as total; return total; }
             }
+            capability SumAccountsByOwner {
+              input SearchInput;
+              output Page<SumGroup<Ref<User>>>;
+              fails InvalidPage;
+              requires readonly;
+              expose query;
+              workflow {
+                sum Account.amount by owner where true
+                  Page input.page, input.size else InvalidPage as groups;
+                return groups;
+              }
+            }
             entity Handle persistent {
               identity id: Id generated auto;
               field label: Text unique;
@@ -693,6 +705,7 @@ class TypedReferenceSiteContractTest {
             case io.kcg.sir.ast.AstListTypeRef l -> collectTypeRef(l.elementType(), sink);
             case io.kcg.sir.ast.AstOptionalTypeRef o -> collectTypeRef(o.elementType(), sink);
             case io.kcg.sir.ast.AstPageTypeRef p -> collectTypeRef(p.elementType(), sink);
+            case io.kcg.sir.ast.AstSumGroupTypeRef g -> collectTypeRef(g.elementType(), sink);
             default -> { }
         }
     }
@@ -718,6 +731,15 @@ class TypedReferenceSiteContractTest {
                     collectExpressionRefs(page.size(), sink);
                     sink.put(page.error().id(), page.error().text());
                 });
+            }
+            case io.kcg.sir.ast.AstGroupedSumStep s -> {
+                sink.put(s.entity().id(), s.entity().text());
+                sink.put(s.field().id(), s.field().text());
+                sink.put(s.key().id(), s.key().text());
+                collectExpressionRefs(s.predicate(), sink);
+                collectExpressionRefs(s.page().page(), sink);
+                collectExpressionRefs(s.page().size(), sink);
+                sink.put(s.page().error().id(), s.page().error().text());
             }
             case io.kcg.sir.ast.AstSumStep s -> {
                 sink.put(s.entity().id(), s.entity().text());

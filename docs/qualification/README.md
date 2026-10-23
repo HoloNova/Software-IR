@@ -930,3 +930,26 @@ mvn -B -q -o -pl sir-toolchain-application -am test '-Dtest=GroupedSumSemanticsT
 **资源／诊断：**Maven384MiB、fork512MiB，均2个可见处理器；一次仅一个定向构建。AFT Java LSP初始化失败为PARTIAL，编译以实际Maven为据；覆盖率未测量。本机无应用／数据库／浏览器和全量门；旧Windows安全目录门保留Linux CI，未通过放宽读取规则消除环境限制。Jackson2.19.4仅test-scope，以BigDecimal树读取真实HTTP金额，不引入生产依赖；第一方精确数值契约来源在g8-group-investigation。SQL列／别名／分页均来自校验后的计划或整数，用户值绑定，不拼请求字符串。
 
 ledger的当前切片为本人显式半开区间／本人分类分页总额，220行SIR／4106行Java／24项能力。自然月／时区、预算历史、AVG／舍入、多键／零组、循环和UI仍未实现；账本67／8／9不变。配套文档与代码同批提交，正常触发同源码CI；不为纯文档造CI，不查询或等待结果，负责人通知。
+
+
+<a id="ci-165-group-reference-coverage-fix"></a>
+## 35. CI #165：新增分组键角色未进入全角色与跨文件契约夹具
+
+失败源码 **`e2704365289018542fd5205d9aa624bd668b5f39`**，[verify #165](https://github.com/HoloNova/Software-IR/actions/runs/39912848967)。冻结门止于Semantic：TypedReferenceSiteContractTest.everyReferenceRoleIsCoveredByAtLeastOneBinding期待全部ReferenceRole，实际集合唯独缺GROUP_KEY_FIELD。后续Completion diagnostics（允许失败收集，步骤success不等于测试通过）继续执行，另发现ProjectVisibilityTest.everyImportSensitiveReferenceRoleHasARealPositiveAndExactMissingImportRefusal同样缺这一角色。独立解析首发226份与后续225份Surefire XML，首发恰1项失败，后续恰2项失败，均无测试error；没有把两个阶段的同一失败累计成3项。业务IT、独立验证、CLI及独立部署均被跳过，新的分组快照／SQL告警仍未验收。完整日志及原XML在 `target/ci-investigation/165/`。
+
+根因是上批增加了GROUP_KEY_FIELD及独立分组测试，却没有同步两处枚举穷尽契约的真实源码。不是生产Resolve丢绑定，也不是应把新角色划成“仅本地”；上批236项定向漏选了这两道门。修复只改测试夹具／测试自己的AST遍历：
+
+- 正式绑定共享源码增加以Account.owner分组的只读分页能力，所有原有18条绑定不变量一起检查该语句。新夹具还揭出allReferenceSiteAstNodeIdsMapBackToOriginalAst的手写遍历未认识AstSumGroupTypeRef／AstGroupedSumStep，已补全类型内Ref、测量、键、谓词、分页和错误引用，保留“每个绑定必须对应原AST”的断言。
+- 跨文件测试的私有fixture副本增加Enrollment.measurement默认Money列及按现有student外键分组的能力；原始共享multi-course资源不改，不使其它计数／digest测试漂移。原有全角色导出正例与逐角色删import反例会自然覆盖GROUP_KEY_FIELD；没有改EnumSet.allOf断言或local排除名单。
+- 新增无文件导出的同源契约，确认键绑定指向Enrollment.student，而非类型目标Student或其它同名字段；删掉准确的Enrollment import后，所有受影响位置各有且仅有一条SIR-SOURCE-VISIBILITY-001，包含分组键的精确SourceSpan，无Type／Validate级联，分析不改源树。
+
+**RED → GREEN：**先运行原18项TypedReferenceSite契约与新增无导出跨文件契约：19项中恰2项失败（缺角色／没有分组键），XML存 `target/ci-165-verification/red/`。该诊断轮临时用maven.test.failure.ignore=true让Reactor收集两处失败，绝不以退出0当通过；修复后已去掉。新增共享分组夹具暴露AST遍历缺口的RED另封存red-ast/，随后补齐而不是跳过该审计。
+
+最终去重 **6类53项，0 failures／errors／skips**：TypedReferenceSiteContractTest18、ProjectVisibilityTest的3个无导出方法、GroupedSumSemanticsTest19、ResolveOnceArchitectureTest7、GroupedSumEditingTest3、GroupedSumContractTest3。GREEN及实际方法索引在 `target/ci-165-verification/green/`／local-result.json；源码哈希随实际修复SHA绑定。
+
+```powershell
+$env:MAVEN_OPTS='-Xmx384m -XX:ActiveProcessorCount=2'
+mvn -B -q -o -pl sir-toolchain-application -am test '-Dtest=TypedReferenceSiteContractTest,ProjectVisibilityTest#groupKeyRequiresItsOwnersImportBeforeAnyFileExport+scalarQuerySourcesRequireExplicitImportsWithoutFileExport+featureArgumentsRequireTheirOwnersImportWithoutFileExport,GroupedSumSemanticsTest,ResolveOnceArchitectureTest,GroupedSumEditingTest,GroupedSumContractTest' '-Dsurefire.failIfNoSpecifiedTests=false' '-DargLine=-Xmx512m -XX:ActiveProcessorCount=2'
+```
+
+**边界：**ProjectVisibilityTest其余4个文件导出依赖方法（包括#165中的原全角色可见性门）本机NOT_RUN，仍由Linux CI实际执行；没有降低Windows不支持的安全目录相对读取要求，不能把3方法通过写成完整7方法通过。无本机全量门、应用／MySQL／浏览器或生成工程Maven构建，未测覆盖率。Maven384MiB／fork512MiB，各2个可见处理器；AFT Java LSP初始化失败为PARTIAL，编译依据真实Maven。生产规则／生成器／语言表面／异常协议均未改。修复测试与配套文档单批提交，推送后继续月度／预算范围核对，不查询或等待新CI，负责人通知结果；不提前上调67／8／9。
