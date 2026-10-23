@@ -106,11 +106,15 @@ CI 提速版 #155 主验证 8:18，正常路径 Completion 跳过，实际测试
 
 8类58项定向通过，实际源443行SIR／4086行Java／20个接口。原借阅8项和错误／路由／DDL合同、Mapper不变性保留。原library IT复用一个应用，新增重复入队／领取、多副本、取消／领取竞争、可观察Book锁等待和外键／触发器晚失败的四表快照检查。仅已编译、本机NOT_RUN；不查询CI，负责人通知。见[设计23.8](../design/12-feature-semantics-and-semantic-types.md#library-reservation-proposal)和[验证30](../qualification/README.md#g2-reservation-local)。账本只把预约从✗改待真库△，**67／8／9**。升级新增空队列表，维护窗口同时切换全部写入口、旧Borrow不能与新锁协议混跑，原activeLoans须真实回填。后续G5／G8及日期差先定范围，不静默扩展。
 
-### 4.7 G5 列表循环、G8 聚合（两个大块，**先和负责人确认要不要做**）
+### 4.7 G5 列表循环、G8 后续聚合（新增范围先确认）
 
 - G5：请求里带列表、工作流逐项处理；对一批行统一改或删（订单行、级联删除）。商城的"一个订单多个商品"、取消订单退库存都卡在这里。
-- G8：求和、平均、分组。记账的核心，毕设里统计页很常见；普通条件行计数已由 G2 提供，不重做。
+- G8：首批条件金额SUM已确认实现，见下；平均、分组及月度预算仍另案。普通条件行计数已由 G2 提供，不重做。
 - 两者都会让语言明显变复杂。上一个 Agent 的建议：等 G7、G2、G4、G9、G10 补完，看还剩多少需求写不下，再决定。
+
+#### G8 首批已实现（待同源码CI）
+
+负责人已确认并实现[设计24](../design/12-feature-semantics-and-semantic-types.md#g8-decimal-sum-proposal)的条件Decimal单列SUM：独立步骤／字段绑定／scope／源编辑与IR硬化；空／全空0，总额不继承单笔精度；复用Lambda谓词和BaseMapper。按需标记及当前Statement告警插件、STATEMENT缓存防绕过，普通查询不改；真实ParamMap缺ew与合法变量名冲突均有RED→GREEN。ledger本人范围／本人分类合计已用上，195／3949／23；不推断分类方向净额或月份预算。30类187项定向通过，见[验证31](../qualification/README.md#g8-decimal-sum-local)；旧Windows目录读取10项受阻，新的内存SUM图谱完整构建通过。Money原IT复用同一应用／构建，加Optional、scope、参数、any和固定CAST告警对照；仅已编译、本机NOT_RUN。方案／文档同源码提交，账本67／8／9不变。group-by、AVG、期间／时区／结果DTO及G5另案；CI结果仍由负责人通知，不查询。
 
 ### 4.8 G12、G13 小项（低优先）
 

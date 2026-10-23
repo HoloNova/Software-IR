@@ -598,7 +598,13 @@ final class NormalizePass {
                 this.siteTargetOrUnknown(s.entity().id()), predicate != null ? predicate : this.unitExpr(s.span()),
                 this.definitionBindingOrUnknown(s.id()), this.validated.findItemBindings().get(s.id()));
           }
-         case AstCreateStep s -> {
+         case io.kcg.sir.ast.AstSumStep s -> {
+             NormalizedExpression predicate = this.normalizeExpression(s.predicate());
+             yield new NormalizedStep.SumStep(s.id(), s.span(), this.siteTargetOrUnknown(s.entity().id()),
+                 this.siteTargetOrUnknown(s.field().id()), predicate != null ? predicate : this.unitExpr(s.span()),
+                 this.definitionBindingOrUnknown(s.id()), this.validated.findItemBindings().get(s.id()));
+          }
+          case AstCreateStep s -> {
             SymbolId entitySym = this.siteTargetOrUnknown(s.entity().id());
             SymbolId resultVar = this.definitionBindingOrUnknown(s.id());
             List<NormalizedBinding> bindings = this.normalizeBindings(s.bindings());

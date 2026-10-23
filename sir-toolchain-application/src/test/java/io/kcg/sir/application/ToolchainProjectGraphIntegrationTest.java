@@ -411,6 +411,7 @@ class ToolchainProjectGraphIntegrationTest {
             case API_ERROR_RESPONSE -> lowerProjectArtifact(lowered, ProjectArtifact.ApiErrorResponse.class);
             case API_EXCEPTION_BASE -> lowerProjectArtifact(lowered, ProjectArtifact.ApiExceptionBase.class);
             case API_EXCEPTION_ADVICE -> lowerProjectArtifact(lowered, ProjectArtifact.ApiExceptionAdvice.class);
+            case EXACT_AGGREGATE -> lowerProjectArtifact(lowered, ProjectArtifact.ExactAggregate.class);
             case VALIDATION_SUPPORT -> lowerProjectArtifact(lowered, ProjectArtifact.ValidationSupport.class);
             case APPLICATION_CONFIG -> lowerProjectArtifact(lowered, ProjectArtifact.ApplicationConfig.class);
             case UUID_TYPE_HANDLER -> lowerProjectArtifact(lowered, ProjectArtifact.UuidTypeHandler.class);

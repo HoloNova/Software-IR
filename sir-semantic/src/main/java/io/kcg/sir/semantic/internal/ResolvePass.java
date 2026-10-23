@@ -813,7 +813,23 @@ final class ResolvePass {
             SirType resultType = s.page().isPresent() ? outputType : itemType == null ? null : new ListType(itemType);
                this.registerStepResultVar(s.result(), s.id(), capScopeId, visibleVars, resultType);
                break;
-            case io.kcg.sir.ast.AstScalarQueryStep s:
+            case io.kcg.sir.ast.AstSumStep s: {
+               this.resolveEntityRef(s.entity(), ReferenceRole.SUM_ENTITY);
+               this.resolveEntityFieldRef(s.field(), s.entity().text(), ReferenceRole.SUM_FIELD);
+                SymbolId queryScope = SymbolIdFactory.capabilityStepScope(capScopeId, s.id().value());
+               this.scopeSymbols.put(queryScope, new ArrayList<>());
+               this.scopeParents.put(queryScope, capScopeId);
+               SymbolId queryItem = SymbolIdFactory.capabilityStepVariable(capScopeId, s.id().value(), "item");
+               this.addSymbol(new Symbol.VariableSymbol(queryItem, "item", s.span(), this.buildRefType(s.entity().text()), null), queryScope);
+               this.findItemBindings.put(s.id(), queryItem);
+               Set<String> queryVars = new LinkedHashSet<>(visibleVars);
+               queryVars.add("item");
+               this.resolveExpression(s.predicate(), capName, queryScope, queryVars, queryItem, null);
+               this.registerStepResultVar(s.result(), s.id(), capScopeId, visibleVars,
+                  PrimitiveType.DECIMAL);
+               break;
+            }
+             case io.kcg.sir.ast.AstScalarQueryStep s:
                this.resolveEntityRef(s.entity(), ReferenceRole.SCALAR_QUERY_ENTITY);
                SymbolId queryScope = SymbolIdFactory.capabilityStepScope(capScopeId, s.id().value());
                this.scopeSymbols.put(queryScope, new ArrayList<>());

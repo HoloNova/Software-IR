@@ -813,3 +813,37 @@ mvn -B -q -o -pl sir-generator-spring-boot -am test '-Dtest=LibraryReservationRu
 新接口路径和就绪地址均对照实际DeploymentPlan，不复用#158不存在的详情探针；10种错误预期保留SIR大小写，不重复#156的错误码假设。既有User／Copy／Loan账本检查仍执行，新队列检查额外逐行核对计数与物理副本当前持有人。
 
 本机没有启动服务／数据库／浏览器或跑全量门；AFT Java LSP初始化失败为PARTIAL，以Maven实际编译和XML为依据，未测覆盖率。证据与源码哈希在 `target/reservation-verification/`。library规模443行SIR／4086行Java／20个接口；预约只从✗转待真库△，总数 **67／8／9**，不把未通知的CI认作通过。新增空队列表且须维护窗口同时切换全部写入口，不猜历史队列、不让旧版本Borrow绕过新Book锁；原activeLoans须真实回填，满额／弃领不自动跳过。通知、过期、续借限制及自动替下一读者借阅均未扩范围。文档随本批代码提交，不单独触发文档CI。
+
+
+<a id="g8-decimal-sum-local"></a>
+## 31. G8 首批：条件 Decimal 求和（已实现，待同源码 CI）
+
+负责人确认设计24后，以 `ddcc3fd31d40886f5af0e5e7ff4d9cebca3f444a` 为基线实施。本批未查询或等待 CI；课程就绪和预约的旧 CI 仍由负责人通知，不推断其通过。方案、实现、技术探针与本记录同批提交，不制造纯文档 CI。
+
+**实际交付：**新增独立 `sum Entity.field where predicate as result;`；只允许 readonly query 和直接 Decimal／Optional Decimal 列。SUM_ENTITY／SUM_FIELD 正式绑定、类型、secret拒绝、scope、结构、SourceEditor和来源图全部贯通；目标计划包含物理列／固定投影／selectObjs／单条聚合SELECT／空集零／当前Statement告警策略，非 Decimal 载体或错误行数明确失败。总额不套单笔 Money 精度，不经double，不作隐式舍入。`ExactAggregate` 支持及图谱角色按需生成，实体Mapper不变，包含SUM的工程计划STATEMENT本地缓存。
+
+**RED → GREEN 及自审发现：**新语义先因语法缺失失败，目标层再因缺Sum计划失败。真实编译暴露 totalAggregateQuery 及实际谓词lambda q0/q1 与合法变量名冲突：用支持方法承接查询，不声明该临时局部；SUM专用lambda使用SIR不可声明的 `$` 前缀，旧查询命名／文本不变。真实MyBatis ParamMap在缺ew时抛BindingException的反例先RED，再改为先containsKey，仅对明确标记查询检查告警；普通查询不获新政策。独立IR的错误item归属、非布尔谓词亦先RED后补拒绝。新Money夹具将scope写在顶层的解析错误只修夹具，按实体内语法加软删除scope；直接把含类型声明的原始Core交给实现校验器的测试也改为正式TargetLowering入口，不改产品契约。
+
+| 最新报告组 | 类数 | tests | 范围 |
+| --- | ---: | ---: | --- |
+| Semantic／Schema／typed refs／源往返 | 7 | 73 | DecimalSumSemanticsTest 12、原Scalar 8、完整性8、typed18、覆盖1、敏感性24、往返2 |
+| SourceEditor | 2 | 4 | SUM普通增删改、LF／CRLF精确改名3，原Scalar编辑1 |
+| Lowering／独立IR | 4 | 42 | SUM16（含14种损坏计划及secret Core）、Scalar5、旧硬化19、G7可选值2 |
+| 真实生成服务／执行支持与旧合同 | 14 | 60 | SUM5、告警6、实际ledger4、Money IT附加探针编译1；前期映射2；旧Scalar2、Query8、Mapper4、Money7、原子金额2、连接绑定3、Optional DTO3、算术输入6、计算视图7 |
+| 应用与八题内存生成 | 3 | 8 | SUM4：实际来源图完整构建、真实IT路由、多源import及改名；旧Money3；八题1 |
+| **合计** | **30** | **187** | **0 failures／errors／skips** |
+
+计数来自各类本次最新 XML，封存在 `target/g8-verification/surefire/`，索引 `local-result.json`，源码哈希 `source-manifest.json`。报告收集发现最终选择器误写 OptionalValuesLoweringTest（实际类为单数 OptionalValueLoweringTest），只补跑这2项后再核对30类，不把未执行选择器算通过。
+
+```powershell
+$env:MAVEN_OPTS='-Xmx384m -XX:ActiveProcessorCount=2'
+mvn -B -q -o -pl sir-toolchain-application -am test '-Dtest=DecimalSumSemanticsTest,ScalarQuerySemanticsTest,SoftwareSchemaCompletenessTest,TypedReferenceSiteContractTest,StructureViewCoverageTest,StructureViewSensitivityTest,SirDeclarationWriterRoundTripTest,DecimalSumEditingTest,ScalarQueryEditingTest,DecimalSumLoweringTest,ScalarQueryLoweringTest,LoweredIrHardeningTest,OptionalValueLoweringTest,DecimalAggregateQueryFeasibilityTest,DecimalSumRuntimeTest,ExactAggregateWarningRuntimeTest,LedgerSumRuntimeTest,MoneyAggregateFixtureCompilationTest,GeneratorScalarQueryContractTest,GeneratorQuerySliceContractTest,GeneratorEntityArtifactInvarianceTest,MoneyRuntimeTest,MoneyAtomicContractTest,MoneySessionConfigurationTest,OptionalPayloadRuntimeTest,ArithmeticInputRuntimeTest,ComputedViewRuntimeTest,DecimalSumToolchainContractTest,MoneyToolchainContractTest,TopicSamplesTest' '-Dsurefire.failIfNoSpecifiedTests=false' '-DargLine=-Xmx512m -XX:ActiveProcessorCount=2'
+```
+
+以上为可复现的正确选择器；实际仅补跑单数Optional类，没有为形成此命令再重复全套。Maven限制384MiB、测试fork512MiB，各2个可见处理器，无`-T`。AFT Java LSP初始化失败为PARTIAL，编译结论取实际Maven，不宣称LSP干净或覆盖率达到80%。另一次ToolchainProjectGraphIntegrationTest有10项在Windows的安全目录相对读取入口受阻，未进入图谱业务验证、未计入187通过数；安全边界未降低，交Linux CI。新的SUM图谱用真实SourceSnapshot内存路径走ProjectGraphBuilder完整构建通过。
+
+**ledger实际样例：**新增本人 `[since,until)` 总额和指定本人分类总额，使用Optional时间与G7拒绝缺省／反序；读取分类后验证owner，外人分类返回原CategoryNotFound，不将整个实体绑定为SQL值。4项实际生成服务测试确认精确大额、actor／时段条件、分类主键与拒绝路径；不等同于真实HTTP。两个接口都是记录金额之和，不依据可变分类方向净额计算，不伪称自然月／预算协议。规模195行SIR／3949行Java／23个显式接口；八题本机只内存生成与交付规划，不构建生成工程。账本仍 **67／8／9**，月度分组／预算、AVG、结果DTO、G5及日期差仍未完成。
+
+**真实MySQL／HTTP：本机NOT_RUN。** 扩展原 MoneyBusinessConformanceIT，同一次应用构建／启动、同一schema；不增加新的业务IT应用或重活作业。保留旧金额／PATCH／并发／严格连接用例。新增Optional Measurement、静态软删除scope、owner条件、空集／全空／正负／大额（超过单笔19位）／尾随零、相关any重复标签不重复求和、请求值防SQL拼接、字面匹配转义以及读不改表。
+
+另把 `ExactAggregateWarningFixture.java.txt` 只复制到该隔离生成目录，记录独立源码副本和SHA；它不是生成模板、SIR或正常交付文件。固定 `CAST(SUM(amount) AS DECIMAL(3,2))` 先用普通Wrapper证明服务器实际返回9.99饱和值，再用标记Wrapper要求HTTP500且不暴露SQL／表名，随后合法合计仍成功。严格与非严格会话均执行；不靠另开连接的SHOW WARNINGS，不吞告警，不把代理链或编译成功当真库通过。真实生成的Money全源码和附加控制器已在本机编译，但数据库与HTTP只待同SHA CI。没有启动本机应用／MySQL／浏览器，没有跑全量门或生成工程全构建；本批没有UI改动。

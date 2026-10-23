@@ -14,6 +14,10 @@ final class GeneratedRuntimeSupport {
     private GeneratedRuntimeSupport() {}
 
     static URLClassLoader compile(String source, Path directory) throws Exception {
+        return compile(source, directory, List.of());
+    }
+
+    static URLClassLoader compile(String source, Path directory, List<Path> additionalJavaSources) throws Exception {
         var arguments = new ArrayList<String>(List.of("--release", "21", "-classpath",
                 System.getProperty("java.class.path"), "-d", directory.toString()));
         for (var file : GeneratorTestSupport.generateSuccessFromText(source)) {
@@ -23,6 +27,7 @@ final class GeneratedRuntimeSupport {
             Files.writeString(path, file.content());
             arguments.add(path.toString());
         }
+        additionalJavaSources.forEach(path -> arguments.add(path.toString()));
         assertEquals(0, ToolProvider.getSystemJavaCompiler().run(null, null, null, arguments.toArray(String[]::new)));
         return new URLClassLoader(new java.net.URL[]{directory.toUri().toURL()}, GeneratedRuntimeSupport.class.getClassLoader());
     }

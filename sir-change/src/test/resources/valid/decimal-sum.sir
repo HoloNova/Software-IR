@@ -1,0 +1,35 @@
+sir 0.3
+software DecimalSum {
+  metadata { displayName "Decimal Sum"; namespace "example.sum"; }
+  target { language java 21; framework spring_boot; persistence mybatis_plus; database mysql; build maven; interface rest; }
+  sources {} imports {}
+  declarations {
+    type TotalAmount = Money;
+    entity Owner persistent { identity id: Id generated auto; }
+    entity Entry persistent {
+      identity id: Id generated auto;
+      field owner: Ref<Owner>;
+      field amount: Optional<Money>;
+      field removed: Flag default false;
+      field label: Text;
+      scope removed == false;
+    }
+    entity Tag persistent { identity id: Id generated auto; field entry: Ref<Entry>; field name: Text; }
+    input Filter { field owner: Ref<Owner>; field minimum: Optional<Money>; field text: Optional<Text>; }
+    capability Total {
+      input Filter; output TotalAmount; requires readonly; expose query;
+      workflow {
+        sum Entry.amount where item.owner == input.owner and (input.minimum is none or item.amount >= input.minimum) as total;
+        return total;
+      }
+    }
+    capability Tagged {
+      input Filter; output TotalAmount; requires readonly; expose query;
+      workflow {
+        sum Entry.amount where item.owner == input.owner and any(Tag, entry == item and name == "target")
+          and not (item.label containsLiteral "_%") as sum;
+        return sum;
+      }
+    }
+  }
+}

@@ -78,7 +78,31 @@ public record SpringBootWorkflow(LoweredNodeId id, LoweredOrigin origin, List<Sp
       }
    }
 
-   public enum ScalarResult { EXISTS, COUNT }
+   public record SumPlan(SymbolId fieldSymbol, String columnName, String projectionSql, String mapperMethod,
+                          int statements, boolean emptyAsZero, boolean rejectWarnings) {
+       public SumPlan {
+          Objects.requireNonNull(fieldSymbol, "fieldSymbol");
+          requireText(columnName, "columnName");
+          requireText(projectionSql, "projectionSql");
+          requireText(mapperMethod, "mapperMethod");
+       }
+    }
+
+    public record SumStep(LoweredNodeId id, LoweredOrigin origin, SymbolId entitySymbol,
+       SpringExpression predicate, List<SpringExpression.StringMatch> stringMatches, SumPlan plan,
+       Variable result, Variable itemVariable) implements Step {
+       public SumStep {
+          requireStep(id, origin);
+          Objects.requireNonNull(entitySymbol, "entitySymbol");
+          Objects.requireNonNull(predicate, "predicate");
+          stringMatches = List.copyOf(stringMatches);
+          Objects.requireNonNull(plan, "plan");
+          Objects.requireNonNull(result, "result");
+          Objects.requireNonNull(itemVariable, "itemVariable");
+       }
+    }
+
+    public enum ScalarResult { EXISTS, COUNT }
 
    /** Physical query choices are made by Lowering, including the one-row existence bound. */
    public record ScalarQueryPlan(ScalarResult kind, String mapperMethod,
@@ -320,6 +344,7 @@ public record SpringBootWorkflow(LoweredNodeId id, LoweredOrigin origin, List<Sp
       SpringBootWorkflow.LoadActorStep,
       SpringBootWorkflow.FindStep,
       SpringBootWorkflow.ScalarQueryStep,
+       SpringBootWorkflow.SumStep,
       SpringBootWorkflow.CreateStep,
       SpringBootWorkflow.UpdateStep,
       SpringBootWorkflow.PersistStep,

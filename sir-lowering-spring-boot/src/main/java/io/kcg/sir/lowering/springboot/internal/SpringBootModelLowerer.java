@@ -169,6 +169,11 @@ public final class SpringBootModelLowerer {
         projectArtifacts.addAll(this.errorContractArtifacts());
         projectArtifacts.add(this.validationSupportArtifact());
         projectArtifacts.add(this.applicationConfigArtifact());
+        if (hasSum()) {
+            String pkg = this.source.metadata().namespace() + ".persistence";
+            projectArtifacts.add(new ProjectArtifact.ExactAggregate(this.nodeId("project", "exact-aggregate"), this.projectOrigin(),
+                "src/main/java/" + pkg.replace('.', '/') + "/ExactAggregate.java", pkg, "ExactAggregate"));
+        }
 
         return new SpringBootLoweredModel(LoweredIrVersion.V0_2, SpringBootTargetProfile.V0_2, this.source.softwareName(), this.source.metadata().displayName(), this.source.metadata().namespace(), declarations, artifacts, this.lowerMavenProject(), this.lowerApplicationMain(transportPlan), projectArtifacts);
     }
@@ -235,6 +240,12 @@ public final class SpringBootModelLowerer {
                 "ApiErrorResponse.FieldError", codes);
     }
 
+    private boolean hasSum() {
+        return this.source.declarations().stream().filter(NormalizedCapability.class::isInstance)
+            .map(NormalizedCapability.class::cast).flatMap(c -> c.workflow().steps().stream())
+            .anyMatch(NormalizedStep.SumStep.class::isInstance);
+    }
+
     private String softwareName() {
         return this.source.softwareName();
     }
@@ -246,7 +257,7 @@ public final class SpringBootModelLowerer {
                 this.kebab(this.softwareName()), true, this.source.declarations().stream()
                     .filter(NormalizedCapability.class::isInstance).map(NormalizedCapability.class::cast)
                     .flatMap(cap -> cap.workflow().steps().stream())
-                    .anyMatch(s -> s instanceof NormalizedStep.LoadStep load && load.forUpdate()));
+                    .anyMatch(s -> s instanceof NormalizedStep.SumStep || s instanceof NormalizedStep.LoadStep load && load.forUpdate()));
     }
 
     /**
@@ -825,6 +836,11 @@ public final class SpringBootModelLowerer {
                     this.lowerOrderKeys(value), this.lowerPageSpec(value), this.lowerStringMatches(value, owner),
                     this.lowerStatementBudget(value),
                     variable(value.resultVariable()), variable(value.itemVariable()));
+            case NormalizedStep.SumStep value -> new SpringBootWorkflow.SumStep(
+                    id, origin, value.entitySymbol(), lowerExpression(value.predicate(), owner, actorSymbol, Optional.of(value.itemVariable())),
+                    this.lowerStringMatches(value.predicate(), owner), new SpringBootWorkflow.SumPlan(value.fieldSymbol(),
+                        this.columns.get(value.fieldSymbol()), "COALESCE(SUM(`" + this.columns.get(value.fieldSymbol()).replace("`", "``") + "`), 0)",
+                        "selectObjs", 1, true, true), variable(value.resultVariable()), variable(value.itemVariable()));
             case NormalizedStep.ScalarQueryStep value -> new SpringBootWorkflow.ScalarQueryStep(
                     id, origin, value.entitySymbol(), lowerExpression(value.predicate(), owner, actorSymbol, Optional.of(value.itemVariable())),
                     this.lowerStringMatches(value.predicate(), owner), this.scalarQueryPlan(value),
@@ -1661,6 +1677,7 @@ public final class SpringBootModelLowerer {
             switch (step) {
                 case NormalizedStep.LoadStep s -> ids.add(s.resultVariable());
                 case NormalizedStep.CreateStep s -> ids.add(s.resultVariable());
+                case NormalizedStep.SumStep s -> ids.add(s.itemVariable());
                 case NormalizedStep.ScalarQueryStep s -> ids.add(s.itemVariable());
                 case NormalizedStep.FindStep s -> {
                     ids.add(s.resultVariable());

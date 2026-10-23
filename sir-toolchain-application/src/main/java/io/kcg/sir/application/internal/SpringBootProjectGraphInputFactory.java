@@ -139,7 +139,8 @@ public final class SpringBootProjectGraphInputFactory {
          case ProjectArtifact.ApiErrorResponse error -> ProjectRole.API_ERROR_RESPONSE;
          case ProjectArtifact.ApiExceptionBase base -> ProjectRole.API_EXCEPTION_BASE;
          case ProjectArtifact.ApiExceptionAdvice advice -> ProjectRole.API_EXCEPTION_ADVICE;
-         case ProjectArtifact.ValidationSupport support -> ProjectRole.VALIDATION_SUPPORT;
+         case ProjectArtifact.ExactAggregate support -> ProjectRole.EXACT_AGGREGATE;
+          case ProjectArtifact.ValidationSupport support -> ProjectRole.VALIDATION_SUPPORT;
          case ProjectArtifact.ApplicationConfig config -> ProjectRole.APPLICATION_CONFIG;
          case ProjectArtifact.MavenProject pom -> ProjectRole.MAVEN_PROJECT;
          case ProjectArtifact.ApplicationMain main -> ProjectRole.APPLICATION_MAIN;
@@ -155,7 +156,8 @@ public final class SpringBootProjectGraphInputFactory {
          case ProjectArtifact.ApiErrorResponse error -> error.path();
          case ProjectArtifact.ApiExceptionBase base -> base.path();
          case ProjectArtifact.ApiExceptionAdvice advice -> advice.path();
-         case ProjectArtifact.ValidationSupport support -> support.path();
+         case ProjectArtifact.ExactAggregate support -> support.path();
+          case ProjectArtifact.ValidationSupport support -> support.path();
          case ProjectArtifact.ApplicationConfig config -> config.path();
          case ProjectArtifact.MavenProject pom -> pom.path();
          case ProjectArtifact.ApplicationMain main -> main.path();

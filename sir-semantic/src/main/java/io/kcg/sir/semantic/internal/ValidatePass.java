@@ -449,7 +449,15 @@ final class ValidatePass {
                   }
                });
                continue;
-         case io.kcg.sir.ast.AstScalarQueryStep s:
+         case io.kcg.sir.ast.AstSumStep s:
+                if (!isReadonly || !isQuery)
+                   this.diagnostics.add(DiagnosticBuilder.error("SIR-FLOW-004", "sum requires a readonly query", s.span()));
+                if (this.typed.referenceSiteBindings().targetFor(s.field().id()).filter(this.secretFields::contains).isPresent())
+                   this.diagnostics.add(DiagnosticBuilder.error("SIR-VALID-001", "sum cannot expose a secret", s.field().span()));
+                this.validateStringMatchShape(s.predicate());
+                this.rejectArithmeticTheQueryCannotCarry(s.predicate(), false);
+                break;
+          case io.kcg.sir.ast.AstScalarQueryStep s:
                this.validateStringMatchShape(s.predicate());
                this.rejectArithmeticTheQueryCannotCarry(s.predicate(), false);
                break;
@@ -904,7 +912,8 @@ final class ValidatePass {
          switch (step) {
             case AstValidateStep s -> this.checkSecretReads(s.condition(), false);
             case AstLoadStep s -> this.checkSecretReads(s.idExpression(), false);
-            case io.kcg.sir.ast.AstScalarQueryStep s -> this.checkSecretReads(s.predicate(), true);
+            case io.kcg.sir.ast.AstSumStep s -> this.checkSecretReads(s.predicate(), true);
+             case io.kcg.sir.ast.AstScalarQueryStep s -> this.checkSecretReads(s.predicate(), true);
             case AstFindStep s -> {
                this.checkSecretReads(s.predicate(), true);
                s.page().ifPresent(page -> {
@@ -1537,7 +1546,8 @@ final class ValidatePass {
          case AstValidateStep s -> walkPresent(s.condition(), action);
          case AstLoadStep s -> walkPresent(s.idExpression(), action);
          case AstFindStep s -> walkPresent(s.predicate(), action);
-         case io.kcg.sir.ast.AstScalarQueryStep s -> walkPresent(s.predicate(), action);
+         case io.kcg.sir.ast.AstSumStep s -> walkPresent(s.predicate(), action);
+          case io.kcg.sir.ast.AstScalarQueryStep s -> walkPresent(s.predicate(), action);
          case AstCreateStep s -> s.bindings().forEach(binding -> walkPresent(binding.value(), action));
          case AstUpdateStep s -> {
             s.guard().ifPresent(guard -> walkPresent(guard, action));
@@ -1584,7 +1594,9 @@ final class ValidatePass {
                this.validateExistenceUsage(page.page(), ExistenceUsage.REJECTED);
                this.validateExistenceUsage(page.size(), ExistenceUsage.REJECTED);
             });
-         } else if (step instanceof io.kcg.sir.ast.AstScalarQueryStep query) {
+         } else if (step instanceof io.kcg.sir.ast.AstSumStep query) {
+             this.validateExistenceUsage(query.predicate(), ExistenceUsage.ALLOWED);
+          } else if (step instanceof io.kcg.sir.ast.AstScalarQueryStep query) {
             this.validateExistenceUsage(query.predicate(), ExistenceUsage.ALLOWED);
          } else if (step instanceof AstValidateStep validateStep) {
             this.validateExistenceUsage(validateStep.condition(), ExistenceUsage.REJECTED);

@@ -20,6 +20,7 @@ final class ArithmeticInputs {
                 case SpringBootWorkflow.LoadStep value -> collect(value.idExpression(), false, input, fields);
                 case SpringBootWorkflow.LoadActorStep value -> collect(value.idExpression(), false, input, fields);
                 case SpringBootWorkflow.FindStep value -> collect(value.predicate(), false, input, fields);
+                case SpringBootWorkflow.SumStep value -> collect(value.predicate(), false, input, fields);
                 case SpringBootWorkflow.ScalarQueryStep value -> collect(value.predicate(), false, input, fields);
                 case SpringBootWorkflow.ReturnStep value -> collect(value.value(), false, input, fields);
                 case SpringBootWorkflow.CreateStep value -> value.bindings().forEach(binding -> collect(binding.value(), false, input, fields));

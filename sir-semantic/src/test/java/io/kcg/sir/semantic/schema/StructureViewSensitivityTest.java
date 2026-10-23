@@ -34,6 +34,7 @@ class StructureViewSensitivityTest {
 
     static List<Edit> factEdits() {
         return List.of(
+            new Edit("sum predicate", "valid/decimal-sum.sir", "item.amount >= input.minimum", "item.amount > input.minimum"),
             new Edit("computed value operator", "valid/computed-views.sir", "item.capacity - item.enrolled", "item.capacity + item.enrolled"),
             new Edit("error http status", ADMIN, "error CourseNotFound http 404;", "error CourseNotFound http 409;"),
             new Edit("error status dropped to default", ADMIN, "error CourseNotFound http 404;", "error CourseNotFound;"),

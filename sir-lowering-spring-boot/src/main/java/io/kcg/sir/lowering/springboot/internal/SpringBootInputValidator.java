@@ -514,7 +514,25 @@ public final class SpringBootInputValidator {
             this.validateDeclarationKind(value.errorSymbol(), NormalizedError.class, capability);
             value.keyField().ifPresent(key -> this.validateLoadKey(value, key, capability));
             break;
-         case NormalizedStep.ScalarQueryStep value:
+         case NormalizedStep.SumStep value: {
+            this.validateDeclarationKind(value.entitySymbol(), NormalizedEntity.class, capability);
+            var entity = this.declarationsById.get(value.entitySymbol());
+            var field = entity instanceof NormalizedEntity e ? e.fields().stream()
+                .filter(f -> f.id().equals(value.fieldSymbol())).findFirst().orElse(null) : null;
+            SirType type = field == null ? null : io.kcg.sir.semantic.feature.SemanticTypes.kind(field.type());
+            if (type instanceof OptionalType optional) type = optional.element();
+            if (field == null || field.secret() || type != PrimitiveType.DECIMAL
+                  || !capability.requires().contains(io.kcg.sir.ast.AstRequirementKind.READONLY)
+                  || capability.exposure() != io.kcg.sir.ast.AstExposureKind.QUERY)
+                this.error("SIR-LOWER-001", "sum requires a non-secret Decimal field of its entity and a readonly query", value.span(), capability.id(), value.sourceNodeId());
+             if (io.kcg.sir.semantic.feature.SemanticTypes.kind(value.predicate().type()) != PrimitiveType.BOOLEAN)
+                 this.error("SIR-LOWER-001", "sum predicate must be Boolean", value.span(), capability.id(), value.sourceNodeId());
+             this.validateExpression(value.predicate(), capability.id(), actorAccess);
+             this.validateVariable(value.resultVariable(), capability);
+             this.validateVariable(value.itemVariable(), capability);
+             break;
+          }
+          case NormalizedStep.ScalarQueryStep value:
             this.validateDeclarationKind(value.entitySymbol(), NormalizedEntity.class, capability);
             this.validateExpression(value.predicate(), capability.id(), actorAccess);
             this.validateVariable(value.resultVariable(), capability);

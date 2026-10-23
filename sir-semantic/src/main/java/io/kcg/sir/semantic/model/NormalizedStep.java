@@ -16,6 +16,7 @@ public sealed interface NormalizedStep
    NormalizedStep.LoadStep,
    NormalizedStep.FindStep,
    NormalizedStep.ScalarQueryStep,
+    NormalizedStep.SumStep,
    NormalizedStep.CreateStep,
    NormalizedStep.UpdateStep,
    NormalizedStep.PersistStep,
@@ -25,7 +26,21 @@ public sealed interface NormalizedStep
 
    SourceSpan span();
 
-   record ScalarQueryStep(@Source AstNodeId sourceNodeId, @Source SourceSpan span,
+   record SumStep(@Source AstNodeId sourceNodeId, @Source SourceSpan span,
+       @Reference SymbolId entitySymbol, @Reference SymbolId fieldSymbol, @Fact NormalizedExpression predicate,
+       @Reference SymbolId resultVariable, @Derived SymbolId itemVariable) implements NormalizedStep {
+       public SumStep {
+          Objects.requireNonNull(sourceNodeId, "sourceNodeId");
+          Objects.requireNonNull(span, "span");
+          Objects.requireNonNull(entitySymbol, "entitySymbol");
+          Objects.requireNonNull(fieldSymbol, "fieldSymbol");
+          Objects.requireNonNull(predicate, "predicate");
+          Objects.requireNonNull(resultVariable, "resultVariable");
+          Objects.requireNonNull(itemVariable, "itemVariable");
+       }
+    }
+
+    record ScalarQueryStep(@Source AstNodeId sourceNodeId, @Source SourceSpan span,
       @Fact io.kcg.sir.ast.AstScalarQueryStep.Kind kind, @Reference SymbolId entitySymbol,
       @Fact NormalizedExpression predicate, @Reference SymbolId resultVariable, @Derived SymbolId itemVariable) implements NormalizedStep {
       public ScalarQueryStep {

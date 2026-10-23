@@ -1057,3 +1057,96 @@ validate not earlier else NotHead;
 新增 LibraryReservationChecks 复用原library IT的应用：认证与私有列表、无／丢失副本拒绝、已借者和重复入队、严格FIFO、归还不自动分配、满额不跳队、本人／馆员取消、多副本及新增副本、8并发重复入队／领取、取消对领取的竞争、不同书目独立。控制连接先持有所有者与Book锁，观察 data_lock_waits 后取消前序待办，验证等待的领取重新判队首；独立外键和触发器制造最后删除／借阅插入失败，比较User／Copy／Loan／Reservation四份快照。全部仅已编译，本机真库NOT_RUN，不能把代理调用当回滚证据。
 
 升级新增空Reservation表，不从旧Loan猜测历史排队；activeLoans仍须真实回填、保持账实一致。**新旧借书写入口不可混跑**：所有写副本／队列的实例须在维护窗口一起切换到新Book协议，否则旧Borrow可绕过队列。无自动过期、通知、弃领跳过、续借限制或还书自动分配。文档随代码同批提交，账本只将预约从✗移为待真库△：**67／8／9**，完整数不升。
+
+
+<a id="g8-decimal-sum-proposal"></a>
+## 24. G8 第一批：条件 Decimal 求和（已实现，待同源码 CI）
+
+基线 `ddcc3fd31d40886f5af0e5e7ff4d9cebca3f444a`。负责人确认首批范围后实施，本文保留核对依据与取舍，并在 24.6 记录实际实现。没有查询／等待 CI；本机定向通过不等于真库验收。仅交付条件金额求和，不把分组、平均、循环、月历或新响应记录一次捆进来。
+
+### 24.1 实际缺口及首批不冒充完成的业务
+
+- 实施前 ScalarQueryStep 只有exists／count，Spring Boot计划明确EXISTS／COUNT和mapper方法；WorkflowRenderer也只生成boolean／long。不能把SUM SQL塞进COUNT计划后声称类型与执行已经支持。
+- 工作流可以直接返回Decimal或Flag；TypePass按正式返回类型检查，WorkflowRenderer非投影分支直接返回表达式。因此第一批不需要为了金额结果新造record、临时持久化实体或workflow变量可见的view参数。
+- G11的Computed严格限定来源行，不能读workflow的sum变量、input或另一张表。不为了把合计拼进现有视图而放松该边界；否则普通、分页与嵌套投影会隐式增加查询或缺参数。
+- 当前ledger的Budget只有owner／category／monthlyLimit，没有月份、时区、起止或唯一期间事实；Category.direction还可被既有Crud修改。故“区间合计超过某个阈值”不自动等于可靠的“月度分类预算超支”。月界、分类历史归属与预算周期须另定业务方案。
+- Crud的owner只展开该套能力的鉴权／过滤，不为所有新查询自动声明实体scope。新的合计必须显式过滤Entry.owner，按分类读取还须验证Category.owner；不能假设Crud替新SUM做了隔离。
+
+**第一批业务切片：**ledger增加本人显式时间区间的总额及指定本人分类的总额，返回Decimal；保留原列表／CRUD。这只是SUM可用的实际落点，不作为“月度每类合计”或“月度超支”两条的完成证据。不按分类逐条load后在Java相加，不把客户端N次请求称为group-by。library的可借数量展示也暂不借此标完成：count读取已存在，逐行展示及批量计划另需处理。
+
+### 24.2 作者语法与数值语义
+
+采用独立步骤，sum为上下文词，不成为全局保留字：
+
+```text
+sum Entry.amount where item.owner == actor
+  and item.occurredAt >= input.since and item.occurredAt < input.until as total;
+return total;
+```
+
+仅单实体的直接Decimal列，包含底层为Decimal的Money／自定义别名与Optional<Decimal>；不接受Ref跳转、secret字段、列表、算术投影、DISTINCT、JOIN、GROUP BY、HAVING、AVG或整数SUM。第一批仅readonly query，不用它实现先汇总后写的并发限额；既有exists／count的可用场景不收窄。以后放开其它测量器须单独定义精度、空值与结果形状。
+
+| 情形 | 明确行为 |
+| --- | --- |
+| 有匹配非空列值 | 数据库精确十进制累加，Java接收BigDecimal，不经double |
+| 可选列为空 | SUM忽略该列值；不因此改变G7比较的遇空为假 |
+| 没有匹配行／全部列为空 | 返回数值0，不返回None；零的JSON小数位不作为固定格式承诺 |
+| 结果类型 | Decimal，不复制源Money的precision／min／max；允许超过单笔金额的19位精度 |
+| 数值超过服务器可表示范围或产生精度相关告警 | 必须明确失败，不接受饱和／截断／舍入后的“成功”值 |
+| 后续写入有精度约束的字段 | 仍由目标字段按G10检查，本批不增加原子聚合写入 |
+
+典型query输入可用Optional<Moment>承载缺省，并复用 `validate input.until > input.since else BadRange;`：G7比较遇空为false，缺省／null／反序均明确拒绝，不依赖非可选日期getter永不为空。实际端点仍用明确的 `[since, until)`；不把任意范围命名成完整的自然月协议、不猜服务器时区。
+
+### 24.3 单一事实与复用落点
+
+采用独立AstSumStep／NormalizedStep.SumStep及目标SumStep，字段引用直接进入该互斥节点；不将现有ScalarQueryStep扩成kind加多组可空列／别名组合，也不为不存在的SUM／AVG家族预留通用解释器。绑定一次得到实体、被测字段和item变量；输出变量正式类型为Decimal。新增字段引用角色和跨文件可见性进入唯一Resolve，声明写出与SourceEditor按绑定改名，不做字符串替换。
+
+复用现有查询谓词合法子集、G7取值与G4相关参数、containsLiteral转义计划和EntityScopes改写。新的SumStep必须加入scope／遍历／origin／Schema完整性／结构覆盖与敏感性／源往返所有分派；必须保留经scope改写的谓词及origin，并由源模型和Lowering回归检查；源侧绑定及独立输入模型校验拒绝secret测量列；目标IR另行检查实体列归属、Decimal物理列、结果类型、投影、警告检查支持和语句数，不假定目标模型已含未传递的源声明事实。用户提供的输入只能绑定值，不能选择SQL列或表达式。
+
+MyBatis-Plus 3.5.12的QueryWrapper.select能承载Lowering生成的固定聚合投影，lambda()与它共享sqlSelect、参数序列、参数map及谓词段；既有BaseMapper.selectObjs已能执行该投影。因此提议使用固定 `COALESCE(SUM(已绑定且正确引用的物理列), 0)`，并继续由现有Lambda谓词渲染器加筛选，不生成按能力变化的Mapper方法。目标计划应分别表达测量列、空集零、BigDecimal结果、SELECT_OBJS及严格告警策略；Generator仅渲染这些事实，不从Java字段名重建列或自行推导提升。
+
+成功路径一个SumStep只有一条聚合SELECT、不拉回所有行、不产生N+1；结果应恰好一行一个BigDecimal，零行、多行或非Decimal载体要拒绝而非猜测转换。告警诊断可能由驱动获取更多服务器诊断信息，不宣称错误路径也只有一次网络往返。原count和实体Mapper产物不因增加sum能力而变化。
+
+### 24.4 精确金额不能漏掉SELECT告警
+
+已从MySQL **mysql-8.4.5**第一方实现确认：`sql/item_sum.cc`的resolve_type区分REAL与DECIMAL；精确数值使用Decimal，add调用my_decimal_add；`sql-common/my_decimal.cc::check_result`对E_DEC_OVERFLOW使用push_warning_printf。不能用“启用严格SQL模式”推导SELECT总能以异常拒绝，也不能把MySQL物理65位上限宣称成无限Decimal。
+
+提议为目标SumStep增加明确的精确聚合标记和专用MyBatis StatementHandler.query告警检查支持产物：只对该标记生效，在当前Statement尚未关闭时清理旧告警、执行、读取当前告警链，任何SQLWarning均使本次精确聚合失败，不向HTTP暴露原始SQL／服务端细节。普通CRUD／count／列表查询的告警协议不随之改变。不新开连接查询SHOW WARNINGS，不切换整个软件的SQL模式，不绕过原SqlSession或另建数据源。无SUM的软件不新增此支持产物。
+
+当前实际依赖为MyBatis **3.5.19**；其PreparedStatementHandler.query在处理ResultSet后返回，Statement此时仍由外层Executor管理。MyBatis-Plus Starter 3.5.12已接收Interceptor beans并注册到SqlSessionFactory。以上接入已实现；实际Statement告警链、普通查询和真实ParamMap的独立执行测试通过，真实Connector/J仍待CI。真库必须验证：空集、全NULL和精确大额成功；fixture可观察的截断／溢出告警必须失败，既有查询和同连接行为不变。不能用仅代理的警告测试代替真库，也不能在验收中静默跳过无法触发的错误分支。
+
+第一方依据：
+
+- [MySQL 8.4.5 SUM](https://github.com/mysql/mysql-server/blob/mysql-8.4.5/sql/item_sum.cc)及[十进制诊断](https://github.com/mysql/mysql-server/blob/mysql-8.4.5/sql-common/my_decimal.cc)。
+- [MyBatis-Plus v3.5.12 QueryWrapper](https://github.com/baomidou/mybatis-plus/blob/v3.5.12/mybatis-plus-core/src/main/java/com/baomidou/mybatisplus/core/conditions/query/QueryWrapper.java)、[SelectObjs](https://github.com/baomidou/mybatis-plus/blob/v3.5.12/mybatis-plus-core/src/main/java/com/baomidou/mybatisplus/core/injector/methods/SelectObjs.java)和[插件装配](https://github.com/baomidou/mybatis-plus/blob/v3.5.12/spring-boot-starter/mybatis-plus-spring-boot-autoconfigure/src/main/java/com/baomidou/mybatisplus/autoconfigure/MybatisPlusAutoConfiguration.java)。
+- [MyBatis 3.5.19 PreparedStatementHandler](https://github.com/mybatis/mybatis-3/blob/mybatis-3.5.19/src/main/java/org/apache/ibatis/executor/statement/PreparedStatementHandler.java)。源码副本／哈希位于 `target/g8-investigation/`，未执行下载源码。
+
+### 24.5 取舍、验收与下一批
+
+| 替代方案 | 本轮不采用的原因 |
+| --- | --- |
+| find全部数据后Java累加 | 拉全表、破坏分页含义；不是数据库聚合 |
+| 给count换成SUM字符串 | 结果仍long、缺正式字段绑定与空集／告警规则 |
+| 在view里任意引用sum变量／input | 破坏G11上下文独立性，普通／分页／嵌套将有不同隐式执行 |
+| 持久化汇总或缓存账本 | 所有记账增删改路径都要维护一致性，反而将读取需求升级成写入协议 |
+| 每个能力生成独立Mapper方法 | 破坏实体产物不依赖能力集合的不变性 |
+| 一次交付sum／avg／分组／月份／新结果记录 | 类型、舍入、零组与分页尚需各自决定，无法把第一条精确求和独立验收 |
+
+前期DecimalAggregateQueryFeasibilityTest **2项通过**：使用真实DefaultSqlInjector生成的selectObjs MappedStatement及DefaultParameterHandler，验证聚合投影和Lambda谓词共用参数，缺省筛选不移除owner条件。它**未执行SQL**，当时尚无SIR sum解析／类型／执行能力，没有证明SUM数值或隔离正确；本批实际实现见24.6。仅跑了该类的定向Maven测试，384MiB Maven／512MiB fork与2个可见处理器，无应用／数据库／浏览器或全量构建；报告封存在 `target/g8-investigation/`。探针是候选执行路径的依据，不当成新功能GREEN。
+
+确认后实施顺序：语法／绑定／Decimal类型与源码往返RED→GREEN；scope／可选值／实体引用／畸形IR与告警计划；真实生成服务与MyBatis执行；最后接ledger本人范围／分类合计及同SHA真库验收。定向必须覆盖跨账号和scope、空／全空／负数／大额／尾随零、源精度不套到总额、NOT下匹配转义、Optional DTO参数、越界与告警、固定列防注入、增删SUM不改Mapper、原exists/count/G7/G10/G11不回归。重活只交CI，结果由负责人通知。
+
+第一批通过后再评审group-by及其结果DTO、无数据分类是否补零、组数分页／稳定排序和一对多归属；月度预算再明确月份／时区／期间唯一性与分类变更的历史语义。AVG须明确精度与舍入，G5循环／批量另案。本轮不增加账本完成数（保持 **67／8／9**）。方案、技术探针与实现同批提交，不单独触发文档CI。
+
+
+### 24.6 实施事实及尚未运行的验证
+
+- 新 AstSumStep／NormalizedStep.SumStep／目标 SumStep 全链贯通；SUM_ENTITY／SUM_FIELD 两个引用角色进入唯一 Resolve。测量列／布尔谓词／readonly query 经源语义和独立输入校验；secret 测量拒绝，Scope 改写保留原事实与来源。SoftwareSchema、结构覆盖／敏感性、声明往返及 SourceEditor 增删改／LF与CRLF改名均覆盖。
+- SumPlan 明确测量符号、物理列、固定投影、selectObjs、1条聚合SELECT、空集零及拒绝告警；独立IR拒绝字段／列／SQL／方法／预算／空集／告警／结果／item归属／支持产物／缓存／事务／command／非布尔谓词等损坏。单笔金额规则不作用于标量返回，输出仍用现有语义类型别名 `type TotalAmount = Money;`，不引入不合法的裸 Decimal 类型声明。
+- 精确聚合支持产物按需生成，图谱角色 EXACT_AGGREGATE 已接输入映射与完整图构建。共用 Lambda 谓词渲染；新 SUM 的内部 lambda 使用 SIR 不可声明的 `$` 前缀，消除合法 q0/q1 和 totalAggregateQuery 变量的冲突，旧查询仍使用原命名／文本。Mapper 逐字节不变。
+- 插件只识别标记 Query。先 containsKey 再读 MyBatis ParamMap，普通 @Param 方法缺 ew 不会被误伤。当前 Statement 清理旧告警、返回前检查本次告警链；普通查询不变，无法获取诊断不当成功。拥有 SUM 的工程计划 STATEMENT 缓存，不能复用 session 结果绕过检查。真实 SQL 及插件装配由后续 CI 验证。
+- ledger 已增加 TotalBetween／TotalOfCategory，保留范围校验、actor隔离和本人分类检查。合计为记录金额之和，不因可变 Category.direction 自动决定正负，不宣称净收支。范围输入 Optional<Moment>，G7使缺省／反序在查询前报 BadRange；外人分类返回原 CategoryNotFound。总额允许超过一笔 Money 精度。
+
+本机 **30类187项，0失败／错误／跳过**，含实际ledger生成Java的4项执行、当前Statement告警6项、构造IR／secret输入16项、所有新IT源码与固定告警控制器编译，原exists/count/G7/G10/G11和Mapper不变性回归；八题只内存生成／交付规划。ledger变为 **195行SIR／3949行Java／23个显式接口**。10项旧目录读取／图谱集成测试在Windows的安全相对读取入口受阻，未计通过、不放宽边界；新的SUM图谱在SourceSnapshot内存路径完整构建通过。证据在[验证31](../qualification/README.md#g8-decimal-sum-local)。未启动应用／MySQL／浏览器，未跑本机全量或生成工程构建，未测覆盖率。
+
+为不新增一轮应用构建／启动，真库复用 MoneyBusinessConformanceIT：Measurement 的 Optional 金额、静态软删除scope、owner参数、空／全空／负数／大额／尾随零、重复Tag不重复求和、相关输入防拼接、containsLiteral转义、读不改表。固定CAST探针只复制到该隔离生成目录，源码及SHA另存证据，不属于正常生成或交付；同一固定SQL用普通Wrapper对照9.99饱和值，再要求标记查询500且无SQL泄漏，后续正常聚合仍成功。严格和非严格会话均检查，不能仅靠严格模式或代理证明。只编译、未在本机执行，仍待同SHA CI，由负责人通知；没有为了此切片增加独立应用或新的重活作业。分组、AVG、月度预算及G5继续另案，账本不变。

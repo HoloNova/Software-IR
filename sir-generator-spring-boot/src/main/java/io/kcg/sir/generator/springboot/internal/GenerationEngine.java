@@ -93,7 +93,8 @@ public final class GenerationEngine {
          case ProjectArtifact.ApiErrorResponse error -> ApiErrorRenderer.render(error);
          case ProjectArtifact.ApiExceptionBase base -> ApiExceptionRenderer.render(base);
          case ProjectArtifact.ApiExceptionAdvice advice -> ApiExceptionAdviceRenderer.render(advice);
-         case ProjectArtifact.ValidationSupport support -> ValidationSupportRenderer.render(support);
+         case ProjectArtifact.ExactAggregate support -> ExactAggregateRenderer.render(support);
+          case ProjectArtifact.ValidationSupport support -> ValidationSupportRenderer.render(support);
          case ProjectArtifact.ApplicationConfig config -> ApplicationConfigRenderer.render(config);
          case ProjectArtifact.MavenProject pom -> throw new IllegalStateException("MavenProject is rendered by the engine: " + pom.path());
          case ProjectArtifact.ApplicationMain app -> throw new IllegalStateException("ApplicationMain is rendered by the engine: " + app.path());

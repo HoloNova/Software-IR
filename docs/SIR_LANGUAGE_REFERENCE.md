@@ -335,7 +335,7 @@ capability OpenTicket {
 
 #### 默认查询范围（`scope`）
 
-`scope 条件;` 写在实体最后，说明哪些行对软件来说“存在”。这个实体的每个 `load`、`find`、`exists`、`count` 和 `any(...)` 都只看满足条件的行：`find` 自动加上这个条件，`load` 到范围外的行时按 `load` 自己的错误失败。条件里直接写本实体的字段名（和 `any` 的条件一样）。典型用法是软删除：
+`scope 条件;` 写在实体最后，说明哪些行对软件来说“存在”。这个实体的每个 `load`、`find`、`exists`、`count`、`sum` 和 `any(...)` 都只看满足条件的行：`find` 自动加上这个条件，`load` 到范围外的行时按 `load` 自己的错误失败。条件里直接写本实体的字段名（和 `any` 的条件一样）。典型用法是软删除：
 
 ```sir-declarations
 entity Note persistent {
@@ -927,7 +927,7 @@ capability RemoveNote {
 
 ## 5. 工作流（`workflow`）
 
-工作流是一串**步骤**，按顺序执行，**以且只以一个 `return` 结束**（`SIR-FLOW-002`）。变量由 `load`、`find`、`exists`、`count`、`create` 的 `as 名字` 引入，之后才能用（`SIR-FLOW-001`）。
+工作流是一串**步骤**，按顺序执行，**以且只以一个 `return` 结束**（`SIR-FLOW-002`）。变量由 `load`、`find`、`exists`、`count`、`sum`、`create` 的 `as 名字` 引入，之后才能用（`SIR-FLOW-001`）。
 
 ### 5.1 `validate`
 
@@ -1484,14 +1484,41 @@ capability WrongCount {
 }
 ```
 
-**不是并发保护。** `count < 5` 或“不存在”后插入，两个请求仍可能同时通过；`requires atomic` 不会自动锁住查询范围。硬限额继续组合行内原子计数和守卫；固定预约时段用联合唯一。没有通用锁、任意时间段并发排他、SUM／AVG／分组，也没有把 `any`／`count` 放进任意表达式或更新守卫。
+**不是并发保护。** `count < 5` 或“不存在”后插入，两个请求仍可能同时通过；`requires atomic` 不会自动锁住查询范围。硬限额继续组合行内原子计数和守卫；区间防重叠须按第 5.2 节的显式父行锁协议组织检查及写入，不由这些查询自动获得。条件金额求和见第 5.10 节；AVG／分组仍不支持，也没有把 `any`／`count`／`sum` 放进任意表达式或更新守卫。
+
+### 5.10 `sum`：条件精确金额求和
+
+```sir
+type TotalAmount = Money;
+capability TotalOfMine {
+  actor Ref<User>;
+  output TotalAmount;
+  requires authenticated;
+  requires readonly;
+  expose query;
+  workflow {
+    sum Entry.amount where item.owner == actor as total;
+    return total;
+  }
+}
+```
+
+`sum 实体.字段 where 条件 as 结果;` 是独立步骤，`sum` 为上下文词。仅 `requires readonly` 的 query 允许；测量列必须直接属于实体且底层为 Decimal，可为 Money、自定义金额别名或 Optional。整数、secret、跨 Ref 取列、算术投影、DISTINCT、JOIN、GROUP BY、AVG 及排序／分页不支持。`item` 只在该步谓词内有效，结果变量只能在本步之后使用；测量列和实体都按正式绑定进行跨文件可见性检查及精确改名。
+
+空集／全空返回数值 0，Optional 列空值由 SUM 忽略；负数和尾随零保持精确，不经过 double、不隐式舍入、不把源字段 precision／min／max 套到总额。结果核心类型为 Decimal，可超过单笔 Money 的精度。示例用已有 Money 语义类型的别名命名标量输出，不新增裸 Decimal 声明语法；这不表示合计要符合单笔 Money 的存储规则。零的 JSON 小数位不承诺固定格式。
+
+普通查询的合法筛选、`any`、G7 可选比较、字面匹配转义及实体 scope 同样生效。Crud 的 owner 只约束它展开的接口，新合计仍须显式筛选 owner；按分类统计还须校验分类属于当前人。实际 ledger 提供本人 `[since, until)` 总额和指定本人分类总额；缺省或反序时间被拒绝。它们相加的是记录金额，不根据可变的分类方向推算净收支，也不是自动的自然月／预算周期协议。
+
+Spring Boot 目标每步计划一条 `COALESCE(SUM(固定物理列), 0)`，继续使用原 BaseMapper，不拉回所有行，也不改实体 Mapper。只有计划过的聚合携带精确标记：在同一 JDBC Statement 未关闭时清理旧告警、执行、检查本语句 SQLWarning；有告警或无法检查就失败，不能把服务器饱和值当成功结果。严格 SQL 模式本身不足以保证 SELECT 聚合精确。普通查询的告警政策不变；包含 SUM 的工程计划 MyBatis STATEMENT 级缓存，避免会话缓存绕过本次执行／告警检查。驱动读取诊断可能额外通信，单条聚合 SELECT 不代表错误路径只作一次网络往返。不得覆盖该缓存／插件配置后仍宣称此保证。
+
+SUM 是只读能力，不参与原子写限额；最终写入其它字段仍须目标字段精度校验。计算视图仍不能引用工作流合计变量，不因此新增分组结果 DTO、批量读取或循环。实现与边界见[设计第 24 节](design/12-feature-semantics-and-semantic-types.md#g8-decimal-sum-proposal)，真库状态见[验证第 31 节](qualification/README.md#g8-decimal-sum-local)。
 
 ## 6. 表达式
 
 | 写法 | 含义 |
 | --- | --- |
 | `true`、`false`、`42`、`0.01`、`"文本"`、`unit` | 字面量 |
-| `名字`、`input`、`actor`、`item` | 变量；`input` 是请求，`actor` 是发起人，`item` 只在 `find` 里 |
+| `名字`、`input`、`actor`、`item` | 变量；`input` 是请求，`actor` 是发起人，`item` 只在 `find`／`exists`／`count`／`sum` 的查询谓词里 |
 | `a.b.c` | 取成员 |
 | `x.字段.present` | 局部更新里，客户端传了没有（包括显式传 null） |
 | `x is none`、`x is present` | 可选值为空／非空；不是 PATCH 的传参标记 |
@@ -1503,7 +1530,7 @@ capability WrongCount {
 | `时刻 + N unit` | 时间平移，`unit` 是 `second(s)`、`minute(s)`、`hour(s)`、`day(s)` |
 | `a < b`、`<=`、`>`、`>=` | 比较，两边同类型 |
 | `a == b`、`a != b` | 相等 |
-| `a containsLiteral b` | 字面包含，只能用在 `find` 的谓词里 |
+| `a containsLiteral b` | 字面包含，只能用在查询步骤的合法谓词里 |
 | `存的 matches 候选` | 口令比对，见下 |
 | `a and b`、`a or b` | 逻辑 |
 | `( ... )` | 括号 |
@@ -1773,7 +1800,7 @@ use Crud {
 | `SIR-FLOW-002` | `return` 的数量不对，或 `return` 后面还有步骤 |
 | `SIR-FLOW-003` | 用到的错误没有在 `fails` 里声明 |
 | `SIR-FLOW-004` | 只读能力里有 `create`／`update`／`persist`／`delete` |
-| `SIR-FLOW-005`／`006` | `any` 出现在 `find`／`exists`／`count` 的谓词之外／`any` 里面又嵌套了 `any` |
+| `SIR-FLOW-005`／`006` | `any` 出现在 `find`／`exists`／`count`／`sum` 的谓词之外／`any` 里面又嵌套了 `any` |
 | `SIR-SOURCE-*` | 多文件工程的问题：入口没列出文件、`import` 找不到声明、没 import 就用了别的文件的声明（`SIR-SOURCE-VISIBILITY-001`） |
 | `SIR-LOWER-*` | 软件本身合法，但目标（Java／Spring Boot／MySQL）暂不支持 |
 

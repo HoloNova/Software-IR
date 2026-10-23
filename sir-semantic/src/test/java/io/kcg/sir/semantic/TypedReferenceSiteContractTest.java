@@ -60,7 +60,12 @@ class TypedReferenceSiteContractTest {
               field state: Status;
               field owner: Ref<User>;
               field version: Version;
+              field amount: Money default 0.0;
               unique (state, owner);
+            }
+            capability SumAccounts {
+              output Money; requires readonly; expose query;
+              workflow { sum Account.amount where true as total; return total; }
             }
             entity Handle persistent {
               identity id: Id generated auto;
@@ -713,6 +718,11 @@ class TypedReferenceSiteContractTest {
                     collectExpressionRefs(page.size(), sink);
                     sink.put(page.error().id(), page.error().text());
                 });
+            }
+            case io.kcg.sir.ast.AstSumStep s -> {
+                sink.put(s.entity().id(), s.entity().text());
+                sink.put(s.field().id(), s.field().text());
+                collectExpressionRefs(s.predicate(), sink);
             }
             case io.kcg.sir.ast.AstScalarQueryStep s -> {
                 sink.put(s.entity().id(), s.entity().text());

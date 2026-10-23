@@ -36,12 +36,14 @@ class MoneyBusinessConformanceIT {
         s.initializeRedaction(url);
         s.prepareSchemaAndFixtures();
         if (s.notRunReason() != null || s.compileAndMaterialize().isEmpty()) return;
+        DecimalSumChecks.installWarningFixture(s);
         var jar = s.buildAndLocateJar(url);
         if (jar == null || !s.startAndWaitUntilReady(jar)) return;
         s.setHttpStatus("READY (Money wallet query)");
         try (var observer = s.openObserver(url)) {
             s.setRowsBefore(s.rowsNow(observer));
             var http = new HttpAssertionClient();
+            DecimalSumChecks.verify(s, observer, http);
             ordinaryWrites(s, observer, http);
             patches(s, observer, http);
             atomicWrites(s, observer, http);
@@ -50,6 +52,7 @@ class MoneyBusinessConformanceIT {
             s.useNonStrictSqlModeFixture();
             if (!s.rebuildAndRestart(url)) return;
             nonStrict(s, observer, http);
+            DecimalSumChecks.warningPolicy(s, http, "non-strict session");
             s.setRowsAfter(s.rowsNow(observer));
         }
     }

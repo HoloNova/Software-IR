@@ -1,0 +1,21 @@
+// TEST_FIXTURE_ONLY: copied into the isolated Money IT tree, never into generator templates or product delivery.
+package example.money.fixture;
+
+@org.springframework.web.bind.annotation.RestController
+public final class ExactAggregateWarningFixture {
+    public static final String ROUTE = "/api/fixture/aggregate-warning";
+    private static final String FIXED_SQL = "CAST(SUM(`amount`) AS DECIMAL(3,2))";
+    private final example.money.persistence.MeasurementMapper mapper;
+
+    public ExactAggregateWarningFixture(example.money.persistence.MeasurementMapper mapper) {
+        this.mapper = mapper;
+    }
+
+    @org.springframework.web.bind.annotation.GetMapping(ROUTE)
+    public java.math.BigDecimal warning(@org.springframework.web.bind.annotation.RequestParam("marked") boolean marked) {
+        com.baomidou.mybatisplus.core.conditions.Wrapper<example.money.domain.Measurement> query = marked
+                ? example.money.persistence.ExactAggregate.query(example.money.domain.Measurement.class, FIXED_SQL)
+                : new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<example.money.domain.Measurement>().select(FIXED_SQL);
+        return example.money.persistence.ExactAggregate.value(this.mapper.selectObjs(query));
+    }
+}

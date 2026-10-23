@@ -100,7 +100,10 @@ final class WorkflowRenderer {
          case SpringBootWorkflow.LoadActorStep load:
             renderLoadActor(ctx, load, variableNames, imports, currentPackage, lines, mappers);
             break;
-         case SpringBootWorkflow.ScalarQueryStep query:
+          case SpringBootWorkflow.SumStep query:
+             renderSum(ctx, query, variableNames, imports, currentPackage, lines, mappers, stringMatches);
+             break;
+          case SpringBootWorkflow.ScalarQueryStep query:
             renderScalarQuery(ctx, query, variableNames, imports, currentPackage, lines, mappers, stringMatches);
             break;
          case FindStep find:
@@ -283,7 +286,27 @@ final class WorkflowRenderer {
       lines.add("        }");
    }
 
-   private static void renderScalarQuery(GenerationContext ctx, SpringBootWorkflow.ScalarQueryStep step,
+   private static void renderSum(GenerationContext ctx, SpringBootWorkflow.SumStep step,
+       Map<SymbolId, String> variableNames, ImportSorter imports, String currentPackage, List<String> lines,
+       Map<SymbolId, WorkflowRenderer.MapperReference> mappers, List<SpringExpression.StringMatch> stringMatches) {
+       EntityDeclaration entity = ctx.entity(step.entitySymbol());
+       registerEntityImport(ctx, entity, imports, currentPackage);
+       var mapper = ensureMapper(ctx, step.entitySymbol(), entity.javaName(), mappers);
+       var support = ctx.model().projectArtifacts().stream()
+           .filter(io.kcg.sir.lowering.springboot.model.ProjectArtifact.ExactAggregate.class::isInstance)
+           .map(io.kcg.sir.lowering.springboot.model.ProjectArtifact.ExactAggregate.class::cast).findFirst().orElseThrow();
+       String helper = support.packageName() + "." + support.simpleName();
+       stringMatches.addAll(step.stringMatches());
+       Map<LoweredNodeId, SpringExpression.StringMatch> matches = new LinkedHashMap<>();
+       for (var match : step.stringMatches()) matches.put(match.expressionId(), match);
+       String predicate = renderPredicateChain(ctx, step.predicate(), step.itemVariable(), entity, matches,
+           variableNames, imports, currentPackage, "item", true);
+       lines.add("        java.math.BigDecimal " + step.result().targetName() + " = " + helper + ".read("
+           + helper + ".query(" + entity.javaName() + ".class, " + StringEscape.javaString(step.plan().projectionSql()) + "),"
+           + " item -> " + predicate + ", " + mapper.mapperFieldName() + "::" + step.plan().mapperMethod() + ");");
+    }
+
+    private static void renderScalarQuery(GenerationContext ctx, SpringBootWorkflow.ScalarQueryStep step,
       Map<SymbolId, String> variableNames, ImportSorter imports, String currentPackage, List<String> lines,
       Map<SymbolId, WorkflowRenderer.MapperReference> mappers, List<SpringExpression.StringMatch> stringMatches) {
       EntityDeclaration entity = ctx.entity(step.entitySymbol());
@@ -754,8 +777,8 @@ final class WorkflowRenderer {
       lines.add("        int " + updated + " = " + mapper.mapperFieldName() + ".update(null, new LambdaUpdateWrapper<" + entity.javaName() + ">()");
       lines.add("                .eq(" + entity.javaName() + "::" + identity + ", " + targetName + "." + identity + "())");
       if (update.guard().isPresent()) {
-         int[] counter = new int[]{0};
-         String rootName = nextWrapperName(counter);
+          var counter = predicateNames("q");
+          String rootName = nextWrapperName(counter);
          String condition = renderPredicateNode(
             ctx, update.guard().orElseThrow().predicate(), target, entity, Map.of(), variableNames, imports, currentPackage, rootName, counter);
          lines.add("                .and(" + rootName + " -> " + condition + ")");
@@ -1087,20 +1110,22 @@ final class WorkflowRenderer {
    }
 
    private static String renderPredicateChain(
-      GenerationContext ctx,
-      SpringExpression predicate,
-      Variable itemVariable,
-      EntityDeclaration entity,
-      Map<LoweredNodeId, SpringExpression.StringMatch> stringMatches,
-      Map<SymbolId, String> variableNames,
-      ImportSorter imports,
-      String currentPackage
-   ) {
-      int[] counter = new int[]{0};
-      String rootName = nextWrapperName(counter);
-      String body = renderPredicateNode(ctx, predicate, itemVariable, entity, stringMatches, variableNames, imports, currentPackage, rootName, counter);
-      return "new LambdaQueryWrapper<" + entity.javaName() + ">()\n                .and(" + rootName + " -> " + body + ")";
-   }
+       GenerationContext ctx, SpringExpression predicate, Variable itemVariable, EntityDeclaration entity,
+       Map<LoweredNodeId, SpringExpression.StringMatch> stringMatches, Map<SymbolId, String> variableNames,
+       ImportSorter imports, String currentPackage) {
+       return renderPredicateChain(ctx, predicate, itemVariable, entity, stringMatches, variableNames, imports,
+           currentPackage, "new LambdaQueryWrapper<" + entity.javaName() + ">()", false);
+    }
+
+    private static String renderPredicateChain(
+       GenerationContext ctx, SpringExpression predicate, Variable itemVariable, EntityDeclaration entity,
+       Map<LoweredNodeId, SpringExpression.StringMatch> stringMatches, Map<SymbolId, String> variableNames,
+       ImportSorter imports, String currentPackage, String seed, boolean privateNames) {
+        var counter = predicateNames(privateNames ? "$sumQ" : "q");
+       String rootName = nextWrapperName(counter);
+       String body = renderPredicateNode(ctx, predicate, itemVariable, entity, stringMatches, variableNames, imports, currentPackage, rootName, counter);
+       return seed + "\n                .and(" + rootName + " -> " + body + ")";
+    }
 
    private static String renderPredicateNode(
       GenerationContext ctx,
@@ -1111,8 +1136,8 @@ final class WorkflowRenderer {
       Map<SymbolId, String> variableNames,
       ImportSorter imports,
       String currentPackage,
-      String wrapperName,
-      int[] counter
+       String wrapperName,
+       java.util.Iterator<String> counter
    ) {
       switch (predicate) {
          case BinaryExpression binary:
@@ -1302,8 +1327,12 @@ final class WorkflowRenderer {
       return "'" + body + "'";
    }
 
-   private static String nextWrapperName(int[] counter) {
-      return "q" + counter[0]++;
+   private static java.util.Iterator<String> predicateNames(String prefix) {
+      return java.util.stream.IntStream.range(0, Integer.MAX_VALUE).mapToObj(i -> prefix + i).iterator();
+   }
+
+   private static String nextWrapperName(java.util.Iterator<String> counter) {
+      return counter.next();
    }
 
    private static String renderFindField(SpringExpression expr, Variable itemVariable, String entityJavaName) {

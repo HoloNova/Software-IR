@@ -110,5 +110,48 @@ software MoneyLedger {
         return unit;
       }
     }
+
+    // G8 conformance rows share this Money application's lifecycle, but do not modify wallet scenarios.
+    type AggregateValue = Money;
+    entity Measurement persistent {
+      identity id: Id generated auto;
+      field owner: Id;
+      field amount: Optional<Money>;
+      field label: Text;
+      field removed: Flag default false;
+      scope removed == false;
+    }
+    entity MeasurementTag persistent {
+      identity id: Id generated auto;
+      field measurement: Ref<Measurement>;
+      field name: Text;
+    }
+
+    input SumProbe { field owner: Id; field minimum: Optional<Money>; }
+    input SumTagProbe { field owner: Id; field tag: Text; }
+    capability SumMeasured {
+      input SumProbe; output AggregateValue;
+      requires readonly; expose query at "/measurements/total";
+      workflow {
+        sum Measurement.amount where item.owner == input.owner and (input.minimum is none or item.amount >= input.minimum) as total;
+        return total;
+      }
+    }
+    capability TaggedSum {
+      input SumTagProbe; output AggregateValue;
+      requires readonly; expose query at "/measurements/tagged";
+      workflow {
+        sum Measurement.amount where item.owner == input.owner and any(MeasurementTag, measurement == item and name == input.tag) as total;
+        return total;
+      }
+    }
+    capability LiteralSum {
+      input SumTagProbe; output AggregateValue;
+      requires readonly; expose query at "/measurements/literal";
+      workflow {
+        sum Measurement.amount where item.owner == input.owner and item.label containsLiteral input.tag as total;
+        return total;
+      }
+    }
   }
 }

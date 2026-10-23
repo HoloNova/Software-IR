@@ -146,8 +146,50 @@ software PersonalLedger {
         return rows;
       }
     }
-    // GAP: the point of a ledger is the month's total per category and "am I over budget", which need sums and counts
-    // over many rows. A query can list the rows but cannot add them up, so the client does the arithmetic and the
-    // budget is stored but never compared with spending.
+    type TotalAmount = Money;
+    input SumRange {
+      field since: Optional<Moment>;
+      field until: Optional<Moment>;
+    }
+    input CategorySumRange {
+      field categoryId: Id;
+      field since: Optional<Moment>;
+      field until: Optional<Moment>;
+    }
+    capability TotalBetween {
+      actor Ref<User>;
+      input SumRange;
+      output TotalAmount;
+      fails BadRange;
+      requires authenticated;
+      requires readonly;
+      expose query at "/entries/total";
+      workflow {
+        validate input.until > input.since else BadRange;
+        sum Entry.amount where item.owner == actor
+          and item.occurredAt >= input.since and item.occurredAt < input.until as total;
+        return total;
+      }
+    }
+    capability TotalOfCategory {
+      actor Ref<User>;
+      input CategorySumRange;
+      output TotalAmount;
+      fails BadRange;
+      fails CategoryNotFound;
+      requires authenticated;
+      requires readonly;
+      expose query at "/categories/{categoryId}/total";
+      workflow {
+        validate input.until > input.since else BadRange;
+        load Category by input.categoryId as category else CategoryNotFound;
+        validate category.owner == actor else CategoryNotFound;
+        sum Entry.amount where item.owner == actor and item.category == category
+          and item.occurredAt >= input.since and item.occurredAt < input.until as total;
+        return total;
+      }
+    }
+    // GAP: explicit range totals now exist. Grouping all categories and natural-month budget semantics
+    // remain separate work; a caller-supplied range is not automatically a monthly budget period.
   }
 }

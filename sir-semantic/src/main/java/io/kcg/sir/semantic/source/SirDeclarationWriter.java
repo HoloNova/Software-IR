@@ -334,7 +334,9 @@ public final class SirDeclarationWriter {
          case "LoadStep" ->
             out.line(2, "load " + text(step, "entitySymbol") + " by " + optionalText(step, "keyField").map(key -> key + ": ").orElse("") + expression(child(step, "idExpression"), 0) + " as " + text(step, "resultVariable") + (text(step, "forUpdate").equals("true") ? " for update" : "") + " else " + text(step, "errorSymbol") + ";");
          case "FindStep" -> this.writeFind(step, out);
-         case "ScalarQueryStep" -> out.line(2, text(step, "kind").toLowerCase(java.util.Locale.ROOT) + " " + text(step, "entitySymbol")
+         case "SumStep" -> out.line(2, "sum " + text(step, "entitySymbol") + "." + text(step, "fieldSymbol")
+             + " where " + expression(child(step, "predicate"), 0) + " as " + text(step, "resultVariable") + ";");
+          case "ScalarQueryStep" -> out.line(2, text(step, "kind").toLowerCase(java.util.Locale.ROOT) + " " + text(step, "entitySymbol")
             + " where " + expression(child(step, "predicate"), 0) + " as " + text(step, "resultVariable") + ";");
          case "CreateStep" -> {
             out.line(2, "create " + text(step, "entitySymbol") + " as " + text(step, "resultVariable") + " {");

@@ -266,6 +266,8 @@ class ProjectVisibilityTest {
         Path root = source.resolve("project.sir");
         String project = Files.readString(root);
         String anchor = "    capability CreateCourse {";
+        Path course = source.resolve("modules/course.sir");
+        Files.writeString(course, Files.readString(course).replace("field code: Code", "field measurement: Money default 0.0; field code: Code"));
         assertTrue(project.contains(anchor), "the scalar query fixture anchor must exist");
         Files.writeString(root, project.replace(anchor, """
                     capability InspectImportedRows {
@@ -275,6 +277,7 @@ class ProjectVisibilityTest {
                       workflow {
                         exists Course where true as courseFound;
                         count Student where true as studentTotal;
+                        sum Course.measurement where true as measured;
                         return unit;
                       }
                     }

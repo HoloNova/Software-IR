@@ -1054,6 +1054,14 @@ public final class SpringBootIrValidation {
                this.error(owner, "only a capability with an actor can read the actor's row");
             }
             break;
+         case SpringBootWorkflow.SumStep value:
+            this.requireDeclaration(value.entitySymbol(), SpringBootDeclaration.EntityDeclaration.class, owner);
+            this.validateExpression(value.predicate(), owner);
+            this.requireKnown(value.result().symbol(), owner, "sum result");
+            this.requireKnown(value.itemVariable().symbol(), owner, "sum item");
+            this.validateStringMatches(value.stringMatches(), value.predicate(), owner);
+            this.validateSum(value, owner);
+            break;
          case SpringBootWorkflow.ScalarQueryStep value:
             this.requireDeclaration(value.entitySymbol(), SpringBootDeclaration.EntityDeclaration.class, owner);
             this.validateExpression(value.predicate(), owner);
@@ -1099,6 +1107,41 @@ public final class SpringBootIrValidation {
          default:
             throw new MatchException(null, null);
       }
+   }
+
+   private void validateSum(SpringBootWorkflow.SumStep query, SpringBootDeclaration.CapabilityDeclaration owner) {
+      var expected = new LoweredJavaType.Scalar(LoweredJavaType.ScalarKind.BIG_DECIMAL);
+      var entity = this.declarations.get(query.entitySymbol());
+      var field = entity instanceof SpringBootDeclaration.EntityDeclaration e ? e.fields().stream()
+            .filter(f -> f.sourceSymbol().equals(query.plan().fieldSymbol())).findFirst().orElse(null) : null;
+      var type = field == null ? null : field.type();
+      if (type instanceof LoweredJavaType.OptionalValue optional) type = optional.elementType();
+       if (field == null || !expected.equals(type) || field.persistenceShape() != SpringBootDeclaration.PersistenceShape.SCALAR
+             || field.columnName().isEmpty()
+            || !field.columnName().get().equals(query.plan().columnName())
+            || !query.plan().projectionSql().equals("COALESCE(SUM(`" + query.plan().columnName().replace("`", "``") + "`), 0)"))
+         this.error(owner, "sum must project a declared Decimal column of its entity");
+      if (!(query.itemVariable().type() instanceof LoweredJavaType.Declared row
+              && row.kind() == LoweredJavaType.DeclaredKind.ENTITY && row.symbolId().equals(query.entitySymbol()))
+            || !owner.workflow().variables().contains(query.itemVariable())
+            || !owner.workflow().variables().contains(query.result()))
+         this.error(owner, "sum row and result must belong to this capability with their declared types");
+      if (!query.result().type().equals(expected)
+             || !query.predicate().type().equals(new LoweredJavaType.Scalar(LoweredJavaType.ScalarKind.BOOLEAN))
+             || !query.plan().emptyAsZero() || !query.plan().rejectWarnings()
+            || !query.plan().mapperMethod().equals("selectObjs") || query.plan().statements() != 1
+             || owner.transactionMode() != SpringBootDeclaration.TransactionMode.READ_ONLY
+             || owner.kind() != SpringBootDeclaration.CapabilityKind.QUERY)
+         this.error(owner, "sum requires exact Decimal, empty zero, current statement warnings and one readonly SELECT");
+      var support = this.model.projectArtifacts().stream().filter(ProjectArtifact.ExactAggregate.class::isInstance)
+            .map(ProjectArtifact.ExactAggregate.class::cast).toList();
+      if (support.size() != 1 || !support.getFirst().packageName().equals(this.model.basePackage() + ".persistence")
+            || !support.getFirst().simpleName().equals("ExactAggregate")
+            || !support.getFirst().path().equals("src/main/java/" + (this.model.basePackage() + ".persistence").replace('.', '/') + "/ExactAggregate.java"))
+         this.error(owner, "sum requires its exact aggregate support artifact");
+      if (this.model.projectArtifacts().stream().filter(ProjectArtifact.ApplicationConfig.class::isInstance)
+            .map(ProjectArtifact.ApplicationConfig.class::cast).filter(ProjectArtifact.ApplicationConfig::statementScopedQueryCache).count() != 1)
+         this.error(owner, "sum requires STATEMENT query cache to avoid bypassing warning checks");
    }
 
    private void validateScalarQuery(SpringBootWorkflow.ScalarQueryStep query, SpringBootDeclaration.CapabilityDeclaration owner) {

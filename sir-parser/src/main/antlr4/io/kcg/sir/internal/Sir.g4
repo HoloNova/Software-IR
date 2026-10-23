@@ -289,6 +289,7 @@ workflowStep
     | loadStep
     | findStep
     | scalarQueryStep
+    | sumStep
     | createStep
     | updateStep
     | persistStep
@@ -314,6 +315,11 @@ lockClause
 
 findStep
     : FIND entity=IDENT WHERE predicate=expression findOrderClause? findPageClause? AS result=IDENT SEMI
+    ;
+
+sumStep
+    : {_input.LT(1).getText().equals("sum")}? IDENT entity=IDENT DOT field=IDENT
+      WHERE predicate=expression AS result=IDENT SEMI
     ;
 
 scalarQueryStep

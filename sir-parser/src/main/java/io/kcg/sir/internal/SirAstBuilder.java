@@ -523,6 +523,11 @@ final class SirAstBuilder {
                     page,
                     name(value.result));
         }
+        if (context.sumStep() != null) {
+            var value = context.sumStep();
+            return new AstSumStep(ids.id(path), source.span(value), nameRef(value.entity, path, "entity"),
+                    nameRef(value.field, path, "field"), expression(value.predicate, path), name(value.result));
+        }
         if (context.scalarQueryStep() != null) {
             var value = context.scalarQueryStep();
             return new AstScalarQueryStep(ids.id(path), source.span(value),

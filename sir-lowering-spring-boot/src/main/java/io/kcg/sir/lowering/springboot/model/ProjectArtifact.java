@@ -18,6 +18,7 @@ public sealed interface ProjectArtifact
    ProjectArtifact.ApiExceptionBase,
    ProjectArtifact.ApiExceptionAdvice,
    ProjectArtifact.ValidationSupport,
+    ProjectArtifact.ExactAggregate,
    ProjectArtifact.ApplicationConfig {
    LoweredNodeId id();
 
@@ -29,6 +30,18 @@ public sealed interface ProjectArtifact
       Objects.requireNonNull(value, name);
       if (value.isBlank()) {
          throw new IllegalArgumentException(name + " must not be blank");
+      }
+   }
+
+   /** Marker and current-Statement warning guard, emitted only when a sum is planned. */
+   record ExactAggregate(LoweredNodeId id, LoweredOrigin origin, String path, String packageName,
+         String simpleName) implements ProjectArtifact {
+      public ExactAggregate {
+         Objects.requireNonNull(id, "id");
+         Objects.requireNonNull(origin, "origin");
+         requireText(path, "path");
+         requireText(packageName, "packageName");
+         requireText(simpleName, "simpleName");
       }
    }
 
