@@ -953,3 +953,26 @@ mvn -B -q -o -pl sir-toolchain-application -am test '-Dtest=TypedReferenceSiteCo
 ```
 
 **边界：**ProjectVisibilityTest其余4个文件导出依赖方法（包括#165中的原全角色可见性门）本机NOT_RUN，仍由Linux CI实际执行；没有降低Windows不支持的安全目录相对读取要求，不能把3方法通过写成完整7方法通过。无本机全量门、应用／MySQL／浏览器或生成工程Maven构建，未测覆盖率。Maven384MiB／fork512MiB，各2个可见处理器；AFT Java LSP初始化失败为PARTIAL，编译依据真实Maven。生产规则／生成器／语言表面／异常协议均未改。修复测试与配套文档单批提交，推送后继续月度／预算范围核对，不查询或等待新CI，负责人通知结果；不提前上调67／8／9。
+
+
+<a id="ci-166-fixture-mapper-cycle-fix"></a>
+## 36. CI #166：分组验收夹具提前解析Mapper造成初始化环
+
+失败源码 **`a6965315f1816731ce460c2c5647059f4b35ff30`**，[verify #166](https://github.com/HoloNova/Software-IR/actions/runs/39915698926)。正式Frozen full gate成功，原始XML确认TypedReferenceSiteContractTest18项、完整ProjectVisibilityTest7项均通过，上轮#165修复有效。Completion diagnostics按成功路径跳过。业务IT共12项仅MoneyBusinessConformanceIT失败；独立解析全部237份Surefire XML，恰1 failure、0 errors。其余11项业务IT通过，独立验证／CLI／部署被跳过，不算验收。
+
+Money生成工程mvn clean verify通过，但Spring启动后退出，httpReadiness=NOT_RUN、7项前置／清理检查通过、1项就绪失败；分组SQL／快照／告警还没执行。`target/ci-investigation/166/conformance-evidence/money-1a1679b7fa4-64005/logs/spring.stdout.log` 的完整原因链是：MybatisPlusAutoConfiguration构造器收集Interceptor[] → GroupedSumFixture构造器需要SummaryEntryMapper → Mapper需要SqlSessionFactory → 工厂仍在创建，最终BeanCurrentlyInCreationException。不是路由404、依赖缺失、上轮契约没修好或数据库警告被放过。
+
+根因在**测试专用夹具**：它既是RestController又实现Interceptor；此前的实际编译／手工构造屏障测试绕过了Spring装配，不能发现这个初始化依赖环。生产ExactAggregate本身不依赖Mapper，不需修改。第一方MyBatis-Plus v3.5.12自动配置源码第124—143行确认构造期间立即解析拦截器；Spring6.2.8 ObjectProvider合同确认通过提供者延后取得目标，固定版本源码及哈希留在 `target/ci-166-investigation/`。
+
+**RED → GREEN：**扩展原MoneyAggregateFixtureCompilationTest，不复制示意夹具：编译真实money.sir和两份实际安装源码，用真实MybatisPlusAutoConfiguration、MapperFactoryBean、SqlSessionFactory及两个拦截器注册纯AnnotationConfigApplicationContext，显式禁止循环引用；DataSource若有访问即失败，不启动SpringApplication、HTTP、连接池或数据库。修复前原样得到BeanCurrentlyInCreationException而非编译／假数据源错误，XML封存在 `target/ci-166-verification/red/`。这不是全量生成工程Maven构建。
+
+修复只把GroupedSumFixture构造参数／字段换为ObjectProvider<SummaryEntryMapper>，到合法告警HTTP方法执行时才getObject，屏障／固定SQL／路由和所有原断言保持不变。容器回归确认SQL工厂在循环引用禁用时完成，构造拦截器不实例化其惰性Mapper，原ExactAggregate和屏障确实被加入工厂；随后运行真实编译后的计数完成屏障，并确认工厂完成后能取得真实Mapper。测试上下文关闭，静态上下文桥惰性注册以免污染其它测试；未替换实际自动配置、MapperFactoryBean或拦截器收集路径。没有开启allow-circular-references、删插件、跳过探针、改生产Bean或改变事务／缓存／错误协议，也没有新依赖。
+
+六类最新报告去重 **29 tests，0 failures／errors／skips**：MoneyAggregateFixtureCompilationTest1、ExactAggregateWarningRuntimeTest6、GroupedSumRuntimeTest13、BusinessSliceHarnessEvidenceTest4、GroupedSumContractTest3、GroupedSumChecksTest2。覆盖装配／延迟Mapper、真实屏障、当前Statement告警及普通ParamMap不受影响、Long／UUID结果、命名边界、冷目录安装和精确HTTP断言。GREEN和实际方法索引在 `target/ci-166-verification/green/`、local-result.json，源码清单绑定修复SHA。
+
+```powershell
+$env:MAVEN_OPTS='-Xmx384m -XX:ActiveProcessorCount=2'
+mvn -B -q -o -pl sir-toolchain-application -am test '-Dtest=MoneyAggregateFixtureCompilationTest,ExactAggregateWarningRuntimeTest,GroupedSumRuntimeTest,BusinessSliceHarnessEvidenceTest,GroupedSumContractTest,GroupedSumChecksTest' '-Dsurefire.failIfNoSpecifiedTests=false' '-DargLine=-Xmx512m -XX:ActiveProcessorCount=2'
+```
+
+没有本机全量门、生成工程Maven构建、应用／MySQL／浏览器，未测覆盖率；Maven384MiB、fork512MiB，各2个可见处理器。AFT Java LSP初始化失败为PARTIAL，以实际Maven编译及XML为据。纯容器装配通过不是HTTP／真库通过，Money的严格／非严格会话、count后提交新组的同快照检查及部署仍待修复SHA CI。月度／预算设计26草案不混入本批；修复测试与状态文档单批提交推送，不查／等新运行，负责人通知结果，账本67／8／9不变。

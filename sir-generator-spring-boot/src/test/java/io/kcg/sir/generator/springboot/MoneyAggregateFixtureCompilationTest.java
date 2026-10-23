@@ -18,7 +18,7 @@ class MoneyAggregateFixtureCompilationTest {
         Files.writeString(grouped,Files.readString(resources.resolve("conformance/mysql/GroupedSumFixture.java.txt")));
         try (var loader = GeneratedRuntimeSupport.compile(source, output, List.of(file,grouped))) {
             assertNotNull(loader.loadClass("example.money.fixture.GroupedSumFixture"));
-            verifyAfterCountBarrier(loader);
+            verifyRealAutoConfiguration(loader);
             assertNotNull(loader.loadClass("example.money.application.GroupMeasuredService"));
             assertNotNull(loader.loadClass("example.money.fixture.ExactAggregateWarningFixture"));
             assertNotNull(loader.loadClass("example.money.application.SumMeasuredService"));
@@ -29,11 +29,53 @@ class MoneyAggregateFixtureCompilationTest {
                 "the fixed SQL warning probe is not a generator output");
     }
 
-    private static void verifyAfterCountBarrier(java.net.URLClassLoader loader) throws Exception {
-        var mapper=loader.loadClass("example.money.persistence.SummaryEntryMapper");
-        Object proxy=java.lang.reflect.Proxy.newProxyInstance(loader,new Class<?>[]{mapper},(p,m,a)->{throw new AssertionError("no database call in fixture test");});
-        var fixtureType=loader.loadClass("example.money.fixture.GroupedSumFixture");
-        Object fixture=fixtureType.getConstructor(mapper).newInstance(proxy);
+    private static void verifyRealAutoConfiguration(java.net.URLClassLoader loader) throws Exception {
+        try (var context = new org.springframework.context.annotation.AnnotationConfigApplicationContext()) {
+            context.setClassLoader(loader);
+            context.getDefaultListableBeanFactory().setAllowCircularReferences(false);
+            context.registerBean(javax.sql.DataSource.class, () -> (javax.sql.DataSource) java.lang.reflect.Proxy.newProxyInstance(
+                    loader, new Class<?>[]{javax.sql.DataSource.class}, (proxy, method, arguments) -> {
+                        if (method.getName().equals("toString")) return "no-connection fixture data source";
+                        throw new AssertionError("container wiring must not access a database: " + method.getName());
+                    }));
+            // Suppress only the unrelated static global-context hook, so this test cannot contaminate later tests.
+            context.registerBean(com.baomidou.mybatisplus.extension.spring.MybatisPlusApplicationContextAware.class,
+                    definition -> definition.setLazyInit(true));
+            context.register(com.baomidou.mybatisplus.autoconfigure.MybatisPlusAutoConfiguration.class);
+            context.register(loader.loadClass("example.money.persistence.ExactAggregate"),
+                    loader.loadClass("example.money.fixture.GroupedSumFixture"),
+                    loader.loadClass("example.money.fixture.ExactAggregateWarningFixture"));
+            registerMapper(context, loader, "SummaryEntryMapper", "summaryEntryMapper");
+            registerMapper(context, loader, "MeasurementMapper", "measurementMapper");
+
+            assertDoesNotThrow(context::refresh, "the real MyBatis auto-configuration must finish without circular dependencies");
+            var factory = context.getBean(org.apache.ibatis.session.SqlSessionFactory.class);
+            Object fixture = context.getBean(loader.loadClass("example.money.fixture.GroupedSumFixture"));
+            assertFalse(context.getDefaultListableBeanFactory().containsSingleton("summaryEntryMapper"),
+                    "creating the interceptor must not resolve its lazy Mapper");
+            assertTrue(factory.getConfiguration().getInterceptors().contains(fixture), "the barrier must remain installed");
+            assertTrue(factory.getConfiguration().getInterceptors().contains(
+                    context.getBean(loader.loadClass("example.money.persistence.ExactAggregate"))), "warning rejection must remain installed");
+            verifyAfterCountBarrier(loader, fixture);
+            var mapperType = loader.loadClass("example.money.persistence.SummaryEntryMapper");
+            assertSame(context.getBean(mapperType), context.getBeanProvider(mapperType).getObject(),
+                    "the actual Mapper must be resolvable after the SQL factory is complete");
+        }
+    }
+
+    private static void registerMapper(org.springframework.context.support.GenericApplicationContext context,
+            ClassLoader loader, String simpleName, String beanName) throws ClassNotFoundException {
+        var mapperType = loader.loadClass("example.money.persistence." + simpleName);
+        var definition = new org.springframework.beans.factory.support.RootBeanDefinition(org.mybatis.spring.mapper.MapperFactoryBean.class);
+        definition.getConstructorArgumentValues().addGenericArgumentValue(mapperType);
+        definition.getPropertyValues().add("sqlSessionFactory", new org.springframework.beans.factory.config.RuntimeBeanReference("sqlSessionFactory"));
+        definition.setAttribute(org.springframework.beans.factory.FactoryBean.OBJECT_TYPE_ATTRIBUTE, mapperType);
+        definition.setLazyInit(true);
+        context.registerBeanDefinition(beanName, definition);
+    }
+
+    private static void verifyAfterCountBarrier(java.net.URLClassLoader loader, Object fixture) throws Exception {
+        var fixtureType=fixture.getClass();
         fixtureType.getMethod("arm").invoke(fixture);
         var helper=loader.loadClass("example.money.persistence.ExactAggregate");
         var wrapper=(com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<?>)helper.getMethod("query",Class.class,String.class)

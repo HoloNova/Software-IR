@@ -111,7 +111,9 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 
 **CI 提速实测：**#155 主验证 8:18（同业务源码 #154 为 19:51），在线预热 0:27、Frozen 3:37，Completion 按预期跳过；真实业务／独立验证／CLI 保留。部署被取消，不能比较整轮时长，也不将全部观测改善归因为编排。详见[验证第 25 节](qualification/README.md#ci-154-accepted)。
 
-**当前修复（#165）：**e270436的冻结门发现GROUP_KEY_FIELD未进入TypedReferenceSite全角色夹具，完成诊断另发现跨文件角色覆盖同样遗漏；业务IT／独立验证／CLI／部署均跳过。已补真实分组源码、测试AST遍历及无导出精确缺import反例，不改生产实现、不缩减角色集合，6类53项定向通过，见[验证35](qualification/README.md#ci-165-group-reference-coverage-fix)。完整文件导出契约仍须Linux CI，本机3个无导出方法不冒充全类通过。修复随配套文档提交推送后继续月度／预算范围核对，不查询或等待新CI。
+**当前修复（#166）：**a696531的Frozen全量门及TypedReferenceSite18项／完整ProjectVisibility7项均通过；唯一业务失败在Money启动时的测试夹具依赖环：MyBatis工厂收集分组拦截器，后者提前取得Mapper，再回到未完成的工厂。已让夹具仅在执行告警请求时解析Mapper，并用实际生成源码、真实MyBatis自动配置／MapperFactoryBean、禁止循环引用的无数据库容器先RED再GREEN；6类29项定向通过，告警与计数后屏障保留，不改生产实现或开放循环引用，见[验证36](qualification/README.md#ci-166-fixture-mapper-cycle-fix)。Money分组SQL／快照未运行到，独立验证／CLI／部署跳过，仍须修复SHA CI；月度设计26草案不混入提交，不查询或等待CI。
+
+**上一轮修复（#165，已由#166验证通过）：**e270436的冻结门发现GROUP_KEY_FIELD未进入TypedReferenceSite全角色夹具，完成诊断另发现跨文件角色覆盖同样遗漏；业务IT／独立验证／CLI／部署均跳过。已补真实分组源码、测试AST遍历及无导出精确缺import反例，不改生产实现、不缩减角色集合，6类53项定向通过，见[验证35](qualification/README.md#ci-165-group-reference-coverage-fix)。完整文件导出契约仍须Linux CI，本机3个无导出方法不冒充全类通过。修复随配套文档提交推送后继续月度／预算范围核对，不查询或等待新CI。
 
 **最新阶段（G8引用分组分页，待同源码CI）：**[设计25](design/12-feature-semantics-and-semantic-types.md#g8-grouped-sum-proposal)已按确认实施：非Optional Ref单键、精确Decimal SUM、Page<SumGroup<Ref<Entity>>>固定key/total与稳定键顺序。COUNT DISTINCT及当前页共两次读取，复用一次筛选求值，明确只读REPEATABLE_READ及每语句告警／STATEMENT缓存；补齐any身份到根行外键的正式关联方向，不是通用JOIN。ledger增加本人区间／本人分类分页汇总（220行SIR／4106行Java／24项能力），不新增存储列、Mapper方法或应用构建。27类236项定向通过，两个CI探针实编并验证计数后屏障；真实HTTP／SQL快照和告警待原Money IT验证，本机NOT_RUN，见[验证34](qualification/README.md#g8-grouped-sum-local)。自然月／时区、预算历史、AVG／多键／零组未实现，账本仍67／8／9。配套文档随实现提交，不查询CI。
 

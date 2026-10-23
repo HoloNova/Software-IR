@@ -122,6 +122,8 @@ CI 提速版 #155 主验证 8:18，正常路径 Completion 跳过，实际测试
 
 #### G8 第二批：引用分组分页已实现，待同源码CI
 
+#166全量门通过（TypedReferenceSite18／完整ProjectVisibility7项通过），唯一失败在Money启动：分组验收拦截器构造依赖Mapper，MyBatis收集插件时形成工厂初始化环。已仅改夹具为ObjectProvider延迟到请求执行时获取Mapper；实际生成类＋真实MyBatis自动装配／MapperFactoryBean在禁止循环引用、禁止数据源访问的容器中先RED再GREEN，仍执行原计数后屏障和告警插件检查，6类29项定向通过，见[验证36](../qualification/README.md#ci-166-fixture-mapper-cycle-fix)。未开放循环引用／删插件／改生产规则；纯容器回归不是完整HTTP真库。业务分组SQL／快照没运行到，独立验证／CLI／部署跳过，仍待修复SHA CI；月度26草案继续留本地，不混入修复或单独造文档CI，不查询／等待结果。
+
 #165阻断于两处契约夹具遗漏GROUP_KEY_FIELD：TypedReferenceSite全角色／原AST审计与ProjectVisibility跨文件穷尽门。已补真实分组及测试AST遍历，添加无导出的Enrollment.student键绑定与删准确import的精确Span反例；6类53项定向通过，不改生产实现、不减覆盖枚举，见[验证35](../qualification/README.md#ci-165-group-reference-coverage-fix)。原跨文件全角色导出方法依赖Linux安全目录读取，本机NOT_RUN，仍保留CI执行。业务／快照／告警、独立验证和部署被跳过，未验收。修复与文档单批提交，推送后继续月度／预算核对，不等CI。
 
 [设计25](../design/12-feature-semantics-and-semantic-types.md#g8-grouped-sum-proposal)已按确认完成，27类236项定向通过，见[验证34](../qualification/README.md#g8-grouped-sum-local)。Page<SumGroup<Ref<Entity>>>只有key和精确total；Ref单键非Optional／secret，按身份升序、不补零组。COUNT DISTINCT和selectMaps用同一筛选求值，显式只读RR快照、两次当前Statement告警及STATEMENT缓存；任何一步失败不返回部分页。补齐any相关身份与根行外键的正式关联方向，不放开通用JOIN。源增删改、跨文件精确改名、结构门、Core／目标IR、Long／UUID、Mapper和支持载体命名冲突均覆盖。旧Mapper和分页协议不变。

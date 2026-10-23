@@ -5,11 +5,12 @@ package example.money.fixture;
 @org.apache.ibatis.plugin.Intercepts(@org.apache.ibatis.plugin.Signature(type=org.apache.ibatis.executor.statement.StatementHandler.class,
     method="query",args={java.sql.Statement.class,org.apache.ibatis.session.ResultHandler.class}))
 public final class GroupedSumFixture implements org.apache.ibatis.plugin.Interceptor {
-    private final example.money.persistence.SummaryEntryMapper mapper;
+    private final org.springframework.beans.factory.ObjectProvider<example.money.persistence.SummaryEntryMapper> mapper;
     private final java.util.concurrent.atomic.AtomicBoolean armed=new java.util.concurrent.atomic.AtomicBoolean();
     private volatile boolean ready;
     private volatile java.util.concurrent.CountDownLatch release=new java.util.concurrent.CountDownLatch(0);
-    public GroupedSumFixture(example.money.persistence.SummaryEntryMapper mapper) { this.mapper=mapper; }
+    // MyBatis creates interceptors while constructing its factory; resolve the Mapper only on a later HTTP request.
+    public GroupedSumFixture(org.springframework.beans.factory.ObjectProvider<example.money.persistence.SummaryEntryMapper> mapper) { this.mapper=mapper; }
 
     @org.springframework.web.bind.annotation.PostMapping("/api/fixture/group-barrier/arm")
     public String arm() {
@@ -41,6 +42,7 @@ public final class GroupedSumFixture implements org.apache.ibatis.plugin.Interce
     @org.springframework.web.bind.annotation.GetMapping("/api/fixture/group-warning")
     public Object warning(@org.springframework.web.bind.annotation.RequestParam("stage") String stage) {
         if (!stage.equals("count") && !stage.equals("data")) throw new IllegalArgumentException("fixture stage");
+        var mapper=this.mapper.getObject();
         var query=example.money.persistence.ExactAggregate.query(example.money.domain.SummaryEntry.class,"DISTINCT `category_id`");
         return example.money.persistence.ExactAggregate.grouped(query,w -> w.eq(example.money.domain.SummaryEntry::getOwner,1L),
             1,20,20,100,100000,IllegalArgumentException::new,"`category_id`",
