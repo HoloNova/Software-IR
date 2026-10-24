@@ -115,7 +115,10 @@ final class WorkflowRenderer {
           case SpringBootWorkflow.ScalarQueryStep query:
             renderScalarQuery(ctx, query, variableNames, imports, currentPackage, lines, mappers, stringMatches);
             break;
-         case FindStep find:
+                   case SpringBootWorkflow.EachStep each:
+             renderEach(ctx,workflow,capability,each,responseRepresentation,inputName,variableNames,imports,currentPackage,lines,mappers,stringMatches);
+             break;
+          case FindStep find:
          renderFind(ctx, find, inputName, variableNames, imports, currentPackage, lines, mappers, stringMatches);
             break;
          case CreateStep create:
@@ -135,7 +138,44 @@ final class WorkflowRenderer {
       }
    }
 
-   private static void renderValidate(
+   private static String variableName(Variable value, Map<SymbolId,String> names) {
+       return names.getOrDefault(value.symbol(),value.targetName());
+   }
+   private static String mapperAccess(MapperReference mapper, Map<SymbolId,String> names) {
+       return (names instanceof EachNames ? "this." : "")+mapper.mapperFieldName();
+   }
+   private static final class EachNames extends LinkedHashMap<SymbolId,String> {
+       EachNames(Map<SymbolId,String> outer) { super(outer); }
+   }
+
+   private static void renderEach(GenerationContext ctx, SpringBootWorkflow workflow, CapabilityDeclaration capability,
+         SpringBootWorkflow.EachStep step, ResponseRepresentation responseRepresentation, String inputName,
+         Map<SymbolId,String> names, ImportSorter imports, String currentPackage, List<String> lines,
+         Map<SymbolId,MapperReference> mappers, List<SpringExpression.StringMatch> stringMatches) {
+       EntityDeclaration entity=ctx.entity(step.entitySymbol());registerEntityImport(ctx,entity,imports,currentPackage);
+       MapperReference mapper=ensureMapper(ctx,step.entitySymbol(),entity.javaName(),mappers);
+       imports.add("com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper");
+       Map<LoweredNodeId,SpringExpression.StringMatch> matches=new LinkedHashMap<>();
+       for(var match:step.stringMatches())matches.put(match.expressionId(),match);
+       stringMatches.addAll(step.stringMatches());
+       String columns=step.plan().columns().stream().map(c -> StringEscape.javaString("`"+c.replace("`","``")+"`"))
+           .collect(java.util.stream.Collectors.joining(", "));
+       String seed="new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<"+entity.javaName()+">("+entity.javaName()+".class).select("+columns+").lambda()";
+       String query=renderPredicateChain(ctx,step.predicate(),step.itemVariable(),entity,matches,names,imports,currentPackage,seed,true)
+           +renderOrderClause(entity,step.orderKeys())+".last("+StringEscape.javaString("LIMIT "+step.plan().fetchLimit())+")";
+       lines.add("        {");
+       lines.add("            var $eachRows = this."+mapper.mapperFieldName()+"."+step.plan().mapperMethod()+"("+query+");");
+       lines.add("            if ($eachRows.size() > "+step.plan().limit()+") throw new "+errorJavaName(ctx,step.errorSymbol(),imports,currentPackage)+"();");
+       lines.add("            for (var $eachRow : $eachRows) {");
+       var local=new EachNames(names);local.put(step.row().symbol(),"$eachRow");int index=0;
+       for(var child:step.body())if(child instanceof SpringBootWorkflow.LoadStep load)local.put(load.result().symbol(),"$eachLocal"+index++);
+       var body=new ArrayList<String>();
+       for(var child:step.body())renderStep(ctx,workflow,capability,child,responseRepresentation,inputName,local,imports,currentPackage,body,mappers,stringMatches);
+       for(String line:body)lines.add("        "+line);
+       lines.add("            }");lines.add("        }");
+   }
+
+private static void renderValidate(
       GenerationContext ctx,
       CapabilityDeclaration capability,
       ValidateStep step,
@@ -171,21 +211,21 @@ final class WorkflowRenderer {
       WorkflowRenderer.MapperReference mapper = ensureMapper(ctx, step.entitySymbol(), entity.javaName(), mappers);
       String idExpr = ExpressionRenderer.renderExpression(step.idExpression(), variableNames);
       collectExpressionImports(ctx, step.idExpression(), variableNames, imports, currentPackage);
-      String resultName = step.result().targetName();
+      String resultName = variableName(step.result(), variableNames);
       String errorName = errorJavaName(ctx, step.errorSymbol(), imports, currentPackage);
       if (step.keyField().isPresent()) {
-         renderKeyedLoad(step, entity, mapper, idExpr, resultName, errorName, imports, lines);
+         renderKeyedLoad(step, entity, mapperAccess(mapper,variableNames), idExpr, resultName, errorName, imports, lines);
          return;
       }
 
       if (step.explicitLock()) {
          imports.add("com.baomidou.mybatisplus.core.toolkit.Wrappers");
-         lines.add("        var " + resultName + " = " + mapper.mapperFieldName()
+         lines.add("        var " + resultName + " = " + mapperAccess(mapper, variableNames)
             + ".selectOne(Wrappers.<" + entity.javaName() + ">lambdaQuery().eq(" + entity.javaName() + "::"
             + getterName(entity.identity().javaName()) + ", " + idExpr + ").last(\"FOR UPDATE\"));");
       } else {
          String readMethod = step.forUpdate() ? "selectByIdForUpdate" : "selectById";
-         lines.add("        var " + resultName + " = " + mapper.mapperFieldName() + "." + readMethod + "(" + idExpr + ");");
+         lines.add("        var " + resultName + " = " + mapperAccess(mapper, variableNames) + "." + readMethod + "(" + idExpr + ");");
       }
       lines.add("        if (" + resultName + " == null) {");
       lines.add("            throw new " + errorName + "();");
@@ -210,7 +250,7 @@ final class WorkflowRenderer {
       String exception = WriteSupport.of(ctx.model()).exceptionBaseFqn();
       imports.add(exception);
       imports.add("org.springframework.http.HttpStatus");
-      String resultName = step.result().targetName();
+      String resultName = variableName(step.result(), variableNames);
       lines.add("        var " + resultName + " = " + mapper.mapperFieldName() + ".selectById(" + idExpr + ");");
       lines.add("        if (" + resultName + " == null) {");
       lines.add("            throw new " + exception.substring(exception.lastIndexOf('.') + 1) + "(\"Unauthenticated\", HttpStatus.UNAUTHORIZED);");
@@ -228,7 +268,7 @@ final class WorkflowRenderer {
    private static void renderKeyedLoad(
       LoadStep step,
       EntityDeclaration entity,
-      WorkflowRenderer.MapperReference mapper,
+      String mapperAccess,
       String valueExpr,
       String resultName,
       String errorName,
@@ -242,7 +282,7 @@ final class WorkflowRenderer {
          .orElseThrow(() -> new IllegalStateException("load key is not a stored field of " + entity.javaName() + ": " + keySymbol));
       imports.add("com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper");
       String matches = resultName + "Matches";
-      lines.add("        var " + matches + " = " + mapper.mapperFieldName() + ".selectList(new LambdaQueryWrapper<" + entity.javaName() + ">()");
+      lines.add("        var " + matches + " = " + mapperAccess + ".selectList(new LambdaQueryWrapper<" + entity.javaName() + ">()");
       lines.add("                .eq(" + entity.javaName() + "::" + getterName(key.javaName()) + ", " + valueExpr + ")");
       lines.add("                .last(\"LIMIT 2\"));");
       lines.add("        if (" + matches + ".isEmpty()) {");
@@ -310,7 +350,7 @@ final class WorkflowRenderer {
        var key = ((LoweredJavaType.SumGroupValue)((LoweredJavaType.PageValue)step.result().type()).elementType()).keyType();
        String decoder = key.identityStorageType().kind() == LoweredJavaType.ScalarKind.UUID ? "uuidKey" : "longKey";
        var page = step.page();
-       lines.add("        var " + step.result().targetName() + " = " + helper + ".grouped(" + helper + ".query("
+       lines.add("        var " + variableName(step.result(), variables) + " = " + helper + ".grouped(" + helper + ".query("
            + entity.javaName() + ".class, " + StringEscape.javaString(step.plan().countProjection()) + "), $filter -> " + predicate
            + ", " + input + "." + getterName(page.pagePropertyName()) + "(), " + input + "." + getterName(page.sizePropertyName()) + "(), "
            + page.defaultSize() + ", " + page.maxSize() + ", " + page.maxPageNumber() + ", "
@@ -335,7 +375,7 @@ final class WorkflowRenderer {
        for (var match : step.stringMatches()) matches.put(match.expressionId(), match);
        String predicate = renderPredicateChain(ctx, step.predicate(), step.itemVariable(), entity, matches,
            variableNames, imports, currentPackage, "item", true);
-       lines.add("        java.math.BigDecimal " + step.result().targetName() + " = " + helper + ".read("
+       lines.add("        java.math.BigDecimal " + variableName(step.result(), variableNames) + " = " + helper + ".read("
            + helper + ".query(" + entity.javaName() + ".class, " + StringEscape.javaString(step.plan().projectionSql()) + "),"
            + " item -> " + predicate + ", " + mapper.mapperFieldName() + "::" + step.plan().mapperMethod() + ");");
     }
@@ -361,7 +401,7 @@ final class WorkflowRenderer {
       }
       String call = mapper.mapperFieldName() + "." + step.plan().mapperMethod() + "(" + wrapper + ")";
       boolean exists = step.plan().kind() == SpringBootWorkflow.ScalarResult.EXISTS;
-      lines.add("        " + (exists ? "boolean " : "long ") + step.result().targetName() + " = "
+      lines.add("        " + (exists ? "boolean " : "long ") + variableName(step.result(), variableNames) + " = "
          + (exists ? "!" + call + ".isEmpty()" : call) + ";");
    }
 
@@ -386,7 +426,7 @@ final class WorkflowRenderer {
          matches.put(match.expressionId(), match);
       }
 
-      String resultName = step.result().targetName();
+      String resultName = variableName(step.result(), variableNames);
       String wrapperChain = renderPredicateChain(ctx, step.predicate(), step.itemVariable(), entity, matches, variableNames, imports, currentPackage)
          + renderOrderClause(entity, step.orderKeys());
       lines.add("        var wrapper = " + wrapperChain + ";");
@@ -574,7 +614,7 @@ final class WorkflowRenderer {
    ) {
       EntityDeclaration entity = ctx.entity(step.entitySymbol());
       registerEntityImport(ctx, entity, imports, currentPackage);
-      String resultName = step.result().targetName();
+      String resultName = variableName(step.result(), variableNames);
       lines.add("        var " + resultName + " = new " + entity.javaName() + "();");
 
       for (Binding binding : step.bindings()) {
@@ -596,7 +636,7 @@ final class WorkflowRenderer {
       List<String> lines
    ) {
       Variable target = resolveVariable(workflow, step.targetVariable());
-      String targetName = target.targetName();
+      String targetName = variableName(target, variableNames);
       SpringBootWorkflow.ConditionalUpdate conditional = step.conditional().orElse(null);
       String inputName = capability.input().map(Variable::targetName).orElse(null);
       for (Binding binding : step.bindings()) {
@@ -657,7 +697,7 @@ final class WorkflowRenderer {
             continue;
          }
 
-         for (Step step : candidate.workflow().steps()) {
+         for (Step step : SpringBootWorkflow.walk(candidate.workflow().steps()).toList()) {
             Optional<SpringBootWorkflow.ConditionalUpdate> conditional = switch (step) {
                case PersistStep persist -> persist.conditional();
                case UpdateStep update -> update.conditional();
@@ -691,11 +731,11 @@ final class WorkflowRenderer {
 
       registerEntityImport(ctx, declared, imports, currentPackage);
       WorkflowRenderer.MapperReference mapper = ensureMapper(ctx, declared.symbolId(), declared.javaName(), mappers);
-      String targetName = target.targetName();
+      String targetName = variableName(target, variableNames);
       EntityDeclaration entity = ctx.entity(declared.symbolId());
       if (step.action() == PersistenceAction.DELETE) {
          // The row was read by a load of this workflow; nothing is written, so there is nothing to check.
-         lines.add("        " + mapper.mapperFieldName() + ".deleteById(" + targetName + "." + getterName(entity.identity().javaName()) + "());");
+         lines.add("        " + mapperAccess(mapper, variableNames) + ".deleteById(" + targetName + "." + getterName(entity.identity().javaName()) + "());");
          return;
       }
 
@@ -724,18 +764,18 @@ final class WorkflowRenderer {
                // The row may collide with one that is already there (a unique field or key): that is the declared failure.
                String duplicate = errorJavaName(ctx, step.failure().orElseThrow(), imports, currentPackage);
                lines.add("        try {");
-               lines.add("            " + mapper.mapperFieldName() + ".insert(" + targetName + ");");
+               lines.add("            " + mapperAccess(mapper, variableNames) + ".insert(" + targetName + ");");
                lines.add("        } catch (org.springframework.dao.DuplicateKeyException duplicate) {");
                lines.add("            throw new " + duplicate + "();");
                lines.add("        }");
                return;
             }
 
-            lines.add("        " + mapper.mapperFieldName() + ".insert(" + targetName + ");");
+            lines.add("        " + mapperAccess(mapper, variableNames) + ".insert(" + targetName + ");");
             return;
          }
 
-         lines.add("        " + mapper.mapperFieldName() + ".updateById(" + targetName + ");");
+         lines.add("        " + mapperAccess(mapper, variableNames) + ".updateById(" + targetName + ");");
          return;
       }
 
@@ -746,7 +786,7 @@ final class WorkflowRenderer {
          ? errorJavaName(ctx, conditional.failure().orElseThrow(), imports, currentPackage)
          : null;
       String affected = targetName + "Affected";
-      lines.add("        int " + affected + " = " + mapper.mapperFieldName() + ".updateIfVersionMatches(" + targetName + ", " + expectedVersion + ");");
+      lines.add("        int " + affected + " = " + mapperAccess(mapper, variableNames) + ".updateIfVersionMatches(" + targetName + ", " + expectedVersion + ");");
       lines.add("        if (" + affected + " != 1) {");
       if (errorName == null) {
          throw new IllegalStateException("a conditional persist must declare the failure of an unmatched row: " + step.id());
@@ -769,7 +809,7 @@ final class WorkflowRenderer {
          return null;
       }
 
-      return workflow.steps().stream()
+      return SpringBootWorkflow.walk(workflow.steps())
          .filter(UpdateStep.class::isInstance)
          .map(UpdateStep.class::cast)
          .filter(update -> update.targetVariable().equals(persist.targetVariable()))
@@ -804,14 +844,14 @@ final class WorkflowRenderer {
       List<String> lines
    ) {
       imports.add("com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper");
-      String targetName = target.targetName();
+      String targetName = variableName(target, variableNames);
       String identity = getterName(entity.identity().javaName());
       String updated = targetName + "Updated";
       renderDecimalDeltas(ctx, update, entity, variableNames, lines);
-      lines.add("        int " + updated + " = " + mapper.mapperFieldName() + ".update(null, new LambdaUpdateWrapper<" + entity.javaName() + ">()");
+      lines.add("        int " + updated + " = " + mapperAccess(mapper, variableNames) + ".update(null, new LambdaUpdateWrapper<" + entity.javaName() + ">()");
       lines.add("                .eq(" + entity.javaName() + "::" + identity + ", " + targetName + "." + identity + "())");
       if (update.guard().isPresent()) {
-          var counter = predicateNames("q");
+          var counter = predicateNames(variableNames instanceof EachNames ? "$eachQ" : "q");
           String rootName = nextWrapperName(counter);
          String condition = renderPredicateNode(
             ctx, update.guard().orElseThrow().predicate(), target, entity, Map.of(), variableNames, imports, currentPackage, rootName, counter);
@@ -845,7 +885,7 @@ final class WorkflowRenderer {
       List<Binding> counted = update.bindings().stream().filter(binding -> binding.relative().isPresent()).toList();
       if (!counted.isEmpty()) {
          String fresh = targetName + "Stored";
-         lines.add("        " + entity.javaName() + " " + fresh + " = " + mapper.mapperFieldName() + ".selectById(" + targetName + "." + identity + "());");
+         lines.add("        " + entity.javaName() + " " + fresh + " = " + mapperAccess(mapper, variableNames) + ".selectById(" + targetName + "." + identity + "());");
          for (Binding binding : counted) {
             lines.add("        " + targetName + "." + setter(binding.targetProperty()) + "(" + fresh + "." + getterName(binding.targetProperty()) + "());");
          }
@@ -953,7 +993,7 @@ final class WorkflowRenderer {
    ) {
       List<WorkflowRenderer.CandidateField> fields = new ArrayList<>();
       SpringBootDeclaration.PatchSpec patch = ctx.patchSpecOf(capability).orElse(null);
-      for (Step candidate : capability.workflow().steps()) {
+      for (Step candidate : SpringBootWorkflow.walk(capability.workflow().steps()).toList()) {
          if (candidate instanceof CreateStep create && create.result().symbol().equals(step.targetVariable())) {
             for (Binding binding : create.bindings()) {
                fields.add(new WorkflowRenderer.CandidateField(

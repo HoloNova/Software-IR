@@ -14,8 +14,8 @@ import org.junit.jupiter.api.Test;
 
 /** Real generated HTTP and independent JDBC: exact totals, rollback and quantity-based stock concurrency. */
 class MultiplicationBusinessConformanceIT {
-    private static final BusinessSliceHarness.Fixture FIXTURE = new BusinessSliceHarness.Fixture(
-            "G6 exact multiplication and multi-unit stock deltas", "/valid/multiplication.sir",
+    static final BusinessSliceHarness.Fixture FIXTURE = new BusinessSliceHarness.Fixture(
+            "G6 exact multiplication and G5 actual shop cancellation", "/valid/shop-conformance.sir",
             "/conformance/mysql/multiplication-ddl.sql", "/conformance/mysql/multiplication-seed.sql",
             "product", "/api/products/show?id=1", "multiplication-report.txt", "multiplication", "kcg.multiplication-conformance.enabled");
 
@@ -25,11 +25,15 @@ class MultiplicationBusinessConformanceIT {
             System.out.println("[MULTIPLICATION-CONFORMANCE] NOT_RUN: " + environment.missingPrerequisites());
             return;
         }
-        var slice = new BusinessSliceHarness(FIXTURE, environment);
+        var slice = createSlice(environment);
         try { slice.verify(() -> execute(slice)); }
         finally { slice.teardown(); slice.writeReport(); }
         System.out.println(slice.report());
         assertTrue(slice.passed(), slice::report);
+    }
+
+    static BusinessSliceHarness createSlice(BusinessSliceHarness.Environment environment) {
+        var slice=new BusinessSliceHarness(FIXTURE,environment);slice.useActorMode("external");return slice;
     }
 
     private void execute(BusinessSliceHarness s) throws Exception {
@@ -37,6 +41,7 @@ class MultiplicationBusinessConformanceIT {
         s.initializeRedaction(url);
         s.prepareSchemaAndFixtures();
         if (s.notRunReason() != null || s.compileAndMaterialize().isEmpty()) return;
+        ShopCancellationChecks.install(s);
         var jar = s.buildAndLocateJar(url);
         if (jar == null || !s.startAndWaitUntilReady(jar)) return;
         s.setHttpStatus("READY (multiplication product query)");
@@ -51,6 +56,7 @@ class MultiplicationBusinessConformanceIT {
             computedResponses(s, observer, http);
             courseCapacityCounters(s, observer, http);
             IntervalBookingChecks.verify(s, observer, http);
+            ShopCancellationChecks.verify(s,observer,http);
             s.setRowsAfter(s.rowsNow(observer));
         }
     }

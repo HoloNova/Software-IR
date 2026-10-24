@@ -1,0 +1,37 @@
+package example.multiplication.fixture;
+
+/** CI only: exercise the actual protected route and generated transaction under a non-strict session. */
+@org.springframework.stereotype.Component
+@org.springframework.core.annotation.Order(org.springframework.core.Ordered.HIGHEST_PRECEDENCE)
+public final class ShopSessionFixture extends org.springframework.web.filter.OncePerRequestFilter {
+    private final org.springframework.transaction.support.TransactionTemplate transaction;
+    private final org.springframework.jdbc.core.JdbcTemplate jdbc;
+    public ShopSessionFixture(org.springframework.transaction.PlatformTransactionManager manager,javax.sql.DataSource source) {
+        transaction=new org.springframework.transaction.support.TransactionTemplate(manager);
+        transaction.setIsolationLevel(org.springframework.transaction.TransactionDefinition.ISOLATION_READ_COMMITTED);
+        jdbc=new org.springframework.jdbc.core.JdbcTemplate(source);
+    }
+    @Override protected void doFilterInternal(jakarta.servlet.http.HttpServletRequest request,jakarta.servlet.http.HttpServletResponse response,
+            jakarta.servlet.FilterChain chain) throws jakarta.servlet.ServletException,java.io.IOException {
+        if(!request.getRequestURI().equals("/api/orders/106/cancel") || !"true".equals(request.getHeader("X-Fixture-Non-Strict"))) {
+            chain.doFilter(request,response);return;
+        }
+        try {
+            transaction.executeWithoutResult(status->{
+                String original=jdbc.queryForObject("SELECT @@SESSION.sql_mode",String.class);
+                jdbc.execute("SET SESSION sql_mode=''");
+                if(!"".equals(jdbc.queryForObject("SELECT @@SESSION.sql_mode",String.class)))throw new IllegalStateException("fixture session is still strict");
+                response.setHeader("X-Fixture-Sql-Mode","non-strict");
+                try {chain.doFilter(request,response);}
+                catch(java.io.IOException|jakarta.servlet.ServletException e){status.setRollbackOnly();throw new FixtureDispatchFailure(e);}
+                finally {if(response.getStatus()>=400)status.setRollbackOnly();jdbc.update("SET SESSION sql_mode=?",original);}
+            });
+        } catch(FixtureDispatchFailure e) {
+            if(e.getCause() instanceof java.io.IOException io)throw io;
+            throw (jakarta.servlet.ServletException)e.getCause();
+        }
+    }
+    private static final class FixtureDispatchFailure extends RuntimeException {
+        FixtureDispatchFailure(Exception cause){super(cause);}
+    }
+}

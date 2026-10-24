@@ -60,19 +60,22 @@ final class EntityScopes {
    }
 
    private NormalizedCapability capability(NormalizedCapability c) {
-      List<NormalizedStep> steps = new ArrayList<>();
-      for (NormalizedStep step : c.workflow().steps()) {
-         NormalizedStep rewritten = this.step(step);
-         steps.add(rewritten);
-         if (rewritten instanceof NormalizedStep.LoadStep load && this.scoped.containsKey(load.entitySymbol())) {
-            String base = load.sourceNodeId().value() + "/scope";
-            NormalizedExpression condition = this.copy(this.scope(load.entitySymbol()), base, Optional.of(load.resultVariable()), load.entitySymbol());
-            steps.add(new NormalizedStep.ValidateStep(new AstNodeId(base), condition.span(), condition, load.errorSymbol()));
+      NormalizedWorkflow w=c.workflow();
+      return new NormalizedCapability(c.id(),c.name(),c.span(),c.sourceNodeId(),c.actorSymbol(),c.inputSymbol(),c.outputType(),
+          c.fails(),c.requires(),c.exposure(),c.method(),c.path(),new NormalizedWorkflow(w.id(),w.span(),w.sourceNodeId(),this.steps(w.steps())));
+   }
+
+   private List<NormalizedStep> steps(List<NormalizedStep> input) {
+      List<NormalizedStep> result=new ArrayList<>();
+      for(NormalizedStep original:input) {
+         NormalizedStep rewritten=this.step(original);result.add(rewritten);
+         if(rewritten instanceof NormalizedStep.LoadStep load && this.scoped.containsKey(load.entitySymbol())) {
+            String base=load.sourceNodeId().value()+"/scope";
+            NormalizedExpression condition=this.copy(this.scope(load.entitySymbol()),base,Optional.of(load.resultVariable()),load.entitySymbol());
+            result.add(new NormalizedStep.ValidateStep(new AstNodeId(base),condition.span(),condition,load.errorSymbol()));
          }
       }
-      NormalizedWorkflow w = c.workflow();
-      return new NormalizedCapability(c.id(), c.name(), c.span(), c.sourceNodeId(), c.actorSymbol(), c.inputSymbol(), c.outputType(),
-         c.fails(), c.requires(), c.exposure(), c.method(), c.path(), new NormalizedWorkflow(w.id(), w.span(), w.sourceNodeId(), steps));
+      return List.copyOf(result);
    }
 
    private NormalizedStep step(NormalizedStep step) {
@@ -89,7 +92,16 @@ final class EntityScopes {
             }
             yield new NormalizedStep.SumStep(s.sourceNodeId(), s.span(), s.entitySymbol(), s.fieldSymbol(), predicate, s.resultVariable(), s.itemVariable());
          }
-         case NormalizedStep.GroupedSumStep s -> {
+                   case NormalizedStep.EachStep s -> {
+             NormalizedExpression predicate=this.expression(s.predicate(),at);
+             if(this.scoped.containsKey(s.entitySymbol())) {
+                String base=at+"/scope";
+                predicate=and(base+"/and",predicate,this.copy(this.scope(s.entitySymbol()),base,Optional.of(s.itemVariable()),s.entitySymbol()));
+             }
+             yield new NormalizedStep.EachStep(s.sourceNodeId(),s.span(),s.entitySymbol(),predicate,s.orderKeys(),s.limit(),
+                 s.errorSymbol(),s.rowVariable(),s.itemVariable(),this.steps(s.body()));
+          }
+case NormalizedStep.GroupedSumStep s -> {
             NormalizedExpression predicate = this.expression(s.predicate(), at);
             if (this.scoped.containsKey(s.entitySymbol())) {
                String base = at + "/scope";

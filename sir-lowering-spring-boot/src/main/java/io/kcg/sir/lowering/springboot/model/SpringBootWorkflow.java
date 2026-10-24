@@ -14,6 +14,12 @@ public record SpringBootWorkflow(LoweredNodeId id, LoweredOrigin origin, List<Sp
       steps = List.copyOf(Objects.requireNonNull(steps, "steps"));
    }
 
+   /** Structural audit only; body scope is kept by the actual execution plan. */
+   public static java.util.stream.Stream<Step> walk(List<Step> steps) {
+       return steps.stream().flatMap(step -> step instanceof EachStep each
+           ? java.util.stream.Stream.concat(java.util.stream.Stream.of(step),walk(each.body())) : java.util.stream.Stream.of(step));
+   }
+
    private static void requireStep(LoweredNodeId id, LoweredOrigin origin) {
       Objects.requireNonNull(id, "id");
       Objects.requireNonNull(origin, "origin");
@@ -78,7 +84,21 @@ public record SpringBootWorkflow(LoweredNodeId id, LoweredOrigin origin, List<Sp
       }
    }
 
-   public record GroupedSumPlan(SymbolId fieldSymbol, SymbolId keySymbol, String columnName, String keyColumn,
+   public record EachPlan(int limit, int fetchLimit, String mapperMethod, List<String> columns,
+         int sourceStatements, int bodyStatements, int maximumStatements) {
+        public EachPlan { requireText(mapperMethod,"each mapper"); columns=List.copyOf(columns); }
+    }
+    public record EachStep(LoweredNodeId id, LoweredOrigin origin, SymbolId entitySymbol,
+         SpringExpression predicate, List<OrderKey> orderKeys, List<SpringExpression.StringMatch> stringMatches,
+         EachPlan plan, SymbolId errorSymbol, Variable row, Variable itemVariable, List<Step> body) implements Step {
+        public EachStep {
+            requireStep(id,origin);Objects.requireNonNull(entitySymbol);Objects.requireNonNull(predicate);
+            orderKeys=List.copyOf(orderKeys);stringMatches=List.copyOf(stringMatches);Objects.requireNonNull(plan);
+            Objects.requireNonNull(errorSymbol);Objects.requireNonNull(row);Objects.requireNonNull(itemVariable);body=List.copyOf(body);
+        }
+    }
+
+    public record GroupedSumPlan(SymbolId fieldSymbol, SymbolId keySymbol, String columnName, String keyColumn,
        String countProjection, String dataProjection, String countMethod, String dataMethod,
        int statements, boolean rejectWarnings) {
        public GroupedSumPlan {
@@ -375,6 +395,7 @@ public record SpringBootWorkflow(LoweredNodeId id, LoweredOrigin origin, List<Sp
       SpringBootWorkflow.LoadStep,
       SpringBootWorkflow.LoadActorStep,
       SpringBootWorkflow.FindStep,
+       SpringBootWorkflow.EachStep,
       SpringBootWorkflow.ScalarQueryStep,
        SpringBootWorkflow.SumStep,
         SpringBootWorkflow.MonthStep,

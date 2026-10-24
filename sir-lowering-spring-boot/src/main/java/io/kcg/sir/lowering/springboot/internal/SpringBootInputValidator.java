@@ -467,7 +467,8 @@ public final class SpringBootInputValidator {
          : true;
    }
 
-   private void validateCapability(NormalizedCapability capability) {
+    private void validateCapability(NormalizedCapability capability) {
+       for(String problem:EachLexicalScopes.core(capability))this.error("SIR-LOWER-INPUT-001",problem,capability.span(),capability.id(),capability.sourceNodeId());
       capability.actorSymbol().ifPresent(symbol -> this.validateVariable(symbol, capability));
       capability.inputSymbol().ifPresent(symbol -> this.validateVariable(symbol, capability));
       SpringBootInputValidator.ActorAccess actorAccess = this.actorAccess(capability);
@@ -520,7 +521,42 @@ public final class SpringBootInputValidator {
             this.validateDeclarationKind(value.errorSymbol(), NormalizedError.class, capability);
             value.keyField().ifPresent(key -> this.validateLoadKey(value, key, capability));
             break;
-         case NormalizedStep.MonthStep value: {
+                   case NormalizedStep.EachStep value: {
+             this.validateDeclarationKind(value.entitySymbol(),NormalizedEntity.class,capability);
+             this.validateDeclarationKind(value.errorSymbol(),NormalizedError.class,capability);
+             this.validateVariable(value.rowVariable(),capability);this.validateVariable(value.itemVariable(),capability);
+             this.validateExpression(value.predicate(),capability.id(),actorAccess);
+             var declared=this.declarationsById.get(value.entitySymbol());
+             boolean valid=declared instanceof NormalizedEntity entity && entity.persistent()
+                 && value.limit().signum()>0 && value.limit().compareTo(java.math.BigInteger.valueOf(100))<=0
+                 && capability.requires().contains(io.kcg.sir.ast.AstRequirementKind.ATOMIC)
+                 && !capability.requires().contains(io.kcg.sir.ast.AstRequirementKind.READONLY)
+                 && capability.exposure()==io.kcg.sir.ast.AstExposureKind.COMMAND
+                 && capability.fails().contains(value.errorSymbol()) && value.predicate().type()==PrimitiveType.BOOLEAN
+                 && !value.orderKeys().isEmpty() && value.orderKeys().getLast().fieldSymbol().equals(entity.identity().id())
+                 && value.orderKeys().stream().map(NormalizedStep.OrderKey::fieldSymbol).distinct().count()==value.orderKeys().size();
+             if(declared instanceof NormalizedEntity entity)for(var key:value.orderKeys()) {
+                 if(key.fieldSymbol().equals(entity.identity().id()))continue;
+                 var field=entity.fields().stream().filter(f -> f.id().equals(key.fieldSymbol())).findFirst().orElse(null);
+                 if(field==null || field.secret() || field.type() instanceof OptionalType || field.type() instanceof ListType)valid=false;
+             }
+             for(SymbolId row:List.of(value.rowVariable(),value.itemVariable())) {
+                 var symbol=this.model.symbols().byId(row).orElse(null);
+                 if(!(symbol instanceof VariableSymbol variable && variable.type() instanceof RefType ref && ref.entityId().equals(value.entitySymbol())))valid=false;
+             }
+             Set<SymbolId> local=new java.util.HashSet<>();local.add(value.rowVariable());
+             for(var child:value.body()) {
+                 if(child instanceof NormalizedStep.LoadStep load)local.add(load.resultVariable());
+                 if(!(child instanceof NormalizedStep.ValidateStep || child instanceof NormalizedStep.LoadStep
+                     || child instanceof NormalizedStep.UpdateStep || child instanceof NormalizedStep.PersistStep))valid=false;
+                 SymbolId target=child instanceof NormalizedStep.UpdateStep u?u.targetVariable():child instanceof NormalizedStep.PersistStep p?p.targetVariable():null;
+                 if(target!=null&&!local.contains(target))valid=false;
+                 if(!(child instanceof NormalizedStep.EachStep))this.validateStep(child,capability,actorAccess);
+             }
+             if(!valid)this.error("SIR-LOWER-INPUT-001","invalid bounded source, local body or atomic contract",value.span(),capability.id(),value.sourceNodeId());
+             break;
+          }
+case NormalizedStep.MonthStep value: {
               this.validateExpression(value.month(),capability.id(),actorAccess);
               this.validateExpression(value.zone(),capability.id(),actorAccess);
               this.validateVariable(value.sinceVariable(),capability);this.validateVariable(value.untilVariable(),capability);

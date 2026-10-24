@@ -573,7 +573,15 @@ final class NormalizePass {
             Optional<SymbolId> keyField = s.keyField().map(key -> this.siteTargetOrUnknown(key.id()));
             yield new NormalizedStep.LoadStep(s.id(), s.span(), entitySym, idExpr != null ? idExpr : this.unitExpr(s.span()), keyField, resultVar, errorSym, s.forUpdate());
          }
-         case AstFindStep s -> {
+         case io.kcg.sir.ast.AstEachStep s -> {
+             NormalizedExpression predicate=this.normalizeExpression(s.predicate());
+             SymbolId row=this.definitionBindingOrUnknown(s.id());
+             yield new NormalizedStep.EachStep(s.id(),s.span(),this.siteTargetOrUnknown(s.entity().id()),
+                 predicate!=null?predicate:this.unitExpr(s.span()),s.order().keys().stream().map(this::normalizeOrderKey).toList(),
+                 s.limit(),this.siteTargetOrUnknown(s.error().id()),row,this.validated.findItemBindings().getOrDefault(s.id(),row),
+                 s.body().stream().map(child -> this.normalizeStep(child,capabilityScope)).filter(java.util.Objects::nonNull).toList());
+          }
+          case AstFindStep s -> {
             SymbolId entitySym = this.siteTargetOrUnknown(s.entity().id());
             SymbolId resultVar = this.definitionBindingOrUnknown(s.id());
             SymbolId itemVar = this.validated.findItemBindings().getOrDefault(s.id(), resultVar);

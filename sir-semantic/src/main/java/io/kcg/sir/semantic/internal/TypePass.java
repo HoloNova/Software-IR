@@ -561,7 +561,11 @@ final class TypePass {
       SirType outputType = this.resolved.typeRefTypes().get(capDecl.output().type().id());
        this.typePageOutput(capDecl, outputType);
 
-      for (AstStep step : capDecl.workflow().steps()) {
+      this.typeSteps(capScopeId,outputType,capDecl.workflow().steps(),visibleVars);
+   }
+
+   private void typeSteps(SymbolId capScopeId, SirType outputType, List<AstStep> steps, Set<String> visibleVars) {
+      for (AstStep step : steps) {
          AstStep var7 = step;
          switch (var7) {
             case AstValidateStep s:
@@ -592,7 +596,16 @@ final class TypePass {
 
                visibleVars.add(s.result().text());
                break;
-            case AstFindStep s:
+            case io.kcg.sir.ast.AstEachStep s: {
+                Set<String> predicateVars=new LinkedHashSet<>(visibleVars);predicateVars.add("item");
+                SirType predicate=this.typeExpression(s.predicate(),SymbolIdFactory.capabilityStepScope(capScopeId,s.id().value()),predicateVars);
+                if(predicate!=null&&!TypeRules.isBoolean(predicate))
+                   this.diagnostics.add(DiagnosticBuilder.error("SIR-TYPE-001","each predicate must be Boolean",s.predicate().span()));
+                Set<String> local=new LinkedHashSet<>(visibleVars);local.add(s.result().text());
+                this.typeSteps(SymbolIdFactory.capabilityStepScope(capScopeId,s.id().value()+"/body"),outputType,s.body(),local);
+                break;
+             }
+             case AstFindStep s:
                SymbolId stepScopeId = SymbolIdFactory.capabilityStepScope(capScopeId, s.id().value());
                Set<String> predVars = new LinkedHashSet<>(visibleVars);
                predVars.add("item");

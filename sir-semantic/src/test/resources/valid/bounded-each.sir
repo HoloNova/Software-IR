@@ -1,0 +1,33 @@
+sir 0.3
+software BoundedEach {
+  metadata { displayName "Bounded Each"; namespace "example.each"; }
+  target { language java 21; framework spring_boot; persistence mybatis_plus; database mysql; build maven; interface rest; }
+  sources {} imports {}
+  declarations {
+    entity Product persistent { identity id: Id generated auto; field stock: Count; }
+    entity Batch persistent { identity id: Id generated auto; field active: Flag; }
+    entity Line persistent {
+      identity id: Id generated auto; field batch: Ref<Batch>; field product: Ref<Product>;
+      field quantity: Quantity; field removed: Flag default false; scope removed == false;
+    }
+    input BatchInput { field id: Id; }
+    error InvalidLine http 409; error Missing http 404; error StockLimit http 409; error TooMany http 409;
+    capability Restore {
+      input BatchInput; output Unit;
+      fails InvalidLine; fails Missing; fails StockLimit; fails TooMany;
+      requires atomic; expose command;
+      workflow {
+        load Batch by input.id as batch for update else Missing;
+        each Line where item.batch == batch order by product ascending, id ascending limit 100 else TooMany as line {
+          validate line.quantity > 0 else InvalidLine;
+          load Product by line.product as product for update else Missing;
+          update product when product.stock >= 0 and product.stock <= 2147483647 - line.quantity else StockLimit {
+            stock: product.stock + line.quantity;
+          }
+          persist product;
+        }
+        return unit;
+      }
+    }
+  }
+}

@@ -290,6 +290,7 @@ workflowStep
     | findStep
     | scalarQueryStep
     | monthStep
+    | eachStep
     | sumStep
     | createStep
     | updateStep
@@ -312,6 +313,13 @@ loadStep
 // Context words: do not reserve for/update as new global identifiers.
 lockClause
     : {_input.LT(1).getText().equals("for")}? IDENT UPDATE
+    ;
+
+// Bounded materialized source; each/limit remain contextual identifiers.
+eachStep
+    : {_input.LT(1).getText().equals("each")}? IDENT entity=IDENT WHERE predicate=expression findOrderClause
+      {_input.LT(1).getText().equals("limit")}? IDENT bound=INT ELSE error=IDENT AS result=IDENT
+      LBRACE workflowStep* RBRACE
     ;
 
 findStep

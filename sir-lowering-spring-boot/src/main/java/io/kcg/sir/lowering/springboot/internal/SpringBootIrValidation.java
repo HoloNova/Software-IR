@@ -120,7 +120,7 @@ public final class SpringBootIrValidation {
       boolean pagesQuery = this.model.declarations().stream()
          .filter(SpringBootDeclaration.CapabilityDeclaration.class::isInstance)
          .map(SpringBootDeclaration.CapabilityDeclaration.class::cast)
-         .flatMap(capability -> capability.workflow().steps().stream())
+         .flatMap(capability -> SpringBootWorkflow.walk(capability.workflow().steps()))
          .anyMatch(step -> step instanceof SpringBootWorkflow.GroupedSumStep
                 || step instanceof SpringBootWorkflow.FindStep find && find.page().isPresent());
 
@@ -776,7 +776,7 @@ public final class SpringBootIrValidation {
 
                // A lock without a version-bounded write would hold a row for no reason, which is the
                // shape the target must never generate by accident.
-               boolean underConditionalUpdate = capability.workflow().steps().stream()
+               boolean underConditionalUpdate = SpringBootWorkflow.walk(capability.workflow().steps())
                   .anyMatch(candidate -> candidate instanceof SpringBootWorkflow.UpdateStep update
                      && update.conditional().isPresent()
                      && update.targetVariable().equals(load.result().symbol()));
@@ -1006,12 +1006,12 @@ public final class SpringBootIrValidation {
 
    /** A page output and a paged find step only make sense together. */
    private void validatePageDemand(SpringBootDeclaration.CapabilityDeclaration capability) {
-      long paged = capability.workflow().steps().stream()
+      long paged = SpringBootWorkflow.walk(capability.workflow().steps())
          .filter(SpringBootWorkflow.FindStep.class::isInstance)
          .map(SpringBootWorkflow.FindStep.class::cast)
          .filter(find -> find.page().isPresent())
          .count();
-      paged += capability.workflow().steps().stream().filter(SpringBootWorkflow.GroupedSumStep.class::isInstance).count();
+      paged += SpringBootWorkflow.walk(capability.workflow().steps()).filter(SpringBootWorkflow.GroupedSumStep.class::isInstance).count();
        boolean pageOutput = capability.outputType() instanceof LoweredJavaType.PageValue;
       if (pageOutput && paged != 1L) {
          this.error(capability, "Page output requires exactly one paged find step, found " + paged);
@@ -1022,7 +1022,8 @@ public final class SpringBootIrValidation {
       }
    }
 
-   private void validateWorkflow(SpringBootDeclaration.CapabilityDeclaration capability) {
+    private void validateWorkflow(SpringBootDeclaration.CapabilityDeclaration capability) {
+       for(String problem:EachLexicalScopes.target(capability))this.error(capability,problem);
       SpringBootWorkflow workflow = capability.workflow();
       this.addNode(workflow.id(), workflow.origin(), "workflow");
       long returnCount = workflow.steps().stream().filter(SpringBootWorkflow.ReturnStep.class::isInstance).count();
@@ -1085,7 +1086,18 @@ public final class SpringBootIrValidation {
             this.validateScalarQuery(value, owner);
             this.validateStringMatches(value.stringMatches(), value.predicate(), owner);
             break;
-         case SpringBootWorkflow.FindStep value:
+                   case SpringBootWorkflow.EachStep value:
+             this.requireDeclaration(value.entitySymbol(),SpringBootDeclaration.EntityDeclaration.class,owner);
+             this.validateExpression(value.predicate(),owner);
+             this.validateStringMatches(value.stringMatches(),value.predicate(),owner);
+             this.requireDeclaration(value.errorSymbol(),SpringBootDeclaration.ErrorDeclaration.class,owner);
+             for(String problem:EachValidation.validate(this.model,owner,value))this.error(owner,problem);
+             for(var child:value.body()) {
+                this.addNode(child.id(),child.origin(),"each body step");
+                if(!(child instanceof SpringBootWorkflow.EachStep))this.validateStep(child,owner);
+             }
+             break;
+case SpringBootWorkflow.FindStep value:
             this.requireDeclaration(value.entitySymbol(), SpringBootDeclaration.EntityDeclaration.class, owner);
             this.validateExpression(value.predicate(), owner);
             this.requireKnown(value.result().symbol(), owner, "find result variable");
@@ -1458,7 +1470,7 @@ public final class SpringBootIrValidation {
 
    private void requirePlainPersist(SpringBootWorkflow.UpdateStep update, SpringBootDeclaration owner, String what) {
       if (owner instanceof SpringBootDeclaration.CapabilityDeclaration capability) {
-         boolean persistedPlainly = capability.workflow().steps().stream()
+         boolean persistedPlainly = SpringBootWorkflow.walk(capability.workflow().steps())
             .anyMatch(step -> step instanceof SpringBootWorkflow.PersistStep persist
                && persist.targetVariable().equals(update.targetVariable())
                && persist.action() == io.kcg.sir.lowering.springboot.model.PersistenceAction.UPDATE

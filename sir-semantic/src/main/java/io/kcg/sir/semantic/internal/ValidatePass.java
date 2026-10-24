@@ -363,7 +363,7 @@ final class ValidatePass {
 
       int writeStepCount = 0;
 
-      for (AstStep step : capDecl.workflow().steps()) {
+      for (AstStep step : io.kcg.sir.ast.AstSteps.walk(capDecl.workflow().steps()).toList()) {
          if (this.isWriteStep(step)) {
             writeStepCount++;
          }
@@ -379,10 +379,19 @@ final class ValidatePass {
       this.validateWriteWorkflow(capDecl, failsSet);
       this.validateExistencePlacement(capDecl);
       this.validateSecretUsage(capDecl);
-      int returnCount = 0;
+             this.validateSteps(capDecl,failsSet,capDecl.workflow().steps(),true);
+       this.validateFailsOrder(capDecl);
+       this.validateRequiresOrder(capDecl);
+   }
+
+   private void validateSteps(AstCapabilityDecl capDecl, Set<SymbolId> failsSet, List<AstStep> steps, boolean top) {
+       boolean isReadonly=capDecl.requirements().stream().anyMatch(r -> r.requirement()==AstRequirementKind.READONLY);
+       boolean isAtomic=capDecl.requirements().stream().anyMatch(r -> r.requirement()==AstRequirementKind.ATOMIC);
+       boolean isQuery=capDecl.exposure().exposure()==AstExposureKind.QUERY;
+int returnCount = 0;
       boolean returnSeen = false;
 
-      for (AstStep step : capDecl.workflow().steps()) {
+      for (AstStep step : steps) {
          if (returnSeen) {
             this.diagnostics.add(DiagnosticBuilder.error("SIR-FLOW-002", "Return 后不能有其他步骤", step.span()));
          }
@@ -478,16 +487,21 @@ final class ValidatePass {
                this.validateStringMatchShape(s.predicate());
                this.rejectArithmeticTheQueryCannotCarry(s.predicate(), false);
                break;
-         case AstFindStep s:
+                   case io.kcg.sir.ast.AstEachStep s:
+                this.validateEach(s,capDecl,failsSet);
+                this.validateWriteWorkflow(capDecl,failsSet,s.body());
+                this.validateSteps(capDecl,failsSet,s.body(),false);
+                break;
+          case AstFindStep s:
                this.validateFindStep(s, capDecl, failsSet);
                break;
             default:
          }
       }
 
-      if (returnCount == 0) {
+      if (top && returnCount == 0) {
          this.diagnostics.add(DiagnosticBuilder.error("SIR-FLOW-002", "Workflow 必须包含 Return 步骤", capDecl.workflow().span()));
-      } else if (returnCount > 1) {
+      } else if (top && returnCount > 1) {
          this.diagnostics.add(DiagnosticBuilder.error("SIR-FLOW-002", "Workflow 只能包含一个 Return 步骤", capDecl.workflow().span()));
       }
 
@@ -501,6 +515,40 @@ final class ValidatePass {
      * {@code SIR-TYPE-001}. This method only owns the exposure rule, so that a paged envelope can
      * never leak into a write command.
      */
+
+   private void validateEach(io.kcg.sir.ast.AstEachStep step, AstCapabilityDecl cap, Set<SymbolId> fails) {
+       if(cap.exposure().exposure()!=AstExposureKind.COMMAND
+             || cap.requirements().stream().noneMatch(r -> r.requirement()==AstRequirementKind.ATOMIC))
+          this.diagnostics.add(DiagnosticBuilder.error("SIR-FLOW-004","each requires an atomic command",step.span()));
+       if(step.limit().signum()<=0 || step.limit().compareTo(java.math.BigInteger.valueOf(100))>0)
+          this.diagnostics.add(DiagnosticBuilder.error("SIR-VALID-001","each limit must be 1..100",step.span()));
+       SymbolId entity=this.typed.referenceSiteBindings().targetFor(step.entity().id()).orElse(null);
+       SymbolId error=this.typed.referenceSiteBindings().targetFor(step.error().id()).orElse(null);
+       if(error!=null && fails!=null && !fails.contains(error))
+          this.diagnostics.add(DiagnosticBuilder.error("SIR-FLOW-003","each references an undeclared failure",step.error().span()));
+       List<SymbolId> keys=step.order().keys().stream().map(k -> this.typed.referenceSiteBindings().targetFor(k.field().id()).orElse(null)).toList();
+       if(keys.isEmpty() || keys.getLast()==null || !keys.getLast().equals(this.entityIdentitySymbolIds.get(entity))
+             || new java.util.HashSet<>(keys).size()!=keys.size())
+          this.diagnostics.add(DiagnosticBuilder.error("SIR-VALID-001","each order must be unique and end with identity",step.order().span()));
+       for(SymbolId key:keys) {
+          SirType type=this.entityFieldTypes.getOrDefault(entity,Map.of()).get(key);
+          if(type instanceof OptionalType || this.secretFields.contains(key))
+             this.diagnostics.add(DiagnosticBuilder.error("SIR-VALID-001","each order cannot use optional or secret fields",step.order().span()));
+       }
+       this.validateStringMatchShape(step.predicate());
+       this.rejectArithmeticTheQueryCannotCarry(step.predicate(),false);
+       Set<SymbolId> local=new java.util.HashSet<>();
+       local.add(this.typed.referenceBindings().get(step.id()));
+       for(AstStep child:step.body()) {
+          if(child instanceof AstLoadStep load) local.add(this.typed.referenceBindings().get(load.id()));
+          if(!(child instanceof AstValidateStep || child instanceof AstLoadStep || child instanceof AstUpdateStep || child instanceof AstPersistStep))
+             this.diagnostics.add(DiagnosticBuilder.error("SIR-FLOW-004","each body only allows validate/load/update/persist",child.span()));
+          AstNameRef target=child instanceof AstUpdateStep update?update.target():child instanceof AstPersistStep persist?persist.target():null;
+          if(target!=null && !local.contains(this.typed.referenceSiteBindings().targetFor(target.id()).orElse(null)))
+             this.diagnostics.add(DiagnosticBuilder.error("SIR-FLOW-004","each body cannot write an outer row",target.span()));
+       }
+   }
+
    private void validatePageUsage(AstCapabilityDecl capDecl, boolean isQuery) {
        SirType outputType = this.typed.typeRefTypes().get(capDecl.output().type().id());
        if (outputType instanceof PageType && !isQuery) {
@@ -944,7 +992,7 @@ final class ValidatePass {
    * after the row is loaded.
    */
    private void validateSecretUsage(AstCapabilityDecl capDecl) {
-      for (AstStep step : capDecl.workflow().steps()) {
+      for (AstStep step : io.kcg.sir.ast.AstSteps.walk(capDecl.workflow().steps()).toList()) {
          switch (step) {
             case AstValidateStep s -> this.checkSecretReads(s.condition(), false);
             case AstLoadStep s -> this.checkSecretReads(s.idExpression(), false);
@@ -1053,7 +1101,7 @@ final class ValidatePass {
          return;
       }
 
-      for (AstStep step : capDecl.workflow().steps()) {
+      for (AstStep step : io.kcg.sir.ast.AstSteps.walk(capDecl.workflow().steps()).toList()) {
          if (step instanceof AstUpdateStep update
             && resultVar.equals(this.typed.referenceSiteBindings().targetFor(update.target().id()).orElse(null))) {
             this.diagnostics.add(DiagnosticBuilder.error(
@@ -1214,6 +1262,10 @@ final class ValidatePass {
    * silently skip the check is rejected here.
    */
    private void validateWriteWorkflow(AstCapabilityDecl capDecl, Set<SymbolId> failsSet) {
+       this.validateWriteWorkflow(capDecl,failsSet,capDecl.workflow().steps());
+   }
+
+   private void validateWriteWorkflow(AstCapabilityDecl capDecl, Set<SymbolId> failsSet, List<AstStep> steps) {
       SymbolId candidateInputSymId = this.capabilityInputSymbolId(capDecl);
       SymbolId patchInputSymId = candidateInputSymId != null && this.patchInputSourceEntities.containsKey(candidateInputSymId)
          ? candidateInputSymId
@@ -1222,7 +1274,7 @@ final class ValidatePass {
       AstStep lastPersist = null;
       AstStep lastUpdate = null;
 
-      for (AstStep step : capDecl.workflow().steps()) {
+      for (AstStep step : steps) {
          if (step instanceof AstPersistStep persist) {
             lastPersist = persist;
          } else if (step instanceof AstUpdateStep update) {
@@ -1262,7 +1314,7 @@ final class ValidatePass {
       }
 
       // An earlier persist may carry an else only when it writes a new row that can collide with a unique constraint.
-      for (AstStep step : capDecl.workflow().steps()) {
+      for (AstStep step : steps) {
          if (step instanceof AstPersistStep persist && persist != lastPersist && persist.failure().isPresent()
                && !this.insertsIntoUniqueEntity(capDecl, persist)) {
             this.diagnostics.add(DiagnosticBuilder.error("SIR-VALID-004", PERSIST_ELSE_RULE, persist.failure().orElseThrow().span()));
@@ -1284,7 +1336,7 @@ final class ValidatePass {
       }
 
       boolean changesEntity = false;
-      for (AstStep step : capDecl.workflow().steps()) {
+      for (AstStep step : io.kcg.sir.ast.AstSteps.walk(capDecl.workflow().steps()).toList()) {
          if (step instanceof AstUpdateStep update) {
             SymbolId updateEntity = this.updateTargetEntitySymId(update);
             if (updateEntity != null && updateEntity.equals(patchInputEntity)) {
@@ -1308,7 +1360,7 @@ final class ValidatePass {
       // Every change the payload can carry must reach the entity through an authored binding: a
       // payload field nobody binds would otherwise be accepted and silently dropped.
       Set<SymbolId> boundMembers = new LinkedHashSet<>();
-      for (AstStep step : capDecl.workflow().steps()) {
+      for (AstStep step : io.kcg.sir.ast.AstSteps.walk(capDecl.workflow().steps()).toList()) {
          if (step instanceof AstUpdateStep update && patchInputEntity != null
             && patchInputEntity.equals(this.updateTargetEntitySymId(update))) {
             for (AstBinding binding : update.bindings()) {
@@ -1332,7 +1384,7 @@ final class ValidatePass {
          }
       }
 
-      for (AstStep step : capDecl.workflow().steps()) {
+      for (AstStep step : io.kcg.sir.ast.AstSteps.walk(capDecl.workflow().steps()).toList()) {
          this.forEachPresentExpression(step, present -> {
             // The presence test binds the payload field; the rule is about the entity member it
             // applies to, because the identity is carried outside the change set.
@@ -1389,8 +1441,9 @@ final class ValidatePass {
          return;
       }
 
-      boolean loaded = capDecl.workflow().steps().stream()
-         .anyMatch(other -> other instanceof AstLoadStep load && target.equals(this.typed.referenceBindings().get(load.id())));
+      boolean loaded = io.kcg.sir.ast.AstSteps.walk(capDecl.workflow().steps())
+          .anyMatch(other -> (other instanceof AstLoadStep || other instanceof io.kcg.sir.ast.AstEachStep)
+              && target.equals(this.typed.referenceBindings().get(other.id())));
       if (!loaded) {
          this.diagnostics.add(DiagnosticBuilder.error(
             "SIR-VALID-007", "update 的守卫只能用于 load 出来的行: " + step.target().text(), step.target().span()));
@@ -1434,7 +1487,7 @@ final class ValidatePass {
          return;
       }
 
-      long updatesOfTheRow = capDecl.workflow().steps().stream()
+      long updatesOfTheRow = io.kcg.sir.ast.AstSteps.walk(capDecl.workflow().steps())
          .filter(other -> other instanceof AstUpdateStep update
             && target.equals(this.typed.referenceSiteBindings().targetFor(update.target().id()).orElse(null)))
          .count();
@@ -1445,8 +1498,9 @@ final class ValidatePass {
    }
 
    private void validateSelfRelativeTarget(AstUpdateStep step, AstCapabilityDecl capDecl, SymbolId target, List<AstBinding> relative) {
-      boolean loaded = capDecl.workflow().steps().stream()
-         .anyMatch(other -> other instanceof AstLoadStep load && target.equals(this.typed.referenceBindings().get(load.id())));
+      boolean loaded = io.kcg.sir.ast.AstSteps.walk(capDecl.workflow().steps())
+          .anyMatch(other -> (other instanceof AstLoadStep || other instanceof io.kcg.sir.ast.AstEachStep)
+              && target.equals(this.typed.referenceBindings().get(other.id())));
       if (!loaded) {
          this.diagnostics.add(DiagnosticBuilder.error(
             "SIR-VALID-007", "“本字段 + 值”只能用于 load 出来的行（新建的行还没有存下来的值）: " + step.target().text(), step.target().span()));
@@ -1560,7 +1614,7 @@ final class ValidatePass {
          return false;
       }
 
-      for (AstStep step : capDecl.workflow().steps()) {
+      for (AstStep step : io.kcg.sir.ast.AstSteps.walk(capDecl.workflow().steps()).toList()) {
          if (step instanceof AstCreateStep create && variable.equals(this.typed.referenceBindings().get(create.id()))) {
             return true;
          }
@@ -1635,7 +1689,7 @@ final class ValidatePass {
    * stated once per workflow instead of being repeated in every step's own validation.
    */
    private void validateExistencePlacement(AstCapabilityDecl capDecl) {
-      for (AstStep step : capDecl.workflow().steps()) {
+      for (AstStep step : io.kcg.sir.ast.AstSteps.walk(capDecl.workflow().steps()).toList()) {
          if (step instanceof AstFindStep find) {
             this.validateExistenceUsage(find.predicate(), ExistenceUsage.ALLOWED);
             find.page().ifPresent(page -> {
@@ -1875,7 +1929,7 @@ final class ValidatePass {
    private void validateDeletes(AstCapabilityDecl capDecl) {
       Set<String> loaded = new LinkedHashSet<>();
       Set<String> deleted = new LinkedHashSet<>();
-      for (AstStep step : capDecl.workflow().steps()) {
+      for (AstStep step : io.kcg.sir.ast.AstSteps.walk(capDecl.workflow().steps()).toList()) {
          if (step instanceof io.kcg.sir.ast.AstLoadStep load) {
             loaded.add(load.result().text());
          } else if (step instanceof io.kcg.sir.ast.AstDeleteStep delete) {

@@ -19,6 +19,8 @@ public enum ReferenceRole {
    CREDENTIAL_EXPIRY_FIELD(SymbolKind.FIELD),
    UNIQUE_KEY_FIELD(SymbolKind.FIELD),
    FIND_ENTITY(SymbolKind.ENTITY),
+   EACH_ENTITY(SymbolKind.ENTITY),
+   EACH_ERROR(SymbolKind.ERROR),
    SCALAR_QUERY_ENTITY(SymbolKind.ENTITY),
    SUM_ENTITY(SymbolKind.ENTITY),
    SUM_FIELD(SymbolKind.FIELD),

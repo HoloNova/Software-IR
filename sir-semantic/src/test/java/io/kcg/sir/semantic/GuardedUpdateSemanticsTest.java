@@ -106,7 +106,7 @@ class GuardedUpdateSemanticsTest {
     }
 
     private static String replace(String fragment, String replacement) {
-        String source = TestSources.resource(FIXTURE);
+        String source = TestSources.resource(FIXTURE).replace("\r\n", "\n");
         assertTrue(source.contains(fragment), "the fragment to replace is missing: " + fragment);
         return source.replace(fragment, replacement);
     }

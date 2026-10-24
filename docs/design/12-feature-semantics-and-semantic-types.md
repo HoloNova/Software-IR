@@ -1270,7 +1270,7 @@ GroupRange 的时间采用现有 Optional<Moment>，缺省／null／反序通过
 `87cad8b7aaf176295ff08003b70192e4de1e1377` 的 [#168](https://github.com/HoloNova/Software-IR/actions/runs/39927438145) 已完整核验：Frozen全量门、业务IT、独立验证、CLI与部署均success，240份XML无失败／错误。Money150项（单值／分组、同页快照、严格／非严格告警）、library203项（限额／FIFO／锁等待／回滚）、course151项（冲突／直接先修／冻结）、乘法72项均通过，资源digest匹配。分组SQL预算JSON为业务count1／page1／会话探测1／未知0，没有更改两条业务读取的合同。部署精度漂移与恢复／新实例链全过，合同外的中断迁移等不计通过，完整证据见[验证38](../qualification/README.md#ci-168-g2-g8-accepted)。本节及23.6—23.8、24节中“待CI／NOT_RUN”均为实施时历史边界，现由本次证据闭环，不改写原失败事实。四项G2需求由△转✓，账本71／4／9；自然月、预算、AVG、多键／零组、日期差和G5仍未实施。
 
 <a id="g8-calendar-month-scope"></a>
-## 26. G8 后续：用户时区自然月与当前预算（已实现，待同源码CI）
+## 26. G8 后续：用户时区自然月与当前预算（#170已验收）
 
 已验收基线为 `87cad8b7aaf176295ff08003b70192e4de1e1377`（#168）。负责人在本轮明确选择：**每位用户自己的时区＋指定预算的当前规则**，不是UTC月，也不是每期历史预算。此确认取代原来的UTC建议，不再重复请示这两项业务选择。本批已按确认贯通接口、月界与预算提示，定向33类247项通过；完整HTTP／SQL与部署仍待新CI。#168仅作已验收基线，不被挪用为本批真库证据；记录与实现同批提交，不单独触发文档CI。
 
@@ -1349,3 +1349,117 @@ ledger的月度声明直接复用于Money IT同一生成工程，AST片段相等
 ### 26.7 CI #169 启动身份配置修复
 
 `b1b7903` 的 [#169](https://github.com/HoloNova/Software-IR/actions/runs/40049305000) 在Frozen全量门和生成工程构建之后，因Money IT未配置kcg.actor-identity.mode而退出，月度真实检查及部署尚未执行。复用应用纳入actor／DualTokenLogin时，必须同步真实external启动配置；不因原Wallet路由公开就假定整个工程无需认证模式。修复只在测试侧：实际创建入口配置external，两次构建启动共用可检查的环境；真实生成身份守卫／凭证适配器与MyBatis装配覆盖原缺口，缺模式001及匿名401保留。7类21项定向通过，详见[验证40](../qualification/README.md#ci-169-actor-mode-fix)。没有修改时区、月界、预算或生产鉴权默认；真实数据库／HTTP和部署仍待修复源码CI，账本71／6／7不变，不查询或等待结果。
+
+
+### 26.8 #170 同源码验收
+
+负责人通知后核验 `e9f38dd7d94ecfabd7f0384b2d9e8e8ca1b0b66e` 的[#170](https://github.com/HoloNova/Software-IR/actions/runs/40052208682)：Frozen、全部业务IT、独立验证、CLI及独立部署全部通过，251份XML／1708项零失败／错误／跳过。Money306项实际检查包含两轮会话／JVM设置、微秒月界、1000／1500／9999日期、读取偏好后等待更新的RR屏障、指定当前预算及越权；源码、DDL、seed摘要匹配。此前#169启动阻塞已闭环，26节里的“待CI／本机NOT_RUN”保留为实施经过；不再作为当前未验收状态。两条ledger需求转✓，账本73／4／7，详见[验证41](../qualification/README.md#ci-170-calendar-accepted)。本次不扩大到每期历史预算、AVG、多键、G5或导出；记录与下一对应源码提交合并，不单独制造文档CI。
+
+
+<a id="g5-bounded-child-iteration-proposal"></a>
+## 27. G5 第一片：有界服务器子行遍历与取消返库（已实现，待同源码CI）
+
+基线为#170已验收的 `e9f38dd7d94ecfabd7f0384b2d9e8e8ca1b0b66e`。负责人已确认本片范围，现已贯通有界each和实际shop取消返库；21类202项定向通过，真实回滚／并发留待同源码CI。账本仍73／4／7，取消订单原本已是△，未提前转完整。先期组合探针归档，正式回归替代；文档随对应实现提交，不单独触发CI。
+
+### 27.1 为什么先做取消，而不是一次放开全部G5
+
+已逐步核对实际 `topics/shop/project.sir`：基线BuyNow仍是单商品多件，先扣库存／持久化新订单，再写明细；当时CancelOrder只把CREATED改成CANCELLED，没有遍历明细或返库存。Pay／Ship沿用状态条件写；当前shop没有追加既有订单明细、修改明细或修改商品库存的普通Crud入口。基线工作流仅平铺步骤，本批新增受限块迭代，不新增累加。List类型虽存在，不等于已经有请求逐项执行／累计业务。
+
+本片先补 **取消CREATED订单时，遍历服务器实际明细并全部返库**。数据来自数据库，不采信客户端提交的商品／数量；复用身份／归属、父行锁、状态条件写和整数增量，不增加购物车表、批量裸SQL或另一套写入机制。它可独立验收一条当前△，也能给有界子行处理建立统一执行节点。
+
+不在本片：请求列表遍历、嵌套请求校验、多个商品结算和金额累计、购物车持久化、优惠券、定期预约、级联删除、任意循环／递归。尤其不能先只让Java能for-each，就宣称完整多商品订单已实现。后续这些范围仍需单独设计，不以本提案提前批准。
+
+### 27.2 已实现接口与业务语义
+
+新增contextual `each` 步骤：实体、现有查询谓词、明确顺序、静态上限和声明错误，再给本次行一个局部名字。不是“find一页再当全量”，不引入作者可随意索引／修改的工作流列表。以下是当前shop的能力片段，其余声明来自实际shop；完整可执行独立示例在语言参考5.13，由既有文档门编译生成：
+
+```text
+error InconsistentOrder http 409;
+error OrderTooLarge http 409;
+error StockLimit http 409;
+capability CancelOrder {
+  actor Ref<User>;
+  input OrderRef;
+  output OrderView;
+  fails InconsistentOrder;
+  fails NotCancellable;
+  fails NotYourOrder;
+  fails OrderNotFound;
+  fails OrderTooLarge;
+  fails ProductNotFound;
+  fails StockLimit;
+  requires authenticated;
+  requires atomic;
+  expose command at "/orders/{id}/cancel";
+  workflow {
+    load PurchaseOrder by input.id as purchase for update else OrderNotFound;
+    validate purchase.buyer == actor else NotYourOrder;
+    update purchase when purchase.state == OrderState.CREATED else NotCancellable {
+      state: OrderState.CANCELLED;
+    }
+    persist purchase;
+    exists OrderLine where item.purchase == purchase as hasLines;
+    validate hasLines else InconsistentOrder;
+    each OrderLine where item.purchase == purchase
+      order by product ascending, id ascending
+      limit 100 else OrderTooLarge as line {
+      validate line.quantity > 0 else InconsistentOrder;
+      load Product by line.product as product for update else ProductNotFound;
+      validate product.stock >= 0 and product.stock <= 2147483647 - line.quantity else StockLimit;
+      update product when product.stock >= 0 and product.stock <= 2147483647 - line.quantity
+        else StockLimit {
+        stock: product.stock + line.quantity;
+      }
+      persist product;
+    }
+    return purchase;
+  }
+}
+```
+
+这里的2147483647是当前Count/Quantity的Int32物理上限，不是额外业务库存配置。先检查正数量，再在已锁产品行上用不溢出的减法检查上界，之后才构造加法候选，并保留同一个SQL上界守卫；因此返库不能依赖严格sql_mode才避免饱和。守卫不按旧内存库存算覆盖值，而是保留SQL `stock = stock + quantity`。价格、总额、明细和支付状态不重算；OFF_SHELF商品也归还库存，返库不等于重新上架。没有明细的旧损坏订单拒绝，不把它成功标为取消。
+
+明确的范围选择是：只取消CREATED，不退款或取消已支付／已发货；同一订单的重复取消仍409，且不得二次返库。沿用原路由、归属错误和成功默认200；不通过新增同名接口绕过旧能力。多个明细指向同一商品时逐条增加，各数量只消费一次，最后一致；不以去重丢掉数量。
+
+### 27.3 上限、查询和作用域
+
+- 首片limit只接受1..100的正整数字面量，shop选择100；不是请求字段、不支持“0表示无限”。目标计划读 `limit+1` 行作为超限哨兵，**在执行任何循环体之前**检查长度，超过便抛OrderTooLarge，不截断处理前100行。前面的订单状态写也随事务回滚。旧超限订单明确不可走本接口，不靠分页循环悄悄部分退库。
+- 源必须是持久化实体，复用scope和受支持的查询表达式／正式绑定。谓词在进入步骤时求值一次；排序只用直接、非secret的可排序物理列，必须以实体身份作为最后稳定键。本业务是商品外键升序、明细身份升序；不把Java内存排序或调用顺序当数据库锁序。
+- 一次有界selectList先物化服务器子行，关闭结果读取后逐条执行；不COUNT再翻页、不在游标未关闭时混写、不拉全表。返回的实体行供本地执行，不生成LineView或嵌套ProductView，不产生投影N+1。没有“每页不超过100所以订单无上限”的解释。
+- 每次循环体的行别名和load产生的局部变量只在体内有效，不能提前用、逃逸到后续return或遮蔽已有名。item仍只表示查询谓词当前行；体内line是明确的服务器实体行，`line.product`走已有物理主键解引用，不把实体传给JDBC。
+- 首片只在atomic command中允许，循环体仅开放validate、单行load、update、persist，且写入目标必须是迭代行或体内load的行。不写外层purchase、不做跨次累加；不允许嵌套each、体内return／break／continue、再分页find／聚合、创建或删除。空源一般执行零次，是否允许是外部业务判断，本例用已有exists拒绝无明细订单。
+
+这些限制使本片不需要同时引入自由变量赋值、循环结果、任意嵌套输入或部分成功协议；不是说这些功能永久禁止。
+
+### 27.4 并发与事务不能交给循环猜测
+
+先锁旧PurchaseOrder，授权并执行状态条件写，之后才读明细；所有产品按物理身份升序加锁。两张订单包含反向商品顺序时也使用相同锁序，不按客户端或明细插入顺序。已有BuyNow只涉及一个商品和它新建、尚未对外可见的订单；不让它反向锁别人的旧订单。Pay／Ship现有条件写与取消竞争时仍由订单状态决定唯一胜者；不能让两个动作各自按先前读到的CREATED成功。
+
+当前shop明细在订单创建事务内写入，之后没有追加／编辑入口；父锁不是可以阻止所有任意SQL插入的魔法。若以后新增追加明细入口，必须先遵守同一父锁并确认CREATED及订单业务允许，不能只锁取消方就宣称稳固。不同库存写入也必须继续用同一原子守卫协议；本片不自动证明任意作者工作流没有死锁，不增加自动重试或吞掉死锁异常。
+
+整个能力只用一个Spring事务、显式READ_COMMITTED及STATEMENT本地缓存，复用现有for-update计划。每条返库必须经过既有候选／守卫／持久化路径；后续明细、库存上限或触发器失败，一律抛出并回滚订单状态及所有已返库商品，无“已经取消、部分返库”的成功响应。循环本身不提交、开启新事务或把例外改为continue。外层HTTP认证、角色／归属不由迭代原语隐式添加。
+
+### 27.5 分层落点与独立拒绝
+
+新增Ast／Normalized／目标层各自的EachStep，保存查询源、谓词item、排序、上限／错误、迭代行绑定与body；源模型与计划仍不可变，不在Generator读取SIR或推断产品／订单名字。新增真实实体／错误引用角色必须同步TypedReferenceSite与ProjectVisibility的全角色样例、测试AST遍历及精确缺import反例，不豁免新角色。
+
+这是第一个嵌套工作流块。Resolve／Type／Validate、scope改写、Normalize、结构Schema／覆盖敏感性、Writer／SourceEditor、精确Renamer、图谱来源和目标分析都必须遍历body。现有通过平铺steps收集锁、缓存、Mapper依赖及写入计划的路径不能只见外层；每个引用仍只有一次正式Resolve，局部变量归属／生命周期由语义及独立输入模型校验。
+
+Lowering明确选定根实体全部所需物理列、固定排序、哨兵读取上限、长度拒绝、每次body绑定、单事务／隔离／缓存及最坏语句预算（有界源读取＋至多limit次body预算）。目标IR必须独立拒绝：0／越界上限、错列／缺稳定身份排序、用Page结果冒充全部源、未绑定错误或局部变量、body逃逸／嵌套／越权写外层、漏Mapper／漏事务／缓存、源或body预算不一致。不允许以不透明Java／SQL字符串保存整个循环；Generator只渲染已验证的计划。
+
+### 27.6 实际验收复用与证据边界
+
+已经在当前源码上跑通**两项组合探针**：SourceEditor按正式绑定把shop的Product／ProductView改为ShopProduct／ShopProductView，然后把实际shop声明组合进原multiplication软件；唯一共享名OutOfStock按同一个409声明核验后去重，不能静默覆盖。完整SIR→语义→Lowering→内存生成成功，原四位单价Product及Money的ShopProduct、两个Mapper同时存在，旧公开就绪路由与新认证订单路由保持各自合同。
+
+这两项先期探针当时只证明**既有源的组合／生成可行**，不含本批尚未实施时的each，不是启动、数据库或锁行为证明；后续实际生成Java已由本批回归实编，真库仍未运行。探针源码和报告封存 `target/g5-investigation/`，实现确认后用实际迭代回归替代，不永久增加一套重复CI探针。
+
+本批在该组合基础上复用MultiplicationBusinessConformanceIT原有构建／启动：新增shop相关表和测试数据，不把已有price(21,4)产品强行改成Money；以正式重命名后的实际shop声明做AST对齐，不写近似Cancel。新增认证后必须像#169修复一样覆盖实际创建路径和external子进程模式、真实身份守卫／凭证装配及匿名401；原公开产品就绪探针不能改成认证路由。保留原72项业务检查，不给Money再加一轮构建，也不另起Shop应用。
+
+本批定向与CI验收范围（后两项真实SQL本机NOT_RUN）：
+
+1. 语法／嵌套绑定／作用域和非法体先RED；源往返、增删改／跨文件改名、两个全角色门、结构遍历与目标独立反例；保持旧无each工程输出兼容。
+2. 实际生成服务及真实MyBatis参数绑定：0／100／101行、同商品多行、负数量、StockLimit、局部名字冲突；边界外不执行body、不泄漏局部变量，非严格模式也不能饱和库存。语言参考新增的正式示例经过现有文档生成门。
+3. 真实HTTP／MySQL：一次取消准确返还全部行；八个并发重复取消只有一个成功；Pay／Cancel竞争不同时成功；两张反序商品订单并发无锁序死结；外人／匿名／已支付／已发货不写；超限、坏明细和第二商品晚失败时，独立观察完整订单／产品／明细快照，验证前面返库和订单状态都回滚。
+4. 至少一个可观察的订单锁等待屏障，确认先等父锁再判断状态／读取明细，不能用偶然压力结果代替；保留完整SQL／分类，复用已修复的会话探测区分，不把驱动SELECT算成额外业务操作。
+
+本批21类202项定向通过，零失败／错误／跳过，按最新类报告去重；ProjectVisibility只计两个新增的无导出方法实例，完整Linux安全文件导出另由CI覆盖。8题基线（shop使用提交前源码，不含each）由新旧WorkflowRenderer纯内存生成对照，775个文件逐字节一致，不构建生成工程。真实HTTP／MySQL、并发与事务回滚均本机NOT_RUN，覆盖率未测量；AFT桥请求超时，不能记诊断清洁，编译以实际Maven为准。证据与残余边界见[验证42](../qualification/README.md#g5-bounded-each-local)，本机报告／源码哈希在target/g5-each-verification，账本73／4／7不变。

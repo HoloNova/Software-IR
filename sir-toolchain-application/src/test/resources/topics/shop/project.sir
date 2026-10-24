@@ -153,7 +153,7 @@ software OnlineShop {
     }
 
     // One request buys several units of one product; quantity drives both the exact total and atomic stock delta.
-    // GAP: multiple products, walking order lines and restoring cancelled stock still need list iteration.
+    // GAP: buying multiple distinct products and accumulating their total still need a separate design.
     input BuyRequest {
       field productId: Id;
       field quantity: Quantity;
@@ -239,25 +239,44 @@ software OnlineShop {
       }
     }
     error NotCancellable http 409;
-    // GAP: cancelling should give every line's quantity back to its product; a request cannot walk the lines of an
-    // order, so the stock is not restored.
+    // Parent first, then product/id order. A later failure rolls back status and every stock delta.
+    error InconsistentOrder http 409;
+    error OrderTooLarge http 409;
+    error StockLimit http 409;
     capability CancelOrder {
       actor Ref<User>;
       input OrderRef;
       output OrderView;
+      fails InconsistentOrder;
       fails NotCancellable;
       fails NotYourOrder;
       fails OrderNotFound;
+      fails OrderTooLarge;
+      fails ProductNotFound;
+      fails StockLimit;
       requires authenticated;
       requires atomic;
       expose command at "/orders/{id}/cancel";
       workflow {
-        load PurchaseOrder by input.id as purchase else OrderNotFound;
+        load PurchaseOrder by input.id as purchase for update else OrderNotFound;
         validate purchase.buyer == actor else NotYourOrder;
         update purchase when purchase.state == OrderState.CREATED else NotCancellable {
           state: OrderState.CANCELLED;
         }
         persist purchase;
+        exists OrderLine where item.purchase == purchase as hasLines;
+        validate hasLines else InconsistentOrder;
+        each OrderLine where item.purchase == purchase
+          order by product ascending, id ascending
+          limit 100 else OrderTooLarge as line {
+          validate line.quantity > 0 else InconsistentOrder;
+          load Product by line.product as product for update else ProductNotFound;
+          validate product.stock >= 0 and product.stock <= 2147483647 - line.quantity else StockLimit;
+          update product when product.stock >= 0 and product.stock <= 2147483647 - line.quantity else StockLimit {
+            stock: product.stock + line.quantity;
+          }
+          persist product;
+        }
         return purchase;
       }
     }

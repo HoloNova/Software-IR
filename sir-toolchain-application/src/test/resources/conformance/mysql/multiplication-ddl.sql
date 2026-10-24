@@ -7,3 +7,12 @@ CREATE TABLE course (id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, capacity INT
 
 CREATE TABLE room (id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255) NOT NULL UNIQUE);
 CREATE TABLE booking (id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, room_id BIGINT NOT NULL, starts_at DATETIME(6) NOT NULL, ends_at DATETIME(6) NOT NULL, CONSTRAINT fixture_booking_room FOREIGN KEY (room_id) REFERENCES room(id));
+
+-- Actual OnlineShop declarations, Product formally renamed to preserve the four-decimal fixture.
+CREATE TABLE user (id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, role VARCHAR(32) NOT NULL DEFAULT 'CUSTOMER', name VARCHAR(64) NOT NULL UNIQUE, password_hash VARCHAR(255) NOT NULL);
+CREATE TABLE access_token (id CHAR(36) NOT NULL PRIMARY KEY, owner_id BIGINT NOT NULL, expires_at DATETIME(6) NOT NULL, CONSTRAINT fixture_shop_access_owner FOREIGN KEY (owner_id) REFERENCES user(id));
+CREATE TABLE refresh_token (id CHAR(36) NOT NULL PRIMARY KEY, owner_id BIGINT NOT NULL, used TINYINT(1) NOT NULL DEFAULT 0, expires_at DATETIME(6) NOT NULL, CONSTRAINT fixture_shop_refresh_owner FOREIGN KEY (owner_id) REFERENCES user(id));
+CREATE TABLE token_pair (id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, access_token CHAR(36) NOT NULL, access_expires_at DATETIME(6) NOT NULL, refresh_token CHAR(36) NOT NULL, refresh_expires_at DATETIME(6) NOT NULL);
+CREATE TABLE shop_product (id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, name VARCHAR(64) NOT NULL, description VARCHAR(255) NULL, price DECIMAL(19,2) NOT NULL, stock INT NOT NULL, state VARCHAR(32) NOT NULL DEFAULT 'ON_SHELF');
+CREATE TABLE purchase_order (id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, buyer_id BIGINT NOT NULL, state VARCHAR(32) NOT NULL DEFAULT 'CREATED', total DECIMAL(19,2) NOT NULL, created_at DATETIME(6) NOT NULL, CONSTRAINT fixture_shop_buyer FOREIGN KEY (buyer_id) REFERENCES user(id));
+CREATE TABLE order_line (id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, purchase_id BIGINT NOT NULL, product_id BIGINT NOT NULL, quantity INT NOT NULL, unit_price DECIMAL(19,2) NOT NULL, CONSTRAINT fixture_shop_purchase FOREIGN KEY (purchase_id) REFERENCES purchase_order(id), CONSTRAINT fixture_shop_product FOREIGN KEY (product_id) REFERENCES shop_product(id));

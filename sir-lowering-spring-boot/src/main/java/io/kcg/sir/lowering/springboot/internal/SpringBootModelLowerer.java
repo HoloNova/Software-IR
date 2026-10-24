@@ -174,7 +174,7 @@ public final class SpringBootModelLowerer {
             projectArtifacts.add(new ProjectArtifact.ExactAggregate(this.nodeId("project", "exact-aggregate"), this.projectOrigin(),
                 "src/main/java/" + pkg.replace('.', '/') + "/ExactAggregate.java", pkg, "ExactAggregate", this.source.declarations().stream()
                      .filter(NormalizedCapability.class::isInstance).map(NormalizedCapability.class::cast)
-                     .flatMap(c -> c.workflow().steps().stream()).anyMatch(NormalizedStep.GroupedSumStep.class::isInstance)
+                     .flatMap(c -> io.kcg.sir.semantic.model.NormalizedSteps.walk(c.workflow().steps())).anyMatch(NormalizedStep.GroupedSumStep.class::isInstance)
                      ? Optional.of(this.source.metadata().namespace()+".api.PageResponse") : Optional.empty()));
         }
 
@@ -242,7 +242,7 @@ public final class SpringBootModelLowerer {
             return fields.stream().anyMatch(f -> f.constraints().stream().anyMatch(c -> c.name().equals("timeZone")));
         });
         boolean calendar = this.source.declarations().stream().filter(NormalizedCapability.class::isInstance)
-            .map(NormalizedCapability.class::cast).flatMap(c -> c.workflow().steps().stream()).anyMatch(NormalizedStep.MonthStep.class::isInstance);
+            .map(NormalizedCapability.class::cast).flatMap(c -> io.kcg.sir.semantic.model.NormalizedSteps.walk(c.workflow().steps())).anyMatch(NormalizedStep.MonthStep.class::isInstance);
         if (timeZone || calendar) codes = java.util.stream.Stream.concat(codes.stream(), java.util.stream.Stream.of("timeZone")).toList();
         return new ProjectArtifact.ValidationSupport(
                 this.nodeId("project", "validation-support"), this.projectOrigin(),
@@ -252,7 +252,7 @@ public final class SpringBootModelLowerer {
 
     private boolean hasSum() {
         return this.source.declarations().stream().filter(NormalizedCapability.class::isInstance)
-            .map(NormalizedCapability.class::cast).flatMap(c -> c.workflow().steps().stream())
+            .map(NormalizedCapability.class::cast).flatMap(c -> io.kcg.sir.semantic.model.NormalizedSteps.walk(c.workflow().steps()))
             .anyMatch(s -> s instanceof NormalizedStep.SumStep || s instanceof NormalizedStep.GroupedSumStep);
     }
 
@@ -267,7 +267,7 @@ public final class SpringBootModelLowerer {
                 this.kebab(this.softwareName()), true, this.source.declarations().stream()
                     .filter(NormalizedCapability.class::isInstance).map(NormalizedCapability.class::cast)
                     .flatMap(cap -> cap.workflow().steps().stream())
-                    .anyMatch(s -> s instanceof NormalizedStep.SumStep || s instanceof NormalizedStep.GroupedSumStep || s instanceof NormalizedStep.LoadStep load && load.forUpdate()));
+                    .anyMatch(s -> s instanceof NormalizedStep.SumStep || s instanceof NormalizedStep.GroupedSumStep || s instanceof NormalizedStep.EachStep || s instanceof NormalizedStep.LoadStep load && load.forUpdate()));
     }
 
     /**
@@ -651,8 +651,8 @@ public final class SpringBootModelLowerer {
 
     private SpringBootDeclaration.CapabilityDeclaration lowerCapability(NormalizedCapability value) {
         boolean authenticated = value.requires().contains(AstRequirementKind.AUTHENTICATED);
-        SpringBootDeclaration.TransactionMode transactionMode = value.requires().contains(AstRequirementKind.READONLY) ? (value.workflow().steps().stream().anyMatch(s -> s instanceof NormalizedStep.GroupedSumStep || s instanceof NormalizedStep.MonthStep)
-             ? SpringBootDeclaration.TransactionMode.REPEATABLE_READ : SpringBootDeclaration.TransactionMode.READ_ONLY) : (value.requires().contains(AstRequirementKind.ATOMIC) ? (value.workflow().steps().stream().anyMatch(s -> s instanceof NormalizedStep.LoadStep load && load.forUpdate())
+        SpringBootDeclaration.TransactionMode transactionMode = value.requires().contains(AstRequirementKind.READONLY) ? (io.kcg.sir.semantic.model.NormalizedSteps.walk(value.workflow().steps()).anyMatch(s -> s instanceof NormalizedStep.GroupedSumStep || s instanceof NormalizedStep.MonthStep)
+             ? SpringBootDeclaration.TransactionMode.REPEATABLE_READ : SpringBootDeclaration.TransactionMode.READ_ONLY) : (value.requires().contains(AstRequirementKind.ATOMIC) ? (io.kcg.sir.semantic.model.NormalizedSteps.walk(value.workflow().steps()).anyMatch(s -> s instanceof NormalizedStep.EachStep || s instanceof NormalizedStep.LoadStep load && load.forUpdate())
                  ? SpringBootDeclaration.TransactionMode.READ_COMMITTED : SpringBootDeclaration.TransactionMode.REQUIRED) : SpringBootDeclaration.TransactionMode.NONE);
         SpringBootDeclaration.CapabilityKind kind = switch (value.exposure()) {
             default -> throw new MatchException(null, null);
@@ -835,6 +835,27 @@ public final class SpringBootModelLowerer {
                 new SpringBootWorkflow.Variable(rowSymbol, "actor", this.lowerVariableType(type, true)));
     }
 
+
+    private SpringBootWorkflow.EachStep lowerEach(NormalizedStep.EachStep source, SymbolId owner,
+            Map<SymbolId,Provenance> provenance, Optional<SymbolId> actor, LoweredNodeId id, LoweredOrigin origin) {
+        Map<SymbolId,Provenance> local=new LinkedHashMap<>(provenance);local.put(source.rowVariable(),Provenance.EXISTING);
+        List<SpringBootWorkflow.Step> body=new ArrayList<>();
+        for(NormalizedStep child:source.body()) {
+            body.add(this.lowerStep(child,owner,local,actor));
+            if(child instanceof NormalizedStep.LoadStep load)local.put(load.resultVariable(),Provenance.EXISTING);
+        }
+        int budget=EachValidation.bodyStatements(body);
+        var entity=this.entities.get(source.entitySymbol());
+        var columns=java.util.stream.Stream.concat(java.util.stream.Stream.of(this.snake(entity.identity().name())),
+            entity.fields().stream().map(field -> this.columns.get(field.id()))).toList();
+        int limit=source.limit().intValueExact();
+        var plan=new SpringBootWorkflow.EachPlan(limit,limit+1,"selectList",columns,1,budget,1+limit*budget);
+        return new SpringBootWorkflow.EachStep(id,origin,source.entitySymbol(),
+            this.lowerExpression(source.predicate(),owner,actor,Optional.of(source.itemVariable())),
+            source.orderKeys().stream().map(key -> new SpringBootWorkflow.OrderKey(key.fieldSymbol(),this.targetMemberName(key.fieldSymbol(),"unknown"),key.descending())).toList(),
+            this.lowerStringMatches(source.predicate(),owner),plan,source.errorSymbol(),this.variable(source.rowVariable()),this.variable(source.itemVariable()),body);
+    }
+
     private SpringBootWorkflow.Step lowerStep(NormalizedStep step, SymbolId owner, Map<SymbolId, Provenance> provenance, Optional<SymbolId> actorSymbol) {
         LoweredNodeId id = this.nodeId(step.sourceNodeId().value(), "step");
         LoweredOrigin origin = this.origin(owner, step.sourceNodeId(), step.span());
@@ -844,6 +865,7 @@ public final class SpringBootModelLowerer {
             case NormalizedStep.LoadStep value -> new SpringBootWorkflow.LoadStep(
                     id, origin, value.entitySymbol(), this.asIdentity(lowerExpression(value.idExpression(), owner, actorSymbol), actorSymbol),
                     variable(value.resultVariable()), value.errorSymbol(), value.forUpdate() || this.locksRow(value, owner), value.keyField(), value.forUpdate());
+            case NormalizedStep.EachStep value -> this.lowerEach(value,owner,provenance,actorSymbol,id,origin);
             case NormalizedStep.FindStep value -> new SpringBootWorkflow.FindStep(
                     id, origin, value.entitySymbol(),
                     lowerExpression(value.predicate(), owner, actorSymbol, this.findItemSymbol(value)),
@@ -961,7 +983,7 @@ public final class SpringBootModelLowerer {
             return Optional.empty();
         }
 
-        return capability.workflow().steps().stream()
+        return io.kcg.sir.semantic.model.NormalizedSteps.walk(capability.workflow().steps())
                 .filter(NormalizedStep.PersistStep.class::isInstance)
                 .map(NormalizedStep.PersistStep.class::cast)
                 .filter(persist -> persist.targetVariable().equals(variable))
@@ -979,7 +1001,7 @@ public final class SpringBootModelLowerer {
             return false;
         }
 
-        return capability.workflow().steps().stream()
+        return io.kcg.sir.semantic.model.NormalizedSteps.walk(capability.workflow().steps())
                 .filter(NormalizedStep.PersistStep.class::isInstance)
                 .map(NormalizedStep.PersistStep.class::cast)
                 .anyMatch(persist -> persist.targetVariable().equals(update.targetVariable()));
@@ -1007,7 +1029,7 @@ public final class SpringBootModelLowerer {
     }
 
     private NormalizedStep.UpdateStep updateStepFor(NormalizedCapability capability, SymbolId variable) {
-        return capability.workflow().steps().stream()
+        return io.kcg.sir.semantic.model.NormalizedSteps.walk(capability.workflow().steps())
                 .filter(NormalizedStep.UpdateStep.class::isInstance)
                 .map(NormalizedStep.UpdateStep.class::cast)
                 .filter(step -> step.targetVariable().equals(variable))
@@ -1720,8 +1742,9 @@ public final class SpringBootModelLowerer {
 
     private Set<SymbolId> collectEntityHoldingVariables(NormalizedCapability capability) {
         LinkedHashSet<SymbolId> ids = new LinkedHashSet<SymbolId>();
-        for (NormalizedStep step : capability.workflow().steps()) {
+        for (NormalizedStep step : io.kcg.sir.semantic.model.NormalizedSteps.walk(capability.workflow().steps()).toList()) {
             switch (step) {
+                case NormalizedStep.EachStep s -> { ids.add(s.rowVariable());ids.add(s.itemVariable()); }
                 case NormalizedStep.LoadStep s -> ids.add(s.resultVariable());
                 case NormalizedStep.CreateStep s -> ids.add(s.resultVariable());
                 case NormalizedStep.SumStep s -> ids.add(s.itemVariable());

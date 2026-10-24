@@ -1598,6 +1598,57 @@ capability MonthStart {
 
 ledger新增GET／POST `/api/me/time-zone`读写本人偏好、GET `/api/entries/monthly-totals?month=YYYY-MM`及GET `/api/budgets/{budgetId}/exceeded?month=YYYY-MM`。未设置偏好时月度接口返回BadPeriod；规则及其分类必须都属于本人，否则BudgetNotFound。预算提示用该分类本人月度金额的精确SUM与指定当前monthlyLimit比较，严格大于才为true；空集0，等于不超。修改偏好、规则或可变账目会影响历史重查，不新增预算期间表或伪造历史快照，不作为并发消费控制。既有用户仅新增可空列，不擅自决定他们的时区；升级前须应用生成的schema变更。
 
+### 5.13 `each`：有界的服务器行遍历
+
+`each` 先读取并完整物化服务器行，最多取 `limit + 1` 行；超限先抛出声明错误，**一条循环体都不执行**。空集不执行体。下面是可放入 `declarations` 的完整片段，由文档生成门执行检查：
+
+```sir-declarations
+entity Inventory persistent {
+  identity id: Id generated auto;
+  field stock: Count;
+}
+entity Parcel persistent {
+  identity id: Id generated auto;
+  field inventory: Ref<Inventory>;
+  field quantity: Quantity;
+}
+input RestoreInput { field inventory: Ref<Inventory>; }
+error InvalidQuantity http 409;
+error MissingInventory http 404;
+error StockLimit http 409;
+error TooManyParcels http 409;
+capability RestoreInventory {
+  input RestoreInput;
+  output Unit;
+  fails InvalidQuantity;
+  fails MissingInventory;
+  fails StockLimit;
+  fails TooManyParcels;
+  requires atomic;
+  expose command;
+  workflow {
+    each Parcel where item.inventory == input.inventory
+      order by inventory ascending, id ascending
+      limit 100 else TooManyParcels as parcel {
+      validate parcel.quantity > 0 else InvalidQuantity;
+      load Inventory by parcel.inventory as inventory for update else MissingInventory;
+      validate inventory.stock >= 0 and inventory.stock <= 2147483647 - parcel.quantity else StockLimit;
+      update inventory when inventory.stock >= 0 and inventory.stock <= 2147483647 - parcel.quantity else StockLimit {
+        stock: inventory.stock + parcel.quantity;
+      }
+      persist inventory;
+    }
+    return unit;
+  }
+}
+```
+
+只允许 atomic command；不是对请求List迭代。`each`／`limit`是上下文词，不占用已有同名字段。来源必须是持久化实体，过滤及scope复用现有查询规则；`item`只在来源谓词内表示来源行。`order by`必须显式声明并以唯一身份列收尾；引用键按物理身份排序。上限必须是1～100的整数字面量，不接受动态表达式、分页、无界扫描或超限截断成功。来源一次读完再执行体，不边读游标边写。
+
+体内只允许validate、load、update、persist；可以读取外层变量，只能写本次迭代行或体内load的行，不能修改捕获的外层行。行变量和体内局部变量不逃逸；不得嵌套each、return、create、delete、再次查询集合、聚合或计算月界，不提供break、continue、else空集分支、金额累计或可变局部变量。体内失败向外传播，沿用整笔事务回滚；调用方不能把先前已执行的体当成部分成功。
+
+需要防止重复操作或并发更改子行时，仍由业务显式锁父行、检查状态并遵守固定子行锁序；each本身不猜父子关系，也不自动锁整个来源集。示例的库存上限校验在候选值加法前执行，并保留SQL条件守卫；不能依赖数据库严格模式来避免整数越界。实际shop的取消订单组合了父订单锁、CREATED条件守卫、明细存在检查、100行上限和商品/id升序返库，失败整笔回滚，不意味着多商品结算已实现。
+
 ## 6. 表达式
 
 | 写法 | 含义 |

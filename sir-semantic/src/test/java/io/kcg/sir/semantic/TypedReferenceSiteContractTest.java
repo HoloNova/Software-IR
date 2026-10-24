@@ -63,6 +63,15 @@ class TypedReferenceSiteContractTest {
               field amount: Money default 0.0;
               unique (state, owner);
             }
+            capability InspectBoundedAccounts {
+              output Unit; fails InvalidPage; requires atomic; expose command;
+              workflow {
+                each Account where true order by id ascending limit 1 else InvalidPage as entry {
+                  validate true else InvalidPage;
+                }
+                return unit;
+              }
+            }
             capability SumAccounts {
               output Money; requires readonly; expose query;
               workflow { sum Account.amount where true as total; return total; }
@@ -735,6 +744,12 @@ class TypedReferenceSiteContractTest {
                     collectExpressionRefs(page.size(), sink);
                     sink.put(page.error().id(), page.error().text());
                 });
+            }
+            case io.kcg.sir.ast.AstEachStep s -> {
+                sink.put(s.entity().id(),s.entity().text());sink.put(s.error().id(),s.error().text());
+                collectExpressionRefs(s.predicate(),sink);
+                s.order().keys().forEach(key -> sink.put(key.field().id(),key.field().text()));
+                s.body().forEach(child -> collectStepRefs(child,sink));
             }
             case io.kcg.sir.ast.AstMonthStep s -> {
                 sink.put(s.error().id(),s.error().text());collectExpressionRefs(s.month(),sink);collectExpressionRefs(s.zone(),sink);

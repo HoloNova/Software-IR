@@ -782,7 +782,13 @@ final class ResolvePass {
          visibleVars.add("input");
       }
 
-      for (AstStep step : capDecl.workflow().steps()) {
+      this.resolveSteps(capDecl, capScopeId, outputType, capDecl.workflow().steps(), visibleVars);
+   }
+
+   private void resolveSteps(AstCapabilityDecl capDecl, SymbolId capScopeId, SirType outputType,
+         List<AstStep> steps, Set<String> visibleVars) {
+      String capName=capDecl.name().text();
+      for (AstStep step : steps) {
          AstStep var8 = step;
          switch (var8) {
             case AstValidateStep s:
@@ -796,7 +802,26 @@ final class ResolvePass {
                this.resolveErrorRef(s.error(), capName, ReferenceRole.LOAD_ERROR);
                this.registerStepResultVar(s.result(), s.id(), capScopeId, visibleVars, this.buildRefType(s.entity().text()));
                break;
-            case AstFindStep s:
+            case io.kcg.sir.ast.AstEachStep s: {
+                this.resolveEntityRef(s.entity(), ReferenceRole.EACH_ENTITY);
+                this.resolveErrorRef(s.error(), capName, ReferenceRole.EACH_ERROR);
+                SymbolId queryScope=SymbolIdFactory.capabilityStepScope(capScopeId,s.id().value());
+                this.scopeSymbols.put(queryScope,new ArrayList<>());
+                this.scopeParents.put(queryScope,capScopeId);
+                SymbolId queryItem=SymbolIdFactory.capabilityStepVariable(capScopeId,s.id().value(),"item");
+                this.addSymbol(new Symbol.VariableSymbol(queryItem,"item",s.span(),this.buildRefType(s.entity().text()),null),queryScope);
+                this.findItemBindings.put(s.id(),queryItem);
+                Set<String> queryVars=new LinkedHashSet<>(visibleVars);queryVars.add("item");
+                this.resolveExpression(s.predicate(),capName,queryScope,queryVars,queryItem,null);
+                this.resolveOrder(s.order(),s.entity().text());
+                SymbolId bodyScope=SymbolIdFactory.capabilityStepScope(capScopeId,s.id().value()+"/body");
+                this.scopeSymbols.put(bodyScope,new ArrayList<>());this.scopeParents.put(bodyScope,capScopeId);
+                Set<String> bodyVars=new LinkedHashSet<>(visibleVars);
+                this.registerStepResultVar(s.result(),s.id(),bodyScope,bodyVars,this.buildRefType(s.entity().text()));
+                this.resolveSteps(capDecl,bodyScope,outputType,s.body(),bodyVars);
+                break;
+             }
+             case AstFindStep s:
                this.resolveEntityRef(s.entity(), ReferenceRole.FIND_ENTITY);
                SymbolId stepScopeId = SymbolIdFactory.capabilityStepScope(capScopeId, s.id().value());
                this.scopeSymbols.put(stepScopeId, new ArrayList<>());

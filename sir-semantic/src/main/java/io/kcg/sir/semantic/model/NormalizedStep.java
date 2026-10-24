@@ -14,7 +14,8 @@ import java.util.Optional;
 public sealed interface NormalizedStep
    permits NormalizedStep.ValidateStep,
    NormalizedStep.LoadStep,
-   NormalizedStep.FindStep,
+    NormalizedStep.FindStep,
+    NormalizedStep.EachStep,
    NormalizedStep.ScalarQueryStep,
     NormalizedStep.SumStep,
      NormalizedStep.MonthStep,
@@ -28,7 +29,19 @@ public sealed interface NormalizedStep
 
    SourceSpan span();
 
-   record MonthStep(@Source AstNodeId sourceNodeId, @Source SourceSpan span,
+    record EachStep(@Source AstNodeId sourceNodeId, @Source SourceSpan span,
+         @Reference SymbolId entitySymbol, @Fact NormalizedExpression predicate,
+         @Fact List<OrderKey> orderKeys, @Fact java.math.BigInteger limit, @Reference SymbolId errorSymbol,
+         @Reference SymbolId rowVariable, @Derived SymbolId itemVariable, @Fact List<NormalizedStep> body) implements NormalizedStep {
+        public EachStep {
+            Objects.requireNonNull(sourceNodeId); Objects.requireNonNull(span); Objects.requireNonNull(entitySymbol);
+            Objects.requireNonNull(predicate); Objects.requireNonNull(limit); Objects.requireNonNull(errorSymbol);
+            Objects.requireNonNull(rowVariable); Objects.requireNonNull(itemVariable);
+            orderKeys=List.copyOf(orderKeys); body=List.copyOf(body);
+        }
+    }
+
+    record MonthStep(@Source AstNodeId sourceNodeId, @Source SourceSpan span,
         @Fact NormalizedExpression month, @Fact NormalizedExpression zone,
         @Reference SymbolId sinceVariable, @Reference SymbolId untilVariable, @Reference SymbolId errorSymbol) implements NormalizedStep {
         public MonthStep {

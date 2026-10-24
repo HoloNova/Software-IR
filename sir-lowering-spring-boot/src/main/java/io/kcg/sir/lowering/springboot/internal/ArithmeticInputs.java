@@ -14,7 +14,7 @@ final class ArithmeticInputs {
 
     static List<SpringExpression.MemberExpression> members(SpringBootWorkflow workflow, SymbolId input) {
         Map<SymbolId, SpringExpression.MemberExpression> fields = new LinkedHashMap<>();
-        for (var step : workflow.steps()) {
+        for (var step : io.kcg.sir.lowering.springboot.model.SpringBootWorkflow.walk(workflow.steps()).toList()) {
             switch (step) {
                 case SpringBootWorkflow.ValidateStep value -> collect(value.condition(), false, input, fields);
                 case SpringBootWorkflow.LoadStep value -> collect(value.idExpression(), false, input, fields);
@@ -23,6 +23,7 @@ final class ArithmeticInputs {
                 case SpringBootWorkflow.MonthStep value -> { collect(value.month(),false,input,fields);collect(value.zone(),false,input,fields); }
                 case SpringBootWorkflow.SumStep value -> collect(value.predicate(), false, input, fields);
                 case SpringBootWorkflow.GroupedSumStep value -> collect(value.predicate(), false, input, fields);
+                case SpringBootWorkflow.EachStep value -> collect(value.predicate(), false, input, fields);
                 case SpringBootWorkflow.ScalarQueryStep value -> collect(value.predicate(), false, input, fields);
                 case SpringBootWorkflow.ReturnStep value -> collect(value.value(), false, input, fields);
                 case SpringBootWorkflow.CreateStep value -> value.bindings().forEach(binding -> collect(binding.value(), false, input, fields));

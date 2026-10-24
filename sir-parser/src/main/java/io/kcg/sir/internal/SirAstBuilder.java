@@ -512,6 +512,13 @@ final class SirAstBuilder {
                     name(value.result),
                     nameRef(value.error, path, "error"), value.lockClause() != null);
         }
+        if (context.eachStep() != null) {
+            var value=context.eachStep();
+            return new io.kcg.sir.ast.AstEachStep(ids.id(path), source.span(value), nameRef(value.entity,path,"entity"),
+                expression(value.predicate,path), findOrder(value.findOrderClause(),path),
+                new java.math.BigInteger(value.bound.getText()), nameRef(value.error,path,"error"), name(value.result),
+                value.workflowStep().stream().map(child -> step(child,path+"/body")).toList());
+        }
         if (context.findStep() != null) {
             var value = context.findStep();
             AstExpression predicate = expression(value.predicate, path);

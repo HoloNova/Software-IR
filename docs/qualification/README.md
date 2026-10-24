@@ -1112,3 +1112,74 @@ mvn -B -q -o -pl sir-toolchain-application -am test '-Dtest=MoneySessionConfigur
 ```
 
 第二条只补共享环境的邻近回归，不重复第一条绿色范围。Maven384MiB／fork512MiB，均2个可见处理器。AFT inspect调用超时，没有形成诊断证据，编译以实际Maven为据；覆盖率未测量。本机未跑全量、真库IT、生成工程Maven构建、Web／浏览器或部署。RED、GREEN及最终源码哈希在 `target/ci-169-verification/`，提交后绑定实际SHA。月报／预算仍待修复源码的HTTP／MySQL及部署，账本71／6／7不变。修复与证据文档单批提交推送触发CI，不查询或等待结果，由负责人通知。
+
+
+<a id="ci-170-calendar-accepted"></a>
+## 41. CI #170：用户时区自然月与指定当前预算验收闭环
+
+验收源码 **`e9f38dd7d94ecfabd7f0384b2d9e8e8ca1b0b66e`**，[verify #170](https://github.com/HoloNova/Software-IR/actions/runs/40052208682)。负责人通知成功后按同SHA实际产物核验，而非仅看运行摘要。Frozen full gate、Business conformance ITs、Independent verification、Standalone CLI及standalone-deployment均success。Frozen成功后的Completion diagnostics按设计跳过，不是缺失验收；中断迁移及非Decimal形状的schema漂移仍在部署合同notRunByContract内，不宣称覆盖。
+
+实际下载的artifact名称为 `surefire-reports`、`conformance-evidence`、`deployment-evidence`；原始副本及汇总在 `target/ci-investigation/170/`。251份XML独立复算1708项、0 failures／errors／skips，包含完整ProjectVisibility 8、TypedReferenceSite 18、八题离线构建以及本批时区／month／UTC JDBC／身份配置。该计数来自本次artifact，不拼接本机247或21项。
+
+**Money报告**为 `conformance-evidence/money-1a16ba5f6cf-44456/money-report.txt`，**306项检查通过、0失败**，生成工程144文件，构建和HTTP就绪均通过；不再是#169的7项准备／清理。`valid/money.sir`、DDL、seed按LF规范化后的SHA256与本次报告逐字核对：
+
+| 资源 | SHA256 |
+| --- | --- |
+| money.sir | `4f9dd7ad00a73db85431615dd90235c6d656899e2d2896a7e4bf3b453e419153` |
+| money-ddl.sql | `7dc51c2b4af8cc0993fa02fb3491aeb7eb8c1b27cf7158edd52da7f2ae4ded02` |
+| money-seed.sql | `5bbe625970786e425af623b38226a55d70ccd233a1d00f684f0f385fe381d788` |
+
+CalendarLedgerContractTest同SHA通过，证实Money里的月度相关声明与实际ledger AST一致；不能把通用Money夹具扩大称为ledger全部CRUD业务均已真库覆盖。
+
+关键实际HTTP／JDBC结果：
+
+- 两轮观察真实DataSource：首次JVM UTC／session SYSTEM／实际UTC偏移0；重启为JVM Pacific/Honolulu、session +05:30、偏移19800秒及空sql_mode。不是只断言环境变量文本。
+- 本人保存的纽约时区下三月合计30.00，月首／下月首微秒按半开区间筛选；请求伪造zone／userId不替换服务端偏好。未认证401、未设置偏好／非法年月及时区400、外人预算及不属于本人的分类404。
+- 指定当前预算等额返回false，当前上限降为29.99后同历史月份返回true；没有按每期历史预算验收或新增历史表。
+- 原用户读取确已在只读RR事务完成，然后屏障等待另一请求提交偏好：在途响应仍30.00，下一请求按新UTC偏好得到109.00；两轮均通过，偏好还原亦成功。
+- 1000-01可绑定读取，1500-02实际通过生成CRUD写入并读回 `1500-02-01T00:00:00Z`、月度合计1.00；9999-11最后完整目标月份返回空集。两轮均经真实Connector/J与MySQL，不用Timestamp内存比较冒充。
+- 原金额精度、写入回滚、单值／分组告警及快照继续通过。`grouped-sum-query-trace.json`为业务count1／page1、session探测1、unexpected0、一个只读事务；不是把查询上限改成3。
+
+其它业务原始报告亦无失败：library201、course151、multiplication72、Crud47项检查；这些是本轮数字，不沿用#168的library203。独立部署report.json的commit及runUrl匹配本SHA，deployment／httpSmoke／persistence／privileges／swagger／contract／missingVolume／business／update／dataUpdate／freshChain／decimalShape／cleanup全部PASSED。
+
+据已确认的用户时区／当前规则口径，将ledger“月度每类合计”和“预算超支提示”两项从待CI△转✓，账本 **73／4／7（86.9%／4.8%／8.3%）**，ledger为7／0／1；不改变题目总数84。仍未完成AVG、多键／零组、G5、日期差罚款和图表／导出，也不借本次结果自动重判两项G9折扣。记录纯文档差异检查后留待下一对应源码提交合并，不单独制造CI、本机不重跑任何已通过范围。后续G5先作范围设计，不把成功通知当新增核心语义的确认。
+
+
+<a id="g5-bounded-each-local"></a>
+## 42. G5第一片：有界服务器each与实际shop取消返库（待同源码CI）
+
+基线 **`e9f38dd7d94ecfabd7f0384b2d9e8e8ca1b0b66e`** 已由第41节#170验收；本批范围经负责人确认，见[设计27](../design/12-feature-semantics-and-semantic-types.md#g5-bounded-child-iteration-proposal)。#170不冒充本批取消返库、并发或事务证据，尚未执行的真库不记通过。
+
+**实现与RED：**先固定缺语法／有界执行计划和实际shop“不返库存”的失败，再贯通AstEachStep、Normalized/目标EachStep、一次正式绑定、结构／来源遍历、scope、块作用域、源往返／SourceEditor及生成。来源selectList完整物化，固定稳定排序及1..100整数字面量，取limit+1哨兵；超限体零执行，不分页截断。只允许atomic command及validate/load/update/persist体，不写捕获的外层行，不开放嵌套、return/create/delete、再次集合查询或累计。循环体失败仍向外抛，由整笔事务处理，不在循环内提交／吞异常。实际shop取消沿用路由和默认200：先锁订单并守卫CREATED，拒绝无明细，然后按product/id升序锁商品并原子返库，明细和金额不重算，OFF_SHELF不重新上架。
+
+**两处有效发现：**第一，直接构造Core或目标IR可让体内变量在块后逃逸，两项有效RED后由各自校验边界拒绝，Generator不猜作用域；列、预算、事务／缓存及不允许的体损坏也保留独立反例。迭代行是已存行，守卫和自增路径现可识别它，新建行仍被拒绝。第二，实际shop库存上限先在候选加法处溢出，没到SQL守卫；在已锁商品上增加候选前上限validate，再保留原SQL守卫，返回声明的StockLimit而不是靠非严格模式饱和。
+
+**本机最终21类202 tests，零失败／错误／跳过，按实际最新XML去重：**
+
+| 模块 | suites | tests | 范围 |
+| --- | ---: | ---: | --- |
+| semantic | 8 | 99 | bounded each20、全正式引用角色18、旧守卫11／显式锁7、schema可达8、结构覆盖1／敏感性32、声明往返2 |
+| change | 1 | 4 | 增删改／首次加入／循环体及跨文件精确改名 |
+| lowering | 2 | 38 | each计划／作用域损坏19、旧独立IR硬化19 |
+| generator | 5 | 39 | each执行5、真实shop11、生成身份／凭证／CI探针装配2、旧写入17／实体Mapper不变4 |
+| application | 5 | 22 | 实际shop合约3、SQL证据角色12、语言参考4、八题内存生成1、两个EACH角色的无导出缺import精确span2 |
+| **合计** | **21** | **202** | **不累计早期探针、旧XML、重跑或IT未启用占位用例** |
+
+新EACH_ENTITY/EACH_ERROR同时补入TypedReferenceSiteContractTest与ProjectVisibility的全角色正式夹具，测试AST遍历认识嵌套步骤；保留EnumSet全部角色及真实跨文件缺import精确SourceSpan，不加local豁免。完整安全文件导出门仍由Linux CI覆盖；这里仅计两个不导出的方法实例，不放宽Windows读取边界。
+
+实际命令分批执行（不为汇总再跑一遍）：
+
+```powershell
+$env:MAVEN_OPTS='-Xmx384m -XX:ActiveProcessorCount=2'
+mvn -B -q -o -pl sir-toolchain-application -am test '-Dtest=BoundedEachSemanticsTest,TypedReferenceSiteContractTest,GuardedUpdateSemanticsTest,ExplicitLockSemanticsTest,SoftwareSchemaCompletenessTest,StructureViewCoverageTest,StructureViewSensitivityTest,SirDeclarationWriterRoundTripTest,BoundedEachEditingTest,BoundedEachLoweringTest,LoweredIrHardeningTest,BoundedEachRuntimeTest,ShopCancellationRuntimeTest,ShopIdentityCompilationTest,GeneratorWriteSliceContractTest,GeneratorEntityArtifactInvarianceTest,ShopCancellationContractTest,ShopCancellationChecksTest,LanguageReferenceExamplesTest,TopicSamplesTest,ProjectVisibilityTest#eachReferencesRequireTheirOwnersImportsBeforeAnyFileExport' '-Dsurefire.failIfNoSpecifiedTests=false' '-DargLine=-Xmx512m -XX:ActiveProcessorCount=2'
+```
+
+首轮3项旧守卫反例因CRLF资源找不到LF片段、未进入语义；只在该测试读取入口统一换行，保留原新建／version行拒绝。随后只补该类并续跑被阻断的模块。末轮两项失败是新夹具写错：文档示例用了保留字target，改为合法inventory；跨文件错误声明留在根中，改用实际contracts模块。只复测LanguageReferenceExamplesTest与ProjectVisibilityTest新方法，未重跑其它绿色类。原精确类名选择没有刷新嵌套的LoweredIrHardeningTest报告，XML时间发现后仅用`-pl sir-lowering-spring-boot -am '-Dtest=LoweredIrHardeningTest*'`补验19项；旧报告不计入最终结果。没有修改保留字或生产可见性／守卫规则来迁就测试。
+
+**兼容性：**`target/G5BaselineCompare.java`编译基线WorkflowRenderer，与当前生成器对同一当前目标模型进行纯内存对照。8题均使用本批之前的源（尤其shop不含each），**775个生成文件逐字节一致**；不是旧新整个编译器的等价证明，也不是生成工程Maven构建。先期2项组合探针归档target/g5-investigation，不再向CI添加重复探针；四份bounded-each夹具以哈希比对。报告、来源哈希、比较结果在target/g5-each-verification。
+
+**真实IT NOT_RUN（本机）：**复用原MultiplicationBusinessConformanceIT同一生成／构建／启动。ShopSourceComposition用SourceEditor正式改名实际shop的Product/ProductView，和原四位精度Product共存，共享OutOfStock只在状态完全一致时去重。实际声明AST及错误协议、路由／200／201、DDL、公开就绪地址对齐；外部external由真实工厂生成并经Spring解析，生成身份守卫缺模式仍拒绝、匿名取消401。新ShopSessionFixture是CI隔离目录探针，真实编译并装配；冷目录证据自建。它只为固定订单106提供经响应头确认的非严格会话，调用的仍是真正受保护的旧取消路由，交易结束恢复sql_mode，不进入交付模板。
+
+保留原乘法／数量／名额／预约检查，追加真实购买后取消、同商品重复行／下架返库、100与101行、缺明细／坏数量、八并发重复取消、Pay竞争、反向明细插入顺序、可观察父锁等待后重查状态、满库存严格／非严格拒绝，以及第二商品触发器失败时订单／库存／明细完整快照不变。保存shop-cancel-trace.json和shop-late-rollback-trace.json，明确一次明细exists加一次有界读取，记录全SQL与事务计数；驱动会话探测复用已有严格白名单，未知表／JOIN／UNION／子查询不能伪装成已知读取。两次产品UPDATE被观察到才宣称晚失败走到后续步骤。以上尚未在本机运行，代理只证明异常传播，不是回滚证明；完整CI须覆盖待提交SHA。
+
+**资源和边界：**Maven384MiB、fork512MiB，各2个可见处理器，一次只跑一个定向构建。AFT桥多次超时，不写诊断清洁；编译以Maven为准。未测覆盖率，没有本机全量、数据库／应用／浏览器或生成工程Maven构建，UI不受影响。shop为327行SIR／2975行生成Java／12项能力；取消原本是△，本批待CI仍△，账本73／4／7不变。没有购物车／多商品结算／请求列表／金额累计或其它未确认业务。#170验收记录、代码与配套文档同一提交，不另造纯文档CI；推送后不查询或等待，负责人通知结果。

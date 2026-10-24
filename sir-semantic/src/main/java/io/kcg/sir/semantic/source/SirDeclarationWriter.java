@@ -328,44 +328,56 @@ public final class SirDeclarationWriter {
    // ----- workflow steps -----------------------------------------------------------------------
 
    private void writeStep(StructNode step, Lines out) {
+       this.writeStep(step,out,2);
+   }
+
+   private void writeStep(StructNode step, Lines out, int depth) {
       switch (step.kind()) {
          case "ValidateStep" ->
-            out.line(2, "validate " + expression(child(step, "condition"), 0) + " else " + text(step, "errorSymbol") + ";");
+            out.line(depth, "validate " + expression(child(step, "condition"), 0) + " else " + text(step, "errorSymbol") + ";");
          case "LoadStep" ->
-            out.line(2, "load " + text(step, "entitySymbol") + " by " + optionalText(step, "keyField").map(key -> key + ": ").orElse("") + expression(child(step, "idExpression"), 0) + " as " + text(step, "resultVariable") + (text(step, "forUpdate").equals("true") ? " for update" : "") + " else " + text(step, "errorSymbol") + ";");
-         case "FindStep" -> this.writeFind(step, out);
-         case "MonthStep" -> out.line(2,"month " + expression(child(step,"month"),0) + " in "
+            out.line(depth, "load " + text(step, "entitySymbol") + " by " + optionalText(step, "keyField").map(key -> key + ": ").orElse("") + expression(child(step, "idExpression"), 0) + " as " + text(step, "resultVariable") + (text(step, "forUpdate").equals("true") ? " for update" : "") + " else " + text(step, "errorSymbol") + ";");
+                   case "EachStep" -> {
+             out.line(depth,"each " + text(step,"entitySymbol") + " where " + expression(child(step,"predicate"),0));
+             out.line(depth+1,"order by " + join(nodes(step,"orderKeys").stream().map(key -> text(key,"fieldSymbol")
+                 +(text(key,"descending").equals("true")?" descending":" ascending")).toList())
+                 +" limit " + text(step,"limit") + " else " + text(step,"errorSymbol") + " as " + text(step,"rowVariable") + " {");
+             for(StructNode body:nodes(step,"body"))this.writeStep(body,out,depth+1);
+             out.line(depth,"}");
+          }
+case "FindStep" -> this.writeFind(step, out);
+         case "MonthStep" -> out.line(depth,"month " + expression(child(step,"month"),0) + " in "
               + expression(child(step,"zone"),0) + " as " + text(step,"sinceVariable") + ", " + text(step,"untilVariable")
               + " else " + text(step,"errorSymbol") + ";");
-          case "SumStep" -> out.line(2, "sum " + text(step, "entitySymbol") + "." + text(step, "fieldSymbol")
+          case "SumStep" -> out.line(depth, "sum " + text(step, "entitySymbol") + "." + text(step, "fieldSymbol")
              + " where " + expression(child(step, "predicate"), 0) + " as " + text(step, "resultVariable") + ";");
           case "GroupedSumStep" -> {
-             out.line(2, "sum " + text(step, "entitySymbol") + "." + text(step, "fieldSymbol")
+             out.line(depth, "sum " + text(step, "entitySymbol") + "." + text(step, "fieldSymbol")
                  + " by " + text(step, "keySymbol"));
-             out.line(3, "where " + expression(child(step, "predicate"), 0));
+             out.line(depth+1, "where " + expression(child(step, "predicate"), 0));
              StructNode page = child(step, "page");
-             out.line(3, "Page input." + text(page, "pageField") + ", input." + text(page, "sizeField")
+             out.line(depth+1, "Page input." + text(page, "pageField") + ", input." + text(page, "sizeField")
                  + " else " + text(page, "errorSymbol"));
-             out.line(3, "as " + text(step, "resultVariable") + ";");
+             out.line(depth+1, "as " + text(step, "resultVariable") + ";");
           }
-          case "ScalarQueryStep" -> out.line(2, text(step, "kind").toLowerCase(java.util.Locale.ROOT) + " " + text(step, "entitySymbol")
+          case "ScalarQueryStep" -> out.line(depth, text(step, "kind").toLowerCase(java.util.Locale.ROOT) + " " + text(step, "entitySymbol")
             + " where " + expression(child(step, "predicate"), 0) + " as " + text(step, "resultVariable") + ";");
          case "CreateStep" -> {
-            out.line(2, "create " + text(step, "entitySymbol") + " as " + text(step, "resultVariable") + " {");
-            this.bindings(step, out);
-            out.line(2, "}");
+            out.line(depth, "create " + text(step, "entitySymbol") + " as " + text(step, "resultVariable") + " {");
+            this.bindings(step, out,depth+1);
+            out.line(depth, "}");
          }
          case "UpdateStep" -> {
-            out.line(2, "update " + text(step, "targetVariable")
+            out.line(depth, "update " + text(step, "targetVariable")
                + optionalChild(step, "guard").map(guard -> " when " + expression(guard, 0) + " else " + text(step, "guardError")).orElse("")
                + " {");
-            this.bindings(step, out);
-            out.line(2, "}");
+            this.bindings(step, out,depth+1);
+            out.line(depth, "}");
          }
-         case "DeleteStep" -> out.line(2, "delete " + text(step, "targetVariable") + ";");
+         case "DeleteStep" -> out.line(depth, "delete " + text(step, "targetVariable") + ";");
          case "PersistStep" ->
-            out.line(2, "persist " + text(step, "targetVariable") + optionalText(step, "failure").map(f -> " else " + f).orElse("") + ";");
-         case "ReturnStep" -> out.line(2, "return " + expression(child(step, "value"), 0) + ";");
+            out.line(depth, "persist " + text(step, "targetVariable") + optionalText(step, "failure").map(f -> " else " + f).orElse("") + ";");
+         case "ReturnStep" -> out.line(depth, "return " + expression(child(step, "value"), 0) + ";");
          default -> throw new IllegalArgumentException("not a workflow step kind: " + step.kind());
       }
    }
@@ -382,9 +394,9 @@ public final class SirDeclarationWriter {
       out.line(3, "as " + text(step, "resultVariable") + ";");
    }
 
-   private void bindings(StructNode step, Lines out) {
+   private void bindings(StructNode step, Lines out, int depth) {
       for (StructNode binding : nodes(step, "bindings")) {
-         out.line(3, text(binding, "fieldName") + ": " + expression(child(binding, "value"), 0) + ";");
+         out.line(depth, text(binding, "fieldName") + ": " + expression(child(binding, "value"), 0) + ";");
       }
    }
 

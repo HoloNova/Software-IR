@@ -61,7 +61,7 @@ final class GroupedSumReadBudget {
     }
 
     /** Full projection must consist only of known @@ variables, never a table, subquery or expression. */
-    private static boolean isSessionProbe(String sql) {
+    static boolean isSessionProbe(String sql) {
         if (!sql.startsWith("select ")) return false;
         return List.of(sql.substring("select ".length()).split(",", -1)).stream().allMatch(item -> {
             var match = SESSION_ITEM.matcher(item.strip());
