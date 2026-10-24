@@ -1,0 +1,5 @@
+{
+  "rootTotal": "SELECT COUNT( * ) AS total FROM book WHERE ((1 = 1)) ORDER BY id ASC",
+  "rootPage": "SELECT id,isbn,title,author,publisher FROM book WHERE ((1 = 1)) ORDER BY id ASC LIMIT 0, 50",
+  "children": "SELECT `book_id` AS count_key,COUNT(*) AS count_value FROM copy WHERE (`book_id` IN (?) AND `copy`.`status` = ?) GROUP BY `book_id`"
+}

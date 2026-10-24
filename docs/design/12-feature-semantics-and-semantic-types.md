@@ -1563,7 +1563,7 @@ MyBatis-Plus3.5.12的真实DefaultSqlInjector／DefaultParameterHandler **2项�
 
 ### 29.6 实施结果与发现的缺口
 
-语法、正式绑定（`VIEW_COUNT_ENTITY`／`VIEW_RELATION_FIELD`）、类型、源往返、Core／目标 IR、五类拒绝、生成计划与实际生成服务已经贯通；21 类 202 项定向回归见[验证 42](../qualification/README.md#library-related-count-local)。
+语法、正式绑定（`VIEW_COUNT_ENTITY`／`VIEW_RELATION_FIELD`）、类型、源往返、Core／目标 IR、五类拒绝、生成计划与实际生成服务已经贯通；当轮18类125项报告见[验证46](../qualification/README.md#library-related-count-local)；其增量编译遗漏与#174修复证据见[验证47](../qualification/README.md#ci-174-related-count-graph-fix)，不能以该125项宣称全源码可编译。
 
 实施中发现并修正的问题，都不是“顺手加功能”：
 

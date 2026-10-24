@@ -174,6 +174,45 @@ class G9TopicRuntimeTest {
         }
     }
 
+    @Test void actualCataloguePageMapsTotalRowsAndOneChildAggregateNotTwoReads() throws Exception {
+        var configuration = library.configuration();
+        var copyType = library.type("persistence.CopyMapper");
+        var assistant = new org.apache.ibatis.builder.MapperBuilderAssistant(configuration, "catalogue-budget");
+        assistant.setCurrentNamespace(copyType.getName());
+        new com.baomidou.mybatisplus.core.injector.DefaultSqlInjector().inspectInject(assistant, copyType);
+        var calls = new ArrayList<String>();
+        var sql = new ArrayList<String>();
+        Object book = new State(library, "Book").row;
+        var rootType = library.type("persistence.BookMapper");
+        Object root = Proxy.newProxyInstance(library.loader(), new Class<?>[]{rootType}, (p, m, a) -> {
+            calls.add("book." + m.getName());
+            sql.add(configuration.getMappedStatement(rootType.getName() + "." + m.getName()).getBoundSql(Map.of("ew", a[0])).getSql());
+            return switch (m.getName()) {
+                case "selectCount" -> 1L;
+                case "selectList" -> List.of(book);
+                default -> throw new AssertionError(m);
+            };
+        });
+        Object child = Proxy.newProxyInstance(library.loader(), new Class<?>[]{copyType}, (p, m, a) -> {
+            assertEquals("selectMaps", m.getName()); calls.add("copy." + m.getName());
+            sql.add(configuration.getMappedStatement(copyType.getName() + ".selectMaps").getBoundSql(Map.of("ew", a[0])).getSql());
+            return List.of();
+        });
+        var type = library.type("application.ListBookService");
+        Object service = type.getConstructors()[0].newInstance(Arrays.stream(type.getConstructors()[0].getParameterTypes())
+                .map(t -> t == rootType ? root : child).toArray());
+        type.getMethod("listBook", library.type("api.ListBookInput")).invoke(service,
+                library.input("ListBookInput", "{\"page\":1,\"size\":50}"));
+        assertEquals(List.of("book.selectCount", "book.selectList", "copy.selectMaps"), calls);
+        var normalized = sql.stream().map(q -> q.replace("`", "").strip().toLowerCase(Locale.ROOT).replaceAll("\\s+", " ")).toList();
+        var fixture = Path.of(System.getProperty("basedir", ".")).resolveSibling("sir-toolchain-application")
+                .resolve("src/test/resources/conformance/mysql/library-count-reads.json");
+        var expected = JSON.readTree(Files.readString(fixture));
+        var expectedSql = List.of("rootTotal", "rootPage", "children").stream().map(k -> expected.path(k).asText())
+                .map(q -> q.replace("`", "").strip().toLowerCase(Locale.ROOT).replaceAll("\\s+", " ")).toList();
+        assertEquals(expectedSql, normalized, "the budget regression must use the actual mapped SQL, not guessed formatting");
+    }
+
     private record Session(String topic, String source, URLClassLoader loader, com.baomidou.mybatisplus.core.MybatisConfiguration configuration) {
         Class<?> type(String name) throws Exception { return loader.loadClass("example." + topic + "." + name); }
         Object input(String type, String json) throws Exception { return JSON.readValue(json, type("api." + type)); }

@@ -3,7 +3,6 @@ package io.kcg.sir.application.conformance;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * The actual library catalogue reports how many copies are on the shelf right now. Every expected number here is
@@ -78,24 +77,21 @@ final class LibraryCountChecks {
             page = h.get(s.baseUrl() + "/api/books?page=1&size=50", Map.of());
             total = trace.stop();
         }
-        var lower = total.selectDigests().stream().map(sql -> sql.toLowerCase(Locale.ROOT)).toList();
-        long bookReads = lower.stream().filter(sql -> sql.contains("from book")).count();
-        long copyReads = lower.stream().filter(sql -> sql.contains("from copy")).count();
-        s.check("the counted page is read once", bookReads == 1, "book reads=" + bookReads + " in " + lower);
-        s.check("all rows on a page share one child aggregate", copyReads == 1, "copy reads=" + copyReads + " in " + lower);
-        s.check("no session or statement count is mistaken for a business read",
-                lower.stream().noneMatch(sql -> sql.contains("from copy") && sql.contains("select @@")), lower.toString());
+        checkPageBudget(s, total);
         s.check("the measured page still succeeded", page.statusCode() == 200, String.valueOf(page.statusCode()));
-        s.check("one page request issues no copy query per row", copyReads < 21, "copy reads=" + copyReads);
 
         final MysqlRuntimeTrace.Trace detail;
+        final HttpAssertionClient.Response response;
         try (var trace = s.openRuntimeTrace()) {
-            h.get(s.baseUrl() + "/api/books/1", Map.of());
+            response = h.get(s.baseUrl() + "/api/books/1", Map.of());
             detail = trace.stop();
         }
-        var detailLower = detail.selectDigests().stream().map(sql -> sql.toLowerCase(Locale.ROOT)).toList();
-        s.check("a detail read also counts in one query",
-                detailLower.stream().filter(sql -> sql.contains("from copy")).count() == 1, detailLower.toString());
+        s.expectStatus("the measured detail still succeeded", response, 200);
+        LibraryCountReadBudget.check(s, detail, false);
+    }
+
+    static void checkPageBudget(BusinessSliceHarness s, MysqlRuntimeTrace.Trace total) throws Exception {
+        LibraryCountReadBudget.check(s, total, true);
     }
 
     private static Map<Long, Long> availableCopies(BusinessSliceHarness s, MysqlObserver o) throws Exception {

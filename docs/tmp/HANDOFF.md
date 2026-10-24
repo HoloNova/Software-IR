@@ -31,13 +31,11 @@
 
 ## 3. 待办（按建议顺序）
 
-### 3.1 完成图书批量关联计数（已确认，实施中）
+### 3.1 图书批量关联计数：等待#174修复后的同SHA验收
 
-负责人已确认[设计 29](../design/12-feature-semantics-and-semantic-types.md#library-related-count-proposal)：书目详情、分页和搜索显示可用副本数，无副本为 0；按当前页键一次批量计数，不逐书查询、不新增存储计数列；新增只读视图 `count(...)` 与可选的 `Crud.readView`，目录路由、馆员写权限、借还及预约守卫全不变。空页不调子 Mapper。真实 MySQL 复用原 library IT，本机只编译。当前语义、写回、独立 IR 与真实生成服务已贯通，源编辑、改名、全角色与最终回归未收口；不据本地结论称真库已验收。
+`0b79ee5` 的#174在预热编译阶段失败，正式门／业务IT／部署均未执行；不能沿用此前125项本机报告声称源码可编译。现已补图谱RELATED_COUNTS角色、显式路径与相关枚举消费者，并增加无需安全目录导出的实际工程图谱／文件／序列化契约。自审另修验收预算：非空页是总数＋根行＋副本聚合共3读，详情共2读；按角色拒绝额外／缺失／重复查询，完整轨迹落JSON，不改变生产SQL。8类62项定向通过，Maven已重编受影响主源码与测试。详见[验证47](../qualification/README.md#ci-174-related-count-graph-fix)。
 
-### 3.1 图书批量关联计数（已实现，待同源码 CI）
-
-负责人已确认[设计 29](../design/12-feature-semantics-and-semantic-types.md#library-related-count-proposal)。实际 library 用 `view CatalogueBook { … field availableCopies: Serial = count(Copy, …) }` 与 `use Crud { readView: CatalogueBook }`，详情／分页／检索（`/api/catalogue`）都带 `availableCopies`：只数 `AVAILABLE` 副本，`LOST`／借出不计，无副本为 0；不新增存储列、不改借还协议、不改写权限与路由。当前页一次分组查询（空页不调子 Mapper），只读 RR 快照；不是借得到的保证。18 类 125 项定向通过（含四类拒绝、源往返、真实生成服务、跨文件可见性与文档门）；实施中修正了改名抛 `IllegalStateException`、新角色未入三门、IR 计划残留外层根行引用等问题。实际 library 为 452／4240／20；真库 HTTP／MySQL 与完整导出门本机 NOT_RUN，详见[验证 45](../qualification/README.md#library-related-count-local)。本条只记待 CI 的 △（76／2／6）；AVG、日期差罚款、请求列表与累计仍未做。
+推送后由负责人通知CI，不轮询；核对实际library数字、分页预算与旧借还／预约／写保护，再决定是否把本条△转✓。本机真实HTTP／MySQL和完整Windows安全导出门NOT_RUN，账本76／2／6不变。设计29与后续小模型／罚款等范围保持原定。
 
 ### 3.2 暂停加新语法，先做小模型评估（模型与方式需负责人决定）
 
@@ -77,6 +75,7 @@
 - **任何新写进 SQL 文本的表名、列名都要经过 `MySqlIdentifiers.render`**（降级模块的 `profile` 包），否则遇到 `condition`、`like`、`group` 这类保留字就是语法错误。`ReservedIdentifierRuntimeTest` 是写法示例。
 - 单独跑某个模块不带 `-am` 会用 `~/.m2` 里旧的模块，报出看似语法的错误，不是代码错，加 `-am`。别的机器加了新依赖时，`-o` 离线会解析失败，去掉 `-o` 联网跑一次即可。
 - 加了 `Binding`、`NormalizedEntity` 这类记录的新分量时，为兼容旧调用保留旧构造器（先例：`SpringBootWorkflow.Binding`、`AstEntityDecl`）。
+- 新增sealed产物种类还须补图谱工厂角色／路径和枚举消费者；增量编译可能复用旧class，不能只凭测试绿判断穷尽switch已重编。优先为新增路径补无目录导出的图谱契约，再定向强制重编受影响模块，完整门仍留CI。
 - 新增语义节点种类或引用角色时，几个覆盖测试会失败并提醒你登记：`StructureViewCoverageTest`、`TypedReferenceSiteContractTest`、`SirDeclarationWriterRoundTripTest`、`ProjectVisibilityTest`，还有两个全角色夹具和测试里的 AST 遍历。
 - 业务 IT 里组合了真实题目源码的，夹具文件要和组合函数的输出逐字一致（例如 `valid/g9-topic-conformance.sir` 对应 `G9TopicComposition.compose()`），改了题目要同步。
 - `git diff --check` 失败（文件末尾空行）会让 `&&` 串起来的提交不发生，注意看输出。

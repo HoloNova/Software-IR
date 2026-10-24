@@ -1271,15 +1271,15 @@ mvn -B -q -o -pl sir-toolchain-application -am test '-Dtest=G9TopicRuntimeTest,G
 
 
 <a id="library-related-count-local"></a>
-## 43. 图书可借数量：视图 count 与 Crud readView（待同源码 CI）
+## 46. 图书可借数量：视图 count 与 Crud readView（#174预热编译失败，后续修复见47）
 
 基线 **`509dc52`**（云端 7 个提交，含 `00b8118` 的手写 SQL 保留字转义）。按负责人要求该 CI 先视为通过继续，本记录不冒称本机核验过它；本片真库证据仍须新 CI 覆盖本批实际提交。业务基线为 #172 已验收的图书题目。
 
-**交付：**`view … { field n: Serial = count(Copy, book == item and status == CopyStatus.AVAILABLE); }` 与 `use Crud { … readView: CatalogueBook; }`。实际 library 的目录详情、分页与 `/api/catalogue` 检索都显示本人可见的 `availableCopies`；创建/更新/删除的输入、返回、路由、写权限不变。只有 `AVAILABLE` 物理副本被计数，`LOST` 与借出副本不计，没有副本的书为 0（不是 `null`），不补无副本的书。
+**交付：**`view … { field n: Serial = count(Copy, book == item and status == CopyStatus.AVAILABLE); }` 与 `use Crud { … readView: CatalogueBook; }`。实际 library 的公开目录详情、分页与 `/api/catalogue` 检索都显示 `availableCopies`；创建/更新/删除的输入、返回、路由、写权限不变。只有 `AVAILABLE` 物理副本被计数，`LOST` 与借出副本不计，没有副本的书为 0（不是 `null`），不补无副本的书。
 
-计数按**当前页一次分组查询**：先读根行（1 条），再用页键 `IN` 加 scope／状态谓词做一次 `selectMaps` 分组；空页不调子 Mapper。只读 `REPEATABLE_READ`、`STATEMENT` 缓存与逐语句告警沿用既有计划；根行与计数在同一快照内，跨请求则随写入变化——因此它是“现在书架上有几本”，**不是借得到的保证**，借出与否仍由借还路径的名额、副本状态与预约顺序决定。
+计数按**当前页一次子表分组查询**：分页原有的总数与根行读取为2条，再用页键 `IN` 加 scope／状态谓词做1条 `selectMaps` 分组（非空页共3条业务读取）；详情是根行1条＋计数1条，空页不调子 Mapper。只读 `REPEATABLE_READ`、`STATEMENT` 缓存与逐语句告警沿用既有计划；根行与计数在同一快照内，跨请求则随写入变化——因此它是“现在书架上有几本”，**不是借得到的保证**，借出与否仍由借还路径的名额、副本状态与预约顺序决定。
 
-**本机证据：18 类 125 项定向通过，0 failures／errors／skips。**
+**当轮本机报告：18 类 125 项定向通过，0 failures／errors／skips。** #174随后证实，增量构建沿用了旧的图谱工厂class，这组结果不证明全源码可编译或图谱链路通过；完整编译与补充图谱证据见第47节。
 
 | 模块 | suites | tests | 实际范围 |
 | --- | ---: | ---: | --- |
@@ -1302,6 +1302,31 @@ mvn -B -o -pl sir-toolchain-application -am test '-Dtest=RelatedCountSemanticsTe
 3. 独立目标 IR 校验抓到计划里残留外层根行引用（scope 与页键 IN 叠加时）；修正后只按页键 `IN` 加 scope 与状态过滤。
 4. 语言参考新增可执行 `sir-declarations` 示例，经现有生成门（避免重演 #162）。
 
-**真实 IT NOT_RUN（本机）：**`LibraryBorrowingBusinessConformanceIT` 只编译。新增 `LibraryCountChecks` 在真库中做：详情/分页/检索的每行数字与观察器独立 SQL 逐本比对；`LOST`、借出、无副本三种 0；一次请求使用运行时轨迹证明“根行 1 条、子表 1 条”（非 N+1），并保留原有借还、预约、写保护检查。本机未启动 MySQL／应用，未跑生成工程构建，无 UI/浏览器测试。
+**真实 IT NOT_RUN（本机）：**`LibraryBorrowingBusinessConformanceIT` 只编译。新增 `LibraryCountChecks` 在真库中做：详情/分页/检索的每行数字与观察器独立 SQL 逐本比对；`LOST`、借出、无副本三种 0；分页用运行时轨迹分别要求“总数1条、根行1条、子表聚合1条”，详情为根行1条＋聚合1条（非 N+1；原预算把分页根表误算成1条，已在第47节修正），并保留原有借还、预约、写保护检查。本机未启动 MySQL／应用，未跑生成工程构建，无 UI/浏览器测试。
 
 **边界：**不新增存储计数列、不改物理 schema、不改变借还协议；不承诺预约抢占或并发借出的实时性；`readView` 只影响 `Get`／`List`。Windows 的安全目录读取门仍阻断完整导出门（`ProjectVisibilityTest` 的同类入口），留给 Linux CI，不放宽生产读取要求。账本本条由 ✗ 转为待 CI 的 △，总数 **76／2／6**；AVG、日期差罚款、请求列表与累计仍未实现。
+
+
+<a id="ci-174-related-count-graph-fix"></a>
+## 47. #174：关联计数支持产物的图谱接入与验收预算修复（待同源码CI）
+
+`0b79ee5` 的 [verify #174](https://github.com/HoloNova/Software-IR/actions/runs/40095437536) 在预热编译阶段失败：`SpringBootProjectGraphInputFactory:137/154` 的两个穷尽switch漏接 `ProjectArtifact.RelatedCounts`。175份原始XML共998项全部是dry-run跳过，正式Frozen、业务IT、独立验证、CLI与部署均NOT_RUN，不能写作“测试零失败所以通过”。原始日志、XML及复算在 `target/ci-investigation/174/`。
+
+本机旧工厂class早于新RelatedCounts.class，增量构建掩盖了源码编译缺口。仅重新编译工厂即可复现同两错；Maven刷新该源码时间后也取得同型编译RED（不是用旧class跑出假GREEN）。修复只在生产侧增加 `RELATED_COUNTS` 图谱角色及显式角色／路径分支；既有枚举消费者同步补齐，**不加default，不修改计数、SQL或事务计划**。
+
+新增无目录导出的图谱契约直接使用实际library与G9组合源码：每个工程恰有一个计数支持产物，空owner归项目根，路径／origin／生成文件字节数及SHA256精确对应，OWNS_ARTIFACT与GENERATES_FILE边各一条；序列化／加载／重序列化保持角色、节点、边、digest及字节。market和ledger不增加计数支持，原SUM角色保留。
+
+自审另发现原计数IT预算误把分页根表读取要求成1条，并直接按裸表名匹配MySQL可能加反引号的digest。原预算对合法三查询窗口取得2项RED。实际生成的ListBookService经真实MyBatis-Plus映射输出：总数查询、根行分页、副本聚合；共享SQL夹具 `library-count-reads.json` 由实际映射契约核对，防止手写SQL假设漂移。新预算分页分别要求总数1／行1／子表聚合1，详情行1／聚合1；已登记的驱动探测另计，缺失、重复、额外业务读与不完整digest窗口都拒绝。完整digest、raw statements和分类写入 `library-count-{page,detail}-trace.json`；冷目录写入已验证，IO异常向harness传播。#174未执行到IT，这项是本机发现，不冒称CI已复现。
+
+**本批8类62项定向通过，0失败／错误／跳过**（按类去重，不累加前批125项）：
+
+| 范围 | 类／项 |
+| --- | ---: |
+| 新图谱契约：实际计数工程2、非计数工程2 | 1／4 |
+| 实际library服务＋真实MyBatis SQL | 1／1（只选择新增方法） |
+| 预算分类正反例、冷目录及完整证据 | 1／16 |
+| 既有图谱序列化、契约与规范化 | 3／32 |
+| 旧SUM图谱与实际G9组合 | 2／9 |
+| 合计 | 8／62 |
+
+Maven日志明确记录project-graph、application主源码及全部application测试源码重新编译，既有导出测试的枚举switch也经编译；Windows不运行完整安全目录导出测试，不降低读取要求。AFT桥超时，诊断不能记作通过；以实际Maven编译为准。证据、XML及源码哈希封存 `target/ci-174-verification/`。覆盖率未测量；本机未启动应用／数据库、未构建生成工程、未跑全量或重触发CI。真实HTTP／MySQL及部署仍待新提交的同SHA结果，账本保持76／2／6。
