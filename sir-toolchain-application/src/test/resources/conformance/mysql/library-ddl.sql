@@ -7,3 +7,16 @@ CREATE TABLE book (id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, isbn VARCHAR(6
 CREATE TABLE copy (id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, barcode VARCHAR(64) NOT NULL UNIQUE, book_id BIGINT NOT NULL, status VARCHAR(32) NOT NULL DEFAULT 'AVAILABLE', CONSTRAINT fixture_copy_book FOREIGN KEY (book_id) REFERENCES book(id));
 CREATE TABLE loan (id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, reader_id BIGINT NOT NULL, copy_id BIGINT NOT NULL, borrowed_at DATETIME(6) NOT NULL, due_at DATETIME(6) NOT NULL, renewals INT NOT NULL DEFAULT 0, returned TINYINT(1) NOT NULL DEFAULT 0, returned_at DATETIME(6) NULL, CONSTRAINT fixture_loan_reader FOREIGN KEY (reader_id) REFERENCES user(id), CONSTRAINT fixture_loan_copy FOREIGN KEY (copy_id) REFERENCES copy(id));
 CREATE TABLE reservation (id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, reader_id BIGINT NOT NULL, book_id BIGINT NOT NULL, queued_at DATETIME(6) NOT NULL, UNIQUE (reader_id,book_id), CONSTRAINT fixture_reservation_reader FOREIGN KEY (reader_id) REFERENCES user(id), CONSTRAINT fixture_reservation_book FOREIGN KEY (book_id) REFERENCES book(id));
+
+-- TEST_FIXTURE_DDL: actual market Item slice sharing the existing library User/credential application.
+CREATE TABLE item (
+  id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  seller_id BIGINT NOT NULL,
+  title VARCHAR(100) NOT NULL,
+  description VARCHAR(500) NULL,
+  price DECIMAL(19,2) NOT NULL,
+  `condition` VARCHAR(32) NULL,
+  status VARCHAR(32) NOT NULL DEFAULT 'ON_SALE',
+  created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  FOREIGN KEY (seller_id) REFERENCES user(id)
+);

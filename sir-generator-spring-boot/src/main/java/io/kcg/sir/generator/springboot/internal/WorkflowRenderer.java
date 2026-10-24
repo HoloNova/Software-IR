@@ -964,7 +964,9 @@ private static void renderValidate(
             // The check judges the merged value the entity now holds, which is a plain nullable value
             // for a nullable field, so no unwrapping is involved.
             String value = targetName + "." + getterName(candidate.propertyName()) + "()";
-            lines.add("        " + simpleName(validationSupport) + "." + constraintCall(
+            String presentOnly = candidate.nullable() && constraint.kind() == SpringBootDeclaration.ConstraintKind.NOT_BLANK
+                    ? "if (" + value + " != null) " : "";
+            lines.add("        " + presentOnly + simpleName(validationSupport) + "." + constraintCall(
                constraint, violations, candidate.requestPath(), value, candidate.decimal()));
          }
       }
@@ -984,7 +986,8 @@ private static void renderValidate(
       String propertyName,
       String requestPath,
       List<SpringBootDeclaration.Constraint> constraints,
-      boolean decimal
+      boolean decimal,
+      boolean nullable
    ) {
    }
 
@@ -1000,7 +1003,7 @@ private static void renderValidate(
                   binding.targetProperty(),
                   binding.sourcePropertyName().orElse(binding.targetProperty()),
                   constraintsOf(entity, binding.fieldSymbol()),
-                  isDecimal(entity, binding.fieldSymbol())));
+                  isDecimal(entity, binding.fieldSymbol()), isOptional(entity, binding.fieldSymbol())));
             }
          } else if (candidate instanceof UpdateStep update && update.targetVariable().equals(step.targetVariable())) {
             for (Binding binding : update.bindings()) {
@@ -1013,12 +1016,17 @@ private static void renderValidate(
                   binding.targetProperty(),
                   patch == null ? change : patch.changesPropertyName() + "." + change,
                   constraintsOf(entity, binding.fieldSymbol()),
-                  isDecimal(entity, binding.fieldSymbol())));
+                  isDecimal(entity, binding.fieldSymbol()), isOptional(entity, binding.fieldSymbol())));
             }
          }
       }
 
       return fields;
+   }
+
+   private static boolean isOptional(EntityDeclaration entity, SymbolId fieldSymbol) {
+      return entity.fields().stream().anyMatch(field -> field.sourceSymbol().equals(fieldSymbol)
+          && field.type() instanceof LoweredJavaType.OptionalValue);
    }
 
    private static boolean isDecimal(EntityDeclaration entity, SymbolId fieldSymbol) {

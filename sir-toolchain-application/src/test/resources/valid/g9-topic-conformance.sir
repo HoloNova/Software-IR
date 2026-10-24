@@ -1,0 +1,460 @@
+sir 0.3
+
+software CampusLibrary {
+  metadata {
+    displayName "Campus Library";
+    namespace "example.library";
+  }
+  target {
+    language java 21;
+    framework spring_boot;
+    persistence mybatis_plus;
+    database mysql;
+    build maven;
+    interface rest;
+  }
+  sources { }
+  imports { }
+  declarations {
+    enum ItemStatus { ON_SALE, SOLD, OFF_SHELF }
+entity Item persistent {
+      identity id: Id generated auto;
+      field seller: Ref<User>;
+      field title: Name;
+      field description: Optional<Remark>;
+      field price: Money where min(0);
+      field condition: Optional<Text> where length(1, 32);
+      field status: ItemStatus default ItemStatus.ON_SALE;
+      field createdAt: Moment default now();
+    }
+use Crud {
+      entity: Item;
+      owner: seller;
+      path: items;
+      writeExclude: [status, createdAt];
+    }
+enum Role { READER, LIBRARIAN }
+    enum CopyStatus { AVAILABLE, BORROWED, LOST }
+
+    entity User persistent {
+      identity id: Id generated auto;
+      field role: Role default Role.READER;
+      field activeLoans: Count default 0;
+    }
+    use DualTokenLogin {
+      account: User;
+      name: name;
+      password: passwordHash;
+    }
+    input RegisterInput {
+      field name: Name;
+      field password: Text where length(6, 64);
+    }
+    view UserView from User {
+      field id: Id;
+      field name: Name;
+      field role: Role;
+    }
+    error NameTaken http 409;
+    capability Register {
+      input RegisterInput;
+      output UserView;
+      fails NameTaken;
+      requires atomic;
+      expose command at "/register";
+      workflow {
+        create User as user {
+          name: input.name;
+          passwordHash: input.password;
+        }
+        persist user else NameTaken;
+        return user;
+      }
+    }
+
+    entity Book persistent {
+      identity id: Id generated auto;
+      field isbn: Code unique;
+      field title: Name;
+      field author: Name;
+      field publisher: Optional<Name>;
+    }
+    entity Copy persistent {
+      identity id: Id generated auto;
+      field barcode: Code unique;
+      field book: Ref<Book>;
+      field status: CopyStatus default CopyStatus.AVAILABLE;
+    }
+    entity Loan persistent {
+      identity id: Id generated auto;
+      field reader: Ref<User>;
+      field copy: Ref<Copy>;
+      field borrowedAt: Moment default now();
+      field dueAt: Moment;
+      field renewals: Count default 0;
+      field returned: Flag default false;
+      field returnedAt: Optional<Moment>;
+    }
+
+    // Only pending tickets live here; ids assigned under the Book lock define FIFO.
+    entity Reservation persistent {
+      identity id: Id generated auto;
+      field reader: Ref<User>;
+      field book: Ref<Book>;
+      field queuedAt: Moment default now();
+      unique (reader, book);
+    }
+
+    error Forbidden http 403;
+
+    // Librarians keep the catalogue; anybody reads it.
+    use Crud {
+      entity: Book;
+      path: books;
+      writer: User;
+      writeRole: LIBRARIAN;
+    }
+    view CopyView from Copy {
+      field id: Id;
+      field barcode: Code;
+      field status: CopyStatus;
+    }
+    input AddCopyInput {
+      field bookId: Id;
+      field barcode: Code;
+    }
+    capability AddCopy {
+      actor Ref<User>;
+      input AddCopyInput;
+      output CopyView;
+      fails BookNotFound;
+      fails Forbidden;
+      requires authenticated;
+      requires atomic;
+      expose command at "/copies";
+      workflow {
+        validate actor.role == Role.LIBRARIAN else Forbidden;
+        load Book by input.bookId as book for update else BookNotFound;
+        create Copy as copy {
+          barcode: input.barcode;
+          book: book;
+        }
+        persist copy;
+        return copy;
+      }
+    }
+
+    input SearchBooks {
+      field keyword: Text;
+      field page: PageNo;
+      field size: PageSize;
+    }
+    error BadPage;
+    capability SearchByTitle {
+      input SearchBooks;
+      output Page<BookView>;
+      fails BadPage;
+      requires readonly;
+      expose query at "/catalogue";
+      workflow {
+        find Book
+          where item.title containsLiteral input.keyword or item.author containsLiteral input.keyword
+          order by title ascending, id ascending
+          Page input.page, input.size else BadPage
+        as rows;
+        return rows;
+      }
+    }
+
+    view LoanView from Loan {
+      field id: Id;
+      field copy: CopyView;
+      field borrowedAt: Moment;
+      field dueAt: Moment;
+      field renewals: Count;
+      field returned: Flag;
+      field returnedAt: Optional<Moment>;
+    }
+    input BorrowInput {
+      field barcode: Code;
+    }
+    error CopyNotFound http 404;
+    error CopyNotAvailable http 409;
+    error ReaderNotFound http 404;
+    error BorrowLimitExceeded http 409;
+    error LoanCounterMismatch http 409;
+    capability Borrow {
+      actor Ref<User>;
+      input BorrowInput;
+      output LoanView;
+      fails BookNotFound;
+      fails BorrowLimitExceeded;
+      fails CopyNotAvailable;
+      fails CopyNotFound;
+      fails QueueHasPriority;
+      fails ReaderNotFound;
+      requires authenticated;
+      requires atomic;
+      expose command at "/loans";
+      workflow {
+        // The common Book mutex protects queues AND all paths that provide or claim a copy.
+        load User by actor as reader for update else ReaderNotFound;
+        load Copy by barcode: input.barcode as observed else CopyNotFound;
+        load Book by observed.book as book for update else BookNotFound;
+        load Copy by observed.id as copy for update else CopyNotFound;
+        exists Reservation where item.book == book as waiting;
+        validate not waiting else QueueHasPriority;
+        update reader when reader.activeLoans < 5 else BorrowLimitExceeded {
+          activeLoans: reader.activeLoans + 1;
+        }
+        persist reader;
+        update copy when copy.status == CopyStatus.AVAILABLE else CopyNotAvailable {
+          status: CopyStatus.BORROWED;
+        }
+        create Loan as loan {
+          reader: actor;
+          copy: copy;
+          dueAt: now() + 30 days;
+        }
+        persist copy;
+        persist loan;
+        return loan;
+      }
+    }
+
+    input LoanRef {
+      field id: Id;
+    }
+    error AlreadyReturned http 409;
+    error LoanNotFound http 404;
+    capability GiveBack {
+      actor Ref<User>;
+      input LoanRef;
+      output LoanView;
+      fails AlreadyReturned;
+      fails BookNotFound;
+      fails CopyNotAvailable;
+      fails CopyNotFound;
+      fails Forbidden;
+      fails LoanCounterMismatch;
+      fails LoanNotFound;
+      fails ReaderNotFound;
+      requires authenticated;
+      requires atomic;
+      expose command at "/loans/{id}/return";
+      workflow {
+        load User by actor as reader for update else ReaderNotFound;
+        load Loan by input.id as loan for update else LoanNotFound;
+        validate loan.reader == actor else Forbidden;
+        validate loan.returned == false else AlreadyReturned;
+        // Refuse stale or uninitialised counters; never silently decrement below zero.
+        validate reader.activeLoans > 0 else LoanCounterMismatch;
+        load Copy by loan.copy as observed else CopyNotFound;
+        load Book by observed.book as book for update else BookNotFound;
+        load Copy by observed.id as copy for update else CopyNotFound;
+        update reader when reader.activeLoans > 0 else LoanCounterMismatch {
+          activeLoans: reader.activeLoans - 1;
+        }
+        persist reader;
+        update loan when loan.returned == false else AlreadyReturned {
+          returned: true;
+          returnedAt: now();
+        }
+        persist loan;
+        update copy when copy.status == CopyStatus.BORROWED else CopyNotAvailable {
+          status: CopyStatus.AVAILABLE;
+        }
+        persist copy;
+        return loan;
+      }
+    }
+    error NotRenewable http 409;
+    capability Renew {
+      actor Ref<User>;
+      input LoanRef;
+      output LoanView;
+      fails Forbidden;
+      fails LoanNotFound;
+      fails NotRenewable;
+      requires authenticated;
+      requires atomic;
+      expose command at "/loans/{id}/renew";
+      workflow {
+        load Loan by input.id as loan else LoanNotFound;
+        validate loan.reader == actor else Forbidden;
+        update loan when loan.returned == false and loan.renewals == 0 and loan.dueAt > now() else NotRenewable {
+          renewals: 1;
+          dueAt: now() + 44 days;
+        }
+        persist loan;
+        return loan;
+      }
+    }
+
+    input PageOnly {
+      field page: PageNo;
+      field size: PageSize;
+    }
+    view ReservationView from Reservation {
+      field id: Id;
+      field book: BookView;
+      field queuedAt: Moment;
+    }
+    input ReserveBookInput { field bookId: Id; }
+    input ReservationRef { field id: Id; }
+    input ClaimReservationInput { field id: Id; field barcode: Code; }
+    error AlreadyBorrowingBook http 409;
+    error AlreadyReserved http 409;
+    error NotQueueHead http 409;
+    error NotReservable http 409;
+    error QueueHasPriority http 409;
+    error ReservationNotFound http 404;
+    error WrongBook http 409;
+
+    capability ReserveBook {
+      actor Ref<User>;
+      input ReserveBookInput;
+      output ReservationView;
+      fails AlreadyBorrowingBook;
+      fails AlreadyReserved;
+      fails BookNotFound;
+      fails NotReservable;
+      fails ReaderNotFound;
+      requires authenticated;
+      requires atomic;
+      expose command at "/reservations";
+      workflow {
+        load User by actor as reader for update else ReaderNotFound;
+        load Book by input.bookId as book for update else BookNotFound;
+        exists Reservation where item.reader == actor and item.book == book as reserved;
+        validate not reserved else AlreadyReserved;
+        exists Copy where item.book == book
+          and any(Loan, copy == item and reader == actor and returned == false) as holding;
+        validate not holding else AlreadyBorrowingBook;
+        exists Reservation where item.book == book as queued;
+        exists Copy where item.book == book and item.status == CopyStatus.AVAILABLE as available;
+        exists Copy where item.book == book and item.status == CopyStatus.BORROWED as borrowed;
+        validate queued or (borrowed and not available) else NotReservable;
+        create Reservation as reservation { reader: actor; book: book; }
+        persist reservation else AlreadyReserved;
+        return reservation;
+      }
+    }
+    capability ClaimReservation {
+      actor Ref<User>;
+      input ClaimReservationInput;
+      output LoanView;
+      fails BookNotFound;
+      fails BorrowLimitExceeded;
+      fails CopyNotAvailable;
+      fails CopyNotFound;
+      fails Forbidden;
+      fails NotQueueHead;
+      fails ReaderNotFound;
+      fails ReservationNotFound;
+      fails WrongBook;
+      requires authenticated;
+      requires atomic;
+      expose command at "/reservations/{id}/claim";
+      workflow {
+        load User by actor as reader for update else ReaderNotFound;
+        load Reservation by input.id as observed else ReservationNotFound;
+        validate observed.reader == actor else Forbidden;
+        load Book by observed.book as book for update else BookNotFound;
+        load Reservation by input.id as reservation for update else ReservationNotFound;
+        validate reservation.reader == actor and reservation.book == book else Forbidden;
+        exists Reservation where item.book == book and item.id < reservation.id as earlier;
+        validate not earlier else NotQueueHead;
+        load Copy by barcode: input.barcode as seen else CopyNotFound;
+        validate seen.book == book else WrongBook;
+        load Copy by seen.id as copy for update else CopyNotFound;
+        update reader when reader.activeLoans < 5 else BorrowLimitExceeded {
+          activeLoans: reader.activeLoans + 1;
+        }
+        persist reader;
+        update copy when copy.status == CopyStatus.AVAILABLE else CopyNotAvailable {
+          status: CopyStatus.BORROWED;
+        }
+        persist copy;
+        create Loan as loan { reader: actor; copy: copy; dueAt: now() + 30 days; }
+        persist loan;
+        delete reservation;
+        return loan;
+      }
+    }
+    capability CancelReservation {
+      actor Ref<User>;
+      input ReservationRef;
+      output Unit;
+      fails BookNotFound;
+      fails Forbidden;
+      fails ReaderNotFound;
+      fails ReservationNotFound;
+      requires authenticated;
+      requires atomic;
+      expose command delete at "/reservations/{id}";
+      workflow {
+        load Reservation by input.id as observed else ReservationNotFound;
+        validate observed.reader == actor or actor.role == Role.LIBRARIAN else Forbidden;
+        // Staff lock the ticket's owner, not themselves, preserving the claim lock order.
+        load User by observed.reader as owner for update else ReaderNotFound;
+        load Book by observed.book as book for update else BookNotFound;
+        load Reservation by input.id as reservation for update else ReservationNotFound;
+        validate reservation.reader == owner and reservation.book == book else ReservationNotFound;
+        delete reservation;
+        return unit;
+      }
+    }
+    capability MyReservations {
+      actor Ref<User>;
+      input PageOnly;
+      output Page<ReservationView>;
+      fails BadPage;
+      requires authenticated;
+      requires readonly;
+      expose query at "/reservations";
+      workflow {
+        find Reservation where item.reader == actor
+          order by id ascending Page input.page, input.size else BadPage as rows;
+        return rows;
+      }
+    }
+
+    capability MyLoans {
+      actor Ref<User>;
+      input PageOnly;
+      output Page<LoanView>;
+      fails BadPage;
+      requires authenticated;
+      requires readonly;
+      expose query at "/loans";
+      workflow {
+        find Loan
+          where item.reader == actor and item.returned == false
+          order by dueAt ascending, id ascending
+          Page input.page, input.size else BadPage
+        as rows;
+        return rows;
+      }
+    }
+    capability OverdueLoans {
+      actor Ref<User>;
+      input PageOnly;
+      output Page<LoanView>;
+      fails BadPage;
+      fails Forbidden;
+      requires authenticated;
+      requires readonly;
+      expose query at "/loans/overdue";
+      workflow {
+        validate actor.role == Role.LIBRARIAN else Forbidden;
+        find Loan
+          where item.returned == false and item.dueAt < now()
+          order by dueAt ascending, id ascending
+          Page input.page, input.size else BadPage
+        as rows;
+        return rows;
+      }
+    }
+  }
+}

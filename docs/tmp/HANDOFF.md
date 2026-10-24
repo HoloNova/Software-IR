@@ -184,3 +184,16 @@ Money IT同一构建纳入与ledger AST对齐的月度业务，新增CalendarSna
 实际shop用SourceEditor正式改名Product以避开旧四位精度Product，组合进原Multiplication IT，原72项检查不删、不另启Shop应用。新增100／101行、重复取消、Pay竞争、反序商品锁、可观察父锁等待、非严格会话上限和第二商品晚失败完整回滚，HTTP／MySQL本机NOT_RUN。真实子进程external、匿名401、公开就绪路由、探针冷目录和实际编译装配已验；JSON保存完整SQL并复用已登记驱动会话探测，不靠总SELECT条数猜业务次数。测试IT只编译、未运行。
 
 本片不含请求List、多商品结算／累计／购物车、嵌套循环或删除；取消原本是△，尚不升完整，账本73／4／7不变。#170月度及预算验收记录随本片代码合并提交，不单独造文档CI。推送后不查询／等CI，负责人通知结果；剩余G5功能先设计，不凭已有each擅自扩面。覆盖率未测量，AFT桥请求超时；Windows安全导出完整门仍由Linux CI覆盖，不放宽读取边界。
+
+
+### #171验收及G9逐题保护收尾（本批真库待CI）
+
+负责人通知后，a2540d02e9c3d44c56f0beea435f1f7a24a3961e的#171（40073882068）已核实全门／部署通过，259份XML无失败／错误；原乘法IT128项检查包含有界each、取消竞争、父锁等待、100／101、非严格上限和第二商品晚失败完整回滚，三份SIR／DDL／seed摘要一致。取消从△转✓，账本74／3／7，见[验证43](../qualification/README.md#ci-171-cancellation-accepted)；上节的待CI／73／4／7是实施历史，不再当当前状态。
+
+本批G9没有新增语法，实际market的Item／ItemStatus／Crud追加到实际library基座并有AST范围提取／完整组合文本契约；原library IT一套构建启动保留全部借还／预约，并加系统字段／归属保护、馆员三写／读者拒写、匿名公开GET、角色撤销、Optional出版社HTTP及独立DB快照。external从实际createSlice的子进程环境核对，启动／路由／状态／错误码／未知JSON拒绝均与实际计划对应。新真库本机NOT_RUN，未加CI编排或新的应用。
+
+真实题目执行另发现Optional<Name>被DTO的标准NotBlank和persist候选重复当必填。已分别用真实DTO和服务取得RED；修复按目标Optional事实生成nullable元素适配及候选有值检查，保留标准NotBlank消息bundle／约束名、必填、长度／精度／时区与PATCH版本协议。14类127项定向通过，含移除策略的对照、publisher缺省／null／有值／空白、PATCH缺席／清空／版本条件写；library仍443行／20能力，Java4102行。详见[验证44](../qualification/README.md#g9-topics-optional-name-local)，原始RED/GREEN及哈希target/g9-topic-verification。
+
+两项G9先保持△，不是凭本机去掉折扣；74／3／7不变。AFT桥超时未取诊断，编译以Maven／实际javac为准，未测覆盖率；无UI、浏览器、应用／数据库启动或本机全量构建。代码／回归／文档及#171验收一批提交推送，不查询或等待CI，由负责人通知结果。下一缺口仍是可借数量、日期差罚款、G5请求列表／累计／购物车等，新增设计须先确认，不因现有each擅自扩面。
+
+提交前SQL自审追加真实Mapper RED：market的condition是MySQL8.4保留字，旧注解裸列令实际selectById产生非法SQL。MySqlMapperIdentifiers按8.4.5官方关键字算法的259项事实，仅在实体MyBatis注解引用时转义保留表／身份／列名，普通标识符、物理列名／DDL／JSON不变。实际selectById／insert（实体根参数）／updateById（et Map）转绿，新增原实体Mapper不变性回归，最终为上述14类127项。第一方URL／哈希和关键字一致性在target/g9-topic-verification/mysql-source；不把这项注解修复泛称为所有手写／关联SQL的兼容证明。

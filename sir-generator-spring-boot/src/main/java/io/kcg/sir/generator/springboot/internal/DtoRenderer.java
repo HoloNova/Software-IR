@@ -34,7 +34,7 @@ final class DtoRenderer {
          collectConstraintImports(imports, field.constraints(), WriteSupport.of(ctx.model()).validationSupportFqn());
       }
 
-      String body = renderBody(decl);
+      String body = renderBody(decl, WriteSupport.of(ctx.model()).validationSupportFqn());
       String content = GenerationContext.assembleSource(packageName, imports, body);
       String path = GenerationContext.javaPath(packageName, artifact.simpleName());
       LoweredNodeId artifactId = artifact.id();
@@ -168,12 +168,12 @@ final class DtoRenderer {
       }
    }
 
-   private static String renderBody(InputDeclaration decl) {
+   private static String renderBody(InputDeclaration decl, String validationSupport) {
       StringBuilder out = new StringBuilder();
       out.append("public class ").append(decl.javaName()).append(" {\n\n");
 
       for (Property field : decl.fields()) {
-         renderField(out, field);
+         renderField(out, field, validationSupport);
       }
 
       for (Property field : decl.fields()) {
@@ -194,14 +194,15 @@ final class DtoRenderer {
    * instead of a rejection. It starts empty, so a request that leaves the member out means "no value", as a
    * JSON null does, instead of leaving the workflow a null where it expects an Optional.
    */
-   private static void renderField(StringBuilder out, Property field) {
+   private static void renderField(StringBuilder out, Property field, String validationSupport) {
       if (field.type() instanceof io.kcg.sir.lowering.springboot.model.LoweredJavaType.OptionalValue optional) {
          out.append("    private java.util.Optional<");
          String element = TypeRenderer.renderBoxedType(optional.elementType());
          int qualifier = field.constraints().isEmpty() ? -1 : element.lastIndexOf('.');
          if (qualifier >= 0) out.append(element, 0, qualifier + 1);
          for (Constraint constraint : field.constraints()) {
-            out.append(renderConstraint(constraint)).append(' ');
+             out.append(constraint.kind() == SpringBootDeclaration.ConstraintKind.NOT_BLANK
+                     ? "@" + validationSupport + ".NotBlank" : renderConstraint(constraint)).append(' ');
          }
 
          out.append(qualifier >= 0 ? element.substring(qualifier + 1) : element).append("> ")

@@ -15,17 +15,17 @@ final class ValidationSupportRenderer {
     private ValidationSupportRenderer() {
     }
 
-    static GeneratedFile render(ProjectArtifact.ValidationSupport artifact) {
+    static GeneratedFile render(ProjectArtifact.ValidationSupport artifact, boolean optionalText) {
         ImportSorter imports = new ImportSorter();
         imports.add("java.math.BigDecimal");
         imports.add("java.util.List");
         String fieldError = artifact.fieldErrorSimpleName();
-        String body = renderBody(artifact, fieldError);
+        String body = renderBody(artifact, fieldError, optionalText);
         String content = GenerationContext.assembleSource(artifact.packageName(), imports, body);
         return new GeneratedFile(artifact.path(), content, artifact.id(), Optional.empty());
     }
 
-    private static String renderBody(ProjectArtifact.ValidationSupport artifact, String fieldError) {
+    private static String renderBody(ProjectArtifact.ValidationSupport artifact, String fieldError, boolean optionalText) {
         StringBuilder out = new StringBuilder();
         out.append("/**\n");
         out.append(" * Candidate checks for the constraints a declared payload field carries.\n");
@@ -39,6 +39,7 @@ final class ValidationSupportRenderer {
         out.append("    }\n\n");
         renderNotNull(out, fieldError);
         renderNotBlank(out, fieldError);
+        if (optionalText) out.append(OptionalTextValidationRenderer.render());
         renderEmail(out, fieldError);
         renderLength(out, fieldError);
         renderBounds(out, fieldError, "min", "must be greater than or equal to", " < 0");

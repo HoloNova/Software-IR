@@ -1183,3 +1183,61 @@ mvn -B -q -o -pl sir-toolchain-application -am test '-Dtest=BoundedEachSemantics
 保留原乘法／数量／名额／预约检查，追加真实购买后取消、同商品重复行／下架返库、100与101行、缺明细／坏数量、八并发重复取消、Pay竞争、反向明细插入顺序、可观察父锁等待后重查状态、满库存严格／非严格拒绝，以及第二商品触发器失败时订单／库存／明细完整快照不变。保存shop-cancel-trace.json和shop-late-rollback-trace.json，明确一次明细exists加一次有界读取，记录全SQL与事务计数；驱动会话探测复用已有严格白名单，未知表／JOIN／UNION／子查询不能伪装成已知读取。两次产品UPDATE被观察到才宣称晚失败走到后续步骤。以上尚未在本机运行，代理只证明异常传播，不是回滚证明；完整CI须覆盖待提交SHA。
 
 **资源和边界：**Maven384MiB、fork512MiB，各2个可见处理器，一次只跑一个定向构建。AFT桥多次超时，不写诊断清洁；编译以Maven为准。未测覆盖率，没有本机全量、数据库／应用／浏览器或生成工程Maven构建，UI不受影响。shop为327行SIR／2975行生成Java／12项能力；取消原本是△，本批待CI仍△，账本73／4／7不变。没有购物车／多商品结算／请求列表／金额累计或其它未确认业务。#170验收记录、代码与配套文档同一提交，不另造纯文档CI；推送后不查询或等待，负责人通知结果。
+
+
+<a id="ci-171-cancellation-accepted"></a>
+## 43. CI #171：有界each与实际取消返库验收闭环
+
+负责人通知成功后核验源码 **`a2540d02e9c3d44c56f0beea435f1f7a24a3961e`**，[verify #171](https://github.com/HoloNova/Software-IR/actions/runs/40073882068)。同SHA的Frozen full gate、Business conformance ITs、Independent verification、Standalone CLI及独立部署均success；Frozen成功后Completion诊断按设计跳过。259份Surefire XML无失败／错误，不能将它们与本机202项累加为新覆盖数。
+
+`conformance-evidence/multiplication-1a16cd11da0-2056/multiplication-report.txt`实际**128项检查通过、0失败**，保留原乘法／数量／名额／预约，并执行实际shop组合后的取消路径：重复取消、Pay竞争、100／101条、商品固定锁序、可观察的父订单锁等待、严格／非严格库存上限、第二商品晚失败的整笔回滚均通过。完整SQL与事务证据在同目录的shop-cancel-trace.json／shop-late-rollback-trace.json，不把代理异常传播作为回滚证据。
+
+以下资源按LF规范化的SHA256与报告逐字核对；只说明本轮实际验证了这些资源，不代表之后修改的库／题目亦被覆盖：
+
+| 资源 | SHA256 |
+| --- | --- |
+| valid/shop-conformance.sir | `e893136f7c1cebf153b8d77653ec81f4b75ed3d61f973d919a9871ca200a5e04` |
+| conformance/mysql/multiplication-ddl.sql | `cb77427e133a62e7415b2973e39650312f84f7356498b2e761c0d7b49c314222` |
+| conformance/mysql/multiplication-seed.sql | `61fc2612e65744f28adbfe5812efc1e25a1dcd1ffb6d3835298e9f10e9c416e0` |
+
+部署report.json的commit匹配本SHA；deployment／httpSmoke／persistence／privileges／swagger／contract／business／update／dataUpdate／decimalShape／freshChain／cleanup均PASSED。原始产物、run.json及独立复算accepted-summary.json在 `target/ci-investigation/171/`；后续不再查询或重复执行该CI。
+
+据此只把shop“取消订单”从△转✓，账本 **74／3／7（88.1%／3.6%／8.3%）**，shop为8／1／3。没有把有界服务器行遍历升级成请求列表、多商品结算、购物车或金额累计；两项G9折扣也不借旧通用IT转完整。第42节及设计27的本机NOT_RUN保留为实施历史边界，完整取消验收以本节为准。记录与下一对应源码／测试提交合并，不单独制造文档CI。
+
+
+<a id="g9-topics-optional-name-local"></a>
+## 44. G9逐题写保护、Optional名称与SQL保留字（待同源码CI）
+
+已验收基线为第43节的 `a2540d0`。本批收口market卖家系统字段保护及library馆员目录维护，先核对实际 `topics/market` 的Item／ItemStatus／Crud与实际 `topics/library`，并非新增G9语法。原题策略已存在，但旧通用Crud IT和旧library借还用例没有逐题覆盖这两处写入，因此不能直接消去折扣。
+
+**有效RED与共享缺陷：**新契约先证明旧IT没有执行market策略（1项失败）；实际library服务的CreateBook／UpdateBook在publisher为空时报INVALID_REQUEST，三场景中两项error，出版社有值时通过。再用真实DTO及Bean Validation复现Optional<Name>缺省／显式null被NotBlank拒绝（3项中2项failure）。三份原报告分别封存在 `target/g9-topic-verification/red/`、`red-optional-name/`、`red-optional-dto/`，没有为迁就测试给合法请求补出版社。
+
+原因有两个独立消费者：DTO在Optional元素上直接用了会拒绝null的标准NotBlank，而Optional.empty的元素正会以null校验；persist前实体候选已是plain nullable值，却仍无条件执行notBlank。修复只消费目标模型已有的Optional事实：可选元素使用按需生成的空值友好NotBlank适配，有值时仍拒绝空串／空白；候选只在可空字段有值时执行该检查。非Optional Name的null拒绝、其它长度／数值／精度／时区约束及版本条件写不改。保留标准NotBlank约束名和消息bundle模板，候选字段路径／错误码沿用既有规则。没有Optional且无该约束的工程不多生成支持代码，market的支持产物契约明确检查这一点。
+
+**提交前SQL自审发现：**实际market的condition是MySQL8.4保留字，原实体TableField直接给裸列名。新增真实DefaultSqlInjector／MappedStatement检查取得确定性RED：selectById生成`SELECT …,condition,… FROM item`；旧代理只执行服务方法，没有覆盖这条SQL。按MySQL8.4.5的lex.h／sql_yacc.yy及gen_keyword_list.cc官方分类提取259个保留字事实，在MyBatis实体注解引用时只给这些表／身份／列名加反引号，普通seller_id等不变；目标物理列仍叫condition，JSON和DDL不改名，不用改题目或给夹具起别名绕过。真实selectById／insert／updateById现均检查转义后的SQL，实体DTO／Mapper不变性及八题生成回归保留。这是MyBatis注解标识符修正，不扩大成所有手写／关联SQL的全方言兼容声明。第一方文件、URL／SHA及259项完全一致核对归档target/g9-topic-verification/mysql-source。初次测试新增Session配置漏同步PATCH构造，属于编译失败而非SQL RED；随后一项真实RED封存red-mysql-identifier。转绿过程中insert探针误传et Map（真实insert是实体根参数，update才是et），已按BaseMapper协议修测试，不改变生产SQL。
+
+**实际生成执行：**G9TopicRuntimeTest编译执行两个实际题目，并用移除writeExclude／writeRole的变体证明这些策略确实改变可写入口和权限，而不是测试探针一律拒绝。验证seller绑定actor、id／seller／status／createdAt不能混入创建请求、status／createdAt不能混入修改请求，外人更新／删除拒绝，已经SOLD的状态在合法编辑后保留，禁止或失败路径没有写操作。馆员三种写操作均执行，读者三种均拒绝。Optional出版社缺省／null／有效值、空串／空白、非可空Name的null、版本PATCH缺席保留／显式清空／有效变更／非法空白均覆盖。PATCH探针起初漏识别旧selectByIdForUpdate，补的是探针，不改版本锁或空changes的既有条件写协议。
+
+**新真库NOT_RUN（本机）：**G9TopicComposition以实际library为基座，只加入从实际market AST提取的ItemStatus、Item与Crud策略，共享原User／DualTokenLogin及library IT的同一构建／启动。私有 g9-topic-conformance.sir 经正式分析，按实际AST范围提取，并与每次重建的完整组合文本逐字对比，保留原library各声明；新建Item表测试DDL不改变交付schema。LibraryBorrowingBusinessConformanceIT保留全部旧借还／预约，并新增G9TopicChecks：HTTP未知字段400、主体归属／状态保持、外人拒写及独立数据库快照、馆员目录CRUD／读者403、匿名GET仍公开、撤销馆员后拒写、空白出版社400而null合法。中止经真实harness.verify记录失败，不留下PASSED证据。external由实际createSlice生成的子进程环境并经Spring绑定核对；公开就绪地址、POST201／PUT和DELETE默认200、原样SIR错误码及拒绝未知JSON字段均与实际交付计划／生成控制器相符。未另起应用、未新增一轮构建、未改CI编排。
+
+最终按最新类XML去重 **14类127 tests，0 failures／errors／skips**，不包括真库IT未启用的占位结果：
+
+| 模块／类 | tests |
+| --- | ---: |
+| generator G9TopicRuntimeTest | 29 |
+| generator GeneratorEntityDtoContractTest／TimeZoneRuntimeTest／OptionalPayloadRuntimeTest | 5／2／3 |
+| generator GeneratorWriteSliceContractTest／GeneratorEntityArtifactInvarianceTest | 17／4 |
+| generator LibraryBorrowingRuntimeTest／LibraryReservationRuntimeTest | 8／19 |
+| application G9TopicContractTest／CrudAccessContractTest | 4／12 |
+| application LibraryBorrowingErrorContractTest／LibraryReservationContractTest／LibraryBorrowingToolchainContractTest | 6／14／3 |
+| application TopicSamplesTest | 1 |
+| **合计** | **127** |
+
+```powershell
+$env:MAVEN_OPTS='-Xmx384m -XX:ActiveProcessorCount=2'
+mvn -B -q -o -pl sir-toolchain-application -am test '-Dtest=G9TopicRuntimeTest,GeneratorEntityDtoContractTest,GeneratorEntityArtifactInvarianceTest,TimeZoneRuntimeTest,OptionalPayloadRuntimeTest,GeneratorWriteSliceContractTest,G9TopicContractTest,CrudAccessContractTest,LibraryBorrowingErrorContractTest,LibraryReservationContractTest,LibraryBorrowingToolchainContractTest,LibraryBorrowingRuntimeTest,LibraryReservationRuntimeTest,TopicSamplesTest' '-Dsurefire.failIfNoSpecifiedTests=false' '-DargLine=-Xmx512m -XX:ActiveProcessorCount=2'
+```
+
+表中为去重后的实际范围；命令作为完整可重放选择，本轮分批执行、未为汇报再跑整批。前四类后出现上述PATCH探针问题后，只继续受影响类；新增支持产物／解码策略及标准消息模板兼容自审后，只补G9TopicRuntimeTest和G9TopicContractTest。最新XML、索引及源码哈希在 `target/g9-topic-verification/`。Maven384MiB／fork512MiB，各2个可见处理器；AFT桥超时未取得诊断结论，不写成clean；编译以实际Maven及生成类javac为准，覆盖率未测量。
+
+本机没有启动数据库／应用／浏览器，没有全量门或生成工程Maven构建；UI不受影响。八题仅内存生成，library的SIR仍443行／20项能力，Java因正确的可空适配从4086变4102行，其余题规模不变。没有把writeExclude宣称为并发锁、角色验证宣称为所有在途请求即时撤权，亦未改变已SOLD商品仍可合法编辑标题等既有业务政策。两项G9继续待新同SHA HTTP／MySQL证据，账本保持74／3／7；不靠本机127项升完整。代码、测试、#171验收和配套文档同批提交，推送后不查询或等待CI，负责人通知结果。

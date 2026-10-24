@@ -1357,7 +1357,7 @@ ledger的月度声明直接复用于Money IT同一生成工程，AST片段相等
 
 
 <a id="g5-bounded-child-iteration-proposal"></a>
-## 27. G5 第一片：有界服务器子行遍历与取消返库（已实现，待同源码CI）
+## 27. G5 第一片：有界服务器子行遍历与取消返库（#171已验收）
 
 基线为#170已验收的 `e9f38dd7d94ecfabd7f0384b2d9e8e8ca1b0b66e`。负责人已确认本片范围，现已贯通有界each和实际shop取消返库；21类202项定向通过，真实回滚／并发留待同源码CI。账本仍73／4／7，取消订单原本已是△，未提前转完整。先期组合探针归档，正式回归替代；文档随对应实现提交，不单独触发CI。
 
@@ -1463,3 +1463,40 @@ Lowering明确选定根实体全部所需物理列、固定排序、哨兵读取
 4. 至少一个可观察的订单锁等待屏障，确认先等父锁再判断状态／读取明细，不能用偶然压力结果代替；保留完整SQL／分类，复用已修复的会话探测区分，不把驱动SELECT算成额外业务操作。
 
 本批21类202项定向通过，零失败／错误／跳过，按最新类报告去重；ProjectVisibility只计两个新增的无导出方法实例，完整Linux安全文件导出另由CI覆盖。8题基线（shop使用提交前源码，不含each）由新旧WorkflowRenderer纯内存生成对照，775个文件逐字节一致，不构建生成工程。真实HTTP／MySQL、并发与事务回滚均本机NOT_RUN，覆盖率未测量；AFT桥请求超时，不能记诊断清洁，编译以实际Maven为准。证据与残余边界见[验证42](../qualification/README.md#g5-bounded-each-local)，本机报告／源码哈希在target/g5-each-verification，账本73／4／7不变。
+
+
+### 27.7 #171验收闭环
+
+负责人通知后核验 `a2540d02e9c3d44c56f0beea435f1f7a24a3961e` 的 [#171](https://github.com/HoloNova/Software-IR/actions/runs/40073882068)：Frozen、全部业务IT、独立验证、CLI与部署通过，259份XML无失败／错误。乘法应用保留原检查并执行实际shop取消，128项通过，包含100／101条、重复取消／Pay竞争、父锁等待、非严格库存上限和后续商品写失败整笔回滚；源码及SQL资源hash与报告一致，详见[验证43](../qualification/README.md#ci-171-cancellation-accepted)。27节的待CI是原实施历史，本次只把取消订单转✓，账本74／3／7，不增加请求列表、多商品结算、累计或购物车。
+
+
+<a id="g9-topics-optional-name"></a>
+## 28. G9实际题目的写保护验收、可选名称与SQL映射修正（待同源码CI）
+
+### 28.1 为什么本批主要是验收，而不是新语言
+
+market已经声明Item的seller owner及writeExclude(status,createdAt)，library已经声明Book的writeRole(LIBRARIAN)与readPublic。旧通用G9和借还真库没有逐题证明这些Crud路径；因此本批用真实题目及移除策略的对照执行，不引入新访问语法，也不凭通用用例直接去掉题目折扣。
+
+保护含义保持明确：创建时卖家绑定actor，id／seller／status／createdAt不是可写创建字段；更新不能接收status／createdAt，外人更新／删除拒绝，已经SOLD的商品合法改标题不恢复ON_SALE。馆员能创建／修改／删除目录，读者不能；匿名目录GET仍公开。writeExclude约束输入与赋值，**不是并发控制**，不能承诺编辑与购买交错时状态一定不被完整实体updateById覆盖。角色检查使用本次请求读取的事实，不声称撤权线性化覆盖所有在途请求；这两项增强不在既有题目口径中偷渡。
+
+### 28.2 实际Nullable事实丢失在两个消费点
+
+真实library的publisher是Optional<Name>，Name继承notBlank和长度。缺省或null合法，但新DTO／服务执行分别证明：Optional元素上的标准NotBlank会校验抽取的null；最终存储候选已是普通可空String，生成器仍不分nullable直接notBlank。因此馆员合法创建／更新报INVALID_REQUEST。不是业务写权限缺失，也不应给测试强填出版社来掩盖。
+
+不改Parser／Core／目标类型或约束协议：DtoRenderer在已有OptionalValue且NOT_BLANK时使用ValidationSupport中按需生成的null友好元素约束；有值仍执行非空白。约束名NotBlank及标准消息bundle保留。WorkflowRenderer候选检查读取目标实体字段OptionalValue事实，只有NOT_BLANK在nullable为null时跳过；NOT_NULL、其它长度／数值／精度／时区规则仍各自执行。非Optional Name仍拒null，PATCH仍按合并后目标候选和版本条件写验证，缺席不等于清空。不需要该适配的工程没有新支持代码；各消费点的分工不互相代替。
+
+### 28.3 组合已有验收能力，避免再建应用
+
+G9TopicComposition以实际library全文为基座，只提取实际market的ItemStatus、Item及Crud声明追加为私有 conformance SIR，按AST源范围提取，以每次重建的完整组合文本检查原题各声明未改，未手写第二份策略。共享User／DualTokenLogin，library IT一套生成／构建／启动保留旧借还与预约检查，添加Item表的测试DDL和HTTP／独立数据库快照。实际子进程工厂验证external配置、公开就绪路由、201／默认200、原样错误码及未知字段拒绝，不新增拦截器或另起应用。
+
+真实HTTP覆盖系统字段／归属拒写、状态保持、馆员三写／读者拒写、撤权后的新请求、匿名GET和出版社null／空白；任何未预期异常经harness.verify原样抛出并记录失败，不能报告PASSED。并发角色撤销／商品状态同步不是本片承诺，后续确有业务要求时应使用已有版本／守卫而不是误称writeExclude已经提供。
+
+### 28.4 MyBatis保留标识符的真实SQL验证
+
+最后自审发现实际Item.condition映射为裸列名；MySQL8.4.5第一方语法将CONDITION列为保留字。真实DefaultSqlInjector／MappedStatement先复现selectById的非法裸词SQL，再由MySqlMapperIdentifiers按官方lex.h、sql_yacc.yy和gen_keyword_list.cc算法提取的259个保留字事实处理实体注解中的表／身份／列名，仅保留字加反引号；普通标识符产物不变，不重命名物理字段或JSON，不靠测试别名绕开。读取／insert／updateById实际SQL及原实体DTO／Mapper不变性已验证，SQL从实体根参数还是et Map取值遵守各自BaseMapper协议。第一方文件及哈希、259项逐字一致核对在target/g9-topic-verification/mysql-source。本批不宣称所有手写／关联SQL均有全方言覆盖，后续仍须按各自计划检验；不修改目标物理模型或schema协议。
+
+### 28.5 验证与剩余边界
+
+初始契约RED（旧IT没执行market）和实际DTO／服务的缺省、null RED原样封存。最终14类127项、零失败／错误／跳过，包含真实生成Java、Bean Validation、PATCH、按需支持、旧借还／预约和八题内存生成；细目及可重放命令见[验证44](../qualification/README.md#g9-topics-optional-name-local)。标准消息模板兼容的最后自审仅补跑两类，不累计重跑次数。library仍443行SIR／20能力，Java因适配变为4102行，其余题规模不变。
+
+本机没有启动HTTP应用／MySQL，完整逐题协议仍须新同SHA CI，不能以本机代理代替数据库、角色配置或解码证据。AFT桥超时未取诊断，编译以Maven／实际javac为准；覆盖率未测量。无UI改变，不跑浏览器。账本74／3／7不变，两项G9继续待验收；#171验收记录与本批代码／测试一起提交，不单独造文档CI，推送后不查询／等待，负责人通知结果。

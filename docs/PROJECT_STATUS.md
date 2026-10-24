@@ -34,7 +34,7 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 - 语义补充（2026-10-18～20）：内置 `use Crud { entity: X; }` 一句给出增删改查，`owner` 让每一行只属于一个账号，`path` 给出 REST 路径；错误可以声明 403，工作流可以读当前用户的字段（`actor.role`），授权就是以 `actor` 为一边的普通检查；`expose … [put|delete] at "/notes/{id}"` 自定 HTTP 方法和带路径参数的路径；已上线的列可以改默认值。部署第二版用 `Crud`（含 `owner`、`path`）管理笔记和标签，CI 冒烟在真实 MySQL 上核对 401／403／404 与 REST 路径。
 - 已上线系统的结构变更（2026-10-20，[设计 12 第 14 节](design/12-feature-semantics-and-semantic-types.md)）：除加列、改名、改默认值外，可以放宽（整数变宽、文本变长或去掉长度、必填变可空），可以删实体、字段，但打包时要写 `--confirm-backup yes`（声明已备份，工具不检查）。本机测试通过；真实 MySQL 上的验证由新增的部署第三版冒烟承担，待提交后的 CI。删掉引用别的表的列、主键列仍不支持。
 - 唯一约束（2026-10-20，[设计 12 第 15 节](design/12-feature-semantics-and-semantic-types.md)）：`persist 变量 else 错误` 能说明新建的行撞上唯一约束时报哪个错误（原来是 500）；实体可写 `unique (a, b);` 声明联合唯一，建表时成为复合唯一索引，保留数据的更新里只能随新建表创建。
-- 选题试写（[报告](qualification/TOPIC_TRIALS.md)）：八个典型后端的84条需求，当前73完整、4带折扣、7未写出（86.9%／4.8%／8.3%）。#168已验收借阅限额、FIFO、课程冲突／直接先修及SUM／分组；#170已核验用户时区月度分类合计和指定当前预算，两项由待CI△转✓。主要未写出项是列表／批量、跨行数量、日期差及图表／导出。既有D1沿引用加载、D2嵌套视图、D3可选比较已修；八题本机只内存生成，新源码离线工程构建仍由CI执行。
+- 选题试写（[报告](qualification/TOPIC_TRIALS.md)）：八个典型后端的84条需求，当前74完整、3带折扣、7未写出（88.1%／3.6%／8.3%）。#168已验收借阅限额、FIFO、课程冲突／直接先修及SUM／分组；#170已核验用户时区月度分类合计和指定当前预算，两项由待CI△转✓；#171验收取消返库后为74／3／7，两项G9仍待本批新CI。主要未写出项是列表／批量、跨行数量、日期差及图表／导出。既有D1沿引用加载、D2嵌套视图、D3可选比较已修；八题本机只内存生成，新源码离线工程构建仍由CI执行。
 
 - G7 可选值（2026-10-20，已实现；后续 #140 已回归验收）：`x is none`／`x is present` 判断空值，兼容类型可比较；任一侧为空普通比较均为 false（含 `!=`），`not` 仍普通取反。显式组合空值判断可写可选筛选，不自动省略条件，PATCH `.present` 不变。tasks、market 已更新，Java 真值表与题目内存生成已验证；八题生成工程离线编译和真实 MySQL／HTTP 为 NOT_RUN。Windows 部署导出测试因现有安全读源能力缺失失败，未放宽边界。方案与限制见[设计 12 第 17 节](design/12-feature-semantics-and-semantic-types.md)，定向证据见[验证说明](qualification/README.md)。
 
@@ -103,7 +103,7 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 - SLM 评测：总设计见 [SLM 评测计划](qualification/SLM_GENERATED_PROJECT_EVALUATION_PLAN.md)，尚未启动。
 - Windows 平台证据；生产、安全认证、性能、高可用资格均未声明。
 
-## 7. 当前阶段（2026-10-22）
+## 7. 当前阶段（2026-10-24）
 
 **语言升级已实施：**负责人 2026-10-17 确认把 SIR 做成 Java 之上的更高层语言——一句声明给出一个功能，作者写语义而不写机器类型，用户可以定义自己的类型和功能，数据库迁移由变更层驱动。[设计 12](design/12-feature-semantics-and-semantic-types.md) 第 9 节的五步已全部实施，结果与留到下一阶段的事项见其第 13 节。迁移由变更层驱动之后，已上线的表支持列改名（带 `@id`）、加可空列、加带默认值的必填列和新建表，这些都由 CI 部署冒烟在真实 MySQL 上核对。
 
@@ -111,9 +111,13 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 
 **CI 提速实测：**#155 主验证 8:18（同业务源码 #154 为 19:51），在线预热 0:27、Frozen 3:37，Completion 按预期跳过；真实业务／独立验证／CLI 保留。部署被取消，不能比较整轮时长，也不将全部观测改善归因为编排。详见[验证第 25 节](qualification/README.md#ci-154-accepted)。
 
-**最新实现（G5第一片，待同源码CI）：**[设计27](design/12-feature-semantics-and-semantic-types.md#g5-bounded-child-iteration-proposal)已按确认实现有界服务器each和实际shop取消返库：最多100行、超限先拒绝且不执行体，父订单状态守卫及商品/id升序锁；SQL整数增量、候选前上限检查和整笔事务保留。21类202项定向通过；Core／目标IR作用域逃逸及计划损坏独立拒绝，源编辑／正式引用／文档门贯通。8题无each基线775个生成文件与旧渲染器逐字节一致。原乘法IT组合正式改名的实际shop，保留原检查，追加并发／锁等待／非严格上限及晚失败回滚，无新增应用构建；本机只编译，不把代理异常传播当事务回滚证明，见[验证42](qualification/README.md#g5-bounded-each-local)。shop327行SIR／2975行Java／12项能力；取消仍记待CI的△，账本73／4／7不变。请求列表、多商品结算、累计金额和购物车未做；文档与#170验收记录随实现提交，不单独触发CI，不查询新CI。
+**最新实现（G9逐题写保护，待同源码CI）：**market系统字段／卖家归属与library馆员目录策略已有，本批补真实生成执行及原library IT的HTTP／数据库快照检查，不新增G9语法或应用构建。发现Optional<Name>的DTO元素和最终候选都误把null当NotBlank违规，已按目标Optional事实修正：缺省／null合法、有值仍拒空白，非可空Name仍必填；标准约束码及消息模板、长度／精度／时区、PATCH版本写保留。SQL自审另用实际Mapper复现condition裸列名，按MySQL8.4.5保留字事实仅在实体SQL注解中转义；物理列／JSON不改名，普通标识符不变。14类127项定向通过，旧借还／预约不删，实际路由／错误码／external环境及拒绝未知JSON字段已核对，见[验证44](qualification/README.md#g9-topics-optional-name-local)。两项G9仍等新CI，不提前去掉折扣，账本74／3／7；library源443行、Java4102行、20项能力，其余规模不变。文档与#171验收记录随代码提交，不查／等新CI。
 
-**最新验收基线（#170，e9f38dd）：**[同SHA运行](https://github.com/HoloNova/Software-IR/actions/runs/40052208682)的Frozen门、全部业务IT、独立验证、CLI与部署全部success；251份XML／1708项无失败、错误或跳过，Money306项业务检查通过，含两种真实会话／JVM配置、月界微秒、历史日期CRUD、用户偏好RR屏障和指定当前预算。源码／DDL／seed摘要与当前资源一致，月报／预算两项转✓，账本 **73／4／7**，见[验证41](qualification/README.md#ci-170-calendar-accepted)。自然月用本人时区、预算用当前规则，不新增期间历史；AVG、G5、日期差及图表／导出不因此视为完成。验收文档留待下一对应源码提交，不单独触发CI。
+**当前验收基线（#171，a2540d0）：**[同SHA运行](https://github.com/HoloNova/Software-IR/actions/runs/40073882068)的Frozen、业务IT、独立验证、CLI与部署均通过，259份XML无失败／错误。原乘法IT128项检查覆盖实际shop取消、100／101界、重复／Pay竞争、父锁等待、非严格上限及第二商品晚失败完整回滚，原72项保留；SIR／DDL／seed摘要核对一致，取消由△转✓，账本74／3／7，详见[验证43](qualification/README.md#ci-171-cancellation-accepted)。新G9组合源码与库DDL另需本批CI，不借旧结果验收新代码。
+
+**G5第一片实现历史（已由#171验收）：**[设计27](design/12-feature-semantics-and-semantic-types.md#g5-bounded-child-iteration-proposal)已按确认实现有界服务器each和实际shop取消返库：最多100行、超限先拒绝且不执行体，父订单状态守卫及商品/id升序锁；SQL整数增量、候选前上限检查和整笔事务保留。21类202项定向通过；Core／目标IR作用域逃逸及计划损坏独立拒绝，源编辑／正式引用／文档门贯通。8题无each基线775个生成文件与旧渲染器逐字节一致。原乘法IT组合正式改名的实际shop，保留原检查，追加并发／锁等待／非严格上限及晚失败回滚，无新增应用构建；本机只编译，不把代理异常传播当事务回滚证明，见[验证42](qualification/README.md#g5-bounded-each-local)。shop327行SIR／2975行Java／12项能力；取消仍记待CI的△，账本73／4／7不变。请求列表、多商品结算、累计金额和购物车未做；文档与#170验收记录随实现提交，不单独触发CI，不查询新CI。
+
+**此前验收基线（#170，e9f38dd）：**[同SHA运行](https://github.com/HoloNova/Software-IR/actions/runs/40052208682)的Frozen门、全部业务IT、独立验证、CLI与部署全部success；251份XML／1708项无失败、错误或跳过，Money306项业务检查通过，含两种真实会话／JVM配置、月界微秒、历史日期CRUD、用户偏好RR屏障和指定当前预算。源码／DDL／seed摘要与当时资源一致，月报／预算两项转✓，账本 **73／4／7**，见[验证41](qualification/README.md#ci-170-calendar-accepted)。自然月用本人时区、预算用当前规则，不新增期间历史；AVG、G5、日期差及图表／导出不因此视为完成。验收文档留待下一对应源码提交，不单独触发CI。
 
 **历史阻塞修复（#169，已由#170闭环）：**Money加入认证月报后漏配external模式，生成工程构建通过但Actor启动守卫正确拒绝，月报真库未执行。现已在实际IT创建路径补齐external，并验证真实子进程Spring环境、生成身份守卫／凭证适配器／MyBatis装配及匿名401；7类21项定向通过，未改生产代码或弱化鉴权，见[验证40](qualification/README.md#ci-169-actor-mode-fix)。单批提交推送后由负责人通知CI，不查询或等待。当时账本为71／6／7，现按#170转为73／4／7。
 
