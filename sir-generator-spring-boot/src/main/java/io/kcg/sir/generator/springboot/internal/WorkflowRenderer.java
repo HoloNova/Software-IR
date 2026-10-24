@@ -101,26 +101,26 @@ final class WorkflowRenderer {
          case SpringBootWorkflow.LoadActorStep load:
             renderLoadActor(ctx, load, variableNames, imports, currentPackage, lines, mappers);
             break;
-           case SpringBootWorkflow.MonthStep month:
-              collectExpressionImports(ctx,month.month(),variableNames,imports,currentPackage);
-              collectExpressionImports(ctx,month.zone(),variableNames,imports,currentPackage);
-              lines.addAll(CalendarStepRenderer.render(month,variableNames,WriteSupport.of(ctx.model()).validationSupportFqn(),
-                  errorJavaName(ctx,month.errorSymbol(),imports,currentPackage),inputName));
-              break;
-           case SpringBootWorkflow.GroupedSumStep query:
-             renderGroupedSum(ctx, query, inputName, variableNames, imports, currentPackage, lines, mappers, stringMatches);
-             break;
-          case SpringBootWorkflow.SumStep query:
-             renderSum(ctx, query, variableNames, imports, currentPackage, lines, mappers, stringMatches);
-             break;
-          case SpringBootWorkflow.ScalarQueryStep query:
+         case SpringBootWorkflow.MonthStep month:
+            collectExpressionImports(ctx,month.month(),variableNames,imports,currentPackage);
+            collectExpressionImports(ctx,month.zone(),variableNames,imports,currentPackage);
+            lines.addAll(CalendarStepRenderer.render(month,variableNames,WriteSupport.of(ctx.model()).validationSupportFqn(),
+                errorJavaName(ctx,month.errorSymbol(),imports,currentPackage),inputName));
+            break;
+         case SpringBootWorkflow.GroupedSumStep query:
+            renderGroupedSum(ctx, query, inputName, variableNames, imports, currentPackage, lines, mappers, stringMatches);
+            break;
+         case SpringBootWorkflow.SumStep query:
+            renderSum(ctx, query, variableNames, imports, currentPackage, lines, mappers, stringMatches);
+            break;
+         case SpringBootWorkflow.ScalarQueryStep query:
             renderScalarQuery(ctx, query, variableNames, imports, currentPackage, lines, mappers, stringMatches);
             break;
-                   case SpringBootWorkflow.EachStep each:
-             renderEach(ctx,workflow,capability,each,responseRepresentation,inputName,variableNames,imports,currentPackage,lines,mappers,stringMatches);
-             break;
-          case FindStep find:
-         renderFind(ctx, find, inputName, variableNames, imports, currentPackage, lines, mappers, stringMatches);
+         case SpringBootWorkflow.EachStep each:
+            renderEach(ctx,workflow,capability,each,responseRepresentation,inputName,variableNames,imports,currentPackage,lines,mappers,stringMatches);
+            break;
+         case FindStep find:
+            renderFind(ctx, find, inputName, variableNames, imports, currentPackage, lines, mappers, stringMatches);
             break;
          case CreateStep create:
             renderCreate(ctx, create, variableNames, imports, currentPackage, lines);
@@ -140,51 +140,51 @@ final class WorkflowRenderer {
    }
 
    private static String variableName(Variable value, Map<SymbolId,String> names) {
-       return names.getOrDefault(value.symbol(),value.targetName());
+      return names.getOrDefault(value.symbol(),value.targetName());
    }
    private static String mapperAccess(MapperReference mapper, Map<SymbolId,String> names) {
-       return (names instanceof EachNames ? "this." : "")+mapper.mapperFieldName();
+      return (names instanceof EachNames ? "this." : "")+mapper.mapperFieldName();
    }
    private static final class EachNames extends LinkedHashMap<SymbolId,String> {
-       EachNames(Map<SymbolId,String> outer) { super(outer); }
+      EachNames(Map<SymbolId,String> outer) { super(outer); }
    }
 
    private static void renderEach(GenerationContext ctx, SpringBootWorkflow workflow, CapabilityDeclaration capability,
          SpringBootWorkflow.EachStep step, ResponseRepresentation responseRepresentation, String inputName,
          Map<SymbolId,String> names, ImportSorter imports, String currentPackage, List<String> lines,
          Map<SymbolId,MapperReference> mappers, List<SpringExpression.StringMatch> stringMatches) {
-       EntityDeclaration entity=ctx.entity(step.entitySymbol());registerEntityImport(ctx,entity,imports,currentPackage);
-       MapperReference mapper=ensureMapper(ctx,step.entitySymbol(),entity.javaName(),mappers);
-       imports.add("com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper");
-       Map<LoweredNodeId,SpringExpression.StringMatch> matches=new LinkedHashMap<>();
-       for(var match:step.stringMatches())matches.put(match.expressionId(),match);
-       stringMatches.addAll(step.stringMatches());
-       String columns=step.plan().columns().stream().map(c -> StringEscape.javaString("`"+c.replace("`","``")+"`"))
-           .collect(java.util.stream.Collectors.joining(", "));
-       String seed="new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<"+entity.javaName()+">("+entity.javaName()+".class).select("+columns+").lambda()";
-       String query=renderPredicateChain(ctx,step.predicate(),step.itemVariable(),entity,matches,names,imports,currentPackage,seed,true)
-           +renderOrderClause(entity,step.orderKeys())+".last("+StringEscape.javaString("LIMIT "+step.plan().fetchLimit())+")";
-       lines.add("        {");
-       lines.add("            var $eachRows = this."+mapper.mapperFieldName()+"."+step.plan().mapperMethod()+"("+query+");");
-       lines.add("            if ($eachRows.size() > "+step.plan().limit()+") throw new "+errorJavaName(ctx,step.errorSymbol(),imports,currentPackage)+"();");
-       lines.add("            for (var $eachRow : $eachRows) {");
-       var local=new EachNames(names);local.put(step.row().symbol(),"$eachRow");int index=0;
-       for(var child:step.body())if(child instanceof SpringBootWorkflow.LoadStep load)local.put(load.result().symbol(),"$eachLocal"+index++);
-       var body=new ArrayList<String>();
-       for(var child:step.body())renderStep(ctx,workflow,capability,child,responseRepresentation,inputName,local,imports,currentPackage,body,mappers,stringMatches);
-       for(String line:body)lines.add("        "+line);
-       lines.add("            }");lines.add("        }");
+      EntityDeclaration entity=ctx.entity(step.entitySymbol());registerEntityImport(ctx,entity,imports,currentPackage);
+      MapperReference mapper=ensureMapper(ctx,step.entitySymbol(),entity.javaName(),mappers);
+      imports.add("com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper");
+      Map<LoweredNodeId,SpringExpression.StringMatch> matches=new LinkedHashMap<>();
+      for(var match:step.stringMatches())matches.put(match.expressionId(),match);
+      stringMatches.addAll(step.stringMatches());
+      String columns=step.plan().columns().stream().map(c -> StringEscape.javaString("`"+c.replace("`","``")+"`"))
+          .collect(java.util.stream.Collectors.joining(", "));
+      String seed="new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<"+entity.javaName()+">("+entity.javaName()+".class).select("+columns+").lambda()";
+      String query=renderPredicateChain(ctx,step.predicate(),step.itemVariable(),entity,matches,names,imports,currentPackage,seed,true)
+          +renderOrderClause(entity,step.orderKeys())+".last("+StringEscape.javaString("LIMIT "+step.plan().fetchLimit())+")";
+      lines.add("        {");
+      lines.add("            var $eachRows = this."+mapper.mapperFieldName()+"."+step.plan().mapperMethod()+"("+query+");");
+      lines.add("            if ($eachRows.size() > "+step.plan().limit()+") throw new "+errorJavaName(ctx,step.errorSymbol(),imports,currentPackage)+"();");
+      lines.add("            for (var $eachRow : $eachRows) {");
+      var local=new EachNames(names);local.put(step.row().symbol(),"$eachRow");int index=0;
+      for(var child:step.body())if(child instanceof SpringBootWorkflow.LoadStep load)local.put(load.result().symbol(),"$eachLocal"+index++);
+      var body=new ArrayList<String>();
+      for(var child:step.body())renderStep(ctx,workflow,capability,child,responseRepresentation,inputName,local,imports,currentPackage,body,mappers,stringMatches);
+      for(String line:body)lines.add("        "+line);
+      lines.add("            }");lines.add("        }");
    }
 
-private static void renderValidate(
-      GenerationContext ctx,
-      CapabilityDeclaration capability,
-      ValidateStep step,
-      Map<SymbolId, String> variableNames,
-      ImportSorter imports,
-      String currentPackage,
-      List<String> lines
-   ) {
+   private static void renderValidate(
+         GenerationContext ctx,
+         CapabilityDeclaration capability,
+         ValidateStep step,
+         Map<SymbolId, String> variableNames,
+         ImportSorter imports,
+         String currentPackage,
+         List<String> lines
+      ) {
       ExpressionRenderer.PresenceScope scope = ctx.patchSpecOf(capability)
          .map(patch -> new ExpressionRenderer.PresenceScope(
             capability.input().orElseThrow().targetName(), patch.changesPropertyName()))
@@ -339,51 +339,51 @@ private static void renderValidate(
    private static void renderGroupedSum(GenerationContext ctx, SpringBootWorkflow.GroupedSumStep step, String input,
        Map<SymbolId, String> variables, ImportSorter imports, String pkg, List<String> lines,
        Map<SymbolId, WorkflowRenderer.MapperReference> mappers, List<SpringExpression.StringMatch> matches) {
-       var entity = ctx.entity(step.entitySymbol());
-       registerEntityImport(ctx, entity, imports, pkg);
-       var mapper = ensureMapper(ctx, step.entitySymbol(), entity.javaName(), mappers);
-       String helper = ctx.model().basePackage() + ".persistence.ExactAggregate";
-       matches.addAll(step.stringMatches());
-       Map<LoweredNodeId, SpringExpression.StringMatch> indexed = new LinkedHashMap<>();
-       for (var match : step.stringMatches()) indexed.put(match.expressionId(), match);
-       String predicate = renderPredicateChain(ctx, step.predicate(), step.itemVariable(), entity, indexed,
-           variables, imports, pkg, "$filter", true);
-       var key = ((LoweredJavaType.SumGroupValue)((LoweredJavaType.PageValue)step.result().type()).elementType()).keyType();
-       String decoder = key.identityStorageType().kind() == LoweredJavaType.ScalarKind.UUID ? "uuidKey" : "longKey";
-       var page = step.page();
-       lines.add("        var " + variableName(step.result(), variables) + " = " + helper + ".grouped(" + helper + ".query("
-           + entity.javaName() + ".class, " + StringEscape.javaString(step.plan().countProjection()) + "), $filter -> " + predicate
-           + ", " + input + "." + getterName(page.pagePropertyName()) + "(), " + input + "." + getterName(page.sizePropertyName()) + "(), "
-           + page.defaultSize() + ", " + page.maxSize() + ", " + page.maxPageNumber() + ", "
-           + errorJavaName(ctx, page.errorSymbol(), imports, pkg) + "::new, "
-           + StringEscape.javaString("`" + step.plan().keyColumn().replace("`", "``") + "`") + ", "
-           + StringEscape.javaString(step.plan().dataProjection()) + ", " + helper + "::" + decoder + ", "
-           + "this." + mapper.mapperFieldName() + "::" + step.plan().countMethod() + ", this." + mapper.mapperFieldName() + "::" + step.plan().dataMethod() + ");");
+      var entity = ctx.entity(step.entitySymbol());
+      registerEntityImport(ctx, entity, imports, pkg);
+      var mapper = ensureMapper(ctx, step.entitySymbol(), entity.javaName(), mappers);
+      String helper = ctx.model().basePackage() + ".persistence.ExactAggregate";
+      matches.addAll(step.stringMatches());
+      Map<LoweredNodeId, SpringExpression.StringMatch> indexed = new LinkedHashMap<>();
+      for (var match : step.stringMatches()) indexed.put(match.expressionId(), match);
+      String predicate = renderPredicateChain(ctx, step.predicate(), step.itemVariable(), entity, indexed,
+          variables, imports, pkg, "$filter", true);
+      var key = ((LoweredJavaType.SumGroupValue)((LoweredJavaType.PageValue)step.result().type()).elementType()).keyType();
+      String decoder = key.identityStorageType().kind() == LoweredJavaType.ScalarKind.UUID ? "uuidKey" : "longKey";
+      var page = step.page();
+      lines.add("        var " + variableName(step.result(), variables) + " = " + helper + ".grouped(" + helper + ".query("
+          + entity.javaName() + ".class, " + StringEscape.javaString(step.plan().countProjection()) + "), $filter -> " + predicate
+          + ", " + input + "." + getterName(page.pagePropertyName()) + "(), " + input + "." + getterName(page.sizePropertyName()) + "(), "
+          + page.defaultSize() + ", " + page.maxSize() + ", " + page.maxPageNumber() + ", "
+          + errorJavaName(ctx, page.errorSymbol(), imports, pkg) + "::new, "
+          + StringEscape.javaString("`" + step.plan().keyColumn().replace("`", "``") + "`") + ", "
+          + StringEscape.javaString(step.plan().dataProjection()) + ", " + helper + "::" + decoder + ", "
+          + "this." + mapper.mapperFieldName() + "::" + step.plan().countMethod() + ", this." + mapper.mapperFieldName() + "::" + step.plan().dataMethod() + ");");
    }
 
    private static void renderSum(GenerationContext ctx, SpringBootWorkflow.SumStep step,
        Map<SymbolId, String> variableNames, ImportSorter imports, String currentPackage, List<String> lines,
        Map<SymbolId, WorkflowRenderer.MapperReference> mappers, List<SpringExpression.StringMatch> stringMatches) {
-       EntityDeclaration entity = ctx.entity(step.entitySymbol());
-       registerEntityImport(ctx, entity, imports, currentPackage);
-       var mapper = ensureMapper(ctx, step.entitySymbol(), entity.javaName(), mappers);
-       var support = ctx.model().projectArtifacts().stream()
-           .filter(io.kcg.sir.lowering.springboot.model.ProjectArtifact.ExactAggregate.class::isInstance)
-           .map(io.kcg.sir.lowering.springboot.model.ProjectArtifact.ExactAggregate.class::cast).findFirst().orElseThrow();
-       String helper = support.packageName() + "." + support.simpleName();
-       stringMatches.addAll(step.stringMatches());
-       Map<LoweredNodeId, SpringExpression.StringMatch> matches = new LinkedHashMap<>();
-       for (var match : step.stringMatches()) matches.put(match.expressionId(), match);
-       String predicate = renderPredicateChain(ctx, step.predicate(), step.itemVariable(), entity, matches,
-           variableNames, imports, currentPackage, "item", true);
-       lines.add("        java.math.BigDecimal " + variableName(step.result(), variableNames) + " = " + helper + ".read("
-           + helper + ".query(" + entity.javaName() + ".class, " + StringEscape.javaString(step.plan().projectionSql()) + "),"
-           + " item -> " + predicate + ", " + mapper.mapperFieldName() + "::" + step.plan().mapperMethod() + ");");
-    }
+      EntityDeclaration entity = ctx.entity(step.entitySymbol());
+      registerEntityImport(ctx, entity, imports, currentPackage);
+      var mapper = ensureMapper(ctx, step.entitySymbol(), entity.javaName(), mappers);
+      var support = ctx.model().projectArtifacts().stream()
+          .filter(io.kcg.sir.lowering.springboot.model.ProjectArtifact.ExactAggregate.class::isInstance)
+          .map(io.kcg.sir.lowering.springboot.model.ProjectArtifact.ExactAggregate.class::cast).findFirst().orElseThrow();
+      String helper = support.packageName() + "." + support.simpleName();
+      stringMatches.addAll(step.stringMatches());
+      Map<LoweredNodeId, SpringExpression.StringMatch> matches = new LinkedHashMap<>();
+      for (var match : step.stringMatches()) matches.put(match.expressionId(), match);
+      String predicate = renderPredicateChain(ctx, step.predicate(), step.itemVariable(), entity, matches,
+          variableNames, imports, currentPackage, "item", true);
+      lines.add("        java.math.BigDecimal " + variableName(step.result(), variableNames) + " = " + helper + ".read("
+          + helper + ".query(" + entity.javaName() + ".class, " + StringEscape.javaString(step.plan().projectionSql()) + "),"
+          + " item -> " + predicate + ", " + mapper.mapperFieldName() + "::" + step.plan().mapperMethod() + ");");
+   }
 
-    private static void renderScalarQuery(GenerationContext ctx, SpringBootWorkflow.ScalarQueryStep step,
-      Map<SymbolId, String> variableNames, ImportSorter imports, String currentPackage, List<String> lines,
-      Map<SymbolId, WorkflowRenderer.MapperReference> mappers, List<SpringExpression.StringMatch> stringMatches) {
+   private static void renderScalarQuery(GenerationContext ctx, SpringBootWorkflow.ScalarQueryStep step,
+     Map<SymbolId, String> variableNames, ImportSorter imports, String currentPackage, List<String> lines,
+     Map<SymbolId, WorkflowRenderer.MapperReference> mappers, List<SpringExpression.StringMatch> stringMatches) {
       EntityDeclaration entity = ctx.entity(step.entitySymbol());
       registerEntityImport(ctx, entity, imports, currentPackage);
       WorkflowRenderer.MapperReference mapper = ensureMapper(ctx, step.entitySymbol(), entity.javaName(), mappers);
@@ -433,9 +433,9 @@ private static void renderValidate(
       lines.add("        var wrapper = " + wrapperChain + ";");
 
       if (step.page().isEmpty()) {
-      lines.add("        var " + resultName + " = " + mapper.mapperFieldName() + ".selectList(wrapper);");
+         lines.add("        var " + resultName + " = " + mapper.mapperFieldName() + ".selectList(wrapper);");
          return;
-   }
+      }
 
       SpringBootWorkflow.PageSpec page = step.page().get();
       if (inputName == null) {
@@ -852,8 +852,8 @@ private static void renderValidate(
       lines.add("        int " + updated + " = " + mapperAccess(mapper, variableNames) + ".update(null, new LambdaUpdateWrapper<" + entity.javaName() + ">()");
       lines.add("                .eq(" + entity.javaName() + "::" + identity + ", " + targetName + "." + identity + "())");
       if (update.guard().isPresent()) {
-          var counter = predicateNames(variableNames instanceof EachNames ? "$eachQ" : "q");
-          String rootName = nextWrapperName(counter);
+         var counter = predicateNames(variableNames instanceof EachNames ? "$eachQ" : "q");
+         String rootName = nextWrapperName(counter);
          String condition = renderPredicateNode(
             ctx, update.guard().orElseThrow().predicate(), target, entity, Map.of(), variableNames, imports, currentPackage, rootName, counter);
          lines.add("                .and(" + rootName + " -> " + condition + ")");
@@ -1059,7 +1059,7 @@ private static void renderValidate(
          }
          case NOT_BLANK -> "notBlank(" + violations + ", " + pathLiteral + ", " + value + ");";
          case TIME_ZONE -> "timeZone(" + violations + ", " + pathLiteral + ", " + value + ");";
-          case EMAIL -> "email(" + violations + ", " + pathLiteral + ", " + value + ");";
+         case EMAIL -> "email(" + violations + ", " + pathLiteral + ", " + value + ");";
          case SIZE -> {
             List<String> args = constraint.arguments();
             if (args.size() != 2) {
@@ -1197,19 +1197,19 @@ private static void renderValidate(
        GenerationContext ctx, SpringExpression predicate, Variable itemVariable, EntityDeclaration entity,
        Map<LoweredNodeId, SpringExpression.StringMatch> stringMatches, Map<SymbolId, String> variableNames,
        ImportSorter imports, String currentPackage) {
-       return renderPredicateChain(ctx, predicate, itemVariable, entity, stringMatches, variableNames, imports,
-           currentPackage, "new LambdaQueryWrapper<" + entity.javaName() + ">()", false);
-    }
+      return renderPredicateChain(ctx, predicate, itemVariable, entity, stringMatches, variableNames, imports,
+          currentPackage, "new LambdaQueryWrapper<" + entity.javaName() + ">()", false);
+   }
 
-    private static String renderPredicateChain(
-       GenerationContext ctx, SpringExpression predicate, Variable itemVariable, EntityDeclaration entity,
-       Map<LoweredNodeId, SpringExpression.StringMatch> stringMatches, Map<SymbolId, String> variableNames,
-       ImportSorter imports, String currentPackage, String seed, boolean privateNames) {
-        var counter = predicateNames(privateNames ? "$sumQ" : "q");
-       String rootName = nextWrapperName(counter);
-       String body = renderPredicateNode(ctx, predicate, itemVariable, entity, stringMatches, variableNames, imports, currentPackage, rootName, counter);
-       return seed + "\n                .and(" + rootName + " -> " + body + ")";
-    }
+   private static String renderPredicateChain(
+      GenerationContext ctx, SpringExpression predicate, Variable itemVariable, EntityDeclaration entity,
+      Map<LoweredNodeId, SpringExpression.StringMatch> stringMatches, Map<SymbolId, String> variableNames,
+      ImportSorter imports, String currentPackage, String seed, boolean privateNames) {
+      var counter = predicateNames(privateNames ? "$sumQ" : "q");
+      String rootName = nextWrapperName(counter);
+      String body = renderPredicateNode(ctx, predicate, itemVariable, entity, stringMatches, variableNames, imports, currentPackage, rootName, counter);
+      return seed + "\n                .and(" + rootName + " -> " + body + ")";
+   }
 
    private static String renderPredicateNode(
       GenerationContext ctx,
@@ -1220,8 +1220,8 @@ private static void renderValidate(
       Map<SymbolId, String> variableNames,
       ImportSorter imports,
       String currentPackage,
-       String wrapperName,
-       java.util.Iterator<String> counter
+      String wrapperName,
+      java.util.Iterator<String> counter
    ) {
       switch (predicate) {
          case BinaryExpression binary:
@@ -1241,12 +1241,12 @@ private static void renderValidate(
                      case GE -> "ge";
                      default -> throw new IllegalStateException();
                   };
-                   if (binary.presentComparison().isPresent()) {
-                      return renderPresentComparison(ctx, binary, itemVariable, entity, variableNames, imports, currentPackage, wrapperName);
-                   }
-                   if (binary.right() instanceof MemberExpression otherColumn
-                     && otherColumn.receiver() instanceof NameExpression otherName
-                     && otherName.resolvedSymbol().equals(itemVariable.symbol())) {
+                  if (binary.presentComparison().isPresent()) {
+                     return renderPresentComparison(ctx, binary, itemVariable, entity, variableNames, imports, currentPackage, wrapperName);
+                  }
+                  if (binary.right() instanceof MemberExpression otherColumn
+                    && otherColumn.receiver() instanceof NameExpression otherName
+                    && otherName.resolvedSymbol().equals(itemVariable.symbol())) {
                      // Two columns of the same row are compared by the database, not by a value read earlier.
                      String operator = switch (binary.operator()) {
                         case EQ -> "=";
@@ -1291,18 +1291,18 @@ private static void renderValidate(
             }
          case UnaryExpression unary when unary.operator() == UnaryOperator.NOT:
             String nestedName = nextWrapperName(counter);
-         String nested = renderPredicateNode(ctx, unary.operand(), itemVariable, entity, stringMatches, variableNames, imports, currentPackage, nestedName, counter);
+            String nested = renderPredicateNode(ctx, unary.operand(), itemVariable, entity, stringMatches, variableNames, imports, currentPackage, nestedName, counter);
             return wrapperName + ".not(" + nestedName + " -> " + nested + ")";
-          case UnaryExpression unary when unary.operator() == UnaryOperator.IS_NONE || unary.operator() == UnaryOperator.IS_PRESENT:
-             if (unary.operand() instanceof MemberExpression member && member.receiver() instanceof NameExpression name
-                   && name.resolvedSymbol().equals(itemVariable.symbol())) {
-                String method = unary.operator() == UnaryOperator.IS_NONE ? "isNull" : "isNotNull";
-                return wrapperName + "." + method + "(" + renderFindField(unary.operand(), itemVariable, entity.javaName()) + ")";
-             }
-             collectExpressionImports(ctx, unary.operand(), variableNames, imports, currentPackage);
-             String question = ExpressionRenderer.renderExpression(unary, variableNames);
-             return wrapperName + ".apply((" + question + ") ? \"1 = 1\" : \"1 = 0\")";
-          case SpringExpression.BooleanLiteral literal:
+         case UnaryExpression unary when unary.operator() == UnaryOperator.IS_NONE || unary.operator() == UnaryOperator.IS_PRESENT:
+            if (unary.operand() instanceof MemberExpression member && member.receiver() instanceof NameExpression name
+                  && name.resolvedSymbol().equals(itemVariable.symbol())) {
+               String method = unary.operator() == UnaryOperator.IS_NONE ? "isNull" : "isNotNull";
+               return wrapperName + "." + method + "(" + renderFindField(unary.operand(), itemVariable, entity.javaName()) + ")";
+            }
+            collectExpressionImports(ctx, unary.operand(), variableNames, imports, currentPackage);
+            String question = ExpressionRenderer.renderExpression(unary, variableNames);
+            return wrapperName + ".apply((" + question + ") ? \"1 = 1\" : \"1 = 0\")";
+         case SpringExpression.BooleanLiteral literal:
             // "where true" is every row (a list of everything, narrowed only by the entity's scope); a wrapper has no
             // empty condition, so the constant is written as one.
             return wrapperName + ".apply(" + StringEscape.javaString(literal.value() ? "1 = 1" : "1 = 0") + ")";
@@ -1316,41 +1316,41 @@ private static void renderValidate(
       }
    }
 
-    /** The lowerer declared a present-only comparison: COALESCE removes SQL UNKNOWN before any NOT. */
-    private static String renderPresentComparison(
-       GenerationContext ctx, BinaryExpression binary, Variable itemVariable, EntityDeclaration entity,
-       Map<SymbolId, String> variableNames, ImportSorter imports, String currentPackage, String wrapperName
-    ) {
-       String column = columnOf(entity, memberSymbol(binary.left(), itemVariable));
-       String operator = switch (binary.operator()) {
-          case EQ -> "=";
-          case NE -> "<>";
-          case LT -> "<";
-          case LE -> "<=";
-          case GT -> ">";
-          case GE -> ">=";
-          default -> throw new IllegalStateException("a comparison plan requires a comparison");
-       };
-       if (binary.right() instanceof MemberExpression member && member.receiver() instanceof NameExpression name
-             && name.resolvedSymbol().equals(itemVariable.symbol())) {
-          String rightColumn = columnOf(entity, member.resolvedMember());
-          return wrapperName + ".apply(" + StringEscape.javaString("COALESCE(" + column + " " + operator + " " + rightColumn + ", FALSE)") + ")";
-       }
-       collectExpressionImports(ctx, binary.right(), variableNames, imports, currentPackage);
-       String value = ExpressionRenderer.renderExpression(binary.right(), variableNames);
-       return wrapperName + ".apply(" + StringEscape.javaString("COALESCE(" + column + " " + operator + " {0}, FALSE)")
-          + ", " + value + ")";
-    }
+   /** The lowerer declared a present-only comparison: COALESCE removes SQL UNKNOWN before any NOT. */
+   private static String renderPresentComparison(
+      GenerationContext ctx, BinaryExpression binary, Variable itemVariable, EntityDeclaration entity,
+      Map<SymbolId, String> variableNames, ImportSorter imports, String currentPackage, String wrapperName
+   ) {
+      String column = columnOf(entity, memberSymbol(binary.left(), itemVariable));
+      String operator = switch (binary.operator()) {
+         case EQ -> "=";
+         case NE -> "<>";
+         case LT -> "<";
+         case LE -> "<=";
+         case GT -> ">";
+         case GE -> ">=";
+         default -> throw new IllegalStateException("a comparison plan requires a comparison");
+      };
+      if (binary.right() instanceof MemberExpression member && member.receiver() instanceof NameExpression name
+            && name.resolvedSymbol().equals(itemVariable.symbol())) {
+         String rightColumn = columnOf(entity, member.resolvedMember());
+         return wrapperName + ".apply(" + StringEscape.javaString("COALESCE(" + column + " " + operator + " " + rightColumn + ", FALSE)") + ")";
+      }
+      collectExpressionImports(ctx, binary.right(), variableNames, imports, currentPackage);
+      String value = ExpressionRenderer.renderExpression(binary.right(), variableNames);
+      return wrapperName + ".apply(" + StringEscape.javaString("COALESCE(" + column + " " + operator + " {0}, FALSE)")
+         + ", " + value + ")";
+   }
 
-    private static String renderExistsArguments(GenerationContext ctx, SpringExpression.ExistsPredicate exists, Map<SymbolId, String> variableNames, ImportSorter imports, String currentPackage) {
+   private static String renderExistsArguments(GenerationContext ctx, SpringExpression.ExistsPredicate exists, Map<SymbolId, String> variableNames, ImportSorter imports, String currentPackage) {
       StringBuilder out = new StringBuilder();
       for (SpringExpression.ExistsArgument argument : exists.arguments()) {
          if (argument instanceof SpringExpression.ExistsArgument.Value value) {
-             collectExpressionImports(ctx, value.expression(), variableNames, imports, currentPackage);
-             out.append(", ").append(ExpressionRenderer.renderExpression(value.expression(), variableNames));
-          } else {
-             out.append(", ").append(renderExistsArgument(argument));
-          }
+            collectExpressionImports(ctx, value.expression(), variableNames, imports, currentPackage);
+            out.append(", ").append(ExpressionRenderer.renderExpression(value.expression(), variableNames));
+         } else {
+            out.append(", ").append(renderExistsArgument(argument));
+         }
       }
 
       return out.toString();
