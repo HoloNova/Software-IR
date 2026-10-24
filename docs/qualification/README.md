@@ -1308,7 +1308,7 @@ mvn -B -o -pl sir-toolchain-application -am test '-Dtest=RelatedCountSemanticsTe
 
 
 <a id="ci-174-related-count-graph-fix"></a>
-## 47. #174：关联计数支持产物的图谱接入与验收预算修复（待同源码CI）
+## 47. #174：关联计数支持产物的图谱接入与验收预算修复（#175编译通过，整轮失败见48）
 
 `0b79ee5` 的 [verify #174](https://github.com/HoloNova/Software-IR/actions/runs/40095437536) 在预热编译阶段失败：`SpringBootProjectGraphInputFactory:137/154` 的两个穷尽switch漏接 `ProjectArtifact.RelatedCounts`。175份原始XML共998项全部是dry-run跳过，正式Frozen、业务IT、独立验证、CLI与部署均NOT_RUN，不能写作“测试零失败所以通过”。原始日志、XML及复算在 `target/ci-investigation/174/`。
 
@@ -1330,3 +1330,41 @@ mvn -B -o -pl sir-toolchain-application -am test '-Dtest=RelatedCountSemanticsTe
 | 合计 | 8／62 |
 
 Maven日志明确记录project-graph、application主源码及全部application测试源码重新编译，既有导出测试的枚举switch也经编译；Windows不运行完整安全目录导出测试，不降低读取要求。AFT桥超时，诊断不能记作通过；以实际Maven编译为准。证据、XML及源码哈希封存 `target/ci-174-verification/`。覆盖率未测量；本机未启动应用／数据库、未构建生成工程、未跑全量或重触发CI。真实HTTP／MySQL及部署仍待新提交的同SHA结果，账本保持76／2／6。
+
+
+<a id="ci-175-catalogue-probe-fix"></a>
+## 48. #175：公开目录旧探针遗漏子表计数，完整受影响类回归（待同源码CI）
+
+同SHA `61eee793bde0374e8f16a8d55a74ffdcae757a00` 的 [verify #175](https://github.com/HoloNova/Software-IR/actions/runs/40097329534) 预热编译成功，#174图谱穷尽switch修复有效。逐个复算首次Frozen产物256份XML（1791项，含459项dry-run跳过）和完成诊断255份XML（1886项、零跳过），两批唯一失败均为 `G9TopicRuntimeTest.actualCatalogueReadsRemainPublic`：真实GetBookService已调用CopyMapper.selectMaps读取availableCopies，但旧State代理不支持此调用并抛AssertionError。日志中身份模式缺失的WARN来自预期负向装配测试，不是本次失败。业务IT、独立验证、CLI及部署均被跳过，不能据完成诊断除一项外通过推定真库可用。
+
+**本机漏验原因：**第47节只选择了G9TopicRuntimeTest中新写的SQL映射方法，没有完整运行同类旧的公开读测试。本问题无需数据库即可检出，是覆盖选择失误，不是远端环境独有。原始日志、全部XML、逐条失败复算在 `target/ci-investigation/175/`。
+
+**RED和修复：**将旧公开读拆为详情／分页／搜索三项，分别调用实际GetBook、ListBook、SearchByTitle，验证不加载User、不写入、count结果以及完整Mapper顺序。修复前3项全部因同一selectMaps缺口失败，错误数／跳过均为0；起初新搜索夹具误写SearchInput造成的ClassNotFound另存初始报告，不算目标RED，改用真实SearchBooks后才封存三项有效RED。State只为Copy.selectMaps返回固定聚合行，并检查真实COUNT投影、book_id分组和{9L, AVAILABLE}参数；其它Mapper的selectMaps与未知调用仍失败。不为生产查询加旁路，不把整个代理改成接受任意方法，生产代码、权限和返回接口均未修改。
+
+**沿真实IT顺序提前发现的第二项：**计数检查误以为种子至少20本，但library-seed只有12本稀疏ID（最大20不等于20行），前序G9的临时书目会被删回原状。不是把阈值改成12：页面检查现在使用独立观察连接的全部书目ID排序，比对完整返回序列、total和逐书计数，漏行／重复／额外／错序均拒绝；先以实际种子和空目录取得2项有效RED，再补7种坏页面反例。这里只验证测试断言，不用代理冒称数据库行为已执行。
+
+**完整受影响类回归：11类122项，零失败／错误／跳过。**本批最终GREEN不使用#方法选择，也不把此前单方法或真库IT未启用结果计入覆盖。
+
+| 完整类 | tests |
+| --- | ---: |
+| G9TopicRuntimeTest（原写保护／Optional／PATCH及三种公开计数读取） | 32 |
+| LibraryBorrowingRuntimeTest | 8 |
+| LibraryReservationRuntimeTest | 19 |
+| RelatedCountRuntimeTest | 6 |
+| G9TopicContractTest | 5 |
+| LibraryBorrowingToolchainContractTest | 3 |
+| LibraryReservationContractTest | 14 |
+| LibraryBorrowingErrorContractTest | 6 |
+| RelatedCountProjectGraphContractTest | 4 |
+| LibraryCountReadBudgetTest | 16 |
+| LibraryCountChecksTest（实际种子／空目录／七种页面损坏） | 9 |
+| **合计** | **122** |
+
+```powershell
+$env:MAVEN_OPTS='-Xmx384m -XX:ActiveProcessorCount=2'
+mvn -B -o -pl sir-toolchain-application -am test '-Dtest=G9TopicRuntimeTest,LibraryBorrowingRuntimeTest,LibraryReservationRuntimeTest,RelatedCountRuntimeTest,G9TopicContractTest,LibraryBorrowingToolchainContractTest,LibraryReservationContractTest,LibraryBorrowingErrorContractTest,RelatedCountProjectGraphContractTest,LibraryCountReadBudgetTest' '-Dsurefire.failIfNoSpecifiedTests=false' '-DargLine=-Xmx512m -XX:ActiveProcessorCount=2' '-l' 'target/ci-175-verification/affected-green.log'
+# 后续只有页面完整性检查被修改，补测该新类及同类预算，不重复已通过的其它范围。
+mvn -B -o -pl sir-toolchain-application -am test '-Dtest=LibraryCountChecksTest,LibraryCountReadBudgetTest' '-Dsurefire.failIfNoSpecifiedTests=false' '-DargLine=-Xmx512m -XX:ActiveProcessorCount=2' '-l' 'target/ci-175-verification/page-contents-green.log'
+```
+
+Maven日志确认generator全部66个及application全部测试源重新编译（首批160、加入页面反例后161）；最新XML按精确类名去重封存 `target/ci-175-verification/`。本机没有启动应用／数据库、运行全量门、构建生成工程或使用浏览器。真实HTTP／MySQL、事务快照、数据库COUNT载体与部署仍NOT_RUN；已核对既有IT的external环境、公开就绪路由、组合源码、DDL及旧检查调用保留，但静态核对不代替执行。覆盖率未测量；AFT/JDTLS初始化失败，记PARTIAL而非诊断通过。账本76／2／6不变，推送后由负责人通知结果，不轮询／重触发CI。

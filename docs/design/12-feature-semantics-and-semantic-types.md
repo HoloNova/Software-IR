@@ -1563,7 +1563,7 @@ MyBatis-Plus3.5.12的真实DefaultSqlInjector／DefaultParameterHandler **2项�
 
 ### 29.6 实施结果与发现的缺口
 
-语法、正式绑定（`VIEW_COUNT_ENTITY`／`VIEW_RELATION_FIELD`）、类型、源往返、Core／目标 IR、五类拒绝、生成计划与实际生成服务已经贯通；当轮18类125项报告见[验证46](../qualification/README.md#library-related-count-local)；其增量编译遗漏与#174修复证据见[验证47](../qualification/README.md#ci-174-related-count-graph-fix)，不能以该125项宣称全源码可编译。
+语法、正式绑定（`VIEW_COUNT_ENTITY`／`VIEW_RELATION_FIELD`）、类型、源往返、Core／目标 IR、五类拒绝、生成计划与实际生成服务已经贯通；当轮18类125项报告见[验证46](../qualification/README.md#library-related-count-local)；其增量编译遗漏与#174修复证据见[验证47](../qualification/README.md#ci-174-related-count-graph-fix)，不能以该125项宣称全源码可编译。#175已证实图谱编译修复，但旧公开读探针漏接新增Copy.selectMaps导致Frozen失败；现已补完整G9详情／分页／搜索回归，并把真库页面检查从固定至少20本改为独立观察连接核对完整ID、顺序与总数（实际种子12本）；11类122项通过，见[验证48](../qualification/README.md#ci-175-catalogue-probe-fix)。只运行同类新增方法不能代替整类旧回归；真实业务IT和部署仍未运行。
 
 实施中发现并修正的问题，都不是“顺手加功能”：
 

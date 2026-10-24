@@ -40,14 +40,29 @@ final class LibraryCountChecks {
         var page = h.get(s.baseUrl() + "/api/books?page=1&size=50", Map.of());
         s.record("catalogue page", page);
         s.expectStatus("catalogue page", page, 200);
-        var body = JSON.readTree(page.body());
+        checkPageContents(s, JSON.readTree(page.body()), s.rowsOf(o, "book"), available);
+        var staff = h.get(s.baseUrl() + "/api/books/1", STAFF);
+        s.expectStatus("an authenticated librarian reads the same view", staff, 200);
+        s.check("the read view does not depend on who reads it",
+                JSON.readTree(staff.body()).path("availableCopies").asLong(-1) == available.getOrDefault(1L, 0L), staff.body());
+    }
+
+    static void checkPageContents(BusinessSliceHarness s, JsonNode body, List<String> bookRows, Map<Long, Long> available) {
         var records = body.path("records");
-        s.check("the page covers every seeded book", records.size() >= 20, "records=" + records.size());
+        var expectedIds = bookRows.stream().map(row -> Long.parseLong(row.split("\\|", -1)[0])).sorted().toList();
+        var actualIds = java.util.stream.StreamSupport.stream(records.spliterator(), false)
+                .map(row -> row.path("id").asLong(-1)).toList();
+        s.check("the complete page has exactly the observer's book identities in order",
+                records.isArray() && actualIds.equals(expectedIds), "expected=" + expectedIds + ", actual=" + actualIds);
+        var total = body.path("total");
+        s.check("the catalogue total equals the observer's row count, not its highest identity",
+                total.isIntegralNumber() && total.canConvertToLong() && total.asLong() == expectedIds.size(), body.toString());
         Map<Long, Long> reported = new LinkedHashMap<>();
         boolean allPresent = true;
         for (var row : records) {
             var field = row.path("availableCopies");
-            allPresent &= field.isIntegralNumber();
+            allPresent &= field.isIntegralNumber() && field.canConvertToLong()
+                    && row.path("id").isIntegralNumber() && row.path("id").canConvertToLong();
             reported.put(row.path("id").asLong(), field.asLong(-1));
         }
         s.check("every catalogue row carries an integral availableCopies", allPresent, records.toString());
@@ -60,13 +75,6 @@ final class LibraryCountChecks {
             if (reported.containsKey(id)) s.check("book " + id + " stays zero rather than dropping the field",
                     reported.get(id) == 0L, "reported " + reported.get(id));
         }
-        s.check("books the page does not contain are still counted correctly", reported.keySet().stream()
-                .noneMatch(id -> id == 999999L), "no invented rows");
-
-        var staff = h.get(s.baseUrl() + "/api/books/1", STAFF);
-        s.expectStatus("an authenticated librarian reads the same view", staff, 200);
-        s.check("the read view does not depend on who reads it",
-                JSON.readTree(staff.body()).path("availableCopies").asLong(-1) == available.getOrDefault(1L, 0L), staff.body());
     }
 
     /** A page of N books must cost one child aggregate, not N. */

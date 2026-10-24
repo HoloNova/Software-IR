@@ -83,10 +83,22 @@ class G9TopicRuntimeTest {
         assertEquals(1, state.writes.size(), state.calls.toString());
         if (!operation.equals("DeleteBook")) assertEquals("edited", get(state.row, "Title"));
     }
-    @Test void actualCatalogueReadsRemainPublic() throws Exception {
+    @ParameterizedTest @ValueSource(strings = {"GetBook", "ListBook", "SearchByTitle"})
+    void actualCatalogueReadsRemainPublic(String operation) throws Exception {
         var state = new State(library, "Book");
-        state.invoke("GetBook", null, withId(library.input("BookIdInput", "{}")));
-        state.invoke("ListBook", null, library.input("ListBookInput", "{\"page\":1,\"size\":20}"));
+        Object input = switch (operation) {
+            case "GetBook" -> withId(library.input("BookIdInput", "{}"));
+            case "ListBook" -> library.input("ListBookInput", "{\"page\":1,\"size\":20}");
+            case "SearchByTitle" -> library.input("SearchBooks", "{\"keyword\":\"original\",\"page\":1,\"size\":20}");
+            default -> throw new AssertionError(operation);
+        };
+        Object response = state.invoke(operation, null, input);
+        var records = operation.equals("GetBook") ? List.of(response) : (List<?>) get(response, "Records");
+        assertEquals(1, records.size());
+        assertEquals(2L, get(records.getFirst(), "AvailableCopies"));
+        assertEquals(operation.equals("GetBook")
+                ? List.of("Book.selectById", "Copy.selectMaps")
+                : List.of("Book.selectCount", "Book.selectList", "Copy.selectMaps"), state.calls);
         assertTrue(state.calls.stream().noneMatch(c -> c.startsWith("User.")), state.calls.toString());
         assertTrue(state.writes.isEmpty());
     }
@@ -265,6 +277,14 @@ class G9TopicRuntimeTest {
                     case "selectById", "selectByIdForUpdate" -> name.equals("User") ? account() : row;
                     case "selectCount" -> 1L;
                     case "selectList" -> List.of(row);
+                    case "selectMaps" -> {
+                        assertEquals("Copy", name, "only the catalogue's child-count mapper may issue selectMaps");
+                        var query = assertInstanceOf(com.baomidou.mybatisplus.core.conditions.query.QueryWrapper.class, args[0]);
+                        assertTrue(query.getSqlSelect().contains("COUNT(*) AS count_value"), query.getSqlSelect());
+                        assertTrue(query.getSqlSegment().contains("GROUP BY `book_id`"), query.getSqlSegment());
+                        assertEquals(Set.of(9L, "AVAILABLE"), new HashSet<>(query.getParamNameValuePairs().values()));
+                        yield List.of(Map.of("count_key", 9L, "count_value", 2L));
+                    }
                     case "insert" -> { set(args[0], "Id", 10L); row = args[0]; writes.add(name + ".insert"); yield 1; }
                     case "updateById", "updateIfVersionMatches" -> { row = args[0]; writes.add(name + ".update"); yield 1; }
                     case "deleteById" -> { writes.add(name + ".delete"); yield 1; }
