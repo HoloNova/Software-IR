@@ -31,6 +31,7 @@ import io.kcg.sir.lowering.springboot.model.SpringExpression.NameExpression;
 import io.kcg.sir.lowering.springboot.model.SpringExpression.UnaryExpression;
 import io.kcg.sir.lowering.springboot.model.SpringExpression.UnaryOperator;
 import io.kcg.sir.lowering.springboot.model.TransportPlan.ResponseRepresentation;
+import io.kcg.sir.lowering.springboot.profile.MySqlIdentifiers;
 import io.kcg.sir.semantic.symbol.SymbolId;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -1387,14 +1388,16 @@ private static void renderValidate(
       throw new IllegalStateException("Find predicate left side must be item.<field>, got: " + expression);
    }
 
+   /** The member's column as it is written in SQL text: a MySQL reserved name such as {@code condition} is quoted. */
    private static String columnOf(EntityDeclaration entity, SymbolId member) {
       if (entity.identity().sourceSymbol().equals(member)) {
-         return entity.identity().columnName();
+         return MySqlIdentifiers.render(entity.identity().columnName());
       }
 
       for (SpringBootDeclaration.Property field : entity.fields()) {
          if (field.sourceSymbol().equals(member)) {
-         return field.columnName().orElseThrow(() -> new IllegalStateException("entity field has no column: " + field.javaName()));
+            return MySqlIdentifiers.render(
+               field.columnName().orElseThrow(() -> new IllegalStateException("entity field has no column: " + field.javaName())));
          }
       }
 

@@ -7,6 +7,7 @@ import io.kcg.sir.lowering.springboot.model.SpringBootDeclaration.EntityDeclarat
 import io.kcg.sir.lowering.springboot.model.SpringBootDeclaration.Generation;
 import io.kcg.sir.lowering.springboot.model.SpringBootDeclaration.Identity;
 import io.kcg.sir.lowering.springboot.model.SpringBootDeclaration.Property;
+import io.kcg.sir.lowering.springboot.profile.MySqlIdentifiers;
 import io.kcg.sir.semantic.symbol.SymbolId;
 import java.util.Optional;
 
@@ -47,12 +48,12 @@ final class EntityRenderer {
 
    private static String renderBody(GenerationContext ctx, EntityDeclaration decl, String packageName) {
       StringBuilder out = new StringBuilder();
-      out.append("@TableName(").append(StringEscape.javaString(MySqlMapperIdentifiers.render(decl.tableName()))).append(")\n");
+      out.append("@TableName(").append(StringEscape.javaString(MySqlIdentifiers.render(decl.tableName()))).append(")\n");
       out.append("public class ").append(decl.javaName()).append(" {\n\n");
       Identity identity = decl.identity();
       String idType = idTypeAnnotation(identity.generation());
       String identityJavaType = TypeRenderer.renderBoxedType(identity.type());
-      out.append("    @TableId(value = ").append(StringEscape.javaString(MySqlMapperIdentifiers.render(identity.columnName()))).append(", type = ").append(idType).append(")\n");
+      out.append("    @TableId(value = ").append(StringEscape.javaString(MySqlIdentifiers.render(identity.columnName()))).append(", type = ").append(idType).append(")\n");
       out.append("    private ").append(identityJavaType).append(' ').append(identity.javaName()).append(";\n\n");
 
       for (Property field : decl.fields()) {
@@ -73,7 +74,7 @@ final class EntityRenderer {
    private static void renderField(StringBuilder out, Property field) {
       String column = field.columnName().orElseThrow(() -> new IllegalStateException("entity field must have column name: " + field.javaName()));
       String javaType = TypeRenderer.renderBoxedType(GenerationContext.entityPropertyType(field.type()));
-      out.append("    @TableField(").append(StringEscape.javaString(MySqlMapperIdentifiers.render(column))).append(")\n");
+      out.append("    @TableField(").append(StringEscape.javaString(MySqlIdentifiers.render(column))).append(")\n");
       out.append("    private ").append(javaType).append(' ').append(field.javaName()).append(";\n\n");
    }
 

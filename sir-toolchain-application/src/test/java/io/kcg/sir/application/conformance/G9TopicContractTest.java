@@ -68,12 +68,17 @@ class G9TopicContractTest {
         assertEquals(RESOURCE, LibraryBorrowingBusinessConformanceIT.FIXTURE.sirResource(),
                 "the prior generic G9 fixture does not qualify the two actual topics");
         assertEquals(G9TopicComposition.compose(), ConformanceFixtures.readResource(RESOURCE).replace("\r\n", "\n"),
-                "keep every actual library declaration and the canonical market Item/Crud slice unchanged");
+                "keep every actual library declaration and the canonical market Item slice unchanged");
         var compiled = ShopCancellationContractTest.compile(RESOURCE);
         for (String operation : List.of("CreateItem", "UpdateItem", "DeleteItem", "CreateBook", "UpdateBook", "DeleteBook")) {
             var capability = ShopCancellationContractTest.capability(compiled, operation);
             assertTrue(capability.authenticated(), operation);
             assertEquals(SpringBootDeclaration.TransactionMode.REQUIRED, capability.transactionMode());
         }
+        var browse = ShopCancellationContractTest.capability(compiled, "BrowseItems");
+        assertEquals(G9TopicChecks.BROWSE, browse.route());
+        assertFalse(browse.authenticated(), "the actual market browse stays public");
+        String service = compiled.generatedFiles().stream().filter(f -> f.relativePath().endsWith("/BrowseItemsService.java")).findFirst().orElseThrow().content();
+        assertTrue(service.contains("COALESCE(`condition` = {0}, FALSE)"), "the reserved condition column is quoted in the browse filter");
     }
 }

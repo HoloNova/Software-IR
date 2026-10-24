@@ -8,6 +8,7 @@ import io.kcg.sir.lowering.springboot.model.SpringBootDeclaration;
 import io.kcg.sir.lowering.springboot.model.SpringBootDeclaration.EntityDeclaration;
 import io.kcg.sir.lowering.springboot.model.SpringBootDeclaration.Property;
 import io.kcg.sir.lowering.springboot.model.SpringBootDeclaration.VersionSpec;
+import io.kcg.sir.lowering.springboot.profile.MySqlIdentifiers;
 import io.kcg.sir.semantic.symbol.SymbolId;
 import java.util.Optional;
 
@@ -69,8 +70,8 @@ final class MapperRenderer {
       out.append("     * Reads the row under a lock so the version this transaction compare-and-sets is the\n");
       out.append("     * version it saw.\n");
       out.append("     */\n");
-      out.append("    @Select(\"SELECT * FROM ").append(entityDecl.tableName()).append(" WHERE ")
-         .append(identity.columnName()).append(" = #{id} FOR UPDATE\")\n");
+      out.append("    @Select(\"SELECT * FROM ").append(MySqlIdentifiers.render(entityDecl.tableName())).append(" WHERE ")
+         .append(MySqlIdentifiers.render(identity.columnName())).append(" = #{id} FOR UPDATE\")\n");
       out.append("    ").append(entityType).append(" selectByIdForUpdate(@Param(\"id\") ")
          .append(TypeRenderer.renderBoxedType(identity.type())).append(" id);\n\n");
       out.append("    /**\n");
@@ -94,7 +95,7 @@ final class MapperRenderer {
     * row was loaded with is a no-op, so the statement stays semantically equivalent.
     */
    private static String renderConditionalUpdateSql(EntityDeclaration entityDecl, VersionSpec version) {
-      StringBuilder sql = new StringBuilder("UPDATE ").append(entityDecl.tableName()).append(" SET ");
+      StringBuilder sql = new StringBuilder("UPDATE ").append(MySqlIdentifiers.render(entityDecl.tableName())).append(" SET ");
       boolean first = true;
       for (Property property : entityDecl.fields()) {
          if (property.columnName().isEmpty() || property.sourceSymbol().equals(version.fieldSymbol())) {
@@ -106,14 +107,15 @@ final class MapperRenderer {
          }
 
          first = false;
-         sql.append(property.columnName().get()).append(" = #{candidate.").append(property.javaName()).append('}');
+         sql.append(MySqlIdentifiers.render(property.columnName().get())).append(" = #{candidate.").append(property.javaName()).append('}');
       }
 
-      sql.append(", ").append(version.columnName()).append(" = ").append(version.columnName())
+      String versionColumn = MySqlIdentifiers.render(version.columnName());
+      sql.append(", ").append(versionColumn).append(" = ").append(versionColumn)
          .append(" + ").append(version.versionIncrement());
-      sql.append(" WHERE ").append(entityDecl.identity().columnName()).append(" = #{candidate.")
+      sql.append(" WHERE ").append(MySqlIdentifiers.render(entityDecl.identity().columnName())).append(" = #{candidate.")
          .append(entityDecl.identity().javaName()).append('}');
-      sql.append(" AND ").append(version.columnName()).append(" = #{expectedVersion}");
+      sql.append(" AND ").append(versionColumn).append(" = #{expectedVersion}");
       return sql.toString();
    }
 }

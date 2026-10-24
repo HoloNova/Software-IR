@@ -24,6 +24,7 @@ import io.kcg.sir.lowering.springboot.model.SpringBootLoweredModel;
 import io.kcg.sir.lowering.springboot.model.SpringBootWorkflow;
 import io.kcg.sir.lowering.springboot.model.SpringExpression;
 import io.kcg.sir.lowering.springboot.model.TransportPlan;
+import io.kcg.sir.lowering.springboot.profile.MySqlIdentifiers;
 import io.kcg.sir.lowering.springboot.profile.SpringBootQueryPolicy;
 import io.kcg.sir.lowering.springboot.profile.SpringBootWritePolicy;
 import io.kcg.sir.lowering.springboot.profile.SpringBootTargetProfile;
@@ -1466,16 +1467,16 @@ public final class SpringBootModelLowerer {
          if (inverse) {
              ExistenceSql condition = this.existenceSql(value.conditions(), related, root, alias, itemSymbol, List.of(), origin.ownerSymbol().orElseThrow());
              return new SpringExpression.ExistsPredicate(id, origin, type,
-                     "SELECT 1 FROM " + this.snake(related.name()) + " " + alias + " WHERE " + condition.text(), condition.arguments());
+                     "SELECT 1 FROM " + MySqlIdentifiers.render(this.snake(related.name())) + " " + alias + " WHERE " + condition.text(), condition.arguments());
          }
-        String relatedColumn = this.columns.getOrDefault(value.connectionField(), this.snake(connectionSymbol.name()));
+        String relatedColumn = MySqlIdentifiers.render(this.columns.getOrDefault(value.connectionField(), this.snake(connectionSymbol.name())));
         NormalizedExpression conditions = this.withoutConnection(value.conditions(), value.connectionField(), itemSymbol);
         ExistenceSql condition = conditions == null
                 ? new ExistenceSql("", List.of())
                 : this.existenceSql(conditions, related, root, alias, itemSymbol, List.of(), origin.ownerSymbol().orElseThrow());
-        String rootTable = this.snake(root.name());
-        String subquery = "SELECT 1 FROM " + this.snake(related.name()) + " " + alias
-                + " WHERE " + alias + "." + relatedColumn + " = " + rootTable + "." + this.snake(root.identity().name())
+        String rootTable = MySqlIdentifiers.render(this.snake(root.name()));
+        String subquery = "SELECT 1 FROM " + MySqlIdentifiers.render(this.snake(related.name())) + " " + alias
+                + " WHERE " + alias + "." + relatedColumn + " = " + rootTable + "." + MySqlIdentifiers.render(this.snake(root.identity().name()))
                 + (condition.text().isEmpty() ? "" : " AND " + condition.text());
         return new SpringExpression.ExistsPredicate(id, origin, type, subquery, condition.arguments());
     }
@@ -1590,7 +1591,7 @@ public final class SpringBootModelLowerer {
     private String columnReference(
             SymbolId resolvedSymbol, NormalizedEntity related, NormalizedEntity root, String alias, Optional<SymbolId> itemSymbol) {
         if (itemSymbol.isPresent() && resolvedSymbol.equals(itemSymbol.get())) {
-            return this.snake(root.name()) + "." + this.snake(root.identity().name());
+            return MySqlIdentifiers.render(this.snake(root.name())) + "." + MySqlIdentifiers.render(this.snake(root.identity().name()));
         }
 
         boolean relatedField = related.identity().id().equals(resolvedSymbol)
@@ -1600,7 +1601,7 @@ public final class SpringBootModelLowerer {
             throw new IllegalStateException("unsupported existence-predicate reference: " + symbol);
         }
 
-        return alias + "." + this.columns.getOrDefault(resolvedSymbol, this.snake(field.name()));
+        return alias + "." + MySqlIdentifiers.render(this.columns.getOrDefault(resolvedSymbol, this.snake(field.name())));
     }
 
     /** A column of the queried row, or the persisted text of an enum member. */
@@ -1613,7 +1614,8 @@ public final class SpringBootModelLowerer {
         if (onItem) {
             Symbol memberSymbol = this.source.symbols().byId(member.resolvedMember()).orElseThrow();
             return new ExistenceSql(
-                    this.snake(root.name()) + "." + this.columns.getOrDefault(member.resolvedMember(), this.snake(memberSymbol.name())),
+                    MySqlIdentifiers.render(this.snake(root.name())) + "."
+                            + MySqlIdentifiers.render(this.columns.getOrDefault(member.resolvedMember(), this.snake(memberSymbol.name()))),
                     arguments);
         }
 

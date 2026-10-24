@@ -1,11 +1,17 @@
-package io.kcg.sir.generator.springboot.internal;
+package io.kcg.sir.lowering.springboot.profile;
 
 import java.util.Locale;
 import java.util.Set;
 
-/** MyBatis annotation SQL names; physical model/schema names remain unquoted and unchanged. */
-final class MySqlMapperIdentifiers {
-    private MySqlMapperIdentifiers() {}
+/**
+ * How a physical table or column name is written inside SQL text: quoted when MySQL reserves it, unchanged otherwise.
+ *
+ * <p>The physical names themselves are never renamed. Every place that writes SQL text with a name in it (mapper
+ * annotations, correlated subqueries, predicate fragments) goes through {@link #render}, so a name such as
+ * {@code condition} or {@code like} is quoted everywhere or nowhere. Ordinary names are left exactly as they were.
+ */
+public final class MySqlIdentifiers {
+    private MySqlIdentifiers() {}
 
     // MySQL 8.4.5 INFORMATION_SCHEMA.KEYWORDS facts (259 reserved words).
     // Derived with the official sql/gen_keyword_list.cc classification, using sql/lex.h and sql/sql_yacc.yy:
@@ -47,7 +53,8 @@ final class MySqlMapperIdentifiers {
             XOR YEAR_MONTH ZEROFILL
             """).split("\\s+"));
 
-    static String render(String physicalName) {
+    /** The name as SQL text: backquoted when it is a MySQL 8.4 reserved word. */
+    public static String render(String physicalName) {
         return RESERVED.contains(physicalName.toUpperCase(Locale.ROOT))
                 ? "`" + physicalName.replace("`", "``") + "`" : physicalName;
     }

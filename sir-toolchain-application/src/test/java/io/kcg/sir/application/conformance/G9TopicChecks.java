@@ -1,12 +1,14 @@
 package io.kcg.sir.application.conformance;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
 /** Actual catalogue and market policy HTTP checks, sharing the existing library process. */
 final class G9TopicChecks {
-    static final String ITEMS = "/api/items", BOOKS = "/api/books";
+    static final String ITEMS = "/api/items", BOOKS = "/api/books", BROWSE = "/api/shop/items";
+    private static final ObjectMapper JSON = new ObjectMapper();
     private static final Map<String, String> READER = bearer(1), OTHER = bearer(2), STAFF = bearer(15);
     private G9TopicChecks() {}
 
@@ -65,6 +67,7 @@ final class G9TopicChecks {
         error(s, "other seller cannot update actual item", h.putJson(url + "/" + id, OTHER, edit), 404, "ItemNotFound");
         error(s, "other seller cannot delete actual item", h.delete(url + "/" + id, OTHER), 404, "ItemNotFound");
         s.check("rejected edits preserve all actual item columns", stored.equals(s.rowsOf(o, "item")), "independent observer snapshot");
+        browse(s, h, id);
         // Isolated fixture transition, not a new production endpoint; prove editing never restores ON_SALE by default.
         s.fixtureStatement("UPDATE item SET status='SOLD' WHERE id=" + id);
         var edited = h.putJson(url + "/" + id, READER, edit); status(s, "owner edits permitted actual item fields", edited, 200);
@@ -73,6 +76,28 @@ final class G9TopicChecks {
         s.check("allowed seller edit reaches storage without transferring ownership", s.rowsOf(o, "item").stream().anyMatch(r -> r.startsWith(id + "|1|Edited seller policy|")), "title changed, owner=1");
         status(s, "owner deletes own actual item", h.delete(url + "/" + id, READER), 200);
         s.check("market round trip restores original rows", before.equals(s.rowsOf(o, "item")), "item cleanup complete");
+    }
+
+    /**
+     * The actual public browse query filters on {@code condition}, a MySQL reserved word: the generated predicate must
+     * quote it, or every call is a SQL syntax error whether or not the filter is given.
+     */
+    private static void browse(BusinessSliceHarness s, HttpAssertionClient h, long id) throws Exception {
+        String url = s.baseUrl() + BROWSE + "?keyword=Seller%20policy&page=1&size=20";
+        browsed(s, h, "browse without a condition runs and lists the item", url, id, true);
+        browsed(s, h, "a missing condition does not match a requested one", url + "&condition=used", id, false);
+        s.fixtureStatement("UPDATE item SET `condition`='used' WHERE id=" + id);
+        browsed(s, h, "browse by the reserved condition column finds the item", url + "&condition=used", id, true);
+        browsed(s, h, "browse by another condition leaves the item out", url + "&condition=new", id, false);
+    }
+
+    private static void browsed(BusinessSliceHarness s, HttpAssertionClient h, String label, String url, long id, boolean listed) throws Exception {
+        var response = h.get(url, Map.of());
+        status(s, label, response, 200);
+        if (response.statusCode() != 200) return;
+        boolean found = false;
+        for (var row : JSON.readTree(response.body()).path("records")) found |= row.path("id").asLong() == id;
+        s.check(label + " (listed=" + listed + ")", found == listed, response.body());
     }
 
     private static String inject(String json, String property) { return json.substring(0, json.length() - 1) + "," + property + "}"; }
