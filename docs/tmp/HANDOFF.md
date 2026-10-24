@@ -2,23 +2,21 @@
 
 > **这是临时文件。** 下面"待办"全部完成、或负责人说不做了以后，用 `git rm -r docs/tmp` 删除整个目录，并单独提交一次（`docs: 移除交接文档`）。除本文件外没有任何文档链接到它，删除不会留下断链。
 >
-> 写于 2026-10-20，接手前一个 Agent（Claude）额度用尽。截至本文，`main` 在提交 `c049acd`，CI（`verify`，含真实 MySQL 部署冒烟）已由负责人确认通过。
+> 本文只写**还要做什么**和**怎么做**。已经做完的事情、每一轮的实施与 CI 经过，分别在[项目状态](../PROJECT_STATUS.md)、[选题试写报告](../qualification/TOPIC_TRIALS.md)和[验证说明](../qualification/README.md)里，这里不重复。
 
 ## 1. 先读什么
 
-1. `AGENTS.md`（项目规范，**优先级最高**）：设计先向负责人讲清楚"为什么存在"并等到确认再写代码；不许假设；本机资源很小，只跑受影响的定向测试，全量验证交给 CI；不为触发 CI 而自动推送；提交要干净（一个提交只做一件事，代码、测试、文档同一提交）。
+1. `AGENTS.md`（项目规范，**优先级最高**）：设计先向负责人讲清楚"为什么存在"并等到确认再写代码；不许假设；本机只跑受影响的定向测试，全量验证交给 CI；不为触发 CI 而自动推送；提交要干净（一个提交只做一件事，代码、测试、文档同一提交）。
 2. `MAIN.md`（项目主体说明）、`docs/PROJECT_STATUS.md`（现状）。
-3. `docs/qualification/TOPIC_TRIALS.md`（选题试写报告，**下面的待办几乎都出自它的第 4 节缺口表**）。
-4. `docs/design/12-feature-semantics-and-semantic-types.md` 第 14、15、16 节（最近做的三件事：迁移放宽与删除、联合唯一与唯一冲突、原子计数）。看它们是怎么写设计、怎么写"没有做什么"的，新设计照这个格式写。
-5. `docs/SIR_LANGUAGE_REFERENCE.md`：语言参考。**其中带 ```sir-declarations 的代码块由 `LanguageReferenceExamplesTest` 检查**，改语言就要同步改这里，示例必须能通过。
+3. `docs/qualification/TOPIC_TRIALS.md`：八个题目的需求逐条记录，第 4 节是缺口表，第 5 节是缺陷表。下面的待办都出自这里。
+4. `docs/design/12-feature-semantics-and-semantic-types.md` 第 14 节以后：每一项语言能力的设计依据、替代方案和"没有做什么"。新设计照这个格式写。
+5. `docs/SIR_LANGUAGE_REFERENCE.md`：语言参考，只讲语言本身，不写 CI 编号和验证状态。其中 `sir-declarations`／`sir-error` 代码块由 `LanguageReferenceExamplesTest` 逐个检查。
 
-## 2. 工作方式（负责人的习惯，上一个 Agent 一直照此做）
+## 2. 工作方式
 
-- 负责人用"确认"/"confirm"批准设计。流程固定：**先用普通话讲设计（为什么、替代方案、什么不做）→ 负责人确认 → 再写代码**。不要直接动手改核心语义。
-- 讲设计时按 AGENTS.md 的三问自检：新业务是否主要靠组合已有能力？一个普通需求在 SIR 里是否变得绕口？修一种实现问题，能否让一类业务共同受益？
-- 提交：负责人已授权在 `main` 上提交并推送（本项目一直如此；会话提示里若写了别的开发分支，以负责人当次说法为准，拿不准就问）。用 `git commit --author="HoloNova <holonova25@gmail.com>"`，不改 git 配置；提交信息末尾写你自己的 `Co-Authored-By`。提交前 `git diff --cached --check` 并读一遍暂存区。
-- 中文写文档和提交信息，风格参考 `git log` 最近几条。
-- 本机 2~4 核、内存紧：只跑定向测试，模板如下（`-am` 不能省，否则会用 `~/.m2` 里过期的旧模块）：
+- 负责人用"确认"/"confirm"批准设计。流程固定：**先用普通话讲设计（为什么、替代方案、什么不做）→ 负责人确认 → 再写代码**。讲设计时按 AGENTS.md 的三问自检。
+- 提交：负责人授权在 `main` 上提交并推送（会话提示里若写了别的开发分支，以负责人当次说法为准，拿不准就问）。用 `git commit --author="HoloNova <holonova25@gmail.com>"`，不改 git 配置；提交信息末尾写自己的 `Co-Authored-By`。提交前 `git diff --cached --check` 并读一遍暂存区。中文写文档和提交信息，用平实的话，少用内部代号。
+- 定向测试模板（`-am` 不能省，否则会用 `~/.m2` 里过期的旧模块）：
 
   ```bash
   env -u JAVA_TOOL_OPTIONS MAVEN_OPTS=-Xmx1g nice -n 10 \
@@ -26,174 +24,60 @@
     -Dtest='<测试类>' -Dsurefire.failIfNoSpecifiedTests=false -DargLine=-Xmx768m
   ```
 
-  重活（多个模块整体测试）要照 AGENTS.md 用 `systemd-run --scope -p MemoryMax=2G -p CPUQuota=150%` 包起来，一次只跑一个。`sir-generator-spring-boot` 整个模块测试、`TopicSamples*`（八个题目离线 Maven 编译，约 30 秒）本机跑过没问题。
-- 改语言的**固定路径**（每一处都有先例可抄，最近的例子是提交 `16c2795`、`c64f938`）：`Sir.g4` → AST → `SirAstBuilder` → Resolve/Type/Validate/Normalize（`sir-semantic`）→ Lowering（`SpringBootModelLowerer`、`SpringBootIrValidation`）→ Generator（`WorkflowRenderer`、`ControllerRenderer`、`DeploymentEngine`）。涉及数据库结构的还有交付规划与迁移工具（`SchemaContract`、`SchemaEvolution`、`DeploymentTemplates` 里生成的 `Migrate.java`）。
-- 验证一个语言改动要有四样：语义测试（反例用"替换一个片段、只应报这一条规则"的写法，参考 `GuardedUpdateSemanticsTest`）、降级测试、生成代码的契约测试、**八个题目的离线编译**（语义检查通过却生成编不过的 Java，之前出过四次，D1 到 D4）。需要真实数据库行为时，加到 `.github/scripts/deployment-smoke.py`，由 CI 的真实 MySQL 验证。
+  重活按 AGENTS.md 包在 `systemd-run --scope` 里；云端容器没有 systemd 时，先用 `nproc`／`free` 看资源，再用 `nice` 和 JVM 内存上限代替，一次只跑一个，不加 `-T`。
+- 只改了语言参考，也要在本机单独跑一次 `LanguageReferenceExamplesTest`（纯文档推送不触发 CI）。
+- 改语言的固定路径：`Sir.g4` → AST → `SirAstBuilder` → Resolve/Type/Validate/Normalize（`sir-semantic`）→ Lowering（`SpringBootModelLowerer`、`SpringBootIrValidation`）→ Generator（`WorkflowRenderer`、`ControllerRenderer`、`DeploymentEngine`）。涉及数据库结构的还有交付规划与迁移工具（`SchemaContract`、`SchemaEvolution`、`DeploymentTemplates` 里生成的 `Migrate.java`）。
+- 验证一个语言改动要有四样：语义测试（反例用"替换一个片段、只应报这一条规则"的写法）、降级测试、生成代码的契约或运行时测试、**八个题目的离线编译**。需要真实数据库行为时，接到已有的业务 IT 里（优先组合已有应用，不新起一套），由 CI 的真实 MySQL 验证。
 
-## 3. 已经做完的（不要重做）
+## 3. 待办（按建议顺序）
 
-迁移放宽类型与删表删列（`--confirm-backup yes`）、`kcg scaffold` 删除、八个题目试写、D1 到 D4 缺陷、唯一冲突报错（`persist x else 错误`）、联合唯一 `unique (a, b);`、**原子计数**（`字段: 行.字段 + 值`，一条 SQL；守卫右边可以是同一行的另一列）。对应试写报告里的 G1、G3 已标"已补"。
+### 3.1 确认缺陷 D5 的真库验收
 
-## 3.1 历史 CI 阻塞（已由 #140 闭环）
+`00b8118` 修了"表名、列名是保留字时，手工拼接的 SQL 没加引号"（见试写报告第 5 节）。它的真库检查接在图书借阅的业务 IT 里（`G9TopicChecks.browse`：按成色筛选的有、无、匹配、不匹配四种请求）。推送后的 CI 通过时，把试写报告里二手交易的两条浏览需求从 △ 改回 ✓（数字变成 76／1／7），同步 `PROJECT_STATUS.md` 那一句。CI 若失败，先看日志、说明原因，再动手。
 
-最新核验：`484a8a792c3ec6a7b9f5a7b7171b009e981a8ce3` 的 [#140](https://github.com/HoloNova/Software-IR/actions/runs/39527408701) 两个 job 和全部实际门通过，报告产物齐备。以下文字保留失败经过，不再作为当前阻塞；G10 的后续源码需新 CI，不能沿用 #140。
+### 3.2 暂停加新语法，先做小模型评估（模型与方式需负责人决定）
 
-负责人要求检查后已核验：#136（33f960b）全量门通过、部署 HTTP 失败，根因为 DTO Optional 被按 nullable 标量直接比较并传入 JDBC；#137（00e3ce9）应用层 5 项失败、部署跳过，根因为旧非法夹具已被 G4 合法化，以及 SCALAR_QUERY_ENTITY 缺少跨文件实例。负责人随后授权修复，本提交已增加明确的 OptionalPayloadValue 取值计划、真实生成 DTO 回归、有效非法夹具和跨文件正反例；58 项定向通过。原文件导出集成、真库、全量门与同源码 CI 尚待验证，未放宽 Windows 安全读源边界。详见验证说明第 8 节。负责人随后明确授权提交并推送本轮修复、继续工作；可继续 G9 代码核对与方案，不把本轮 CI 提前记为通过，也不把 192 项旧定向结果当成 CI 通过。G9 方案此后已获负责人确认并实现，结果见 4.4；#138 的后续失败与本轮冒烟断言修复见验证记录第 9 节。
+最近语言新增了七种工作流步骤（`exists`、`count`、`sum`、`sum … by`、`month`、`each`、`load … for update`），每种都带不少写作规则。这个项目面向写代码的模型，规则越多越容易写错。建议继续扩语言之前，先用八个题目加双 Token 题做一次评估，看模型实际能写对多少、错在哪些规则上。评估计划草稿在 `docs/qualification/SLM_GENERATED_PROJECT_EVALUATION_PLAN.md`；用哪个模型、怎么判分，等负责人定。
 
-## 4. 待办（按建议顺序）
+### 3.3 按评估结果决定剩下的缺口（每项先设计、等确认）
 
-当前试写数字：84条需求，73条（86.9%）完整写出，4条（4.8%）带折扣，7条（8.3%）尚未写出。#170已验收用户时区自然月及指定当前预算，两项待CI△转✓；#168已验收library限额／FIFO及课程两项。下文旧轮数字和“待CI”保留为实施经过，不当作当前状态。每补一个缺口，都要更新 `TOPIC_TRIALS.md` 的表和数字、`PROJECT_STATUS.md` 里那一句、语言参考、设计 12 新增一节。
+试写报告里还写不出或带折扣的需求，集中在这几类：
 
-### 4.1 G7 可选值比较与空值判断（已确认并实现，后续 #140 回归通过）
+- 列表与批量（G5 剩余）：请求里带列表（一个订单多个商品、购物车）、每周重复预约、批量删除。
+- 跨行数量：书目显示可借册数。
+- 日期差：逾期罚款 = 天数 × 费率（乘法已有，缺"两个时刻相差几天"）。`month` 目前只服务记账一个题目，设计日期差时可以一起考虑把日期能力做得更通用。
+- 统计（G8 剩余）：平均值、多个分组键、补零组、图表与导出。
+- 优惠券：先和负责人确认需求本身。
 
-负责人已确认设计：`is none`／`is present` 判断空值；普通比较任一侧为空均为 false（包括 `!=`），`not (==)` 是普通取反；可选筛选以 `input.x is none or item.x == input.x` 显式表达；PATCH `.present` 保持原义。实现与限制见设计 12 第 17 节，不要重开设计或改为空值自动跳过。
+### 3.4 把"靠作者自觉"的并发约定做成编译器检查或提示（需设计）
 
-tasks、market 已更新；本机语义、降级、生成真值表、源往返与题目内存生成通过。部署真库冒烟已补，八题离线构建与 MySQL／HTTP 留给 CI。Windows 部署导出测试被现有 SecureDirectoryStream 边界阻断，不放宽该安全规则。负责人随后已授权本批 G7 提交并推送、不等待 CI；当时没有核验新 CI；后续已证实 #136 部署失败，见 3.1。Git 授权仍以负责人当次明确指令为准。
+下面几条现在只写在语言参考里，写错了编译器不报，只有真实并发时才出问题，模型写代码时尤其容易漏：
 
-### 4.2 G2 对多行的存在与计数（原语已实现，业务组合未全补）
+- 先锁父行：所有可能产生冲突记录的写法，都必须先 `load … for update` 同一行父行（语言参考 5.2）。
+- 作者维护的计数：所有改变状态的写法都要更新计数；给已上线系统加计数列，要先回填（5.2 的借阅例子）。
+- `persist` 顺序：新建一行并给它引用的行计数时，先 `persist` 被计数的行，否则 MySQL 会因外键读锁死锁（5.6）。
 
-负责人已确认并实施设计 12 第 18 节：`exists Entity where ... as flag`／`count Entity where ... as total`，结果为 Boolean／Int64，每步一条 SQL，scope 与空值规则不变。exists 只读一个主键并转 Boolean，count 用 SQL COUNT，不把读整表或 Java 集合大小当计数。任务成员授权已用上；借阅限额、排队、课程关联与任意时段并发约束不能因新增读取原语就记为完成，需另行补业务组合。本机所选 25 类 192 项通过（含 G7、源写回、结构／引用与 Mapper 不变性），真库及生成工程构建待 CI；负责人随后已明确授权本批提交并推送、不等待 CI，推送时未核验结果，后续已证实 #137 全量门失败，见 3.1；后续 Git 操作仍以当次授权为准。
+可以考虑的方向：编译器自动排序、发出警告，或者把常见组合做成一个写法。先讲清楚每个方向能防住什么、防不住什么。
 
-### 4.3 G4 按请求里的值穿过关联过滤（已实现，后续 #140 回归通过）
-
-已用 `ExistsArgument.Value` 把外部字段、actor 和已加载值保留为类型化表达式并参数绑定，博客样例恢复 PostTag。不会放开缺少根行关联的 any 或嵌套 any。部署 v3 冒烟已补文本注入、scope、可选参数及账号隔离断言，V1..V11 不变；Windows 没有启动业务服务。后续 G9 实施结果见 4.4；本轮不自动扩展到 G10。
-
-### 4.4 G9 Crud（已实现，后续 #140 验收通过）
-
-负责人确认[设计 12 第 19 节](../design/12-feature-semantics-and-semantic-types.md#g9-crud)后已在工作区贯通 text／names、字段集合选择、正式参数 binding、精确 rename／源回写及 Crud 的 writer、writeRole、roleField、writeExclude、read: public 和多段路径。旧 use 默认行为不变。library Book 只允许馆员写；market Item 从输入与赋值排除 status／createdAt，保留手写的在售浏览。此排除不是并发锁，普通非版本持久化并未重定义。
-
-89 项定向测试通过，真实 CRLF、旧手写展开等价、跨文件正反例、角色与字段错误均有覆盖。真库 `CrudAccessBusinessConformanceIT` 已复用既有 harness 并接入 verify.yml，尚未执行；不增加八题完成数，不把本机报告当作全量 CI。#138（ee6ddeb）的全量门通过，部署因 `/favorites/raise` 更新成功被脚本误期待 201 而失败；本轮修为 200 并补控制器契约断言。详见[验证记录第 9 节](../qualification/README.md#g9-crud-local)。随后已提交推送 f82cb94；#139 双全量门通过，新增真库 IT 因错误地用夹带排除字段的请求测试正常写入／权限而失败。修复只分开测试请求与断言，13 项相关定向通过，待新 CI 复验；见[验证记录第 10 节](../qualification/README.md#ci-139-fixture-fix)。阶段完成按负责人授权直接 commit + push 触发 CI。
-
-### 4.5 G10 Money（#147 已验收，以下保留实施经过）
-
-已按[设计 12 第 20 节](../design/12-feature-semantics-and-semantic-types.md#g10-money-proposal)实现默认 precision(19,2)、显式覆写、精确校验与 DECIMAL 物理合同；接受无损尾随零、不隐式舍入。原子金额仍基于数据库当前值加减；实际事务连接必须严格 SQL mode，最终溢出回滚。PATCH 精度来自实体，未放宽其他业务约束禁令；语义类型继续全项目可见，实体仍须 import。
-
-15 类最新定向报告共 105 项通过，market／shop／ledger 已改 Money，八题内存生成／交付规划通过。金额 MySQL／HTTP、非严格模式与并发、八题生成工程编译和独立部署已接 CI，本机均未执行；不重定义普通非版本持久化的全行／NULL 策略。详见[验证记录](../qualification/README.md#g10-money-local)。随后 `a54c351` 的 #141 因 DecimalPrecision 辅助 record 误入模型包，以及 DTO 旧注解断言失配失败；后续真库和部署被跳过。本轮移到 feature 包并补齐完整 DTO 契约，七类 65 项定向通过，不改精度算法、不豁免架构门，随后已推送 `303a139`。#142 双全量门通过，金额 IT 已有 53 项检查通过，但在非严格模式重启因测试环境键错误而失败，后续部署被跳过。本轮修正环境绑定，5 项定向通过，完整真库与部署仍待新 CI；见[验证记录第 13 节](../qualification/README.md#ci-141-fix)和[第 14 节](../qualification/README.md#ci-142-session-fix)。随后 #143 金额真库 57 项通过，部署生命周期修复已推送；#144 在更早的合同阶段缺运行器依赖，独立修复 `b8f2cf0` 预热并离线执行真正合同，见[第 16 节](../qualification/README.md#ci-144-dependency-fix)。G10 部署仍待新 CI，G6 按负责人要求已继续实现，见 4.6；不擅自开始循环与聚合。
-
-### 4.6 G6 乘法、G11 视图计算字段
-
-- G6：负责人要求继续下一阶段后，已按[设计第 21 节](../design/12-feature-semantics-and-semantic-types.md#g6-multiplication-proposal)实现精确乘法、显式整数转 Decimal 和能力级算术输入检查；分页默认、Optional／PATCH 不变，Ref.id 的错误路径按真实 DTO 属性。shop 按数量计价扣库存、订单持久化后再创建明细，28 类 223 项主回归通过。真库并发、精度回滚和明细一致性已接 CI，本机未运行；library 罚款仍缺日期差，未记完成。见[验证第 17 节](../qualification/README.md#g6-multiplication-local)。#143 金额真库 57 项通过，但部署漂移未闭环；#144 在初次合同测试缺失运行器依赖，已单独修复 `b8f2cf0`，见[第 16 节](../qualification/README.md#ci-144-dependency-fix)。下一项评审 G11，不顺带循环／聚合。
-- G11：已按第22节实现并由 #150 验收：`field remaining: Count = item.capacity - item.enrolled;`，计算输出独立命名、当前行正式绑定，互斥 Column／Related／Computed 分支与共用投影渲染，不新增 SQL／DDL。course 增加 remaining／full；关系与乘法真库均含计算断言。库可借数量仍需跨行聚合，不在本轮。见[验证第21节](../qualification/README.md#ci-150-accepted)。下一项回到 G2 业务组合。
-- 最新 CI：`4a1d8c8c2f28fd0d5678f65bfd4494cf163d8321` 的 #150 全部门 success，G11 闭环：关系真库 40 项（含根行 doubledCapacity 60／40、嵌套 label 逐行、枚举 active 逐行）、乘法真库 56 项（含 8 并发选课仅 3 成功、满额后 remaining／full）、八题生成工程、双全量门及独立部署均通过，见[验证第21节](../qualification/README.md#ci-150-accepted)。#149 三项失败已确认是测试假设错误（借用只认夹具主表的 expectRow、视图未声明 capacity），已由 `4a1d8c8` 修正。计算仅基于本行、三个投影路径共用计划，不新增SQL／DDL，不自动舍入Money，也不补跨行可借数量。
-
-### 4.6.1 G2 第一批（#154 已验收）
-
-显式 `load … as row for update else Error;` 仅 atomic command／主键允许；Scope、结构和源编辑保留事实。Spring Boot 目标明确 READ_COMMITTED，工程级 MyBatis 本地缓存 STATEMENT；显式锁用既有 BaseMapper identity locking query，不因能力变化修改实体 Mapper。原版本自动锁不变。booking 改为 `[startsAt,endsAt)`，Room 锁后执行重叠 exists。15 类 147 项定向通过，见[验证第 22 节](../qualification/README.md#g2-locking-local)。真库屏障检查复用 MultiplicationBusinessConformanceIT，未在本机执行，需求账本不变。首轮 #153 双全量门通过，但新增预约比较把 Room 对象绑定到 room_id 而返回 500，未能走到锁屏障；已修复 Lowering 的 identity 取值并补真实 MyBatis 参数回归，21 类 89 项定向通过；随后 bf14d90 的 #154 全门成功，乘法／预约真库 72 项通过，含先读后等锁屏障，见[验证第 25 节](../qualification/README.md#ci-154-accepted)。
-
-复核修正：课程冲突也需要学生锁；旧草案先修课片段的 required 并未取得，任意集合的反关联后来已用Course根的两个同级any表达，不用单门限制冒充完成。library 的限额及借／还一致性已实施待 CI（下节）；课程组合已实现见第三批，排队未完成。verify 的 push 已忽略 docs/** 和 **/*.md，纯文档更新不触发 CI，文档尽量随源码提交。
-
-### 4.6.2 G2 第二批：library 限额（#168已验收）
-
-**当前验收结论：**87cad8b的[#168](https://github.com/HoloNova/Software-IR/actions/runs/39927438145)已核对同SHA原始产物，library203、course151、Money150项业务检查均通过，源digest匹配；240份XML无失败／错误，独立验证／CLI／部署全部通过。借阅限额、FIFO本人领取、时间冲突和任意直接先修四项转✓，当轮账本 **71／4／9**；本批月报／预算转待CI后为 **71／6／7**。以下旧轮“待CI／NOT_RUN”均是实现时的历史边界，不是当前阻塞；详见[验证38](../qualification/README.md#ci-168-g2-g8-accepted)。不把分组当自然月，不把扫码领取当还书自动分配。
-
-
-不改语言或生成器生产代码：User.activeLoans 默认 0，Borrow 先锁读者，以 <5 的条件增量占额后再改副本／建 Loan；GiveBack 锁 User → Loan → Copy，首次归还减一，重复／外人／计数异常拒写，晚失败要求整事务回滚。续借不占额。7 类 31 项定向通过；新的真库 IT 直接用实际 topics/library 源，已编译但未在本机执行。旧库需回填真实在借数，不能把 DEFAULT 0 当业务迁移；已有超限数保持真实值，可归还而不可继续借。见设计 23.6 与[验证第 26 节](../qualification/README.md#g2-library-local)。随后第三批已实现课程冲突的学生锁与任意先修课的反关联，排队另案，不重做已有读取／金额／投影原语。
-
-随后 #156 正式全量通过，但新 IT 把 SIR 声明错误名误期待为大写下划线，借阅真库 60 项通过、22 项错误码比较失败。修复只改测试预期并补固定错误码到实际 SIR／生成异常的契约，3 类 17 项定向通过；library SIR 和编译器生产代码未改。后续 `9d31a82` 的#157现已核实success，#158借阅IT亦通过；账本另行归档，见[验证第 27 节](../qualification/README.md#ci-156-error-contract-fix)及[第29节](../qualification/README.md#ci-158-readiness-fix)。当时课程阶段仅有本地未提交测试，未混入该修复；负责人会通知 CI 结果，不等待或轮询。
-
-CI 提速版 #155 主验证 8:18，正常路径 Completion 跳过，实际测试保留；部署被取消，不记整轮通过。完整基线仍为 #154。后续部署并行／缓存尚未实施，不必因已完成本轮提速重复修改工作流。文档随本批源码，不额外触发文档 CI。
-
-### 4.6.3 G2 第三批：课程组合（#168已验收）
-
-实际 topics/course 已实现周课表半开区间、学生锁冲突检查、任意直接先修集合；关键是把Course作为根，组合同级 any(Prerequisite) 与 not any(CompletedCourse)，不用新语法、循环或时段快照。先修只在草稿增删、发布后冻结；成绩由管理员追加，学生不能自报通过。选课先User后Course；退课User→Enrollment→Course，座位仍按SQL守卫增减。原POST /courses/{id}/enroll、DELETE /enrollments/{id}不改路由。数值missing/null用既有G6检查，分页默认保留。
-
-6类38项定向通过；新CourseSelectionBusinessConformanceIT直接用该题目，已编译接现有业务CI，真库/HTTP/锁等待/晚失败回滚本机未执行。源384行SIR／3379行Java／14个显式接口，完整数不升，账本67／7／10。见[设计23.7](../design/12-feature-semantics-and-semantic-types.md#g2-course-combinations)和[验证28](../qualification/README.md#g2-course-local)。旧库课表、发布、先修、成绩和座位账本须所有者维护窗口核验，不做自动迁移；不提供成绩撤销、递归闭包或多时段/多学期。文档随本批源码，CI结果仍由负责人通知，不查询/等待。
-
-#158正式全量门及生成工程构建通过，新课程IT却用不存在的 `/api/courses/10` 判定就绪，404导致全部课程业务未运行、部署跳过。现只将探针改为已有公开搜索，并用实际 Api 端点与输入模型守契约，3类34项定向通过；未修改生产接口／业务，不接受404为READY。见[验证29](../qualification/README.md#ci-158-readiness-fix)，等新源码CI，结果仍由负责人通知。
-
-上述CI修复已单独推送7d13a2d，排队没有混入；随后按负责人继续指示完成第四批，见下文。循环/聚合/日期差仍另案，不能借此扩大。
-
-### 4.6.4 G2 第四批：书目FIFO与本人扫码领取（#168已验收）
-
-实际library增加Reservation及ReserveBook／ClaimReservation／CancelReservation／MyReservations，无新增语法／编译器生产分支。先取得User→Book等共同锁，再查同书更早预约；不能加全局owner scope，私有列表单独过滤。普通Borrow有队列即拒绝，GiveBack仅释放，AddCopy也锁Book；领取成功才扣名额、改Copy、建Loan并删预约，同事务共同提交。满额不自动跳过，所有者或馆员可明确取消；馆员锁预约所有者而不是自身，避免反向User锁。旧续借规则未改，无过期／通知／自动分配。
-
-8类58项定向通过，实际源443行SIR／4086行Java／20个接口。原借阅8项和错误／路由／DDL合同、Mapper不变性保留。原library IT复用一个应用，新增重复入队／领取、多副本、取消／领取竞争、可观察Book锁等待和外键／触发器晚失败的四表快照检查。仅已编译、本机NOT_RUN；不查询CI，负责人通知。见[设计23.8](../design/12-feature-semantics-and-semantic-types.md#library-reservation-proposal)和[验证30](../qualification/README.md#g2-reservation-local)。账本只把预约从✗改待真库△，**67／8／9**。升级新增空队列表，维护窗口同时切换全部写入口、旧Borrow不能与新锁协议混跑，原activeLoans须真实回填。后续G5／G8及日期差先定范围，不静默扩展。
-
-### 4.7 G5 列表循环、G8 后续聚合（新增范围先确认）
-
-- G5：已按[设计27](../design/12-feature-semantics-and-semantic-types.md#g5-bounded-child-iteration-proposal)确认完成第一片有界服务器each及shop取消返库，21类202项定向通过，详见文末收尾。真实并发／回滚接入原乘法IT，本机NOT_RUN；请求列表、累计、购物车和多商品结算仍未实现，不因each已存在而擅自扩面。早期探针已归档，文档随实现合并，账本不变。
-- G8：SUM／分组已由#168验收，用户时区自然月及指定当前预算已由#170验收，见下；平均、多键／零组仍另案，不重做既有求和。
-- 两者都会让语言明显变复杂。上一个 Agent 的建议：等 G7、G2、G4、G9、G10 补完，看还剩多少需求写不下，再决定。
-
-#### G8 首批条件SUM（#168已验收；下述为实现时记录）
-
-负责人已通知0bebfcd的修复CI通过；本批不再次查询或借其冒充新分组快照证据。#163的Money IT在构建前写探针副本时因证据目录未建而NoSuchFile中止，且报告将中止写成PASSED。已让写入方建档、harness异常入失败通道，14项定向通过，见[验证33](../qualification/README.md#ci-163-evidence-dir-fix)。两IT在本机为NOT_RUN（无参考库），真库SUM／告警仍待新CI；修复推送后直接继续。
-
-#162在语言参考门发现第5.10节的声明片段误标完整sir且漏User／Entry。本批已改为包含依赖的可执行sir-declarations；新增文档到SUM计划、owner及actor正式绑定的契约，不绕开文档门、不改生产实现，23项定向通过，见[验证32](../qualification/README.md#ci-162-sum-reference-fix)。真实SUM IT和部署仍未验收，修复单独提交推送后继续分组方案，不查询或等待CI，由负责人通知。
-
-负责人已确认并实现[设计24](../design/12-feature-semantics-and-semantic-types.md#g8-decimal-sum-proposal)的条件Decimal单列SUM：独立步骤／字段绑定／scope／源编辑与IR硬化；空／全空0，总额不继承单笔精度；复用Lambda谓词和BaseMapper。按需标记及当前Statement告警插件、STATEMENT缓存防绕过，普通查询不改；真实ParamMap缺ew与合法变量名冲突均有RED→GREEN。ledger本人范围／本人分类合计已用上，195／3949／23；不推断分类方向净额或月份预算。30类187项定向通过，见[验证31](../qualification/README.md#g8-decimal-sum-local)；旧Windows目录读取10项受阻，新的内存SUM图谱完整构建通过。Money原IT复用同一应用／构建，加Optional、scope、参数、any和固定CAST告警对照；仅已编译、本机NOT_RUN。方案／文档同源码提交，账本67／8／9不变。当时尚无group-by；其后分组及结果载体已按下节实现。AVG、期间／时区与G5仍另案，CI结果由负责人通知，不查询。
-
-#### G8 第二批：引用分组分页（#168已验收）
-
-#168核验后已关闭#165到#167阻塞：全角色／跨文件完整门、容器启动、真实SQL预算均通过，grouped-sum-query-trace.json实际为count1／page1／session1／unexpected0。Money同快照与严格／非严格两条语句告警均通过，部署全部合同项通过；不在合同的中断迁移等仍未运行。验收证据与SHA见验证38，不重复本机测试，也不因文档单独提交触发CI。
-
-
-#167（74bd393）全量门通过，#165／#166修复均有效；237份XML仅Money 1失败，而且真实分组业务已全部执行通过，唯一失败是新增读取预算把5条Connector/J会话探测算成业务查询（断言2、实际7）。已按语句角色分类：业务计数恰1、业务分页恰1、不可识别0，并要求summary条数与日志一致；#167真实digest（含服务端DISTINCTROW）固化为回归，完整digest／raw／分类写入grouped-sum-query-trace.json，写失败即判失败。未改期望值、未放宽或删断言，生产未动，7类59项定向通过，见[验证37](../qualification/README.md#ci-167-grouped-read-budget-fix)。真实SQL预算、快照与告警仍待修复SHA CI。
-
-#166全量门通过（TypedReferenceSite18／完整ProjectVisibility7项通过），唯一失败在Money启动：分组验收拦截器构造依赖Mapper，MyBatis收集插件时形成工厂初始化环。已仅改夹具为ObjectProvider延迟到请求执行时获取Mapper；实际生成类＋真实MyBatis自动装配／MapperFactoryBean在禁止循环引用、禁止数据源访问的容器中先RED再GREEN，仍执行原计数后屏障和告警插件检查，6类29项定向通过，见[验证36](../qualification/README.md#ci-166-fixture-mapper-cycle-fix)。未开放循环引用／删插件／改生产规则；纯容器回归不是完整HTTP真库。业务分组SQL／快照没运行到，独立验证／CLI／部署跳过，仍待修复SHA CI；月度26草案继续留本地，不混入修复或单独造文档CI，不查询／等待结果。
-
-#165阻断于两处契约夹具遗漏GROUP_KEY_FIELD：TypedReferenceSite全角色／原AST审计与ProjectVisibility跨文件穷尽门。已补真实分组及测试AST遍历，添加无导出的Enrollment.student键绑定与删准确import的精确Span反例；6类53项定向通过，不改生产实现、不减覆盖枚举，见[验证35](../qualification/README.md#ci-165-group-reference-coverage-fix)。原跨文件全角色导出方法依赖Linux安全目录读取，本机NOT_RUN，仍保留CI执行。业务／快照／告警、独立验证和部署被跳过，未验收。修复与文档单批提交，推送后继续月度／预算核对，不等CI。
-
-[设计25](../design/12-feature-semantics-and-semantic-types.md#g8-grouped-sum-proposal)已按确认完成，27类236项定向通过，见[验证34](../qualification/README.md#g8-grouped-sum-local)。Page<SumGroup<Ref<Entity>>>只有key和精确total；Ref单键非Optional／secret，按身份升序、不补零组。COUNT DISTINCT和selectMaps用同一筛选求值，显式只读RR快照、两次当前Statement告警及STATEMENT缓存；任何一步失败不返回部分页。补齐any相关身份与根行外键的正式关联方向，不放开通用JOIN。源增删改、跨文件精确改名、结构门、Core／目标IR、Long／UUID、Mapper和支持载体命名冲突均覆盖。旧Mapper和分页协议不变。
-
-Money IT复用原应用，增加GroupedSumFixture：计数真正完成后在可观察屏障等待，控制连接提交新组，再检验同页仍是旧快照。严格／非严格会话均覆盖数据和计数告警；两个实际探针编译／冷目录安装／屏障执行定向通过，本机未运行真库。ledger只有本人显式区间内的本人分类分页合计，220／4106／24；月份／时区、预算历史、AVG／多键／零组和G5仍未做，账本67／8／9不变。JSON精确断言增加Jackson2.19.4仅test依赖；三项早期可行性探针源码归档target，实际实现回归替代它们，不再向CI增加重复探针测试。文档随源码提交，不查／等CI，负责人通知结果。
-
-#### G8第三批：用户时区自然月及当前预算提示（#170已验收）
-
-当前结论：e9f38dd的[#170](https://github.com/HoloNova/Software-IR/actions/runs/40052208682)全门和部署通过，251份XML／1708项零失败／错误／跳过，Money306项含实际日期／会话／偏好快照／当前规则均PASS，资源摘要匹配。月报和预算两项转✓，账本73／4／7，详见[验证41](../qualification/README.md#ci-170-calendar-accepted)。下面#169和本机NOT_RUN均是历史经过，不能继续当当前阻塞；后续新功能须自己的源码证据。下一项G5仍先定范围再实施，不把多商品、取消返库和购物车一次混进核心。
-
-#169的Frozen全量门及生成工程构建通过，Money缺kcg.actor-identity.mode在启动即退出，月界／日期／偏好快照均未执行，部署跳过。本批只在实际Money创建路径显式设置external，抽取并复用真实子进程环境；补真实Actor启动守卫、凭证适配器和MyBatis装配，缺模式仍拒绝、匿名仍401，无固定actor绕过。7类21项定向通过，见[验证40](../qualification/README.md#ci-169-actor-mode-fix)，证据target/ci-169-verification。生产代码及CI编排不变，修复完成直接提交推送，不等待新CI，由负责人通知。
-
-负责人已选择每位用户自己的时区＋指定预算当前规则，**不能再把原UTC建议当决定，也不重复问同样两点**。[设计26](../design/12-feature-semantics-and-semantic-types.md#g8-calendar-month-scope)已改写：服务端本人偏好是权威，月报不临时接受任意zone；旧用户未设置则明确拒绝，不猜UTC。现已补通用timeZone字符串校验及可信本人设置；month步骤把YearMonth本月／下月当地最早有效时刻分别转Instant；RR同快照读偏好／预算／金额，预算按budgetId作精确Flag比较。无每期预算表／冻结历史；规则、账目、偏好变化都会影响历史重查，不隐式加EXPENSE-only。
-
-先期JDK21探针在target/g8-month-investigation，不当成业务证据。本批实际SIR语义／源编辑／全角色及结构门、独立Core／IR、生成服务和UTC JDBC4.2适配均已实现；33类247项定向通过，见[验证39](../qualification/README.md#g8-calendar-month-local)。JDBC协议测试在UTC／Pacific/Honolulu各运行，同类不重复累计；实际自动装配和3份探针源码编译／屏障执行通过，无本机应用／SQL。month会拒绝两端点越过DATETIME(6)，旧Timestamp在1000／1500年的混合日历缺口已用按需UTC LocalDateTime适配解决，普通无month软件不改产物。PATCH仍遵守version及Optional，空changes仍可作原版本条件写，不改变字段。新MONTH_ERROR同步两处全角色夹具及无导出的精确缺import反例；完整文件导出留Linux CI。
-
-Money IT同一构建纳入与ledger AST对齐的月度业务，新增CalendarSnapshotFixture在用户读取完成后等待，另一请求提交时区再放行，检验在途快照与后续重查。纽约月界微秒、1000下界／1500历史CRUD／9999末月、未设置／非法偏好、本人预算／分类隔离、等额／变更当前上限均等待真实CI。原非严格重启同时设置+05:30会话／Pacific/Honolulu JVM，实际DataSource读取会话time_zone／sql_mode、UTC偏差秒数与JVM区域，不拿环境变量当证据；既有告警、SQL预算和分组屏障保留，不增加原有严格／非严格两轮构建启动之外的轮次。ledger281行SIR／4609行Java／28项能力；两项从✗转待CI△，当前71／6／7，图表／导出仍✗。本批无UI，不起浏览器；旧账号须先设置时区，不自动猜测或回填。记录与源码一批提交推送，不查询／等待CI，结果由负责人通知。
-
-### 4.8 G12、G13 小项（低优先）
+### 3.5 小项（低优先）
 
 - G12：每个题目要重复约 35 行账号样板（`Register`、`UserView`、`use DualTokenLogin`）。
-- G13：写作磕绊——`fails` 必须按错误名排序，`order`、`item`、`from` 是关键字不能当名字。可以改成更友好的报错，或放宽排序要求。
+- G13：写作磕绊。`fails` 必须按错误名排序；`order`、`item`、`from` 是关键字不能当名字。可以改成更友好的报错，或放宽排序要求。
+- G14（不做）：文件上传、发邮件短信、定时任务、调外部服务、实时推送、前端。
 
-### 4.9 其它
-
-- **SLM（小模型）评估**还没开始，用哪个模型、怎么评估没有决定，等负责人说。
-- **锁顺序**：新建一行并给它引用的行计数时，必须先 `persist` 被计数的行，否则真实 MySQL 并发会死锁（外键检查的读锁）。现在只写在语言参考里，没有做成编译器规则。如果以后觉得常有人踩，可以考虑自动排序或给提示，需要设计。
-- **已知的 G14**（不做）：文件上传、发邮件短信、定时任务、调外部服务、实时推送、前端。
-
-## 5. 需要留意的坑（上一个 Agent 踩过的）
+## 4. 需要留意的坑
 
 - 一个 `update` 若带守卫或"本字段 ± 值"，这一行**只能有这一个 `update`**（整个写成一条 SQL，只写绑定的列）。
 - optional 引用的列名不带 `_id`（`Optional<Ref<X>>` → 列 `author`），必填引用改可选引用在迁移里是"先改名再放宽"。
 - 修改测试夹具时，`fails` 声明要按错误名排序；`order`、`item`、`from` 不能当名字；`Optional<Text where ...>` 不是合法写法；`Serial default 0` 类型不匹配，用 `Optional<Count>` 等。
-- 单独跑 `-pl sir-generator-spring-boot test` 不带 `-am` 会用 `~/.m2` 里旧的 parser，报 "不属于 SIR v0.1 的语法：default"——不是代码错，加 `-am`。
+- **任何新写进 SQL 文本的表名、列名都要经过 `MySqlIdentifiers.render`**（降级模块的 `profile` 包），否则遇到 `condition`、`like`、`group` 这类保留字就是语法错误。`ReservedIdentifierRuntimeTest` 是写法示例。
+- 单独跑某个模块不带 `-am` 会用 `~/.m2` 里旧的模块，报出看似语法的错误，不是代码错，加 `-am`。别的机器加了新依赖时，`-o` 离线会解析失败，去掉 `-o` 联网跑一次即可。
 - 加了 `Binding`、`NormalizedEntity` 这类记录的新分量时，为兼容旧调用保留旧构造器（先例：`SpringBootWorkflow.Binding`、`AstEntityDecl`）。
-- 新增语义节点种类或引用角色时，几个覆盖测试会失败并提醒你登记：`StructureViewCoverageTest`、`TypedReferenceSiteContractTest`、`SirDeclarationWriterRoundTripTest`、`ProjectVisibilityTest`。
+- 新增语义节点种类或引用角色时，几个覆盖测试会失败并提醒你登记：`StructureViewCoverageTest`、`TypedReferenceSiteContractTest`、`SirDeclarationWriterRoundTripTest`、`ProjectVisibilityTest`，还有两个全角色夹具和测试里的 AST 遍历。
+- 业务 IT 里组合了真实题目源码的，夹具文件要和组合函数的输出逐字一致（例如 `valid/g9-topic-conformance.sir` 对应 `G9TopicComposition.compose()`），改了题目要同步。
 - `git diff --check` 失败（文件末尾空行）会让 `&&` 串起来的提交不发生，注意看输出。
-- 部署样例每改一次，链的版本数和步骤都会变：同步改 `DeploymentPackageApplicationTest`、`.github/workflows/verify.yml` 里的 `schemaVersion` 和步骤列表、`.github/scripts/deployment-smoke.py` 里的 `applied=V7..V11` 和 `flyway_schema_history` 计数（现在是 11）。
+- 部署样例每改一次，链的版本数和步骤都会变：同步改 `DeploymentPackageApplicationTest`、`.github/workflows/verify.yml` 里的 `schemaVersion` 和步骤列表、`.github/scripts/deployment-smoke.py` 里的 `applied=V7..V11` 和 `flyway_schema_history` 计数。
 
-## 6. 完成之后
+## 5. 完成之后
 
 所有待办完成（或负责人明确不做）后：确认 CI 绿；`git rm -r docs/tmp`；单独提交 `docs: 移除交接文档`。
-
-
-### G5第一片收尾（已实现，待同源码CI）
-
-负责人确认[设计27](../design/12-feature-semantics-and-semantic-types.md#g5-bounded-child-iteration-proposal)后已实施有界服务器each与实际shop取消返库，见[验证42](../qualification/README.md#g5-bounded-each-local)。21类202项定向通过、零失败／跳过；原无each的8题基线775个生成文件逐字节一致。Core和目标IR独立拒绝词法逃逸、外层写入、坏来源／稳定排序／预算／事务／缓存；EACH_ENTITY/EACH_ERROR全角色夹具及两个无导出缺import精确SourceSpan案例已补。shop327／2975／12；旧状态守卫、默认200及SQL原子增量保留，已锁产品上先检查上界，再计算候选，仍留SQL守卫。
-
-实际shop用SourceEditor正式改名Product以避开旧四位精度Product，组合进原Multiplication IT，原72项检查不删、不另启Shop应用。新增100／101行、重复取消、Pay竞争、反序商品锁、可观察父锁等待、非严格会话上限和第二商品晚失败完整回滚，HTTP／MySQL本机NOT_RUN。真实子进程external、匿名401、公开就绪路由、探针冷目录和实际编译装配已验；JSON保存完整SQL并复用已登记驱动会话探测，不靠总SELECT条数猜业务次数。测试IT只编译、未运行。
-
-本片不含请求List、多商品结算／累计／购物车、嵌套循环或删除；取消原本是△，尚不升完整，账本73／4／7不变。#170月度及预算验收记录随本片代码合并提交，不单独造文档CI。推送后不查询／等CI，负责人通知结果；剩余G5功能先设计，不凭已有each擅自扩面。覆盖率未测量，AFT桥请求超时；Windows安全导出完整门仍由Linux CI覆盖，不放宽读取边界。
-
-
-### #171验收及G9逐题保护收尾（本批真库待CI）
-
-负责人通知后，a2540d02e9c3d44c56f0beea435f1f7a24a3961e的#171（40073882068）已核实全门／部署通过，259份XML无失败／错误；原乘法IT128项检查包含有界each、取消竞争、父锁等待、100／101、非严格上限和第二商品晚失败完整回滚，三份SIR／DDL／seed摘要一致。取消从△转✓，账本74／3／7，见[验证43](../qualification/README.md#ci-171-cancellation-accepted)；上节的待CI／73／4／7是实施历史，不再当当前状态。
-
-本批G9没有新增语法，实际market的Item／ItemStatus／Crud追加到实际library基座并有AST范围提取／完整组合文本契约；原library IT一套构建启动保留全部借还／预约，并加系统字段／归属保护、馆员三写／读者拒写、匿名公开GET、角色撤销、Optional出版社HTTP及独立DB快照。external从实际createSlice的子进程环境核对，启动／路由／状态／错误码／未知JSON拒绝均与实际计划对应。新真库本机NOT_RUN，未加CI编排或新的应用。
-
-真实题目执行另发现Optional<Name>被DTO的标准NotBlank和persist候选重复当必填。已分别用真实DTO和服务取得RED；修复按目标Optional事实生成nullable元素适配及候选有值检查，保留标准NotBlank消息bundle／约束名、必填、长度／精度／时区与PATCH版本协议。14类127项定向通过，含移除策略的对照、publisher缺省／null／有值／空白、PATCH缺席／清空／版本条件写；library仍443行／20能力，Java4102行。详见[验证44](../qualification/README.md#g9-topics-optional-name-local)，原始RED/GREEN及哈希target/g9-topic-verification。
-
-两项G9先保持△，不是凭本机去掉折扣；74／3／7不变。AFT桥超时未取诊断，编译以Maven／实际javac为准，未测覆盖率；无UI、浏览器、应用／数据库启动或本机全量构建。代码／回归／文档及#171验收一批提交推送，不查询或等待CI，由负责人通知结果。下一缺口仍是可借数量、日期差罚款、G5请求列表／累计／购物车等，新增设计须先确认，不因现有each擅自扩面。
-
-提交前SQL自审追加真实Mapper RED：market的condition是MySQL8.4保留字，旧注解裸列令实际selectById产生非法SQL。MySqlMapperIdentifiers按8.4.5官方关键字算法的259项事实，仅在实体MyBatis注解引用时转义保留表／身份／列名，普通标识符、物理列名／DDL／JSON不变。实际selectById／insert（实体根参数）／updateById（et Map）转绿，新增原实体Mapper不变性回归，最终为上述14类127项。第一方URL／哈希和关键字一致性在target/g9-topic-verification/mysql-source；不把这项注解修复泛称为所有手写／关联SQL的兼容证明。
