@@ -150,6 +150,9 @@ final class ExpressionRenderer {
          case SUB -> renderArithmetic(left, right, binary.type(), "subtract", "subtractExact");
          case MUL -> renderArithmetic(left, right, binary.type(), "multiply", "multiplyExact");
          case MATCHES -> "SecretDigest.matches(" + right + ", " + left + ")";
+         case DAYS_BETWEEN -> renderDaysBetween(left, right, operandType);
+         case MAX -> renderChoice(left, right, operandType, "max");
+         case MIN -> renderChoice(left, right, operandType, "min");
          case CONTAINS_LITERAL -> throw new IllegalStateException(
                  "literal matching is a query predicate, not a value expression: " + binary.id());
       };
@@ -185,6 +188,32 @@ final class ExpressionRenderer {
       } else {
          throw new IllegalStateException("Unsupported arithmetic operand type: " + type);
       }
+   }
+
+   /**
+   * Whole days from the first value to the second. A date-time counts 24-hour periods, rounded down, so it agrees
+   * with "a day is 24 hours" in a time shift; a date counts calendar days. Either is negative when the second is
+   * earlier, and each argument is evaluated once.
+   */
+   private static String renderDaysBetween(String left, String right, LoweredJavaType type) {
+      if (isScalarKind(type, ScalarKind.INSTANT)) {
+         return "Math.floorDiv(java.time.Duration.between(" + left + ", " + right + ").getSeconds(), 86400L)";
+      } else if (isScalarKind(type, ScalarKind.LOCAL_DATE)) {
+         return "java.time.temporal.ChronoUnit.DAYS.between(" + left + ", " + right + ")";
+      }
+      throw new IllegalStateException("daysBetween needs two dates or two date-times: " + type);
+   }
+
+   /** The larger or smaller of two values of one type; each argument is evaluated once. */
+   private static String renderChoice(String left, String right, LoweredJavaType type, String method) {
+      if (isScalarKind(type, ScalarKind.INTEGER) || isScalarKind(type, ScalarKind.LONG)) {
+         return "Math." + method + "(" + left + ", " + right + ")";
+      } else if (isScalarKind(type, ScalarKind.BIG_DECIMAL)) {
+         return "(" + left + ")." + method + "(" + right + ")";
+      } else if (isScalarKind(type, ScalarKind.INSTANT) || isScalarKind(type, ScalarKind.LOCAL_DATE)) {
+         return "java.util.Collections." + method + "(java.util.List.of(" + left + ", " + right + "))";
+      }
+      throw new IllegalStateException(method + " needs two numbers or two points in time: " + type);
    }
 
    /**

@@ -1397,6 +1397,7 @@ case SpringBootWorkflow.FindStep value:
             this.validateExpression(value.right(), owner);
              this.validatePresentComparison(value, owner);
              this.validateArithmetic(value, owner);
+             this.validateFunction(value, owner);
             this.validateMatches(value, owner);
             break;
          case SpringExpression.DigestExpression value:
@@ -1525,6 +1526,29 @@ case SpringBootWorkflow.FindStep value:
             || scalar.kind() == LoweredJavaType.ScalarKind.BIG_DECIMAL);
       if (!numeric || !value.left().type().equals(value.type()) || !value.right().type().equals(value.type())) {
          this.error(owner, "arithmetic needs two operands of the result's numeric type: " + value.id());
+      }
+   }
+
+   /**
+   * A built-in function takes two operands of one type: daysBetween two dates or two date-times and answers a
+   * long; max and min two numbers or two points in time and answer in that type. Neither takes an optional value.
+   */
+   private void validateFunction(SpringExpression.BinaryExpression value, SpringBootDeclaration owner) {
+      var operator = value.operator();
+      if (operator != SpringExpression.BinaryOperator.DAYS_BETWEEN && operator != SpringExpression.BinaryOperator.MAX
+            && operator != SpringExpression.BinaryOperator.MIN) {
+         return;
+      }
+      LoweredJavaType.ScalarKind kind = value.left().type() instanceof LoweredJavaType.Scalar scalar ? scalar.kind() : null;
+      boolean temporal = kind == LoweredJavaType.ScalarKind.INSTANT || kind == LoweredJavaType.ScalarKind.LOCAL_DATE;
+      boolean numeric = kind == LoweredJavaType.ScalarKind.INTEGER || kind == LoweredJavaType.ScalarKind.LONG
+         || kind == LoweredJavaType.ScalarKind.BIG_DECIMAL;
+      boolean valid = value.left().type().equals(value.right().type()) && value.presentComparison().isEmpty()
+         && (operator == SpringExpression.BinaryOperator.DAYS_BETWEEN
+            ? temporal && value.type().equals(new LoweredJavaType.Scalar(LoweredJavaType.ScalarKind.LONG))
+            : (temporal || numeric) && value.type().equals(value.left().type()));
+      if (!valid) {
+         this.error(owner, "a built-in function needs two operands of one supported type and answers its declared type: " + value.id());
       }
    }
 

@@ -34,7 +34,7 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 - 语义补充（2026-10-18～20）：内置 `use Crud { entity: X; }` 一句给出增删改查，`owner` 让每一行只属于一个账号，`path` 给出 REST 路径；错误可以声明 403，工作流可以读当前用户的字段（`actor.role`），授权就是以 `actor` 为一边的普通检查；`expose … [put|delete] at "/notes/{id}"` 自定 HTTP 方法和带路径参数的路径；已上线的列可以改默认值。部署第二版用 `Crud`（含 `owner`、`path`）管理笔记和标签，CI 冒烟在真实 MySQL 上核对 401／403／404 与 REST 路径。
 - 已上线系统的结构变更（2026-10-20，[设计 12 第 14 节](design/12-feature-semantics-and-semantic-types.md)）：除加列、改名、改默认值外，可以放宽（整数变宽、文本变长或去掉长度、必填变可空），可以删实体、字段，但打包时要写 `--confirm-backup yes`（声明已备份，工具不检查）。本机测试通过；真实 MySQL 上的验证由新增的部署第三版冒烟承担，待提交后的 CI。删掉引用别的表的列、主键列仍不支持。
 - 唯一约束（2026-10-20，[设计 12 第 15 节](design/12-feature-semantics-and-semantic-types.md)）：`persist 变量 else 错误` 能说明新建的行撞上唯一约束时报哪个错误（原来是 500）；实体可写 `unique (a, b);` 声明联合唯一，建表时成为复合唯一索引，保留数据的更新里只能随新建表创建。
-- 选题试写（[报告](qualification/TOPIC_TRIALS.md)）：八个典型后端的 84 条需求，当前 76 条完整写出、1 条带折扣、7 条尚未写出（90.5%／1.2%／8.3%）。带折扣的是商城的单商品下单；写不出的主要是列表与批量处理、跨行数量、日期差和图表导出。缺陷 D1 到 D5 都已修，八个题目的生成工程由 CI 逐个离线编译。
+- 选题试写（[报告](qualification/TOPIC_TRIALS.md)）：八个典型后端的 84 条需求，当前 76 条完整写出、3 条带折扣、5 条尚未写出（90.5%／3.6%／6.0%）。带折扣的是商城的单商品下单，以及等待真库验收的图书可借数量和逾期罚款；写不出的主要是列表与批量处理和图表导出。缺陷 D1 到 D5 都已修，八个题目的生成工程由 CI 逐个离线编译。
 
 - G7 可选值（2026-10-20，已实现；后续 #140 已回归验收）：`x is none`／`x is present` 判断空值，兼容类型可比较；任一侧为空普通比较均为 false（含 `!=`），`not` 仍普通取反。显式组合空值判断可写可选筛选，不自动省略条件，PATCH `.present` 不变。tasks、market 已更新，Java 真值表与题目内存生成已验证；八题生成工程离线编译和真实 MySQL／HTTP 为 NOT_RUN。Windows 部署导出测试因现有安全读源能力缺失失败，未放宽边界。方案与限制见[设计 12 第 17 节](design/12-feature-semantics-and-semantic-types.md)，定向证据见[验证说明](qualification/README.md)。
 

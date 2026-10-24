@@ -1090,6 +1090,24 @@ final class TypePass {
                 this.diagnostics.add(DiagnosticBuilder.error("SIR-TYPE-001",
                    "乘法需要同类数值，或 Decimal 与整数；不自动提升 Int32 字段到 Int64", expr.span()));
                 return null;
+             case DAYS_BETWEEN:
+                // Whole days from the first to the second: both moments, or both dates. The answer is a
+                // 64-bit integer so it can be multiplied by a rate or compared with a count of days.
+                if (!leftType.equals(rightType) || (leftType != PrimitiveType.DATE_TIME && leftType != PrimitiveType.DATE)) {
+                   this.diagnostics.add(DiagnosticBuilder.error("SIR-TYPE-001",
+                      "daysBetween 的两个参数必须同为 Moment 或同为 Day（不能是可选值）", expr.span()));
+                   return null;
+                }
+                return PrimitiveType.INT64;
+             case MAX:
+             case MIN:
+                if (!leftType.equals(rightType) || !this.isOrderedValue(leftType)) {
+                   this.diagnostics.add(DiagnosticBuilder.error("SIR-TYPE-001",
+                      (expr.operator() == AstBinaryOperator.MAX ? "max" : "min")
+                         + " 的两个参数必须是同一种数值、Moment 或 Day（不能是可选值）", expr.span()));
+                   return null;
+                }
+                return leftType;
              case ADD:
              case SUB:
                if (!leftType.equals(rightType) || !TypeRules.isNumeric(leftType)) {
@@ -1137,9 +1155,14 @@ final class TypePass {
 
    private boolean mixesInt32AndInt64(AstBinaryOperator operator) {
       return switch (operator) {
-         case EQ, NE, GT, GE, LT, LE, ADD, SUB, MUL -> true;
+         case EQ, NE, GT, GE, LT, LE, ADD, SUB, MUL, MAX, MIN -> true;
          default -> false;
       };
+   }
+
+   /** The values max and min choose between: numbers and points in time, never text, flags or optional values. */
+   private boolean isOrderedValue(SirType type) {
+      return TypeRules.isNumeric(type) || type == PrimitiveType.DATE_TIME || type == PrimitiveType.DATE;
    }
 
    /**

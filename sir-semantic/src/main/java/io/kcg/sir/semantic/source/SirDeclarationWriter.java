@@ -44,6 +44,9 @@ public final class SirDeclarationWriter {
       Map.entry("GT", RELATIONAL), Map.entry("GE", RELATIONAL), Map.entry("LT", RELATIONAL), Map.entry("LE", RELATIONAL),
       Map.entry("CONTAINS_LITERAL", CONTAINS), Map.entry("MATCHES", CONTAINS), Map.entry("ADD", ADDITIVE), Map.entry("SUB", ADDITIVE), Map.entry("MUL", MULTIPLICATIVE)
    );
+   private static final Map<String, String> FUNCTION_TEXT = Map.of(
+      "DAYS_BETWEEN", "daysBetween", "MAX", "max", "MIN", "min"
+   );
    private static final Map<String, String> PRIMITIVE_TEXT = Map.of(
       "UNIT", "Unit"
    );
@@ -475,6 +478,11 @@ case "FindStep" -> this.writeFind(step, out);
 
    private static String binary(StructNode node) {
       String operator = text(node, "operator");
+      String function = FUNCTION_TEXT.get(operator);
+      if (function != null) {
+         // A built-in function is a binary node written as a call; its arguments need no parentheses.
+         return function + "(" + expression(child(node, "left"), 0) + ", " + expression(child(node, "right"), 0) + ")";
+      }
       Integer level = OPERATOR_LEVEL.get(operator);
       if (level == null) {
          throw new IllegalArgumentException("unknown binary operator " + operator);

@@ -1385,7 +1385,7 @@ capability Rotate {
 }
 ```
 
-规则：守卫是布尔表达式，由“目标字段与值的比较”和空值判断（目标的可选字段，或不读取目标的可选值）用 `and`／`or`／`not` 组合，比较的右边可以是值，也可以恰好是目标的另一个字段（`course.enrolled < course.capacity`，由数据库拿两列比）；目标必须是 `load` 出来的行；实体不能带 `versioned`；错误要在 `fails` 里声明；绑定的值**不能读目标自己的字段**（守卫只钉住它判断的那些字段，其它字段在内存里是旧的，读它们再写回会丢失更新），可以读 `input`、常量、`now()` 和别的变量，唯一的例外是下一节的“本字段加减一个值”（`SIR-VALID-007`）；带守卫的 `update` 后面要有对同一行的普通 `persist`，这一行只能有这一个 `update`。
+规则：守卫是布尔表达式，由“目标字段与值的比较”和空值判断（目标的可选字段，或不读取目标的可选值）用 `and`／`or`／`not` 组合，比较的右边可以是值，也可以恰好是目标的另一个字段（`course.enrolled < course.capacity`，由数据库拿两列比）；目标必须是 `load` 出来的行；实体不能带 `versioned`；错误要在 `fails` 里声明；绑定的值**不能读目标自己的字段**（守卫只钉住它判断的那些字段，其它字段在内存里是旧的，读它们再写回会丢失更新），可以读 `input`、常量、`now()` 和别的变量，例外有两个：下一节的“本字段加减一个值”，以及目标是用 `load … for update` 锁住的行（锁一直持有到事务结束，读到的就是存着的值，所以可以读它自己的字段）（`SIR-VALID-007`）；带守卫的 `update` 后面要有对同一行的普通 `persist`，这一行只能有这一个 `update`。
 
 守卫在**一条 SQL 里**检查并写入，所以并发下只有一个请求成功。它依赖数据库驱动把“匹配的行数”当影响行数（MySQL Connector/J 的默认行为）；如果部署时在连接串上加了 `useAffectedRows=true`，“设成和原来一样的值”会被当成没有匹配而报守卫的错误。
 
@@ -1710,6 +1710,8 @@ capability RestoreInventory {
 | `- x`、`not x` | 负号、非 |
 | `a + b`、`a - b` | 同底层的整数（32 位或 64 位）或 `Money` 加减；整数溢出会抛错而不是回绕 |
 | `a * b` | 同型整数精确乘法，或 Decimal 底层值乘 Decimal／整数；金额乘整数无损转换，不经浮点数 |
+| `daysBetween(a, b)` | 从 `a` 到 `b` 经过的整天数，64 位整数，见下 |
+| `max(a, b)`、`min(a, b)` | 两个同类型值里较大／较小的一个，见下 |
 | `时刻 + N unit` | 时间平移，`unit` 是 `second(s)`、`minute(s)`、`hour(s)`、`day(s)` |
 | `a < b`、`<=`、`>`、`>=` | 比较，两边同类型 |
 | `a == b`、`a != b` | 相等 |
@@ -1751,6 +1753,43 @@ capability RecordSale {
 | 有值 | 空 | false | false | true |
 | 相同值 | 相同值 | true | false | false |
 | 不同值 | 不同值 | false | true | true |
+
+**内置函数。**`daysBetween(a, b)` 是从 `a` 到 `b` 经过的整天数，结果是 64 位整数：两个 `Moment` 按 24 小时一天、向下取整（3 天半是 3，早 1 小时是 -1）；两个 `Day` 按日历天数相减。`b` 早于 `a` 时是负数。`max(a, b)`、`min(a, b)` 取两个同类型值里较大或较小的一个，可以是同一种数值，也可以是两个 `Moment` 或两个 `Day`；整数字面量会跟着另一边变宽（`max(0, daysBetween(...))` 里的 `0` 按 64 位理解）。三个函数的参数都不能是 `Optional`，也不能是文本或布尔；参数来自请求时和算术一样必须有值。它们和算术一样在 Java 里计算：查询条件里只能放在不读取 `item` 的一侧，`any(...)` 里不能用；计算视图字段可以用来源行的字段。`max`、`min`、`daysBetween` 不是保留字，别处仍可以当名字。
+
+逾期罚款是典型用法：还书时锁住借阅记录，按逾期整天数乘费率，提前还不罚：
+
+```sir-declarations
+entity Loan persistent {
+  identity id: Id generated auto;
+  field dueAt: Moment;
+  field returned: Flag default false;
+  field fine: Money default 0.00;
+}
+view LoanView from Loan {
+  field id: Id;
+  field fine: Money;
+}
+input LoanRef { field id: Id; }
+error AlreadyReturned http 409;
+error LoanNotFound http 404;
+capability GiveBack {
+  input LoanRef;
+  output LoanView;
+  fails AlreadyReturned;
+  fails LoanNotFound;
+  requires atomic;
+  expose command;
+  workflow {
+    load Loan by input.id as loan for update else LoanNotFound;
+    update loan when loan.returned == false else AlreadyReturned {
+      returned: true;
+      fine: max(0, daysBetween(loan.dueAt, now())) * 0.50;
+    }
+    persist loan;
+    return loan;
+  }
+}
+```
 
 **时间平移**：底必须是 `Moment`，或者只按天的 `Day`；数量最大 2147483647；孤立的“15 minutes”不是表达式。“一天”按 24 小时算。`now() + 15 minutes`、`input.start + 3 days`。
 

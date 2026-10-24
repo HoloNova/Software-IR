@@ -83,8 +83,11 @@ public sealed interface SpringExpression
       CONTAINS_LITERAL,
       MATCHES,
       ADD,
-       SUB,
-       MUL;
+      SUB,
+      MUL,
+      DAYS_BETWEEN,
+      MAX,
+      MIN;
    }
 
    /**

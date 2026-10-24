@@ -64,9 +64,16 @@ final class ViewExpressionValidation {
                         case INTEGER, LONG, BIG_DECIMAL, STRING, LOCAL_DATE, INSTANT -> true;
                         default -> false;
                     };
+            case DAYS_BETWEEN -> left.equals(right) && temporal(left) && expression.type().equals(new LoweredJavaType.Scalar(LoweredJavaType.ScalarKind.LONG));
+            case MAX, MIN -> a.equals(b) && left.equals(right) && (numeric(left) || temporal(left)) && left.equals(expression.type());
             case MATCHES, CONTAINS_LITERAL -> false;
         };
         if (!valid) errors.add("computed binary expression has inconsistent types");
+    }
+
+    private static boolean temporal(LoweredJavaType type) {
+        return type instanceof LoweredJavaType.Scalar scalar
+                && (scalar.kind() == LoweredJavaType.ScalarKind.INSTANT || scalar.kind() == LoweredJavaType.ScalarKind.LOCAL_DATE);
     }
 
     private static void literal(SpringExpression expression, LoweredJavaType.ScalarKind expected, List<String> errors) {

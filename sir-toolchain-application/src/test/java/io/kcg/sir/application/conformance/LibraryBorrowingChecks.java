@@ -1,5 +1,6 @@
 package io.kcg.sir.application.conformance;
 
+import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,7 +13,7 @@ import java.util.concurrent.TimeUnit;
 /** Independent HTTP and observer-connection checks; fixture control writes are explicitly labelled. */
 final class LibraryBorrowingChecks {
     private static final int LIMIT = 5;
-    private static final int USER_COUNTER = 2, LOAN_READER = 1, LOAN_COPY = 2, LOAN_RETURNED = 6;
+    private static final int USER_COUNTER = 2, LOAN_READER = 1, LOAN_COPY = 2, LOAN_RETURNED = 6, LOAN_FINE = 8;
     private LibraryBorrowingChecks() {}
 
     /** Fixed expectations checked against the actual SIR declarations, never inferred from a response. */
@@ -90,13 +91,21 @@ final class LibraryBorrowingChecks {
         s.check("only the first return releases a slot", counter(s, observer, 1) == 4, snapshot(s, observer).users().toString());
         String[] loan = parts(row(s.rowsOf(observer, "loan"), loanId));
         s.check("return marker and timestamp are both persisted once", loan[LOAN_RETURNED].equals("1") && !loan[7].equals("null"), String.join("|", loan));
+        s.check("a return before the due date is not fined", amount(loan[LOAN_FINE]).signum() == 0, String.join("|", loan));
         s.check("returned copy is available", parts(row(s.rowsOf(observer, "copy"), copyId))[3].equals("AVAILABLE"), Long.toString(copyId));
         invariant(s, observer, "concurrent duplicate returns cannot underflow a counter");
     }
 
     private static void mixedBorrowAndReturn(BusinessSliceHarness s, MysqlObserver observer, HttpAssertionClient http) throws Exception {
+        // 73 hours overdue is three whole days whatever the clock skew between the fixture and the application.
+        s.fixtureStatement("UPDATE loan SET due_at = UTC_TIMESTAMP(6) - INTERVAL 73 HOUR WHERE id = 2");
         var responses = parallel(List.of(() -> giveBack(s, http, 1, 2), () -> borrow(s, http, 1, 13)));
         status(s, "concurrent return succeeds", responses.get(0), 200);
+        BigDecimal fine = new BigDecimal("1.50");
+        s.check("an overdue return answers 0.50 for each whole day late",
+                amount(BusinessSliceHarness.field(responses.get(0).body(), "fine")).compareTo(fine) == 0, responses.get(0).body());
+        s.check("the fine is stored on the returned loan",
+                amount(parts(row(s.rowsOf(observer, "loan"), 2))[LOAN_FINE]).compareTo(fine) == 0, String.join("|", parts(row(s.rowsOf(observer, "loan"), 2))));
         var borrow = responses.get(1);
         s.check("borrow/return race follows either valid serial order", borrow.statusCode() == 201 || borrow.statusCode() == 409, statuses(responses));
         if (borrow.statusCode() == 409) error(s, "borrow before the return still sees a full reader", borrow, Failure.BORROW_LIMIT_EXCEEDED);
@@ -163,6 +172,9 @@ final class LibraryBorrowingChecks {
     private static String row(List<String> rows, long id) { return rows.stream().filter(r -> r.startsWith(id + "|")).findFirst().orElseThrow(); }
     private static String[] parts(String row) { return row.split("\\|", -1); }
     private static boolean active(String[] loan) { return loan[LOAN_RETURNED].equals("0"); }
+    private static BigDecimal amount(String text) {
+        try { return new BigDecimal(text.strip()); } catch (RuntimeException e) { return new BigDecimal("-999"); }
+    }
     private record Snapshot(List<String> users, List<String> loans, List<String> copies) {
         Snapshot { users = List.copyOf(users); loans = List.copyOf(loans); copies = List.copyOf(copies); }
     }

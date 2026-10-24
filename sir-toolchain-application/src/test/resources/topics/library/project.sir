@@ -77,6 +77,8 @@ software CampusLibrary {
       field renewals: Count default 0;
       field returned: Flag default false;
       field returnedAt: Optional<Moment>;
+      // Charged when the copy comes back: 0.50 for every whole day past dueAt, nothing for an early return.
+      field fine: Money default 0.00;
     }
 
     // Only pending tickets live here; ids assigned under the Book lock define FIFO.
@@ -166,6 +168,7 @@ software CampusLibrary {
       field renewals: Count;
       field returned: Flag;
       field returnedAt: Optional<Moment>;
+      field fine: Money;
     }
     input BorrowInput {
       field barcode: Code;
@@ -248,9 +251,11 @@ software CampusLibrary {
           activeLoans: reader.activeLoans - 1;
         }
         persist reader;
+        // The loan is locked, so its own dueAt may be read in the guarded update.
         update loan when loan.returned == false else AlreadyReturned {
           returned: true;
           returnedAt: now();
+          fine: max(0, daysBetween(loan.dueAt, now())) * 0.50;
         }
         persist loan;
         update copy when copy.status == CopyStatus.BORROWED else CopyNotAvailable {

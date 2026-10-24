@@ -587,7 +587,10 @@ int returnCount = 0;
             }
          }
          case AstBinaryExpression e -> {
-            boolean arithmetic = e.operator() == AstBinaryOperator.ADD || e.operator() == AstBinaryOperator.SUB || e.operator() == AstBinaryOperator.MUL;
+            // A built-in function is computed in Java like arithmetic, so it may not read the queried row either.
+            boolean arithmetic = e.operator() == AstBinaryOperator.ADD || e.operator() == AstBinaryOperator.SUB
+               || e.operator() == AstBinaryOperator.MUL || e.operator() == AstBinaryOperator.DAYS_BETWEEN
+               || e.operator() == AstBinaryOperator.MAX || e.operator() == AstBinaryOperator.MIN;
             if (arithmetic && (insideAny || this.mentionsItem(e))) {
                this.diagnostics.add(DiagnosticBuilder.error("SIR-VALID-001", ARITHMETIC_ON_COLUMN, e.span()));
             } else {
@@ -1462,10 +1465,15 @@ int returnCount = 0;
       }
 
       this.validateGuardShape(guard, target);
+      // A row read "for update" is locked for the rest of the transaction, so what was read is still what is stored:
+      // its other fields may be read again. Without the lock only the guarded columns are pinned.
+      boolean locked = io.kcg.sir.ast.AstSteps.walk(capDecl.workflow().steps())
+          .anyMatch(other -> other instanceof AstLoadStep load && load.forUpdate()
+              && target.equals(this.typed.referenceBindings().get(other.id())));
       for (AstBinding binding : step.bindings()) {
-         if (this.mentionsVariable(binding.value(), target) && !this.isSelfRelative(binding, target)) {
+         if (!locked && this.mentionsVariable(binding.value(), target) && !this.isSelfRelative(binding, target)) {
             this.diagnostics.add(DiagnosticBuilder.error(
-               "SIR-VALID-007", "带守卫的 update 的绑定值不能读取目标自身的字段（只有“本字段 + 值”或“本字段 - 值”可以）: "
+               "SIR-VALID-007", "带守卫的 update 的绑定值不能读取目标自身的字段（只有“本字段 + 值”或“本字段 - 值”可以；先用 load … for update 锁住这一行则可以）: "
                   + binding.fieldName().text(), binding.value().span()));
          }
       }

@@ -13,5 +13,11 @@ public enum AstBinaryOperator {
     MATCHES,
     ADD,
     SUB,
-    MUL
+    MUL,
+    /** {@code daysBetween(a, b)}: whole days from a to b, written as a call but carried as a binary node. */
+    DAYS_BETWEEN,
+    /** {@code max(a, b)}: the larger of two values of one comparable type. */
+    MAX,
+    /** {@code min(a, b)}: the smaller of two values of one comparable type. */
+    MIN
 }

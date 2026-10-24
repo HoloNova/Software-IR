@@ -808,6 +808,18 @@ final class SirAstBuilder {
             return new AstCountExpression(ids.id(path), source.span(context),
                     nameRef(predicate.entity, path, "entity"), expression(predicate.conditions, path));
         }
+        if (context.functionCall() != null) {
+            SirParser.FunctionCallContext call = context.functionCall();
+            AstBinaryOperator operator = switch (call.name.getText()) {
+                case "daysBetween" -> AstBinaryOperator.DAYS_BETWEEN;
+                case "max" -> AstBinaryOperator.MAX;
+                case "min" -> AstBinaryOperator.MIN;
+                default -> throw new IllegalStateException("the grammar admits only the built-in function names");
+            };
+            // The node spans the whole call, so a diagnostic on it points at the function name too.
+            return new AstBinaryExpression(ids.id(path), source.span(context), expression(call.left, path), operator,
+                    expression(call.right, path));
+        }
         if (context.anyPredicate() != null) {
             SirParser.AnyPredicateContext predicate = context.anyPredicate();
             return new AstAnyExpression(

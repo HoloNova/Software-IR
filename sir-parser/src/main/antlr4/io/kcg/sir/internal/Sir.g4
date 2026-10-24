@@ -499,7 +499,15 @@ primaryExpression
     | NOW LPAREN RPAREN
     | anyPredicate
     | countPredicate
+    | functionCall
     | groupedExpression
+    ;
+
+// Built-in two-argument functions. The names are contextual: a field may still be called max or min, because a
+// name is never otherwise followed by an opening parenthesis.
+functionCall
+    : {_input.LT(1).getText().equals("daysBetween") || _input.LT(1).getText().equals("max")
+        || _input.LT(1).getText().equals("min")}? name=IDENT LPAREN left=expression COMMA right=expression RPAREN
     ;
 
 groupedExpression

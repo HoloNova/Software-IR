@@ -1,0 +1,71 @@
+sir 0.3
+software Fines {
+  metadata {
+    displayName "Fines";
+    namespace "example.fines";
+  }
+  target {
+    language java 21;
+    framework spring_boot;
+    persistence mybatis_plus;
+    database mysql;
+    build maven;
+    interface rest;
+  }
+  sources { }
+  imports { }
+  declarations {
+    entity Loan persistent {
+      identity id: Id generated auto;
+      field dueAt: Moment;
+      field returned: Flag default false;
+      field returnedAt: Optional<Moment>;
+      field fine: Money default 0.00;
+      field startDay: Day;
+      field endDay: Day;
+    }
+    view LoanView from Loan {
+      field id: Id;
+      field fine: Money;
+      field plannedDays: Serial = daysBetween(item.startDay, item.endDay);
+      field lastDay: Day = max(item.startDay, item.endDay);
+    }
+    input LoanRef {
+      field id: Id;
+    }
+    input Window {
+      field since: Moment;
+      field until: Moment;
+      field cap: Serial;
+    }
+    error AlreadyReturned http 409;
+    error LoanNotFound http 404;
+    capability GiveBack {
+      input LoanRef;
+      output LoanView;
+      fails AlreadyReturned;
+      fails LoanNotFound;
+      requires atomic;
+      expose command;
+      workflow {
+        load Loan by input.id as loan for update else LoanNotFound;
+        update loan when loan.returned == false else AlreadyReturned {
+          returned: true;
+          returnedAt: now();
+          fine: max(0, daysBetween(loan.dueAt, now())) * 0.50;
+        }
+        persist loan;
+        return loan;
+      }
+    }
+    capability CappedDays {
+      input Window;
+      output Serial;
+      requires readonly;
+      expose query;
+      workflow {
+        return min(daysBetween(input.since, input.until), input.cap);
+      }
+    }
+  }
+}

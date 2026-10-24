@@ -42,6 +42,12 @@ final class ArithmeticInputs {
                 && (scalar.kind() == LoweredJavaType.ScalarKind.INTEGER || scalar.kind() == LoweredJavaType.ScalarKind.LONG);
     }
 
+    /** A date or date-time; only a built-in function makes one of these a required value. */
+    private static boolean temporal(LoweredJavaType type) {
+        return type instanceof LoweredJavaType.Scalar scalar
+                && (scalar.kind() == LoweredJavaType.ScalarKind.INSTANT || scalar.kind() == LoweredJavaType.ScalarKind.LOCAL_DATE);
+    }
+
     private static boolean numeric(LoweredJavaType type) {
         return integral(type) || type instanceof LoweredJavaType.Scalar scalar && scalar.kind() == LoweredJavaType.ScalarKind.BIG_DECIMAL;
     }
@@ -50,7 +56,11 @@ final class ArithmeticInputs {
             Map<SymbolId, SpringExpression.MemberExpression> fields) {
         switch (expression) {
             case SpringExpression.BinaryExpression value -> {
-                boolean required = arithmetic || switch (value.operator()) { case ADD, SUB, MUL -> true; default -> false; };
+                // A built-in function cannot answer without both arguments either, so its inputs are required the same way.
+                boolean required = arithmetic || switch (value.operator()) {
+                    case ADD, SUB, MUL, DAYS_BETWEEN, MAX, MIN -> true;
+                    default -> false;
+                };
                 collect(value.left(), required, input, fields);
                 collect(value.right(), required, input, fields);
             }
@@ -58,7 +68,8 @@ final class ArithmeticInputs {
                     arithmetic || value.operator() == SpringExpression.UnaryOperator.NEGATE, input, fields);
             case SpringExpression.IntegralToDecimal value -> collect(value.operand(), arithmetic, input, fields);
             case SpringExpression.MemberExpression value -> {
-                if (arithmetic && numeric(value.type()) && value.receiver() instanceof SpringExpression.NameExpression receiver
+                if (arithmetic && (numeric(value.type()) || temporal(value.type()))
+                        && value.receiver() instanceof SpringExpression.NameExpression receiver
                         && receiver.resolvedSymbol().equals(input)) {
                     fields.putIfAbsent(value.resolvedMember(), value);
                 }
