@@ -146,6 +146,8 @@ public final class Features {
         new Parameter("writeRole", Kind.NAME, Optional.of(""), Pattern.compile("([A-Za-z][A-Za-z0-9]{0,63})?"), 0, 0, "writeRole must name an enum member"),
         new Parameter("roleField", Kind.NAME, Optional.of("role"), NAME, 0, 0, "roleField must name the account's enum field"),
         new Parameter("writeExclude", Kind.NAMES, Optional.of("[]"), NAME, 0, 0, "writeExclude must be a list of fields"),
+        new Parameter("readView", Kind.NAME, Optional.of(""), Pattern.compile("([A-Za-z][A-Za-z0-9]{0,63})?"), 0, 0,
+            "readView must name a view of the managed entity"),
         new Parameter("read", Kind.NAME, Optional.of(""), Pattern.compile("(public)?"), 0, 0, "read must be public or omitted")),
         "/io/kcg/sir/semantic/feature/crud.sir");
 

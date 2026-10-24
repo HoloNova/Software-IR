@@ -467,7 +467,50 @@ view CourseView from Course {
 }
 ```
 
-计算在组装响应时进行，直接返回、分页和嵌套视图都一样，不增加数据库列、迁移或 SQL。用到的字段不必出现在响应里。整数溢出会报错，不会回绕；金额计算保持精确值，不按 `Money` 的存储精度舍入。`where` 和 `order by` 只能用实体字段，不能用计算字段的名字。跨行的数量（比如一本书还能借几册）、聚合和时间差仍然写不出来。
+计算在组装响应时进行，直接返回、分页和嵌套视图都一样，不增加数据库列、迁移或 SQL。用到的字段不必出现在响应里。整数溢出会报错，不会回绕；金额计算保持精确值，不按 `Money` 的存储精度舍入。`where` 和 `order by` 只能用实体字段，不能用计算字段的名字。聚合、金额合计和时间差仍然写不出来。
+
+**跨行计数。**视图字段可以写成 `field 数量: Serial = count(子实体, 关联条件);`，统计子行中符合条件的有多少行。被数的实体和条件里读的字段都要能找到（多文件时同样需要 import）；条件里必须用子实体的一个 `Ref` 字段与 `item` 比较，这就是关联，写别的形式会被拒绝。结果是 64 位整数，0 行就是 0，不会变成空值。计数只能出现在视图字段的完整取值里（以及这样的视图作为分页结果）：实体 `scope`、输入字段、工作流步骤、`where`／`order by` 里都不行。
+
+```sir-declarations
+enum CopyStatus { AVAILABLE, BORROWED, LOST }
+entity Book persistent {
+  identity id: Id generated auto;
+  field title: Name;
+}
+entity Copy persistent {
+  identity id: Id generated auto;
+  field book: Ref<Book>;
+  field status: CopyStatus default CopyStatus.AVAILABLE;
+}
+view CatalogueBook from Book {
+  field id: Id;
+  field title: Name;
+  field availableCopies: Serial =
+    count(Copy, book == item and status == CopyStatus.AVAILABLE);
+}
+use Crud {
+  entity: Book;
+  path: books;
+  readView: CatalogueBook;
+}
+input SearchBooks { field keyword: Text; field page: PageNo; field size: PageSize; }
+error BadPage;
+capability SearchByTitle {
+  input SearchBooks;
+  output Page<CatalogueBook>;
+  fails BadPage;
+  requires readonly;
+  expose query at "/catalogue";
+  workflow {
+    find Book where item.title containsLiteral input.keyword
+      order by title ascending, id ascending
+      Page input.page, input.size else BadPage as rows;
+    return rows;
+  }
+}
+```
+
+计数的读法是**先读根行，再对当前页的子行做一次分组统计**：一个分页请求不会每行再查一次，空页一行子查询都不发。同一个请求内根行和计数看同一个只读快照（`REPEATABLE_READ`），不同请求之间会随写入变化。因此这个字段是“现在书架上几本”，**不是借得到的保证**：真正能否借出仍由借书路径的名额、副本状态和预约顺序决定。子实体自身的 `scope` 照常生效（软删除的副本不会被数进去）。
 
 一个视图字段还可以是关联实体的视图（嵌套）：
 
@@ -1891,6 +1934,7 @@ use Crud {
 | `roleField: role` | 默认是 `role`。`writeRole` 读的是 `writer` 账号上的这个字段，它必须是非可选的枚举，`writeRole` 的值是这个枚举的成员。 |
 | `writeExclude: [status, createdAt]` | 这些字段同时从创建、普通更新和局部更新的输入里去掉，也不能被赋值；视图里照常显示，也不会自动赋值。不能排除没有默认值的必填字段，也不能排到更新时没有字段可写。 |
 | `read: public` | `Get`／`List` 不要求登录，也不加“只看自己”的条件，但实体 `scope` 仍然生效。不写时保持原来的读权限。 |
+| `readView: CatalogueBook` | `Get`／`List` 返回这个视图而不是自动生成的 `${entity}View`；创建、更新、删除的输入与返回不变，仍是自动视图。视图必须是同一实体的视图，只能少列字段，不能改变写权限或路由。 |
 
 例如 `use Crud { entity: Book; writer: User; writeRole: LIBRARIAN; }` 保持目录公开读、仅馆员可写。`use Crud { entity: Item; owner: seller; read: public; writeExclude: [status, createdAt]; }` 公开符合 scope 的商品，并仅让本人写可写字段；**不自动筛选在售商品**。角色与归属为 AND，不给予管理员越权；未登录 401、角色错误 403、别人行 404，版本冲突保持 409。完整可编译样例见 [crud-access.sir](../sir-toolchain-application/src/test/resources/valid/crud-access.sir)。
 

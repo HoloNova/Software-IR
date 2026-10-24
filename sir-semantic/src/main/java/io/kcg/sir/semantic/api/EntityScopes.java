@@ -56,10 +56,24 @@ final class EntityScopes {
       if (scopes.scoped.isEmpty()) {
          return declarations;
       }
-      return declarations.stream().map(d -> d instanceof NormalizedCapability c ? scopes.capability(c) : d).toList();
+      return declarations.stream().map(d -> d instanceof NormalizedCapability c ? scopes.capability(c)
+          : d instanceof io.kcg.sir.semantic.model.NormalizedView v ? scopes.view(v) : d).toList();
    }
 
-   private NormalizedCapability capability(NormalizedCapability c) {
+    private io.kcg.sir.semantic.model.NormalizedView view(io.kcg.sir.semantic.model.NormalizedView view) {
+       var fields=view.fields().stream().map(field -> {
+          if (!(field.value() instanceof io.kcg.sir.semantic.model.NormalizedViewField.CountRelated count)
+                || !this.scoped.containsKey(count.entity())) return field;
+          String at=field.sourceNodeId().value()+"/count-scope";
+          var conditions=and(at+"/and",count.conditions(),this.copy(this.scope(count.entity()),at,Optional.empty(),count.entity()));
+          return new io.kcg.sir.semantic.model.NormalizedViewField(field.id(),field.name(),field.span(),field.sourceNodeId(),field.type(),
+             new io.kcg.sir.semantic.model.NormalizedViewField.CountRelated(count.rowSymbol(),count.entity(),count.connectionField(),conditions),
+             field.directNamedTypeReferenceSiteId());
+       }).toList();
+       return new io.kcg.sir.semantic.model.NormalizedView(view.id(),view.name(),view.span(),view.sourceNodeId(),view.sourceEntity(),fields);
+    }
+
+    private NormalizedCapability capability(NormalizedCapability c) {
       NormalizedWorkflow w=c.workflow();
       return new NormalizedCapability(c.id(),c.name(),c.span(),c.sourceNodeId(),c.actorSymbol(),c.inputSymbol(),c.outputType(),
           c.fails(),c.requires(),c.exposure(),c.method(),c.path(),new NormalizedWorkflow(w.id(),w.span(),w.sourceNodeId(),this.steps(w.steps())));

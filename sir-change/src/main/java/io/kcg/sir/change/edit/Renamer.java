@@ -148,20 +148,30 @@ final class Renamer {
       };
    }
 
-   /** View fields that show an entity field, and patch payload fields that change it. */
-   private static List<SymbolId> followers(NormalizedSemanticModel model, SymbolId field) {
-      List<SymbolId> followers = new ArrayList<>();
-      for (NormalizedDeclaration declaration : model.declarations()) {
-         if (declaration instanceof NormalizedView view) {
-            view.fields().stream().filter(f -> !(f.value() instanceof NormalizedViewField.Computed))
-                   .filter(f -> f.sourceField().equals(field)).map(NormalizedViewField::id).forEach(followers::add);
-         } else if (declaration instanceof NormalizedInput input) {
-            input.fields().stream().filter(f -> f.patchSourceField().equals(Optional.of(field))).map(NormalizedField::id).forEach(followers::add);
-         }
-      }
+    /** View fields that show an entity field, and patch payload fields that change it. */
+    private static List<SymbolId> followers(NormalizedSemanticModel model, SymbolId field) {
+       List<SymbolId> followers = new ArrayList<>();
+       for (NormalizedDeclaration declaration : model.declarations()) {
+          if (declaration instanceof NormalizedView view) {
+             view.fields().stream().filter(Renamer::showsAColumn)
+                    .filter(f -> f.sourceField().equals(field)).map(NormalizedViewField::id).forEach(followers::add);
+          } else if (declaration instanceof NormalizedInput input) {
+             input.fields().stream().filter(f -> f.patchSourceField().equals(Optional.of(field))).map(NormalizedField::id).forEach(followers::add);
+          }
+       }
 
-      return followers;
-   }
+       return followers;
+    }
+
+    /** A projection that reads one column of the source row; a computed or counted value is its own output name. */
+    private static boolean showsAColumn(NormalizedViewField field) {
+       return switch (field.value()) {
+          case NormalizedViewField.Column ignored -> true;
+          case NormalizedViewField.Related ignored -> true;
+          case NormalizedViewField.Computed ignored -> false;
+          case NormalizedViewField.CountRelated ignored -> false;
+       };
+    }
 
    /** Rename parameter reference ranges by their resolved identities, never by matching another argument's text. */
    private static NormalizedFeatureUse rename(NormalizedFeatureUse use, Map<SymbolId, String> names, Map<SymbolId, String> oldNames) {

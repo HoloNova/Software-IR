@@ -1475,3 +1475,102 @@ G9TopicComposition以实际library全文为基座，只提取实际market的Item
 初始契约RED（旧IT没执行market）和实际DTO／服务的缺省、null RED原样封存。最终14类127项、零失败／错误／跳过，包含真实生成Java、Bean Validation、PATCH、按需支持、旧借还／预约和八题内存生成；细目及可重放命令见[验证44](../qualification/README.md#g9-topics-optional-name-local)。标准消息模板兼容的最后自审仅补跑两类，不累计重跑次数。library仍443行SIR／20能力，Java因适配变为4102行，其余题规模不变。
 
 #172 在真实 MySQL 上执行了两题的逐题验收（HTTP 与独立数据库快照），两条 G9 需求由带折扣转为完整写出。writeExclude 仍不是并发控制，见 28.1。
+
+
+<a id="library-related-count-proposal"></a>
+## 29. 图书可借数量：只读视图的批量关联计数（已确认，实施完成待同源码CI）
+
+### 29.1 现状与要解决的完整场景
+
+业务基线为#172的图书题目；实施基线已接入云端509dc52（含00b8118的SQL标识符修复），该修复按负责人要求先视为通过继续，不冒称本机已核验新CI。实际library已有Copy.status、Book目录详情／分页及SearchByTitle，但没有可借数量。现有 `count Copy … as total` 可返回一个Int64；G11计算字段只能使用来源行，不能执行查询或读工作流变量；现有TO_MANY投影会取回子实体，不能把取回全部副本再size当成数据库计数。`use Crud`目前固定生成EntityView，没有选择读视图的参数。这些都是代码核对的事实，不把尚未存在的count函数或readView参数当成已有能力。
+
+完整切片应在**详情、目录分页和标题／作者搜索的每条书目**直接给出数量；无副本或无AVAILABLE副本的书仍显示0。不能只新增单本计数端点让列表逐本调用，也不新增一列需要所有借还路径维护的计数器。
+
+建议数量的公开含义为“状态为AVAILABLE的物理副本数”，命名availableCopies。它不是当前读者必定能借到的承诺：排队优先、五本限额、并发争抢仍由既有Borrow／ClaimReservation的锁和守卫决定，不自动扣除或跳过满额队首，也不自动分配。报表不能代替写保护，数量与资格需要在接口说明中分开。
+
+### 29.2 拟议作者接口与受控范围
+
+下面是**提案text**，当前Parser尚不接受；确认后再实现正式AST／绑定／计划。
+
+```text
+view CatalogueBook from Book {
+  field id: Id;
+  field isbn: Code;
+  field title: Name;
+  field author: Name;
+  field publisher: Optional<Name>;
+  field availableCopies: Serial =
+    count(Copy, book == item and status == CopyStatus.AVAILABLE);
+}
+use Crud {
+  entity: Book;
+  path: books;
+  writer: User;
+  writeRole: LIBRARIAN;
+  readView: CatalogueBook;
+}
+```
+
+count的关联方向复用any的“子行直接必填Ref字段指向根行”：这里book属于Copy，item绑定当前Book，status属于Copy。只开放这个方向、COUNT(*)、合法非secret字段／常量谓词及来源scope，不是自由JOIN／SQL，也不开放嵌套count、工作流actor／input／now捕获、任意聚合表达式、DISTINCT／SUM／AVG或动态排序。返回基础Int64，示例用现有Serial（Count是Int32，不能拿来隐式窄化）。count必须是视图字段的完整取值分支，不在任意表达式里偷偷执行SQL。
+
+readView是**可选的通用Crud参数**，只改变Get／List的输出类型；Create／Update继续返回自动生成的原EntityView，输入、角色、owner、writeExclude、状态码和路由均不改。参数必须正式绑定到同来源实体的显式view，跨文件须导入；错误来源、缺声明、secret投影或冲突必须诊断，不按名字拼接或豁免可见性。自动EntityView仍保留供写返回及原Loan／Reservation嵌套使用。SearchByTitle显式改为Page<CatalogueBook>，原`/api/catalogue`、`/api/books`、`/api/books/{id}`保留，不另造一套目录入口。
+
+首片只允许**只读能力**消费含count的视图；源集合必须为单行或受现有分页上限约束的Page，沿途可有不增加根数量的TO_ONE／可空TO_ONE投影。只读嵌套count统一走同一批量计划；拒绝不受界的List或TO_MANY路径后再计数，也不在command返回中隐式查询。这一限制避免给每个循环或新建行返回引入未定义的数量／快照；后续若有真实需要再独立设计，旧不含count的视图行为不变。
+
+### 29.3 查询、零组和快照
+
+先读授权后的当前页根行，再从它们取得并去重身份键，一次查询：
+
+```sql
+SELECT book_id AS count_key, COUNT(*) AS count_value
+FROM copy
+WHERE book_id IN (?, …) AND status = ? /* 另带正式scope */
+GROUP BY book_id
+```
+
+SQL列、表、别名和关联均来自Lowered计划，物理引用正确转义，请求值及enum值绑定。只取分组键和数量，不加载所有副本、借阅人、条码或借阅记录；不增加实体Mapper方法，复用selectMaps。只把计数映射回已有书目顺序，数据库分组行的迭代顺序不改变根分页。缺失组映射为0，**结果已有组的null、负数、错误别名、外来键、重复键、分数或溢出不得冒充0**；Long／UUID身份按计划解码，不经double或不受检查的窄化。
+
+每个唯一计数取值站点至多增加1条分组读取，不按页中书数增长；详情通常为根load＋1，目录／搜索为旧根count＋根selectList＋1。空页、越界页或空可选父投影必须跳过整个子Mapper调用；不能写`.in(!keys.isEmpty(), …)`后仍执行查询，它在空键时会移除IN，退化成全表聚合。源键数上限来自实际查询Profile（当前pageMaxSize=100），不是把limit100偷偷用作截断聚合。多计数字段若暂不合并，预算按显式站点分别计算；不宣称已经做查询优化。
+
+只读根行／分页总数／子计数统一进入明确REPEATABLE_READ事务及STATEMENT缓存，复用已存在的目标事务模式而不依赖MySQL默认隔离。不存在同一HTTP多次调用间的快照承诺。COUNT是整型计数，不启用Money的SUM溢出插件或Decimal精度规则；Count-only工程不应平白生成ExactAggregate金额支持。
+
+### 29.4 各层职责与正反例
+
+- Parser独立表示关联计数；Resolve唯一绑定来源实体、关联字段、根行、条件和枚举引用，保留ReferenceRole／AstNodeId／SourceSpan，readView同样绑定显式声明。正式类型与合法位置检查不在Generator临时补。Normalize遇到坏表达式保留原诊断而不是构造null节点。
+- 在NormalizedViewField.Value新增与Column／Related／Computed互斥的CountRelated取值，不虚构存储列。源写出、增删改、字段／实体／视图精确改名、跨文件可见性、全角色夹具、结构完整性／敏感性和图消费一并覆盖，不把新记录放成不可达的模型辅助对象。
+- Lowering写出已验证的父键、子外键／存储列、scope谓词、COUNT投影、别名、身份及计数载体、空集合／零组规则、查询预算、页界和事务／缓存事实。Core与目标IR各自拒绝伪造关联、secret／可选外键、错误结果类型／列／来源、错误站点、无界集合和丢失策略，不能只依赖源校验。
+- Generator在已有批量投影准备阶段读取计数并持有索引；字段拼装只按计划读取索引，不能在逐行lambda里调数据库。普通、分页、只读TO_ONE嵌套和空可选路径共享同一取值分支；DTO／OpenAPI／合同schema都是普通Int64只读输出。可拆出专注的投影读取渲染器，不借机重写旧渲染路径。
+
+验证应覆盖：0副本、全借出／LOST、可用与不可用混合、同页多书、相同书名不同身份、不分页逃逸／跨页、子scope、Long／UUID、非法Map载体、空键完全不调用Mapper、含驱动探测时的真实业务预算。用计数前可观察屏障，让控制连接提交副本状态变更，当前请求保持同一快照，下次请求看到变化；保持原Borrow／Return／Claim后的数量变化及G9馆员目录／写保护全量断言，不改200／201和external启动模式。Count字段移除、关联字段改名及readView缺import分别有负例，不靠字符串替换。
+
+### 29.5 方案比较、依赖证据与验收成本
+
+| 做法 | 结论 |
+| --- | --- |
+| 给每本书调用一次旧count | 单本够用，但分页出现N+1；不作为完整目录方案 |
+| 读所有副本后size | 不受副本数约束，泄漏不必要数据和占用内存，不采用 |
+| 给Book加availableCount并在借还中维护 | 把展示统计变成新存储不变量／回填和多路径写入负担，不采用 |
+| 只给Copy分组返回有副本的书 | 丢零副本书目，改变根分页，不采用 |
+| 一次给所有字段／表达式开放任意聚合 | NULL／分组／权限／隐式查询一起扩面，首片不做 |
+| 当前页根键批量COUNT＋视图互斥计划 | 可保留目录／分页和零组，查询预算有界，建议采用 |
+
+MyBatis-Plus3.5.12的真实DefaultSqlInjector／DefaultParameterHandler **2项依赖探针已通过**，证明selectMaps的COUNT分组／页键IN／字符串状态及手工模拟的scope条件保持参数绑定（不是SIR自动scope或真实Enum JDBC的实现证据），并实证空条件IN会被省略。源码、最新XML及哈希在 `target/library-count-investigation/`；这是依赖能力验证，不是SIR视图计数或真实SQL实现，未证明MySQL结果载体及快照。AFT Java／JDTLS初始化失败记PARTIAL，编译以该次Maven为准。临时测试已归档，不进入CI增加重复探针。
+
+确认后复用**原library IT同一生成应用／构建**，扩充实际CatalogueBook／readView和对应观察表；保持G9、借还及FIFO所有旧检查。只编译新IT，本机不启动应用／数据库、生成工程或全量门，不使用浏览器／UI单测。代码和配套文档一次对应提交，新计数需求在同SHA真库验收前不记完整；当前账本仍76／1／7，提案不单独提交触发CI。
+
+逾期罚款另案：当前只有Moment平移、比较与精确乘法，没有日期差；天数要选择“满24小时”“不足一天算一天”或某业务时区日历日，还要定义归还冻结、费率与收费／展示范围。此前未确认这些口径，本片不自行给费率、默认时区或取整，也不把计数实现顺带变成缴费系统。
+
+
+### 29.6 实施结果与发现的缺口
+
+语法、正式绑定（`VIEW_COUNT_ENTITY`／`VIEW_RELATION_FIELD`）、类型、源往返、Core／目标 IR、五类拒绝、生成计划与实际生成服务已经贯通；21 类 202 项定向回归见[验证 42](../qualification/README.md#library-related-count-local)。
+
+实施中发现并修正的问题，都不是“顺手加功能”：
+
+- **改名会直接抛异常。** `Renamer.followers` 过滤了 `Computed` 却漏了 `CountRelated`，任何实体字段改名在含 count 视图的工程里都会走 `sourceField()` 并抛 `IllegalStateException`。现在按“是否显示某一列”显式分派，`Computed` 与 `CountRelated` 都不跟随源列改名，计数输出名和关联条件各自独立。
+- **全角色夹具不会自动覆盖新角色。** 结构覆盖清单、`TypedReferenceSiteContractTest` 的 AST 回指与全角色契约、跨文件可见性都必须显式登记 count，否则新角色可以“悄无声息地没有正例”。这三处已补齐，含“删掉 import 后精确报 `SIR-SOURCE-VISIBILITY-001`”的反例。
+- **软删除 scope 与页键 IN 的叠加。** 计划里子实体 scope 谓词要保留，但外层根行引用必须已消失；独立 IR 校验抓到了残留的外层引用，修正后计划只按当前页键 `IN` 加 scope 与状态过滤。
+- **保留字与手写 SQL。** 云端 `00b8118` 已把保留字转义集中到 `MySqlIdentifiers`；本片只补它对“显式全引用列”的 `quote`，没有另建一套表，也不改物理列名与 JSON 字段名。
+- **真实样例与夹具同源。** library 主题改动后由既有 `G9TopicComposition` 重新生成 `g9-topic-conformance.sir`，真库 IT 仍跑同一份实际声明，不是另写近似业务。
+
+本机证据边界照旧：真实 HTTP／MySQL 的“扇出一次”“零副本为 0”“LOST 不计”与既有借还／预约／写保护回归，本机只编译、未运行；完整导出门在 Windows 受安全目录读取限制，留给 Linux CI。账本本条只记待 CI 的 △。

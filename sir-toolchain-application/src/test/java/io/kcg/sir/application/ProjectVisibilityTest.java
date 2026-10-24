@@ -22,6 +22,7 @@ class ProjectVisibilityTest {
         addKeyedLookup(source);
         addGuardedUpdate(source);
         addScalarQueries(source);
+        addRelatedCount(source);
         addFeatureSelections(source);
         moveContracts(source);
         var positive = generate(source, temp.resolve("positive"));
@@ -382,6 +383,33 @@ class ProjectVisibilityTest {
                         count Student where true as studentTotal;
                         sum Course.measurement where true as measured;
                         return unit;
+                      }
+                    }
+                """ + anchor));
+    }
+
+    /** A count projection whose counted entity and join field both live in an imported module. */
+    static void addRelatedCount(Path source) throws Exception {
+        Path root = source.resolve("project.sir");
+        String project = Files.readString(root);
+        String anchor = "    input GetCourseInput {";
+        assertTrue(project.contains(anchor), "the related count fixture anchor must exist");
+        Files.writeString(root, project.replace(anchor, """
+                    view CourseHeadline from Course {
+                      field id: Id;
+                      field name: Text;
+                      field activeEnrollments: Serial =
+                        count(Enrollment, course == item and status == EnrollmentStatus.ACTIVE);
+                    }
+                    capability SearchCourseHeadlines {
+                      input SearchCourseEnrollmentsInput;
+                      output Page<CourseHeadline>;
+                      fails InvalidPage;
+                      requires readonly;
+                      expose query;
+                      workflow {
+                        find Course where true order by name ascending Page input.page, input.size else InvalidPage as rows;
+                        return rows;
                       }
                     }
                 """ + anchor));

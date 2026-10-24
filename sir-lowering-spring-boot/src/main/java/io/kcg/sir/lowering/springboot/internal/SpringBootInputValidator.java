@@ -269,7 +269,13 @@ public final class SpringBootInputValidator {
       for (NormalizedViewField field : view.fields()) {
          this.validateBound(field.id(), field.span(), field.sourceNodeId(), FieldSymbol.class);
          this.validateType(field.type(), field.span(), field.id(), field.sourceNodeId());
-         if (field.value() instanceof NormalizedViewField.Computed computed) {
+          if (field.value() instanceof NormalizedViewField.CountRelated count) {
+              this.validateExpression(count.conditions(),view.id());
+              for(String problem:RelatedCountValidation.core(view,field,count,this.model))
+                  this.error("SIR-LOWER-BINDING-001",problem,field.span(),field.id(),field.sourceNodeId());
+              continue;
+          }
+          if (field.value() instanceof NormalizedViewField.Computed computed) {
              this.validateExpression(computed.expression(), view.id());
              for (String problem : NormalizedViewExpressions.validate(view, field, computed, this.model)) {
                 this.error("SIR-LOWER-BINDING-001", problem, field.span(), field.id(), field.sourceNodeId());
@@ -468,6 +474,8 @@ public final class SpringBootInputValidator {
    }
 
     private void validateCapability(NormalizedCapability capability) {
+       for(String problem:RelatedCountValidation.coreOutput(capability,this.model))
+          this.error("SIR-LOWER-BINDING-001",problem,capability.span(),capability.id(),capability.sourceNodeId());
        for(String problem:EachLexicalScopes.core(capability))this.error("SIR-LOWER-INPUT-001",problem,capability.span(),capability.id(),capability.sourceNodeId());
       capability.actorSymbol().ifPresent(symbol -> this.validateVariable(symbol, capability));
       capability.inputSymbol().ifPresent(symbol -> this.validateVariable(symbol, capability));

@@ -170,6 +170,11 @@ public final class SpringBootModelLowerer {
         projectArtifacts.addAll(this.errorContractArtifacts());
         projectArtifacts.add(this.validationSupportArtifact());
         projectArtifacts.add(this.applicationConfigArtifact());
+        if (hasRelatedCount()) {
+            String pkg = this.source.metadata().namespace() + ".persistence";
+            projectArtifacts.add(new ProjectArtifact.RelatedCounts(this.nodeId("project", "related-counts"), this.projectOrigin(),
+                "src/main/java/" + pkg.replace('.', '/') + "/RelatedCounts.java", pkg, "RelatedCounts"));
+        }
         if (hasSum()) {
             String pkg = this.source.metadata().namespace() + ".persistence";
             projectArtifacts.add(new ProjectArtifact.ExactAggregate(this.nodeId("project", "exact-aggregate"), this.projectOrigin(),
@@ -251,6 +256,15 @@ public final class SpringBootModelLowerer {
                 "ApiErrorResponse.FieldError", codes, calendar);
     }
 
+    private boolean hasRelatedCount() {
+        return this.views.values().stream().flatMap(v -> v.fields().stream())
+            .anyMatch(f -> f.value() instanceof NormalizedViewField.CountRelated);
+    }
+
+    private boolean viewHasCount(SirType type) {
+        return RelatedCountValidation.contains(type, this.source.declarations(), new java.util.HashSet<>());
+    }
+
     private boolean hasSum() {
         return this.source.declarations().stream().filter(NormalizedCapability.class::isInstance)
             .map(NormalizedCapability.class::cast).flatMap(c -> io.kcg.sir.semantic.model.NormalizedSteps.walk(c.workflow().steps()))
@@ -265,7 +279,7 @@ public final class SpringBootModelLowerer {
     private ProjectArtifact.ApplicationConfig applicationConfigArtifact() {
         return new ProjectArtifact.ApplicationConfig(
                 this.nodeId("project", "application-config"), this.projectOrigin(), "src/main/resources/application.yml",
-                this.kebab(this.softwareName()), true, this.source.declarations().stream()
+                this.kebab(this.softwareName()), true, this.hasRelatedCount() || this.source.declarations().stream()
                     .filter(NormalizedCapability.class::isInstance).map(NormalizedCapability.class::cast)
                     .flatMap(cap -> cap.workflow().steps().stream())
                     .anyMatch(s -> s instanceof NormalizedStep.SumStep || s instanceof NormalizedStep.GroupedSumStep || s instanceof NormalizedStep.EachStep || s instanceof NormalizedStep.LoadStep load && load.forUpdate()));
@@ -439,6 +453,11 @@ public final class SpringBootModelLowerer {
     }
 
     private SpringBootDeclaration.ViewField lowerViewField(NormalizedView value, NormalizedViewField field) {
+        if (field.value() instanceof NormalizedViewField.CountRelated count) {
+            return new SpringBootDeclaration.ViewField(this.symbolId(field.id(), "view-field"),
+                this.origin(value.id(), field.sourceNodeId(), field.span()), field.id(), field.name(), this.lowerType(field.type()),
+                new SpringBootDeclaration.CountViewValue(this.lowerRelatedCount(value, field, count)));
+        }
         if (field.value() instanceof NormalizedViewField.Computed computed) {
             return new SpringBootDeclaration.ViewField(this.symbolId(field.id(), "view-field"),
                 this.origin(value.id(), field.sourceNodeId(), field.span()), field.id(), field.name(), this.lowerType(field.type()),
@@ -493,6 +512,20 @@ public final class SpringBootModelLowerer {
                 collection ? foreignKeyProperty : targetIdentityProperty,
                 collection ? foreignKeyProperty : targetIdentityProperty,
                 collection ? Optional.of(targetIdentityProperty) : Optional.empty()));
+    }
+
+    private SpringBootDeclaration.RelatedCountPlan lowerRelatedCount(NormalizedView view, NormalizedViewField field,
+            NormalizedViewField.CountRelated count) {
+        var root=this.entities.get(view.sourceEntity()); var related=this.entities.get(count.entity());
+        var conditions=RelatedCountValidation.filter(count.conditions(),count);
+        var predicate=conditions==null ? new ExistenceSql("",List.of())
+            : this.existenceSql(conditions,related,root,MySqlIdentifiers.quote(this.snake(related.name())),Optional.of(count.rowSymbol()),List.of(),view.id());
+        String column=this.columns.get(count.connectionField()); String quoted=MySqlIdentifiers.quote(column);
+        return new SpringBootDeclaration.RelatedCountPlan(this.nodeId(field.sourceNodeId().value(),"related-count"),
+            this.origin(view.id(),field.sourceNodeId(),field.span()),field.id(),count.entity(),count.connectionField(),
+            this.identityPropertyName(root),this.targetMemberName(count.connectionField(),""),quoted,
+            this.lowerType(root.identity().type()),quoted+" AS count_key","COUNT(*) AS count_value",
+            "count_key","count_value","selectMaps",predicate.text(),predicate.arguments(),this.queryPolicy.pageMaxSize(),1,true,true);
     }
 
     private String identityPropertyName(NormalizedEntity entity) {
@@ -652,7 +685,7 @@ public final class SpringBootModelLowerer {
 
     private SpringBootDeclaration.CapabilityDeclaration lowerCapability(NormalizedCapability value) {
         boolean authenticated = value.requires().contains(AstRequirementKind.AUTHENTICATED);
-        SpringBootDeclaration.TransactionMode transactionMode = value.requires().contains(AstRequirementKind.READONLY) ? (io.kcg.sir.semantic.model.NormalizedSteps.walk(value.workflow().steps()).anyMatch(s -> s instanceof NormalizedStep.GroupedSumStep || s instanceof NormalizedStep.MonthStep)
+        SpringBootDeclaration.TransactionMode transactionMode = value.requires().contains(AstRequirementKind.READONLY) ? (this.viewHasCount(value.outputType()) || io.kcg.sir.semantic.model.NormalizedSteps.walk(value.workflow().steps()).anyMatch(s -> s instanceof NormalizedStep.GroupedSumStep || s instanceof NormalizedStep.MonthStep)
              ? SpringBootDeclaration.TransactionMode.REPEATABLE_READ : SpringBootDeclaration.TransactionMode.READ_ONLY) : (value.requires().contains(AstRequirementKind.ATOMIC) ? (io.kcg.sir.semantic.model.NormalizedSteps.walk(value.workflow().steps()).anyMatch(s -> s instanceof NormalizedStep.EachStep || s instanceof NormalizedStep.LoadStep load && load.forUpdate())
                  ? SpringBootDeclaration.TransactionMode.READ_COMMITTED : SpringBootDeclaration.TransactionMode.REQUIRED) : SpringBootDeclaration.TransactionMode.NONE);
         SpringBootDeclaration.CapabilityKind kind = switch (value.exposure()) {
@@ -1547,6 +1580,14 @@ public final class SpringBootModelLowerer {
             NormalizedExpression expression, NormalizedEntity related, NormalizedEntity root, String alias,
             Optional<SymbolId> itemSymbol, List<SpringExpression.ExistsArgument> arguments, SymbolId owner) {
         return switch (expression) {
+            case NormalizedExpression.BinaryExpression binary when binary.operator() == io.kcg.sir.ast.AstBinaryOperator.CONTAINS_LITERAL
+                    && binary.right() instanceof NormalizedExpression.StringLiteral literal -> {
+                var left=this.existenceSql(binary.left(),related,root,alias,itemSymbol,arguments,owner);
+                String escaped=literal.value();
+                for(String character:this.queryPolicy.likeEscapedLiterals()) escaped=escaped.replace(character,"\\"+character);
+                var right=this.boundValue(new SpringExpression.ExistsArgument.Text("%"+escaped+"%"),left.arguments());
+                yield new ExistenceSql(left.text()+" LIKE "+right.text()+" ESCAPE '\\\\'",right.arguments());
+            }
             case NormalizedExpression.BinaryExpression binary when isComparison(binary.operator()) -> {
                 ExistenceSql left = this.existenceSql(binary.left(), related, root, alias, itemSymbol, arguments, owner);
                 ExistenceSql right = this.existenceSql(binary.right(), related, root, alias, itemSymbol, left.arguments(), owner);
@@ -1601,7 +1642,8 @@ public final class SpringBootModelLowerer {
             throw new IllegalStateException("unsupported existence-predicate reference: " + symbol);
         }
 
-        return alias + "." + MySqlIdentifiers.render(this.columns.getOrDefault(resolvedSymbol, this.snake(field.name())));
+        String column=this.columns.getOrDefault(resolvedSymbol,this.snake(field.name()));
+        return alias + "." + (alias.startsWith("`") ? MySqlIdentifiers.quote(column) : MySqlIdentifiers.render(column));
     }
 
     /** A column of the queried row, or the persisted text of an enum member. */
@@ -1717,6 +1759,7 @@ public final class SpringBootModelLowerer {
 
         int count = 0;
         for (NormalizedViewField field : view.fields()) {
+            if (field.value() instanceof NormalizedViewField.CountRelated) count++;
             if (field.relation().isPresent()) {
                 count += 1 + this.associationReadCount(field.relation().get().targetView());
             }

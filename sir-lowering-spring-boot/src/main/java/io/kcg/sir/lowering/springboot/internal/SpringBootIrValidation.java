@@ -375,7 +375,8 @@ public final class SpringBootIrValidation {
          value.sourceRow().ifPresent(row -> this.knownSymbols.add(row.symbol()));
          value.fields().forEach(field -> {
                this.knownSymbols.add(field.sourceSymbol());
-               if (!(field.value() instanceof SpringBootDeclaration.ComputedViewValue))
+               if (!(field.value() instanceof SpringBootDeclaration.ComputedViewValue)
+                    && !(field.value() instanceof SpringBootDeclaration.CountViewValue))
                    this.knownSymbols.add(field.sourceFieldSymbol());
          });
          break;
@@ -523,10 +524,16 @@ public final class SpringBootIrValidation {
       for (SpringBootDeclaration.ViewField field : view.fields()) {
          this.addNode(field.id(), field.origin(), "view field");
          this.knownSymbols.add(field.sourceSymbol());
-         if (!(field.value() instanceof SpringBootDeclaration.ComputedViewValue))
+         if (!(field.value() instanceof SpringBootDeclaration.ComputedViewValue)
+                    && !(field.value() instanceof SpringBootDeclaration.CountViewValue))
                    this.knownSymbols.add(field.sourceFieldSymbol());
          this.validateType(field.type(), view);
-         if (field.value() instanceof SpringBootDeclaration.ComputedViewValue computed) {
+          if (field.value() instanceof SpringBootDeclaration.CountViewValue counted) {
+             this.addNode(counted.plan().id(),counted.plan().origin(),"related count plan");
+             for(String problem:RelatedCountValidation.target(view,field,counted.plan(),this.model))this.error(view,problem);
+             continue;
+          }
+          if (field.value() instanceof SpringBootDeclaration.ComputedViewValue computed) {
             this.validateExpression(computed.expression(), view);
             for (String problem : ViewExpressionValidation.validate(view, field, computed.expression(), this.declarations))
                this.error(view, problem);
@@ -663,7 +670,8 @@ public final class SpringBootIrValidation {
       }
    }
 
-   private void validateCapability(SpringBootDeclaration.CapabilityDeclaration capability) {
+    private void validateCapability(SpringBootDeclaration.CapabilityDeclaration capability) {
+       for(String problem:RelatedCountValidation.targetOutput(capability,this.model))this.error(capability,problem);
       capability.actor().ifPresent(variable -> this.knownSymbols.add(variable.symbol()));
       capability.input().ifPresent(variable -> this.knownSymbols.add(variable.symbol()));
 
@@ -1267,8 +1275,9 @@ case SpringBootWorkflow.FindStep value:
 
       int associations = 0;
       for (SpringBootDeclaration.ViewField field : view.fields()) {
-         if (field.relation().isPresent()) {
-            associations += 1 + this.associationReads(field.type());
+          if (field.value() instanceof SpringBootDeclaration.CountViewValue) associations++;
+          if (field.relation().isPresent()) {
+             associations += 1 + this.associationReads(field.type());
          }
       }
 

@@ -1241,3 +1241,67 @@ mvn -B -q -o -pl sir-toolchain-application -am test '-Dtest=G9TopicRuntimeTest,G
 表中为去重后的实际范围；命令作为完整可重放选择，本轮分批执行、未为汇报再跑整批。前四类后出现上述PATCH探针问题后，只继续受影响类；新增支持产物／解码策略及标准消息模板兼容自审后，只补G9TopicRuntimeTest和G9TopicContractTest。最新XML、索引及源码哈希在 `target/g9-topic-verification/`。Maven384MiB／fork512MiB，各2个可见处理器；AFT桥超时未取得诊断结论，不写成clean；编译以实际Maven及生成类javac为准，覆盖率未测量。
 
 本机没有启动数据库／应用／浏览器，没有全量门或生成工程Maven构建；UI不受影响。八题仅内存生成，library的SIR仍443行／20项能力，Java因正确的可空适配从4086变4102行，其余题规模不变。没有把writeExclude宣称为并发锁、角色验证宣称为所有在途请求即时撤权，亦未改变已SOLD商品仍可合法编辑标题等既有业务政策。两项G9继续待新同SHA HTTP／MySQL证据，账本保持74／3／7；不靠本机127项升完整。代码、测试、#171验收和配套文档同批提交，推送后不查询或等待CI，负责人通知结果。
+
+
+<a id="ci-172-g9-accepted"></a>
+## 45. #172：两项G9实际题目写保护验收闭环
+
+负责人通知通过后读取同源码证据：提交 **`91fc78ee7885c13c9eb9de9d2a9fe45ac4ead41e`**，[verify #172](https://github.com/HoloNova/Software-IR/actions/runs/40081795538)。Frozen full gate、业务IT、独立验证、CLI、独立部署全部success；Completion成功路径skipped为预期去重。全部 **261份Surefire XML／1823 tests，0 failures／errors／skips**，按原始XML逐份核对，不累计本机14类127项或旧CI数量。
+
+本轮实际library组合应用 `library-borrowing-1a16d3dd5c3-33876`：生成工程构建PASSED、公开书目路由READY、**247项业务检查全部通过**。新检查与旧借还／预约同一应用，不另起近似应用，也没有删除旧检查。market仅组合原题Item策略切片，不把此报告宣称为market全业务覆盖。
+
+| 原需求 | 实际证据 | 判定 |
+| --- | --- | --- |
+| 卖家更新时保护系统字段 | 真实HTTP拒绝status／createdAt／sellerId及创建时id注入；其他卖家不能改删；合法编辑保持SOLD、持久化createdAt及seller；数据库前后快照核对 | △→✓ |
+| 馆员维护图书目录 | 匿名三写401、读者三写403，馆员新增／更新／删除；公开GET不要求登录；服务器撤销角色后拒写；publisher=null合法、空白400 NotBlank，数据库状态核对 | △→✓ |
+
+可空名称的必填反例、PATCH三态与实际Mapper的保留condition读取／insert／update SQL也在正式单测中通过；真实market HTTP用condition=null完成创建／重载／更新／删除，不将其夸称为非空condition的全部JDBC写入场景。旧借阅限额、排队FIFO、本人领取、并发、整笔回滚继续通过，报告末尾的最终账本一致性检查保留。
+
+三份当前资源按LF规范化与报告逐字核对：
+
+| 资源 | SHA256 |
+| --- | --- |
+| `/valid/g9-topic-conformance.sir` | `d486e6631a96117a6a46dfb47b486fea0a7f5a37a48b31b01b0959c0dce73dc4` |
+| `/conformance/mysql/library-ddl.sql` | `96a3053a2527d3223107980148b5b6af515a43480e0974b7a2bd73245c1f4696` |
+| `/conformance/mysql/library-seed.sql` | `35c57611fd1b15749c7eac6f497ff5263e8e6f63282216502c0c9c9b196cd39a` |
+
+部署report.json明确同一commit／runUrl，deployment、httpSmoke、persistence、privileges、swagger、contract、missingVolume、business、update、dataUpdate、freshChain、cleanup、decimalShape均PASSED；合同仍将interruptedMigration和schemaDriftOtherThanDecimalShape标为NOT_RUN，不把未执行项写成通过。
+
+证据来自该run上传的 `surefire-reports`、`conformance-evidence`、`deployment-evidence`；原文件及核验脚本保存在 `target/ci-investigation/172/`，索引verified-summary.json。未在本机补跑任何业务IT、全量或生成工程构建，覆盖率没有据此推断。只将上述两条G9升级，账本 **76完整／1带折扣／7未写出（84条）**；唯一折扣为多商品下单。可借数量、罚款和其余功能不因这轮验收而升级。验收记录留待下一对应源码提交合并，不制造纯文档CI或重跑已通过范围。
+
+
+<a id="library-related-count-local"></a>
+## 43. 图书可借数量：视图 count 与 Crud readView（待同源码 CI）
+
+基线 **`509dc52`**（云端 7 个提交，含 `00b8118` 的手写 SQL 保留字转义）。按负责人要求该 CI 先视为通过继续，本记录不冒称本机核验过它；本片真库证据仍须新 CI 覆盖本批实际提交。业务基线为 #172 已验收的图书题目。
+
+**交付：**`view … { field n: Serial = count(Copy, book == item and status == CopyStatus.AVAILABLE); }` 与 `use Crud { … readView: CatalogueBook; }`。实际 library 的目录详情、分页与 `/api/catalogue` 检索都显示本人可见的 `availableCopies`；创建/更新/删除的输入、返回、路由、写权限不变。只有 `AVAILABLE` 物理副本被计数，`LOST` 与借出副本不计，没有副本的书为 0（不是 `null`），不补无副本的书。
+
+计数按**当前页一次分组查询**：先读根行（1 条），再用页键 `IN` 加 scope／状态谓词做一次 `selectMaps` 分组；空页不调子 Mapper。只读 `REPEATABLE_READ`、`STATEMENT` 缓存与逐语句告警沿用既有计划；根行与计数在同一快照内，跨请求则随写入变化——因此它是“现在书架上有几本”，**不是借得到的保证**，借出与否仍由借还路径的名额、副本状态与预约顺序决定。
+
+**本机证据：18 类 125 项定向通过，0 failures／errors／skips。**
+
+| 模块 | suites | tests | 实际范围 |
+| --- | ---: | ---: | --- |
+| semantic | 4 | 40 | count/readView 契约 19、全角色 AST 回指 18、结构覆盖 1、声明往返 2 |
+| change | 2 | 10 | count 改名/新增/删除与计算字段回归 5＋5 |
+| lowering | 2 | 42 | 独立 Core／目标 IR 拒绝 23、既有硬化 19 |
+| generator | 3 | 13 | 真实生成服务 6、实体产物不变性 4、保留字 SQL 3 |
+| application | 7 | 20 | G9 组合契约 5、取消返库组合 3、语言参考 4、八题内存生成 1、跨文件 count 1、证据装配 5、真库 IT 编译 1 |
+| **合计** | **18** | **125** | 不累计此前重跑 |
+
+```powershell
+$env:MAVEN_OPTS='-Xmx384m -XX:ActiveProcessorCount=2'
+mvn -B -o -pl sir-toolchain-application -am test '-Dtest=RelatedCountSemanticsTest,TypedReferenceSiteContractTest,StructureViewCoverageTest,SirDeclarationWriterRoundTripTest,RelatedCountEditingTest,ComputedViewEditingTest,RelatedCountLoweringTest,LoweredIrHardeningTest,RelatedCountRuntimeTest,GeneratorEntityArtifactInvarianceTest,ReservedIdentifierRuntimeTest,G9TopicContractTest,ShopCancellationContractTest,LanguageReferenceExamplesTest,TopicSamplesTest,RelatedCountProjectTest,BusinessSliceHarnessEvidenceTest,LibraryBorrowingBusinessConformanceIT' '-Dsurefire.failIfNoSpecifiedTests=false' '-DargLine=-Xmx512m -XX:ActiveProcessorCount=2'
+```
+
+**实施中修正的缺陷（均先取 RED）：**
+
+1. `Renamer.followers` 只排除了 `Computed`，含 count 视图的工程里任何实体字段改名都会抛 `IllegalStateException: count projection has no source column`。改为按“是否显示源列”显式分派。
+2. 结构覆盖清单、全角色契约与跨文件可见性都没有自动包含新角色；三处已登记，含删 import 后精确报 `SIR-SOURCE-VISIBILITY-001`。
+3. 独立目标 IR 校验抓到计划里残留外层根行引用（scope 与页键 IN 叠加时）；修正后只按页键 `IN` 加 scope 与状态过滤。
+4. 语言参考新增可执行 `sir-declarations` 示例，经现有生成门（避免重演 #162）。
+
+**真实 IT NOT_RUN（本机）：**`LibraryBorrowingBusinessConformanceIT` 只编译。新增 `LibraryCountChecks` 在真库中做：详情/分页/检索的每行数字与观察器独立 SQL 逐本比对；`LOST`、借出、无副本三种 0；一次请求使用运行时轨迹证明“根行 1 条、子表 1 条”（非 N+1），并保留原有借还、预约、写保护检查。本机未启动 MySQL／应用，未跑生成工程构建，无 UI/浏览器测试。
+
+**边界：**不新增存储计数列、不改物理 schema、不改变借还协议；不承诺预约抢占或并发借出的实时性；`readView` 只影响 `Get`／`List`。Windows 的安全目录读取门仍阻断完整导出门（`ProjectVisibilityTest` 的同类入口），留给 Linux CI，不放宽生产读取要求。账本本条由 ✗ 转为待 CI 的 △，总数 **76／2／6**；AVG、日期差罚款、请求列表与累计仍未实现。

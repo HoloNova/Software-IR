@@ -84,7 +84,7 @@ ${for f in entity.fields only owner}
 ${end}
 ${end}
       input ${entity}IdInput;
-      output ${entity}View;
+      output ${if readView}${readView}${else}${entity}View${end};
       fails ${entity}NotFound;
 ${if not read}
 ${if owner}
@@ -110,7 +110,7 @@ ${for f in entity.fields only owner}
 ${end}
 ${end}
       input List${entity}Input;
-      output Page<${entity}View>;
+      output Page<${if readView}${readView}${else}${entity}View${end}>;
       fails Invalid${entity}Page;
 ${if not read}
 ${if owner}

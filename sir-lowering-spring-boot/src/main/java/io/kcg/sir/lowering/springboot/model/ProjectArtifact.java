@@ -19,7 +19,8 @@ public sealed interface ProjectArtifact
    ProjectArtifact.ApiExceptionAdvice,
    ProjectArtifact.ValidationSupport,
     ProjectArtifact.ExactAggregate,
-   ProjectArtifact.ApplicationConfig {
+    ProjectArtifact.RelatedCounts,
+    ProjectArtifact.ApplicationConfig {
    LoweredNodeId id();
 
    LoweredOrigin origin();
@@ -31,6 +32,14 @@ public sealed interface ProjectArtifact
       if (value.isBlank()) {
          throw new IllegalArgumentException(name + " must not be blank");
       }
+   }
+
+   record RelatedCounts(LoweredNodeId id, LoweredOrigin origin, String path, String packageName,
+       String simpleName) implements ProjectArtifact {
+       public RelatedCounts {
+           Objects.requireNonNull(id, "id"); Objects.requireNonNull(origin, "origin");
+           requireText(path, "path"); requireText(packageName, "packageName"); requireText(simpleName, "simpleName");
+       }
    }
 
    record ExactAggregate(LoweredNodeId id, LoweredOrigin origin, String path, String packageName,

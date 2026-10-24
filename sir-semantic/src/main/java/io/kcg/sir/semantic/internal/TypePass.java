@@ -800,7 +800,11 @@ final class TypePass {
              this.typeExpression(e.target(), scopeId, visibleVars);
              yield PrimitiveType.BOOLEAN;
           }
-          case AstAnyExpression e -> this.typeAnyExpression(e, scopeId, visibleVars);
+           case io.kcg.sir.ast.AstCountExpression e -> {
+               this.typeExpression(e.conditions(), scopeId, visibleVars);
+               yield PrimitiveType.INT64;
+           }
+           case AstAnyExpression e -> this.typeAnyExpression(e, scopeId, visibleVars);
          case AstUnaryExpression e -> this.typeUnaryExpression(e, scopeId, visibleVars);
          case AstBinaryExpression e -> this.typeBinaryExpression(e, scopeId, visibleVars);
          case AstTimeShiftExpression e -> this.typeTimeShift(e, scopeId, visibleVars);

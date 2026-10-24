@@ -1,0 +1,40 @@
+sir 0.3
+software RelatedCounts {
+  metadata { displayName "Related Counts"; namespace "example.counts"; }
+  target { language java 21; framework spring_boot; persistence mybatis_plus; database mysql; build maven; interface rest; }
+  sources {} imports {}
+  declarations {
+    enum Role { READER, LIBRARIAN }
+    enum CopyStatus { AVAILABLE, BORROWED, LOST }
+    entity User persistent { identity id: Id generated auto; field role: Role; }
+    entity Book persistent { identity id: Id generated auto; field title: Name; }
+    entity Copy persistent {
+      identity id: Id generated auto;
+      field book: Ref<Book>;
+      field status: CopyStatus;
+      field removed: Flag default false;
+      scope removed == false;
+    }
+    view CatalogueBook from Book {
+      field id: Id;
+      field title: Name;
+      field availableCopies: Serial = count(Copy, book == item and status == CopyStatus.AVAILABLE);
+    }
+    use Crud { entity: Book; path: books; writer: User; writeRole: LIBRARIAN; readView: CatalogueBook; }
+    input Search { field keyword: Text; field page: PageNo; field size: PageSize; }
+    error BadPage;
+    capability SearchCatalogue {
+      input Search;
+      output Page<CatalogueBook>;
+      fails BadPage;
+      requires readonly;
+      expose query at "/catalogue";
+      workflow {
+        find Book where item.title containsLiteral input.keyword
+          order by title ascending, id ascending
+          Page input.page, input.size else BadPage as rows;
+        return rows;
+      }
+    }
+  }
+}

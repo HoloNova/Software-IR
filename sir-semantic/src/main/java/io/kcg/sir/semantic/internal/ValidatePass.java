@@ -223,7 +223,8 @@ final class ValidatePass {
       }
 
       this.validateCredentials();
-      return ValidatedContext.from(this.typed, List.copyOf(this.diagnostics));
+       RelatedCountRules.outputs(this.software, this.typed, this.diagnostics);
+       return ValidatedContext.from(this.typed, List.copyOf(this.diagnostics));
    }
 
    private static final String ROUTE_CODE = "SIR-VALID-013";
@@ -915,7 +916,8 @@ int returnCount = 0;
 
    private void walkScope(AstExpression expression, String entity) {
       switch (expression) {
-         case AstAnyExpression e -> this.diagnostics.add(DiagnosticBuilder.error(SCOPE_CODE, "scope 中不能使用 any(): " + entity, e.span()));
+          case AstAnyExpression e -> this.diagnostics.add(DiagnosticBuilder.error(SCOPE_CODE, "scope 中不能使用 any(): " + entity, e.span()));
+          case io.kcg.sir.ast.AstCountExpression e -> this.diagnostics.add(DiagnosticBuilder.error(SCOPE_CODE, "scope cannot contain related count queries: " + entity, e.span()));
          case AstPresentExpression e -> this.diagnostics.add(DiagnosticBuilder.error(SCOPE_CODE, "scope 中不能使用 .present: " + entity, e.span()));
          case AstGroupedExpression e -> this.walkScope(e.inner(), entity);
          case AstUnaryExpression e -> this.walkScope(e.operand(), entity);
@@ -1031,7 +1033,8 @@ int returnCount = 0;
          case AstUnaryExpression e -> this.checkSecretReads(e.operand(), inFind);
          case AstPresentExpression e -> this.checkSecretReads(e.target(), inFind);
          case AstTimeShiftExpression e -> this.checkSecretReads(e.base(), inFind);
-         case AstAnyExpression e -> this.checkSecretReads(e.conditions(), true);
+          case AstAnyExpression e -> this.checkSecretReads(e.conditions(), true);
+          case io.kcg.sir.ast.AstCountExpression e -> this.checkSecretReads(e.conditions(), true);
          case AstNameExpression e -> {
             SymbolId target = this.typed.referenceSiteBindings().targetFor(e.name().id()).orElse(null);
             if (target != null && this.secretFields.contains(target)) {
@@ -1117,7 +1120,10 @@ int returnCount = 0;
       for (AstViewField field : viewDecl.fields()) {
          field.expression().ifPresent(expression -> {
              this.checkSecretReads(expression, false);
-             ComputedViewRules.validate(expression, this.typed,
+              if (expression instanceof io.kcg.sir.ast.AstCountExpression count)
+                 RelatedCountRules.validate(count, this.typed,
+                     SymbolIdFactory.viewSourceRow(this.typed.declarationBindings().get(viewDecl.id())), this.software, this.diagnostics);
+              else ComputedViewRules.validate(expression, this.typed,
                 SymbolIdFactory.viewSourceRow(this.typed.declarationBindings().get(viewDecl.id())),
                 Set.copyOf(this.entityIdentitySymbolIds.values()), this.diagnostics);
              SirType type = this.typed.typeRefTypes().get(field.type().id());
@@ -1725,7 +1731,9 @@ int returnCount = 0;
       }
 
       switch (expression) {
-         case AstAnyExpression any -> {
+          case io.kcg.sir.ast.AstCountExpression count -> this.diagnostics.add(DiagnosticBuilder.error(
+              "SIR-FLOW-005", "count(...) is only a complete view field value", count.span()));
+          case AstAnyExpression any -> {
             if (usage == ExistenceUsage.REJECTED) {
                this.diagnostics.add(DiagnosticBuilder.error(
                   "SIR-FLOW-005", "any 只能出现在 find/exists/count 的 where 谓词中", any.span()));

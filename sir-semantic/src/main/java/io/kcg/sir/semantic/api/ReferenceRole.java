@@ -41,6 +41,7 @@ public enum ReferenceRole {
    PERSIST_FAILURE(SymbolKind.ERROR),
    UPDATE_GUARD_ERROR(SymbolKind.ERROR),
    EXISTS_SOURCE_ENTITY(SymbolKind.ENTITY),
+    VIEW_COUNT_ENTITY(SymbolKind.ENTITY),
    EXISTS_CONDITION_FIELD(SymbolKind.FIELD),
    VIEW_RELATION_FIELD(SymbolKind.FIELD);
 

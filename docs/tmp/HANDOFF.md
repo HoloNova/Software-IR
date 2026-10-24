@@ -31,11 +31,19 @@
 
 ## 3. 待办（按建议顺序）
 
-### 3.1 暂停加新语法，先做小模型评估（模型与方式需负责人决定）
+### 3.1 完成图书批量关联计数（已确认，实施中）
+
+负责人已确认[设计 29](../design/12-feature-semantics-and-semantic-types.md#library-related-count-proposal)：书目详情、分页和搜索显示可用副本数，无副本为 0；按当前页键一次批量计数，不逐书查询、不新增存储计数列；新增只读视图 `count(...)` 与可选的 `Crud.readView`，目录路由、馆员写权限、借还及预约守卫全不变。空页不调子 Mapper。真实 MySQL 复用原 library IT，本机只编译。当前语义、写回、独立 IR 与真实生成服务已贯通，源编辑、改名、全角色与最终回归未收口；不据本地结论称真库已验收。
+
+### 3.1 图书批量关联计数（已实现，待同源码 CI）
+
+负责人已确认[设计 29](../design/12-feature-semantics-and-semantic-types.md#library-related-count-proposal)。实际 library 用 `view CatalogueBook { … field availableCopies: Serial = count(Copy, …) }` 与 `use Crud { readView: CatalogueBook }`，详情／分页／检索（`/api/catalogue`）都带 `availableCopies`：只数 `AVAILABLE` 副本，`LOST`／借出不计，无副本为 0；不新增存储列、不改借还协议、不改写权限与路由。当前页一次分组查询（空页不调子 Mapper），只读 RR 快照；不是借得到的保证。18 类 125 项定向通过（含四类拒绝、源往返、真实生成服务、跨文件可见性与文档门）；实施中修正了改名抛 `IllegalStateException`、新角色未入三门、IR 计划残留外层根行引用等问题。实际 library 为 452／4240／20；真库 HTTP／MySQL 与完整导出门本机 NOT_RUN，详见[验证 45](../qualification/README.md#library-related-count-local)。本条只记待 CI 的 △（76／2／6）；AVG、日期差罚款、请求列表与累计仍未做。
+
+### 3.2 暂停加新语法，先做小模型评估（模型与方式需负责人决定）
 
 最近语言新增了七种工作流步骤（`exists`、`count`、`sum`、`sum … by`、`month`、`each`、`load … for update`），每种都带不少写作规则。这个项目面向写代码的模型，规则越多越容易写错。建议继续扩语言之前，先用八个题目加双 Token 题做一次评估，看模型实际能写对多少、错在哪些规则上。评估计划草稿在 `docs/qualification/SLM_GENERATED_PROJECT_EVALUATION_PLAN.md`；用哪个模型、怎么判分，等负责人定。
 
-### 3.2 按评估结果决定剩下的缺口（每项先设计、等确认）
+### 3.3 按评估结果决定剩下的缺口（每项先设计、等确认）
 
 试写报告里还写不出或带折扣的需求，集中在这几类：
 
@@ -45,7 +53,7 @@
 - 统计（G8 剩余）：平均值、多个分组键、补零组、图表与导出。
 - 优惠券：先和负责人确认需求本身。
 
-### 3.3 把"靠作者自觉"的并发约定做成编译器检查或提示（需设计）
+### 3.4 把"靠作者自觉"的并发约定做成编译器检查或提示（需设计）
 
 下面几条现在只写在语言参考里，写错了编译器不报，只有真实并发时才出问题，模型写代码时尤其容易漏：
 
@@ -55,7 +63,7 @@
 
 可以考虑的方向：编译器自动排序、发出警告，或者把常见组合做成一个写法。先讲清楚每个方向能防住什么、防不住什么。
 
-### 3.4 小项（低优先）
+### 3.5 小项（低优先）
 
 - G12：每个题目要重复约 35 行账号样板（`Register`、`UserView`、`use DualTokenLogin`）。
 - G13：写作磕绊。`fails` 必须按错误名排序；`order`、`item`、`from` 是关键字不能当名字。可以改成更友好的报错，或放宽排序要求。

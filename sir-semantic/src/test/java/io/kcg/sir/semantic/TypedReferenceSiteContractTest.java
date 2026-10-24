@@ -117,6 +117,21 @@ class TypedReferenceSiteContractTest {
               field id: Id;
               field state: Status;
             }
+            view UserLedger from User {
+              field id: Id;
+              field openAccounts: Serial = count(Account, owner == item and state == Status.ACTIVE);
+            }
+            capability PageLedger {
+              input SearchInput;
+              output Page<UserLedger>;
+              fails InvalidPage;
+              requires readonly;
+              expose query;
+              workflow {
+                find User where true order by id ascending Page input.page, input.size else InvalidPage as rows;
+                return rows;
+              }
+            }
             view AccountSummary from Account {
               field id: Id;
               field state: Status;
@@ -693,6 +708,7 @@ class TypedReferenceSiteContractTest {
                     for (io.kcg.sir.ast.AstViewField f : e.fields()) {
                         sink.put(f.name().id(), f.name().text());
                         collectTypeRef(f.type(), sink);
+                        f.expression().ifPresent(value -> collectExpressionRefs(value, sink));
                     }
                 }
                 case io.kcg.sir.ast.AstErrorDecl e -> { /* no AstNameRef references */ }
@@ -819,6 +835,10 @@ class TypedReferenceSiteContractTest {
             case io.kcg.sir.ast.AstAnyExpression a -> {
                 sink.put(a.entity().id(), a.entity().text());
                 collectExpressionRefs(a.conditions(), sink);
+            }
+            case io.kcg.sir.ast.AstCountExpression c -> {
+                sink.put(c.entity().id(), c.entity().text());
+                collectExpressionRefs(c.conditions(), sink);
             }
             default -> { }
         }

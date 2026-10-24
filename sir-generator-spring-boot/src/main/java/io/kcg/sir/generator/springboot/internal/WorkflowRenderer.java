@@ -454,7 +454,7 @@ final class WorkflowRenderer {
       String recordsName = resultName + "Records";
       lines.add("        var " + recordsName + " = " + mapper.mapperFieldName() + ".selectList(wrapper.last(\"LIMIT \" + (" + pageName + " - 1) * " + sizeName + " + \", \" + " + sizeName + "));");
       ViewDeclaration view = responseView(ctx, step);
-      Map<String, WorkflowRenderer.RelationRead> reads = new LinkedHashMap<>();
+      Map<String, WorkflowRenderer.ProjectionRead> reads = new LinkedHashMap<>();
       readAssociations(ctx, view, recordsName, reads, imports, currentPackage, lines, mappers, new int[]{0}, "");
       lines.add("        var " + resultName + " = new PageResponse<>(" + resultName + "Total, " + pageName + ", " + sizeName + ", "
          + recordsName + ".stream().map(row -> "
@@ -473,7 +473,7 @@ final class WorkflowRenderer {
       GenerationContext ctx,
       ViewDeclaration view,
       String rows,
-      Map<String, WorkflowRenderer.RelationRead> reads,
+      Map<String, WorkflowRenderer.ProjectionRead> reads,
       ImportSorter imports,
       String currentPackage,
       List<String> lines,
@@ -482,8 +482,18 @@ final class WorkflowRenderer {
       String path
    ) {
       EntityDeclaration owner = ctx.entity(view.sourceEntitySymbol());
-      for (SpringBootDeclaration.ViewField field : view.fields()) {
-         SpringBootDeclaration.ViewRelationPlan plan = field.relation().orElse(null);
+       for (SpringBootDeclaration.ViewField field : view.fields()) {
+          if (field.value() instanceof SpringBootDeclaration.CountViewValue count) {
+             var plan=count.plan();
+             var child=ctx.entity(plan.targetEntitySymbol());
+             var mapper=ensureMapper(ctx,plan.targetEntitySymbol(),child.javaName(),mappers);
+             var read=RelatedCountProjectionRenderer.prepare(ctx,view,plan,rows,mapper.mapperFieldName(),Integer.toString(counter[0]++));
+             lines.addAll(read.lines());
+             String site=path.isEmpty()?field.javaName():path+"."+field.javaName();
+             reads.put(site,new CountRead(plan,read.indexVariable()));
+             continue;
+          }
+          SpringBootDeclaration.ViewRelationPlan plan = field.relation().orElse(null);
          if (plan == null) {
             continue;
          }
@@ -528,7 +538,7 @@ final class WorkflowRenderer {
       GenerationContext ctx,
       ViewDeclaration view,
       String row,
-      Map<String, WorkflowRenderer.RelationRead> reads,
+      Map<String, WorkflowRenderer.ProjectionRead> reads,
       String path,
       ImportSorter imports,
       String currentPackage
@@ -541,14 +551,21 @@ final class WorkflowRenderer {
             out.append(", ");
          }
 
-         SpringBootDeclaration.ViewRelationPlan plan = field.relation().orElse(null);
-         if (plan == null) {
-            out.append(renderProjectionValue(ctx, view, field, row, imports, currentPackage));
+          if (field.value() instanceof SpringBootDeclaration.CountViewValue) {
+             String site=path.isEmpty()?field.javaName():path+"."+field.javaName();
+             if (!(reads.get(site) instanceof CountRead read))throw new IllegalStateException("missing planned count index: "+site);
+             out.append(read.indexVariable()).append(".getOrDefault(").append(row).append('.').append(getterName(read.plan().sourceKeyPropertyName()))
+                 .append("(), 0L)");
+             continue;
+          }
+          SpringBootDeclaration.ViewRelationPlan plan = field.relation().orElse(null);
+          if (plan == null) {
+             out.append(renderProjectionValue(ctx, view, field, row, imports, currentPackage));
             continue;
          }
 
          String site = path.isEmpty() ? field.javaName() : path + "." + field.javaName();
-         WorkflowRenderer.RelationRead read = reads.get(site);
+         WorkflowRenderer.RelationRead read = reads.get(site) instanceof RelationRead relation ? relation : null;
          ViewDeclaration target = ctx.declaration(plan.targetViewSymbol()) instanceof ViewDeclaration value ? value : null;
          if (read == null || target == null) {
             throw new IllegalStateException("a nested projection has no read for its use site: " + site);
@@ -570,9 +587,11 @@ final class WorkflowRenderer {
    }
 
    /** The index one nested projection reads its related rows from, and the name its row is bound to. */
-   private record RelationRead(
-      SpringBootDeclaration.ViewRelationPlan plan, String indexVariable, String lambdaName) {
-   }
+    private sealed interface ProjectionRead permits RelationRead, CountRead {}
+    private record CountRead(SpringBootDeclaration.RelatedCountPlan plan, String indexVariable) implements ProjectionRead {}
+    private record RelationRead(
+       SpringBootDeclaration.ViewRelationPlan plan, String indexVariable, String lambdaName) implements ProjectionRead {
+    }
 
    private static SpringBootDeclaration.ViewDeclaration responseView(GenerationContext ctx, FindStep step) {
       if (!(step.result().type() instanceof LoweredJavaType.PageValue pageValue)
@@ -1137,7 +1156,7 @@ final class WorkflowRenderer {
          }
 
          lines.add("        var returnedRows = java.util.List.of(" + value + ");");
-         Map<String, WorkflowRenderer.RelationRead> reads = new LinkedHashMap<>();
+         Map<String, WorkflowRenderer.ProjectionRead> reads = new LinkedHashMap<>();
          readAssociations(ctx, view, "returnedRows", reads, imports, currentPackage, lines, mappers, new int[]{0}, "");
          lines.add("        return " + renderProjectionRow(ctx, view, value, reads, "", imports, currentPackage) + ";");
          return;
@@ -1356,7 +1375,7 @@ final class WorkflowRenderer {
       return out.toString();
    }
 
-   private static String renderExistsArgument(SpringExpression.ExistsArgument argument) {
+   static String renderExistsArgument(SpringExpression.ExistsArgument argument) {
       return switch (argument) {
          case SpringExpression.ExistsArgument.Value ignored -> throw new IllegalStateException("external values require their bound variable context");
          case SpringExpression.ExistsArgument.Text text -> StringEscape.javaString(text.value());

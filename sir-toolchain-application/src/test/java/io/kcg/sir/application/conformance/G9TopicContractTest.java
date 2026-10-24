@@ -41,6 +41,27 @@ class G9TopicContractTest {
                 && f.content().contains("super(\"" + expected.getKey() + "\", HttpStatus." + expected.getValue() + ");")));
     }
 
+    @Test void catalogueReadsCountAvailableCopiesWithoutTurningACrudIntoANewRoute() throws Exception {
+        var compiled = ShopCancellationContractTest.compile(RESOURCE);
+        for (String read : List.of("GetBook", "ListBook"))
+            assertTrue(ShopCancellationContractTest.capability(compiled, read).toString().contains("CatalogueBook"), read);
+        var search = ShopCancellationContractTest.capability(compiled, "SearchByTitle");
+        assertEquals("/api/catalogue", search.route());
+        String service = compiled.generatedFiles().stream().filter(f -> f.relativePath().endsWith("/SearchByTitleService.java")).findFirst().orElseThrow().content();
+        assertEquals(1, occurrences(service, "RelatedCounts.read("), "the whole page is counted once");
+        var detail = compiled.generatedFiles().stream().filter(f -> f.relativePath().endsWith("/GetBookService.java")).findFirst().orElseThrow().content();
+        assertTrue(detail.contains("new CatalogueBook("), detail);
+        assertEquals(1, occurrences(detail, "RelatedCounts.read("), detail);
+        for (String write : List.of("CreateBook", "UpdateBook"))
+            assertFalse(ShopCancellationContractTest.capability(compiled, write).toString().contains("CatalogueBook"), write);
+    }
+
+    private static int occurrences(String text, String needle) {
+        int count = 0;
+        for (int at = text.indexOf(needle); at >= 0; at = text.indexOf(needle, at + needle.length())) count++;
+        return count;
+    }
+
     @Test void actualChildEnvironmentKeepsExternalIdentityWithoutStartingAProcess(@org.junit.jupiter.api.io.TempDir java.nio.file.Path root) throws Exception {
         var environment = BusinessSliceHarnessEvidenceTest.environment(root.resolve("work"), root.resolve("evidence"), LibraryBorrowingBusinessConformanceIT.FIXTURE.enabledProperty());
         var slice = LibraryBorrowingBusinessConformanceIT.createSlice(environment);

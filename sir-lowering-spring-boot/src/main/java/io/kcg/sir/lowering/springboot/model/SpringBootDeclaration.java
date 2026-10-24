@@ -363,14 +363,16 @@ public sealed interface SpringBootDeclaration
           return switch (value) {
              case ColumnViewValue column -> column.sourceFieldSymbol();
              case RelatedViewValue related -> related.sourceFieldSymbol();
-             case ComputedViewValue ignored -> throw new IllegalStateException("computed projection has no column");
+              case CountViewValue ignored -> throw new IllegalStateException("count projection has no column");
+              case ComputedViewValue ignored -> throw new IllegalStateException("computed projection has no column");
           };
        }
        public String sourcePropertyName() {
           return switch (value) {
              case ColumnViewValue column -> column.sourcePropertyName();
              case RelatedViewValue related -> related.sourcePropertyName();
-             case ComputedViewValue ignored -> throw new IllegalStateException("computed projection has no column");
+              case CountViewValue ignored -> throw new IllegalStateException("count projection has no column");
+              case ComputedViewValue ignored -> throw new IllegalStateException("computed projection has no column");
           };
        }
        public Optional<ViewRelationPlan> relation() {
@@ -378,7 +380,7 @@ public sealed interface SpringBootDeclaration
        }
     }
 
-    sealed interface ViewValue permits ColumnViewValue, RelatedViewValue, ComputedViewValue {}
+    sealed interface ViewValue permits ColumnViewValue, RelatedViewValue, ComputedViewValue, CountViewValue {}
 
     record ColumnViewValue(SymbolId sourceFieldSymbol, String sourcePropertyName) implements ViewValue {
        public ColumnViewValue {
@@ -393,7 +395,33 @@ public sealed interface SpringBootDeclaration
           Objects.requireNonNull(plan, "plan");
        }
     }
-    record ComputedViewValue(SpringExpression expression) implements ViewValue {
+     record CountViewValue(RelatedCountPlan plan) implements ViewValue {
+         public CountViewValue { Objects.requireNonNull(plan, "plan"); }
+     }
+
+     /** One bounded grouped read over keys from the already-authorized source rows. */
+     record RelatedCountPlan(LoweredNodeId id, LoweredOrigin origin, SymbolId viewFieldSymbol,
+         SymbolId targetEntitySymbol, SymbolId connectionFieldSymbol,
+         String sourceKeyPropertyName, String targetKeyPropertyName, String keyColumn,
+         LoweredJavaType keyType, String keyProjection, String countProjection,
+         String keyAlias, String countAlias, String mapperMethod, String conditionSql,
+         List<SpringExpression.ExistsArgument> arguments, int maxKeys, int queryBudget,
+         boolean skipEmptySource, boolean missingGroupIsZero) {
+         public RelatedCountPlan {
+             Objects.requireNonNull(id, "id"); Objects.requireNonNull(origin, "origin");
+             Objects.requireNonNull(viewFieldSymbol, "viewFieldSymbol");
+             Objects.requireNonNull(targetEntitySymbol, "targetEntitySymbol");
+             Objects.requireNonNull(connectionFieldSymbol, "connectionFieldSymbol");
+             requireText(sourceKeyPropertyName, "sourceKeyPropertyName");
+             requireText(targetKeyPropertyName, "targetKeyPropertyName"); requireText(keyColumn, "keyColumn");
+             Objects.requireNonNull(keyType, "keyType");
+             requireText(keyProjection, "keyProjection"); requireText(countProjection, "countProjection");
+             requireText(keyAlias, "keyAlias"); requireText(countAlias, "countAlias"); requireText(mapperMethod, "mapperMethod");
+             Objects.requireNonNull(conditionSql, "conditionSql"); arguments=List.copyOf(arguments);
+         }
+     }
+
+     record ComputedViewValue(SpringExpression expression) implements ViewValue {
        public ComputedViewValue { Objects.requireNonNull(expression, "expression"); }
     }
 

@@ -203,7 +203,11 @@ public final class SirDeclarationWriter {
       out.line(0, "view " + text(node, "name") + " from " + text(node, "sourceEntity") + " {");
       for (StructNode field : nodes(node, "fields")) {
          StructNode value = child(field, "value");
-         String computed = value.kind().equals("Computed") ? " = " + expression(child(value, "expression"), 0) : "";
+          String computed = switch (value.kind()) {
+             case "Computed" -> " = " + expression(child(value, "expression"), 0);
+             case "CountRelated" -> " = count(" + text(value, "entity") + ", " + expression(child(value, "conditions"), 0) + ")";
+             default -> "";
+          };
          out.line(1, "field " + text(field, "name") + ": " + type(child(field, "type")) + computed + ";");
       }
 

@@ -394,20 +394,26 @@ final class NormalizePass {
          continue;
          }
 
-         NormalizedExpression computed = field.expression().map(this::normalizeExpression).orElse(null);
-         if (field.expression().isPresent() && computed == null) continue;
-         fields.add(new NormalizedViewField(
-         SymbolIdFactory.viewField(this.softwareName, decl.name().text(), fieldName),
-         fieldName,
-         field.span(),
-         field.id(),
-         type,
-         field.expression().<NormalizedViewField.Value>map(expression -> new NormalizedViewField.Computed(
-             SymbolIdFactory.viewSourceRow(id), computed))
-             .orElseGet(() -> this.relationOf(type).<NormalizedViewField.Value>map(relation ->
-                new NormalizedViewField.Related(this.siteTargetOrUnknown(field.name().id()), relation))
-                .orElseGet(() -> new NormalizedViewField.Column(this.siteTargetOrUnknown(field.name().id())))),
-         field.type() instanceof AstNamedTypeRef named ? Optional.of(named.name().id()) : Optional.empty()));
+          NormalizedViewField.Value value;
+          if (field.expression().orElse(null) instanceof io.kcg.sir.ast.AstCountExpression count) {
+             var conditions = this.normalizeExpression(count.conditions());
+             var entity = this.siteTargetOrUnknown(count.entity().id());
+             var connection = ExistenceConnection.fieldOf(count.conditions(), this.validated.referenceSiteBindings(),
+                 java.util.Map.of(decl.id(), SymbolIdFactory.viewSourceRow(id)));
+             if (conditions == null || isUnknown(entity) || connection == null) continue;
+             value = new NormalizedViewField.CountRelated(SymbolIdFactory.viewSourceRow(id), entity, connection, conditions);
+          } else if (field.expression().isPresent()) {
+             var computed = this.normalizeExpression(field.expression().orElseThrow());
+             if (computed == null) continue;
+             value = new NormalizedViewField.Computed(SymbolIdFactory.viewSourceRow(id), computed);
+          } else {
+             value = this.relationOf(type).<NormalizedViewField.Value>map(relation ->
+                 new NormalizedViewField.Related(this.siteTargetOrUnknown(field.name().id()), relation))
+                 .orElseGet(() -> new NormalizedViewField.Column(this.siteTargetOrUnknown(field.name().id())));
+          }
+          fields.add(new NormalizedViewField(SymbolIdFactory.viewField(this.softwareName, decl.name().text(), fieldName),
+              fieldName, field.span(), field.id(), type, value,
+              field.type() instanceof AstNamedTypeRef named ? Optional.of(named.name().id()) : Optional.empty()));
       }
 
       return new NormalizedView(

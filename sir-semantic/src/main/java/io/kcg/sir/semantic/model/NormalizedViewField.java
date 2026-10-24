@@ -39,7 +39,7 @@ public record NormalizedViewField(
                 relation.<Value>map(r -> new Related(sourceField, r)).orElseGet(() -> new Column(sourceField)), typeSite);
     }
 
-    public sealed interface Value permits Column, Related, Computed {}
+    public sealed interface Value permits Column, Related, Computed, CountRelated {}
 
     public record Column(@Derived SymbolId sourceField) implements Value {
         public Column { Objects.requireNonNull(sourceField, "sourceField"); }
@@ -59,10 +59,21 @@ public record NormalizedViewField(
         }
     }
 
+    public record CountRelated(@Derived SymbolId rowSymbol, @Reference SymbolId entity,
+            @Derived SymbolId connectionField, @Fact NormalizedExpression conditions) implements Value {
+        public CountRelated {
+            Objects.requireNonNull(rowSymbol, "rowSymbol");
+            Objects.requireNonNull(entity, "entity");
+            Objects.requireNonNull(connectionField, "connectionField");
+            Objects.requireNonNull(conditions, "conditions");
+        }
+    }
+
     public SymbolId sourceField() {
         return switch (value) {
             case Column column -> column.sourceField();
             case Related related -> related.sourceField();
+            case CountRelated ignored -> throw new IllegalStateException("count projection has no source column");
             case Computed ignored -> throw new IllegalStateException("computed projection has no source column");
         };
     }

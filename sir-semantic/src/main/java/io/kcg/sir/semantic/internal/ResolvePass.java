@@ -571,7 +571,9 @@ final class ResolvePass {
        for (AstViewDecl view : this.viewDecls.values()) {
           if (view.fields().stream().noneMatch(field -> field.expression().isPresent())) continue;
           SymbolId scope = this.declarationBindings.get(view.id());
-          SymbolId row = SymbolIdFactory.viewSourceRow(scope);
+           SymbolId row = SymbolIdFactory.viewSourceRow(scope);
+           if (view.fields().stream().anyMatch(f -> f.expression().orElse(null) instanceof io.kcg.sir.ast.AstCountExpression))
+              this.findItemBindings.put(view.id(), row);
           this.addSymbol(new Symbol.VariableSymbol(row, "item", view.span(),
                 this.buildRefType(view.sourceEntity().text()), null), scope);
           for (AstViewField field : view.fields()) {
@@ -1081,7 +1083,12 @@ final class ResolvePass {
              case AstPresentExpression e:
                 this.resolvePresentExpression(e, capName, scopeId, visibleVars, currentItemSymbol, anyEntityName);
                 break;
-             case AstAnyExpression e:
+              case io.kcg.sir.ast.AstCountExpression e:
+                 this.resolveEntityRef(e.entity(), ReferenceRole.VIEW_COUNT_ENTITY);
+                 this.resolveExpression(e.conditions(), capName, scopeId, visibleVars, currentItemSymbol,
+                     this.entityDecls.containsKey(e.entity().text()) ? e.entity().text() : null);
+                 break;
+              case AstAnyExpression e:
                 this.resolveAnyExpression(e, capName, scopeId, visibleVars, currentItemSymbol);
                 break;
              case AstUnaryExpression e:

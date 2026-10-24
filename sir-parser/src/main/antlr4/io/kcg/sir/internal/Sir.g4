@@ -498,11 +498,16 @@ primaryExpression
     | ITEM
     | NOW LPAREN RPAREN
     | anyPredicate
+    | countPredicate
     | groupedExpression
     ;
 
 groupedExpression
     : LPAREN expression RPAREN
+    ;
+
+countPredicate
+    : {_input.LT(1).getText().equals("count")}? IDENT LPAREN entity=IDENT COMMA conditions=expression RPAREN
     ;
 
 anyPredicate

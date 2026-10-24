@@ -58,6 +58,7 @@ class LibraryBorrowingBusinessConformanceIT {
             slice.setRowsBefore(slice.rowsNow(observer));
             var http = new HttpAssertionClient();
             G9TopicChecks.verify(slice, observer, http);
+            LibraryCountChecks.verify(slice, observer, http);
             LibraryBorrowingChecks.verify(slice, observer, http);
             LibraryReservationChecks.verify(slice, observer, http);
             slice.setRowsAfter(slice.rowsNow(observer));

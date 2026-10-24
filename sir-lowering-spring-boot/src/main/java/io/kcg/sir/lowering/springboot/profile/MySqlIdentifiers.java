@@ -53,9 +53,14 @@ public final class MySqlIdentifiers {
             XOR YEAR_MONTH ZEROFILL
             """).split("\\s+"));
 
+    /** Explicitly quoted SQL identifier, also used by plans that quote every projection column. */
+    public static String quote(String physicalName) {
+        return "`" + physicalName.replace("`", "``") + "`";
+    }
+
     /** The name as SQL text: backquoted when it is a MySQL 8.4 reserved word. */
     public static String render(String physicalName) {
         return RESERVED.contains(physicalName.toUpperCase(Locale.ROOT))
-                ? "`" + physicalName.replace("`", "``") + "`" : physicalName;
+                ? quote(physicalName) : physicalName;
     }
 }
