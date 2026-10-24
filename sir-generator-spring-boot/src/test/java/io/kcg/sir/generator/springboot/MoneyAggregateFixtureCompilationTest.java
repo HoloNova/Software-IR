@@ -21,7 +21,8 @@ class MoneyAggregateFixtureCompilationTest {
         try (var loader = GeneratedRuntimeSupport.compile(source, output, List.of(file,grouped,calendar))) {
             assertNotNull(loader.loadClass("example.money.fixture.GroupedSumFixture"));
             verifyCalendarBarrier(loader);
-            verifyRealAutoConfiguration(loader);
+            verifyRealAutoConfiguration(loader, false);
+            verifyRealAutoConfiguration(loader, true);
             assertNotNull(loader.loadClass("example.money.application.GroupMeasuredService"));
             assertNotNull(loader.loadClass("example.money.fixture.ExactAggregateWarningFixture"));
             assertNotNull(loader.loadClass("example.money.application.SumMeasuredService"));
@@ -32,9 +33,14 @@ class MoneyAggregateFixtureCompilationTest {
                 "the fixed SQL warning probe is not a generator output");
     }
 
-    private static void verifyRealAutoConfiguration(java.net.URLClassLoader loader) throws Exception {
+    private static void verifyRealAutoConfiguration(java.net.URLClassLoader loader, boolean configured) throws Exception {
         try (var context = new org.springframework.context.annotation.AnnotationConfigApplicationContext()) {
             context.setClassLoader(loader);
+            var properties = context.getEnvironment().getPropertySources();
+            properties.remove(org.springframework.core.env.StandardEnvironment.SYSTEM_PROPERTIES_PROPERTY_SOURCE_NAME);
+            properties.remove(org.springframework.core.env.StandardEnvironment.SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME);
+            properties.addFirst(new org.springframework.core.env.SystemEnvironmentPropertySource("systemEnvironment",
+                    configured ? java.util.Map.of("KCG_ACTOR_IDENTITY_MODE", "external") : java.util.Map.of()));
             context.getDefaultListableBeanFactory().setAllowCircularReferences(false);
             context.registerBean(javax.sql.DataSource.class, () -> (javax.sql.DataSource) java.lang.reflect.Proxy.newProxyInstance(
                     loader, new Class<?>[]{javax.sql.DataSource.class}, (proxy, method, arguments) -> {
@@ -45,18 +51,35 @@ class MoneyAggregateFixtureCompilationTest {
             context.registerBean(com.baomidou.mybatisplus.extension.spring.MybatisPlusApplicationContextAware.class,
                     definition -> definition.setLazyInit(true));
             context.register(com.baomidou.mybatisplus.autoconfigure.MybatisPlusAutoConfiguration.class);
-            context.register(loader.loadClass("example.money.api.ValidationSupport$UtcInstantHandler"),
+            context.register(loader.loadClass("example.money.Application$ActorIdentityRuntime"),
+                    loader.loadClass("example.money.application.CredentialIdentityAdapter"),
+                    loader.loadClass("example.money.persistence.UuidTypeHandler"),
+                    loader.loadClass("example.money.api.ValidationSupport$UtcInstantHandler"),
                     loader.loadClass("example.money.fixture.CalendarSnapshotFixture"),loader.loadClass("example.money.persistence.ExactAggregate"),
                     loader.loadClass("example.money.fixture.GroupedSumFixture"),
                     loader.loadClass("example.money.fixture.ExactAggregateWarningFixture"));
             registerMapper(context, loader, "SummaryEntryMapper", "summaryEntryMapper");
             registerMapper(context, loader, "MeasurementMapper", "measurementMapper");
+            registerMapper(context, loader, "AccessTokenMapper", "accessTokenMapper");
+            registerMapper(context, loader, "RefreshTokenMapper", "refreshTokenMapper");
 
+            if (!configured) {
+                var failure = assertThrows(IllegalStateException.class, context::refresh);
+                assertTrue(failure.getMessage().contains("KCG-ACTOR-STARTUP-001"), failure.toString());
+                assertTrue(failure.getMessage().contains("kcg.actor-identity.mode"), failure.toString());
+                assertFalse(context.isActive());
+                return;
+            }
             assertDoesNotThrow(context::refresh, "the real MyBatis auto-configuration must finish without circular dependencies");
             var factory = context.getBean(org.apache.ibatis.session.SqlSessionFactory.class);
             assertEquals(loader.loadClass("example.money.api.ValidationSupport$UtcInstantHandler"),
                     factory.getConfiguration().getTypeHandlerRegistry().getTypeHandler(java.time.Instant.class).getClass(),
                     "the actual auto-configuration must register UTC temporal binding, not merely compile its class");
+            var actorType = loader.loadClass("example.money.Application$ActorIdentityAdapter");
+            var actors = context.getBeansOfType(actorType);
+            assertEquals(java.util.Set.of(io.kcg.sir.lowering.springboot.model.ActorIdentityTransportPlan.EXTERNAL_ADAPTER_BEAN_NAME), actors.keySet());
+            assertEquals(loader.loadClass("example.money.application.CredentialIdentityAdapter"), actors.values().iterator().next().getClass());
+            verifyAnonymousStillRefused(context, loader);
             Object fixture = context.getBean(loader.loadClass("example.money.fixture.GroupedSumFixture"));
             assertFalse(context.getDefaultListableBeanFactory().containsSingleton("summaryEntryMapper"),
                     "creating the interceptor must not resolve its lazy Mapper");
@@ -68,6 +91,31 @@ class MoneyAggregateFixtureCompilationTest {
             assertSame(context.getBean(mapperType), context.getBeanProvider(mapperType).getObject(),
                     "the actual Mapper must be resolvable after the SQL factory is complete");
         }
+    }
+
+    private static void verifyAnonymousStillRefused(org.springframework.context.ApplicationContext context,
+            ClassLoader loader) throws Exception {
+        var runtimeType = loader.loadClass("example.money.Application$ActorIdentityRuntime");
+        var interceptor = (org.springframework.web.servlet.HandlerInterceptor) loader
+                .loadClass("example.money.Application$ActorIdentityInterceptor")
+                .getConstructor(runtimeType).newInstance(context.getBean(runtimeType));
+        var request = (jakarta.servlet.http.HttpServletRequest) java.lang.reflect.Proxy.newProxyInstance(loader,
+                new Class<?>[]{jakarta.servlet.http.HttpServletRequest.class}, (proxy, method, arguments) -> switch (method.getName()) {
+                    case "getMethod" -> "GET";
+                    case "getAttribute" -> org.springframework.web.servlet.HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE
+                            .equals(arguments[0]) ? "/api/entries/monthly-totals" : null;
+                    case "getHeader", "removeAttribute" -> null;
+                    default -> throw new AssertionError(method.getName());
+                });
+        var status = new java.util.concurrent.atomic.AtomicInteger();
+        var response = (jakarta.servlet.http.HttpServletResponse) java.lang.reflect.Proxy.newProxyInstance(loader,
+                new Class<?>[]{jakarta.servlet.http.HttpServletResponse.class}, (proxy, method, arguments) -> {
+                    assertEquals("setStatus", method.getName());
+                    status.set((Integer) arguments[0]);
+                    return null;
+                });
+        assertFalse(interceptor.preHandle(request, response, new Object()));
+        assertEquals(401, status.get(), "external is real token authentication, not a fixed actor bypass");
     }
 
     private static void verifyCalendarBarrier(java.net.URLClassLoader loader) throws Exception {

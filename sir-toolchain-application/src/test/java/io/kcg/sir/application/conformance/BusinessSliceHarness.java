@@ -443,7 +443,8 @@ final class BusinessSliceHarness {
                 : Map.of();
     }
 
-    Path buildAndLocateJar(MysqlRuntimeJdbcUrl runtimeUrl) throws IOException, InterruptedException {
+    /** Shared by both real build/start rounds; inspectable without spawning Maven or an application. */
+    Map<String, String> childEnvironment(MysqlRuntimeJdbcUrl runtimeUrl) {
         ChildEnvironmentBuilder childEnvironment = new ChildEnvironmentBuilder()
                 .copyOsAllowlist()
                 .mavenRepoLocal(this.environment.mavenRepo().toString())
@@ -463,6 +464,11 @@ final class BusinessSliceHarness {
         // ChildEnvironmentBuilder deliberately drops inherited MAVEN_OPTS; limits must be explicit.
         List<String> mavenLimits = ConformanceJvmLimits.arguments("maven");
         if (!mavenLimits.isEmpty()) childEnv.put("MAVEN_OPTS", childEnv.get("MAVEN_OPTS") + " " + String.join(" ", mavenLimits));
+        return Map.copyOf(childEnv);
+    }
+
+    Path buildAndLocateJar(MysqlRuntimeJdbcUrl runtimeUrl) throws IOException, InterruptedException {
+        Map<String, String> childEnv = this.childEnvironment(runtimeUrl);
         this.springProcess = new SpringApplicationProcess(
                 Path.of(System.getProperty("java.home"), "bin", "java"), childEnv, this.redactor);
         MavenProjectRunner mavenRunner = new MavenProjectRunner(

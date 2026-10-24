@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 
 /** Actual generated HTTP/JDBC behavior; the separate deployment smoke verifies product DDL. */
 class MoneyBusinessConformanceIT {
-    private static final BusinessSliceHarness.Fixture FIXTURE = new BusinessSliceHarness.Fixture(
+    static final BusinessSliceHarness.Fixture FIXTURE = new BusinessSliceHarness.Fixture(
             "G10 exact Money, PATCH, atomic deltas and non-strict sessions", "/valid/money.sir",
             "/conformance/mysql/money-ddl.sql", "/conformance/mysql/money-seed.sql", "wallet", "/api/wallet/show?id=1",
             "money-report.txt", "money", "kcg.money-conformance.enabled");
@@ -24,11 +24,17 @@ class MoneyBusinessConformanceIT {
             System.out.println("[MONEY-CONFORMANCE] NOT_RUN: " + environment.missingPrerequisites());
             return;
         }
-        var slice = new BusinessSliceHarness(FIXTURE, environment);
+        var slice = createSlice(environment);
         try { slice.verify(() -> execute(slice)); }
         finally { slice.teardown(); slice.writeReport(); }
         System.out.println(slice.report());
         assertTrue(slice.passed(), slice::report);
+    }
+
+    static BusinessSliceHarness createSlice(BusinessSliceHarness.Environment environment) {
+        var slice = new BusinessSliceHarness(FIXTURE, environment);
+        slice.useActorMode("external");
+        return slice;
     }
 
     private void execute(BusinessSliceHarness s) throws Exception {

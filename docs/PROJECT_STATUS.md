@@ -1,6 +1,6 @@
 # KCG-Code 当前项目状态
 
-> 更新：2026-10-23。状态：正常开发中的工程，不宣称生产就绪。本文说明**现在能做什么**；验证口径与证据在[验证说明](qualification/README.md)；已完成或退役的材料在 [history](history/README.md)。
+> 更新：2026-10-24。状态：正常开发中的工程，不宣称生产就绪。本文说明**现在能做什么**；验证口径与证据在[验证说明](qualification/README.md)；已完成或退役的材料在 [history](history/README.md)。
 
 ## 1. 定位
 
@@ -110,6 +110,8 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 **之后的语义补充（2026-10-18～20）：**负责人确认先补语义、暂不做小模型评测，依次实施了内置 `Crud`、授权（403 与读当前用户字段）、路由与路径参数、通用改名命令，均已由 CI 通过（见第 4 节）。随后负责人确认并实施 G7 可选值比较、空值判断与显式筛选（`33f960b` 已推送，推送时按要求未核验 CI）；再确认并实现 G2/G4 查询原语（`00e3ce9` 已推送，推送时未核验 CI）。后续核验发现 #136 的真实 DTO Optional 取值错误、#137 的旧非法夹具和新增引用角色覆盖缺口；修复工作区 58 项定向通过，负责人随后授权随本提交推送并继续工作；同源码 CI 验收尚未完成。证据与未执行项见[验证说明第 8 节](qualification/README.md#ci-136-137-fix)。CI 修复已推送为 `ee6ddeb`；#138 的全量门通过、部署更新接口错误期待 201 而实际 200，本轮已改正断言，不能把整次 CI 记为通过。负责人确认后，[G9 Crud](design/12-feature-semantics-and-semantic-types.md#g9-crud) 已在工作区实现角色写权限、字段排除、公开读与多段路径，并贯通通用参数值和精确改名；library／market 已采用。89 项定向通过，真库 IT 已接入 CI，`f82cb94` 已推送；#139 双全量门通过，新增 G9 真库 IT 因把夹带排除字段的请求当作正常写入／权限请求而失败，后续部署被跳过。本轮分开合法请求与字段篡改请求，未改生产规则；13 项相关定向通过，完整 IT 仍待修复源码 CI。证据见[第 10 节](qualification/README.md#ci-139-fixture-fix)，八题完成数不提前上调。证据见[第 9 节](qualification/README.md#g9-crud-local)。SLM 评测的模型与样本数仍未定。
 
 **CI 提速实测：**#155 主验证 8:18（同业务源码 #154 为 19:51），在线预热 0:27、Frozen 3:37，Completion 按预期跳过；真实业务／独立验证／CLI 保留。部署被取消，不能比较整轮时长，也不将全部观测改善归因为编排。详见[验证第 25 节](qualification/README.md#ci-154-accepted)。
+
+**当前修复（#169）：**Money加入认证月报后漏配external模式，生成工程构建通过但Actor启动守卫正确拒绝，月报真库未执行。现已在实际IT创建路径补齐external，并验证真实子进程Spring环境、生成身份守卫／凭证适配器／MyBatis装配及匿名401；7类21项定向通过，未改生产代码或弱化鉴权，见[验证40](qualification/README.md#ci-169-actor-mode-fix)。单批提交推送后由负责人通知CI，不查询或等待。账本仍71／6／7。
 
 **最新实现（用户时区月报／当前预算，待同源码CI）：**已按[设计26](design/12-feature-semantics-and-semantic-types.md#g8-calendar-month-scope)实现无参数timeZone约束、可信本人偏好及month双UTC边界；只读RR复用现有SUM／分组。指定budgetId和分类都检查本人归属，严格大于当前上限才提示，不冻结历史。旧用户未设偏好明确拒绝；新增可空列须应用schema变更。生成目标按计划启用UTC JDBC4.2适配，避免Timestamp混合日历及默认时区影响1000／1500等日期，无month工程不变。33类247项定向通过；真实Money IT复用构建，加入月界微秒／历史CRUD／非UTC实际会话及偏好修改屏障，本机NOT_RUN。ledger281／4609／28，账本71／6／7；详见[验证39](qualification/README.md#g8-calendar-month-local)。#168记录与配套文档随本批代码提交，不额外触发文档CI，不查询／等待新CI。
 

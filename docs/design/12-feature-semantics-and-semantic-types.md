@@ -1344,3 +1344,8 @@ month有明确AstMonthStep／边界声明节点、Normalized MonthStep与Lowerin
 ledger的月度声明直接复用于Money IT同一生成工程，AST片段相等且必须真实存在；不另起应用。新的CalendarSnapshotFixture只作隔离验收，在User查询已完成后可观察地等待，另请求提交偏好修改，再检查在途月报仍为原时区、下一请求使用新时区。真实样例包括纽约三月月首／下月首微秒、1000最小月、1500 CRUD历史写读、9999边界、空集、未设置／非法时区、伪造请求zone／userId无效、他人预算／分类拒绝及当前上限变更。重新利用原非严格重启，在同一次重启令会话+05:30、JVM Pacific/Honolulu；验收通过实际DataSource查询@@session.time_zone／sql_mode和ZoneId.systemDefault，不以环境变量存在冒称覆盖。旧SQL预算、每语句告警和分组count后屏障保留。
 
 本机只编译／执行内存生成服务、实际自动装配及探针，不启动这些HTTP／SQL场景。新增契约还核对真实Crud /api/entries POST的201、详情GET、设置接口默认200和SIR错误码，不把Java异常类名当公开code或虚构一个CalendarInsert接口。ledger当前281行SIR／4609行Java／28项能力；两项月度需求为待CI△，图表／导出仍✗。随实现一批提交，#168验收记录也并入本批，不独立造文档CI，不查询／等待新运行。
+
+
+### 26.7 CI #169 启动身份配置修复
+
+`b1b7903` 的 [#169](https://github.com/HoloNova/Software-IR/actions/runs/40049305000) 在Frozen全量门和生成工程构建之后，因Money IT未配置kcg.actor-identity.mode而退出，月度真实检查及部署尚未执行。复用应用纳入actor／DualTokenLogin时，必须同步真实external启动配置；不因原Wallet路由公开就假定整个工程无需认证模式。修复只在测试侧：实际创建入口配置external，两次构建启动共用可检查的环境；真实生成身份守卫／凭证适配器与MyBatis装配覆盖原缺口，缺模式001及匿名401保留。7类21项定向通过，详见[验证40](../qualification/README.md#ci-169-actor-mode-fix)。没有修改时区、月界、预算或生产鉴权默认；真实数据库／HTTP和部署仍待修复源码CI，账本71／6／7不变，不查询或等待结果。

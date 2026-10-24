@@ -1083,3 +1083,32 @@ mvn -B -q -o -pl sir-generator-spring-boot -am test '-Dtest=CalendarUtcJdbcRunti
 **资源／边界：**Maven384MiB／fork512MiB，各2个可见处理器，一次仅一构建。AFT Java LSP初始化失败为PARTIAL，不能据此宣称无诊断；编译依据实际Maven。覆盖率NOT_MEASURED；本机全量、完整Linux文件导出、生成工程Maven构建、数据库／应用及部署均NOT_RUN。没有UI改动或浏览器／UI单测。旧账号新可空time_zone列需应用schema变更并主动设置，不猜默认、不自动重写旧历史日期。
 
 TopicSamplesTest实际内存输出ledger **281行SIR／4609行Java／28项能力**。月报／预算两条从✗转已实现待CI△，账本 **71／6／7**，不是新验收✓；AVG／多键／零组、日期差、G5和图表／导出未做。#168验收文档与本批代码同一提交推送，不独立造文档CI，不查询／等待新运行，由负责人通知结果。
+
+
+<a id="ci-169-actor-mode-fix"></a>
+## 40. CI #169：Money 新增认证路由但漏配启动身份模式
+
+失败源码 **`b1b7903683b374c5fc627a0b1241494bfb1688df`**，[verify #169](https://github.com/HoloNova/Software-IR/actions/runs/40049305000)。Frozen full gate、生成工程 `mvn clean verify` 成功；248份原始XML只有MoneyBusinessConformanceIT一项failure。应用日志 `conformance-evidence/money-1a16b83c132-54885/logs/spring.stdout.log` 第23／30行明确：
+
+```text
+KCG-ACTOR-STARTUP-001: property kcg.actor-identity.mode is missing or blank
+at example.money.Application$ActorIdentityRuntime.afterSingletonsInstantiated
+```
+
+不是月界运算或日期绑定失败：应用初始化即退出，7项通过是准备／构建／清理，1项失败是就绪；月报、历史日期、偏好快照没有执行，独立验证／CLI／部署被跳过。原Money没有认证能力，本批纳入实际ledger的actor及DualTokenLogin后，IT漏同步 `useActorMode("external")`。既有DualToken／library／course IT早已显式设置。缺模式拒绝启动是正确的生产协议，不能改默认、关启动守卫或用local-fixed冒充真实认证。
+
+**修复仅在测试树：**实际Money IT通过createSlice创建并显式配置external；harness将原子进程环境构造原样抽出为childEnvironment，真实Maven／Java及非严格重启仍使用该唯一路径，返回不可变快照。没有修改src/main、生成模板、时区算法、旧鉴权协议或CI编排。
+
+**RED→GREEN：**MoneyActorEnvironmentTest调用实际Money创建入口和实际子进程环境，再经Spring的systemEnvironment属性源解析，不断言一份复制常量。先取得2项中1项失败：`expected external but was null`，无认证切片无模式的对照通过。首轮曾被旧证据测试辅助URL带schema挡住，先修正为合法控制端点后才取得上述有效RED，不把辅助数据错误算缺模式证据。正式回归还检查非严格／非UTC重启保留external、Hikari的实际配置键及TZ，不注入固定身份或本地profile。
+
+MoneyAggregateFixtureCompilationTest现加载实际生成的ActorIdentityRuntime、CredentialIdentityAdapter、AccessToken／RefreshToken Mapper及UUID／UTC处理器，配合真实MyBatis-Plus自动装配：缺模式仍触发与CI相同的001；配置external后必须唯一装配真正的凭证适配器，无循环且不得访问DataSource。用实际生成拦截器执行匿名月报请求，必须401，不以固定actor绕过。原告警插件、计数后屏障、读取用户后屏障及UTC处理器注册检查保留。测试日志中的001是预期负例，不是失败，也没有启动Web服务器／真实应用。
+
+7类最新XML去重 **21 tests，0 failures／errors／skips**：MoneyActorEnvironmentTest 2、MoneyAggregateFixtureCompilationTest 1、BusinessSliceHarnessEvidenceTest 5、CalendarLedgerContractTest 4、MoneySessionConfigurationTest 3、ConformanceJvmLimitsTest 2、GeneratorCredentialContractTest 4。
+
+```powershell
+$env:MAVEN_OPTS='-Xmx384m -XX:ActiveProcessorCount=2'
+mvn -B -q -o -pl sir-toolchain-application -am test '-Dtest=MoneyActorEnvironmentTest,MoneyAggregateFixtureCompilationTest,BusinessSliceHarnessEvidenceTest,CalendarLedgerContractTest' '-Dsurefire.failIfNoSpecifiedTests=false' '-DargLine=-Xmx512m -XX:ActiveProcessorCount=2'
+mvn -B -q -o -pl sir-toolchain-application -am test '-Dtest=MoneySessionConfigurationTest,ConformanceJvmLimitsTest,GeneratorCredentialContractTest' '-Dsurefire.failIfNoSpecifiedTests=false' '-DargLine=-Xmx512m -XX:ActiveProcessorCount=2'
+```
+
+第二条只补共享环境的邻近回归，不重复第一条绿色范围。Maven384MiB／fork512MiB，均2个可见处理器。AFT inspect调用超时，没有形成诊断证据，编译以实际Maven为据；覆盖率未测量。本机未跑全量、真库IT、生成工程Maven构建、Web／浏览器或部署。RED、GREEN及最终源码哈希在 `target/ci-169-verification/`，提交后绑定实际SHA。月报／预算仍待修复源码的HTTP／MySQL及部署，账本71／6／7不变。修复与证据文档单批提交推送触发CI，不查询或等待结果，由负责人通知。

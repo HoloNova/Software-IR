@@ -63,21 +63,25 @@ class BusinessSliceHarnessEvidenceTest {
     }
 
     static BusinessSliceHarness harness(Path work, Path evidence) {
+        return new BusinessSliceHarness(FIXTURE, environment(work, evidence, FIXTURE.enabledProperty()));
+    }
+
+    static BusinessSliceHarness.Environment environment(Path work, Path evidence, String enabledProperty) {
         Map<String, String> properties = Map.of(
-                "kcg.evidence-conformance.enabled", "true",
+                enabledProperty, "true",
                 "kcg.conformance.work-parent", work.toAbsolutePath().toString(),
                 "kcg.conformance.evidence-parent", evidence.toAbsolutePath().toString(),
                 "kcg.conformance.maven-executable", work.resolve("mvn").toAbsolutePath().toString(),
                 "kcg.conformance.maven-repo", work.resolve("m2").toAbsolutePath().toString(),
                 "kcg.query-conformance.schema-name", "kcg_conf_evidence");
         Map<String, String> variables = Map.of(
-                "KCG_CONF_CONTROL_JDBC_URL", "jdbc:mysql://127.0.0.1:3306/kcg_conf_evidence",
+                "KCG_CONF_CONTROL_JDBC_URL", "jdbc:mysql://127.0.0.1:3306/",
                 "KCG_CONF_CONTROL_USERNAME", "control",
                 "KCG_CONF_CONTROL_PASSWORD", "control",
                 "KCG_CONF_RUNTIME_USERNAME", "runtime",
                 "KCG_CONF_RUNTIME_PASSWORD", "runtime");
-        var environment = BusinessSliceHarness.Environment.read(properties::get, variables::get, "kcg.evidence-conformance.enabled");
+        var environment = BusinessSliceHarness.Environment.read(properties::get, variables::get, enabledProperty);
         assertTrue(environment.complete(), environment.missingPrerequisites()::toString);
-        return new BusinessSliceHarness(FIXTURE, environment);
+        return environment;
     }
 }

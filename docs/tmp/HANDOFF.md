@@ -140,6 +140,8 @@ Money IT复用原应用，增加GroupedSumFixture：计数真正完成后在可�
 
 #### G8第三批：用户时区自然月及当前预算提示（已实现，待同源码CI）
 
+#169的Frozen全量门及生成工程构建通过，Money缺kcg.actor-identity.mode在启动即退出，月界／日期／偏好快照均未执行，部署跳过。本批只在实际Money创建路径显式设置external，抽取并复用真实子进程环境；补真实Actor启动守卫、凭证适配器和MyBatis装配，缺模式仍拒绝、匿名仍401，无固定actor绕过。7类21项定向通过，见[验证40](../qualification/README.md#ci-169-actor-mode-fix)，证据target/ci-169-verification。生产代码及CI编排不变，修复完成直接提交推送，不等待新CI，由负责人通知。
+
 负责人已选择每位用户自己的时区＋指定预算当前规则，**不能再把原UTC建议当决定，也不重复问同样两点**。[设计26](../design/12-feature-semantics-and-semantic-types.md#g8-calendar-month-scope)已改写：服务端本人偏好是权威，月报不临时接受任意zone；旧用户未设置则明确拒绝，不猜UTC。现已补通用timeZone字符串校验及可信本人设置；month步骤把YearMonth本月／下月当地最早有效时刻分别转Instant；RR同快照读偏好／预算／金额，预算按budgetId作精确Flag比较。无每期预算表／冻结历史；规则、账目、偏好变化都会影响历史重查，不隐式加EXPENSE-only。
 
 先期JDK21探针在target/g8-month-investigation，不当成业务证据。本批实际SIR语义／源编辑／全角色及结构门、独立Core／IR、生成服务和UTC JDBC4.2适配均已实现；33类247项定向通过，见[验证39](../qualification/README.md#g8-calendar-month-local)。JDBC协议测试在UTC／Pacific/Honolulu各运行，同类不重复累计；实际自动装配和3份探针源码编译／屏障执行通过，无本机应用／SQL。month会拒绝两端点越过DATETIME(6)，旧Timestamp在1000／1500年的混合日历缺口已用按需UTC LocalDateTime适配解决，普通无month软件不改产物。PATCH仍遵守version及Optional，空changes仍可作原版本条件写，不改变字段。新MONTH_ERROR同步两处全角色夹具及无导出的精确缺import反例；完整文件导出留Linux CI。
