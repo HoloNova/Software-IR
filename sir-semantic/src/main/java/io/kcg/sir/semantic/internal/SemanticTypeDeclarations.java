@@ -127,7 +127,7 @@ final class SemanticTypeDeclarations {
    private static Optional<SemanticTypes.Rule> rule(AstConstraint constraint, PrimitiveType kind, List<Diagnostic> diagnostics) {
       String name = constraint.name().text();
       int expected = switch (name) {
-         case "notBlank", "email" -> 0;
+         case "notBlank", "email", "timeZone" -> 0;
          case "min", "max" -> 1;
          case "length", "precision" -> 2;
          default -> -1;

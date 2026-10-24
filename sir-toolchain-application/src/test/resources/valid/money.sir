@@ -192,5 +192,139 @@ software MoneyLedger {
         return totals;
       }
     }
+
+    // Actual ledger calendar declarations; checked against the topic AST, not a parallel implementation.
+    enum Direction { INCOME, EXPENSE }
+    type ZoneName = Text where timeZone, length(1, 64);
+    entity User persistent {
+      identity id: Id generated auto;
+      field timeZone: Optional<ZoneName>;
+    }
+    use DualTokenLogin {
+      account: User;
+      name: name;
+      password: passwordHash;
+    }
+    input RegisterInput {
+      field name: Name;
+      field password: Text where length(6, 64);
+    }
+    view UserView from User {
+      field id: Id;
+      field name: Name;
+    }
+    error NameTaken http 409;
+    capability Register {
+      input RegisterInput;
+      output UserView;
+      fails NameTaken;
+      requires atomic;
+      expose command at "/register";
+      workflow {
+        create User as user {
+          name: input.name;
+          passwordHash: input.password;
+        }
+        persist user else NameTaken;
+        return user;
+      }
+    }
+    error BadPage;
+    error Forbidden http 403;
+    input PageOnly {
+      field page: PageNo;
+      field size: PageSize;
+    }
+
+    entity Category persistent {
+      identity id: Id generated auto;
+      field owner: Ref<User>;
+      field name: Name;
+      field direction: Direction;
+    }
+    // Exact decimal amounts; 0.01 is the smallest positive value at Money's default scale.
+    entity Entry persistent {
+      identity id: Id generated auto;
+      field owner: Ref<User>;
+      field category: Ref<Category>;
+      field amount: Money where min(0.01);
+      field note: Optional<Remark>;
+      field occurredAt: Moment;
+    }
+    entity Budget persistent {
+      identity id: Id generated auto;
+      field owner: Ref<User>;
+      field category: Ref<Category>;
+      field monthlyLimit: Money where min(0.01);
+    }
+    use Crud {
+      entity: Entry;
+      owner: owner;
+      path: entries;
+    }
+    use Crud {
+      entity: Budget;
+      owner: owner;
+      path: budgets;
+    }
+    // A missing preference is deliberate: old users must choose, never silently inherit the server's zone.
+    view TimeZoneView from User { field timeZone: Optional<Text>; }
+    input PreferredTimeZone { field timeZone: ZoneName where notBlank; }
+    error UserNotFound http 404;
+    error BadPeriod http 400;
+    capability ReadTimeZone {
+      actor Ref<User>; output TimeZoneView; fails UserNotFound;
+      requires authenticated; requires readonly; expose query at "/me/time-zone";
+      workflow {
+        load User by actor as account else UserNotFound;
+        return account;
+      }
+    }
+    capability SetTimeZone {
+      actor Ref<User>; input PreferredTimeZone; output TimeZoneView; fails UserNotFound;
+      requires authenticated; requires atomic; expose command at "/me/time-zone";
+      workflow {
+        load User by actor as account else UserNotFound;
+        update account { timeZone: input.timeZone; }
+        persist account;
+        return account;
+      }
+    }
+    input MonthQuery {
+      field month: Optional<Text>;
+      field page: PageNo;
+      field size: PageSize;
+    }
+    capability TotalsForMonth {
+      actor Ref<User>; input MonthQuery; output Page<SumGroup<Ref<Category>>>;
+      fails BadPage; fails BadPeriod; fails UserNotFound;
+      requires authenticated; requires readonly; expose query at "/entries/monthly-totals";
+      workflow {
+        load User by actor as account else UserNotFound;
+        month input.month in account.timeZone as since, until else BadPeriod;
+        sum Entry.amount by category
+          where item.owner == actor and any(Category, id == item.category and owner == actor)
+            and item.occurredAt >= since and item.occurredAt < until
+          Page input.page, input.size else BadPage as totals;
+        return totals;
+      }
+    }
+    input BudgetMonthQuery { field budgetId: Id; field month: Optional<Text>; }
+    capability BudgetExceededForMonth {
+      actor Ref<User>; input BudgetMonthQuery; output Flag;
+      fails BadPeriod; fails BudgetNotFound; fails UserNotFound;
+      requires authenticated; requires readonly; expose query at "/budgets/{budgetId}/exceeded";
+      workflow {
+        load User by actor as account else UserNotFound;
+        month input.month in account.timeZone as since, until else BadPeriod;
+        load Budget by input.budgetId as budget else BudgetNotFound;
+        validate budget.owner == actor else BudgetNotFound;
+        load Category by budget.category as category else BudgetNotFound;
+        validate category.owner == actor else BudgetNotFound;
+        sum Entry.amount where item.owner == actor and item.category == category
+          and item.occurredAt >= since and item.occurredAt < until as total;
+        return total > budget.monthlyLimit;
+      }
+    }
   }
 }

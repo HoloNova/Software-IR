@@ -607,7 +607,17 @@ final class TypePass {
                s.page().ifPresent(page -> this.typePageClause(page, capScopeId, visibleVars));
                visibleVars.add(s.result().text());
                break;
-            case io.kcg.sir.ast.AstSumStep s: {
+            case io.kcg.sir.ast.AstMonthStep s: {
+                for (AstExpression expression : List.of(s.month(), s.zone())) {
+                    SirType type=this.typeExpression(expression,capScopeId,visibleVars);
+                    if (type instanceof OptionalType optional) type=optional.element();
+                    if (type!=null && type!=PrimitiveType.STRING)
+                        this.diagnostics.add(DiagnosticBuilder.error("SIR-TYPE-001","month requires text month and time zone",expression.span()));
+                }
+                visibleVars.add(s.since().name().text());visibleVars.add(s.until().name().text());
+                break;
+             }
+             case io.kcg.sir.ast.AstSumStep s: {
                Set<String> queryVars = new LinkedHashSet<>(visibleVars);
                queryVars.add("item");
                SirType queryType = this.typeExpression(s.predicate(), SymbolIdFactory.capabilityStepScope(capScopeId, s.id().value()), queryVars);

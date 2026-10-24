@@ -129,7 +129,8 @@ public sealed interface SpringBootDeclaration
    enum ConstraintKind {
       NOT_NULL,
       PRECISION,
-      NOT_BLANK,
+      TIME_ZONE,
+       NOT_BLANK,
       EMAIL,
       SIZE,
       DECIMAL_MIN,

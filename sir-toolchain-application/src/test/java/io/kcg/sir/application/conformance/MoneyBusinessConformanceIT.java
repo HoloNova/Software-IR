@@ -38,6 +38,7 @@ class MoneyBusinessConformanceIT {
         if (s.notRunReason() != null || s.compileAndMaterialize().isEmpty()) return;
         DecimalSumChecks.installWarningFixture(s);
         GroupedSumChecks.install(s);
+        CalendarLedgerChecks.install(s);
         var jar = s.buildAndLocateJar(url);
         if (jar == null || !s.startAndWaitUntilReady(jar)) return;
         s.setHttpStatus("READY (Money wallet query)");
@@ -46,16 +47,19 @@ class MoneyBusinessConformanceIT {
             var http = new HttpAssertionClient();
             DecimalSumChecks.verify(s, observer, http);
             GroupedSumChecks.verify(s, observer, http);
+            CalendarLedgerChecks.verify(s,http,false);
             ordinaryWrites(s, observer, http);
             patches(s, observer, http);
             atomicWrites(s, observer, http);
             overflow(s, observer, http);
             // Fixed pool initialization affects the actual write connections; never SET GLOBAL or a second probe connection.
             s.useNonStrictSqlModeFixture();
+            s.useNonUtcCalendarSessionFixture();
             if (!s.rebuildAndRestart(url)) return;
             nonStrict(s, observer, http);
             DecimalSumChecks.warningPolicy(s, http, "non-strict session");
             GroupedSumChecks.warnings(s, http, "non-strict session");
+            CalendarLedgerChecks.verify(s,http,true);
             s.setRowsAfter(s.rowsNow(observer));
         }
     }

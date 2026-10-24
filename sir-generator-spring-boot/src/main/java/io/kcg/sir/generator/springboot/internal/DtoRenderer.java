@@ -157,6 +157,7 @@ final class DtoRenderer {
          String type = switch (constraint.kind()) {
             case NOT_BLANK -> "jakarta.validation.constraints.NotBlank";
             case EMAIL -> "jakarta.validation.constraints.Email";
+             case TIME_ZONE -> validationSupport + ".RegionTimeZone";
             case SIZE -> "jakarta.validation.constraints.Size";
             case DECIMAL_MIN -> "jakarta.validation.constraints.DecimalMin";
             case DECIMAL_MAX -> "jakarta.validation.constraints.DecimalMax";
@@ -220,6 +221,7 @@ final class DtoRenderer {
       return switch (constraint.kind()) {
          case NOT_BLANK -> "@NotBlank";
          case EMAIL -> "@Email";
+          case TIME_ZONE -> "@RegionTimeZone";
          case SIZE -> {
             List<String> args = constraint.arguments();
             if (args.size() != 2) {

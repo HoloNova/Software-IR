@@ -528,6 +528,14 @@ final class SirAstBuilder {
                     page,
                     name(value.result));
         }
+        if (context.monthStep() != null) {
+            var value=context.monthStep();
+            return new io.kcg.sir.ast.AstMonthStep(ids.id(path), source.span(value),
+                expression(value.month,path), expression(value.zone,path),
+                new io.kcg.sir.ast.AstMonthBoundary(ids.id(path+"/since"), source.span(value.since), name(value.since)),
+                new io.kcg.sir.ast.AstMonthBoundary(ids.id(path+"/until"), source.span(value.until), name(value.until)),
+                nameRef(value.error,path,"error"));
+        }
         if (context.sumStep() != null) {
             var value = context.sumStep();
             AstExpression predicate = expression(value.predicate, path);

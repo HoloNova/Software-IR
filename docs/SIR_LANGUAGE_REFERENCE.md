@@ -248,7 +248,7 @@ entity Account persistent {
 }
 ```
 
-**约束**（`where` 后面，逗号分隔）：`notBlank`（非空白，文本）、`email`（邮箱格式，文本）、`length(最小, 最大)`（文本）、`min(值)`、`max(值)`（数字）、`precision(总位数, 小数位)`（十进制）。同一个约束不能重复，`min` 不能大于 `max`。
+**约束**（`where` 后面，逗号分隔）：`notBlank`（非空白，文本）、`email`（邮箱格式，文本）、`timeZone`（目标JDK支持的区域时区或UTC，文本，无参数）、`length(最小, 最大)`（文本）、`min(值)`、`max(值)`（数字）、`precision(总位数, 小数位)`（十进制）。同一个约束不能重复，`min` 不能大于 `max`。`timeZone`接受UTC及带斜线且存在于目标JDK tzdb的区域名，如Asia/Shanghai；不接受CST、纯偏移、UTC+08:00、拼错名称或前后空格。不把编译机的时区列表冻结进生成代码。null本身仍交由独立必填规则处理；设置接口可组合notBlank。DTO和最终存储候选使用同一检查，PATCH仍按目标实体校验，不能在PATCH输入重复声明timeZone业务约束。
 
 **`versioned`**：这个整数字段是并发版本号，每个实体最多一个。带版本号的实体，更新时要用 `persist ... else 错误`（见 5.5）。
 
@@ -1573,7 +1573,30 @@ capability TotalsByCategory {
 
 每步两条聚合读取（COUNT DISTINCT＋当前页的GROUP BY），不拉全明细、不逐分类查询、不隐式补零。筛选值只求值一次，两次读取在同一显式只读REPEATABLE_READ快照内；两条语句都检查自身告警，继续使用STATEMENT本地缓存。任意一步失败不返回部分页。不同HTTP翻页请求不保证同一快照，不能据此做并发写入限额。
 
-owner和相关实体归属须由作者明确筛选；scope自动保留，但Crud的owner不等于任意统计的授权。ledger现在提供本人显式区间内的本人分类合计，**不是自然月、历史净收支或预算超支**。AVG／舍入、多键、Optional键、文本／枚举键、HAVING、按总额排序及零组补齐不在本批范围。
+owner和相关实体归属须由作者明确筛选；scope自动保留，但Crud的owner不等于任意统计的授权。ledger保留显式区间合计，并用第5.12节的用户月界组合自然月分类汇总和指定当前预算提示；不是历史净收支、不可变历史预算或写入限额。AVG／舍入、多键、Optional键、文本／枚举键、HAVING、按总额排序及零组补齐不在本批范围。
+
+### 5.12 `month`：区域自然月的两个UTC边界
+
+```sir-declarations
+type ZoneName = Text where timeZone, length(1, 64);
+input MonthInput { field month: Optional<Text>; field zone: Optional<ZoneName>; }
+error BadPeriod http 400;
+capability MonthStart {
+  input MonthInput; output Moment; fails BadPeriod; requires readonly; expose query;
+  workflow {
+    month input.month in input.zone as since, until else BadPeriod;
+    return since;
+  }
+}
+```
+
+这一步只用于readonly query，两个表达式必须为非secret的文本或Optional文本；不自动读取用户偏好。上述通用例子由作者显式选择输入时区，ledger则先按actor读取User，再使用已保存的account.timeZone，不允许请求临时覆盖别人或本人的报表时区。`since`、`until`必须是两个新名字，类型都是Moment，只在后续步骤可见；错误须列入fails。该步骤自身不发SQL。
+
+年月严格为四位YYYY-MM，不自动trim、补零或猜时区。以JDK的YearMonth与LocalDate.atStartOfDay分别求本月及下月当地首日最早有效时刻，再转UTC；gap取跳跃后首个有效时刻，overlap取第一次出现。不能把月长当固定秒数，也不能先取UTC月再平移。查询组合采用`occurredAt >= since and occurredAt < until`，两端点及其前置偏好读取位于同一明确的只读REPEATABLE_READ事务中；独立HTTP请求不共享快照。
+
+缺值、显式null、非法格式／月份、不支持的区域或任一UTC端点越过目标DATETIME(6)范围，走声明错误（例中400 BadPeriod），不隐式回退UTC、不向外漏DateTimeException。当前目标端点为1000-01-01T00:00:00Z至9999-12-31T23:59:59.999999Z；因此9999-12及偏移后越过下限的1000-01也可能拒绝。包含month步骤的工程显式启用JDBC4.2的UTC Instant／DATETIME字段适配，避开旧Timestamp混合日历与JVM默认时区；独立IR会拒绝移除该支持或篡改物理边界。无month工程维持原输出。旧数据不因此自动改写，早期历史日期须按实际存储字段核对，不推测回填。
+
+ledger新增GET／POST `/api/me/time-zone`读写本人偏好、GET `/api/entries/monthly-totals?month=YYYY-MM`及GET `/api/budgets/{budgetId}/exceeded?month=YYYY-MM`。未设置偏好时月度接口返回BadPeriod；规则及其分类必须都属于本人，否则BudgetNotFound。预算提示用该分类本人月度金额的精确SUM与指定当前monthlyLimit比较，严格大于才为true；空集0，等于不超。修改偏好、规则或可变账目会影响历史重查，不新增预算期间表或伪造历史快照，不作为并发消费控制。既有用户仅新增可空列，不擅自决定他们的时区；升级前须应用生成的schema变更。
 
 ## 6. 表达式
 

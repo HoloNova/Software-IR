@@ -82,7 +82,10 @@ tasks、market 已更新；本机语义、降级、生成真值表、源往返�
 
 复核修正：课程冲突也需要学生锁；旧草案先修课片段的 required 并未取得，任意集合的反关联后来已用Course根的两个同级any表达，不用单门限制冒充完成。library 的限额及借／还一致性已实施待 CI（下节）；课程组合已实现见第三批，排队未完成。verify 的 push 已忽略 docs/** 和 **/*.md，纯文档更新不触发 CI，文档尽量随源码提交。
 
-### 4.6.2 G2 第二批：library 限额（已实现，待本批 CI）
+### 4.6.2 G2 第二批：library 限额（#168已验收）
+
+**当前验收结论：**87cad8b的[#168](https://github.com/HoloNova/Software-IR/actions/runs/39927438145)已核对同SHA原始产物，library203、course151、Money150项业务检查均通过，源digest匹配；240份XML无失败／错误，独立验证／CLI／部署全部通过。借阅限额、FIFO本人领取、时间冲突和任意直接先修四项转✓，当轮账本 **71／4／9**；本批月报／预算转待CI后为 **71／6／7**。以下旧轮“待CI／NOT_RUN”均是实现时的历史边界，不是当前阻塞；详见[验证38](../qualification/README.md#ci-168-g2-g8-accepted)。不把分组当自然月，不把扫码领取当还书自动分配。
+
 
 不改语言或生成器生产代码：User.activeLoans 默认 0，Borrow 先锁读者，以 <5 的条件增量占额后再改副本／建 Loan；GiveBack 锁 User → Loan → Copy，首次归还减一，重复／外人／计数异常拒写，晚失败要求整事务回滚。续借不占额。7 类 31 项定向通过；新的真库 IT 直接用实际 topics/library 源，已编译但未在本机执行。旧库需回填真实在借数，不能把 DEFAULT 0 当业务迁移；已有超限数保持真实值，可归还而不可继续借。见设计 23.6 与[验证第 26 节](../qualification/README.md#g2-library-local)。随后第三批已实现课程冲突的学生锁与任意先修课的反关联，排队另案，不重做已有读取／金额／投影原语。
 
@@ -90,7 +93,7 @@ tasks、market 已更新；本机语义、降级、生成真值表、源往返�
 
 CI 提速版 #155 主验证 8:18，正常路径 Completion 跳过，实际测试保留；部署被取消，不记整轮通过。完整基线仍为 #154。后续部署并行／缓存尚未实施，不必因已完成本轮提速重复修改工作流。文档随本批源码，不额外触发文档 CI。
 
-### 4.6.3 G2 第三批：课程组合（实现，待本批CI）
+### 4.6.3 G2 第三批：课程组合（#168已验收）
 
 实际 topics/course 已实现周课表半开区间、学生锁冲突检查、任意直接先修集合；关键是把Course作为根，组合同级 any(Prerequisite) 与 not any(CompletedCourse)，不用新语法、循环或时段快照。先修只在草稿增删、发布后冻结；成绩由管理员追加，学生不能自报通过。选课先User后Course；退课User→Enrollment→Course，座位仍按SQL守卫增减。原POST /courses/{id}/enroll、DELETE /enrollments/{id}不改路由。数值missing/null用既有G6检查，分页默认保留。
 
@@ -100,7 +103,7 @@ CI 提速版 #155 主验证 8:18，正常路径 Completion 跳过，实际测试
 
 上述CI修复已单独推送7d13a2d，排队没有混入；随后按负责人继续指示完成第四批，见下文。循环/聚合/日期差仍另案，不能借此扩大。
 
-### 4.6.4 G2 第四批：书目FIFO与本人扫码领取（实现，待CI）
+### 4.6.4 G2 第四批：书目FIFO与本人扫码领取（#168已验收）
 
 实际library增加Reservation及ReserveBook／ClaimReservation／CancelReservation／MyReservations，无新增语法／编译器生产分支。先取得User→Book等共同锁，再查同书更早预约；不能加全局owner scope，私有列表单独过滤。普通Borrow有队列即拒绝，GiveBack仅释放，AddCopy也锁Book；领取成功才扣名额、改Copy、建Loan并删预约，同事务共同提交。满额不自动跳过，所有者或馆员可明确取消；馆员锁预约所有者而不是自身，避免反向User锁。旧续借规则未改，无过期／通知／自动分配。
 
@@ -109,10 +112,10 @@ CI 提速版 #155 主验证 8:18，正常路径 Completion 跳过，实际测试
 ### 4.7 G5 列表循环、G8 后续聚合（新增范围先确认）
 
 - G5：请求里带列表、工作流逐项处理；对一批行统一改或删（订单行、级联删除）。商城的"一个订单多个商品"、取消订单退库存都卡在这里。
-- G8：条件金额SUM与第二批引用分组分页均已实现，见下；平均、自然月及预算仍另案。普通条件行计数已由 G2 提供，不重做。
+- G8：SUM／分组已由#168验收，用户时区自然月及当前预算本批已实现、待新CI，见下；平均、多键／零组仍另案，不重做既有求和。
 - 两者都会让语言明显变复杂。上一个 Agent 的建议：等 G7、G2、G4、G9、G10 补完，看还剩多少需求写不下，再决定。
 
-#### G8 首批已实现（待同源码CI）
+#### G8 首批条件SUM（#168已验收；下述为实现时记录）
 
 负责人已通知0bebfcd的修复CI通过；本批不再次查询或借其冒充新分组快照证据。#163的Money IT在构建前写探针副本时因证据目录未建而NoSuchFile中止，且报告将中止写成PASSED。已让写入方建档、harness异常入失败通道，14项定向通过，见[验证33](../qualification/README.md#ci-163-evidence-dir-fix)。两IT在本机为NOT_RUN（无参考库），真库SUM／告警仍待新CI；修复推送后直接继续。
 
@@ -120,7 +123,10 @@ CI 提速版 #155 主验证 8:18，正常路径 Completion 跳过，实际测试
 
 负责人已确认并实现[设计24](../design/12-feature-semantics-and-semantic-types.md#g8-decimal-sum-proposal)的条件Decimal单列SUM：独立步骤／字段绑定／scope／源编辑与IR硬化；空／全空0，总额不继承单笔精度；复用Lambda谓词和BaseMapper。按需标记及当前Statement告警插件、STATEMENT缓存防绕过，普通查询不改；真实ParamMap缺ew与合法变量名冲突均有RED→GREEN。ledger本人范围／本人分类合计已用上，195／3949／23；不推断分类方向净额或月份预算。30类187项定向通过，见[验证31](../qualification/README.md#g8-decimal-sum-local)；旧Windows目录读取10项受阻，新的内存SUM图谱完整构建通过。Money原IT复用同一应用／构建，加Optional、scope、参数、any和固定CAST告警对照；仅已编译、本机NOT_RUN。方案／文档同源码提交，账本67／8／9不变。当时尚无group-by；其后分组及结果载体已按下节实现。AVG、期间／时区与G5仍另案，CI结果由负责人通知，不查询。
 
-#### G8 第二批：引用分组分页已实现，待同源码CI
+#### G8 第二批：引用分组分页（#168已验收）
+
+#168核验后已关闭#165到#167阻塞：全角色／跨文件完整门、容器启动、真实SQL预算均通过，grouped-sum-query-trace.json实际为count1／page1／session1／unexpected0。Money同快照与严格／非严格两条语句告警均通过，部署全部合同项通过；不在合同的中断迁移等仍未运行。验收证据与SHA见验证38，不重复本机测试，也不因文档单独提交触发CI。
+
 
 #167（74bd393）全量门通过，#165／#166修复均有效；237份XML仅Money 1失败，而且真实分组业务已全部执行通过，唯一失败是新增读取预算把5条Connector/J会话探测算成业务查询（断言2、实际7）。已按语句角色分类：业务计数恰1、业务分页恰1、不可识别0，并要求summary条数与日志一致；#167真实digest（含服务端DISTINCTROW）固化为回归，完整digest／raw／分类写入grouped-sum-query-trace.json，写失败即判失败。未改期望值、未放宽或删断言，生产未动，7类59项定向通过，见[验证37](../qualification/README.md#ci-167-grouped-read-budget-fix)。真实SQL预算、快照与告警仍待修复SHA CI。
 
@@ -131,6 +137,14 @@ CI 提速版 #155 主验证 8:18，正常路径 Completion 跳过，实际测试
 [设计25](../design/12-feature-semantics-and-semantic-types.md#g8-grouped-sum-proposal)已按确认完成，27类236项定向通过，见[验证34](../qualification/README.md#g8-grouped-sum-local)。Page<SumGroup<Ref<Entity>>>只有key和精确total；Ref单键非Optional／secret，按身份升序、不补零组。COUNT DISTINCT和selectMaps用同一筛选求值，显式只读RR快照、两次当前Statement告警及STATEMENT缓存；任何一步失败不返回部分页。补齐any相关身份与根行外键的正式关联方向，不放开通用JOIN。源增删改、跨文件精确改名、结构门、Core／目标IR、Long／UUID、Mapper和支持载体命名冲突均覆盖。旧Mapper和分页协议不变。
 
 Money IT复用原应用，增加GroupedSumFixture：计数真正完成后在可观察屏障等待，控制连接提交新组，再检验同页仍是旧快照。严格／非严格会话均覆盖数据和计数告警；两个实际探针编译／冷目录安装／屏障执行定向通过，本机未运行真库。ledger只有本人显式区间内的本人分类分页合计，220／4106／24；月份／时区、预算历史、AVG／多键／零组和G5仍未做，账本67／8／9不变。JSON精确断言增加Jackson2.19.4仅test依赖；三项早期可行性探针源码归档target，实际实现回归替代它们，不再向CI增加重复探针测试。文档随源码提交，不查／等CI，负责人通知结果。
+
+#### G8第三批：用户时区自然月及当前预算提示（已实现，待同源码CI）
+
+负责人已选择每位用户自己的时区＋指定预算当前规则，**不能再把原UTC建议当决定，也不重复问同样两点**。[设计26](../design/12-feature-semantics-and-semantic-types.md#g8-calendar-month-scope)已改写：服务端本人偏好是权威，月报不临时接受任意zone；旧用户未设置则明确拒绝，不猜UTC。现已补通用timeZone字符串校验及可信本人设置；month步骤把YearMonth本月／下月当地最早有效时刻分别转Instant；RR同快照读偏好／预算／金额，预算按budgetId作精确Flag比较。无每期预算表／冻结历史；规则、账目、偏好变化都会影响历史重查，不隐式加EXPENSE-only。
+
+先期JDK21探针在target/g8-month-investigation，不当成业务证据。本批实际SIR语义／源编辑／全角色及结构门、独立Core／IR、生成服务和UTC JDBC4.2适配均已实现；33类247项定向通过，见[验证39](../qualification/README.md#g8-calendar-month-local)。JDBC协议测试在UTC／Pacific/Honolulu各运行，同类不重复累计；实际自动装配和3份探针源码编译／屏障执行通过，无本机应用／SQL。month会拒绝两端点越过DATETIME(6)，旧Timestamp在1000／1500年的混合日历缺口已用按需UTC LocalDateTime适配解决，普通无month软件不改产物。PATCH仍遵守version及Optional，空changes仍可作原版本条件写，不改变字段。新MONTH_ERROR同步两处全角色夹具及无导出的精确缺import反例；完整文件导出留Linux CI。
+
+Money IT同一构建纳入与ledger AST对齐的月度业务，新增CalendarSnapshotFixture在用户读取完成后等待，另一请求提交时区再放行，检验在途快照与后续重查。纽约月界微秒、1000下界／1500历史CRUD／9999末月、未设置／非法偏好、本人预算／分类隔离、等额／变更当前上限均等待真实CI。原非严格重启同时设置+05:30会话／Pacific/Honolulu JVM，实际DataSource读取会话time_zone／sql_mode、UTC偏差秒数与JVM区域，不拿环境变量当证据；既有告警、SQL预算和分组屏障保留，不增加原有严格／非严格两轮构建启动之外的轮次。ledger281行SIR／4609行Java／28项能力；两项从✗转待CI△，当前71／6／7，图表／导出仍✗。本批无UI，不起浏览器；旧账号须先设置时区，不自动猜测或回填。记录与源码一批提交推送，不查询／等待CI，结果由负责人通知。
 
 ### 4.8 G12、G13 小项（低优先）
 

@@ -100,7 +100,13 @@ final class WorkflowRenderer {
          case SpringBootWorkflow.LoadActorStep load:
             renderLoadActor(ctx, load, variableNames, imports, currentPackage, lines, mappers);
             break;
-          case SpringBootWorkflow.GroupedSumStep query:
+           case SpringBootWorkflow.MonthStep month:
+              collectExpressionImports(ctx,month.month(),variableNames,imports,currentPackage);
+              collectExpressionImports(ctx,month.zone(),variableNames,imports,currentPackage);
+              lines.addAll(CalendarStepRenderer.render(month,variableNames,WriteSupport.of(ctx.model()).validationSupportFqn(),
+                  errorJavaName(ctx,month.errorSymbol(),imports,currentPackage),inputName));
+              break;
+           case SpringBootWorkflow.GroupedSumStep query:
              renderGroupedSum(ctx, query, inputName, variableNames, imports, currentPackage, lines, mappers, stringMatches);
              break;
           case SpringBootWorkflow.SumStep query:
@@ -1003,7 +1009,8 @@ final class WorkflowRenderer {
             yield "precision(" + violations + ", " + pathLiteral + ", " + value + ", " + shape.precision() + ", " + shape.scale() + ");";
          }
          case NOT_BLANK -> "notBlank(" + violations + ", " + pathLiteral + ", " + value + ");";
-         case EMAIL -> "email(" + violations + ", " + pathLiteral + ", " + value + ");";
+         case TIME_ZONE -> "timeZone(" + violations + ", " + pathLiteral + ", " + value + ");";
+          case EMAIL -> "email(" + violations + ", " + pathLiteral + ", " + value + ");";
          case SIZE -> {
             List<String> args = constraint.arguments();
             if (args.size() != 2) {

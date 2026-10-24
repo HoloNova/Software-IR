@@ -605,7 +605,14 @@ final class NormalizePass {
                 this.siteTargetOrUnknown(s.entity().id()), predicate != null ? predicate : this.unitExpr(s.span()),
                 this.definitionBindingOrUnknown(s.id()), this.validated.findItemBindings().get(s.id()));
           }
-         case io.kcg.sir.ast.AstSumStep s -> {
+          case io.kcg.sir.ast.AstMonthStep s -> {
+              NormalizedExpression month=this.normalizeExpression(s.month()), zone=this.normalizeExpression(s.zone());
+              yield new NormalizedStep.MonthStep(s.id(), s.span(),
+                  month!=null?month:this.unitExpr(s.month().span()),zone!=null?zone:this.unitExpr(s.zone().span()),
+                  this.definitionBindingOrUnknown(s.since().id()),this.definitionBindingOrUnknown(s.until().id()),
+                  this.siteTargetOrUnknown(s.error().id()));
+          }
+          case io.kcg.sir.ast.AstSumStep s -> {
              NormalizedExpression predicate = this.normalizeExpression(s.predicate());
              yield new NormalizedStep.SumStep(s.id(), s.span(), this.siteTargetOrUnknown(s.entity().id()),
                  this.siteTargetOrUnknown(s.field().id()), predicate != null ? predicate : this.unitExpr(s.span()),

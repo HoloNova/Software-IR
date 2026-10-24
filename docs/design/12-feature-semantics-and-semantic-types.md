@@ -857,7 +857,7 @@ Lowering 复用 G6 的 IntegralToDecimal 与 G7 的空值比较计划；明确�
 course增加remaining与full，仍用原子守卫控制名额。只有实际实现与验收后才能重判“显示剩余名额”这一条；library可借数量需要跨行计数，不因本轮本行计算就算完成。G5／G8、日期差、界面和小模型评估都不在本轮范围。本机实现证据见下节；同源码 CI 仍待运行，不把新增写法直接当作真库验收结果。
 
 <a id="g2-business-combinations-proposal"></a>
-## 23. G2 业务组合：行锁／区间预约已验收，借阅限额待 CI
+## 23. G2 业务组合：行锁／区间预约及借阅／课程／FIFO（#168已验收）
 
 负责人确认继续后进入实施，基线 `359a45a` 的 #152 success。本节修正实施前草案中未闭合的取值与并发假设，不把草案当实现。第一批显式行锁及预约防重叠已由 #154 验收；第二批借阅限额见 23.6，课程冲突与先修课仍未完成。
 
@@ -909,7 +909,7 @@ validate not taken else HourTaken;
 
 第二批实现借阅限额与借／还一致性（23.6）；第三批按学生锁和同级 any 实现课程冲突／先修集合（23.7），尚待真库 CI。排队提升另案，不宣称已完成。
 
-### 23.6 第二批：借阅限额与借／还一致性（实现，待本批 CI）
+### 23.6 第二批：借阅限额与借／还一致性（#168已验收）
 
 **场景与复用：**每人最多 5 本在借。只用现有 User 身份锁、条件增减、Loan 状态守卫和 atomic 事务；不增加借书专用语法，不在编译器按 User／Loan 名字写业务。`User.activeLoans: Count default 0` 是服务端维护的状态，注册输入不接受它，续借不增加它。它不是 `count Loan` 的瞬时读取结果；先数后判断无法防止两个并发请求同时看到 4。
 
@@ -954,7 +954,7 @@ WHERE u.active_loans <> COALESCE(totals.actual, 0);
 
 
 <a id="g2-course-combinations"></a>
-### 23.7 第三批：课程冲突与任意直接先修集合（实现，待同源码 CI）
+### 23.7 第三批：课程冲突与任意直接先修集合（#168已验收）
 
 基线 `9d31a82`；按负责人要求不查询或等待新 CI。实现直接修改实际 `topics/course/project.sir`，没有 Parser／Semantic／Lowering／Generator 生产改动。
 
@@ -986,7 +986,7 @@ CourseSelectionBusinessConformanceIT 直接使用实际题目，复用现有隔�
 
 
 <a id="library-reservation-proposal"></a>
-### 23.8 第四批：书目预约、FIFO 与队首扫码领取（已实现，待同源码CI）
+### 23.8 第四批：书目预约、FIFO 与队首扫码领取（#168已验收）
 
 方案核对基线 `7c0017a`；负责人继续后，以课程就绪修复 `7d13a2d` 为基线实施实际 library。复用既有查询与锁，不增加语法／编译器生产分支；下文保留取舍依据，最终实现与本机验证见23.8.5。没有查询或等待新CI，真库验收仍待同源码证据。
 
@@ -1060,7 +1060,7 @@ validate not earlier else NotHead;
 
 
 <a id="g8-decimal-sum-proposal"></a>
-## 24. G8 第一批：条件 Decimal 求和（已实现，待同源码 CI）
+## 24. G8 第一批：条件 Decimal 求和（#168已验收）
 
 基线 `ddcc3fd31d40886f5af0e5e7ff4d9cebca3f444a`。负责人确认首批范围后实施，本文保留核对依据与取舍，并在 24.6 记录实际实现。没有查询／等待 CI；本机定向通过不等于真库验收。仅交付条件金额求和，不把分组、平均、循环、月历或新响应记录一次捆进来。
 
@@ -1158,7 +1158,7 @@ MyBatis-Plus 3.5.12的QueryWrapper.select能承载Lowering生成的固定聚合�
 
 
 <a id="g8-grouped-sum-proposal"></a>
-## 25. G8 第二批：按引用分组的精确金额分页（已实现，待同源码 CI）
+## 25. G8 第二批：按引用分组的精确金额分页（#168已验收）
 
 基线为修复 #163 后的 `0bebfcdf8fcfb5219d40e53a8d026b0416cd9a46`，负责人通知 CI 已通过并确认本节范围。现已贯通语法、正式绑定、类型／结构、源编辑、目标计划和真实生成服务；本批真实 HTTP／MySQL 仍须同源码 CI。本节及配套语言参考、验收记录随代码提交，不单独触发文档 CI。
 
@@ -1263,3 +1263,84 @@ GroupRange 的时间采用现有 Optional<Moment>，缺省／null／反序通过
 ### 25.8 CI #165：分组键的穷尽引用契约补齐
 
 [e270436的#165](https://github.com/HoloNova/Software-IR/actions/runs/39912848967)首次冻结门仅TypedReferenceSiteContractTest遗漏GROUP_KEY_FIELD；后续完成诊断还在ProjectVisibilityTest的跨文件全角色门发现同一遗漏。原门都必须保留，不以放宽枚举、把键视为local或跳过新角色解决。已在私有真实fixture中加入分组能力，补全测试的AstSumGroupTypeRef／AstGroupedSumStep遍历，并以同一跨文件fixture验证Enrollment.student绑定及准确缺import位置的单一Resolve诊断。6类53项定向通过，生产代码未改，见[验证35](../qualification/README.md#ci-165-group-reference-coverage-fix)。本机3个无导出可见性方法不是完整全角色导出门，后者仍交Linux CI。业务IT／独立验证／CLI／部署在#165被跳过，仍待修复SHA，账本不变；推送修复后直接继续月度／预算核对，不查／等CI。
+
+
+### 25.9 CI #168 同源码验收及实际题目收口
+
+`87cad8b7aaf176295ff08003b70192e4de1e1377` 的 [#168](https://github.com/HoloNova/Software-IR/actions/runs/39927438145) 已完整核验：Frozen全量门、业务IT、独立验证、CLI与部署均success，240份XML无失败／错误。Money150项（单值／分组、同页快照、严格／非严格告警）、library203项（限额／FIFO／锁等待／回滚）、course151项（冲突／直接先修／冻结）、乘法72项均通过，资源digest匹配。分组SQL预算JSON为业务count1／page1／会话探测1／未知0，没有更改两条业务读取的合同。部署精度漂移与恢复／新实例链全过，合同外的中断迁移等不计通过，完整证据见[验证38](../qualification/README.md#ci-168-g2-g8-accepted)。本节及23.6—23.8、24节中“待CI／NOT_RUN”均为实施时历史边界，现由本次证据闭环，不改写原失败事实。四项G2需求由△转✓，账本71／4／9；自然月、预算、AVG、多键／零组、日期差和G5仍未实施。
+
+<a id="g8-calendar-month-scope"></a>
+## 26. G8 后续：用户时区自然月与当前预算（已实现，待同源码CI）
+
+已验收基线为 `87cad8b7aaf176295ff08003b70192e4de1e1377`（#168）。负责人在本轮明确选择：**每位用户自己的时区＋指定预算的当前规则**，不是UTC月，也不是每期历史预算。此确认取代原来的UTC建议，不再重复请示这两项业务选择。本批已按确认贯通接口、月界与预算提示，定向33类247项通过；完整HTTP／SQL与部署仍待新CI。#168仅作已验收基线，不被挪用为本批真库证据；记录与实现同批提交，不单独触发文档CI。
+
+### 26.1 实施前核对的基座与缺口
+
+- ledger的Moment经PrimitiveType.DATE_TIME降为java.time.Instant，now()也生成Instant.now()；物理列为DATETIME(6)。既有固定时长平移不等于日历月；基线没有YearMonth或月份边界步骤。本批新增明确的month步骤，不新增通用let。
+- #168证明TotalsByCategory能按显式半开区间正确求本人分类的精确分页总额，计数与当前页同快照；不再重做SUM、分页或JSON载体。
+- 交付Compose的JDBC URL固定connectionTimeZone=UTC、forceConnectionTimeZoneToSession=true。业务月时区与存储／会话时区必须分开：偏好只决定两个UTC Instant边界，不能据此把连接设成用户时区。旧Money IT的URL不带时区参数且子进程TZ=UTC，旧证据不被冒充为非默认会话日期验证；本批新增非UTC会话／JVM对照并检查实际设置，见26.6。
+- 基线User没有时区字段或设置接口，本批先建立服务端可信的本人偏好；只给报表加一个可任填zone参数不满足本次选择。
+- Budget只有owner、category、monthlyLimit，无期间或分类唯一键；Entry／Budget普通Crud也不自动校验分类归属。提示必须按明确budgetId读取本人规则，再检查分类归属，不能任取第一条或擅自合并多个上限。
+- 现有返回Flag、load／validate及精确单值SUM可以组合预算提示，不需向G11 view注入工作流变量，不新增通用record、循环或第二套金额算法。
+
+### 26.2 本人时区设置与变更语义
+
+已为ledger的User新增可空的区域时区字段，提供读取／设置本人偏好的能力；身份来自actor而不是请求中的userId。不更改共享DualTokenLogin认证协议，不允许用户写其它账号偏好。新用户注册保持兼容，未设置时不默认为服务器时区或悄悄退回UTC：月度接口明确拒绝并要求先设置。旧行新增可空列，不从系统Locale／服务器时区猜测旧用户偏好。
+
+时区采用运行目标JDK支持的区域ID（如Asia/Shanghai、America/New_York及UTC），而非一个固定小时偏移或模糊的CST。原有语义规则没有时区校验；本批在已有字符串约束通路新增无参数timeZone规则，复用于设置请求与最终存储候选检查，不以一段正则冒充tzdb查验，也不拿固定月份试算时区是否合法。用JDK已有ZoneId／ZoneRulesProvider，不加第三方时间库。最终具体字符串集合与null／Optional规则由约束回归钉住，不把编译机tzdb列表硬编码进交付模板。
+
+一次月度请求读取一次本人时区，并把该值用于两个端点。改偏好影响后续请求（包括过去月份的重新查询），不改已存Instant、不自动迁移账目。不同HTTP请求可以捕获不同的已提交设置，不宣称跨请求报表被冻结；若将来需要历史时区快照，须另立业务合同。本轮不因选择用户时区而新增每期预算表。
+
+### 26.3 当地自然月步骤与JDK规则
+
+请求只给严格ISO年月YYYY-MM；区域由本人已保存设置取得。现已支持一个显式日历步骤；以下片段需置于含对应声明的能力工作流中（语言参考5.12有完整可执行声明示例）：
+
+```text
+load User by actor as account else UserNotFound;
+month input.month in account.timeZone as since, until else BadPeriod;
+sum Entry.amount by category
+  where item.owner == actor and any(Category, id == item.category and owner == actor)
+    and item.occurredAt >= since and item.occurredAt < until
+  Page input.page, input.size else BadPage as totals;
+return totals;
+```
+
+这个步骤只产两个Moment变量，不产生查询或存储列；语义是分别取得本月和下月首日的当地最早有效时刻，再转UTC Instant。**不能先算UTC月再平移固定偏移，也不能从起点加30天或月天数×24小时。**依照JDK LocalDate.atStartOfDay(ZoneId)：当地月首落在gap时使用跳跃后的第一个有效时刻，overlap时取第一次出现；两个端点分别求值。由YearMonth.plusMonths处理跨年及闰年，不自行实现日历算法。
+
+年月缺席／null／格式非法、时区缺席／不受支持、任一UTC端点超出当前目标可绑定范围，走声明错误而非DateTimeException／NPE／500。读偏好和认证可以先访问数据库；错误必须在SUM等业务统计执行前拒绝，不再笼统承诺“整个HTTP请求零SQL”。要检查**两个UTC端点**，不是只验本地年月：时区偏移也可能把边界带入相邻年份。Java允许9999-12再加一月为10000-01，不证明DATETIME(6)／Connector/J能接受；目标上下限与真实绑定仍须独立验证，不把本轮Java探针称作存储边界证据。
+
+首片限定readonly query，Lowering使用已有REPEATABLE_READ模式，使偏好、预算和金额读取处于同一快照；不改变其它旧能力隔离，也不把只读提示当成原子消费限额。正式来源覆盖月份表达式、时区表达式、两个定义和错误引用；新增引用角色或节点必须同步唯一Resolve、跨文件可见性、SourceEditor／改名、两处全角色夹具及测试AST遍历，避免再漏#165类型的契约。
+
+### 26.4 指定预算的当前规则提示
+
+接口按budgetId＋month查询，返回Flag。业务顺序：读取本人偏好并计算月界；读取指定Budget并检查owner；读取其Category并检查owner；SUM该用户该分类在[since,until)的账目；返回total > monthlyLimit。空账目总额0，等于上限不是超支，计算继续使用精确BigDecimal；预算可指向的分类身份和本人账目都必须明确绑定。
+
+沿用当前规则意味着：修改上限或账目会改变过去月份提示。**历史预算快照与不可变历史账本是两个问题，本轮两者都不新增。**不创建月份预算行、不补伪造历史、不新增EXPENSE-only限制，也不依赖可变Category.direction来解释历史净支出。本轮是“分类金额超过指定当前规则”的提示，不是信用额度控制、自动扣款或历史审计报表。
+
+### 26.5 先期依赖取证与本批验收
+
+OpenJDK jdk21u第一方ZoneId、YearMonth、LocalDate源码及blob／SHA256保存在 `target/g8-month-investigation/`。已核实getAvailableZoneIds返回区域ID集合、plusMonths日历运算、atStartOfDay的gap／overlap合同，采用JDK既有实现，不新增依赖。GitHub搜索未返回匹配结果后直接取第一方源码，不能把搜索无结果写成没有现成能力。
+
+本轮 `MonthBoundaryProbe.java` 在JVM默认UTC及Pacific/Kiritimati各验证10个精确边界场景：UTC闰年／世纪年／跨年、上海跨UTC年份、纽约春秋DST、Havana月首重叠、Asuncion月首gap、Lord_Howe半小时DST、Apia跳过日期。两种环境均通过同一组预先列出的Instant／秒数；这是**10个独立场景在两种环境下执行**，不累计成20条SIR业务覆盖。代码／输出／源码哈希在上述目录。
+
+这项先期纯JDK探针本身不实现SIR月报、配置持久化、类型／绑定或日期SQL；没有启动应用／数据库，也不证明任意tzdb版本和连接时区兼容。它揭示需要覆盖的边界，不替代本批正式RED→GREEN。实施及验收顺序为：
+
+1. 字符串时区校验、本人设置／读取和旧行无偏好行为；约束类型／参数、非法值、DTO与最终候选同义、Optional／PATCH不误伤、本人隔离。
+2. 月份步骤的语法、绑定、双结果作用域、写回／精确改名；新角色全覆盖与独立Core／目标IR拒绝，目标计划明确时区来源、错误、UTC边界及RR模式。
+3. 实际ledger月度分类／指定预算提示，验证月首含／下月首不含、跨年／DST、空集、上限相等／超出、他人规则／分类拒绝、并发设置只读取一次。
+4. 复用Money IT做真实日期绑定与同快照／精确汇总，分别设置JVM默认时区与显式连接／会话时区并检查实际@@session.time_zone，不能只改进程TZ后冒称SQL时区覆盖。既有告警、SQL预算和计数后屏障保留，不再无解释增加应用构建。
+
+本批已完成上述核心链路，33类247项定向通过（含ProjectVisibility一条无导出新方法），不是重复统计先期探针。真实HTTP／SQL、Linux安全目录导出及部署本机NOT_RUN；覆盖率未测量，AFT诊断PARTIAL以Maven编译为准，见[验证39](../qualification/README.md#g8-calendar-month-local)。月报／预算由✗转为已实现待CI的△，账本71／6／7，不提前转完整。AVG、多键／零组、日期差罚款及G5不混入。
+
+
+### 26.6 实施发现：物理绑定与验收边界
+
+时区约束复用既有别名继承、default、DTO及最终候选通路；JDK21运行目标的UTC／带斜线区域集合是权威，CST、偏移和前后空格均拒绝。PATCH仍遵守版本实体及Optional类型协议，不能为重复声明timeZone新增豁免；空changes仍按既有协议作版本条件写，不改变时区，显式clear可清可空字段。新测试曾漏version／Optional及误期待空changes零写，均修测试，不修改原PATCH协议。
+
+month有明确AstMonthStep／边界声明节点、Normalized MonthStep与Lowering MonthPlan，两个输出及MONTH_ERROR正式来源绑定。两个全角色夹具、测试AST遍历、增删改／精确改名、结构覆盖／敏感性及独立Core／IR均同步；未定义表达式保留原诊断并安全归一化，不再NPE。跨文件新方法用真实contracts模块作缺import的精确Span反例；旧测试辅助解析器只列固定FILES，新增模块也须显式纳入Snapshot，不能把测试源集合遗漏当作产品可见性错误。完整安全导出门仍交Linux CI，不降低Windows读取要求。
+
+**真实物理缺口：**旧`Timestamp.from(1000-01-01T00:00:00Z).toLocalDateTime()`路径在实测中得到999-12-27，混合Julian／Gregorian日历还会令1500年发生偏移。包含month步骤的工程现由校验后的ValidationSupport.utcInstantBinding标记生成JDBC4.2适配：写Instant→UTC LocalDateTime→setObject(TIMESTAMP)，读getObject(LocalDateTime.class)→UTC Instant，注册到实际MyBatis配置；不用Timestamp、系统默认时区或把连接改成用户时区。普通无month工程不多此代码；独立IR拒绝移除该支持或篡改DATETIME(6)上下界。6项实际生成适配测试涵盖1000／1500、微秒、参数和结果（ResultSet／CallableStatement）及NULL；UTC和非UTC JVM验证不重复计覆盖数。已有实际自动配置回归确保支持及验收拦截器装配不形成Mapper／SqlSessionFactory循环，也不在本机取数据库连接。旧记录按真实已存字段解释，不自动重写可能已有偏移的数据。
+
+ledger的月度声明直接复用于Money IT同一生成工程，AST片段相等且必须真实存在；不另起应用。新的CalendarSnapshotFixture只作隔离验收，在User查询已完成后可观察地等待，另请求提交偏好修改，再检查在途月报仍为原时区、下一请求使用新时区。真实样例包括纽约三月月首／下月首微秒、1000最小月、1500 CRUD历史写读、9999边界、空集、未设置／非法时区、伪造请求zone／userId无效、他人预算／分类拒绝及当前上限变更。重新利用原非严格重启，在同一次重启令会话+05:30、JVM Pacific/Honolulu；验收通过实际DataSource查询@@session.time_zone／sql_mode和ZoneId.systemDefault，不以环境变量存在冒称覆盖。旧SQL预算、每语句告警和分组count后屏障保留。
+
+本机只编译／执行内存生成服务、实际自动装配及探针，不启动这些HTTP／SQL场景。新增契约还核对真实Crud /api/entries POST的201、详情GET、设置接口默认200和SIR错误码，不把Java异常类名当公开code或虚构一个CalendarInsert接口。ledger当前281行SIR／4609行Java／28项能力；两项月度需求为待CI△，图表／导出仍✗。随实现一批提交，#168验收记录也并入本批，不独立造文档CI，不查询／等待新运行。

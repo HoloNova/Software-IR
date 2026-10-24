@@ -84,6 +84,24 @@ class ProjectVisibilityTest {
                 () -> negative.diagnostics().toString());
     }
 
+    @Test void monthErrorRequiresItsActualOwnersImportBeforeAnyFileExport() throws Exception {
+        Path source=fixture(temp),root=source.resolve("project.sir");addScalarQueries(source);moveContracts(source);
+        var positive=new SirSemanticAnalyzer().analyzeProject(parsedSources(source));assertTrue(positive.isSuccess(),()->positive.diagnostics().toString());
+        var model=positive.model().orElseThrow();var sites=model.referenceSiteBindings().all().stream().filter(b -> b.site().role()==ReferenceRole.MONTH_ERROR).toList();
+        assertEquals(1,sites.size());var month=sites.getFirst();
+        var owner=model.declarations().stream().filter(d -> d.id().equals(month.targetSymbol())).findFirst().orElseThrow();
+        assertEquals("InvalidPage",owner.name());assertNotEquals(ENTRY,owner.span().source());
+        String original=Files.readString(root),literal="import "+owner.name()+" from \""+owner.span().source().value()+"\";";
+        assertTrue(original.contains(literal));Files.writeString(root,original.replace(literal," ".repeat(literal.length())));
+        var before=tree(temp);var negative=new SirSemanticAnalyzer().analyzeProject(parsedSources(source));assertFalse(negative.isSuccess());
+        var actual=negative.diagnostics().stream().filter(d -> d.isError()).toList();
+        var expected=model.referenceSiteBindings().all().stream().filter(b -> b.targetSymbol().equals(owner.id()) && b.site().span().source().equals(ENTRY))
+            .map(b -> b.site().span()).collect(Collectors.toSet());
+        assertEquals(expected,actual.stream().map(d -> d.primarySpan()).collect(Collectors.toSet()));assertEquals(expected.size(),actual.size());
+        assertTrue(actual.stream().allMatch(d -> d.code().value().equals("SIR-SOURCE-VISIBILITY-001")),actual::toString);
+        assertEquals(before,tree(temp));
+    }
+
     @Test void groupKeyRequiresItsOwnersImportBeforeAnyFileExport() throws Exception {
         Path source = fixture(temp), root = source.resolve("project.sir");
         addScalarQueries(source);
@@ -221,6 +239,8 @@ class ProjectVisibilityTest {
     private static ProjectSemanticInput parsedSources(Path root) throws Exception {
         Map<SourceId, byte[]> inputs = new LinkedHashMap<>();
         for (String file : FILES) inputs.put(SourceId.of(file), Files.readAllBytes(root.resolve(file)));
+        Path contracts=root.resolve("modules/contracts.sir");
+        if(Files.isRegularFile(contracts))inputs.put(SourceId.of("modules/contracts.sir"),Files.readAllBytes(contracts));
         return parse(new SourceSnapshot(ENTRY, inputs));
     }
     private static ToolchainResult.Failure refusal(Path source, Path output) {
@@ -308,6 +328,10 @@ class ProjectVisibilityTest {
         Files.writeString(enrollment, entity.replace(status, "field measurement: Money default 0.0; " + status));
         assertTrue(project.contains(anchor), "the scalar query fixture anchor must exist");
         Files.writeString(root, project.replace(anchor, """
+                    capability InspectImportedMonth {
+                      output Moment; fails InvalidPage; requires readonly; expose query;
+                      workflow { month "2026-01" in "UTC" as since, until else InvalidPage; return since; }
+                    }
                     capability SumImportedEnrollments {
                       input SearchCourseEnrollmentsInput;
                       output Page<SumGroup<Ref<Student>>>;

@@ -419,7 +419,7 @@ public final class SpringBootInputValidator {
       this.validateType(field.type(), field.span(), field.id(), field.sourceNodeId());
 
       for (NormalizedConstraint constraint : field.constraints()) {
-         if (!Set.of("notBlank", "email", "length", "min", "max", "precision").contains(constraint.name())) {
+         if (!Set.of("notBlank", "email", "timeZone", "length", "min", "max", "precision").contains(constraint.name())) {
             this.error("SIR-LOWER-FEATURE-001", "unsupported constraint: " + constraint.name(), constraint.span(), field.id(), constraint.sourceNodeId());
          }
 
@@ -427,13 +427,19 @@ public final class SpringBootInputValidator {
          this.validateConstraintArguments(constraint, field);
       }
 
-      if (!persistent && field.type() instanceof RefType) {
+      if (field.constraints().stream().anyMatch(c -> c.name().equals("timeZone"))
+             && field.defaultValue().orElse(null) instanceof NormalizedExpression.StringLiteral literal
+             && !io.kcg.sir.semantic.feature.RegionTimeZones.accepts(literal.value()))
+          this.error("SIR-LOWER-INPUT-001", "invalid time zone default", field.span(), field.id(), field.sourceNodeId());
+       if (!persistent && field.type() instanceof RefType) {
       }
    }
 
    private void validateConstraintArguments(NormalizedConstraint constraint, NormalizedField field) {
       boolean valid = switch (constraint.name()) {
          case "notBlank", "email" -> constraint.arguments().isEmpty();
+          case "timeZone" -> constraint.arguments().isEmpty()
+              && io.kcg.sir.semantic.feature.SemanticTypes.kind(field.type() instanceof OptionalType o ? o.element() : field.type()) == PrimitiveType.STRING;
          case "length" -> constraint.arguments().size() == 2 && constraint.arguments().stream().allMatch(IntegerLiteral.class::isInstance);
          case "precision" -> constraint.arguments().size() == 2
             && constraint.arguments().stream().allMatch(IntegerLiteral.class::isInstance)
@@ -514,7 +520,27 @@ public final class SpringBootInputValidator {
             this.validateDeclarationKind(value.errorSymbol(), NormalizedError.class, capability);
             value.keyField().ifPresent(key -> this.validateLoadKey(value, key, capability));
             break;
-         case NormalizedStep.GroupedSumStep value: {
+         case NormalizedStep.MonthStep value: {
+              this.validateExpression(value.month(),capability.id(),actorAccess);
+              this.validateExpression(value.zone(),capability.id(),actorAccess);
+              this.validateVariable(value.sinceVariable(),capability);this.validateVariable(value.untilVariable(),capability);
+              this.validateDeclarationKind(value.errorSymbol(),NormalizedError.class,capability);
+              if (monthReadsSecret(value.month()) || monthReadsSecret(value.zone()))
+                 this.error("SIR-LOWER-INPUT-001","month cannot read secret fields",value.span(),capability.id(),value.sourceNodeId());
+              SirType month=value.month().type(),zone=value.zone().type();
+              if(month instanceof OptionalType o)month=o.element();if(zone instanceof OptionalType o)zone=o.element();
+              if(month!=PrimitiveType.STRING || zone!=PrimitiveType.STRING
+                  || !capability.requires().contains(io.kcg.sir.ast.AstRequirementKind.READONLY)
+                  || capability.exposure()!=io.kcg.sir.ast.AstExposureKind.QUERY || !capability.fails().contains(value.errorSymbol())
+                  || value.sinceVariable().equals(value.untilVariable())
+                  || this.model.symbols().byId(value.sinceVariable()).filter(VariableSymbol.class::isInstance)
+                      .map(VariableSymbol.class::cast).map(VariableSymbol::type).filter(PrimitiveType.DATE_TIME::equals).isEmpty()
+                  || this.model.symbols().byId(value.untilVariable()).filter(VariableSymbol.class::isInstance)
+                      .map(VariableSymbol.class::cast).map(VariableSymbol::type).filter(PrimitiveType.DATE_TIME::equals).isEmpty())
+                 this.error("SIR-LOWER-INPUT-001","month requires text, two Moment outputs and a readonly declared failure",value.span(),capability.id(),value.sourceNodeId());
+              break;
+          }
+          case NormalizedStep.GroupedSumStep value: {
              this.validateStep(new NormalizedStep.SumStep(value.sourceNodeId(), value.span(), value.entitySymbol(),
                  value.fieldSymbol(), value.predicate(), value.resultVariable(), value.itemVariable()), capability, actorAccess);
              var entity=this.declarationsById.get(value.entitySymbol());
@@ -814,6 +840,15 @@ public final class SpringBootInputValidator {
          owner,
          expression.sourceNodeId()
       );
+   }
+
+   private boolean monthReadsSecret(NormalizedExpression expression) {
+      if (!(expression instanceof NormalizedExpression.MemberExpression member)) return false;
+      return this.model.declarations().stream().flatMap(d -> {
+         if(d instanceof NormalizedEntity e)return e.fields().stream();
+         if(d instanceof NormalizedInput i)return i.fields().stream();
+         return java.util.stream.Stream.<NormalizedField>empty();
+      }).anyMatch(f -> f.id().equals(member.resolvedMember()) && f.secret()) || monthReadsSecret(member.receiver());
    }
 
    private void validateType(SirType type, SourceSpan span, SymbolId owner, AstNodeId nodeId) {

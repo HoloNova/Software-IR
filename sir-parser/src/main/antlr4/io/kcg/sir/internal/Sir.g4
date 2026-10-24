@@ -289,6 +289,7 @@ workflowStep
     | loadStep
     | findStep
     | scalarQueryStep
+    | monthStep
     | sumStep
     | createStep
     | updateStep
@@ -319,6 +320,13 @@ findStep
 
 // "sum A.f by k where <pred> Page p,s else E as r;" groups by one direct reference column. `by` is the same
 // token a load uses, so it stays contextual: without it the step keeps its single-value meaning.
+// Contextual words keep existing fields named month or in legal.
+monthStep
+    : {_input.LT(1).getText().equals("month")}? IDENT month=expression
+      {_input.LT(1).getText().equals("in")}? IDENT zone=expression
+      AS since=IDENT COMMA until=IDENT ELSE error=IDENT SEMI
+    ;
+
 sumStep
     : {_input.LT(1).getText().equals("sum")}? IDENT entity=IDENT DOT field=IDENT
       (groupByClause WHERE predicate=expression findPageClause | WHERE predicate=expression)

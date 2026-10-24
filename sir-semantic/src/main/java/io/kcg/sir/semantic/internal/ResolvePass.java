@@ -814,7 +814,15 @@ final class ResolvePass {
             SirType resultType = s.page().isPresent() ? outputType : itemType == null ? null : new ListType(itemType);
                this.registerStepResultVar(s.result(), s.id(), capScopeId, visibleVars, resultType);
                break;
-            case io.kcg.sir.ast.AstSumStep s: {
+            case io.kcg.sir.ast.AstMonthStep s: {
+                this.resolveExpression(s.month(),capName,capScopeId,visibleVars,null,null);
+                this.resolveExpression(s.zone(),capName,capScopeId,visibleVars,null,null);
+                this.resolveErrorRef(s.error(),capName,ReferenceRole.MONTH_ERROR);
+                this.registerStepResultVar(s.since().name(),s.since().id(),capScopeId,visibleVars,PrimitiveType.DATE_TIME);
+                this.registerStepResultVar(s.until().name(),s.until().id(),capScopeId,visibleVars,PrimitiveType.DATE_TIME);
+                break;
+             }
+             case io.kcg.sir.ast.AstSumStep s: {
                this.resolveEntityRef(s.entity(), ReferenceRole.SUM_ENTITY);
                this.resolveEntityFieldRef(s.field(), s.entity().text(), ReferenceRole.SUM_FIELD);
                 SymbolId queryScope = SymbolIdFactory.capabilityStepScope(capScopeId, s.id().value());

@@ -253,8 +253,13 @@ public sealed interface ProjectArtifact
       String packageName,
       String simpleName,
       String fieldErrorSimpleName,
-      List<String> constraintCodes
+       List<String> constraintCodes,
+       boolean utcInstantBinding
    ) implements ProjectArtifact {
+      public ValidationSupport(LoweredNodeId id,LoweredOrigin origin,String path,String packageName,String simpleName,
+            String fieldErrorSimpleName,List<String> constraintCodes) {
+         this(id,origin,path,packageName,simpleName,fieldErrorSimpleName,constraintCodes,false);
+      }
       public ValidationSupport {
          Objects.requireNonNull(id, "id");
          Objects.requireNonNull(origin, "origin");

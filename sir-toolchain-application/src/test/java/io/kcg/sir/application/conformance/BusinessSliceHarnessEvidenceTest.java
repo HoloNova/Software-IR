@@ -22,14 +22,15 @@ class BusinessSliceHarnessEvidenceTest {
             "evidence-report.txt", "evidence", "kcg.evidence-conformance.enabled");
 
     @org.junit.jupiter.params.ParameterizedTest
-    @org.junit.jupiter.params.provider.ValueSource(strings={"ExactAggregateWarningFixture","GroupedSumFixture"})
+    @org.junit.jupiter.params.provider.ValueSource(strings={"ExactAggregateWarningFixture","GroupedSumFixture","CalendarSnapshotFixture"})
     void warningProbeIsWrittenWhenTheRunHasNotCreatedItsEvidenceDirectoryYet(String name,@TempDir Path root) throws Exception {
         var work = root.resolve("work-absent");
         var evidence = root.resolve("evidence-absent");
         assertFalse(Files.exists(evidence), "the fixture must start without the directory CI failed to create");
         var harness = harness(work, evidence);
 
-        if (name.equals("GroupedSumFixture")) GroupedSumChecks.install(harness);
+        if (name.equals("CalendarSnapshotFixture")) CalendarLedgerChecks.install(harness);
+        else if (name.equals("GroupedSumFixture")) GroupedSumChecks.install(harness);
         else DecimalSumChecks.installWarningFixture(harness);
 
         var copy = harness.evidenceRoot().resolve(name+".java.txt");

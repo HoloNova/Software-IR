@@ -78,7 +78,9 @@ final class EntityScopes {
    private NormalizedStep step(NormalizedStep step) {
       String at = step.sourceNodeId().value();
       return switch (step) {
-         case NormalizedStep.SumStep s -> {
+          case NormalizedStep.MonthStep s -> new NormalizedStep.MonthStep(s.sourceNodeId(),s.span(),
+              this.expression(s.month(),at),this.expression(s.zone(),at),s.sinceVariable(),s.untilVariable(),s.errorSymbol());
+          case NormalizedStep.SumStep s -> {
             NormalizedExpression predicate = this.expression(s.predicate(), at);
             if (this.scoped.containsKey(s.entitySymbol())) {
                String base = at + "/scope";

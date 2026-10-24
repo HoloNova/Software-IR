@@ -11,6 +11,7 @@ public enum ReferenceRole {
    REF_TYPE_TARGET(SymbolKind.ENTITY),
    CAPABILITY_FAILS_ERROR(SymbolKind.ERROR),
    VALIDATE_ERROR(SymbolKind.ERROR),
+   MONTH_ERROR(SymbolKind.ERROR),
    LOAD_ERROR(SymbolKind.ERROR),
    LOAD_ENTITY(SymbolKind.ENTITY),
    LOAD_KEY_FIELD(SymbolKind.FIELD),

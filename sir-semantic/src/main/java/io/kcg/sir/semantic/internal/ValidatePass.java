@@ -449,7 +449,13 @@ final class ValidatePass {
                   }
                });
                continue;
-         case io.kcg.sir.ast.AstSumStep s:
+         case io.kcg.sir.ast.AstMonthStep s:
+                 if (!isReadonly || !isQuery)
+                    this.diagnostics.add(DiagnosticBuilder.error("SIR-FLOW-004","month requires a readonly query",s.span()));
+                 if (this.typed.referenceSiteBindings().targetFor(s.error().id()).filter(e -> failsSet != null && !failsSet.contains(e)).isPresent())
+                    this.diagnostics.add(DiagnosticBuilder.error("SIR-FLOW-003","month references an undeclared failure",s.error().span()));
+                 break;
+          case io.kcg.sir.ast.AstSumStep s:
                 if (!isReadonly || !isQuery)
                    this.diagnostics.add(DiagnosticBuilder.error("SIR-FLOW-004", "sum requires a readonly query", s.span()));
                 if (this.typed.referenceSiteBindings().targetFor(s.field().id()).filter(this.secretFields::contains).isPresent())
@@ -887,7 +893,11 @@ final class ValidatePass {
          if (field.unique() || field.secret() || field.versioned()) {
             this.diagnostics.add(DiagnosticBuilder.error(DEFAULT_CODE, "unique、secret、version 字段不能声明 default: " + name, field.defaultValue().get().span()));
          }
-         BigDecimal value = this.evalNumeric(field.defaultValue().get());
+         if (this.ungroup(field.defaultValue().get()) instanceof AstStringLiteral text
+                && field.constraints().stream().anyMatch(c -> c.name().text().equals("timeZone"))
+                && !io.kcg.sir.semantic.feature.RegionTimeZones.accepts(text.value()))
+             this.diagnostics.add(DiagnosticBuilder.error(DEFAULT_CODE, "default is not a supported region time zone: " + name, text.span()));
+          BigDecimal value = this.evalNumeric(field.defaultValue().get());
          for (AstConstraint constraint : field.constraints()) {
             if (!constraint.name().text().equals("precision")) continue;
             List<String> arguments = constraint.arguments().stream().map(this::evalInteger)
@@ -938,7 +948,8 @@ final class ValidatePass {
          switch (step) {
             case AstValidateStep s -> this.checkSecretReads(s.condition(), false);
             case AstLoadStep s -> this.checkSecretReads(s.idExpression(), false);
-            case io.kcg.sir.ast.AstSumStep s -> this.checkSecretReads(s.predicate(), true);
+            case io.kcg.sir.ast.AstMonthStep s -> { this.checkSecretReads(s.month(),true); this.checkSecretReads(s.zone(),true); }
+             case io.kcg.sir.ast.AstSumStep s -> this.checkSecretReads(s.predicate(), true);
             case io.kcg.sir.ast.AstGroupedSumStep s -> {
                this.checkSecretReads(s.predicate(), true);
                this.checkSecretReads(s.page().page(), true);
@@ -1577,7 +1588,8 @@ final class ValidatePass {
          case AstValidateStep s -> walkPresent(s.condition(), action);
          case AstLoadStep s -> walkPresent(s.idExpression(), action);
          case AstFindStep s -> walkPresent(s.predicate(), action);
-         case io.kcg.sir.ast.AstSumStep s -> walkPresent(s.predicate(), action);
+         case io.kcg.sir.ast.AstMonthStep s -> { walkPresent(s.month(),action); walkPresent(s.zone(),action); }
+          case io.kcg.sir.ast.AstSumStep s -> walkPresent(s.predicate(), action);
          case io.kcg.sir.ast.AstGroupedSumStep s -> {
             walkPresent(s.predicate(), action);
             walkPresent(s.page().page(), action);
@@ -1996,7 +2008,7 @@ final class ValidatePass {
             if (constraint.arguments().size() != expectedArgs) {
                this.diagnostics.add(DiagnosticBuilder.error("SIR-SYMBOL-002", "约束参数数量错误: " + name + " 需要 " + expectedArgs + " 个参数", constraint.span()));
             } else {
-               if ((name.equals("notBlank") || name.equals("email") || name.equals("length")) && constraintType != PrimitiveType.STRING) {
+               if ((name.equals("notBlank") || name.equals("email") || name.equals("length") || name.equals("timeZone")) && constraintType != PrimitiveType.STRING) {
                   this.diagnostics.add(DiagnosticBuilder.error("SIR-TYPE-001", "约束 " + name + " 只适用于 String", constraint.span()));
                }
 
@@ -2052,12 +2064,12 @@ final class ValidatePass {
    }
 
    private boolean isValidConstraintName(String name) {
-      return name.equals("notBlank") || name.equals("email") || name.equals("min") || name.equals("max") || name.equals("length") || name.equals("precision");
+      return name.equals("timeZone") || name.equals("notBlank") || name.equals("email") || name.equals("min") || name.equals("max") || name.equals("length") || name.equals("precision");
    }
 
    private int constraintArgCount(String name) {
       return switch (name) {
-         case "notBlank", "email" -> 0;
+         case "notBlank", "email", "timeZone" -> 0;
          case "min", "max" -> 1;
          case "length", "precision" -> 2;
          default -> 0;

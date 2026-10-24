@@ -237,10 +237,17 @@ public final class SpringBootModelLowerer {
         });
         List<String> codes = java.util.stream.Stream.concat(SpringBootWritePolicy.V0_1.validatedConstraintCodes().stream(),
                 decimal ? java.util.stream.Stream.of("precision", "notNull") : java.util.stream.Stream.of("notNull")).toList();
+        boolean timeZone = this.source.declarations().stream().anyMatch(d -> {
+            List<NormalizedField> fields = d instanceof NormalizedEntity e ? e.fields() : d instanceof NormalizedInput i ? i.fields() : List.of();
+            return fields.stream().anyMatch(f -> f.constraints().stream().anyMatch(c -> c.name().equals("timeZone")));
+        });
+        boolean calendar = this.source.declarations().stream().filter(NormalizedCapability.class::isInstance)
+            .map(NormalizedCapability.class::cast).flatMap(c -> c.workflow().steps().stream()).anyMatch(NormalizedStep.MonthStep.class::isInstance);
+        if (timeZone || calendar) codes = java.util.stream.Stream.concat(codes.stream(), java.util.stream.Stream.of("timeZone")).toList();
         return new ProjectArtifact.ValidationSupport(
                 this.nodeId("project", "validation-support"), this.projectOrigin(),
                 packagePath + "ValidationSupport.java", packageName, "ValidationSupport",
-                "ApiErrorResponse.FieldError", codes);
+                "ApiErrorResponse.FieldError", codes, calendar);
     }
 
     private boolean hasSum() {
@@ -628,6 +635,7 @@ public final class SpringBootModelLowerer {
         SpringBootDeclaration.ConstraintKind kind = switch (constraint.name()) {
             case "notBlank" -> SpringBootDeclaration.ConstraintKind.NOT_BLANK;
             case "email" -> SpringBootDeclaration.ConstraintKind.EMAIL;
+             case "timeZone" -> SpringBootDeclaration.ConstraintKind.TIME_ZONE;
             case "length" -> SpringBootDeclaration.ConstraintKind.SIZE;
             case "min" -> SpringBootDeclaration.ConstraintKind.DECIMAL_MIN;
             case "max" -> SpringBootDeclaration.ConstraintKind.DECIMAL_MAX;
@@ -643,7 +651,7 @@ public final class SpringBootModelLowerer {
 
     private SpringBootDeclaration.CapabilityDeclaration lowerCapability(NormalizedCapability value) {
         boolean authenticated = value.requires().contains(AstRequirementKind.AUTHENTICATED);
-        SpringBootDeclaration.TransactionMode transactionMode = value.requires().contains(AstRequirementKind.READONLY) ? (value.workflow().steps().stream().anyMatch(NormalizedStep.GroupedSumStep.class::isInstance)
+        SpringBootDeclaration.TransactionMode transactionMode = value.requires().contains(AstRequirementKind.READONLY) ? (value.workflow().steps().stream().anyMatch(s -> s instanceof NormalizedStep.GroupedSumStep || s instanceof NormalizedStep.MonthStep)
              ? SpringBootDeclaration.TransactionMode.REPEATABLE_READ : SpringBootDeclaration.TransactionMode.READ_ONLY) : (value.requires().contains(AstRequirementKind.ATOMIC) ? (value.workflow().steps().stream().anyMatch(s -> s instanceof NormalizedStep.LoadStep load && load.forUpdate())
                  ? SpringBootDeclaration.TransactionMode.READ_COMMITTED : SpringBootDeclaration.TransactionMode.REQUIRED) : SpringBootDeclaration.TransactionMode.NONE);
         SpringBootDeclaration.CapabilityKind kind = switch (value.exposure()) {
@@ -842,6 +850,11 @@ public final class SpringBootModelLowerer {
                     this.lowerOrderKeys(value), this.lowerPageSpec(value), this.lowerStringMatches(value, owner),
                     this.lowerStatementBudget(value),
                     variable(value.resultVariable()), variable(value.itemVariable()));
+            case NormalizedStep.MonthStep value -> new SpringBootWorkflow.MonthStep(id,origin,
+                this.nullablePayloadValue(this.lowerExpression(value.month(),owner,actorSymbol)),
+                this.nullablePayloadValue(this.lowerExpression(value.zone(),owner,actorSymbol)),
+                this.variable(value.sinceVariable()),this.variable(value.untilVariable()),value.errorSymbol(),
+                new SpringBootWorkflow.MonthPlan(CalendarMonthValidation.MINIMUM,CalendarMonthValidation.MAXIMUM,0));
             case NormalizedStep.GroupedSumStep value -> new SpringBootWorkflow.GroupedSumStep(
                      id, origin, value.entitySymbol(), lowerExpression(value.predicate(), owner, actorSymbol, Optional.of(value.itemVariable())),
                      this.lowerStringMatches(value.predicate(), owner), this.groupedSumPlan(value), this.groupPage(value.page()),

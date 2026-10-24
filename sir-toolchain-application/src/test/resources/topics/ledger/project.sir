@@ -17,8 +17,10 @@ software PersonalLedger {
   imports { }
   declarations {
     enum Direction { INCOME, EXPENSE }
+    type ZoneName = Text where timeZone, length(1, 64);
     entity User persistent {
       identity id: Id generated auto;
+      field timeZone: Optional<ZoneName>;
     }
     use DualTokenLogin {
       account: User;
@@ -214,7 +216,66 @@ software PersonalLedger {
         return totals;
       }
     }
-    // GAP: category totals use an explicit half-open range, not a natural month or a budget period.
+    // A missing preference is deliberate: old users must choose, never silently inherit the server's zone.
+    view TimeZoneView from User { field timeZone: Optional<Text>; }
+    input PreferredTimeZone { field timeZone: ZoneName where notBlank; }
+    error UserNotFound http 404;
+    error BadPeriod http 400;
+    capability ReadTimeZone {
+      actor Ref<User>; output TimeZoneView; fails UserNotFound;
+      requires authenticated; requires readonly; expose query at "/me/time-zone";
+      workflow {
+        load User by actor as account else UserNotFound;
+        return account;
+      }
+    }
+    capability SetTimeZone {
+      actor Ref<User>; input PreferredTimeZone; output TimeZoneView; fails UserNotFound;
+      requires authenticated; requires atomic; expose command at "/me/time-zone";
+      workflow {
+        load User by actor as account else UserNotFound;
+        update account { timeZone: input.timeZone; }
+        persist account;
+        return account;
+      }
+    }
+    input MonthQuery {
+      field month: Optional<Text>;
+      field page: PageNo;
+      field size: PageSize;
+    }
+    capability TotalsForMonth {
+      actor Ref<User>; input MonthQuery; output Page<SumGroup<Ref<Category>>>;
+      fails BadPage; fails BadPeriod; fails UserNotFound;
+      requires authenticated; requires readonly; expose query at "/entries/monthly-totals";
+      workflow {
+        load User by actor as account else UserNotFound;
+        month input.month in account.timeZone as since, until else BadPeriod;
+        sum Entry.amount by category
+          where item.owner == actor and any(Category, id == item.category and owner == actor)
+            and item.occurredAt >= since and item.occurredAt < until
+          Page input.page, input.size else BadPage as totals;
+        return totals;
+      }
+    }
+    input BudgetMonthQuery { field budgetId: Id; field month: Optional<Text>; }
+    capability BudgetExceededForMonth {
+      actor Ref<User>; input BudgetMonthQuery; output Flag;
+      fails BadPeriod; fails BudgetNotFound; fails UserNotFound;
+      requires authenticated; requires readonly; expose query at "/budgets/{budgetId}/exceeded";
+      workflow {
+        load User by actor as account else UserNotFound;
+        month input.month in account.timeZone as since, until else BadPeriod;
+        load Budget by input.budgetId as budget else BudgetNotFound;
+        validate budget.owner == actor else BudgetNotFound;
+        load Category by budget.category as category else BudgetNotFound;
+        validate category.owner == actor else BudgetNotFound;
+        sum Entry.amount where item.owner == actor and item.category == category
+          and item.occurredAt >= since and item.occurredAt < until as total;
+        return total > budget.monthlyLimit;
+      }
+    }
+    // Current preferences, rules and mutable entries determine historical re-queries; no period snapshots.
     // Zero-entry categories are absent; mutable directions are not historical net-income facts.
   }
 }

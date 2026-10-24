@@ -1,0 +1,44 @@
+// TEST_FIXTURE_ONLY: waits after the actual RR user read, before the month is evaluated.
+package example.money.fixture;
+
+@org.springframework.web.bind.annotation.RestController
+@org.apache.ibatis.plugin.Intercepts(@org.apache.ibatis.plugin.Signature(type=org.apache.ibatis.executor.statement.StatementHandler.class,
+    method="query",args={java.sql.Statement.class,org.apache.ibatis.session.ResultHandler.class}))
+public final class CalendarSnapshotFixture implements org.apache.ibatis.plugin.Interceptor {
+    private final java.util.concurrent.atomic.AtomicBoolean armed=new java.util.concurrent.atomic.AtomicBoolean();
+    private volatile boolean ready;
+    @org.springframework.beans.factory.annotation.Autowired
+    private org.springframework.beans.factory.ObjectProvider<javax.sql.DataSource> dataSource;
+    @org.springframework.web.bind.annotation.GetMapping("/api/fixture/calendar/session")
+    public java.util.Map<String,String> session() throws java.sql.SQLException {
+        try(var connection=dataSource.getObject().getConnection();var statement=connection.createStatement();
+            var row=statement.executeQuery("SELECT @@SESSION.time_zone, @@SESSION.sql_mode, TIMESTAMPDIFF(SECOND, UTC_TIMESTAMP(), NOW())")) {
+            if(!row.next())throw new java.sql.SQLException("session probe returned no row");
+            return java.util.Map.of("timeZone",row.getString(1),"sqlMode",row.getString(2),"offsetSeconds",row.getString(3),"jvmZone",java.time.ZoneId.systemDefault().getId());
+        }
+    }
+    private volatile java.util.concurrent.CountDownLatch gate=new java.util.concurrent.CountDownLatch(0);
+    @org.springframework.web.bind.annotation.PostMapping("/api/fixture/calendar/arm")
+    public String arm() { gate=new java.util.concurrent.CountDownLatch(1);ready=false;armed.set(true);return "armed"; }
+    @org.springframework.web.bind.annotation.GetMapping("/api/fixture/calendar/status")
+    public String status() {return ready?"ready":"waiting";}
+    @org.springframework.web.bind.annotation.PostMapping("/api/fixture/calendar/release")
+    public String release() {armed.set(false);gate.countDown();return "released";}
+    @Override public Object intercept(org.apache.ibatis.plugin.Invocation invocation) throws Throwable {
+        var handler=(org.apache.ibatis.executor.statement.StatementHandler)invocation.getTarget();
+        var sql=handler.getBoundSql().getSql();
+        boolean target=org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive()
+            && org.springframework.transaction.support.TransactionSynchronizationManager.isCurrentTransactionReadOnly()
+            && java.util.Objects.equals(java.sql.Connection.TRANSACTION_REPEATABLE_READ,
+                org.springframework.transaction.support.TransactionSynchronizationManager.getCurrentTransactionIsolationLevel())
+            && sql.matches("(?is).*\\bFROM\\s+`?user`?\\s+WHERE\\b.*");
+        Object rows=invocation.proceed();
+        if(target && rows instanceof java.util.List<?> values && !values.isEmpty()
+            && values.getFirst() instanceof example.money.domain.User && armed.compareAndSet(true,false)) {
+            ready=true;
+            try {if(!gate.await(20,java.util.concurrent.TimeUnit.SECONDS))throw new java.sql.SQLTimeoutException("calendar after-user barrier timed out");}
+            finally {ready=false;}
+        }
+        return rows;
+    }
+}

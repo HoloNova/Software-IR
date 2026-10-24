@@ -1,0 +1,26 @@
+sir 0.3
+software CalendarMonth {
+  metadata { displayName "Calendar month"; namespace "example.calendar"; }
+  target { language java 21; framework spring_boot; persistence mybatis_plus; database mysql; build maven; interface rest; }
+  sources {} imports {}
+  declarations {
+    input CalendarInput { field month: Optional<Text>; field zone: Optional<Text>; }
+    error BadPeriod http 400;
+    capability MonthStart {
+      input CalendarInput; output Moment; fails BadPeriod;
+      requires readonly; expose query;
+      workflow {
+        month input.month in input.zone as since, until else BadPeriod;
+        return since;
+      }
+    }
+    capability MonthEnd {
+      input CalendarInput; output Moment; fails BadPeriod;
+      requires readonly; expose query;
+      workflow {
+        month input.month in input.zone as since, until else BadPeriod;
+        return until;
+      }
+    }
+  }
+}

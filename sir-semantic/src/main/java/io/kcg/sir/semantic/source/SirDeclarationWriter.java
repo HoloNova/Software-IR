@@ -334,7 +334,10 @@ public final class SirDeclarationWriter {
          case "LoadStep" ->
             out.line(2, "load " + text(step, "entitySymbol") + " by " + optionalText(step, "keyField").map(key -> key + ": ").orElse("") + expression(child(step, "idExpression"), 0) + " as " + text(step, "resultVariable") + (text(step, "forUpdate").equals("true") ? " for update" : "") + " else " + text(step, "errorSymbol") + ";");
          case "FindStep" -> this.writeFind(step, out);
-         case "SumStep" -> out.line(2, "sum " + text(step, "entitySymbol") + "." + text(step, "fieldSymbol")
+         case "MonthStep" -> out.line(2,"month " + expression(child(step,"month"),0) + " in "
+              + expression(child(step,"zone"),0) + " as " + text(step,"sinceVariable") + ", " + text(step,"untilVariable")
+              + " else " + text(step,"errorSymbol") + ";");
+          case "SumStep" -> out.line(2, "sum " + text(step, "entitySymbol") + "." + text(step, "fieldSymbol")
              + " where " + expression(child(step, "predicate"), 0) + " as " + text(step, "resultVariable") + ";");
           case "GroupedSumStep" -> {
              out.line(2, "sum " + text(step, "entitySymbol") + "." + text(step, "fieldSymbol")

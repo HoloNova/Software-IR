@@ -17,6 +17,7 @@ public sealed interface NormalizedStep
    NormalizedStep.FindStep,
    NormalizedStep.ScalarQueryStep,
     NormalizedStep.SumStep,
+     NormalizedStep.MonthStep,
     NormalizedStep.GroupedSumStep,
    NormalizedStep.CreateStep,
    NormalizedStep.UpdateStep,
@@ -27,7 +28,17 @@ public sealed interface NormalizedStep
 
    SourceSpan span();
 
-   record SumStep(@Source AstNodeId sourceNodeId, @Source SourceSpan span,
+   record MonthStep(@Source AstNodeId sourceNodeId, @Source SourceSpan span,
+        @Fact NormalizedExpression month, @Fact NormalizedExpression zone,
+        @Reference SymbolId sinceVariable, @Reference SymbolId untilVariable, @Reference SymbolId errorSymbol) implements NormalizedStep {
+        public MonthStep {
+            Objects.requireNonNull(sourceNodeId); Objects.requireNonNull(span);
+            Objects.requireNonNull(month); Objects.requireNonNull(zone);
+            Objects.requireNonNull(sinceVariable); Objects.requireNonNull(untilVariable); Objects.requireNonNull(errorSymbol);
+        }
+    }
+
+    record SumStep(@Source AstNodeId sourceNodeId, @Source SourceSpan span,
        @Reference SymbolId entitySymbol, @Reference SymbolId fieldSymbol, @Fact NormalizedExpression predicate,
        @Reference SymbolId resultVariable, @Derived SymbolId itemVariable) implements NormalizedStep {
        public SumStep {

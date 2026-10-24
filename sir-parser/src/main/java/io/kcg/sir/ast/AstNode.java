@@ -17,6 +17,7 @@ public sealed interface AstNode permits
         AstCapabilityClause,
         AstWorkflow,
         AstStep,
+        AstMonthBoundary,
         AstFindOrder,
         AstFindOrderKey,
         AstFindPage,

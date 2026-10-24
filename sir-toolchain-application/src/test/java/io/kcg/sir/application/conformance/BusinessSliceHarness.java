@@ -198,6 +198,7 @@ final class BusinessSliceHarness {
     private SpringApplicationProcess springProcess;
     private String actorMode;
     private boolean nonStrictSqlModeFixture;
+    private boolean nonUtcCalendarSessionFixture;
     private Process process;
     private boolean schemaCreated;
     private String failure;
@@ -427,6 +428,13 @@ final class BusinessSliceHarness {
 
     /** Fixed test-only session setup; never alters endpoint/schema validation or the server's global mode. */
     void useNonStrictSqlModeFixture() { this.nonStrictSqlModeFixture = true; }
+    void useNonUtcCalendarSessionFixture() { this.nonUtcCalendarSessionFixture = true; }
+
+    static Map<String,String> sessionInitializationEnvironment(boolean nonStrict,boolean nonUtc) {
+        if(!nonUtc)return sessionInitializationEnvironment(nonStrict);
+        return Map.of("SPRING_DATASOURCE_HIKARI_CONNECTIONINITSQL",nonStrict
+            ? "SET SESSION sql_mode='', time_zone='+05:30'" : "SET SESSION time_zone='+05:30'");
+    }
 
     static Map<String, String> sessionInitializationEnvironment(boolean nonStrict) {
         // Boot maps dots to underscores but removes dashes: connection-init-sql -> CONNECTIONINITSQL.
@@ -450,7 +458,8 @@ final class BusinessSliceHarness {
 
         Map<String, String> childEnv = new java.util.LinkedHashMap<>(childEnvironment.build());
         // Hikari runs this on every new physical connection, after Connector/J initialization.
-        childEnv.putAll(sessionInitializationEnvironment(this.nonStrictSqlModeFixture));
+        childEnv.putAll(sessionInitializationEnvironment(this.nonStrictSqlModeFixture,this.nonUtcCalendarSessionFixture));
+        if(this.nonUtcCalendarSessionFixture)childEnv.put("TZ","Pacific/Honolulu");
         // ChildEnvironmentBuilder deliberately drops inherited MAVEN_OPTS; limits must be explicit.
         List<String> mavenLimits = ConformanceJvmLimits.arguments("maven");
         if (!mavenLimits.isEmpty()) childEnv.put("MAVEN_OPTS", childEnv.get("MAVEN_OPTS") + " " + String.join(" ", mavenLimits));

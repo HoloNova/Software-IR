@@ -1057,7 +1057,13 @@ public final class SpringBootIrValidation {
                this.error(owner, "only a capability with an actor can read the actor's row");
             }
             break;
-         case SpringBootWorkflow.GroupedSumStep value:
+         case SpringBootWorkflow.MonthStep value:
+              this.validateExpression(value.month(),owner);this.validateExpression(value.zone(),owner);
+              this.requireKnown(value.since().symbol(),owner,"month start");this.requireKnown(value.until().symbol(),owner,"month end");
+              this.requireDeclaration(value.errorSymbol(),SpringBootDeclaration.ErrorDeclaration.class,owner);
+              for(String problem:CalendarMonthValidation.validate(this.model,owner,value))this.error(owner,problem);
+              break;
+          case SpringBootWorkflow.GroupedSumStep value:
              this.validateExpression(value.predicate(), owner);
              this.validateStringMatches(value.stringMatches(), value.predicate(), owner);
              this.validatePageSpec(owner, value.page());

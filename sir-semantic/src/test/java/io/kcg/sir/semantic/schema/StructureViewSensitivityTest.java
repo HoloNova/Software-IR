@@ -34,6 +34,8 @@ class StructureViewSensitivityTest {
 
     static List<Edit> factEdits() {
         return List.of(
+            new Edit("month zone", "valid/calendar-month.sir", "in input.zone", "in \"UTC\""),
+            new Edit("month input", "valid/calendar-month.sir", "month input.month", "month \"2026-01\""),
             new Edit("grouped sum predicate", "valid/decimal-group.sir", "item.owner == actor", "item.owner != actor"),
             new Edit("grouped sum page sources", "valid/decimal-group.sir", "Page input.page, input.size", "Page input.size, input.page"),
             new Edit("sum predicate", "valid/decimal-sum.sir", "item.amount >= input.minimum", "item.amount > input.minimum"),

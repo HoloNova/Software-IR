@@ -1012,3 +1012,74 @@ mvn -B -q -o -pl sir-toolchain-application -am test '-Dtest=GroupedSumSqlBudgetT
 ```
 
 **边界：**本机没有全量门、生成工程 Maven 构建、应用、MySQL 或浏览器，未测覆盖率；真实读取预算、同快照与告警仍须修复 SHA 的 CI 实际执行，本机 59 项不能替代真库验收。AFT Java LSP 初始化失败记为 PARTIAL，编译以实际 Maven 与 XML 为据。月度／预算设计 26 草案仍未提交、不混入本批；修复测试与状态文档单批提交推送，不查询或等待结果，由负责人通知；账本仍 67／8／9。
+
+
+<a id="ci-168-g2-g8-accepted"></a>
+## 38. CI #168：G8 单值／分组与 G2 课程／借阅／预约验收闭环
+
+验收源码 **`87cad8b7aaf176295ff08003b70192e4de1e1377`**，[verify #168](https://github.com/HoloNova/Software-IR/actions/runs/39927438145)。负责人通知通过后只做一次证据核验，不等待／轮询新运行。Frozen full gate、Business conformance ITs、Independent verification IT、Standalone CLI smoke、standalone-deployment 及实际冷部署／HTTP／持久化步骤全部 success；Completion diagnostics 按正常成功路径跳过，不需要重复执行全量门。
+
+下载并保留实际产物：`surefire-reports`、`conformance-evidence`、`deployment-evidence`，本机副本在 `target/ci-investigation/168/`。240 份原始 Surefire XML 独立复算 **0 failures／errors**；TypedReferenceSiteContractTest 18、完整 ProjectVisibilityTest 7、LanguageReferenceExamplesTest 4、GroupedSumSqlBudgetTest 30 均通过，TopicSamplesOfflineCompilationTest 1 项通过，包含八题生成工程离线编译。这里的一项聚合 IT 是 JUnit 测试方法数，不能把它冒充下表逐项业务检查数；同批纯文档不重跑本机测试。
+
+| 实际证据（conformance-evidence 内） | 业务 checks | 核实的行为 |
+| --- | ---: | --- |
+| `money-1a167f8ad5c-41865/money-report.txt` | **150 PASS／0 FAIL** | 单值SUM、空／全空、正负大额、scope／绑定；分组组数与稳定分页、空页／越界；count后另一事务提交新组、当前响应仍为旧快照；严格／非严格会话的当前Statement告警拒绝，失败不污染后续请求 |
+| `library-borrowing-1a167f9ab80-29214/library-borrowing-report.txt` | **203 PASS／0 FAIL** | 读者最后名额竞争、首次／重复归还与计数一致；FIFO、普通借书不得插队、满额不跳过、本人／馆员取消、多副本并发；真实Book锁等待、领取／取消竞争、最后一步删除失败的四表回滚 |
+| `course-selection-1a167f85f74-41055/course-selection-report.txt` | **151 PASS／0 FAIL** | 学生锁防同时进入冲突课程、半开节次区间；任意直接先修集合与可信完成记录、发布后冻结；真实等学生锁后重查冲突、选／退晚失败回滚 |
+| `multiplication-1a167f965e7-1362/multiplication-report.txt` | **72 PASS／0 FAIL** | 既有精确乘法／数量、名额与预约锁组合回归 |
+
+上述报告均写 `generatedProjectBuild=PASSED` 和 `httpReadiness=READY`，不是环境前置分支 NOT_RUN。运行的 SIR digest 与验收当时的源按LF规范化后逐字节核对：library `fb9d99762b792fcc970937e51fcedc0745d5f42d4fcacdf73d0ff91fbbd500d7`、course `5acc49c8745946ebc5683b8cfca781fa608e48400fdaee83e1f970940d1c12a6`、money `41e252b3b679b677ad9002f415b09b5d7a24de2e5d82df709016ea2794f294b4`。实际题目源码与Money通用夹具的身份区分保留，不把Money覆盖等同于ledger全部HTTP业务已验收。
+
+**#167预算修复的真实结论：**`money-…/grouped-sum-query-trace.json` 包含 countReads=1、pageReads=1、sessionProbes=1、unexpectedReads=0、selectCount=3、readOnlyTransactions=1。服务端COUNT仍为DISTINCTROW规范形。通过的是“一次业务计数＋一次业务分页，其余只能明确会话探测”的原约束，绝不是总SELECT必须7或2；连接池冷／热影响探测次数，不影响业务预算。原始语句与分类完整保留。
+
+**部署：**`deployment-evidence/report.json` 的 commit 与 runUrl 精确绑定本SHA及本运行。deployment、httpSmoke、persistence、privileges、swagger、contract、missingVolume、business、update、dataUpdate、freshChain、cleanup、decimalShape 全为 PASSED，覆盖精度漂移拒绝及恢复和新实例迁移链。其 `notRunByContract` 明列 interruptedMigration、schemaDriftOtherThanDecimalShape；这两项不在本次合同内，不把它们写成通过。
+
+**结论／账本：**G8条件Decimal SUM及引用单键分组分页验收闭环；G2实际library／course的借阅最多5本、预约已借出图书（严格FIFO本人扫码领取，不自动分配）、课程时间冲突、全部直接先修四项由待真库△转✓。84条账本由 **67／8／9 → 71／4／9**（完整／带折扣／未写出）。没有新增需求或抬高G9逐题保护、商城多商品／退库存的完成度。该轮验收时自然月、预算提示、AVG、多键／零组、日期差罚款和G5仍未实现；分组不能冒充自然月。验收记录当时与设计26草案保留本地，现随第39节对应代码合并提交，不为纯文档单独触发CI。
+
+
+<a id="g8-calendar-month-local"></a>
+## 39. G8第三批：用户时区自然月与指定当前预算（已实现，待同源码CI）
+
+已验收基线 **`87cad8b7aaf176295ff08003b70192e4de1e1377`**（第38节）。负责人已确认每位用户自己的时区＋指定budgetId的当前规则，不采用UTC月或每期预算表；[设计26](../design/12-feature-semantics-and-semantic-types.md#g8-calendar-month-scope)与语言参考5.12已同步。#168不包含新月报，不能挪用为本批真库证据。下列本机结果来自分轮、受影响定向测试；只在新增变更／明确失败或未执行时补跑，不再次跑全量。
+
+**交付：**`timeZone`无参数文本约束，目标JDK区域数据库校验UTC／带斜线区域，DTO／default／最终写入候选一致。ledger本人偏好GET／POST `/api/me/time-zone`，不接受他人ID，旧用户未设置就拒绝月报，不回退UTC。`month input.month in account.timeZone as since,until else BadPeriod;`按JDK分别求两个月首当地最早有效时刻，得到两个UTC Moment。四位年月、缺值／null、无效区域及两个端点的DATETIME(6)范围都走声明错误；只读RR、零SQL本地步骤复用SUM／分组，不增加第二套统计逻辑。预算与分类都检查本人归属、严格total > 当前monthlyLimit，等额不超；修改偏好／账目／上限会改变历史重查，不冻结历史或新增期间存储。
+
+**先RED再实现：**时区规则与新语法、源往返、目标计划、实际生成月界／ledger服务先失败后转绿。未定义表达式已有诊断时，Normalize新节点曾NPE，现保留原诊断并安全归一化；不放开非法引用。独立Core及目标IR拒绝错误输出／定义归属、参数类型、secret、未声明错误、非只读快照、篡改边界／SQL预算及缺失校验／UTC绑定支持。MONTH_ERROR同步全引用角色夹具和AST遍历，不重演#165；新跨文件方法精确核对移除实际owner import后的SourceSpan。测试自己的Snapshot helper原先只读固定FILES，加入contracts模块后须也把该模块送入解析，不修改产品源集合规则。
+
+**JDBC实质缺口：**旧Timestamp路径把1000年UTC字段转成999-12-27，1500年也有混合日历偏移；该RED封存于 `target/g8-month-verification/jdbc-red/`。包含month的工程按明确计划生成UTC Instant TypeHandler：JDBC4.2 LocalDateTime字段读写，不用Timestamp或JVM默认时区；实际MyBatis-Plus自动装配收集该组件。无month软件不增此代码，不能在IR中删掉标记却称支持目标日期。6项实际生成处理器用例覆盖1000／1500／1582、现代微秒、9999、ResultSet／CallableStatement及NULL，验证真实JDBC方法和参数。该6项在UTC／Pacific/Honolulu两个JVM执行各通过，报告独立保存在jdbc-utc／jdbc-honolulu，**按类去重仍只计6项**；代理协议不被称作Connector/J真库成功。
+
+**最终最新XML按类去重：33类247 tests，0 failures／errors／skips。**
+
+| 模块 | 实际测试类范围 | suites | tests |
+| --- | --- | ---: | ---: |
+| semantic | CalendarMonth10、TimeZone16、全角色18、Schema完整8、结构覆盖1／敏感28、往返2 | 7 | 83 |
+| change | CalendarMonthEditing增／删／改／精确改名 | 1 | 3 |
+| lowering | CalendarMonth14、旧DecimalSum16／GroupedSum21 | 3 | 51 |
+| generator | 月界26、JDBC6、ledger月报5、时区2／PATCH1、旧DTO5／可选3／Money7／分组13／ledgerSUM4／Mapper4、真实探针装配编译1、架构3／边界6 | 14 | 86 |
+| application | CalendarLedger合同4、冷目录证据5、旧分组合约3／HTTP断言2、SUM工具链4、语言示例4、ProjectVisibility仅新无导出方法1、八题内存生成1 | 8 | 24 |
+| **合计** | **不把旧重跑、JDK先期探针或双时区重复执行累计** | **33** | **247** |
+
+索引 `target/g8-month-verification/local-result.json` 记录每类实际方法及报告时间；green目录封存最新原始XML，RED按time-zone／calendar／lowering／ledger／jdbc分目录保留。源码哈希另存source-manifest，提交后绑定实际SHA。ProjectVisibility这里只执行 `monthErrorRequiresItsActualOwnersImportBeforeAnyFileExport`，不能把它冒称全类或Linux文件导出门通过；该完整门仍由CI执行，不降低Windows安全读取要求。
+
+本批还纠正了新测试的三类假设：PATCH必须有version且字段Optional匹配，空changes仍会执行原版本条件写（不改变时区）；公开错误码是BadPeriod等SIR名而非Java的BadPeriodException；历史写入走既有Crud `/api/entries`的201及详情GET，不存在另一个CalendarInsert控制器。均改测试遵守原协议，没有放宽业务或输入边界。语言参考新增sir-declarations仍经过完整生成门，不以普通文本绕过#162类问题。
+
+最近真实执行的收尾命令（仅对应子集，247项总数以分轮最新XML为据；不为凑一条命令重跑）：
+
+```powershell
+$env:MAVEN_OPTS='-Xmx384m -XX:ActiveProcessorCount=2'
+mvn -B -q -o -pl sir-toolchain-application -am test '-Dtest=CalendarLedgerContractTest' '-Dsurefire.failIfNoSpecifiedTests=false' '-DargLine=-Xmx512m -XX:ActiveProcessorCount=2'
+mvn -B -q -o -pl sir-generator-spring-boot -am test '-Dtest=GeneratorArchitectureRegressionTest,GeneratorProductionBoundaryTest,DecimalSumLoweringTest,GroupedSumLoweringTest' '-Dsurefire.failIfNoSpecifiedTests=false' '-DargLine=-Xmx512m -XX:ActiveProcessorCount=2'
+mvn -B -q -o -pl sir-toolchain-application -am test '-Dtest=CalendarUtcJdbcRuntimeTest,MoneyAggregateFixtureCompilationTest' '-Dsurefire.failIfNoSpecifiedTests=false' '-DargLine=-Xmx512m -XX:ActiveProcessorCount=2 -Duser.timezone=UTC'
+mvn -B -q -o -pl sir-generator-spring-boot -am test '-Dtest=CalendarUtcJdbcRuntimeTest' '-Dsurefire.failIfNoSpecifiedTests=false' '-DargLine=-Xmx512m -XX:ActiveProcessorCount=2 -Duser.timezone=Pacific/Honolulu'
+```
+
+**真实HTTP／MySQL NOT_RUN：**沿用MoneyBusinessConformanceIT同一生成工程及既有构建／重启轮次（原严格启动和非严格重启都会构建，并非只构建一次），纳入与实际ledger逐声明AST一致且必须存在的User／偏好／分类／预算／月报声明。CalendarSnapshotFixture与旧告警／分组两个探针一起真实编译和装配，不在本机启动Web或连接数据库；User查询完成后可观察屏障也由编译后的拦截器验证，不在Mapper构造时解析依赖。CI将验证：
+
+- 纽约月首含／下月首不含及微秒，空集，1000下界、1500年通过实际Crud写读再按月查、9999最后完整月；非法月份／未设置／非法时区及伪造请求zone／userId。
+- 可信Bearer本人偏好、预算及分类归属，等额不超、当前上限变更改变历史重查；不隐式按分类方向做净支出。
+- User已读后暂停、另一个HTTP请求提交时区，再放行：在途月报用原偏好，下一请求用新偏好，不靠压力测试碰巧交错。
+- 旧严格UTC环境及原非严格重启的+05:30实际会话／Pacific/Honolulu JVM；通过真实DataSource读取time_zone、sql_mode、UTC差秒数和JVM区域，两个模式均核对实际偏差（0／19800），不凭环境变量存在冒称覆盖。旧每语句告警、SQL预算、分组计数后屏障保留，无新增应用构建。
+
+**资源／边界：**Maven384MiB／fork512MiB，各2个可见处理器，一次仅一构建。AFT Java LSP初始化失败为PARTIAL，不能据此宣称无诊断；编译依据实际Maven。覆盖率NOT_MEASURED；本机全量、完整Linux文件导出、生成工程Maven构建、数据库／应用及部署均NOT_RUN。没有UI改动或浏览器／UI单测。旧账号新可空time_zone列需应用schema变更并主动设置，不猜默认、不自动重写旧历史日期。
+
+TopicSamplesTest实际内存输出ledger **281行SIR／4609行Java／28项能力**。月报／预算两条从✗转已实现待CI△，账本 **71／6／7**，不是新验收✓；AVG／多键／零组、日期差、G5和图表／导出未做。#168验收文档与本批代码同一提交推送，不独立造文档CI，不查询／等待新运行，由负责人通知结果。

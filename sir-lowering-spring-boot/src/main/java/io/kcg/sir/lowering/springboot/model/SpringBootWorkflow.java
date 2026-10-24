@@ -99,7 +99,18 @@ public record SpringBootWorkflow(LoweredNodeId id, LoweredOrigin origin, List<Sp
        }
     }
 
-    public record SumPlan(SymbolId fieldSymbol, String columnName, String projectionSql, String mapperMethod,
+    public record MonthPlan(String minimumInstant, String maximumInstant, int statements) {
+        public MonthPlan { requireText(minimumInstant,"minimumInstant");requireText(maximumInstant,"maximumInstant"); }
+     }
+     public record MonthStep(LoweredNodeId id, LoweredOrigin origin, SpringExpression month, SpringExpression zone,
+         Variable since, Variable until, SymbolId errorSymbol, MonthPlan plan) implements Step {
+        public MonthStep {
+           requireStep(id,origin);Objects.requireNonNull(month);Objects.requireNonNull(zone);
+           Objects.requireNonNull(since);Objects.requireNonNull(until);Objects.requireNonNull(errorSymbol);Objects.requireNonNull(plan);
+        }
+     }
+
+     public record SumPlan(SymbolId fieldSymbol, String columnName, String projectionSql, String mapperMethod,
                           int statements, boolean emptyAsZero, boolean rejectWarnings) {
        public SumPlan {
           Objects.requireNonNull(fieldSymbol, "fieldSymbol");
@@ -366,6 +377,7 @@ public record SpringBootWorkflow(LoweredNodeId id, LoweredOrigin origin, List<Sp
       SpringBootWorkflow.FindStep,
       SpringBootWorkflow.ScalarQueryStep,
        SpringBootWorkflow.SumStep,
+        SpringBootWorkflow.MonthStep,
        SpringBootWorkflow.GroupedSumStep,
       SpringBootWorkflow.CreateStep,
       SpringBootWorkflow.UpdateStep,

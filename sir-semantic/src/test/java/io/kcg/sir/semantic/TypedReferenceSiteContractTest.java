@@ -67,6 +67,10 @@ class TypedReferenceSiteContractTest {
               output Money; requires readonly; expose query;
               workflow { sum Account.amount where true as total; return total; }
             }
+            capability InspectMonth {
+              output Moment; fails InvalidPage; requires readonly; expose query;
+              workflow { month "2026-01" in "UTC" as since, until else InvalidPage; return since; }
+            }
             capability SumAccountsByOwner {
               input SearchInput;
               output Page<SumGroup<Ref<User>>>;
@@ -731,6 +735,9 @@ class TypedReferenceSiteContractTest {
                     collectExpressionRefs(page.size(), sink);
                     sink.put(page.error().id(), page.error().text());
                 });
+            }
+            case io.kcg.sir.ast.AstMonthStep s -> {
+                sink.put(s.error().id(),s.error().text());collectExpressionRefs(s.month(),sink);collectExpressionRefs(s.zone(),sink);
             }
             case io.kcg.sir.ast.AstGroupedSumStep s -> {
                 sink.put(s.entity().id(), s.entity().text());
