@@ -769,9 +769,9 @@ shop 已用同一 quantity 守卫库存、原子减库存、计算订单金额�
 
 
 <a id="g11-computed-view-proposal"></a>
-## 22. G11：来源行上的计算视图字段（已实现，待同源码 CI）
+## 22. G11：来源行上的计算视图字段（#150 已验收）
 
-实施基线为 `d6f03e74b731a5c826e2cc6f5267b6fc09937fe9`，其 [#148](https://github.com/HoloNova/Software-IR/actions/runs/39705427653) 已通过；前序 G10／G6 验收见 #147。负责人确认继续后，本节语法、互斥模型、源编辑、降级与共用生成已实现，27 类 183 项本机定向通过；本批真库及八题生成工程构建仍待同源码 CI，不沿用 #148 作为 G11 通过证据，不提前增加需求完成数。展示值不新增数据库列、触发器或工作流临时赋值。
+负责人确认后实施。本节记录设计依据与取舍；实施过程和验收见[验证第 20、21 节](../qualification/README.md#g11-computed-view-local)。
 
 ### 22.1 实施前核对的共同问题
 
@@ -1062,7 +1062,7 @@ validate not earlier else NotHead;
 <a id="g8-decimal-sum-proposal"></a>
 ## 24. G8 第一批：条件 Decimal 求和（#168已验收）
 
-基线 `ddcc3fd31d40886f5af0e5e7ff4d9cebca3f444a`。负责人确认首批范围后实施，本文保留核对依据与取舍，并在 24.6 记录实际实现。没有查询／等待 CI；本机定向通过不等于真库验收。仅交付条件金额求和，不把分组、平均、循环、月历或新响应记录一次捆进来。
+负责人确认首批范围后实施：只做条件金额求和，不把分组、平均、循环、月历或新响应记录一次捆进来。本节记录设计依据与取舍，24.6 记录实际实现；实施过程和验收见[验证第 31、32、38 节](../qualification/README.md#g8-decimal-sum-local)。
 
 ### 24.1 实际缺口及首批不冒充完成的业务
 
@@ -1152,15 +1152,10 @@ MyBatis-Plus 3.5.12的QueryWrapper.select能承载Lowering生成的固定聚合�
 为不新增一轮应用构建／启动，真库复用 MoneyBusinessConformanceIT：Measurement 的 Optional 金额、静态软删除scope、owner参数、空／全空／负数／大额／尾随零、重复Tag不重复求和、相关输入防拼接、containsLiteral转义、读不改表。固定CAST探针只复制到该隔离生成目录，源码及SHA另存证据，不属于正常生成或交付；同一固定SQL用普通Wrapper对照9.99饱和值，再要求标记查询500且无SQL泄漏，后续正常聚合仍成功。严格和非严格会话均检查，不能仅靠严格模式或代理证明。只编译、未在本机执行，仍待同SHA CI，由负责人通知；没有为了此切片增加独立应用或新的重活作业。分组、AVG、月度预算及G5继续另案，账本不变。
 
 
-### 24.7 CI #162 文档生成门修复
-
-`93804e1` 的 [#162](https://github.com/HoloNova/Software-IR/actions/runs/39883793969) 在 LanguageReferenceExamplesTest 失败：第5.10节把以type开头的声明片段标为完整sir，还缺User／Entry。首发与后续诊断各218份XML仅这一失败，真库和部署仍未执行。已补完整依赖并使用仍会包装根文档且贯通生成的sir-declarations，新增契约验证真实文档的SUM精确计划、owner／item／actor正式绑定。五类23项定向通过，Parser、类型与SUM执行代码未改，见[验证32](../qualification/README.md#ci-162-sum-reference-fix)。187项旧定向漏选现有语言参考门，不能把旧单测通过误称文档门已覆盖。修复源码仍须新CI；不查询／等待结果，修复推送后继续G8分组方案，账本不变。
-
-
 <a id="g8-grouped-sum-proposal"></a>
 ## 25. G8 第二批：按引用分组的精确金额分页（#168已验收）
 
-基线为修复 #163 后的 `0bebfcdf8fcfb5219d40e53a8d026b0416cd9a46`，负责人通知 CI 已通过并确认本节范围。现已贯通语法、正式绑定、类型／结构、源编辑、目标计划和真实生成服务；本批真实 HTTP／MySQL 仍须同源码 CI。本节及配套语言参考、验收记录随代码提交，不单独触发文档 CI。
+负责人确认本节范围后实施。本节记录设计依据与取舍，25.7 记录实施发现；实施过程和验收见[验证第 34 至 38 节](../qualification/README.md#g8-grouped-sum-local)。
 
 ### 25.1 实际缺口与最小业务切片
 
@@ -1260,19 +1255,10 @@ GroupRange 的时间采用现有 Optional<Moment>，缺省／null／反序通过
 - ledger的显式区间分组合计本机规模为SIR 220行、生成Java 4106行、24项能力；分类名不在分组响应，不隐式读关联名称。尚无自然月／时区、预算历史、AVG／舍入、多键、零组或分组表达式。需求账本未因语言能力或待验收样例提前上调。
 
 
-### 25.8 CI #165：分组键的穷尽引用契约补齐
-
-[e270436的#165](https://github.com/HoloNova/Software-IR/actions/runs/39912848967)首次冻结门仅TypedReferenceSiteContractTest遗漏GROUP_KEY_FIELD；后续完成诊断还在ProjectVisibilityTest的跨文件全角色门发现同一遗漏。原门都必须保留，不以放宽枚举、把键视为local或跳过新角色解决。已在私有真实fixture中加入分组能力，补全测试的AstSumGroupTypeRef／AstGroupedSumStep遍历，并以同一跨文件fixture验证Enrollment.student绑定及准确缺import位置的单一Resolve诊断。6类53项定向通过，生产代码未改，见[验证35](../qualification/README.md#ci-165-group-reference-coverage-fix)。本机3个无导出可见性方法不是完整全角色导出门，后者仍交Linux CI。业务IT／独立验证／CLI／部署在#165被跳过，仍待修复SHA，账本不变；推送修复后直接继续月度／预算核对，不查／等CI。
-
-
-### 25.9 CI #168 同源码验收及实际题目收口
-
-`87cad8b7aaf176295ff08003b70192e4de1e1377` 的 [#168](https://github.com/HoloNova/Software-IR/actions/runs/39927438145) 已完整核验：Frozen全量门、业务IT、独立验证、CLI与部署均success，240份XML无失败／错误。Money150项（单值／分组、同页快照、严格／非严格告警）、library203项（限额／FIFO／锁等待／回滚）、course151项（冲突／直接先修／冻结）、乘法72项均通过，资源digest匹配。分组SQL预算JSON为业务count1／page1／会话探测1／未知0，没有更改两条业务读取的合同。部署精度漂移与恢复／新实例链全过，合同外的中断迁移等不计通过，完整证据见[验证38](../qualification/README.md#ci-168-g2-g8-accepted)。本节及23.6—23.8、24节中“待CI／NOT_RUN”均为实施时历史边界，现由本次证据闭环，不改写原失败事实。四项G2需求由△转✓，账本71／4／9；自然月、预算、AVG、多键／零组、日期差和G5仍未实施。
-
 <a id="g8-calendar-month-scope"></a>
 ## 26. G8 后续：用户时区自然月与当前预算（#170已验收）
 
-已验收基线为 `87cad8b7aaf176295ff08003b70192e4de1e1377`（#168）。负责人在本轮明确选择：**每位用户自己的时区＋指定预算的当前规则**，不是UTC月，也不是每期历史预算。此确认取代原来的UTC建议，不再重复请示这两项业务选择。本批已按确认贯通接口、月界与预算提示，定向33类247项通过；完整HTTP／SQL与部署仍待新CI。#168仅作已验收基线，不被挪用为本批真库证据；记录与实现同批提交，不单独触发文档CI。
+负责人明确选择：**每位用户自己的时区＋指定预算的当前规则**，不是 UTC 月，也不是每期历史预算。本节记录设计依据与取舍；实施过程和验收见[验证第 39 至 41 节](../qualification/README.md#g8-calendar-month-local)。
 
 ### 26.1 实施前核对的基座与缺口
 
@@ -1346,20 +1332,10 @@ ledger的月度声明直接复用于Money IT同一生成工程，AST片段相等
 本机只编译／执行内存生成服务、实际自动装配及探针，不启动这些HTTP／SQL场景。新增契约还核对真实Crud /api/entries POST的201、详情GET、设置接口默认200和SIR错误码，不把Java异常类名当公开code或虚构一个CalendarInsert接口。ledger当前281行SIR／4609行Java／28项能力；两项月度需求为待CI△，图表／导出仍✗。随实现一批提交，#168验收记录也并入本批，不独立造文档CI，不查询／等待新运行。
 
 
-### 26.7 CI #169 启动身份配置修复
-
-`b1b7903` 的 [#169](https://github.com/HoloNova/Software-IR/actions/runs/40049305000) 在Frozen全量门和生成工程构建之后，因Money IT未配置kcg.actor-identity.mode而退出，月度真实检查及部署尚未执行。复用应用纳入actor／DualTokenLogin时，必须同步真实external启动配置；不因原Wallet路由公开就假定整个工程无需认证模式。修复只在测试侧：实际创建入口配置external，两次构建启动共用可检查的环境；真实生成身份守卫／凭证适配器与MyBatis装配覆盖原缺口，缺模式001及匿名401保留。7类21项定向通过，详见[验证40](../qualification/README.md#ci-169-actor-mode-fix)。没有修改时区、月界、预算或生产鉴权默认；真实数据库／HTTP和部署仍待修复源码CI，账本71／6／7不变，不查询或等待结果。
-
-
-### 26.8 #170 同源码验收
-
-负责人通知后核验 `e9f38dd7d94ecfabd7f0384b2d9e8e8ca1b0b66e` 的[#170](https://github.com/HoloNova/Software-IR/actions/runs/40052208682)：Frozen、全部业务IT、独立验证、CLI及独立部署全部通过，251份XML／1708项零失败／错误／跳过。Money306项实际检查包含两轮会话／JVM设置、微秒月界、1000／1500／9999日期、读取偏好后等待更新的RR屏障、指定当前预算及越权；源码、DDL、seed摘要匹配。此前#169启动阻塞已闭环，26节里的“待CI／本机NOT_RUN”保留为实施经过；不再作为当前未验收状态。两条ledger需求转✓，账本73／4／7，详见[验证41](../qualification/README.md#ci-170-calendar-accepted)。本次不扩大到每期历史预算、AVG、多键、G5或导出；记录与下一对应源码提交合并，不单独制造文档CI。
-
-
 <a id="g5-bounded-child-iteration-proposal"></a>
 ## 27. G5 第一片：有界服务器子行遍历与取消返库（#171已验收）
 
-基线为#170已验收的 `e9f38dd7d94ecfabd7f0384b2d9e8e8ca1b0b66e`。负责人已确认本片范围，现已贯通有界each和实际shop取消返库；21类202项定向通过，真实回滚／并发留待同源码CI。账本仍73／4／7，取消订单原本已是△，未提前转完整。先期组合探针归档，正式回归替代；文档随对应实现提交，不单独触发CI。
+负责人确认本片范围后实施：有界 each 和实际 shop 的取消返库。本节记录设计依据与取舍；实施过程和验收见[验证第 42、43 节](../qualification/README.md#g5-bounded-each-local)。
 
 ### 27.1 为什么先做取消，而不是一次放开全部G5
 
@@ -1465,13 +1441,10 @@ Lowering明确选定根实体全部所需物理列、固定排序、哨兵读取
 本批21类202项定向通过，零失败／错误／跳过，按最新类报告去重；ProjectVisibility只计两个新增的无导出方法实例，完整Linux安全文件导出另由CI覆盖。8题基线（shop使用提交前源码，不含each）由新旧WorkflowRenderer纯内存生成对照，775个文件逐字节一致，不构建生成工程。真实HTTP／MySQL、并发与事务回滚均本机NOT_RUN，覆盖率未测量；AFT桥请求超时，不能记诊断清洁，编译以实际Maven为准。证据与残余边界见[验证42](../qualification/README.md#g5-bounded-each-local)，本机报告／源码哈希在target/g5-each-verification，账本73／4／7不变。
 
 
-### 27.7 #171验收闭环
-
-负责人通知后核验 `a2540d02e9c3d44c56f0beea435f1f7a24a3961e` 的 [#171](https://github.com/HoloNova/Software-IR/actions/runs/40073882068)：Frozen、全部业务IT、独立验证、CLI与部署通过，259份XML无失败／错误。乘法应用保留原检查并执行实际shop取消，128项通过，包含100／101条、重复取消／Pay竞争、父锁等待、非严格库存上限和后续商品写失败整笔回滚；源码及SQL资源hash与报告一致，详见[验证43](../qualification/README.md#ci-171-cancellation-accepted)。27节的待CI是原实施历史，本次只把取消订单转✓，账本74／3／7，不增加请求列表、多商品结算、累计或购物车。
-
-
 <a id="g9-topics-optional-name"></a>
-## 28. G9实际题目的写保护验收、可选名称与SQL映射修正（待同源码CI）
+## 28. G9实际题目的写保护验收、可选名称与SQL映射修正（#172 已验收）
+
+实施过程和验收见[验证第 44 节](../qualification/README.md#g9-topics-optional-name-local)；`91fc78e` 的 [#172](https://github.com/HoloNova/Software-IR/actions/runs/40081795538) 全部门通过。
 
 ### 28.1 为什么本批主要是验收，而不是新语言
 
@@ -1495,8 +1468,10 @@ G9TopicComposition以实际library全文为基座，只提取实际market的Item
 
 最后自审发现实际Item.condition映射为裸列名；MySQL8.4.5第一方语法将CONDITION列为保留字。真实DefaultSqlInjector／MappedStatement先复现selectById的非法裸词SQL，再由MySqlMapperIdentifiers按官方lex.h、sql_yacc.yy和gen_keyword_list.cc算法提取的259个保留字事实处理实体注解中的表／身份／列名，仅保留字加反引号；普通标识符产物不变，不重命名物理字段或JSON，不靠测试别名绕开。读取／insert／updateById实际SQL及原实体DTO／Mapper不变性已验证，SQL从实体根参数还是et Map取值遵守各自BaseMapper协议。第一方文件及哈希、259项逐字一致核对在target/g9-topic-verification/mysql-source。本批不宣称所有手写／关联SQL均有全方言覆盖，后续仍须按各自计划检验；不修改目标物理模型或schema协议。
 
+这一批只覆盖了实体映射注解。工作流里手工拼接的 SQL 片段（可选值比较、两列比较、字面匹配、关联子查询、带版本号实体的加锁读取和条件更新）仍是裸名字，后来作为缺陷 D5 修复（`00b8118`），与映射注解共用同一份保留字表，见[试写报告第 5 节](../qualification/TOPIC_TRIALS.md)。
+
 ### 28.5 验证与剩余边界
 
 初始契约RED（旧IT没执行market）和实际DTO／服务的缺省、null RED原样封存。最终14类127项、零失败／错误／跳过，包含真实生成Java、Bean Validation、PATCH、按需支持、旧借还／预约和八题内存生成；细目及可重放命令见[验证44](../qualification/README.md#g9-topics-optional-name-local)。标准消息模板兼容的最后自审仅补跑两类，不累计重跑次数。library仍443行SIR／20能力，Java因适配变为4102行，其余题规模不变。
 
-本机没有启动HTTP应用／MySQL，完整逐题协议仍须新同SHA CI，不能以本机代理代替数据库、角色配置或解码证据。AFT桥超时未取诊断，编译以Maven／实际javac为准；覆盖率未测量。无UI改变，不跑浏览器。账本74／3／7不变，两项G9继续待验收；#171验收记录与本批代码／测试一起提交，不单独造文档CI，推送后不查询／等待，负责人通知结果。
+#172 在真实 MySQL 上执行了两题的逐题验收（HTTP 与独立数据库快照），两条 G9 需求由带折扣转为完整写出。writeExclude 仍不是并发控制，见 28.1。
