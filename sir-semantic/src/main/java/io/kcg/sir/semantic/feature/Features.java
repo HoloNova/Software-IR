@@ -151,7 +151,24 @@ public final class Features {
         new Parameter("read", Kind.NAME, Optional.of(""), Pattern.compile("(public)?"), 0, 0, "read must be public or omitted")),
         "/io/kcg/sir/semantic/feature/crud.sir");
 
-    private static final Map<String, Feature> ALL = Map.of(DUAL_TOKEN_LOGIN.name(), DUAL_TOKEN_LOGIN, CRUD.name(), CRUD);
+    /**
+     * The sign-up every account-based software repeats: a request with a name and a password creates the account, a taken
+     * name is a conflict, and the answer is a view of the new account. {@code show: [role]} adds fields of the account to
+     * that view (the identity and the login name are always there). The names {@code name} and {@code password} are the
+     * account's fields, the same ones {@code DualTokenLogin} gives it; the request carries them as {@code name} and
+     * {@code password}.
+     */
+    public static final Feature ACCOUNT_REGISTRATION = new Feature("AccountRegistration", List.of(
+        new Parameter("account", Kind.NAME, Optional.empty(), NAME, 0, 0, "account must name the entity that is registered"),
+        new Parameter("name", Kind.NAME, Optional.of("loginName"), NAME, 0, 0, "name must be the account's login name field"),
+        new Parameter("password", Kind.NAME, Optional.of("password"), NAME, 0, 0, "password must be the account's password field"),
+        new Parameter("show", Kind.NAMES, Optional.of("[]"), NAME, 0, 0, "show must be a list of the account's fields"),
+        new Parameter("prefix", Kind.NAME, Optional.of(""), Pattern.compile("([A-Z][A-Za-z0-9]{0,31})?"), 0, 0,
+            "prefix must start with an upper-case letter")),
+        "/io/kcg/sir/semantic/feature/account-registration.sir");
+
+    private static final Map<String, Feature> ALL = Map.of(DUAL_TOKEN_LOGIN.name(), DUAL_TOKEN_LOGIN, CRUD.name(), CRUD,
+        ACCOUNT_REGISTRATION.name(), ACCOUNT_REGISTRATION);
 
     public static Optional<Feature> named(String name) {
         return Optional.ofNullable(ALL.get(name));

@@ -1788,3 +1788,14 @@ repeat input.weeks times limit 12 else TooManyWeeks as week {
 - 没有放宽排序：自动重排会让一次编辑悄悄移动作者写的行，与“编辑只改被指的那一处、不动注释”相冲突。
 
 验证：`KeywordAsNameDiagnosticTest`、`FailsOrderMessageTest` 覆盖新提示，其它语法错误的提示不变。
+## 37. G12：账号注册样板（已实现，待同源码 CI）
+
+八个题目都重复写约 20 行注册：`RegisterInput`、`UserView`、`NameTaken`、`Register`，除了视图里要不要显示 `role`，一字不差。已经有 `use` 和内置功能的机制，所以不加语法，加一个内置功能 `AccountRegistration { account; name; password; show; prefix }`，模板是 `account-registration.sir`，视图里的额外字段用已有的 `only <字段列表参数>` 循环挑出。
+
+先问三个问题。新业务主要靠组合已有能力：全部由已有机制拼成。普通需求不绕口：“这个软件能注册”就是一个 `use`。一类业务共同受益：所有有账号的软件。
+
+验证它“就是那些行”：新增两份夹具，一份手写注册、一份用 `use`，断言模型相同、生成的工程逐字节相同（和双 Token 登录的验证同一个办法）。八个题目全部改用它，改之前和改之后各题目生成的全部文件的摘要完全一致，每个题目少约 19 行 SIR。
+
+没有把注册并进 `DualTokenLogin`：登录和注册是两件事，有的软件由别处创建账号（管理员建号），不该被捆绑。
+
+验证：`FeatureUseTest` 新增注册的等价性和参数检查；八个题目的生成摘要前后一致；语言参考补注册一节，示例门通过。

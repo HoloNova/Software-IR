@@ -1,0 +1,27 @@
+    input ${prefix}RegisterInput {
+      field name: Name;
+      field password: Text where length(6, 64);
+    }
+    view ${prefix}${account}View from ${account} {
+      field ${account.identity.name}: ${account.identity.type};
+      field ${name}: Name;
+${for f in account.fields only show}
+      field ${f.name}: ${f.type};
+${end}
+    }
+    error ${prefix}NameTaken http 409;
+    capability ${prefix}Register {
+      input ${prefix}RegisterInput;
+      output ${prefix}${account}View;
+      fails ${prefix}NameTaken;
+      requires atomic;
+      expose command at "/register";
+      workflow {
+        create ${account} as user {
+          ${name}: input.name;
+          ${password}: input.password;
+        }
+        persist user else ${prefix}NameTaken;
+        return user;
+      }
+    }

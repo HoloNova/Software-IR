@@ -28,30 +28,11 @@ software OnlineShop {
       name: name;
       password: passwordHash;
     }
-    input RegisterInput {
-      field name: Name;
-      field password: Text where length(6, 64);
-    }
-    view UserView from User {
-      field id: Id;
-      field name: Name;
-      field role: Role;
-    }
-    error NameTaken http 409;
-    capability Register {
-      input RegisterInput;
-      output UserView;
-      fails NameTaken;
-      requires atomic;
-      expose command at "/register";
-      workflow {
-        create User as user {
-          name: input.name;
-          passwordHash: input.password;
-        }
-        persist user else NameTaken;
-        return user;
-      }
+    use AccountRegistration {
+      account: User;
+      name: name;
+      password: passwordHash;
+      show: [role];
     }
     error BadPage;
     error Forbidden http 403;

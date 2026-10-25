@@ -51,6 +51,19 @@ class FeatureUseTest {
         assertEquals(files(written), files(used), "the generated project must be byte-identical");
     }
 
+    @Test void registrationMeansExactlyTheSignUpLinesItStandsFor() throws IOException {
+        var written = compile(resource("/valid/account-registration-written.sir"));
+        var used = compile(resource("/valid/account-registration-feature.sir"));
+        assertEquals(authored(written.semanticModel()), authored(used.semanticModel()));
+        assertEquals(files(written), files(used), "the generated project must be byte-identical");
+    }
+
+    @Test void registrationParametersAreChecked() throws IOException {
+        String base = resource("/valid/account-registration-feature.sir");
+        assertEquals(List.of("SIR-FEATURE-002"), errors(base.replace("      account: User;\n      name: name;\n      password: passwordHash;\n      show", "      name: name;\n      password: passwordHash;\n      show")));
+        assertFalse(errors(base.replace("show: [role]", "show: [nothing]")).isEmpty(), "a shown field the account does not have is refused");
+    }
+
     @Test void theModelSaysWhichDeclarationsAFeatureExpandedInto() throws IOException {
         NormalizedSemanticModel model = compile(resource("/valid/dual-token-feature.sir")).semanticModel();
         SymbolId feature = new SymbolId("sir://DualTokenDesk/feature/DualTokenLogin/User");

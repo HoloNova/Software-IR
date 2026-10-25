@@ -619,7 +619,7 @@ view AccountView from Account {
 
 ### 3.8 功能（`use` 与 `feature`）
 
-一个功能是一组声明的名字：`use 功能 { 参数: 值; }` 在编译时展开成它代表的声明，展开出来的东西和手写的一样被检查、生成、部署，但不写进源码，编辑时也只改 `use` 这一处。语言自带 `DualTokenLogin`（双 Token 登录，见 7.2）和 `Crud`（增删改查，见 7.3）。
+一个功能是一组声明的名字：`use 功能 { 参数: 值; }` 在编译时展开成它代表的声明，展开出来的东西和手写的一样被检查、生成、部署，但不写进源码，编辑时也只改 `use` 这一处。语言自带 `DualTokenLogin`（双 Token 登录，见 7.2）、`Crud`（增删改查，见 7.3）和 `AccountRegistration`（注册，见 7.1 末尾）。
 
 自己的功能用 `feature` 定义。参数有四种：`name`（一个名字，默认值可以是空的 `""`）、`duration`（一段时长，如 `7 days`）、`text`（一段文字，如 `"my/posts"`，也可以只写一个名字）、`names`（名字列表，如 `[status, createdAt]`，空列表写 `[]`），都可以有默认值。`names` 只用来挑选字段（见下面的 `only`／`except`），不能直接拼进模板。模板是三个反引号括起来的 SIR 声明，用 `${参数}` 引用其它参数：
 
@@ -2088,6 +2088,19 @@ capability Login {
 ```
 
 要点：绑定到 `secret` 字段的值（`passwordHash: input.password`）由生成的服务做 PBKDF2-HMAC-SHA256 摘要后再存，每条记录有自己的盐；口令错误和账号不存在**用同一个错误**，响应体一样（但响应时间不同：账号不存在时不做摘要计算，口令强度、锁定、限流不在语言里）。
+
+**`AccountRegistration`：注册的样板。**每个有账号的软件都要写一遍“收名字和口令、建账号、重名报冲突、返回账号视图”，约 20 行。它们可以写成一个 `use`：
+
+```text
+use AccountRegistration {
+  account: User;
+  name: name;
+  password: passwordHash;
+  show: [role];
+}
+```
+
+它展开成 `RegisterInput`（请求里的 `name` 和 `password`，口令 6 到 64 个字符）、`UserView`（身份、登录名，再加 `show` 里列的字段；视图名是账号实体名加 `View`）、错误 `NameTaken`（409）和能力 `Register`（`POST /api/register`，`persist … else NameTaken`）。`name`、`password` 是账号上的两个字段名，和 `DualTokenLogin` 里给的同名，默认值也一样；`show` 默认为空；`prefix` 给展开出的名字加前缀，避免和你自己写的同名声明冲突。展开出来的和手写的完全一样：同一个软件模型，逐字节相同的生成工程。
 
 ### 7.2 双 Token 登录
 

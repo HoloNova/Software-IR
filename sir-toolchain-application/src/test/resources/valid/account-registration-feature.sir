@@ -1,0 +1,36 @@
+sir 0.3
+
+software SignUpDesk {
+  metadata {
+    displayName "Sign Up Desk";
+    namespace "example.signup";
+  }
+  target {
+    language java 21;
+    framework spring_boot;
+    persistence mybatis_plus;
+    database mysql;
+    build maven;
+    interface rest;
+  }
+  sources { }
+  imports { }
+  declarations {
+    enum Role { MEMBER, ADMIN }
+    entity User persistent {
+      identity id: Id generated auto;
+      field role: Role default Role.MEMBER;
+    }
+    use DualTokenLogin {
+      account: User;
+      name: name;
+      password: passwordHash;
+    }
+    use AccountRegistration {
+      account: User;
+      name: name;
+      password: passwordHash;
+      show: [role];
+    }
+  }
+}
