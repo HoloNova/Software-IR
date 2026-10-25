@@ -37,6 +37,8 @@ class TopicSamplesTest {
             var compiled = ProjectCompilation.compile(new SourceSnapshot(entry, Map.of(entry, text)),
                 model -> new SpringBootGenerator().generate(model), diagnostics);
             assertTrue(compiled.isPresent(), () -> topic + ": " + diagnostics);
+            // The samples follow the concurrency conventions, so the compiler has nothing to warn them about.
+            assertTrue(diagnostics.stream().noneMatch(d -> d.severity() == io.kcg.sir.application.api.ExecutionSeverity.WARNING), () -> topic + ": " + diagnostics);
             assertTrue(compiled.get().generatedFiles().size() > 40, topic);
             new SpringBootDeploymentPlanner().plan(compiled.get().semanticModel(), compiled.get().loweredModel());
             long sirLines = new String(text, java.nio.charset.StandardCharsets.UTF_8).lines().count();

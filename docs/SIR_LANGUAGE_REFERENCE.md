@@ -1004,7 +1004,7 @@ load Room by input.roomId as room for update else RoomNotFound;
 
 在 Spring Boot／MySQL 目标上，`for update` 生成按主键的 `SELECT … FOR UPDATE`。含 `for update` 的能力使用 `READ_COMMITTED` 隔离级别，这样锁住父行之后的查询能看到别的事务刚提交的行；生成工程的 MyBatis 本地缓存设为 `STATEMENT`，事务里重复的相同查询每次都真的去查。没写 `for update` 的能力不受影响，带版本号实体原有的加锁方式也不变。
 
-行锁不会自动识别业务上的冲突：**所有可能产生冲突记录的写法，都必须先锁同一行父行，再检查、再写入**。比如房间预约用半开区间 `[startsAt, endsAt)`，重叠条件是 `item.startsAt < input.endsAt and item.endsAt > input.startsAt`，首尾相接不算冲突。只写 `exists` 再插入，或者只声明 `requires atomic`，都防不住并发下的重叠。要锁多行父行时，作者自己保持统一的加锁顺序。死锁或等锁超时按执行失败处理，不会自动重试，也不会转成 4xx。
+行锁不会自动识别业务上的冲突：**所有可能产生冲突记录的写法，都必须先锁同一行父行，再检查、再写入**。比如房间预约用半开区间 `[startsAt, endsAt)`，重叠条件是 `item.startsAt < input.endsAt and item.endsAt > input.startsAt`，首尾相接不算冲突。只写 `exists` 再插入，或者只声明 `requires atomic`，都防不住并发下的重叠。编译器对这个约定只做提示：工作流里先 `exists`／`count` 检查、再 `create` 同一个实体，检查条件里用到了某个加载的行，却没有在检查前 `for update` 锁住任何行，被插入的实体也没有声明 `unique`，就会给出警告 `SIR-WARN-001`（不阻止编译）；约定里“所有写法都要先锁父行”和“计数要由所有写法一起维护”没法在编译期证明，仍要作者自己保证。要锁多行父行时，作者自己保持统一的加锁顺序。死锁或等锁超时按执行失败处理，不会自动重试，也不会转成 4xx。
 
 也可以按**声明了 `unique` 的字段**取：
 
@@ -1433,7 +1433,56 @@ capability Take {
 
 规则（`SIR-VALID-007`）：形式只有 `字段: 变量.同一个字段 + 值` 和 `字段: 变量.同一个字段 - 值`，值不能读这一行；字段必须是整数（`Count`、`Quantity`、`Serial` 等）或带精度的 `Money`；行必须是 `load` 出来的，或者是本次新建、并且在这一步之前已经 `persist` 过的（还没存下的行没有值可加）；实体不能带 `versioned`；这一行只能有这一个 `update`（它整个写成一条语句，只写绑定的那些列）。不带守卫也可以，行不在了会以服务器错误结束。写入后会把这一列重新读回来，所以返回的是存着的值，不是读到的旧值加一。
 
-一个常见的搭配是“新建一行并给被引用的行计数”（选课：新建选课记录，课程的已选人数加一）。**先 `persist` 被计数的行，再 `persist` 新建的行**：在 MySQL（InnoDB）里，插入引用了某一行的记录会先给被引用的行加读锁，两个请求若各自拿着读锁再去改同一行，会互相等待而死锁；先改被计数的行，后到的请求在这里排队，就不会。
+一个常见的搭配是“新建一行并给被引用的行计数”（选课：新建选课记录，课程的已选人数加一）。**先 `persist` 被计数的行，再 `persist` 新建的行**：在 MySQL（InnoDB）里，插入引用了某一行的记录会先给被引用的行加读锁，两个请求若各自拿着读锁再去改同一行，会互相等待而死锁；先改被计数的行，后到的请求在这里排队，就不会。**编译器检查这一点**（`SIR-VALID-015`）：一个新行引用了某一行，这一行又被 `update`，并且它不是用 `load … for update` 加载的，那么新行的 `persist` 必须排在这一行的 `persist` 之后，否则报错；用 `for update` 在加载处就锁住它，两种顺序都安全。
+
+下面的写法会被拒绝：选课记录先 `persist`，课程的人数后 `persist`，而课程没有加锁。
+
+```sir-error SIR-VALID-015
+entity Course persistent {
+  identity id: Id generated auto;
+  field capacity: Count;
+  field enrolled: Count default 0;
+}
+entity Enrollment persistent {
+  identity id: Id generated auto;
+  field course: Ref<Course>;
+  field student: Id;
+  unique (course, student);
+}
+view EnrollmentView from Enrollment {
+  field id: Id;
+}
+input TakeInput {
+  field courseId: Id;
+  field student: Id;
+}
+error CourseFull http 409;
+error CourseMissing http 404;
+error Taken http 409;
+capability Take {
+  input TakeInput;
+  output EnrollmentView;
+  fails CourseFull;
+  fails CourseMissing;
+  fails Taken;
+  requires atomic;
+  expose command;
+  workflow {
+    load Course by input.courseId as course else CourseMissing;
+    update course when course.enrolled < course.capacity else CourseFull {
+      enrolled: course.enrolled + 1;
+    }
+    create Enrollment as made {
+      course: course;
+      student: input.student;
+    }
+    persist made else Taken;
+    persist course;
+    return made;
+  }
+}
+```
+
 
 没有守卫、又不是上面这种形式的“读自己的字段再写回”（例如 `a: row.b + 1`）仍然合法，但那是先读、再改、再写，并发下会丢更新；要并发安全就按这一节写。原子写只支持本字段加减一个值，不支持乘；加减的值可以用乘法算出来，但不能读这一行。金额的加减值必须能精确表示到字段的小数位。执行原子写的数据库连接必须开着严格模式（`STRICT_TRANS_TABLES` 或 `STRICT_ALL_TABLES`），否则拒绝写入，不会去改服务器的全局设置。金额加到超出范围属于数据库执行失败，整个事务回滚，不会变成作者声明的守卫错误；“余额不能为负”这类规则仍要自己写守卫。
 
@@ -2172,6 +2221,8 @@ use Crud {
 | `SIR-FLOW-001` | 用了未声明或还没声明的变量，或在 `find` 之外用了 `item` |
 | `SIR-FLOW-002` | `return` 的数量不对，或 `return` 后面还有步骤 |
 | `SIR-FLOW-003` | 用到的错误没有在 `fails` 里声明 |
+| `SIR-VALID-015` | 先 `persist` 指向一行的新行、再改这一行，而这一行没有用 `for update` 加载：两个并发请求会死锁 |
+| `SIR-WARN-001` | （警告，不阻止编译）先 `exists`／`count` 检查再 `create`，既没有 `for update` 锁也没有 `unique` 兜底，并发时两个请求可能同时通过 |
 | `SIR-FLOW-004` | 只读能力里有 `create`／`update`／`persist`／`delete` |
 | `SIR-FLOW-005`／`006` | `any` 出现在 `find`／`exists`／`count`／`sum` 的谓词之外／`any` 里面又嵌套了 `any` |
 | `SIR-SOURCE-*` | 多文件工程的问题：入口没列出文件、`import` 找不到声明、没 import 就用了别的文件的声明（`SIR-SOURCE-VISIBILITY-001`） |

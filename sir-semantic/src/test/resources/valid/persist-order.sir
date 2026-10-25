@@ -1,0 +1,43 @@
+sir 0.3
+software PersistOrder {
+  metadata { displayName "Persist Order"; namespace "example.order"; }
+  target { language java 21; framework spring_boot; persistence mybatis_plus;
+    database mysql; build maven; interface rest; }
+  sources {} imports {}
+  declarations {
+    entity Course persistent {
+      identity id: Id generated auto;
+      field capacity: Count;
+      field enrolled: Count default 0;
+    }
+    entity Enrollment persistent {
+      identity id: Id generated auto;
+      field course: Ref<Course>;
+      field student: Id;
+      unique (course, student);
+    }
+    view EnrollmentView from Enrollment { field id: Id; }
+    input Enroll { field courseId: Id; field student: Id; }
+    error CourseFull http 409;
+    error CourseMissing http 404;
+    error Taken http 409;
+    capability TakeCourse {
+      input Enroll; output EnrollmentView;
+      fails CourseFull; fails CourseMissing; fails Taken;
+      requires atomic; expose command at "/enrollments";
+      workflow {
+        load Course by input.courseId as course else CourseMissing;
+        update course when course.enrolled < course.capacity else CourseFull {
+          enrolled: course.enrolled + 1;
+        }
+        create Enrollment as made {
+          course: course;
+          student: input.student;
+        }
+        persist course;
+        persist made else Taken;
+        return made;
+      }
+    }
+  }
+}

@@ -59,6 +59,7 @@ import io.kcg.sir.semantic.type.TypeRules;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -378,6 +379,8 @@ final class ValidatePass {
       this.validateReturnPlacement(capDecl);
       this.validatePageUsage(capDecl, isQuery);
       this.validateWriteWorkflow(capDecl, failsSet);
+      this.validatePersistOrder(capDecl);
+      this.warnUncheckedCheckThenInsert(capDecl);
       this.validateExistencePlacement(capDecl);
       this.validateSecretUsage(capDecl);
              this.validateSteps(capDecl,failsSet,capDecl.workflow().steps(),true);
@@ -1327,6 +1330,103 @@ int returnCount = 0;
    * update applies to the versioned entity itself, so every combination that would
    * silently skip the check is rejected here.
    */
+   /**
+    * Persisting a row that points at an unlocked row, and only afterwards changing that row, is a deadlock waiting for
+    * two requests. In InnoDB the insert takes a shared lock on the row it points at; two requests that each hold it and
+    * then ask for the exclusive lock to update the row wait for one another. The fix is either to lock the row where it
+    * is loaded ({@code for update}) or to persist the changed row first, so the later request queues on the update.
+    */
+   private void validatePersistOrder(AstCapabilityDecl capDecl) {
+      List<AstStep> steps = capDecl.workflow().steps();
+      Map<SymbolId, Boolean> locked = new HashMap<>();
+      for (AstStep step : steps) {
+         if (step instanceof AstLoadStep load) {
+            SymbolId row = this.typed.referenceBindings().get(load.id());
+            if (row != null) locked.put(row, load.forUpdate());
+         }
+      }
+
+      for (int at = 0; at < steps.size(); at++) {
+         if (!(steps.get(at) instanceof AstCreateStep create)) continue;
+         SymbolId made = this.typed.referenceBindings().get(create.id());
+         int created = this.persistIndex(steps, made, at);
+         if (made == null || created < 0) continue;
+         for (AstBinding binding : create.bindings()) {
+            if (!(this.ungroup(binding.value()) instanceof AstNameExpression name)) continue;
+            SymbolId target = this.typed.referenceSiteBindings().targetFor(name.name().id()).orElse(null);
+            if (target == null || !Boolean.FALSE.equals(locked.get(target))) continue;
+            boolean updated = steps.stream().anyMatch(other -> other instanceof AstUpdateStep update
+               && this.typed.referenceSiteBindings().targetFor(update.target().id()).filter(target::equals).isPresent());
+            int changed = this.persistIndex(steps, target, 0);
+            if (updated && changed > created) {
+               this.diagnostics.add(DiagnosticBuilder.error("SIR-VALID-015",
+                  "先 persist 被引用并要修改的行 " + name.name().text() + "，再 persist 指向它的新行 " + create.result().text()
+                     + "（或者用 load … for update 先锁住它）；否则两个并发请求会在外键读锁上互相等待而死锁",
+                  steps.get(created).span()));
+            }
+         }
+      }
+   }
+
+   /**
+    * Checking that nothing conflicts and then inserting is not safe by itself: two concurrent requests can both pass the
+    * check. The database only stops them when the inserted entity has a unique key, or when both requests first queue on
+    * a lock of the same row ({@code load … for update}). Neither is here, so the author is told; the source stays legal
+    * because a unique key on another path or a deliberate race may be what is wanted.
+    */
+   private void warnUncheckedCheckThenInsert(AstCapabilityDecl capDecl) {
+      if (capDecl.requirements().stream().noneMatch(r -> r.requirement() == AstRequirementKind.ATOMIC)) return;
+      List<AstStep> steps = capDecl.workflow().steps();
+      Set<SymbolId> loaded = new java.util.HashSet<>();
+      for (int at = 0; at < steps.size(); at++) {
+         AstStep step = steps.get(at);
+         if (step instanceof AstLoadStep load) {
+            if (load.forUpdate()) return;
+            SymbolId row = this.typed.referenceBindings().get(load.id());
+            if (row != null) loaded.add(row);
+         }
+         if (!(step instanceof io.kcg.sir.ast.AstScalarQueryStep query)) continue;
+         SymbolId entity = this.typed.referenceSiteBindings().targetFor(query.entity().id()).orElse(null);
+         if (entity == null || this.uniqueEntities.contains(entity)) continue;
+         Set<SymbolId> mentioned = new java.util.HashSet<>();
+         this.collectVariables(query.predicate(), mentioned);
+         mentioned.retainAll(loaded);
+         if (mentioned.isEmpty()) continue;
+         boolean inserts = steps.subList(at + 1, steps.size()).stream().anyMatch(later -> later instanceof AstCreateStep create
+            && this.typed.referenceSiteBindings().targetFor(create.entity().id()).filter(entity::equals).isPresent());
+         if (inserts) {
+            this.diagnostics.add(DiagnosticBuilder.warning("SIR-WARN-001",
+               "先检查再插入，并发的两个请求可能同时通过检查：给这一步用到的行加 load … for update，或者给被插入的实体声明 unique",
+               query.span()));
+         }
+      }
+   }
+
+   private void collectVariables(AstExpression expression, Set<SymbolId> sink) {
+      switch (expression) {
+         case AstNameExpression name -> this.typed.referenceSiteBindings().targetFor(name.name().id()).ifPresent(sink::add);
+         case AstMemberExpression member -> this.collectVariables(member.receiver(), sink);
+         case AstGroupedExpression grouped -> this.collectVariables(grouped.inner(), sink);
+         case AstUnaryExpression unary -> this.collectVariables(unary.operand(), sink);
+         case AstPresentExpression present -> this.collectVariables(present.target(), sink);
+         case AstTimeShiftExpression shift -> this.collectVariables(shift.base(), sink);
+         case AstBinaryExpression binary -> {
+            this.collectVariables(binary.left(), sink);
+            this.collectVariables(binary.right(), sink);
+         }
+         default -> { }
+      }
+   }
+
+   /** The position of the first persist of {@code row} after {@code from}, or -1. */
+   private int persistIndex(List<AstStep> steps, SymbolId row, int from) {
+      for (int at = from; at < steps.size(); at++) {
+         if (steps.get(at) instanceof AstPersistStep persist
+               && this.typed.referenceSiteBindings().targetFor(persist.target().id()).filter(row::equals).isPresent()) return at;
+      }
+      return -1;
+   }
+
    private void validateWriteWorkflow(AstCapabilityDecl capDecl, Set<SymbolId> failsSet) {
        this.validateWriteWorkflow(capDecl,failsSet,capDecl.workflow().steps());
    }

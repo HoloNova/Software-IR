@@ -15,6 +15,11 @@ final class DiagnosticBuilder {
       return new Diagnostic(new DiagnosticCode(code), DiagnosticSeverity.ERROR, message, span, List.of(), List.of());
    }
 
+   /** A finding that does not stop compilation: the source is legal, but probably not what the author meant. */
+   static Diagnostic warning(String code, String message, SourceSpan span) {
+      return new Diagnostic(new DiagnosticCode(code), DiagnosticSeverity.WARNING, message, span, List.of(), List.of());
+   }
+
    static Diagnostic errorWithRelated(String code, String message, SourceSpan span, RelatedLocation related) {
       return new Diagnostic(new DiagnosticCode(code), DiagnosticSeverity.ERROR, message, span, List.of(related), List.of());
    }
