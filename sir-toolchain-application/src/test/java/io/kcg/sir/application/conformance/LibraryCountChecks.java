@@ -82,6 +82,8 @@ final class LibraryCountChecks {
         final HttpAssertionClient.Response page;
         final MysqlRuntimeTrace.Trace total;
         try (var trace = s.openRuntimeTrace()) {
+            // The window must be opened, or the digest baseline is empty and every read since start-up is counted.
+            trace.start();
             page = h.get(s.baseUrl() + "/api/books?page=1&size=50", Map.of());
             total = trace.stop();
         }
@@ -91,6 +93,8 @@ final class LibraryCountChecks {
         final MysqlRuntimeTrace.Trace detail;
         final HttpAssertionClient.Response response;
         try (var trace = s.openRuntimeTrace()) {
+            // The window must be opened, or the digest baseline is empty and every read since start-up is counted.
+            trace.start();
             response = h.get(s.baseUrl() + "/api/books/1", Map.of());
             detail = trace.stop();
         }
