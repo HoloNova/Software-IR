@@ -18,7 +18,14 @@ public record AstGroupedSumStep(
         AstNameRef key,
         AstExpression predicate,
         AstFindPage page,
-        AstName result) implements AstStep {
+        AstName result,
+        boolean average) implements AstStep {
+
+    /** A total per group, the form every step had before the average existed. */
+    public AstGroupedSumStep(AstNodeId id, SourceSpan span, AstNameRef entity, AstNameRef field, AstNameRef key,
+            AstExpression predicate, AstFindPage page, AstName result) {
+        this(id, span, entity, field, key, predicate, page, result, false);
+    }
 
     public AstGroupedSumStep {
         Objects.requireNonNull(id, "id");

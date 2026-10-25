@@ -1560,7 +1560,7 @@ capability TotalOfMine {
 }
 ```
 
-`sum 实体.字段 where 条件 as 结果;` 是一个独立步骤，`sum` 只在这个位置是关键字，只能用在 `requires readonly` 的 query 里。求和的字段必须直接属于这个实体，底层是十进制（`Money`、它的别名，或 `Optional` 包着的这些）。不支持整数字段、`secret` 字段、顺着引用取的字段、表达式、去重、关联、平均值和分页；按引用分组见 5.11。`item` 只在这一步的条件里有效，结果变量在这一步之后才能用。
+`sum 实体.字段 where 条件 as 结果;` 是一个独立步骤，`sum` 只在这个位置是关键字，只能用在 `requires readonly` 的 query 里。求和的字段必须直接属于这个实体，底层是十进制（`Money`、它的别名，或 `Optional` 包着的这些）。不支持整数字段、`secret` 字段、顺着引用取的字段、表达式、去重、关联和分页；平均值见本节末尾，按引用分组见 5.11。`item` 只在这一步的条件里有效，结果变量在这一步之后才能用。
 
 没有匹配的行，或者匹配的行金额全为空时，结果是 0；空值不参与求和。负数和末尾的零都保持精确，不经过浮点数，不舍入，也不套用字段自己的精度和 `min`／`max`，所以总额可以超过一笔 `Money` 的精度。例子里用 `type TotalAmount = Money;` 给输出起名，这不表示总额要符合一笔金额的存储规则。0 在 JSON 里显示几位小数不做保证。
 
@@ -1569,6 +1569,14 @@ capability TotalOfMine {
 在 Spring Boot／MySQL 目标上，每个 `sum` 是一条 `COALESCE(SUM(列), 0)`，不把行读回来再加。MySQL 在求和越界时可能只给一个警告，然后返回被截断的值，所以生成的代码会检查这条语句的警告：有警告或者查不了警告，都当作失败，不会返回一个错的总额。严格 SQL 模式管不到 SELECT，代替不了这项检查。含 `sum` 的工程会把 MyBatis 本地缓存设为 `STATEMENT`，保证每次都真的执行并检查；部署时改掉这个缓存设置或拦截器，这项保证就不成立。
 
 `sum` 只读，不能用来控制写入的上限。计算字段不能引用 `sum` 的结果。设计依据见[设计第 24 节](design/12-feature-semantics-and-semantic-types.md#g8-decimal-sum-proposal)。
+
+**平均值。**把关键字 `sum` 换成 `avg` 就是平均值，其它写法和限制都与 `sum` 相同（单值或 `by` 分组都可以）：
+
+```text
+avg Entry.amount where item.owner == actor and item.occurredAt >= input.since and item.occurredAt < input.until as mean;
+```
+
+平均值只算金额不为空的行；结果按字段自己声明的小数位**四舍五入（0.5 进位）**，例如 1.785 在两位小数的 `Money` 上是 1.79；没有匹配的行或者金额全为空时结果是 0，需要把“没有数据”和“平均为零”分开时，先用 `exists` 或 `count` 判断。在 MySQL 上是 `COALESCE(ROUND(AVG(列), 小数位), 0)`，同样检查语句警告。分组的平均值每组一个数，规则和分组合计一致。
 
 ### 5.11 `sum … by …`：按引用分组的精确金额分页
 

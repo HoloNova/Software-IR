@@ -30,7 +30,7 @@ class GroupedSumEditingTest {
         var page=child(node("PageSpec","pageField",REF,text("page"),"sizeField",REF,text("size"),"errorSymbol",REF,text("BadPage")));
         var group=child(node("GroupedSumStep","entitySymbol",REF,text("Entry"),"fieldSymbol",REF,text("amount"),
             "keySymbol",REF,text("category"),"predicate",FACT,child(node("BooleanLiteral","value",FACT,text("true"))),
-            "page",FACT,page,"resultVariable",REF,text("extra")));
+            "page",FACT,page,"average",FACT,text("false"),"resultVariable",REF,text("extra")));
         var flow=Selector.root().named("declarations","TotalsByCategory").slot("workflow");
         var added=edit(source("\n"),List.of(new Command.Add(flow.slot("steps"),group,OptionalInt.of(0))));
         assertTrue(rendered(added).contains("sum Entry.amount by category"));

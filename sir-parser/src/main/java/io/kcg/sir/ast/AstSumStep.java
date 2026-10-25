@@ -5,7 +5,12 @@ import java.util.Objects;
 
 /** One exact Decimal measurement, distinct from a row count or an existence read. */
 public record AstSumStep(AstNodeId id, SourceSpan span, AstNameRef entity, AstNameRef field,
-                         AstExpression predicate, AstName result) implements AstStep {
+                         AstExpression predicate, AstName result, boolean average) implements AstStep {
+    /** A total, the form every step had before the average existed. */
+    public AstSumStep(AstNodeId id, SourceSpan span, AstNameRef entity, AstNameRef field, AstExpression predicate, AstName result) {
+        this(id, span, entity, field, predicate, result, false);
+    }
+
     public AstSumStep {
         Objects.requireNonNull(id, "id");
         Objects.requireNonNull(span, "span");

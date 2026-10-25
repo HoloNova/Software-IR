@@ -119,7 +119,14 @@ public record SpringBootWorkflow(LoweredNodeId id, LoweredOrigin origin, List<Sp
 
     public record GroupedSumPlan(SymbolId fieldSymbol, SymbolId keySymbol, String columnName, String keyColumn,
        String countProjection, String dataProjection, String countMethod, String dataMethod,
-       int statements, boolean rejectWarnings) {
+       int statements, boolean rejectWarnings, boolean average, int scale) {
+       public GroupedSumPlan(SymbolId fieldSymbol, SymbolId keySymbol, String columnName, String keyColumn,
+             String countProjection, String dataProjection, String countMethod, String dataMethod,
+             int statements, boolean rejectWarnings) {
+          this(fieldSymbol, keySymbol, columnName, keyColumn, countProjection, dataProjection, countMethod, dataMethod,
+                statements, rejectWarnings, false, 0);
+       }
+
        public GroupedSumPlan {
           Objects.requireNonNull(fieldSymbol, "fieldSymbol"); Objects.requireNonNull(keySymbol, "keySymbol");
           for (String value : List.of(columnName, keyColumn, countProjection, dataProjection, countMethod, dataMethod))
@@ -150,7 +157,12 @@ public record SpringBootWorkflow(LoweredNodeId id, LoweredOrigin origin, List<Sp
      }
 
      public record SumPlan(SymbolId fieldSymbol, String columnName, String projectionSql, String mapperMethod,
-                          int statements, boolean emptyAsZero, boolean rejectWarnings) {
+                          int statements, boolean emptyAsZero, boolean rejectWarnings, boolean average, int scale) {
+       public SumPlan(SymbolId fieldSymbol, String columnName, String projectionSql, String mapperMethod,
+             int statements, boolean emptyAsZero, boolean rejectWarnings) {
+          this(fieldSymbol, columnName, projectionSql, mapperMethod, statements, emptyAsZero, rejectWarnings, false, 0);
+       }
+
        public SumPlan {
           Objects.requireNonNull(fieldSymbol, "fieldSymbol");
           requireText(columnName, "columnName");

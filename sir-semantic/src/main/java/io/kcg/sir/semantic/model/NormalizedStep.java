@@ -65,7 +65,12 @@ public sealed interface NormalizedStep
 
     record SumStep(@Source AstNodeId sourceNodeId, @Source SourceSpan span,
        @Reference SymbolId entitySymbol, @Reference SymbolId fieldSymbol, @Fact NormalizedExpression predicate,
-       @Reference SymbolId resultVariable, @Derived SymbolId itemVariable) implements NormalizedStep {
+       @Reference SymbolId resultVariable, @Derived SymbolId itemVariable, @Fact boolean average) implements NormalizedStep {
+       public SumStep(AstNodeId sourceNodeId, SourceSpan span, SymbolId entitySymbol, SymbolId fieldSymbol,
+             NormalizedExpression predicate, SymbolId resultVariable, SymbolId itemVariable) {
+          this(sourceNodeId, span, entitySymbol, fieldSymbol, predicate, resultVariable, itemVariable, false);
+       }
+
        public SumStep {
           Objects.requireNonNull(sourceNodeId, "sourceNodeId");
           Objects.requireNonNull(span, "span");
@@ -86,7 +91,12 @@ public sealed interface NormalizedStep
     record GroupedSumStep(@Source AstNodeId sourceNodeId, @Source SourceSpan span,
         @Reference SymbolId entitySymbol, @Reference SymbolId fieldSymbol, @Reference SymbolId keySymbol,
         @Fact NormalizedExpression predicate, @Fact PageSpec page,
-        @Reference SymbolId resultVariable, @Derived SymbolId itemVariable) implements NormalizedStep {
+        @Reference SymbolId resultVariable, @Derived SymbolId itemVariable, @Fact boolean average) implements NormalizedStep {
+        public GroupedSumStep(AstNodeId sourceNodeId, SourceSpan span, SymbolId entitySymbol, SymbolId fieldSymbol,
+              SymbolId keySymbol, NormalizedExpression predicate, PageSpec page, SymbolId resultVariable, SymbolId itemVariable) {
+           this(sourceNodeId, span, entitySymbol, fieldSymbol, keySymbol, predicate, page, resultVariable, itemVariable, false);
+        }
+
         public GroupedSumStep {
            Objects.requireNonNull(sourceNodeId, "sourceNodeId");
            Objects.requireNonNull(span, "span");

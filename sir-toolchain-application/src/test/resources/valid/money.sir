@@ -153,6 +153,15 @@ software MoneyLedger {
         return total;
       }
     }
+    // The average is rounded half up to the cent; an empty or all-null selection answers 0.
+    capability AverageMeasured {
+      input SumProbe; output AggregateValue;
+      requires readonly; expose query at "/measurements/average";
+      workflow {
+        avg Measurement.amount where item.owner == input.owner and (input.minimum is none or item.amount >= input.minimum) as mean;
+        return mean;
+      }
+    }
     // Grouped reads share this application's lifecycle, not the mutable wallet rows.
     entity SummaryCategory persistent {
       identity id: Id generated auto;
@@ -190,6 +199,22 @@ software MoneyLedger {
           Page input.page, input.size else BadGroupPage
         as totals;
         return totals;
+      }
+    }
+    capability AverageGroupMeasured {
+      input GroupProbe; output Page<SumGroup<Ref<SummaryCategory>>>;
+      fails BadGroupPage; fails BadGroupRange;
+      requires readonly; expose query at "/measurements/average-groups";
+      workflow {
+        validate input.until > input.since else BadGroupRange;
+        avg SummaryEntry.amount by category
+          where item.owner == input.owner
+            and any(SummaryCategory, id == item.category and owner == input.owner)
+            and item.occurredAt >= input.since and item.occurredAt < input.until
+            and (input.label is none or item.label == input.label)
+          Page input.page, input.size else BadGroupPage
+        as means;
+        return means;
       }
     }
 

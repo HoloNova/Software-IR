@@ -104,7 +104,7 @@ final class EntityScopes {
                NormalizedExpression scope = this.copy(this.scope(s.entitySymbol()), base, Optional.of(s.itemVariable()), s.entitySymbol());
                predicate = and(base + "/and", predicate, scope);
             }
-            yield new NormalizedStep.SumStep(s.sourceNodeId(), s.span(), s.entitySymbol(), s.fieldSymbol(), predicate, s.resultVariable(), s.itemVariable());
+            yield new NormalizedStep.SumStep(s.sourceNodeId(), s.span(), s.entitySymbol(), s.fieldSymbol(), predicate, s.resultVariable(), s.itemVariable(), s.average());
          }
                    case NormalizedStep.EachStep s -> {
              NormalizedExpression predicate=this.expression(s.predicate(),at);
@@ -125,7 +125,7 @@ case NormalizedStep.GroupedSumStep s -> {
                predicate = and(base + "/and", predicate, scope);
             }
             yield new NormalizedStep.GroupedSumStep(s.sourceNodeId(), s.span(), s.entitySymbol(), s.fieldSymbol(),
-               s.keySymbol(), predicate, s.page(), s.resultVariable(), s.itemVariable());
+               s.keySymbol(), predicate, s.page(), s.resultVariable(), s.itemVariable(), s.average());
          }
          case NormalizedStep.ScalarQueryStep s -> {
             NormalizedExpression predicate = this.expression(s.predicate(), at);

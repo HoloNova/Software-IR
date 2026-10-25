@@ -345,7 +345,7 @@ monthStep
     ;
 
 sumStep
-    : {_input.LT(1).getText().equals("sum")}? IDENT entity=IDENT DOT field=IDENT
+    : {_input.LT(1).getText().equals("sum") || _input.LT(1).getText().equals("avg")}? kind=IDENT entity=IDENT DOT field=IDENT
       (groupByClause WHERE predicate=expression findPageClause | WHERE predicate=expression)
       AS result=IDENT SEMI
     ;

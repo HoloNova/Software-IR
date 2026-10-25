@@ -938,8 +938,9 @@ public final class SpringBootModelLowerer {
             case NormalizedStep.SumStep value -> new SpringBootWorkflow.SumStep(
                     id, origin, value.entitySymbol(), lowerExpression(value.predicate(), owner, actorSymbol, Optional.of(value.itemVariable())),
                     this.lowerStringMatches(value.predicate(), owner), new SpringBootWorkflow.SumPlan(value.fieldSymbol(),
-                        this.columns.get(value.fieldSymbol()), "COALESCE(SUM(`" + this.columns.get(value.fieldSymbol()).replace("`", "``") + "`), 0)",
-                        "selectObjs", 1, true, true), variable(value.resultVariable()), variable(value.itemVariable()));
+                        this.columns.get(value.fieldSymbol()),
+                        AggregateSql.measurement("`" + this.columns.get(value.fieldSymbol()).replace("`", "``") + "`", value.average(), this.decimalScale(value.fieldSymbol())),
+                        "selectObjs", 1, true, true, value.average(), this.decimalScale(value.fieldSymbol())), variable(value.resultVariable()), variable(value.itemVariable()));
             case NormalizedStep.ScalarQueryStep value -> new SpringBootWorkflow.ScalarQueryStep(
                     id, origin, value.entitySymbol(), lowerExpression(value.predicate(), owner, actorSymbol, Optional.of(value.itemVariable())),
                     this.lowerStringMatches(value.predicate(), owner), this.scalarQueryPlan(value),
@@ -1129,8 +1130,17 @@ public final class SpringBootModelLowerer {
         String quotedKey="`"+key.replace("`", "``")+"`";
         String quotedAmount="`"+amount.replace("`", "``")+"`";
         return new SpringBootWorkflow.GroupedSumPlan(step.fieldSymbol(), step.keySymbol(), amount, key,
-                "DISTINCT "+quotedKey, quotedKey+" AS g_key,COALESCE(SUM("+quotedAmount+"), 0) AS g_total",
-                "selectCount", "selectMaps", 2, true);
+                "DISTINCT "+quotedKey,
+                quotedKey+" AS g_key,"+AggregateSql.measurement(quotedAmount, step.average(), this.decimalScale(step.fieldSymbol()))+" AS g_total",
+                "selectCount", "selectMaps", 2, true, step.average(), this.decimalScale(step.fieldSymbol()));
+    }
+
+    /** The scale of a Decimal field's declared precision, which an average is rounded to. */
+    private int decimalScale(SymbolId fieldSymbol) {
+        return this.entities.values().stream().flatMap(entity -> entity.fields().stream())
+            .filter(field -> field.id().equals(fieldSymbol)).flatMap(field -> field.constraints().stream())
+            .filter(c -> c.name().equals("precision")).map(this::decimalShape).findFirst()
+            .orElseThrow(() -> new IllegalStateException("a measured Decimal field has no precision: " + fieldSymbol)).scale();
     }
 
     private SpringBootWorkflow.PageSpec groupPage(NormalizedStep.PageSpec page) {

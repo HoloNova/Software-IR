@@ -33,7 +33,7 @@ final class GroupedSumValidation {
         String k = "`" + p.keyColumn().replace("`", "``") + "`";
         String a = "`" + p.columnName().replace("`", "``") + "`";
         if (!p.countProjection().equals("DISTINCT " + k)
-                || !p.dataProjection().equals(k + " AS g_key,COALESCE(SUM(" + a + "), 0) AS g_total")
+                || !p.dataProjection().equals(k + " AS g_key," + AggregateSql.measurement(a, p.average(), p.scale()) + " AS g_total")
                 || !p.countMethod().equals("selectCount") || !p.dataMethod().equals("selectMaps")
                 || p.statements() != 2 || !p.rejectWarnings())
             errors.add("grouped sum must plan the same key for distinct count and exact ordered data, with statement warnings");

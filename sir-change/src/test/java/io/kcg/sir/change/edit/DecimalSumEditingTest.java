@@ -29,7 +29,7 @@ class DecimalSumEditingTest {
     @Test void addUpdateAndDeleteUseOrdinaryCommandsAndReparseTheWholeSoftware() {
         var step = child(node("SumStep", "entitySymbol", REF, text("Entry"),
                 "fieldSymbol", REF, text("amount"), "predicate", FACT, child(node("BooleanLiteral", "value", FACT, text("true"))),
-                "resultVariable", REF, text("extra")));
+                "average", FACT, text("false"), "resultVariable", REF, text("extra")));
         var steps = Selector.root().named("declarations", "Total").slot("workflow").slot("steps");
         var added = edit(source("\n"), List.of(new Command.Add(steps, step, OptionalInt.of(0))));
         assertTrue(textOf(added).contains("sum Entry.amount where true as extra;"));

@@ -599,7 +599,7 @@ case NormalizedStep.MonthStep value: {
           }
           case NormalizedStep.GroupedSumStep value: {
              this.validateStep(new NormalizedStep.SumStep(value.sourceNodeId(), value.span(), value.entitySymbol(),
-                 value.fieldSymbol(), value.predicate(), value.resultVariable(), value.itemVariable()), capability, actorAccess);
+                 value.fieldSymbol(), value.predicate(), value.resultVariable(), value.itemVariable(), value.average()), capability, actorAccess);
              var entity=this.declarationsById.get(value.entitySymbol());
              var key=entity instanceof NormalizedEntity e ? e.fields().stream().filter(f -> f.id().equals(value.keySymbol())).findFirst().orElse(null) : null;
              SirType result=this.model.symbols().byId(value.resultVariable()).filter(VariableSymbol.class::isInstance)

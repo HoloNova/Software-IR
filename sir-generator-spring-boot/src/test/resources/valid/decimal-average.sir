@@ -1,0 +1,58 @@
+sir 0.3
+software DecimalAverage {
+  metadata { displayName "Decimal Average"; namespace "example.average"; }
+  target { language java 21; framework spring_boot; persistence mybatis_plus;
+    database mysql; build maven; interface rest; }
+  sources {} imports {}
+  declarations {
+    type MeanAmount = Money;
+    entity Account persistent {
+      identity id: Id generated auto;
+    }
+    entity Category persistent {
+      identity id: Id generated auto;
+      field owner: Ref<Account>;
+      field label: Text;
+    }
+    entity Entry persistent {
+      identity id: Id generated auto;
+      field owner: Ref<Account>;
+      field category: Ref<Category>;
+      field amount: Optional<Money>;
+      field quantity: Count;
+      field occurredAt: Moment;
+    }
+    input AverageInput {
+      field page: PageNo;
+      field size: PageSize;
+    }
+    error BadPage;
+    capability AverageAmount {
+      actor Ref<Account>;
+      output MeanAmount;
+      requires authenticated;
+      requires readonly;
+      expose query at "/entries/average";
+      workflow {
+        avg Entry.amount where item.owner == actor as mean;
+        return mean;
+      }
+    }
+    capability AveragesByCategory {
+      actor Ref<Account>;
+      input AverageInput;
+      output Page<SumGroup<Ref<Category>>>;
+      fails BadPage;
+      requires authenticated;
+      requires readonly;
+      expose query at "/entries/average-by-category";
+      workflow {
+        avg Entry.amount by category
+          where item.owner == actor and any(Category, id == item.category and owner == actor)
+          Page input.page, input.size else BadPage
+        as means;
+        return means;
+      }
+    }
+  }
+}

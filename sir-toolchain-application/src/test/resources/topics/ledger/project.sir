@@ -216,6 +216,41 @@ software PersonalLedger {
         return totals;
       }
     }
+    // The average of an entry in the period, rounded half up to the cent; a period with no entries answers 0.
+    capability AverageBetween {
+      actor Ref<User>;
+      input SumRange;
+      output TotalAmount;
+      fails BadRange;
+      requires authenticated;
+      requires readonly;
+      expose query at "/entries/average";
+      workflow {
+        validate input.until > input.since else BadRange;
+        avg Entry.amount where item.owner == actor
+          and item.occurredAt >= input.since and item.occurredAt < input.until as mean;
+        return mean;
+      }
+    }
+    capability AveragesByCategory {
+      actor Ref<User>;
+      input GroupRange;
+      output Page<SumGroup<Ref<Category>>>;
+      fails BadPage;
+      fails BadRange;
+      requires authenticated;
+      requires readonly;
+      expose query at "/entries/averages-by-category";
+      workflow {
+        validate input.until > input.since else BadRange;
+        avg Entry.amount by category
+          where item.owner == actor and any(Category, id == item.category and owner == actor)
+            and item.occurredAt >= input.since and item.occurredAt < input.until
+          Page input.page, input.size else BadPage
+        as means;
+        return means;
+      }
+    }
     // A missing preference is deliberate: old users must choose, never silently inherit the server's zone.
     view TimeZoneView from User { field timeZone: Optional<Text>; }
     input PreferredTimeZone { field timeZone: ZoneName where notBlank; }

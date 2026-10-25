@@ -48,6 +48,11 @@ final class DecimalSumChecks {
         total(s,http,"/measurements/tagged?owner=1&tag=target","3.57","any filters without duplicating a multiply-tagged measurement");
         total(s,http,"/measurements/tagged?owner=1&tag="+encode("' OR 1=1 --"),"0","correlated request value stays a bound argument");
         total(s,http,"/measurements/literal?owner=1&tag="+encode("_%"),"1.23","containsLiteral still escapes SQL wildcards");
+        total(s,http,"/measurements/average?owner=1","1.00","the average ignores nulls: (1.23 + 2.34 - 0.57) / 3");
+        total(s,http,"/measurements/average?owner=1&minimum=1.2300","1.79","1.785 rounds half up to the cent");
+        total(s,http,"/measurements/average?owner=3","0","an all-null selection averages to zero");
+        total(s,http,"/measurements/average?owner=4","0","an empty selection averages to zero");
+        total(s,http,"/measurements/average?owner=5","99999999999999999.99","the average of two large equal amounts is exact");
         warningPolicy(s,http,"strict session");
         s.check("aggregate reads never modify source rows or tags",before.equals(s.rowsOf(observer,"measurement"))
                 && tags.equals(s.rowsOf(observer,"measurement_tag")),s.rowsOf(observer,"measurement").toString());

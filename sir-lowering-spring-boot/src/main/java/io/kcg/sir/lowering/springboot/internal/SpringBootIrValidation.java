@@ -1163,7 +1163,8 @@ case SpringBootWorkflow.FindStep value:
        if (field == null || !expected.equals(type) || field.persistenceShape() != SpringBootDeclaration.PersistenceShape.SCALAR
              || field.columnName().isEmpty()
             || !field.columnName().get().equals(query.plan().columnName())
-            || !query.plan().projectionSql().equals("COALESCE(SUM(`" + query.plan().columnName().replace("`", "``") + "`), 0)"))
+            || !query.plan().projectionSql().equals(AggregateSql.measurement(
+                  "`" + query.plan().columnName().replace("`", "``") + "`", query.plan().average(), query.plan().scale())))
          this.error(owner, "sum must project a declared Decimal column of its entity");
       if (!(query.itemVariable().type() instanceof LoweredJavaType.Declared row
               && row.kind() == LoweredJavaType.DeclaredKind.ENTITY && row.symbolId().equals(query.entitySymbol()))

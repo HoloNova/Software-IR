@@ -11,6 +11,7 @@ import java.util.concurrent.*;
 final class GroupedSumChecks {
     static final String RESOURCE="/conformance/mysql/GroupedSumFixture.java.txt";
     static final String ROUTE="/api/measurements/groups";
+    static final String AVERAGE_ROUTE="/api/measurements/average-groups";
     static final String BARRIER="/api/fixture/group-barrier";
     private static final ObjectMapper JSON=new ObjectMapper().enable(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS);
     private GroupedSumChecks() {}
@@ -34,6 +35,7 @@ final class GroupedSumChecks {
         if(defaults!=null) s.check("group default page policy is the existing 1/20",defaults.path("page").asInt()==1&&defaults.path("size").asInt()==20,defaults.toString());
         page(s,http,range(3),0,List.of(),List.of());
         page(s,http,range(1)+"&label="+URLEncoder.encode("' OR 1=1 --",StandardCharsets.UTF_8),0,List.of(),List.of());
+        averages(s,http);
         invalid(s,http,range(1)+"&page=0","BadGroupPage");
         invalid(s,http,ROUTE+"?owner=1&until=2026-02-01T00:00:00Z","BadGroupRange");
         invalid(s,http,ROUTE+"?owner=1&since=2026-02-01T00:00:00Z&until=2026-01-01T00:00:00Z","BadGroupRange");
@@ -77,6 +79,13 @@ final class GroupedSumChecks {
             checkPage(s,response,1,List.of(901L),List.of("1.00"),"same page remains on the count snapshot after another transaction commits");
             page(s,http,range(99),2,List.of(901L,902L),List.of("1.00","2.00"));
         } finally { s.fixtureStatement("DELETE FROM summary_entry WHERE id=9002"); }
+    }
+
+    /** The same grouping with avg: each group's mean rounded half up to the cent, an all-null group answering 0. */
+    private static void averages(BusinessSliceHarness s,HttpAssertionClient http) throws Exception {
+        String path=AVERAGE_ROUTE+"?owner=1&since=2026-01-01T00:00:00Z&until=2026-02-01T00:00:00Z";
+        page(s,http,path,3,List.of(101L,102L,103L),List.of("1.00","0","99999999999999999.99"));
+        page(s,http,path+"&page=2&size=2",3,List.of(103L),List.of("99999999999999999.99"));
     }
 
     private static String range(long owner) {

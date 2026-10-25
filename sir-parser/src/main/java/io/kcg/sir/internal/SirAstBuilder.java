@@ -559,9 +559,10 @@ final class SirAstBuilder {
 
                 return new AstGroupedSumStep(ids.id(path), source.span(value), entity, field,
                         nameRef(value.groupByClause().key, path, "key"), predicate, findPage(page, path),
-                        name(value.result));
+                        name(value.result), value.kind.getText().equals("avg"));
             }
-            return new AstSumStep(ids.id(path), source.span(value), entity, field, predicate, name(value.result));
+            return new AstSumStep(ids.id(path), source.span(value), entity, field, predicate, name(value.result),
+                    value.kind.getText().equals("avg"));
         }
         if (context.scalarQueryStep() != null) {
             var value = context.scalarQueryStep();

@@ -334,6 +334,11 @@ public final class SirDeclarationWriter {
 
    // ----- workflow steps -----------------------------------------------------------------------
 
+   /** The keyword of a measurement step: the total is written {@code sum}, the average {@code avg}. */
+   private static String aggregateWord(StructNode step) {
+      return text(step, "average").equals("true") ? "avg" : "sum";
+   }
+
    private void writeStep(StructNode step, Lines out) {
        this.writeStep(step,out,2);
    }
@@ -362,10 +367,10 @@ case "RepeatStep" -> {
          case "MonthStep" -> out.line(depth,"month " + expression(child(step,"month"),0) + " in "
               + expression(child(step,"zone"),0) + " as " + text(step,"sinceVariable") + ", " + text(step,"untilVariable")
               + " else " + text(step,"errorSymbol") + ";");
-          case "SumStep" -> out.line(depth, "sum " + text(step, "entitySymbol") + "." + text(step, "fieldSymbol")
+          case "SumStep" -> out.line(depth, aggregateWord(step) + " " + text(step, "entitySymbol") + "." + text(step, "fieldSymbol")
              + " where " + expression(child(step, "predicate"), 0) + " as " + text(step, "resultVariable") + ";");
           case "GroupedSumStep" -> {
-             out.line(depth, "sum " + text(step, "entitySymbol") + "." + text(step, "fieldSymbol")
+             out.line(depth, aggregateWord(step) + " " + text(step, "entitySymbol") + "." + text(step, "fieldSymbol")
                  + " by " + text(step, "keySymbol"));
              out.line(depth+1, "where " + expression(child(step, "predicate"), 0));
              StructNode page = child(step, "page");

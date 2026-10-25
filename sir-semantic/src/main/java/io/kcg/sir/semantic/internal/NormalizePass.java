@@ -617,7 +617,7 @@ final class NormalizePass {
              yield new NormalizedStep.GroupedSumStep(s.id(), s.span(), this.siteTargetOrUnknown(s.entity().id()),
                 this.siteTargetOrUnknown(s.field().id()), this.siteTargetOrUnknown(s.key().id()),
                 predicate != null ? predicate : this.unitExpr(s.span()), this.normalizePageSpec(s.page()),
-                this.definitionBindingOrUnknown(s.id()), this.validated.findItemBindings().get(s.id()));
+                this.definitionBindingOrUnknown(s.id()), this.validated.findItemBindings().get(s.id()), s.average());
           }
           case io.kcg.sir.ast.AstScalarQueryStep s -> {
              NormalizedExpression predicate = this.normalizeExpression(s.predicate());
@@ -636,7 +636,7 @@ final class NormalizePass {
              NormalizedExpression predicate = this.normalizeExpression(s.predicate());
              yield new NormalizedStep.SumStep(s.id(), s.span(), this.siteTargetOrUnknown(s.entity().id()),
                  this.siteTargetOrUnknown(s.field().id()), predicate != null ? predicate : this.unitExpr(s.span()),
-                 this.definitionBindingOrUnknown(s.id()), this.validated.findItemBindings().get(s.id()));
+                 this.definitionBindingOrUnknown(s.id()), this.validated.findItemBindings().get(s.id()), s.average());
           }
           case AstCreateStep s -> {
             SymbolId entitySym = this.siteTargetOrUnknown(s.entity().id());
