@@ -34,7 +34,7 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 - 语义补充（2026-10-18～20）：内置 `use Crud { entity: X; }` 一句给出增删改查，`owner` 让每一行只属于一个账号，`path` 给出 REST 路径；错误可以声明 403，工作流可以读当前用户的字段（`actor.role`），授权就是以 `actor` 为一边的普通检查；`expose … [put|delete] at "/notes/{id}"` 自定 HTTP 方法和带路径参数的路径；已上线的列可以改默认值。部署第二版用 `Crud`（含 `owner`、`path`）管理笔记和标签，CI 冒烟在真实 MySQL 上核对 401／403／404 与 REST 路径。
 - 已上线系统的结构变更（2026-10-20，[设计 12 第 14 节](design/12-feature-semantics-and-semantic-types.md)）：除加列、改名、改默认值外，可以放宽（整数变宽、文本变长或去掉长度、必填变可空），可以删实体、字段，但打包时要写 `--confirm-backup yes`（声明已备份，工具不检查）。本机测试通过；真实 MySQL 上的验证由新增的部署第三版冒烟承担，待提交后的 CI。删掉引用别的表的列、主键列仍不支持。
 - 唯一约束（2026-10-20，[设计 12 第 15 节](design/12-feature-semantics-and-semantic-types.md)）：`persist 变量 else 错误` 能说明新建的行撞上唯一约束时报哪个错误（原来是 500）；实体可写 `unique (a, b);` 声明联合唯一，建表时成为复合唯一索引，保留数据的更新里只能随新建表创建。
-- 选题试写（[报告](qualification/TOPIC_TRIALS.md)）：八个典型后端的 84 条需求，当前 78 条完整写出、6 条带折扣、0 条尚未写出（92.9%／7.1%／0%）。图书可借数量和逾期罚款已由 #178 真库验收；带折扣的五条都已实现、等待同源码 CI 真库验收：商城的优惠券、下单、多商品订单和购物车，会议室的每周重复预约；记账的“图表数据、导出”记为带折扣：图表所需的数接口都有，导出文件属于不做的 G14。缺陷 D1 到 D5 都已修，八个题目的生成工程由 CI 逐个离线编译。
+- 选题试写（[报告](qualification/TOPIC_TRIALS.md)）：八个典型后端的84条需求，当前 **83条完整写出、1条带折扣、0条尚未写出（98.8%／1.2%／0%）**。#184同SHA真库及完整CI验收后，商城优惠券、下单、多商品订单、购物车与每周重复预约五条转完整；图书计数、罚款、记账平均值等也回归通过。唯一折扣是合并需求“图表数据、导出”：数据接口已验收，文件导出属于明确不做的G14。D1～D5已修；八题逐个离线编译不等同于八个独立应用逐题HTTP验收。
 
 - G7 可选值（2026-10-20，已实现；后续 #140 已回归验收）：`x is none`／`x is present` 判断空值，兼容类型可比较；任一侧为空普通比较均为 false（含 `!=`），`not` 仍普通取反。显式组合空值判断可写可选筛选，不自动省略条件，PATCH `.present` 不变。tasks、market 已更新，Java 真值表与题目内存生成已验证；八题生成工程离线编译和真实 MySQL／HTTP 为 NOT_RUN。Windows 部署导出测试因现有安全读源能力缺失失败，未放宽边界。方案与限制见[设计 12 第 17 节](design/12-feature-semantics-and-semantic-types.md)，定向证据见[验证说明](qualification/README.md)。
 
@@ -73,7 +73,7 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 
 ## 4. 验证状态
 
-- 当前完整验收基线：`bf14d905b2edce5b67bc0ddf39ed189be2c10aa1` 的 [CI #154](https://github.com/HoloNova/Software-IR/actions/runs/39749656260) 全部门 success，显式锁与预约屏障已验收；[证据第 25 节](qualification/README.md#ci-154-accepted)。#155 主验证成功、部署被取消，不计整轮通过；本批 library 源码尚需新 CI。
+- **当前完整验收基线：**`5972072eb920e5c21ea8d2ac5c4f88ecd98ef66c` 的 [CI #184](https://github.com/HoloNova/Software-IR/actions/runs/40155600764)，Frozen、业务IT、独立验证、CLI、冷部署全部success。284份上传XML共1970项，0失败／错误／跳过（包括随后IT，不冒称单次Frozen计数）；13份业务报告全PASSED，SIR／DDL／seed摘要与当前源码吻合。部署同SHA的98个HTTP请求符合预期，持久化、权限、合同、更新链和清理均通过。证据与有意未测边界见[验证50](qualification/README.md#ci-184-accepted)；历史#154是显式锁／预约屏障首次验收，#155部署取消仍不计全绿。
 - G10：Money 的精度、PATCH、原子金额与实际事务连接严格模式已验收；同 SHA 金额真库57项、独立部署精度／scale漂移拒绝、恢复和新实例迁移链均通过。不自动迁移旧整数分或已有金额精度。
 - G6：精确乘法与能力级必需值计划已验收，乘法真库 37 项（#147）、后扩展至 56 项（#150）通过，包含并发数量扣库、计算后精度拒写回滚和明细一致性；八题生成工程离线编译通过。需求账本已由后续 #150 更新为 66／5／13（金额一条与剩余名额一条转完整）。
 
@@ -103,7 +103,9 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 - SLM 评测：总设计见 [SLM 评测计划](qualification/SLM_GENERATED_PROJECT_EVALUATION_PLAN.md)，尚未启动。
 - Windows 平台证据；生产、安全认证、性能、高可用资格均未声明。
 
-## 7. 当前阶段（2026-10-24）
+## 7. 当前阶段（2026-10-25）
+
+本轮选定的缺口已实现并由#184完整验收，账本83／1／0；G14文件导出等排除项不补做。下面较早的实施记录保留当时的失败／NOT_RUN状态，不作为当前待办；当前验收以第4节和[验证50](qualification/README.md#ci-184-accepted)为准。模型评估尚未启动，模型、样本和评分方式由负责人另行确定。
 
 **语言升级已实施：**负责人 2026-10-17 确认把 SIR 做成 Java 之上的更高层语言——一句声明给出一个功能，作者写语义而不写机器类型，用户可以定义自己的类型和功能，数据库迁移由变更层驱动。[设计 12](design/12-feature-semantics-and-semantic-types.md) 第 9 节的五步已全部实施，结果与留到下一阶段的事项见其第 13 节。迁移由变更层驱动之后，已上线的表支持列改名（带 `@id`）、加可空列、加带默认值的必填列和新建表，这些都由 CI 部署冒烟在真实 MySQL 上核对。
 
@@ -111,23 +113,23 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 
 **CI 提速实测：**#155 主验证 8:18（同业务源码 #154 为 19:51），在线预热 0:27、Frozen 3:37，Completion 按预期跳过；真实业务／独立验证／CLI 保留。部署被取消，不能比较整轮时长，也不将全部观测改善归因为编排。详见[验证第 25 节](qualification/README.md#ci-154-accepted)。
 
-**当前接手与#183修复（完整验收仍待同源码CI）：**已快进拉取`fc60661`，对应业务源码`0ac9739`的[verify #183](https://github.com/HoloNova/Software-IR/actions/runs/40153597517) Frozen通过；281份XML／1960项只有MultiplicationBusinessConformanceIT失败，原因是验收器把非阻断并发警告当成错误。乘法／商城182项检查通过、1项诊断断言失败；Money326、library299、course151全部通过，优惠券、购物车／每周系列回滚与avg均有真实HTTP／MySQL结果且资源哈希吻合。只修公共测试harness区分ERROR／WARNING，保留警告与先读后锁重查；9类65项定向通过。独立验证、CLI、部署未运行，账本仍78／6／0，交接文档暂不删除；见[验证49](qualification/README.md#ci-183-compilation-warning-fix)。不开始新功能或模型评估，完整验收后再收尾；图表／导出合并需求仍有G14折扣。
+**接手收口（#184完整验收）：**已拉取云端更新并以`5972072`修复#183验收器误拒合法WARNING；保留警告、预读、显式锁与后置重查，生产编译器／SQL／业务未改。本机9类65项定向通过后，负责人通知同SHA CI全绿，已核对原始报告及部署证据；乘法／商城183、Money326、library299、course151等全PASSED。#183唯一失败及修复过程保留在[验证49](qualification/README.md#ci-183-compilation-warning-fix)，#184结案在[验证50](qualification/README.md#ci-184-accepted)。本轮仅做状态归档及按原任务单独清理临时交接文档，不新增功能或自动启动评估。
 
-**当前实现（平均值 `avg`，待完整同源码 CI）：**[设计34](design/12-feature-semantics-and-semantic-types.md)；`avg` 与 `sum` 是同一个步骤（单值和按引用分组），按字段小数位四舍五入，无数据为 0；ledger 加区间平均和按分类平均，Money 业务 IT 加平均值检查。多分组键和补零组没有做，原因见设计34.3。
+**平均值 `avg`（#184已验收）：**[设计34](design/12-feature-semantics-and-semantic-types.md)；`avg` 与 `sum` 是同一个步骤（单值和按引用分组），按字段小数位四舍五入，无数据为 0；ledger 加区间平均和按分类平均，Money 业务 IT 加平均值检查。多分组键和补零组没有做，原因见设计34.3。
 
-**上一实现（优惠券，待同源码 CI）：**[设计33](design/12-feature-semantics-and-semantic-types.md)；需求由实现者定义（立减、有效期、起用金额、总次数、一人一张、一单一券、取消退券），全部由已有能力组合，没有新语法；真库检查含八买家抢三次的并发。
+**优惠券（#184已验收）：**[设计33](design/12-feature-semantics-and-semantic-types.md)；需求由实现者定义（立减、有效期、起用金额、总次数、一人一张、一单一券、取消退券），全部由已有能力组合，没有新语法；真库检查含八买家抢三次的并发。
 
-**上一实现（G5 第三片：`repeat` 与 `addDays`，待同源码 CI）：**[设计32](design/12-feature-semantics-and-semantic-types.md)；`repeat 次数 times limit N else 错误 as 序号 { }` 按请求里的次数重复（上限是字面量，超限一次都不执行），`addDays(t, n)` 把时刻挪若干整天；booking 由此写出每周重复预约，真库检查接在乘法业务 IT 的预约部分。本机各模块定向测试和语言参考示例通过。
+**G5第三片：`repeat`与`addDays`（#184已验收）：**[设计32](design/12-feature-semantics-and-semantic-types.md)；`repeat 次数 times limit N else 错误 as 序号 { }` 按请求里的次数重复（上限是字面量，超限一次都不执行），`addDays(t, n)` 把时刻挪若干整天；booking 由此写出每周重复预约，真库检查接在乘法业务 IT 的预约部分。本机各模块定向测试和语言参考示例通过。
 
-**上一实现（G5 第二片：循环体里新建、删除和累加，待同源码 CI）：**[设计31](design/12-feature-semantics-and-semantic-types.md)放开 `each` 循环体：可以 `create`、`delete`、`exists`／`count`，对循环外的行只能做不带守卫的“本字段 ± 值”累加（一条 `SET total = total + ?`）；已经 `persist` 过的新建行也能做原子累加；`each` 正在处理的行可以删除。shop 由此加了购物车（加入、改数量、移除、查看、清空、结账），结账逐项锁商品扣库存、写明细、累加订单总额并清空购物车，售罄整笔回滚；真库检查接在乘法业务 IT，不新起应用。本机语义、降级、生成与编辑模块的定向测试、八题离线编译和语言参考示例通过；真实 MySQL 由 CI 执行。
+**G5第二片：循环体里新建、删除和累加（#184已验收）：**[设计31](design/12-feature-semantics-and-semantic-types.md)放开 `each` 循环体：可以 `create`、`delete`、`exists`／`count`，对循环外的行只能做不带守卫的“本字段 ± 值”累加（一条 `SET total = total + ?`）；已经 `persist` 过的新建行也能做原子累加；`each` 正在处理的行可以删除。shop 由此加了购物车（加入、改数量、移除、查看、清空、结账），结账逐项锁商品扣库存、写明细、累加订单总额并清空购物车，售罄整笔回滚；真库检查接在乘法业务 IT，不新起应用。本机语义、降级、生成与编辑模块的定向测试、八题离线编译和语言参考示例通过；真实 MySQL 由 CI 执行。
 
-**上一实现（daysBetween、max、min 与逾期罚款，待同源码 CI）：**[设计30](design/12-feature-semantics-and-semantic-types.md)；library 还书时按整天数罚 0.50，提前还书不罚。#177 里这两项真库检查已通过，整轮因目录计数预算检查漏 `start()` 失败；`84b8cc7` 的 #178 全部通过，两项转完整。
+**daysBetween、max、min与逾期罚款（#178验收，#184回归通过）：**[设计30](design/12-feature-semantics-and-semantic-types.md)；library 还书时按整天数罚 0.50，提前还书不罚。#177 里这两项真库检查已通过，整轮因目录计数预算检查漏 `start()` 失败；`84b8cc7` 的 #178 全部通过，两项转完整。
 
-**#175探针修复（待同源码CI）：**`61eee79` 已通过预热编译，首次Frozen和完成诊断都只有G9TopicRuntimeTest旧公开读探针不认识Copy.selectMaps的一项失败；业务IT／独立验证／CLI／部署均未执行。上轮只跑新增SQL方法，遗漏同类旧回归，是本机可检出的覆盖选择失误。沿IT顺序核对时还发现并修正了“至少20本”与实际12本种子的失配，改为按观察连接的完整书目ID集、总数、顺序与逐书计数校验，补漏行／重复／额外／错序等反例。完整执行11类122项（零失败／跳过），包含G9整类32项、详情／分页／搜索匿名计数、旧借还／FIFO与图谱／预算；仅测试探针及文档改动，生产逻辑不变。见[验证48](qualification/README.md#ci-175-catalogue-probe-fix)，账本保持76／2／6。负责人已澄清先完成剩余缺口再做小模型评估，评估不是实施前置。
+**#175探针修复（历史记录，后续#178／#184已验收）：**`61eee79` 已通过预热编译，首次Frozen和完成诊断都只有G9TopicRuntimeTest旧公开读探针不认识Copy.selectMaps的一项失败；业务IT／独立验证／CLI／部署均未执行。上轮只跑新增SQL方法，遗漏同类旧回归，是本机可检出的覆盖选择失误。沿IT顺序核对时还发现并修正了“至少20本”与实际12本种子的失配，改为按观察连接的完整书目ID集、总数、顺序与逐书计数校验，补漏行／重复／额外／错序等反例。完整执行11类122项（零失败／跳过），包含G9整类32项、详情／分页／搜索匿名计数、旧借还／FIFO与图谱／预算；仅测试探针及文档改动，生产逻辑不变。见[验证48](qualification/README.md#ci-175-catalogue-probe-fix)，账本保持76／2／6。负责人已澄清先完成剩余缺口再做小模型评估，评估不是实施前置。
 
 **#174修复（编译由#175证实，整轮失败见上）：**`0b79ee5` 在预热编译失败：新增RelatedCounts未接图谱工厂两处穷尽switch，本机旧class掩盖源码缺口，原125项不能证明全源码可编译。已补独立RELATED_COUNTS角色、路径与现有枚举消费者，并在无目录导出的实际library／组合及market／ledger上验证节点、边、文件哈希与序列化。自审同时修正分页验收预算：原分页已有总数＋根行2读，另加1次副本聚合；不是根行1读。实际MyBatis SQL与共享夹具对齐，预算仍拒缺失／重复／额外查询，完整证据落盘。本轮8类62项通过，主源码与测试重新编译；生产计数／SQL／事务未改，详见[验证47](qualification/README.md#ci-174-related-count-graph-fix)。#174业务与部署未运行，新真库结果待负责人通知，账本76／2／6不变。
 
-**上一实现（图书可借数量 count 视图与 Crud readView，待同源码CI）：**library 的目录详情、分页与检索现在直接返回 `availableCopies`：只数 `AVAILABLE` 副本，`LOST` 与借出不计，无副本为 0；不新增存储列，不改借还协议和写权限。计数按当前页一次分组查询（空页不调子 Mapper），同一只读快照内完成；它是“现在书架上几本”，**不是借得到的保证**。当轮报告 18 类 125 项定向通过（编译证据局限见上文）（含 19 项 count 契约、4 类拒绝、源往返、真实生成服务、文档门与库夹具重建）；实施中修正了四个先以 RED 暴露的缺陷：含 count 时字段改名抛 `IllegalStateException`、全角色／结构／跨文件门未登记新角色、IR 计划残留外层根行引用、以及缺乏可执行示例。实际 library 变为 452 行 SIR／4240 行 Java／20 项能力；真库 HTTP／MySQL 与完整导出门本机 NOT_RUN，见[验证46](qualification/README.md#library-related-count-local)。本条只转为待 CI 的 △，账本76／2／6，AVG、日期差罚款、请求列表与累计仍未做。
+**图书可借数量count视图与Crud readView（以下为当时记录，后续#178／#184已验收）：**library 的目录详情、分页与检索现在直接返回 `availableCopies`：只数 `AVAILABLE` 副本，`LOST` 与借出不计，无副本为 0；不新增存储列，不改借还协议和写权限。计数按当前页一次分组查询（空页不调子 Mapper），同一只读快照内完成；它是“现在书架上几本”，**不是借得到的保证**。当轮报告 18 类 125 项定向通过（编译证据局限见上文）（含 19 项 count 契约、4 类拒绝、源往返、真实生成服务、文档门与库夹具重建）；实施中修正了四个先以 RED 暴露的缺陷：含 count 时字段改名抛 `IllegalStateException`、全角色／结构／跨文件门未登记新角色、IR 计划残留外层根行引用、以及缺乏可执行示例。实际 library 变为 452 行 SIR／4240 行 Java／20 项能力；真库 HTTP／MySQL 与完整导出门本机 NOT_RUN，见[验证46](qualification/README.md#library-related-count-local)。本条只转为待 CI 的 △，账本76／2／6，AVG、日期差罚款、请求列表与累计仍未做。
 
 **上一实现（G9逐题写保护，已由#172验收）：**market系统字段／卖家归属与library馆员目录策略已有，本批补真实生成执行及原library IT的HTTP／数据库快照检查，不新增G9语法或应用构建。发现Optional<Name>的DTO元素和最终候选都误把null当NotBlank违规，已按目标Optional事实修正：缺省／null合法、有值仍拒空白，非可空Name仍必填；标准约束码及消息模板、长度／精度／时区、PATCH版本写保留。SQL自审另用实际Mapper复现condition裸列名，按MySQL8.4.5保留字事实仅在实体SQL注解中转义；物理列／JSON不改名，普通标识符不变。14类127项定向通过，旧借还／预约不删，实际路由／错误码／external环境及拒绝未知JSON字段已核对，见[验证44](qualification/README.md#g9-topics-optional-name-local)。两项G9后由#172转✓（当时账本76／1／7）；library源当时为443行，本片新增 count／readView 后为452行、Java4240行。文档与#171验收记录随代码提交，不查／等新CI。
 

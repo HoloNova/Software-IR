@@ -32,7 +32,7 @@
 
 ## 4. 当前证据
 
-**当前完整验收基线：** `bf14d905b2edce5b67bc0ddf39ed189be2c10aa1` 的 [verify #154](https://github.com/HoloNova/Software-IR/actions/runs/39749656260) 全部门 success，显式锁与区间预约、G10／G6／G11、完整部署均闭环，见[第 25 节](#ci-154-accepted)。#155 主验证成功、部署被取消，不计整轮通过；新借阅限额源码待本批 CI，不能借用旧绿灯。下文旧运行保留为历史证据。
+**当前完整验收基线：**`5972072eb920e5c21ea8d2ac5c4f88ecd98ef66c`的[verify #184](https://github.com/HoloNova/Software-IR/actions/runs/40155600764)，Frozen、业务IT、独立验证、CLI和冷部署全部success；284份上传XML／1970项零失败／错误／跳过，账本83／1／0。完整报告、资源哈希及未测范围见[第50节](#ci-184-accepted)。下文旧运行按当时的失败、跳过或待验收状态保存，不代表当前待办；#154仍是显式锁／预约首次验收，#155部署取消仍不计整轮通过。
 
 **历史运行：** [verify #88](https://github.com/HoloNova/Software-IR/actions/runs/38901782044)，受测提交 `fe40836`（`main`，feat(cli): kcg scaffold dual-token），success。冻结与完成两条全量闸门、业务场景 IT（含新的 `DualTokenScaffoldBusinessConformanceIT`：用脚手架输出作夹具，逐条验证双 Token 七条行为，含过期的访问令牌与 6 路同时刷新的竞争）、独立验证 IT、Standalone CLI smoke 均成功；核对时读了业务场景 IT 的日志，确认新 IT 运行并全部通过。
 
@@ -1371,7 +1371,7 @@ Maven日志确认generator全部66个及application全部测试源重新编译�
 
 
 <a id="ci-183-compilation-warning-fix"></a>
-## 49. #183：公共业务验收器区分警告与错误（待修复源码完整CI）
+## 49. #183：公共业务验收器区分警告与错误（后续#184已验收）
 
 已快进拉取云端 `fc60661`；它只更新交接，对应业务源码 **`0ac973938c5e9c05b5af1f58b69730ff149ac33f`** 的 [verify #183](https://github.com/HoloNova/Software-IR/actions/runs/40153597517) Frozen全量门通过。独立复算281份原始Surefire XML：1960项、1 failure、0 errors／skips，唯一失败为MultiplicationBusinessConformanceIT。业务报告是乘法／商城182项通过、1项“无诊断”断言失败；不是新业务停止在编译或启动阶段。独立验证、Standalone CLI及部署均跳过，不记为验收通过。原始日志、XML与复算在 `target/ci-investigation/183/`。
 
@@ -1405,4 +1405,50 @@ mvn -B -o -pl sir-toolchain-application -am test '-Dtest=BusinessSliceCompilatio
 
 **同SHA业务证据核对（不与本机65项累加）：**#183的Money326、library299、course151、Crud47、关系40等均0失败；13份报告的SIR／DDL／seed LF哈希全部与当前资源一致。乘法／商城唯一失败为上述诊断断言，以下真实HTTP／MySQL检查已执行通过：购物车多商品总额11.50、扣库与清空，后续售罄时订单／明细／先前扣库整笔回滚；三周系列逐周间隔七天、第二周冲突时第一周也回滚、13周超限零写入；同单重复用券返回CouponAlreadyUsed、取消退券、八人抢三次恰三成功且计数等于使用记录数；AVG忽略空值、空／全空为0、1.785进位1.79、大额精确及分组分页。#182曾失败的优惠券检查在#183全部通过，858ffd7修复有效，但不能抹去#182首次失败或将#183称为整轮全绿。
 
-**剩余收口：**等待修复源码完整CI（含独立验证、CLI、部署）后再升级五条商城／预约需求并同步设计31～37的状态；账本目前仍 **78／6／0**。记账合并需求“图表数据、导出”保留G14未做文件导出的折扣，不能只因AVG通过就整条记✓。完整验收前保留docs/tmp交接；不新增业务、不开始模型评估、不重复触发或轮询CI，负责人通知结果后继续收尾。
+**后续结案：**修复提交5972072的#184已通过完整CI，含独立验证、CLI和部署，见[验证50](#ci-184-accepted)。原先78／6／0的待验收账本正式转为83／1／0：五条商城／预约需求升级，图表／导出合并需求因G14继续保留折扣。原始#183失败和跳过范围仍按上述事实保存，不倒写为全绿。
+
+
+<a id="ci-184-accepted"></a>
+## 50. #184：云端剩余缺口及验收器修复完整验收（83／1／0）
+
+**源码与运行：**`5972072eb920e5c21ea8d2ac5c4f88ecd98ef66c`，[verify #184](https://github.com/HoloNova/Software-IR/actions/runs/40155600764)。负责人通知通过后，主会话下载原始报告复核：`gates-and-business-it`与`standalone-deployment`两个job均success；Frozen、业务IT、独立验证、Standalone CLI和冷部署全部执行通过。Completion仅在Frozen失败时运行，本轮按设计跳过，不把它写成另一次全量门通过。
+
+**原始XML：**surefire-reports的284份XML共 **1970项、0失败／错误／跳过**。这是上传报告的复算，含随后执行的IT，不冒称单次Frozen门测试数，也不与本机65项累加。八题生成与逐题离线构建已执行；新增能力的实际测试包含：
+
+| 完整类 | tests |
+| --- | ---: |
+| BusinessSliceCompilationTest | 6 |
+| FeatureUseTest | 7 |
+| TopicSamplesTest／TopicSamplesOfflineCompilationTest | 1／1 |
+| AverageSemanticsTest／AverageLoweringTest／AverageRuntimeTest | 3／1／1 |
+| LoopBodySemanticsTest／LoopBodyRuntimeTest | 5／3 |
+| RepeatSemanticsTest／RepeatRuntimeTest | 8／3 |
+| PersistOrderSemanticsTest／CheckThenInsertWarningTest | 4／4 |
+| KeywordAsNameDiagnosticTest／FailsOrderMessageTest | 4／1 |
+
+**真实HTTP／MySQL：**13份标准业务报告全部PASSED，各自SIR／DDL／seed的LF哈希均与受测提交的当前资源吻合。Query有两份报告（含预热），同一场景不算两份独立覆盖。
+
+| 业务场景 | 通过检查数 | 失败 |
+| --- | ---: | ---: |
+| Query | 40 | 0 |
+| Write | 61 | 0 |
+| Relation | 40 | 0 |
+| Token | 33 | 0 |
+| Bearer | 35 | 0 |
+| Dual Token | 34 | 0 |
+| Crud access | 47 | 0 |
+| Guard | 24 | 0 |
+| Library borrowing／目录／二手浏览 | 299 | 0 |
+| Course selection | 151 | 0 |
+| Money／日历／预算／AVG | 326 | 0 |
+| Multiplication／shop／booking | 183 | 0 |
+
+购物车验收了总额11.50、逐项扣库与结账清空；后续售罄时先前扣库、订单及明细全部回滚，购物车不变；空车拒绝、只清本人购物车。每周系列验收三条相隔七天、第二周冲突整批回滚、13周超限零写入。优惠券验收声明错误码、拒写、取消退券与八人抢三次恰三成功，计数等于使用记录数。AVG验收忽略空值、空／全空为0、1.785四舍五入至1.79、大额精确及分组分页。BookAfterRead的先读、真实锁等待及锁后重查继续通过；SIR-WARN-001作为警告保留，不再误判失败。
+
+**独立验证：**正确样本及版本链的STATIC／BUILD／START／BUSINESS全部通过；错误业务样本按约定在BUSINESS失败，故障构建在BUILD失败，不可达数据库在START记NOT_RUN并停止后续阶段，清理均成功。这些是测试要求的拒绝路径，不将负例阶段的FAILED／NOT_RUN改写为成功，也不把它们当作整轮失败。
+
+**冷部署：**deployment-evidence/report.json绑定相同SHA与run URL；98个HTTP请求的实际状态均等于预期。deployment、httpSmoke、persistence、privileges、swagger、contract、missingVolume、business、update、dataUpdate、freshChain、decimalShape、cleanup均PASSED。中断迁移及除Decimal形状以外的schema drift仍在notRunByContract中，不借本轮绿声称已覆盖。
+
+**账本及范围：**商城下单、一个订单多个商品、购物车、优惠券和每周重复预约五条由△转✓，84条合计 **83／1／0（98.8%／1.2%／0%）**。设计31～37结案，注册展开等价性、诊断与提示均有正式回归。唯一△仍是记账“图表数据、导出”：数据接口已完成，文件导出明确属于不做的G14。请求列表、多分组键、补零组、嵌套循环等保持设计中的未做边界；不自动开启新功能或模型评估。当前状态与试写报告同步后，接着以独立文档提交删除已完成任务的临时交接目录。
+
+**证据位置：**`target/ci-investigation/184/`保存run.json、artifacts.json、三类原始产物及accepted-summary.json，分别对应GitHub的surefire-reports、conformance-evidence和deployment-evidence；它们绑定上述受测SHA。后续收尾仅改文档，不改变受测业务源码。没有在本机重跑构建／测试、启动服务／数据库、使用浏览器，纯文档提交不触发CI。
