@@ -1,6 +1,6 @@
 # KCG-Code 当前项目状态
 
-> 更新：2026-10-24。状态：正常开发中的工程，不宣称生产就绪。本文说明**现在能做什么**；验证口径与证据在[验证说明](qualification/README.md)；已完成或退役的材料在 [history](history/README.md)。
+> 更新：2026-10-25。状态：正常开发中的工程，不宣称生产就绪。本文说明**现在能做什么**；验证口径与证据在[验证说明](qualification/README.md)；已完成或退役的材料在 [history](history/README.md)。
 
 ## 1. 定位
 
@@ -111,7 +111,9 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 
 **CI 提速实测：**#155 主验证 8:18（同业务源码 #154 为 19:51），在线预热 0:27、Frozen 3:37，Completion 按预期跳过；真实业务／独立验证／CLI 保留。部署被取消，不能比较整轮时长，也不将全部观测改善归因为编排。详见[验证第 25 节](qualification/README.md#ci-154-accepted)。
 
-**当前实现（平均值 `avg`，待同源码 CI）：**[设计34](design/12-feature-semantics-and-semantic-types.md)；`avg` 与 `sum` 是同一个步骤（单值和按引用分组），按字段小数位四舍五入，无数据为 0；ledger 加区间平均和按分类平均，Money 业务 IT 加平均值检查。多分组键和补零组没有做，原因见设计34.3。
+**当前接手与#183修复（完整验收仍待同源码CI）：**已快进拉取`fc60661`，对应业务源码`0ac9739`的[verify #183](https://github.com/HoloNova/Software-IR/actions/runs/40153597517) Frozen通过；281份XML／1960项只有MultiplicationBusinessConformanceIT失败，原因是验收器把非阻断并发警告当成错误。乘法／商城182项检查通过、1项诊断断言失败；Money326、library299、course151全部通过，优惠券、购物车／每周系列回滚与avg均有真实HTTP／MySQL结果且资源哈希吻合。只修公共测试harness区分ERROR／WARNING，保留警告与先读后锁重查；9类65项定向通过。独立验证、CLI、部署未运行，账本仍78／6／0，交接文档暂不删除；见[验证49](qualification/README.md#ci-183-compilation-warning-fix)。不开始新功能或模型评估，完整验收后再收尾；图表／导出合并需求仍有G14折扣。
+
+**当前实现（平均值 `avg`，待完整同源码 CI）：**[设计34](design/12-feature-semantics-and-semantic-types.md)；`avg` 与 `sum` 是同一个步骤（单值和按引用分组），按字段小数位四舍五入，无数据为 0；ledger 加区间平均和按分类平均，Money 业务 IT 加平均值检查。多分组键和补零组没有做，原因见设计34.3。
 
 **上一实现（优惠券，待同源码 CI）：**[设计33](design/12-feature-semantics-and-semantic-types.md)；需求由实现者定义（立减、有效期、起用金额、总次数、一人一张、一单一券、取消退券），全部由已有能力组合，没有新语法；真库检查含八买家抢三次的并发。
 

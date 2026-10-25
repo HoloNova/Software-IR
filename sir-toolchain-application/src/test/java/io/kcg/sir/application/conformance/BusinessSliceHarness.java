@@ -363,8 +363,9 @@ final class BusinessSliceHarness {
                 new io.kcg.sir.source.SourceSnapshot(entry, java.util.Map.of(entry,
                         ConformanceFixtures.readResource(this.fixture.sirResource()).getBytes(StandardCharsets.UTF_8))),
                 new SpringBootGenerator()::generate, diagnostics);
-        this.check("the SIR slice compiles with no diagnostics",
-                compiled.isPresent() && diagnostics.isEmpty(), "diagnostics=" + diagnostics);
+        this.check("the SIR slice compiles without errors (warnings remain visible)",
+                compiled.isPresent() && diagnostics.stream().noneMatch(ExecutionDiagnostic::isError),
+                "diagnostics=" + diagnostics);
         if (compiled.isEmpty()) {
             this.failure = "the SIR slice did not compile";
             return List.of();

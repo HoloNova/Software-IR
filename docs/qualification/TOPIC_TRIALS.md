@@ -8,6 +8,8 @@
 
 **一句话结论：**84 条需求里，**78 条完整写出、6 条带折扣、0 条尚未写出（92.9%／7.1%／0%）**。图书可借数量和逾期罚款已由 #178 在真实 MySQL 上验收。带折扣的六条都已实现（记账的图表与导出只有图表所需的数，导出文件属于不做的 G14）、定向回归通过，等同源码 CI 验收：商城的优惠券、下单、一个订单多个商品和购物车（G5 第二片，见[设计 31](../design/12-feature-semantics-and-semantic-types.md)），以及会议室的每周重复预约（`repeat` 与 `addDays`，[设计 32](../design/12-feature-semantics-and-semantic-types.md)）。第一版只有 58% 完整写出；之后补上的并发计数、联合唯一、可选值、存在与计数、金额、乘法、计算视图、求和与分组、有界遍历、跨行计数，都是同一提交的 CI 在真实 MySQL 上验收通过后才计为完整。普通的增删改查、分页、登录归属和状态流转，大约 150 到 450 行 SIR 就能写完。
 
+**接手验收（2026-10-25）：**已拉取`fc60661`并核对业务源码`0ac9739`的#183。Frozen通过；乘法／商城真实检查182通过、仅“无诊断”断言因非阻断警告失败，购物车／每周预约回滚与优惠券并发检查均已执行；Money326项全通过且包含avg。原始XML唯一失败与资源哈希已独立核对，见[验证49](README.md#ci-183-compilation-warning-fix)。验收器修复后9类65项定向通过；独立验证／CLI／部署在#183均跳过，当前账本保持78／6／0，不提前升级。图表所需的数不等于已实现文件导出，G14折扣继续保留。
+
 ## 2. 八个题目
 
 | 题目 | 目录 | SIR 行 | 生成 Java 行 | 接口数（含登录） | 需求条数 | ✓ 完整写出 | △ 带折扣写出 | ✗ 尚未写出 |
@@ -67,7 +69,7 @@
 | G5 | **首片有界服务器each及取消返库已由#171验收**：1..100行、明确稳定排序、完整物化、超限体零执行、局部行作用域；实际shop取消CREATED明细返库。第二片（已实现，待同源码 CI）：循环体里可以新建、删除，并对循环外的行做“本字段 ± 值”累加，shop 购物车结账与清空、批量删除由此写出。第三片（已实现，待同源码 CI）：`repeat n times limit N` 与 `addDays` 写出每周重复预约。请求里的列表仍没有 | shop、booking | [设计27](../design/12-feature-semantics-and-semantic-types.md#g5-bounded-child-iteration-proposal)；21类202项、旧8题775文件对照；原乘法应用复用并由#171执行128项检查及完整部署，见[验证43](README.md#ci-171-cancellation-accepted) | 首片已验收 |
 | G6（#147 已验收） | **精确乘法**：同型整数、Decimal 与整数混合乘法；Lowering 显式转换与能力级算术缺值检查，保留分页默认、Optional／PATCH 和原子加减边界。shop 已按数量计价扣库存，未增加日期差 | shop、library | [设计第 21 节](../design/12-feature-semantics-and-semantic-types.md#g6-multiplication-proposal)；28 类 223 项本机主回归通过；`997794c` 的 #147 乘法真库37项与完整部署通过 | 已验收通用能力 |
 | G7（通用能力已回归验收） | **可选值**：`is none`／`is present` 判断空值；兼容类型可比较，任意一侧为空均为 false（包括 `!=`），`not` 仍普通取反。用 `input.x is none or item.x == input.x` 明确省略未传的筛选条件；PATCH `.present` 不变 | tasks、market | [设计 12 第 17 节](../design/12-feature-semantics-and-semantic-types.md)；语义、降级、生成 Java 真值表与题目内存生成已验证 | 已补 |
-| G8 | **条件Decimal SUM及引用单键分组分页已实现**；两次读取同筛选／只读RR快照，当前Statement告警拒绝。用户时区自然月／当前预算已由#170验收，AVG、零组／多键仍未实现；来源行计算不能读工作流合计 | ledger、library | 独立只读步骤，Page<SumGroup<Ref<Entity>>>固定key/total；#168验收单值／分组，#170验收月报／当前预算，见[设计25](../design/12-feature-semantics-and-semantic-types.md#g8-grouped-sum-proposal) | 高（对记账） |
+| G8 | **条件Decimal SUM及引用单键分组分页已实现**；两次读取同筛选／只读RR快照，当前Statement告警拒绝。用户时区自然月／当前预算已由#170验收，AVG已实现且#183金额业务检查通过，完整验收待修复源码CI；零组／多键有意不做，见设计34.3；来源行计算不能读工作流合计 | ledger、library | 独立只读步骤，Page<SumGroup<Ref<Entity>>>固定key/total；#168验收单值／分组，#170验收月报／当前预算，见[设计25](../design/12-feature-semantics-and-semantic-types.md#g8-grouped-sum-proposal) | 高（对记账） |
 | G9（#172 已验收） | **Crud 的写权限和写保护**：按角色限制写、从输入和赋值里排除字段、多段路径、公开读本人写，展开后仍是普通 SIR | library、market、blog | 通用能力由 #140 验收；图书目录和二手商品两题的逐题验收由 #172 在真实 MySQL 上完成。排除字段不是并发控制 | 已补 |
 | G10 | **#147 已验收**：Money 默认 precision(19,2)，可覆写、精确校验、显式 DECIMAL 交付与原子金额；不隐式舍入或自动迁移精度 | market、shop、ledger | 三题已改 Money；#147 金额真库57项、精度漂移拒绝、恢复与新实例链均通过；[设计 12 第 20 节](../design/12-feature-semantics-and-semantic-types.md#g10-money-proposal) | 已验收通用能力 |
 | G11（#150 已验收） | **来源行计算视图**：`field remaining: Count = item.capacity - item.enrolled;`；普通／分页／嵌套共用取值计划，不新增存储列或 SQL；精确金额不按存储精度舍入 | course、library | [设计第 22 节](../design/12-feature-semantics-and-semantic-types.md#g11-computed-view-proposal)；27 类 183 项本机定向通过；`4a1d8c8` 的 #150 关系真库 40 项、乘法真库 56 项（含原子选课与满额后 remaining／full）与完整部署通过 | 已验收通用能力 |

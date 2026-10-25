@@ -1781,6 +1781,12 @@ repeat input.weeks times limit 12 else TooManyWeeks as week {
 
 语义测试：持久化顺序（合法、反序被拒、加 `for update` 后两种顺序都合法、被引用的行没有修改时合法）；警告（有锁无警告、无锁有警告且仍成功、有 `unique` 无警告、条件没有用到已加载的行不警告）。语言参考新增 `sir-error SIR-VALID-015` 示例，由示例门逐个检查。八个题目样例不产生警告，这条加进了题目样例测试。
 
+### 35.7 接手验收发现：警告不是编译失败（#183）
+
+`0ac9739` 的#183 Frozen通过，但业务harness仍把 `diagnostics.isEmpty()` 当成编译成功。既有 BookAfterRead 故意在锁前读取一次、锁后再重查，用来验证缓存／快照与可观察锁等待；SIR-WARN-001会指出锁前那次检查，源仍合法。不能为了让IT变绿删掉警告、预读或锁后检查，也不改变第35节所定义的保守警告规则。
+
+修复只在公共测试harness消费正式的 `ExecutionDiagnostic.isError()`：ERROR仍失败，WARNING保留代码、级别、消息和源位置。新测试从实际组合源码走同一compileAndMaterialize入口，先取得同型RED，再验证生成文件逐字节物化、预读／FOR UPDATE／后置检查保留；另外覆盖三份正常业务夹具和真实语义／降级错误不生成目录。9类65项定向通过，编译器与生产业务未改，见[验证49](../qualification/README.md#ci-183-compilation-warning-fix)。#183的Money326项和乘法／商城182项真实检查有通过证据，但整轮失败、独立验证／CLI／部署跳过，第31～37节不提前转成整轮验收完成。
+
 ## 36. G13：写作上的小磕绊（已实现，待同源码 CI）
 
 - **`fails` 必须按错误名排序**：规则保留（排序让生成的文件和写回的源码稳定），但报错现在直接给出排好序的整行：`应写成：fails A; fails B; fails C;`，并指出哪一个要排在哪一个前面；`requires` 的顺序错误也指出具体是哪两个。

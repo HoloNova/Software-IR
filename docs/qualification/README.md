@@ -1368,3 +1368,41 @@ mvn -B -o -pl sir-toolchain-application -am test '-Dtest=LibraryCountChecksTest,
 ```
 
 Maven日志确认generator全部66个及application全部测试源重新编译（首批160、加入页面反例后161）；最新XML按精确类名去重封存 `target/ci-175-verification/`。本机没有启动应用／数据库、运行全量门、构建生成工程或使用浏览器。真实HTTP／MySQL、事务快照、数据库COUNT载体与部署仍NOT_RUN；已核对既有IT的external环境、公开就绪路由、组合源码、DDL及旧检查调用保留，但静态核对不代替执行。覆盖率未测量；AFT/JDTLS初始化失败，记PARTIAL而非诊断通过。账本76／2／6不变，推送后由负责人通知结果，不轮询／重触发CI。
+
+
+<a id="ci-183-compilation-warning-fix"></a>
+## 49. #183：公共业务验收器区分警告与错误（待修复源码完整CI）
+
+已快进拉取云端 `fc60661`；它只更新交接，对应业务源码 **`0ac973938c5e9c05b5af1f58b69730ff149ac33f`** 的 [verify #183](https://github.com/HoloNova/Software-IR/actions/runs/40153597517) Frozen全量门通过。独立复算281份原始Surefire XML：1960项、1 failure、0 errors／skips，唯一失败为MultiplicationBusinessConformanceIT。业务报告是乘法／商城182项通过、1项“无诊断”断言失败；不是新业务停止在编译或启动阶段。独立验证、Standalone CLI及部署均跳过，不记为验收通过。原始日志、XML与复算在 `target/ci-investigation/183/`。
+
+**根因：**云端增加SIR-WARN-001后，合法源可以带非阻断警告继续编译，但BusinessSliceHarness仍用 `compiled.isPresent() && diagnostics.isEmpty()`。既有组合夹具BookAfterRead故意先读、再锁同一Room、重查后才插入，用来验证旧快照与缓存；保守警告在锁前检查处产生（shop-conformance.sir:738），harness误判失败。编译器、SQL、锁和业务本身没有因这条警告停止。不能删除预读／锁后检查、关闭警告或把WARNING升级为ERROR来迁就验收。
+
+**修复和RED：**仅修改测试harness消费正式 `ExecutionDiagnostic.isError()`；成功报告仍记录全部诊断，警告的代码、级别、消息与SourceSpan不丢。新BusinessSliceCompilationTest使用真实IT的compileAndMaterialize，6项中先取得同型的1 failure（0 errors／skips），其余正常夹具和真正错误边界通过。修复后实际生成文件逐字节物化，预读／FOR UPDATE／后置检查均保留；Money、library、course正常夹具仍成功；真实语义与降级错误仍返回空产物、FAILED且不创建生成目录。新探针对锁API的初次假设错误只修测试：普通实体显式锁是selectOne＋Wrapper FOR UPDATE，不是版本实体的selectByIdForUpdate；exists生成布尔结果而非selectCount。原有效RED单独保存，不用这些探针断言错误替代根因证据。
+
+**本机最新XML按完整类去重：9类65项，0失败／错误／跳过。**
+
+| 完整类 | tests |
+| --- | ---: |
+| BusinessSliceCompilationTest | 6 |
+| BusinessSliceHarnessEvidenceTest | 5 |
+| ShopCancellationContractTest | 3 |
+| ShopCancellationChecksTest | 14 |
+| G9TopicContractTest | 5 |
+| LibraryBorrowingToolchainContractTest | 3 |
+| LibraryCountChecksTest | 9 |
+| LibraryCountReadBudgetTest | 16 |
+| CalendarLedgerContractTest | 4 |
+| **合计** | **65** |
+
+```powershell
+$env:MAVEN_OPTS='-Xmx384m -XX:ActiveProcessorCount=2'
+mvn -B -o -pl sir-toolchain-application -am test '-Dtest=BusinessSliceCompilationTest,BusinessSliceHarnessEvidenceTest,ShopCancellationContractTest,ShopCancellationChecksTest,G9TopicContractTest,LibraryBorrowingToolchainContractTest,LibraryCountChecksTest,LibraryCountReadBudgetTest,CalendarLedgerContractTest' '-Dsurefire.failIfNoSpecifiedTests=false' '-DargLine=-Xmx512m -XX:ActiveProcessorCount=2' '-l' 'target/ci-183-verification/affected-green.log'
+# 只修正新探针的生成API假设后，重跑该完整类；其它8类59项已绿，不重复执行。
+mvn -B -o -pl sir-toolchain-application -am test '-Dtest=BusinessSliceCompilationTest' '-Dsurefire.failIfNoSpecifiedTests=false' '-DargLine=-Xmx512m -XX:ActiveProcessorCount=2' '-l' 'target/ci-183-verification/compilation-green.log'
+```
+
+本批源码哈希、最新XML及RED／GREEN封存在 `target/ci-183-verification/`。Maven日志确认拉取后的所有受影响主模块及application164个测试源已经重编；不是依赖旧class。AFT/JDTLS初始化失败，诊断记PARTIAL；编译以Maven为准。未测覆盖率，本机没有启动服务／数据库、运行IT或全量门、构建生成工程、使用浏览器。UI不受影响。
+
+**同SHA业务证据核对（不与本机65项累加）：**#183的Money326、library299、course151、Crud47、关系40等均0失败；13份报告的SIR／DDL／seed LF哈希全部与当前资源一致。乘法／商城唯一失败为上述诊断断言，以下真实HTTP／MySQL检查已执行通过：购物车多商品总额11.50、扣库与清空，后续售罄时订单／明细／先前扣库整笔回滚；三周系列逐周间隔七天、第二周冲突时第一周也回滚、13周超限零写入；同单重复用券返回CouponAlreadyUsed、取消退券、八人抢三次恰三成功且计数等于使用记录数；AVG忽略空值、空／全空为0、1.785进位1.79、大额精确及分组分页。#182曾失败的优惠券检查在#183全部通过，858ffd7修复有效，但不能抹去#182首次失败或将#183称为整轮全绿。
+
+**剩余收口：**等待修复源码完整CI（含独立验证、CLI、部署）后再升级五条商城／预约需求并同步设计31～37的状态；账本目前仍 **78／6／0**。记账合并需求“图表数据、导出”保留G14未做文件导出的折扣，不能只因AVG通过就整条记✓。完整验收前保留docs/tmp交接；不新增业务、不开始模型评估、不重复触发或轮询CI，负责人通知结果后继续收尾。

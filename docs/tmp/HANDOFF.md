@@ -29,21 +29,23 @@
 - 改语言的固定路径：`Sir.g4` → AST → `SirAstBuilder` → Resolve/Type/Validate/Normalize（`sir-semantic`）→ Lowering（`SpringBootModelLowerer`、`SpringBootIrValidation`）→ Generator（`WorkflowRenderer`、`ControllerRenderer`、`DeploymentEngine`）。涉及数据库结构的还有交付规划与迁移工具（`SchemaContract`、`SchemaEvolution`、`DeploymentTemplates` 里生成的 `Migrate.java`）。
 - 验证一个语言改动要有四样：语义测试（反例用"替换一个片段、只应报这一条规则"的写法）、降级测试、生成代码的契约或运行时测试、**八个题目的离线编译**。需要真实数据库行为时，接到已有的业务 IT 里（优先组合已有应用，不新起一套），由 CI 的真实 MySQL 验证。
 
-## 3. 待办（按顺序，当前进度截至 `0ac9739`）
+## 3. 待办（按顺序，已核对 `0ac9739` 的 #183，验收器修复待新同源码 CI）
 
 缺口清单（G5、优惠券、G8、G12、G13、3.4 并发约定的编译器检查）都已实现并推送，唯一剩下的是**等 CI 验收并收尾**。不要再开新功能，也**不要开始小模型评估**（评估要等负责人另行确定模型、样本和评分方式）。
 
 ### 3.1 看 CI，失败就修
 
-`0ac9739` 是最新一次推送，CI 会跑它。#182（`ebb7ce7`）只有优惠券验收失败，已在 `858ffd7` 修好（申请优惠券先登记使用记录再加次数；验收的两张订单补了明细）。#179 全绿，说明购物车结账的真库检查通过。
+已快进拉取云端 `fc60661`（业务源码 `0ac9739`）。#183 的 Frozen 全量门已通过；逐份复算281个XML／1960项，唯一失败是 BusinessSliceHarness 要求诊断完全为空，把 BookAfterRead 的合法 SIR-WARN-001 当错误。乘法／商城182项检查通过、1项诊断断言失败；Money326、library299、course151全部通过，原始资源哈希与当前源码一致。#182的优惠券错误已由858ffd7修复，#183实际执行的重复用券错误码、取消退券及八人抢三次均通过。证据见[验证49](../qualification/README.md#ci-183-compilation-warning-fix)。
+
+本轮只修验收器的错误／警告区分，不删警告、不删先读再锁后重查的夹具、不改生产代码。新编译回归先取得同型RED，最终9类65项定向通过。独立验证／CLI／部署在#183均跳过，仍待修复源码的完整CI；不能把业务检查通过写成整轮验收通过。
 
 - 同一次 CI 里还有第一次真库验证的内容：每周重复预约（`IntervalBookingChecks.weeklySeries`）、平均值（Money IT）、优惠券（`ShopCouponChecks`）。哪一项红，就按失败日志修；这些检查都在 `sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/` 下。
-- 看日志的办法：失败的 job 日志里搜 `FAIL`，每个检查项一行，带期望和实际值。
-- 推送会取消还在跑的旧 CI，所以别连续推；修好一次推一次。
+- 先核原始Surefire XML中的失败／错误，再看对应业务报告和应用日志；不要只从日志尾部猜失败范围。
+- 当前 verify 为 `cancel-in-progress: false`；修复同批一次推送，不重复触发或轮询。结果由负责人通知。
 
 ### 3.2 CI 绿之后的文档收尾
 
-把试写报告和项目状态里这几项的"△／待 CI"改成"✓"，改数字（现在写的是 78／6／0，按实际改）：多商品订单和购物车、优惠券、每周重复预约、记账图表数据（avg）。涉及的文件：`docs/qualification/TOPIC_TRIALS.md`、`docs/PROJECT_STATUS.md`、`docs/design/12-feature-semantics-and-semantic-types.md` 第 31～37 节标题里的"待同源码 CI"。纯文档提交不触发 CI。
+完整CI通过后，按新同SHA报告把多商品下单、一个订单多个商品、购物车、优惠券、每周重复预约的"△／待 CI"改成"✓"，逐项复算数字（当前仍78／6／0）。记账的合并需求“图表数据、导出”即使avg验收通过，导出文件仍属不做的G14，不能因此整条变✓；保留折扣和具体原因。涉及的文件：`docs/qualification/TOPIC_TRIALS.md`、`docs/PROJECT_STATUS.md`、`docs/design/12-feature-semantics-and-semantic-types.md` 第31～37节的验收状态。纯文档提交不触发CI。
 
 ### 3.3 删除本目录
 
