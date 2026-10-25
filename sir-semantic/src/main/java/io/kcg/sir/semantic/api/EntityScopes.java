@@ -115,6 +115,8 @@ final class EntityScopes {
              yield new NormalizedStep.EachStep(s.sourceNodeId(),s.span(),s.entitySymbol(),predicate,s.orderKeys(),s.limit(),
                  s.errorSymbol(),s.rowVariable(),s.itemVariable(),this.steps(s.body()));
           }
+          case NormalizedStep.RepeatStep s -> new NormalizedStep.RepeatStep(s.sourceNodeId(),s.span(),this.expression(s.count(),at),
+                 s.limit(),s.errorSymbol(),s.indexVariable(),this.steps(s.body()));
 case NormalizedStep.GroupedSumStep s -> {
             NormalizedExpression predicate = this.expression(s.predicate(), at);
             if (this.scoped.containsKey(s.entitySymbol())) {

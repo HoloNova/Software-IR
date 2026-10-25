@@ -19,5 +19,7 @@ public enum AstBinaryOperator {
     /** {@code max(a, b)}: the larger of two values of one comparable type. */
     MAX,
     /** {@code min(a, b)}: the smaller of two values of one comparable type. */
-    MIN
+    MIN,
+    /** {@code addDays(t, n)}: a Moment or Day moved by n whole days (a day is 24 hours for a Moment). */
+    ADD_DAYS
 }

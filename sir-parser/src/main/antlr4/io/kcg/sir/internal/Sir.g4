@@ -291,6 +291,7 @@ workflowStep
     | scalarQueryStep
     | monthStep
     | eachStep
+    | repeatStep
     | sumStep
     | createStep
     | updateStep
@@ -318,6 +319,14 @@ lockClause
 // Bounded materialized source; each/limit remain contextual identifiers.
 eachStep
     : {_input.LT(1).getText().equals("each")}? IDENT entity=IDENT WHERE predicate=expression findOrderClause
+      {_input.LT(1).getText().equals("limit")}? IDENT bound=INT ELSE error=IDENT AS result=IDENT
+      LBRACE workflowStep* RBRACE
+    ;
+
+// A counted loop over 0..count-1 with the same upper bound as each; repeat/times/limit stay contextual identifiers.
+repeatStep
+    : {_input.LT(1).getText().equals("repeat")}? IDENT count=expression
+      {_input.LT(1).getText().equals("times")}? IDENT
       {_input.LT(1).getText().equals("limit")}? IDENT bound=INT ELSE error=IDENT AS result=IDENT
       LBRACE workflowStep* RBRACE
     ;
@@ -507,7 +516,7 @@ primaryExpression
 // name is never otherwise followed by an opening parenthesis.
 functionCall
     : {_input.LT(1).getText().equals("daysBetween") || _input.LT(1).getText().equals("max")
-        || _input.LT(1).getText().equals("min")}? name=IDENT LPAREN left=expression COMMA right=expression RPAREN
+        || _input.LT(1).getText().equals("min") || _input.LT(1).getText().equals("addDays")}? name=IDENT LPAREN left=expression COMMA right=expression RPAREN
     ;
 
 groupedExpression

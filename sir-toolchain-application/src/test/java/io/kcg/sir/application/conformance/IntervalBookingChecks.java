@@ -38,6 +38,31 @@ final class IntervalBookingChecks {
                 s.rowsOf(observer, "booking").toString());
         expect(s, book(s, http, PATH, 2, "10:00", "11:00"), 201, "another room has an independent interval domain");
         priorReadWaitsForLockAndSeesCommit(s, observer, http);
+        weeklySeries(s, observer, http);
+    }
+
+    /** A weekly series on room 2 books the same hours seven days apart; one taken week or an over-long series books nothing. */
+    private static void weeklySeries(BusinessSliceHarness s, MysqlObserver observer, HttpAssertionClient http) throws Exception {
+        long before = roomRows(s, observer, "2");
+        expect(s, weekly(s, http, "2030-01-01", 3), 201, "a three-week series is booked");
+        s.check("one booking per week, seven days apart", roomRows(s, observer, "2") == before + 3
+                && s.fixtureScalar("SELECT COUNT(*) FROM booking WHERE room_id=2 AND starts_at IN ('2030-01-01 14:00:00','2030-01-08 14:00:00','2030-01-15 14:00:00')") == 3,
+                s.rowsOf(observer, "booking").toString());
+        var rows = s.rowsOf(observer, "booking");
+        expect(s, weekly(s, http, "2029-12-25", 3), 409, "a series whose second week is taken is refused");
+        s.check("the first week of the refused series is rolled back", rows.equals(s.rowsOf(observer, "booking")),
+                s.rowsOf(observer, "booking").toString());
+        expect(s, weekly(s, http, "2030-03-01", 13), 409, "a series over the bound is refused before any week");
+        s.check("the over-long series wrote nothing", rows.equals(s.rowsOf(observer, "booking")), s.rowsOf(observer, "booking").toString());
+    }
+
+    private static long roomRows(BusinessSliceHarness s, MysqlObserver observer, String room) throws Exception {
+        return s.rowsOf(observer, "booking").stream().filter(row -> row.split("\\|", -1)[1].equals(room)).count();
+    }
+
+    private static HttpAssertionClient.Response weekly(BusinessSliceHarness s, HttpAssertionClient http, String day, int weeks) throws Exception {
+        return http.postJson(s.baseUrl() + PATH + "/weekly", Map.of(), "{\"roomId\":2,\"startsAt\":\"" + day
+                + "T14:00:00Z\",\"endsAt\":\"" + day + "T15:00:00Z\",\"weeks\":" + weeks + "}");
     }
 
     private static void priorReadWaitsForLockAndSeesCommit(BusinessSliceHarness s, MysqlObserver observer,

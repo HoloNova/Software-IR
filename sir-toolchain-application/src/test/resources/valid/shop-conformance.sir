@@ -605,6 +605,24 @@ type UnitPrice = Money where precision(21, 4);
         return made;
       }
     }
+    input WeeklyBooking { field roomId: Id; field startsAt: Moment; field endsAt: Moment; field weeks: Quantity; }
+    error TooManyWeeks http 409;
+    capability BookWeekly {
+      input WeeklyBooking; output Unit;
+      fails InvalidInterval; fails RoomMissing; fails SlotTaken; fails TooManyWeeks;
+      requires atomic; expose command at "/bookings/weekly";
+      workflow {
+        validate input.startsAt < input.endsAt else InvalidInterval;
+        load Room by input.roomId as room for update else RoomMissing;
+        repeat input.weeks times limit 12 else TooManyWeeks as week {
+          exists Booking where item.room == room and item.startsAt < addDays(input.endsAt, week * 7) and item.endsAt > addDays(input.startsAt, week * 7) as taken;
+          validate not taken else SlotTaken;
+          create Booking as made { room: room; startsAt: addDays(input.startsAt, week * 7); endsAt: addDays(input.endsAt, week * 7); }
+          persist made;
+        }
+        return unit;
+      }
+    }
     capability BookAfterRead {
       input NewBooking; output BookingView;
       fails InvalidInterval; fails RoomMissing; fails SlotTaken;

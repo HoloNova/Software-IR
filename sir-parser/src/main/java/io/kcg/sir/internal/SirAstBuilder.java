@@ -519,6 +519,12 @@ final class SirAstBuilder {
                 new java.math.BigInteger(value.bound.getText()), nameRef(value.error,path,"error"), name(value.result),
                 value.workflowStep().stream().map(child -> step(child,path+"/body")).toList());
         }
+        if (context.repeatStep() != null) {
+            var value=context.repeatStep();
+            return new io.kcg.sir.ast.AstRepeatStep(ids.id(path), source.span(value), expression(value.count,path),
+                new java.math.BigInteger(value.bound.getText()), nameRef(value.error,path,"error"), name(value.result),
+                value.workflowStep().stream().map(child -> step(child,path+"/body")).toList());
+        }
         if (context.findStep() != null) {
             var value = context.findStep();
             AstExpression predicate = expression(value.predicate, path);
@@ -814,6 +820,7 @@ final class SirAstBuilder {
                 case "daysBetween" -> AstBinaryOperator.DAYS_BETWEEN;
                 case "max" -> AstBinaryOperator.MAX;
                 case "min" -> AstBinaryOperator.MIN;
+                case "addDays" -> AstBinaryOperator.ADD_DAYS;
                 default -> throw new IllegalStateException("the grammar admits only the built-in function names");
             };
             // The node spans the whole call, so a diagnostic on it points at the function name too.

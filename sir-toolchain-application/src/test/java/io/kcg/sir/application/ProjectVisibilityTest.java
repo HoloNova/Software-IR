@@ -104,7 +104,7 @@ class ProjectVisibilityTest {
     }
 
     @org.junit.jupiter.params.ParameterizedTest
-    @org.junit.jupiter.params.provider.EnumSource(value=ReferenceRole.class,names={"EACH_ENTITY","EACH_ERROR"})
+    @org.junit.jupiter.params.provider.EnumSource(value=ReferenceRole.class,names={"EACH_ENTITY","EACH_ERROR","REPEAT_ERROR"})
     void eachReferencesRequireTheirOwnersImportsBeforeAnyFileExport(ReferenceRole role) throws Exception {
         Path source=fixture(temp),root=source.resolve("project.sir");moveContracts(source);addScalarQueries(source);
         var positive=new SirSemanticAnalyzer().analyzeProject(parsedSources(source));assertTrue(positive.isSuccess(),()->positive.diagnostics().toString());
@@ -354,6 +354,15 @@ class ProjectVisibilityTest {
                       workflow {
                         each Enrollment where true order by id ascending limit 1 else InvalidPage as entry {
                           validate true else InvalidPage;
+                        }
+                        return unit;
+                      }
+                    }
+                    capability InspectImportedRepeat {
+                      output Unit; fails InvalidPage; requires atomic; expose command;
+                      workflow {
+                        repeat 2 times limit 2 else InvalidPage as pass {
+                          validate pass >= 0 else InvalidPage;
                         }
                         return unit;
                       }

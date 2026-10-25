@@ -5,6 +5,7 @@ public sealed interface AstStep extends AstNode permits
         AstLoadStep,
         AstFindStep,
         AstEachStep,
+        AstRepeatStep,
         AstScalarQueryStep,
         AstSumStep,
         AstMonthStep,

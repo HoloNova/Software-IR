@@ -66,6 +66,8 @@ final class ViewExpressionValidation {
                     };
             case DAYS_BETWEEN -> left.equals(right) && temporal(left) && expression.type().equals(new LoweredJavaType.Scalar(LoweredJavaType.ScalarKind.LONG));
             case MAX, MIN -> a.equals(b) && left.equals(right) && (numeric(left) || temporal(left)) && left.equals(expression.type());
+            case ADD_DAYS -> temporal(left) && left.equals(expression.type()) && right instanceof LoweredJavaType.Scalar days
+                    && (days.kind() == LoweredJavaType.ScalarKind.INTEGER || days.kind() == LoweredJavaType.ScalarKind.LONG);
             case MATCHES, CONTAINS_LITERAL -> false;
         };
         if (!valid) errors.add("computed binary expression has inconsistent types");

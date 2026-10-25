@@ -17,7 +17,14 @@ public record SpringBootWorkflow(LoweredNodeId id, LoweredOrigin origin, List<Sp
    /** Structural audit only; body scope is kept by the actual execution plan. */
    public static java.util.stream.Stream<Step> walk(List<Step> steps) {
        return steps.stream().flatMap(step -> step instanceof EachStep each
-           ? java.util.stream.Stream.concat(java.util.stream.Stream.of(step),walk(each.body())) : java.util.stream.Stream.of(step));
+           ? java.util.stream.Stream.concat(java.util.stream.Stream.of(step),walk(each.body()))
+           : step instanceof RepeatStep repeat ? java.util.stream.Stream.concat(java.util.stream.Stream.of(step),walk(repeat.body()))
+           : java.util.stream.Stream.of(step));
+   }
+
+   /** The body of a loop step (each or repeat), or empty for any other step. */
+   public static List<Step> body(Step step) {
+       return step instanceof EachStep each ? each.body() : step instanceof RepeatStep repeat ? repeat.body() : List.of();
    }
 
    private static void requireStep(LoweredNodeId id, LoweredOrigin origin) {
@@ -95,6 +102,18 @@ public record SpringBootWorkflow(LoweredNodeId id, LoweredOrigin origin, List<Sp
             requireStep(id,origin);Objects.requireNonNull(entitySymbol);Objects.requireNonNull(predicate);
             orderKeys=List.copyOf(orderKeys);stringMatches=List.copyOf(stringMatches);Objects.requireNonNull(plan);
             Objects.requireNonNull(errorSymbol);Objects.requireNonNull(row);Objects.requireNonNull(itemVariable);body=List.copyOf(body);
+        }
+    }
+
+    /**
+     * A counted loop: the count is evaluated once, a count above {@code limit} fails with the error before any pass, and
+     * the body runs with {@code index} = 0 .. count-1. {@code maximumStatements} is the bound times the body's statements.
+     */
+    public record RepeatStep(LoweredNodeId id, LoweredOrigin origin, SpringExpression count, int limit,
+         SymbolId errorSymbol, Variable index, int bodyStatements, int maximumStatements, List<Step> body) implements Step {
+        public RepeatStep {
+            requireStep(id,origin);Objects.requireNonNull(count);Objects.requireNonNull(errorSymbol);Objects.requireNonNull(index);
+            body=List.copyOf(body);
         }
     }
 
@@ -396,6 +415,7 @@ public record SpringBootWorkflow(LoweredNodeId id, LoweredOrigin origin, List<Sp
       SpringBootWorkflow.LoadActorStep,
       SpringBootWorkflow.FindStep,
        SpringBootWorkflow.EachStep,
+       SpringBootWorkflow.RepeatStep,
       SpringBootWorkflow.ScalarQueryStep,
        SpringBootWorkflow.SumStep,
         SpringBootWorkflow.MonthStep,

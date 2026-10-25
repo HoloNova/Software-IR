@@ -45,7 +45,7 @@ public final class SirDeclarationWriter {
       Map.entry("CONTAINS_LITERAL", CONTAINS), Map.entry("MATCHES", CONTAINS), Map.entry("ADD", ADDITIVE), Map.entry("SUB", ADDITIVE), Map.entry("MUL", MULTIPLICATIVE)
    );
    private static final Map<String, String> FUNCTION_TEXT = Map.of(
-      "DAYS_BETWEEN", "daysBetween", "MAX", "max", "MIN", "min"
+      "DAYS_BETWEEN", "daysBetween", "MAX", "max", "MIN", "min", "ADD_DAYS", "addDays"
    );
    private static final Map<String, String> PRIMITIVE_TEXT = Map.of(
       "UNIT", "Unit"
@@ -352,7 +352,13 @@ public final class SirDeclarationWriter {
              for(StructNode body:nodes(step,"body"))this.writeStep(body,out,depth+1);
              out.line(depth,"}");
           }
-case "FindStep" -> this.writeFind(step, out);
+case "RepeatStep" -> {
+             out.line(depth,"repeat " + expression(child(step,"count"),0) + " times limit " + text(step,"limit")
+                 + " else " + text(step,"errorSymbol") + " as " + text(step,"indexVariable") + " {");
+             for(StructNode body:nodes(step,"body"))this.writeStep(body,out,depth+1);
+             out.line(depth,"}");
+          }
+          case "FindStep" -> this.writeFind(step, out);
          case "MonthStep" -> out.line(depth,"month " + expression(child(step,"month"),0) + " in "
               + expression(child(step,"zone"),0) + " as " + text(step,"sinceVariable") + ", " + text(step,"untilVariable")
               + " else " + text(step,"errorSymbol") + ";");

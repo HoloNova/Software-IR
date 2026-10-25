@@ -21,6 +21,7 @@ public enum ReferenceRole {
    FIND_ENTITY(SymbolKind.ENTITY),
    EACH_ENTITY(SymbolKind.ENTITY),
    EACH_ERROR(SymbolKind.ERROR),
+   REPEAT_ERROR(SymbolKind.ERROR),
    SCALAR_QUERY_ENTITY(SymbolKind.ENTITY),
    SUM_ENTITY(SymbolKind.ENTITY),
    SUM_FIELD(SymbolKind.FIELD),

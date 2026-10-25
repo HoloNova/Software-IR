@@ -24,6 +24,8 @@ final class ArithmeticInputs {
                 case SpringBootWorkflow.SumStep value -> collect(value.predicate(), false, input, fields);
                 case SpringBootWorkflow.GroupedSumStep value -> collect(value.predicate(), false, input, fields);
                 case SpringBootWorkflow.EachStep value -> collect(value.predicate(), false, input, fields);
+                // A loop cannot run an unknown number of times, so a count from the request is required like an operand.
+                case SpringBootWorkflow.RepeatStep value -> collect(value.count(), true, input, fields);
                 case SpringBootWorkflow.ScalarQueryStep value -> collect(value.predicate(), false, input, fields);
                 case SpringBootWorkflow.ReturnStep value -> collect(value.value(), false, input, fields);
                 case SpringBootWorkflow.CreateStep value -> value.bindings().forEach(binding -> collect(binding.value(), false, input, fields));
@@ -58,7 +60,7 @@ final class ArithmeticInputs {
             case SpringExpression.BinaryExpression value -> {
                 // A built-in function cannot answer without both arguments either, so its inputs are required the same way.
                 boolean required = arithmetic || switch (value.operator()) {
-                    case ADD, SUB, MUL, DAYS_BETWEEN, MAX, MIN -> true;
+                    case ADD, SUB, MUL, DAYS_BETWEEN, MAX, MIN, ADD_DAYS -> true;
                     default -> false;
                 };
                 collect(value.left(), required, input, fields);

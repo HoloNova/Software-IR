@@ -16,6 +16,7 @@ public sealed interface NormalizedStep
    NormalizedStep.LoadStep,
     NormalizedStep.FindStep,
     NormalizedStep.EachStep,
+    NormalizedStep.RepeatStep,
    NormalizedStep.ScalarQueryStep,
     NormalizedStep.SumStep,
      NormalizedStep.MonthStep,
@@ -38,6 +39,17 @@ public sealed interface NormalizedStep
             Objects.requireNonNull(predicate); Objects.requireNonNull(limit); Objects.requireNonNull(errorSymbol);
             Objects.requireNonNull(rowVariable); Objects.requireNonNull(itemVariable);
             orderKeys=List.copyOf(orderKeys); body=List.copyOf(body);
+        }
+    }
+
+    /** A counted loop: the body runs with {@code indexVariable} = 0 .. count-1, after the count is checked against the bound. */
+    record RepeatStep(@Source AstNodeId sourceNodeId, @Source SourceSpan span, @Fact NormalizedExpression count,
+         @Fact java.math.BigInteger limit, @Reference SymbolId errorSymbol, @Reference SymbolId indexVariable,
+         @Fact List<NormalizedStep> body) implements NormalizedStep {
+        public RepeatStep {
+            Objects.requireNonNull(sourceNodeId); Objects.requireNonNull(span); Objects.requireNonNull(count);
+            Objects.requireNonNull(limit); Objects.requireNonNull(errorSymbol); Objects.requireNonNull(indexVariable);
+            body=List.copyOf(body);
         }
     }
 

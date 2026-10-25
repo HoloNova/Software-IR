@@ -160,6 +160,45 @@ software RoomBooking {
         return made;
       }
     }
+    // A weekly series books the same hours on consecutive weeks. The room is locked once, then each week is checked for
+    // an overlap and written; one taken week stops the series and rolls back every earlier week.
+    input WeeklyBooking {
+      field roomId: Id;
+      field startsAt: Moment;
+      field endsAt: Moment;
+      field purpose: Remark where notBlank;
+      field weeks: Quantity;
+    }
+    error TooManyWeeks http 409;
+    capability BookWeekly {
+      actor Ref<User>;
+      input WeeklyBooking;
+      output Unit;
+      fails HourTaken;
+      fails InvalidInterval;
+      fails RoomNotFound;
+      fails TooManyWeeks;
+      requires authenticated;
+      requires atomic;
+      expose command at "/bookings/weekly";
+      workflow {
+        validate input.startsAt < input.endsAt else InvalidInterval;
+        load Room by input.roomId as room for update else RoomNotFound;
+        repeat input.weeks times limit 12 else TooManyWeeks as week {
+          exists Booking where item.room == room and item.startsAt < addDays(input.endsAt, week * 7) and item.endsAt > addDays(input.startsAt, week * 7) as taken;
+          validate not taken else HourTaken;
+          create Booking as made {
+            room: room;
+            booker: actor;
+            startsAt: addDays(input.startsAt, week * 7);
+            endsAt: addDays(input.endsAt, week * 7);
+            purpose: input.purpose;
+          }
+          persist made else HourTaken;
+        }
+        return unit;
+      }
+    }
     input BookingRef {
       field id: Id;
     }

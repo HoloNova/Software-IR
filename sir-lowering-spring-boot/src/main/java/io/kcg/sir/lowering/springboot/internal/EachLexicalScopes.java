@@ -12,18 +12,28 @@ final class EachLexicalScopes {
 
     static List<String> core(NormalizedCapability capability) {
         var all=new HashSet<SymbolId>();
-        NormalizedSteps.walk(capability.workflow().steps()).filter(NormalizedStep.EachStep.class::isInstance)
-            .map(NormalizedStep.EachStep.class::cast).forEach(e -> {
-                all.add(e.rowVariable());all.add(e.itemVariable());
-                e.body().forEach(child -> LoopBodies.declaredCore(child).ifPresent(all::add));
-            });
+        NormalizedSteps.walk(capability.workflow().steps()).forEach(step -> {
+            switch(step) {
+                case NormalizedStep.EachStep e -> {all.add(e.rowVariable());all.add(e.itemVariable());}
+                case NormalizedStep.RepeatStep r -> all.add(r.indexVariable());
+                default -> {return;}
+            }
+            NormalizedSteps.body(step).forEach(child -> LoopBodies.declaredCore(child).ifPresent(all::add));
+        });
         if(all.isEmpty())return List.of();
         var errors=new ArrayList<String>();
         for(var step:capability.workflow().steps()) {
-            if(!(step instanceof NormalizedStep.EachStep each)) { reject(coreUses(step),all,Set.of(),errors);continue; }
-            reject(coreNames(each.predicate()),all,Set.of(each.itemVariable()),errors);
-            var available=new HashSet<SymbolId>();available.add(each.rowVariable());
-            for(var child:each.body()) {
+            var available=new HashSet<SymbolId>();
+            switch(step) {
+                case NormalizedStep.EachStep each -> {
+                    reject(coreNames(each.predicate()),all,Set.of(each.itemVariable()),errors);available.add(each.rowVariable());
+                }
+                case NormalizedStep.RepeatStep repeat -> {
+                    reject(coreNames(repeat.count()),all,Set.of(),errors);available.add(repeat.indexVariable());
+                }
+                default -> {reject(coreUses(step),all,Set.of(),errors);continue;}
+            }
+            for(var child:NormalizedSteps.body(step)) {
                 reject(coreUses(child),all,available,errors);
                 LoopBodies.declaredCore(child).ifPresent(available::add);
             }
@@ -33,18 +43,28 @@ final class EachLexicalScopes {
 
     static List<String> target(SpringBootDeclaration.CapabilityDeclaration capability) {
         var all=new HashSet<SymbolId>();
-        SpringBootWorkflow.walk(capability.workflow().steps()).filter(SpringBootWorkflow.EachStep.class::isInstance)
-            .map(SpringBootWorkflow.EachStep.class::cast).forEach(e -> {
-                all.add(e.row().symbol());all.add(e.itemVariable().symbol());
-                e.body().forEach(child -> LoopBodies.declaredTarget(child).ifPresent(all::add));
-            });
+        SpringBootWorkflow.walk(capability.workflow().steps()).forEach(step -> {
+            switch(step) {
+                case SpringBootWorkflow.EachStep e -> {all.add(e.row().symbol());all.add(e.itemVariable().symbol());}
+                case SpringBootWorkflow.RepeatStep r -> all.add(r.index().symbol());
+                default -> {return;}
+            }
+            SpringBootWorkflow.body(step).forEach(child -> LoopBodies.declaredTarget(child).ifPresent(all::add));
+        });
         if(all.isEmpty())return List.of();
         var errors=new ArrayList<String>();
         for(var step:capability.workflow().steps()) {
-            if(!(step instanceof SpringBootWorkflow.EachStep each)) {reject(targetUses(step),all,Set.of(),errors);continue;}
-            reject(targetNames(each.predicate()),all,Set.of(each.itemVariable().symbol()),errors);
-            var available=new HashSet<SymbolId>();available.add(each.row().symbol());
-            for(var child:each.body()) {
+            var available=new HashSet<SymbolId>();
+            switch(step) {
+                case SpringBootWorkflow.EachStep each -> {
+                    reject(targetNames(each.predicate()),all,Set.of(each.itemVariable().symbol()),errors);available.add(each.row().symbol());
+                }
+                case SpringBootWorkflow.RepeatStep repeat -> {
+                    reject(targetNames(repeat.count()),all,Set.of(),errors);available.add(repeat.index().symbol());
+                }
+                default -> {reject(targetUses(step),all,Set.of(),errors);continue;}
+            }
+            for(var child:SpringBootWorkflow.body(step)) {
                 reject(targetUses(child),all,available,errors);
                 LoopBodies.declaredTarget(child).ifPresent(available::add);
             }
@@ -54,7 +74,7 @@ final class EachLexicalScopes {
 
     private static void reject(Stream<SymbolId> reads,Set<SymbolId> local,Set<SymbolId> available,List<String> errors) {
         reads.filter(local::contains).filter(id -> !available.contains(id)).distinct()
-            .forEach(id -> errors.add("each lexical variable is used outside its lifetime: "+id));
+            .forEach(id -> errors.add("loop lexical variable is used outside its lifetime: "+id));
     }
 
     private static Stream<SymbolId> coreUses(NormalizedStep step) {
@@ -63,6 +83,7 @@ final class EachLexicalScopes {
             case NormalizedStep.LoadStep s -> coreNames(s.idExpression());
             case NormalizedStep.ReturnStep s -> coreNames(s.value());
             case NormalizedStep.EachStep s -> coreNames(s.predicate());
+            case NormalizedStep.RepeatStep s -> coreNames(s.count());
             case NormalizedStep.FindStep s -> coreNames(s.predicate());
             case NormalizedStep.SumStep s -> coreNames(s.predicate());
             case NormalizedStep.GroupedSumStep s -> coreNames(s.predicate());
@@ -100,6 +121,7 @@ final class EachLexicalScopes {
             case SpringBootWorkflow.LoadActorStep s -> targetNames(s.idExpression());
             case SpringBootWorkflow.ReturnStep s -> targetNames(s.value());
             case SpringBootWorkflow.EachStep s -> targetNames(s.predicate());
+            case SpringBootWorkflow.RepeatStep s -> targetNames(s.count());
             case SpringBootWorkflow.FindStep s -> targetNames(s.predicate());
             case SpringBootWorkflow.SumStep s -> targetNames(s.predicate());
             case SpringBootWorkflow.GroupedSumStep s -> targetNames(s.predicate());

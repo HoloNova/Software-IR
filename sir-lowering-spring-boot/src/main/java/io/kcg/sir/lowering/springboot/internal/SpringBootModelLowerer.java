@@ -281,7 +281,7 @@ public final class SpringBootModelLowerer {
                 this.nodeId("project", "application-config"), this.projectOrigin(), "src/main/resources/application.yml",
                 this.kebab(this.softwareName()), true, this.hasRelatedCount() || this.source.declarations().stream()
                     .filter(NormalizedCapability.class::isInstance).map(NormalizedCapability.class::cast)
-                    .flatMap(cap -> cap.workflow().steps().stream())
+                    .flatMap(cap -> io.kcg.sir.semantic.model.NormalizedSteps.walk(cap.workflow().steps()))
                     .anyMatch(s -> s instanceof NormalizedStep.SumStep || s instanceof NormalizedStep.GroupedSumStep || s instanceof NormalizedStep.EachStep || s instanceof NormalizedStep.LoadStep load && load.forUpdate()));
     }
 
@@ -893,6 +893,22 @@ public final class SpringBootModelLowerer {
             this.lowerStringMatches(source.predicate(),owner),plan,source.errorSymbol(),this.variable(source.rowVariable()),this.variable(source.itemVariable()),body);
     }
 
+    private SpringBootWorkflow.RepeatStep lowerRepeat(NormalizedStep.RepeatStep source, SymbolId owner,
+            Map<SymbolId,Provenance> provenance, Optional<SymbolId> actor, LoweredNodeId id, LoweredOrigin origin) {
+        Map<SymbolId,Provenance> local=new LinkedHashMap<>(provenance);
+        List<SpringBootWorkflow.Step> body=new ArrayList<>();
+        for(NormalizedStep child:source.body()) {
+            body.add(this.lowerStep(child,owner,local,actor));
+            if(child instanceof NormalizedStep.LoadStep load)local.put(load.resultVariable(),Provenance.EXISTING);
+            if(child instanceof NormalizedStep.CreateStep create)local.put(create.resultVariable(),Provenance.NEW);
+            if(child instanceof NormalizedStep.PersistStep persist)local.put(persist.targetVariable(),Provenance.EXISTING);
+        }
+        int budget=EachValidation.bodyStatements(body);
+        int limit=source.limit().intValueExact();
+        return new SpringBootWorkflow.RepeatStep(id,origin,this.lowerExpression(source.count(),owner,actor),limit,
+            source.errorSymbol(),this.variable(source.indexVariable()),budget,limit*budget,body);
+    }
+
     private SpringBootWorkflow.Step lowerStep(NormalizedStep step, SymbolId owner, Map<SymbolId, Provenance> provenance, Optional<SymbolId> actorSymbol) {
         LoweredNodeId id = this.nodeId(step.sourceNodeId().value(), "step");
         LoweredOrigin origin = this.origin(owner, step.sourceNodeId(), step.span());
@@ -903,6 +919,7 @@ public final class SpringBootModelLowerer {
                     id, origin, value.entitySymbol(), this.asIdentity(lowerExpression(value.idExpression(), owner, actorSymbol), actorSymbol),
                     variable(value.resultVariable()), value.errorSymbol(), value.forUpdate() || this.locksRow(value, owner), value.keyField(), value.forUpdate());
             case NormalizedStep.EachStep value -> this.lowerEach(value,owner,provenance,actorSymbol,id,origin);
+            case NormalizedStep.RepeatStep value -> this.lowerRepeat(value,owner,provenance,actorSymbol,id,origin);
             case NormalizedStep.FindStep value -> new SpringBootWorkflow.FindStep(
                     id, origin, value.entitySymbol(),
                     lowerExpression(value.predicate(), owner, actorSymbol, this.findItemSymbol(value)),

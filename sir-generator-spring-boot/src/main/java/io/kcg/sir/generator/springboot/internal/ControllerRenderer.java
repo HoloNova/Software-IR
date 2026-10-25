@@ -216,7 +216,7 @@ final class ControllerRenderer {
    * from the capability's name.
    */
    private static boolean createsEntity(CapabilityDeclaration decl) {
-      return decl.workflow().steps().stream()
+      return io.kcg.sir.lowering.springboot.model.SpringBootWorkflow.walk(decl.workflow().steps())
          .anyMatch(step -> step instanceof io.kcg.sir.lowering.springboot.model.SpringBootWorkflow.CreateStep);
    }
 

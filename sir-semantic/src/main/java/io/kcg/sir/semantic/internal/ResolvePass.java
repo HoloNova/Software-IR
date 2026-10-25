@@ -823,6 +823,17 @@ final class ResolvePass {
                 this.resolveSteps(capDecl,bodyScope,outputType,s.body(),bodyVars);
                 break;
              }
+             case io.kcg.sir.ast.AstRepeatStep s: {
+                // The count is read outside the loop; the pass number is visible only in the body.
+                this.resolveExpression(s.count(),capName,capScopeId,visibleVars,null,null);
+                this.resolveErrorRef(s.error(), capName, ReferenceRole.REPEAT_ERROR);
+                SymbolId bodyScope=SymbolIdFactory.capabilityStepScope(capScopeId,s.id().value()+"/body");
+                this.scopeSymbols.put(bodyScope,new ArrayList<>());this.scopeParents.put(bodyScope,capScopeId);
+                Set<String> bodyVars=new LinkedHashSet<>(visibleVars);
+                this.registerStepResultVar(s.result(),s.id(),bodyScope,bodyVars,PrimitiveType.INT32);
+                this.resolveSteps(capDecl,bodyScope,outputType,s.body(),bodyVars);
+                break;
+             }
              case AstFindStep s:
                this.resolveEntityRef(s.entity(), ReferenceRole.FIND_ENTITY);
                SymbolId stepScopeId = SymbolIdFactory.capabilityStepScope(capScopeId, s.id().value());

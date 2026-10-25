@@ -605,6 +605,15 @@ final class TypePass {
                 this.typeSteps(SymbolIdFactory.capabilityStepScope(capScopeId,s.id().value()+"/body"),outputType,s.body(),local);
                 break;
              }
+             case io.kcg.sir.ast.AstRepeatStep s: {
+                // The pass number is an Int32 counting from 0, so the count is one as well (Count, Quantity, a literal).
+                SirType count=this.typeExpression(s.count(),capScopeId,visibleVars);
+                if(count!=null&&count!=PrimitiveType.INT32)
+                   this.diagnostics.add(DiagnosticBuilder.error("SIR-TYPE-001","repeat 的次数必须是 Int32 整数（如 Count、Quantity，不能是可选值）",s.count().span()));
+                Set<String> local=new LinkedHashSet<>(visibleVars);local.add(s.result().text());
+                this.typeSteps(SymbolIdFactory.capabilityStepScope(capScopeId,s.id().value()+"/body"),outputType,s.body(),local);
+                break;
+             }
              case AstFindStep s:
                SymbolId stepScopeId = SymbolIdFactory.capabilityStepScope(capScopeId, s.id().value());
                Set<String> predVars = new LinkedHashSet<>(visibleVars);
@@ -1105,6 +1114,15 @@ final class TypePass {
                    this.diagnostics.add(DiagnosticBuilder.error("SIR-TYPE-001",
                       (expr.operator() == AstBinaryOperator.MAX ? "max" : "min")
                          + " 的两个参数必须是同一种数值、Moment 或 Day（不能是可选值）", expr.span()));
+                   return null;
+                }
+                return leftType;
+             case ADD_DAYS:
+                // A point in time moved by whole days: the day count is an integer of either width.
+                if ((leftType != PrimitiveType.DATE_TIME && leftType != PrimitiveType.DATE)
+                      || (rightType != PrimitiveType.INT32 && rightType != PrimitiveType.INT64)) {
+                   this.diagnostics.add(DiagnosticBuilder.error("SIR-TYPE-001",
+                      "addDays 的参数必须是一个 Moment 或 Day 和一个整数天数（不能是可选值）", expr.span()));
                    return null;
                 }
                 return leftType;

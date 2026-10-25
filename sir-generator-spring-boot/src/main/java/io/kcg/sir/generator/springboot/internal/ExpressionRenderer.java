@@ -153,6 +153,7 @@ final class ExpressionRenderer {
          case DAYS_BETWEEN -> renderDaysBetween(left, right, operandType);
          case MAX -> renderChoice(left, right, operandType, "max");
          case MIN -> renderChoice(left, right, operandType, "min");
+         case ADD_DAYS -> renderAddDays(left, right, binary.type());
          case CONTAINS_LITERAL -> throw new IllegalStateException(
                  "literal matching is a query predicate, not a value expression: " + binary.id());
       };
@@ -202,6 +203,16 @@ final class ExpressionRenderer {
          return "java.time.temporal.ChronoUnit.DAYS.between(" + left + ", " + right + ")";
       }
       throw new IllegalStateException("daysBetween needs two dates or two date-times: " + type);
+   }
+
+   /** A point in time moved by whole days; a day is 24 hours for an instant, a calendar day for a date. */
+   private static String renderAddDays(String moment, String days, LoweredJavaType type) {
+      if (isScalarKind(type, ScalarKind.INSTANT)) {
+         return "(" + moment + ").plus(java.time.Duration.ofDays(" + days + "))";
+      } else if (isScalarKind(type, ScalarKind.LOCAL_DATE)) {
+         return "(" + moment + ").plusDays(" + days + ")";
+      }
+      throw new IllegalStateException("addDays moves a date or a date-time: " + type);
    }
 
    /** The larger or smaller of two values of one type; each argument is evaluated once. */

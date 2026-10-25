@@ -559,6 +559,24 @@ public final class SpringBootInputValidator {
              if(!valid)this.error("SIR-LOWER-INPUT-001","invalid bounded source, local body or atomic contract",value.span(),capability.id(),value.sourceNodeId());
              break;
           }
+          case NormalizedStep.RepeatStep value: {
+             this.validateDeclarationKind(value.errorSymbol(),NormalizedError.class,capability);
+             this.validateVariable(value.indexVariable(),capability);
+             this.validateExpression(value.count(),capability.id(),actorAccess);
+             var index=this.model.symbols().byId(value.indexVariable()).orElse(null);
+             boolean valid=value.limit().signum()>0 && value.limit().compareTo(java.math.BigInteger.valueOf(100))<=0
+                 && capability.requires().contains(io.kcg.sir.ast.AstRequirementKind.ATOMIC)
+                 && !capability.requires().contains(io.kcg.sir.ast.AstRequirementKind.READONLY)
+                 && capability.exposure()==io.kcg.sir.ast.AstExposureKind.COMMAND
+                 && capability.fails().contains(value.errorSymbol()) && value.count().type()==PrimitiveType.INT32
+                 && index instanceof VariableSymbol variable && variable.type()==PrimitiveType.INT32
+                 && LoopBodies.validCore(value.indexVariable(),value.body());
+             for(var child:value.body()) {
+                 if(!(child instanceof NormalizedStep.EachStep || child instanceof NormalizedStep.RepeatStep))this.validateStep(child,capability,actorAccess);
+             }
+             if(!valid)this.error("SIR-LOWER-INPUT-001","invalid counted loop, local body or atomic contract",value.span(),capability.id(),value.sourceNodeId());
+             break;
+          }
 case NormalizedStep.MonthStep value: {
               this.validateExpression(value.month(),capability.id(),actorAccess);
               this.validateExpression(value.zone(),capability.id(),actorAccess);

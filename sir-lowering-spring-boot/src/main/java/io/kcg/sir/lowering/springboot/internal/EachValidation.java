@@ -66,4 +66,22 @@ final class EachValidation {
             errors.add("each body may write only its own rows; an outer row only by accumulation");
         return List.copyOf(errors);
     }
+
+    /** The same frame for a counted loop: an atomic command, a literal bound, a declared failure and an Int32 index. */
+    static List<String> validate(SpringBootDeclaration.CapabilityDeclaration owner, SpringBootWorkflow.RepeatStep repeat) {
+        var errors=new ArrayList<String>();
+        var int32=new LoweredJavaType.Scalar(LoweredJavaType.ScalarKind.INTEGER);
+        if(repeat.limit()<1 || repeat.limit()>100 || repeat.bodyStatements()!=bodyStatements(repeat.body())
+                || repeat.maximumStatements()!=repeat.limit()*repeat.bodyStatements())
+            errors.add("repeat needs a literal bound of 1..100 and a bounded body budget");
+        if(owner.kind()!=SpringBootDeclaration.CapabilityKind.COMMAND || owner.transactionMode()==SpringBootDeclaration.TransactionMode.NONE
+                || owner.transactionMode()==SpringBootDeclaration.TransactionMode.READ_ONLY
+                || !owner.failures().contains(repeat.errorSymbol()))
+            errors.add("repeat requires an atomic command and a declared failure");
+        if(!repeat.index().type().equals(int32) || !repeat.count().type().equals(int32) || !owner.workflow().variables().contains(repeat.index()))
+            errors.add("repeat needs an Int32 count and a declared Int32 index");
+        if(!LoopBodies.validTarget(repeat.index().symbol(),repeat.body()))
+            errors.add("repeat body may write only its own rows; an outer row only by accumulation");
+        return List.copyOf(errors);
+    }
 }

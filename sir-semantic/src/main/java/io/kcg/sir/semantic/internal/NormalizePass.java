@@ -587,6 +587,12 @@ final class NormalizePass {
                  s.limit(),this.siteTargetOrUnknown(s.error().id()),row,this.validated.findItemBindings().getOrDefault(s.id(),row),
                  s.body().stream().map(child -> this.normalizeStep(child,capabilityScope)).filter(java.util.Objects::nonNull).toList());
           }
+          case io.kcg.sir.ast.AstRepeatStep s -> {
+             NormalizedExpression count=this.normalizeExpression(s.count());
+             yield new NormalizedStep.RepeatStep(s.id(),s.span(),count!=null?count:this.unitExpr(s.span()),s.limit(),
+                 this.siteTargetOrUnknown(s.error().id()),this.definitionBindingOrUnknown(s.id()),
+                 s.body().stream().map(child -> this.normalizeStep(child,capabilityScope)).filter(java.util.Objects::nonNull).toList());
+          }
           case AstFindStep s -> {
             SymbolId entitySym = this.siteTargetOrUnknown(s.entity().id());
             SymbolId resultVar = this.definitionBindingOrUnknown(s.id());

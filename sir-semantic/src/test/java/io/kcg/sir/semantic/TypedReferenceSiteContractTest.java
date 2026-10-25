@@ -72,6 +72,15 @@ class TypedReferenceSiteContractTest {
                 return unit;
               }
             }
+            capability RepeatAccounts {
+              output Unit; fails InvalidPage; requires atomic; expose command;
+              workflow {
+                repeat 2 times limit 2 else InvalidPage as pass {
+                  validate pass >= 0 else InvalidPage;
+                }
+                return unit;
+              }
+            }
             capability SumAccounts {
               output Money; requires readonly; expose query;
               workflow { sum Account.amount where true as total; return total; }
@@ -765,6 +774,10 @@ class TypedReferenceSiteContractTest {
                 sink.put(s.entity().id(),s.entity().text());sink.put(s.error().id(),s.error().text());
                 collectExpressionRefs(s.predicate(),sink);
                 s.order().keys().forEach(key -> sink.put(key.field().id(),key.field().text()));
+                s.body().forEach(child -> collectStepRefs(child,sink));
+            }
+            case io.kcg.sir.ast.AstRepeatStep s -> {
+                sink.put(s.error().id(),s.error().text());collectExpressionRefs(s.count(),sink);
                 s.body().forEach(child -> collectStepRefs(child,sink));
             }
             case io.kcg.sir.ast.AstMonthStep s -> {

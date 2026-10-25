@@ -87,7 +87,8 @@ public sealed interface SpringExpression
       MUL,
       DAYS_BETWEEN,
       MAX,
-      MIN;
+      MIN,
+      ADD_DAYS;
    }
 
    /**

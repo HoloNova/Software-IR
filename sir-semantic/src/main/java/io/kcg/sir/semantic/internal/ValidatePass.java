@@ -493,6 +493,11 @@ int returnCount = 0;
                 this.validateWriteWorkflow(capDecl,failsSet,s.body());
                 this.validateSteps(capDecl,failsSet,s.body(),false);
                 break;
+          case io.kcg.sir.ast.AstRepeatStep s:
+                this.validateRepeat(s,capDecl,failsSet);
+                this.validateWriteWorkflow(capDecl,failsSet,s.body());
+                this.validateSteps(capDecl,failsSet,s.body(),false);
+                break;
           case AstFindStep s:
                this.validateFindStep(s, capDecl, failsSet);
                break;
@@ -538,6 +543,23 @@ int returnCount = 0;
        }
        this.validateStringMatchShape(step.predicate());
        this.rejectArithmeticTheQueryCannotCarry(step.predicate(),false);
+       this.validateLoopBody(step.id(), step.body());
+   }
+
+   /**
+    * A counted loop has the same frame as each: an atomic command, a literal bound of 1..100 checked before the first
+    * pass, a declared failure for a count over it, and the same body rules. The count is computed in Java, so unlike an
+    * each source it may be any Int32 value of the request or the workflow.
+    */
+   private void validateRepeat(io.kcg.sir.ast.AstRepeatStep step, AstCapabilityDecl cap, Set<SymbolId> fails) {
+       if(cap.exposure().exposure()!=AstExposureKind.COMMAND
+             || cap.requirements().stream().noneMatch(r -> r.requirement()==AstRequirementKind.ATOMIC))
+          this.diagnostics.add(DiagnosticBuilder.error("SIR-FLOW-004","repeat 只能用在 requires atomic 的 command 里",step.span()));
+       if(step.limit().signum()<=0 || step.limit().compareTo(java.math.BigInteger.valueOf(100))>0)
+          this.diagnostics.add(DiagnosticBuilder.error("SIR-VALID-001","repeat 的上限必须是 1 到 100",step.span()));
+       SymbolId error=this.typed.referenceSiteBindings().targetFor(step.error().id()).orElse(null);
+       if(error!=null && fails!=null && !fails.contains(error))
+          this.diagnostics.add(DiagnosticBuilder.error("SIR-FLOW-003","repeat 引用了没有声明的 fails",step.error().span()));
        this.validateLoopBody(step.id(), step.body());
    }
 
@@ -624,7 +646,8 @@ int returnCount = 0;
             // A built-in function is computed in Java like arithmetic, so it may not read the queried row either.
             boolean arithmetic = e.operator() == AstBinaryOperator.ADD || e.operator() == AstBinaryOperator.SUB
                || e.operator() == AstBinaryOperator.MUL || e.operator() == AstBinaryOperator.DAYS_BETWEEN
-               || e.operator() == AstBinaryOperator.MAX || e.operator() == AstBinaryOperator.MIN;
+               || e.operator() == AstBinaryOperator.MAX || e.operator() == AstBinaryOperator.MIN
+               || e.operator() == AstBinaryOperator.ADD_DAYS;
             if (arithmetic && (insideAny || this.mentionsItem(e))) {
                this.diagnostics.add(DiagnosticBuilder.error("SIR-VALID-001", ARITHMETIC_ON_COLUMN, e.span()));
             } else {

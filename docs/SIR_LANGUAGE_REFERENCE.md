@@ -1692,7 +1692,7 @@ capability RestoreInventory {
 
 只能用在 `requires atomic` 的 command 里；它处理的是数据库里的行，不是请求里的列表。`each`、`limit` 只在这个位置是关键字。来源必须是持久化实体，条件和 `scope` 的规则与普通查询相同，`item` 只在条件里表示来源行。必须写 `order by`，并且以主键收尾，保证顺序稳定；引用字段按它存的主键排序。上限必须是 1 到 100 的整数字面量，不能是表达式；超过上限不会截断了事，而是报错。
 
-循环体里能写 `validate`、`load`、`exists`、`count`、`create`、`update`、`persist`、`delete`（`SIR-FLOW-004`）。可以读外面的变量；能写、能删的是本次处理的行、体内 `load` 的行和体内 `create` 的行。循环外的行只能**累加**：一个不带守卫的 `update`，每个绑定都是“本字段 + 值”或“本字段 - 值”（见 5.6 的计数），后面跟 `persist`。这样每一次循环都是一条 `SET total = total + ?`，由数据库在存着的值上加，前一次的结果不会被后一次覆盖；要累加到本次新建的行上，这一行要在循环前先 `persist`。行变量和体内的变量出了循环就不能用。体内不能再嵌套 `each`，也不能有 `return`、`find`、求和或 `month`；没有 `break`、`continue`。体内任何一步失败，整笔事务回滚，之前已经执行过的循环也一起撤销。
+循环体里能写 `validate`、`load`、`exists`、`count`、`create`、`update`、`persist`、`delete`（`SIR-FLOW-004`）。可以读外面的变量；能写、能删的是本次处理的行、体内 `load` 的行和体内 `create` 的行。循环外的行只能**累加**：一个不带守卫的 `update`，每个绑定都是“本字段 + 值”或“本字段 - 值”（见 5.6 的计数），后面跟 `persist`。这样每一次循环都是一条 `SET total = total + ?`，由数据库在存着的值上加，前一次的结果不会被后一次覆盖；要累加到本次新建的行上，这一行要在循环前先 `persist`。行变量和体内的变量出了循环就不能用。体内不能再嵌套 `each` 或 `repeat`，也不能有 `return`、`find`、求和或 `month`；没有 `break`、`continue`。体内任何一步失败，整笔事务回滚，之前已经执行过的循环也一起撤销。
 
 下面是购物车结账：先存一张总额为 0 的订单，再逐个购物车条目锁商品、扣库存、写明细、把这一项的金额加到订单上，最后删掉条目。
 
@@ -1779,6 +1779,64 @@ capability CheckOut {
 
 `each` 不会自动加锁。要防止重复操作或子行被并发修改，仍要先锁父行、检查状态，并按固定顺序锁子行。例子里先检查库存加上数量不会超过整数上限，再写带同样条件的守卫，不依赖数据库的严格模式防溢出。[商城样例](../sir-toolchain-application/src/test/resources/topics/shop/project.sir)的取消订单就是这样组合的：锁订单、守卫状态为 `CREATED`、检查明细存在、上限 100 行、按商品和 id 升序退回库存，任何一步失败整笔回滚；同一个样例里的结账就是上面购物车的写法。
 
+### 5.14 `repeat`：按次数重复（有上限）
+
+```
+repeat 次数 times limit N else 错误 as 序号 { ... }
+```
+
+`each` 处理数据库里查到的行；`repeat` 处理"请求里说要做几次"，例如每周重复预约。次数先算一次，大于 `limit` 就直接报声明的错误，**循环体一次都不执行**；然后体内的 `序号` 依次是 0、1、……、次数 - 1，类型是 `Int32`，出了循环就不能用。完整例子：
+
+```sir-declarations
+entity Hall persistent {
+  identity id: Id generated auto;
+}
+entity Slot persistent {
+  identity id: Id generated auto;
+  field hall: Ref<Hall>;
+  field startsAt: Moment;
+  field endsAt: Moment;
+}
+input WeeklySlot {
+  field hallId: Id;
+  field startsAt: Moment;
+  field endsAt: Moment;
+  field weeks: Quantity;
+}
+error HallMissing http 404;
+error InvalidSpan http 400;
+error SlotTaken http 409;
+error TooManyWeeks http 409;
+capability BookWeekly {
+  input WeeklySlot;
+  output Unit;
+  fails HallMissing;
+  fails InvalidSpan;
+  fails SlotTaken;
+  fails TooManyWeeks;
+  requires atomic;
+  expose command at "/slots/weekly";
+  workflow {
+    validate input.startsAt < input.endsAt else InvalidSpan;
+    load Hall by input.hallId as hall for update else HallMissing;
+    repeat input.weeks times limit 12 else TooManyWeeks as week {
+      exists Slot where item.hall == hall and item.startsAt < addDays(input.endsAt, week * 7) and item.endsAt > addDays(input.startsAt, week * 7) as taken;
+      validate not taken else SlotTaken;
+      create Slot as made {
+        hall: hall;
+        startsAt: addDays(input.startsAt, week * 7);
+        endsAt: addDays(input.endsAt, week * 7);
+      }
+      persist made;
+    }
+    return unit;
+  }
+}
+```
+
+次数必须是 `Int32`（`Count`、`Quantity` 或整数字面量，不能是可选值）；上限是 1 到 100 的整数字面量；只能用在 `requires atomic` 的 command 里；错误必须在 `fails` 里声明。循环体的规则和 `each` 完全相同（5.13）。先锁父行，再逐周检查、逐周写入：任何一周被占用，之前几周的预约一起回滚。
+
+
 ## 6. 表达式
 
 | 写法 | 含义 |
@@ -1795,6 +1853,7 @@ capability CheckOut {
 | `a * b` | 同型整数精确乘法，或 Decimal 底层值乘 Decimal／整数；金额乘整数无损转换，不经浮点数 |
 | `daysBetween(a, b)` | 从 `a` 到 `b` 经过的整天数，64 位整数，见下 |
 | `max(a, b)`、`min(a, b)` | 两个同类型值里较大／较小的一个，见下 |
+| `addDays(t, n)` | `Moment` 或 `Day` 加 `n` 整天（`Moment` 按 24 小时一天），`n` 是整数，见下 |
 | `时刻 + N unit` | 时间平移，`unit` 是 `second(s)`、`minute(s)`、`hour(s)`、`day(s)` |
 | `a < b`、`<=`、`>`、`>=` | 比较，两边同类型 |
 | `a == b`、`a != b` | 相等 |
@@ -1837,7 +1896,7 @@ capability RecordSale {
 | 相同值 | 相同值 | true | false | false |
 | 不同值 | 不同值 | false | true | true |
 
-**内置函数。**`daysBetween(a, b)` 是从 `a` 到 `b` 经过的整天数，结果是 64 位整数：两个 `Moment` 按 24 小时一天、向下取整（3 天半是 3，早 1 小时是 -1）；两个 `Day` 按日历天数相减。`b` 早于 `a` 时是负数。`max(a, b)`、`min(a, b)` 取两个同类型值里较大或较小的一个，可以是同一种数值，也可以是两个 `Moment` 或两个 `Day`；整数字面量会跟着另一边变宽（`max(0, daysBetween(...))` 里的 `0` 按 64 位理解）。三个函数的参数都不能是 `Optional`，也不能是文本或布尔；参数来自请求时和算术一样必须有值。它们和算术一样在 Java 里计算：查询条件里只能放在不读取 `item` 的一侧，`any(...)` 里不能用；计算视图字段可以用来源行的字段。`max`、`min`、`daysBetween` 不是保留字，别处仍可以当名字。
+**内置函数。**`daysBetween(a, b)` 是从 `a` 到 `b` 经过的整天数，结果是 64 位整数：两个 `Moment` 按 24 小时一天、向下取整（3 天半是 3，早 1 小时是 -1）；两个 `Day` 按日历天数相减。`b` 早于 `a` 时是负数。`max(a, b)`、`min(a, b)` 取两个同类型值里较大或较小的一个，可以是同一种数值，也可以是两个 `Moment` 或两个 `Day`；整数字面量会跟着另一边变宽（`max(0, daysBetween(...))` 里的 `0` 按 64 位理解）。三个函数的参数都不能是 `Optional`，也不能是文本或布尔；参数来自请求时和算术一样必须有值。它们和算术一样在 Java 里计算：查询条件里只能放在不读取 `item` 的一侧，`any(...)` 里不能用；计算视图字段可以用来源行的字段。`addDays(t, n)` 把 `Moment` 或 `Day` 往后挪 `n` 整天（负数往前），结果与 `t` 同类型，`n` 是 `Int32` 或 `Int64` 整数；`Moment` 按 24 小时一天，`Day` 按日历天。它同样不能有可选参数，规则与上面三个函数一致。`max`、`min`、`daysBetween`、`addDays` 不是保留字，别处仍可以当名字。
 
 逾期罚款是典型用法：还书时锁住借阅记录，按逾期整天数乘费率，提前还不罚：
 

@@ -1105,6 +1105,15 @@ public final class SpringBootIrValidation {
                 if(!(child instanceof SpringBootWorkflow.EachStep))this.validateStep(child,owner);
              }
              break;
+          case SpringBootWorkflow.RepeatStep value:
+             this.validateExpression(value.count(),owner);
+             this.requireDeclaration(value.errorSymbol(),SpringBootDeclaration.ErrorDeclaration.class,owner);
+             for(String problem:EachValidation.validate(owner,value))this.error(owner,problem);
+             for(var child:value.body()) {
+                this.addNode(child.id(),child.origin(),"repeat body step");
+                if(!(child instanceof SpringBootWorkflow.EachStep || child instanceof SpringBootWorkflow.RepeatStep))this.validateStep(child,owner);
+             }
+             break;
 case SpringBootWorkflow.FindStep value:
             this.requireDeclaration(value.entitySymbol(), SpringBootDeclaration.EntityDeclaration.class, owner);
             this.validateExpression(value.predicate(), owner);
@@ -1536,13 +1545,21 @@ case SpringBootWorkflow.FindStep value:
    private void validateFunction(SpringExpression.BinaryExpression value, SpringBootDeclaration owner) {
       var operator = value.operator();
       if (operator != SpringExpression.BinaryOperator.DAYS_BETWEEN && operator != SpringExpression.BinaryOperator.MAX
-            && operator != SpringExpression.BinaryOperator.MIN) {
+            && operator != SpringExpression.BinaryOperator.MIN && operator != SpringExpression.BinaryOperator.ADD_DAYS) {
          return;
       }
       LoweredJavaType.ScalarKind kind = value.left().type() instanceof LoweredJavaType.Scalar scalar ? scalar.kind() : null;
       boolean temporal = kind == LoweredJavaType.ScalarKind.INSTANT || kind == LoweredJavaType.ScalarKind.LOCAL_DATE;
       boolean numeric = kind == LoweredJavaType.ScalarKind.INTEGER || kind == LoweredJavaType.ScalarKind.LONG
          || kind == LoweredJavaType.ScalarKind.BIG_DECIMAL;
+      if (operator == SpringExpression.BinaryOperator.ADD_DAYS) {
+         LoweredJavaType.ScalarKind days = value.right().type() instanceof LoweredJavaType.Scalar scalar ? scalar.kind() : null;
+         if (!temporal || value.presentComparison().isPresent() || !value.type().equals(value.left().type())
+               || (days != LoweredJavaType.ScalarKind.INTEGER && days != LoweredJavaType.ScalarKind.LONG)) {
+            this.error(owner, "addDays needs a point in time and a whole number of days and answers the point's type: " + value.id());
+         }
+         return;
+      }
       boolean valid = value.left().type().equals(value.right().type()) && value.presentComparison().isEmpty()
          && (operator == SpringExpression.BinaryOperator.DAYS_BETWEEN
             ? temporal && value.type().equals(new LoweredJavaType.Scalar(LoweredJavaType.ScalarKind.LONG))

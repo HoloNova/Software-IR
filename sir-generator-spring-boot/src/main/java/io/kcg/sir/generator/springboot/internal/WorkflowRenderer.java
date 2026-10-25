@@ -119,6 +119,9 @@ final class WorkflowRenderer {
          case SpringBootWorkflow.EachStep each:
             renderEach(ctx,workflow,capability,each,responseRepresentation,inputName,variableNames,imports,currentPackage,lines,mappers,stringMatches);
             break;
+         case SpringBootWorkflow.RepeatStep repeat:
+            renderRepeat(ctx,workflow,capability,repeat,responseRepresentation,inputName,variableNames,imports,currentPackage,lines,mappers,stringMatches);
+            break;
          case FindStep find:
             renderFind(ctx, find, inputName, variableNames, imports, currentPackage, lines, mappers, stringMatches);
             break;
@@ -170,6 +173,30 @@ final class WorkflowRenderer {
       lines.add("            for (var $eachRow : $eachRows) {");
       var local=new EachNames(names);local.put(step.row().symbol(),"$eachRow");int index=0;
       // Every row or answer a pass declares gets a name no outer variable can have, so a pass never shadows one.
+      for(var child:step.body()) {
+         if(child instanceof SpringBootWorkflow.LoadStep load)local.put(load.result().symbol(),"$eachLocal"+index++);
+         if(child instanceof SpringBootWorkflow.CreateStep create)local.put(create.result().symbol(),"$eachLocal"+index++);
+         if(child instanceof SpringBootWorkflow.ScalarQueryStep scalar)local.put(scalar.result().symbol(),"$eachLocal"+index++);
+      }
+      var body=new ArrayList<String>();
+      for(var child:step.body())renderStep(ctx,workflow,capability,child,responseRepresentation,inputName,local,imports,currentPackage,body,mappers,stringMatches);
+      for(String line:body)lines.add("        "+line);
+      lines.add("            }");lines.add("        }");
+   }
+
+   /** A counted loop: the count is read once and checked against the bound before the first pass, as an each source is. */
+   private static void renderRepeat(GenerationContext ctx, SpringBootWorkflow workflow, CapabilityDeclaration capability,
+         SpringBootWorkflow.RepeatStep step, ResponseRepresentation responseRepresentation, String inputName,
+         Map<SymbolId,String> names, ImportSorter imports, String currentPackage, List<String> lines,
+         Map<SymbolId,MapperReference> mappers, List<SpringExpression.StringMatch> stringMatches) {
+      collectExpressionImports(ctx,step.count(),names,imports,currentPackage);
+      lines.add("        {");
+      lines.add("            int $repeatCount = "+ExpressionRenderer.renderExpression(step.count(),names)+";");
+      lines.add("            if ($repeatCount > "+step.limit()+") throw new "+errorJavaName(ctx,step.errorSymbol(),imports,currentPackage)+"();");
+      // A fresh final copy per pass, so a query lambda in the body may read the pass number.
+      lines.add("            for (int $repeatPass = 0; $repeatPass < $repeatCount; $repeatPass++) {");
+      lines.add("                final int $repeatIndex = $repeatPass;");
+      var local=new EachNames(names);local.put(step.index().symbol(),"$repeatIndex");int index=0;
       for(var child:step.body()) {
          if(child instanceof SpringBootWorkflow.LoadStep load)local.put(load.result().symbol(),"$eachLocal"+index++);
          if(child instanceof SpringBootWorkflow.CreateStep create)local.put(create.result().symbol(),"$eachLocal"+index++);
