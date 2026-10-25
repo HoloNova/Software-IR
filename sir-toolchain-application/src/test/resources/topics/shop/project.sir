@@ -456,10 +456,6 @@ software OnlineShop {
         load Coupon by found.id as coupon for update else CouponNotFound;
         validate now() >= coupon.startsAt and now() <= coupon.endsAt else CouponExpired;
         validate purchase.total >= coupon.minSpend and purchase.total >= coupon.amountOff else MinSpendNotMet;
-        update coupon when coupon.used < coupon.totalLimit else CouponExhausted {
-          used: coupon.used + 1;
-        }
-        persist coupon;
         create Redemption as redemption {
           coupon: coupon;
           buyer: actor;
@@ -467,6 +463,10 @@ software OnlineShop {
           amountOff: coupon.amountOff;
         }
         persist redemption else CouponAlreadyUsed;
+        update coupon when coupon.used < coupon.totalLimit else CouponExhausted {
+          used: coupon.used + 1;
+        }
+        persist coupon;
         update purchase {
           total: purchase.total - coupon.amountOff;
         }

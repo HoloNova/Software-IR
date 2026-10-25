@@ -17,6 +17,9 @@ final class ShopCouponChecks {
         coupon(s,2,"OLD",5.00,0.00,"2020-01-01 00:00:00","2021-01-01 00:00:00",9);
         coupon(s,3,"BIG",5.00,100.00,"2020-01-01 00:00:00","2099-01-01 00:00:00",9);
         order(s,301,1,"20.00");order(s,302,2,"20.00");order(s,303,1,"20.00");
+        // Cancelling refuses an order without lines, so the two orders that get cancelled hold one line each.
+        s.fixtureStatement("INSERT INTO shop_product (id,name,price,stock,state) VALUES(30,'coupon-item',20.00,10,'ON_SHELF')");
+        s.fixtureStatement("INSERT INTO order_line(purchase_id,product_id,quantity,unit_price) VALUES(301,30,1,20.00),(302,30,1,20.00)");
 
         error(s,"an unknown code is a declared not-found",apply(s,h,1,301,"NOPE"),404,"CouponNotFound");
         error(s,"another buyer's order is refused",apply(s,h,2,301,"SAVE5"),403,"NotYourOrder");
