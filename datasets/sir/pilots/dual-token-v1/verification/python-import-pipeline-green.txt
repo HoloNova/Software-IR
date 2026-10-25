@@ -1,0 +1,12 @@
+test_import_rebinds_old_host_fingerprints_and_resets_all_gates_without_a_call (test_pipeline.PipelineTests.test_import_rebinds_old_host_fingerprints_and_resets_all_gates_without_a_call) ... ok
+test_import_rejects_changed_response_before_creating_destination (test_pipeline.PipelineTests.test_import_rejects_changed_response_before_creating_destination) ... ok
+test_one_feedback_repair_keeps_failed_parent_and_uses_real_diagnostics (test_pipeline.PipelineTests.test_one_feedback_repair_keeps_failed_parent_and_uses_real_diagnostics) ... ok
+test_prompt_changed_after_freeze_is_rejected_before_a_paid_call (test_pipeline.PipelineTests.test_prompt_changed_after_freeze_is_rejected_before_a_paid_call) ... ok
+test_raw_request_response_usage_and_extracted_source_remain_bound (test_pipeline.PipelineTests.test_raw_request_response_usage_and_extracted_source_remain_bound) ... ok
+test_reference_is_not_silently_exported_using_its_historical_ci_result (test_pipeline.PipelineTests.test_reference_is_not_silently_exported_using_its_historical_ci_result) ... ok
+test_truncated_api_output_is_preserved_but_never_added_as_a_candidate (test_pipeline.PipelineTests.test_truncated_api_output_is_preserved_but_never_added_as_a_candidate) ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 22.750s
+
+OK

@@ -1452,3 +1452,26 @@ mvn -B -o -pl sir-toolchain-application -am test '-Dtest=BusinessSliceCompilatio
 **账本及范围：**商城下单、一个订单多个商品、购物车、优惠券和每周重复预约五条由△转✓，84条合计 **83／1／0（98.8%／1.2%／0%）**。设计31～37结案，注册展开等价性、诊断与提示均有正式回归。唯一△仍是记账“图表数据、导出”：数据接口已完成，文件导出明确属于不做的G14。请求列表、多分组键、补零组、嵌套循环等保持设计中的未做边界；不自动开启新功能或模型评估。当前状态与试写报告同步后，接着以独立文档提交删除已完成任务的临时交接目录。
 
 **证据位置：**`target/ci-investigation/184/`保存run.json、artifacts.json、三类原始产物及accepted-summary.json，分别对应GitHub的surefire-reports、conformance-evidence和deployment-evidence；它们绑定上述受测SHA。后续收尾仅改文档，不改变受测业务源码。没有在本机重跑构建／测试、启动服务／数据库、使用浏览器，纯文档提交不触发CI。
+
+
+<a id="slm-data-pilot-v1"></a>
+## 51. 数据首批：真实教师候选、编译反馈与四门资格（当时业务NOT_RUN，后续见52）
+
+负责人确认先做数据，主会话沿用公开双Token题目与原业务oracle。`experiments/slm/`增加冻结/跨宿主导入/采样/显式修复/静态检查/资格导出；测试层给原DualTokenBusinessConformanceIT接安全外部候选和已读快照入口，不修改编译器核心、语言、原DDL/seed/HTTP/JDBC断言。普通CI未指定候选时仍验原参考。
+
+实际5次教师API调用：3个初始候选均PARSE失败；一条分支经2次反馈修复后GENERATION通过（45文件），参考种子另计。累计21414 tokens，SDK完整响应/请求、用量、失败、parent关系和哈希均保存；不手改SIR、不把修复次数当独立题。新候选真实BUILD/START/BUSINESS全部NOT_RUN，正式SFT导出0条。不能套用#184对固定参考的成功证据。
+
+Python31项与Java4类23项定向通过；真实CLI逐样本检查也执行，未启动应用/库、运行全量门或浏览器。AFT桥超时，诊断不记为清洁，覆盖率未测；详见[数据报告](SLM_DATA_PILOT_REPORT.md)。持久数据在`datasets/sir/pilots/dual-token-v1/`，操作与参考环境模板见[实验README](../../experiments/slm/README.md)，本机原始RED/GREEN在`target/slm-data-verification/`。Windows安全读源限制不放宽。
+
+[基座调研](SLM_MODEL_SELECTION.md)建议DeepSeek-Coder-1.3B-Instruct研究基线与Qwen3-4B-Instruct-2507现代对照。真实分词器测得完整修复序列10489/8348 tokens，不允许静默套4K/8K；V2-Lite是16B总权重/约2.4B激活，不按2.4B dense算内存。尚未租GPU、下载权重、启动训练或小模型基线；业务账本83/1/0不变。
+
+<a id="slm-lab-runtime-v1"></a>
+## 52. Lab 平台验证与首个外部教师候选真实业务验收
+
+负责人指定本地Forgejo与ML平台部署机`ssh lab`，重点是SIR候选参考环境，不是GPU训练。Forgejo以`holonova`身份私有建仓库/Issue及清理成功，Actions runners为空；ML签名API成功/非零失败/超时/运行中取消及产物下载实测成功，CPU/内存cgroup生效。工具使用指南改为独立Prompt文本，Forgejo仅局域网直连，任务通过公网ML API。未操作GitHub或改现有origin，未创建Git提交或注册Actions runner。
+
+原生宿主补齐同版本Java21 headless JDK，复用便携Maven3.9.14与离线依赖，MySQL8.4.11；在2304MiB/150%CPU的systemd用户scope内串行构建和运行原DualTokenBusinessConformanceIT。准备中JRE缺编译工具、首次打包漏未跟踪适配器两处失败均保留；补齐后完整1284文件SHA清单验证，源码清单hash `60c59c1828dd99bda4b954deac67e3c4e6b64e872a0f3f7fec07f7aa5abeb86d`。不改候选、核心或oracle，不跑全量门。
+
+参考run `dual-token-slice-1a1720f89b4-17144`：四门PASSED、35/0；教师run `dual-token-slice-1a1721082e4-62691`：静态/构建/启动PASSED，业务FAILED、19/14。真实日志与生成Java证明候选在persist前将null UUID复制进TokenPair，登录INSERT缺access_token而500，其余多为连带失败。平台可用不等于候选正确，14个断言失败不算14种独立业务缺陷。
+
+`datasets/sir/runs/dual-token-lab-v1/`封存两次XML、原始报告/日志、四门绑定、失败准备与清理证明、生成Java及oracle快照；附件哈希逐一核对。现有导出器实际输出0条新教师答案、1条单列的既有参考种子。本轮没有新教师API调用，未启动训练/小模型基线。临时scope/应用/端口、schema/账号/凭据文件均已清理；现有平台服务保留。实际业务路径是**SSH原生参考环境**，不能记为ML默认镜像或Forgejo Actions CI通过，#184完整CI基线和83/1/0账本不变。后续按负责人要求删除了临时参考目录和平台指南文件；历史证据保留，不再以SSH目录作为可复用工具入口。详见[数据报告第二阶段](SLM_DATA_PILOT_REPORT.md#第二阶段lab-真实参考环境2026-10-25)。

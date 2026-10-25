@@ -1,0 +1,28 @@
+{
+  "id": "8d6353c5",
+  "created_at": 1792913814.7704527,
+  "started_at": 1792913815.3846645,
+  "finished_at": 1792913817.5647624,
+  "status": "failed",
+  "owner": "sir-agent-zdw00",
+  "name": "sir-platform-nonzero",
+  "cmd": "exit 7",
+  "image": "ml-base:p312",
+  "cpus": 0.5,
+  "mem_mb": 256,
+  "ttl_sec": 60,
+  "network": "none",
+  "src_name": null,
+  "exit_code": 7,
+  "cancel_requested": 0,
+  "error": null,
+  "pool": "test",
+  "ephemeral": 0,
+  "purge_after": null,
+  "result": {
+    "status": "failed",
+    "exit_code": 7,
+    "duration_sec": 2.1,
+    "killed_by": null
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "forgejo": {
+    "identity": {
+      "login": "holonova",
+      "is_admin": true
+    },
+    "repository_create_read_issue_close_cleanup": "PASSED",
+    "actions_runners": [],
+    "automatic_ci": "NOT_RUN",
+    "auxiliary_config_probe": "Initial root-level INI parsing failed after API/cleanup; configuration-only follow-up passed without repeating successful API operations."
+  },
+  "ml_api": {
+    "smoke": {
+      "url": "https://ml.campuslink.vip",
+      "jobs": [
+        {
+          "id": "4dfe58ba",
+          "name": "sir-platform-positive",
+          "status": "succeeded",
+          "exit_code": 0,
+          "ttl": 60
+        },
+        {
+          "id": "8d6353c5",
+          "name": "sir-platform-nonzero",
+          "status": "failed",
+          "exit_code": 7,
+          "ttl": 60
+        },
+        {
+          "id": "e6c228c7",
+          "name": "sir-platform-timeout",
+          "status": "timeout",
+          "exit_code": 143,
+          "ttl": 3
+        }
+      ],
+      "resource_facts": {
+        "uid": 1000,
+        "memory_max": "268435456",
+        "cpu_max": "50000 100000",
+        "java": null,
+        "mvn": null
+      },
+      "artifact_sha256": "bef0ac379155b264633ba1b7bd65fab33e00151dae7773eaa953fb3bcd2fd228",
+      "verdict": "PASSED"
+    },
+    "running_cancel": {
+      "id": "a72fb646",
+      "observed_running_output": "READY",
+      "cancel_response": {
+        "id": "a72fb646",
+        "status": "canceling"
+      },
+      "final_status": "canceled",
+      "verdict": "PASSED"
+    }
+  },
+  "reference_business_evidence": "datasets/sir/runs/dual-token-lab-v1",
+  "github_writes": false,
+  "project_commits_created": false
+}

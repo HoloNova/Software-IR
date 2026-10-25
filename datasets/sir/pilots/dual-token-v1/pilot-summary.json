@@ -1,0 +1,66 @@
+{
+  "exported_training_records": 0,
+  "initial_candidates": 3,
+  "initial_static_passed": 0,
+  "new_business_qualified": 0,
+  "reference_seeds": 1,
+  "repair_candidates": 2,
+  "runtime": "NOT_RUN",
+  "samples": [
+    {
+      "id": "auth-dual-token-v1-reference",
+      "origin": "existing_reference",
+      "parent_id": null,
+      "source_sha256": "c0728c4ad9d32dc0a97f71d34ac9837dc64c25ec467710ef0e17e35fe1c83c80",
+      "stage": "GENERATION",
+      "static": "PASSED"
+    },
+    {
+      "id": "auth-dual-token-v1-teacher-f4b4a6071888",
+      "origin": "teacher",
+      "parent_id": null,
+      "source_sha256": "e7c64be0ec86465d0b33436704a8800126e3ba397d97968a25c4b58192c752b9",
+      "stage": "PARSE",
+      "static": "FAILED"
+    },
+    {
+      "id": "auth-dual-token-v1-teacher-2f2f819780a2",
+      "origin": "teacher",
+      "parent_id": null,
+      "source_sha256": "778713f5a5e01f769717b03878e934b605dd69ab31043d235c3d5428a7bc7495",
+      "stage": "PARSE",
+      "static": "FAILED"
+    },
+    {
+      "id": "auth-dual-token-v1-teacher-4fe6870d899c",
+      "origin": "teacher",
+      "parent_id": null,
+      "source_sha256": "c4aa16bbb089ff8f942b5f968c3b4b3af0fd5171f55bf4d80529fbc76fb02142",
+      "stage": "PARSE",
+      "static": "FAILED"
+    },
+    {
+      "id": "auth-dual-token-v1-teacher-6702e9b70653",
+      "origin": "teacher",
+      "parent_id": "auth-dual-token-v1-teacher-f4b4a6071888",
+      "source_sha256": "4c29f90490f22adcce209fe92c39c8ce6e4c5a74c1f73b89c20e5beee2a41366",
+      "stage": "SEMANTIC",
+      "static": "FAILED"
+    },
+    {
+      "id": "auth-dual-token-v1-teacher-ef9ddc30eb79",
+      "origin": "teacher",
+      "parent_id": "auth-dual-token-v1-teacher-6702e9b70653",
+      "source_sha256": "a5cd4c7155a309916fd111531cbd46f7fea5981b0395e0ad37955b71e606122a",
+      "stage": "GENERATION",
+      "static": "PASSED"
+    }
+  ],
+  "teacher_calls": 5,
+  "teacher_static_passed": 1,
+  "usage": {
+    "completion_tokens": 5763,
+    "prompt_tokens": 15651,
+    "total_tokens": 21414
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "id": "a72fb646",
+  "observed_running_output": "READY",
+  "cancel_response": {
+    "id": "a72fb646",
+    "status": "canceling"
+  },
+  "final_status": "canceled",
+  "verdict": "PASSED"
+}

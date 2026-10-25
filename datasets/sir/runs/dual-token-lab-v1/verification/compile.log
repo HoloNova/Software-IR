@@ -1,0 +1,267 @@
+[INFO] Scanning for projects...
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Build Order:
+[INFO] 
+[INFO] KCG-Code                                                           [pom]
+[INFO] SIR Parser                                                         [jar]
+[INFO] SIR Semantic                                                       [jar]
+[INFO] SIR Lowering API                                                   [jar]
+[INFO] SIR Change                                                         [jar]
+[INFO] SIR Spring Boot Lowering                                           [jar]
+[INFO] SIR Generator Spring Boot                                          [jar]
+[INFO] SIR Project Graph                                                  [jar]
+[INFO] SIR Toolchain Application                                          [jar]
+[INFO] KCG CLI                                                            [jar]
+[INFO] 
+[INFO] --------------------------< io.kcg:kcg-code >---------------------------
+[INFO] Building KCG-Code 0.1.0-SNAPSHOT                                  [1/10]
+[INFO]   from pom.xml
+[INFO] --------------------------------[ pom ]---------------------------------
+[INFO] 
+[INFO] -------------------------< io.kcg:sir-parser >--------------------------
+[INFO] Building SIR Parser 0.1.0-SNAPSHOT                                [2/10]
+[INFO]   from sir-parser/pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- antlr4:4.13.2:antlr4 (generate-sir-parser) @ sir-parser ---
+[INFO] No grammars to process
+[INFO] ANTLR 4: Processing source directory /home/labadmin/sir-reference/20261025-pilot/repo/sir-parser/src/main/antlr4
+[INFO] 
+[INFO] --- resources:3.4.0:resources (default-resources) @ sir-parser ---
+[INFO] skip non existing resourceDirectory /home/labadmin/sir-reference/20261025-pilot/repo/sir-parser/src/main/resources
+[INFO] 
+[INFO] --- compiler:3.14.1:compile (default-compile) @ sir-parser ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.4.0:testResources (default-testResources) @ sir-parser ---
+[INFO] Copying 10 resources from src/test/resources to target/test-classes
+[INFO] 
+[INFO] --- compiler:3.14.1:testCompile (default-testCompile) @ sir-parser ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- surefire:3.5.6:test (default-test) @ sir-parser ---
+[INFO] Tests are skipped.
+[INFO] 
+[INFO] --- jar:3.5.0:jar (default-jar) @ sir-parser ---
+[INFO] 
+[INFO] ------------------------< io.kcg:sir-semantic >-------------------------
+[INFO] Building SIR Semantic 0.1.0-SNAPSHOT                              [3/10]
+[INFO]   from sir-semantic/pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.4.0:resources (default-resources) @ sir-semantic ---
+[INFO] Copying 4 resources from src/main/resources to target/classes
+[INFO] 
+[INFO] --- compiler:3.14.1:compile (default-compile) @ sir-semantic ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.4.0:testResources (default-testResources) @ sir-semantic ---
+[INFO] Copying 35 resources from src/test/resources to target/test-classes
+[INFO] 
+[INFO] --- compiler:3.14.1:testCompile (default-testCompile) @ sir-semantic ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- surefire:3.5.6:test (default-test) @ sir-semantic ---
+[INFO] Tests are skipped.
+[INFO] 
+[INFO] --- jar:3.5.0:jar (default-jar) @ sir-semantic ---
+[INFO] 
+[INFO] ----------------------< io.kcg:sir-lowering-api >-----------------------
+[INFO] Building SIR Lowering API 0.1.0-SNAPSHOT                          [4/10]
+[INFO]   from sir-lowering-api/pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.4.0:resources (default-resources) @ sir-lowering-api ---
+[INFO] skip non existing resourceDirectory /home/labadmin/sir-reference/20261025-pilot/repo/sir-lowering-api/src/main/resources
+[INFO] 
+[INFO] --- compiler:3.14.1:compile (default-compile) @ sir-lowering-api ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.4.0:testResources (default-testResources) @ sir-lowering-api ---
+[INFO] skip non existing resourceDirectory /home/labadmin/sir-reference/20261025-pilot/repo/sir-lowering-api/src/test/resources
+[INFO] 
+[INFO] --- compiler:3.14.1:testCompile (default-testCompile) @ sir-lowering-api ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- surefire:3.5.6:test (default-test) @ sir-lowering-api ---
+[INFO] Tests are skipped.
+[INFO] 
+[INFO] --- jar:3.5.0:jar (default-jar) @ sir-lowering-api ---
+[INFO] 
+[INFO] -------------------------< io.kcg:sir-change >--------------------------
+[INFO] Building SIR Change 0.1.0-SNAPSHOT                                [5/10]
+[INFO]   from sir-change/pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.4.0:resources (default-resources) @ sir-change ---
+[INFO] skip non existing resourceDirectory /home/labadmin/sir-reference/20261025-pilot/repo/sir-change/src/main/resources
+[INFO] 
+[INFO] --- compiler:3.14.1:compile (default-compile) @ sir-change ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.4.0:testResources (default-testResources) @ sir-change ---
+[INFO] Copying 9 resources from src/test/resources to target/test-classes
+[INFO] 
+[INFO] --- compiler:3.14.1:testCompile (default-testCompile) @ sir-change ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- surefire:3.5.6:test (default-test) @ sir-change ---
+[INFO] Tests are skipped.
+[INFO] 
+[INFO] --- jar:3.5.0:jar (default-jar) @ sir-change ---
+[INFO] 
+[INFO] ------------------< io.kcg:sir-lowering-spring-boot >-------------------
+[INFO] Building SIR Spring Boot Lowering 0.1.0-SNAPSHOT                  [6/10]
+[INFO]   from sir-lowering-spring-boot/pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.4.0:resources (default-resources) @ sir-lowering-spring-boot ---
+[INFO] skip non existing resourceDirectory /home/labadmin/sir-reference/20261025-pilot/repo/sir-lowering-spring-boot/src/main/resources
+[INFO] 
+[INFO] --- compiler:3.14.1:compile (default-compile) @ sir-lowering-spring-boot ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.4.0:testResources (default-testResources) @ sir-lowering-spring-boot ---
+[INFO] Copying 29 resources from src/test/resources to target/test-classes
+[INFO] 
+[INFO] --- compiler:3.14.1:testCompile (default-testCompile) @ sir-lowering-spring-boot ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- surefire:3.5.6:test (default-test) @ sir-lowering-spring-boot ---
+[INFO] Tests are skipped.
+[INFO] 
+[INFO] --- jar:3.5.0:jar (default-jar) @ sir-lowering-spring-boot ---
+[INFO] 
+[INFO] ------------------< io.kcg:sir-generator-spring-boot >------------------
+[INFO] Building SIR Generator Spring Boot 0.1.0-SNAPSHOT                 [7/10]
+[INFO]   from sir-generator-spring-boot/pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.4.0:resources (default-resources) @ sir-generator-spring-boot ---
+[INFO] skip non existing resourceDirectory /home/labadmin/sir-reference/20261025-pilot/repo/sir-generator-spring-boot/src/main/resources
+[INFO] 
+[INFO] --- compiler:3.14.1:compile (default-compile) @ sir-generator-spring-boot ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.4.0:testResources (default-testResources) @ sir-generator-spring-boot ---
+[INFO] Copying 34 resources from src/test/resources to target/test-classes
+[INFO] 
+[INFO] --- compiler:3.14.1:testCompile (default-testCompile) @ sir-generator-spring-boot ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- surefire:3.5.6:test (default-test) @ sir-generator-spring-boot ---
+[INFO] Tests are skipped.
+[INFO] 
+[INFO] --- jar:3.5.0:jar (default-jar) @ sir-generator-spring-boot ---
+[INFO] 
+[INFO] ----------------------< io.kcg:sir-project-graph >----------------------
+[INFO] Building SIR Project Graph 0.1.0-SNAPSHOT                         [8/10]
+[INFO]   from sir-project-graph/pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.4.0:resources (default-resources) @ sir-project-graph ---
+[INFO] skip non existing resourceDirectory /home/labadmin/sir-reference/20261025-pilot/repo/sir-project-graph/src/main/resources
+[INFO] 
+[INFO] --- compiler:3.14.1:compile (default-compile) @ sir-project-graph ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.4.0:testResources (default-testResources) @ sir-project-graph ---
+[INFO] skip non existing resourceDirectory /home/labadmin/sir-reference/20261025-pilot/repo/sir-project-graph/src/test/resources
+[INFO] 
+[INFO] --- compiler:3.14.1:testCompile (default-testCompile) @ sir-project-graph ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- surefire:3.5.6:test (default-test) @ sir-project-graph ---
+[INFO] Tests are skipped.
+[INFO] 
+[INFO] --- jar:3.5.0:jar (default-jar) @ sir-project-graph ---
+[INFO] 
+[INFO] ------------------< io.kcg:sir-toolchain-application >------------------
+[INFO] Building SIR Toolchain Application 0.1.0-SNAPSHOT                 [9/10]
+[INFO]   from sir-toolchain-application/pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.4.0:resources (default-resources) @ sir-toolchain-application ---
+[INFO] skip non existing resourceDirectory /home/labadmin/sir-reference/20261025-pilot/repo/sir-toolchain-application/src/main/resources
+[INFO] 
+[INFO] --- compiler:3.14.1:compile (default-compile) @ sir-toolchain-application ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.4.0:testResources (default-testResources) @ sir-toolchain-application ---
+[INFO] Copying 100 resources from src/test/resources to target/test-classes
+[INFO] 
+[INFO] --- compiler:3.14.1:testCompile (default-testCompile) @ sir-toolchain-application ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 166 source files with javac [debug release 21] to target/test-classes
+[INFO] 
+[INFO] --- surefire:3.5.6:test (default-test) @ sir-toolchain-application ---
+[INFO] Tests are skipped.
+[INFO] 
+[INFO] --- jar:3.5.0:jar (default-jar) @ sir-toolchain-application ---
+[INFO] Building jar: /home/labadmin/sir-reference/20261025-pilot/repo/sir-toolchain-application/target/sir-toolchain-application-0.1.0-SNAPSHOT.jar
+[INFO] 
+[INFO] ---------------------------< io.kcg:kcg-cli >---------------------------
+[INFO] Building KCG CLI 0.1.0-SNAPSHOT                                  [10/10]
+[INFO]   from kcg-cli/pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.4.0:resources (default-resources) @ kcg-cli ---
+[INFO] skip non existing resourceDirectory /home/labadmin/sir-reference/20261025-pilot/repo/kcg-cli/src/main/resources
+[INFO] 
+[INFO] --- compiler:3.14.1:compile (default-compile) @ kcg-cli ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 12 source files with javac [debug release 21] to target/classes
+[INFO] 
+[INFO] --- resources:3.4.0:testResources (default-testResources) @ kcg-cli ---
+[INFO] Copying 7 resources from src/test/resources to target/test-classes
+[INFO] 
+[INFO] --- compiler:3.14.1:testCompile (default-testCompile) @ kcg-cli ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 11 source files with javac [debug release 21] to target/test-classes
+[INFO] 
+[INFO] --- surefire:3.5.6:test (default-test) @ kcg-cli ---
+[INFO] Tests are skipped.
+[INFO] 
+[INFO] --- jar:3.5.0:jar (default-jar) @ kcg-cli ---
+[INFO] Building jar: /home/labadmin/sir-reference/20261025-pilot/repo/kcg-cli/target/kcg.jar
+[INFO] 
+[INFO] --- shade:3.6.0:shade (default) @ kcg-cli ---
+[INFO] Including io.kcg:sir-toolchain-application:jar:0.1.0-SNAPSHOT in the shaded jar.
+[INFO] Including io.kcg:sir-parser:jar:0.1.0-SNAPSHOT in the shaded jar.
+[INFO] Including org.antlr:antlr4-runtime:jar:4.13.2 in the shaded jar.
+[INFO] Including io.kcg:sir-semantic:jar:0.1.0-SNAPSHOT in the shaded jar.
+[INFO] Including io.kcg:sir-lowering-api:jar:0.1.0-SNAPSHOT in the shaded jar.
+[INFO] Including io.kcg:sir-lowering-spring-boot:jar:0.1.0-SNAPSHOT in the shaded jar.
+[INFO] Including io.kcg:sir-generator-spring-boot:jar:0.1.0-SNAPSHOT in the shaded jar.
+[INFO] Including io.kcg:sir-project-graph:jar:0.1.0-SNAPSHOT in the shaded jar.
+[INFO] Including io.kcg:sir-change:jar:0.1.0-SNAPSHOT in the shaded jar.
+[WARNING] antlr4-runtime-4.13.2.jar, kcg.jar, sir-change-0.1.0-SNAPSHOT.jar, sir-generator-spring-boot-0.1.0-SNAPSHOT.jar, sir-lowering-api-0.1.0-SNAPSHOT.jar, sir-lowering-spring-boot-0.1.0-SNAPSHOT.jar, sir-parser-0.1.0-SNAPSHOT.jar, sir-project-graph-0.1.0-SNAPSHOT.jar, sir-semantic-0.1.0-SNAPSHOT.jar, sir-toolchain-application-0.1.0-SNAPSHOT.jar define 1 overlapping resource: 
+[WARNING]   - META-INF/MANIFEST.MF
+[WARNING] maven-shade-plugin has detected that some files are
+[WARNING] present in two or more JARs. When this happens, only one
+[WARNING] single version of the file is copied to the uber jar.
+[WARNING] Usually this is not harmful and you can skip these warnings,
+[WARNING] otherwise try to manually exclude artifacts based on
+[WARNING] mvn dependency:tree -Ddetail=true and the above output.
+[WARNING] See https://maven.apache.org/plugins/maven-shade-plugin/
+[INFO] Replacing original artifact with shaded artifact.
+[INFO] Replacing /home/labadmin/sir-reference/20261025-pilot/repo/kcg-cli/target/kcg.jar with /home/labadmin/sir-reference/20261025-pilot/repo/kcg-cli/target/kcg-cli-0.1.0-SNAPSHOT-shaded.jar
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Summary for KCG-Code 0.1.0-SNAPSHOT:
+[INFO] 
+[INFO] KCG-Code ........................................... SUCCESS [  0.005 s]
+[INFO] SIR Parser ......................................... SUCCESS [  3.591 s]
+[INFO] SIR Semantic ....................................... SUCCESS [  0.279 s]
+[INFO] SIR Lowering API ................................... SUCCESS [  0.117 s]
+[INFO] SIR Change ......................................... SUCCESS [  0.120 s]
+[INFO] SIR Spring Boot Lowering ........................... SUCCESS [  0.259 s]
+[INFO] SIR Generator Spring Boot .......................... SUCCESS [  1.113 s]
+[INFO] SIR Project Graph .................................. SUCCESS [  0.024 s]
+[INFO] SIR Toolchain Application .......................... SUCCESS [ 18.786 s]
+[INFO] KCG CLI ............................................ SUCCESS [  2.976 s]
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  28.069 s
+[INFO] Finished at: 2026-10-25T15:55:48+08:00
+[INFO] ------------------------------------------------------------------------

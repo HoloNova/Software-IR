@@ -1,0 +1,73 @@
+{
+  "base": "http://10.167.119.250:3000",
+  "credential_mode": "0o600",
+  "operations": [
+    {
+      "operation": "create_private_repository",
+      "status": 201
+    },
+    {
+      "operation": "read_created_repository",
+      "status": 200
+    },
+    {
+      "operation": "create_issue",
+      "status": 201
+    },
+    {
+      "operation": "close_issue",
+      "status": 201
+    },
+    {
+      "operation": "GET /actions/runners",
+      "status": 200,
+      "body": []
+    },
+    {
+      "operation": "GET /actions/runs",
+      "status": 200,
+      "body": {
+        "workflow_runs": [],
+        "total_count": 0
+      }
+    },
+    {
+      "operation": "delete_disposable_repository",
+      "status": 204
+    }
+  ],
+  "identity": {
+    "login": "holonova",
+    "is_admin": true
+  },
+  "version": {
+    "status": 200,
+    "body": {
+      "version": "16.0.6+gitea-1.22.0"
+    }
+  },
+  "repository": {
+    "full_name": "holonova/agent-platform-smoke-20261025-073104",
+    "private": true,
+    "html_url": "http://10.167.119.250:3000/holonova/agent-platform-smoke-20261025-073104",
+    "ssh_url": "ssh://git@10.167.119.250:2222/holonova/agent-platform-smoke-20261025-073104.git",
+    "has_actions": true,
+    "empty": true
+  }
+}
+Traceback (most recent call last):
+  File "<stdin>", line 63, in <module>
+  File "/usr/lib/python3.14/configparser.py", line 754, in read
+    self._read(fp, filename)
+    ~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/configparser.py", line 1070, in _read
+    ParsingError._raise_all(self._read_inner(fp, fpname))
+                            ~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "/usr/lib/python3.14/configparser.py", line 1098, in _read_inner
+    self._handle_rest(st, line, fpname)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/configparser.py", line 1122, in _handle_rest
+    raise MissingSectionHeaderError(fpname, st.lineno, line)
+configparser.MissingSectionHeaderError: File contains no section headers.
+file: '/opt/forgejo/data/gitea/conf/app.ini', line: 1
+'APP_NAME = Lab Git\n'

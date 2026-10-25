@@ -1,0 +1,49 @@
+
+ML_SERVICE_LOCATIONS
+Id=mlplatform-web.service
+FragmentPath=/etc/systemd/system/mlplatform-web.service
+ExecStart={ path=/srv/mlplatform/app/.venv/bin/uvicorn ; argv[]=/srv/mlplatform/app/.venv/bin/uvicorn mlp.api:app --host 127.0.0.1 --port 8088 --proxy-headers --forwarded-allow-ips=127.0.0.1 --no-access-log ; ignore_errors=no ; start_time=[n/a] ; stop_time=[n/a] ; pid=0 ; code=(null) ; status=0/0 }
+WorkingDirectory=/srv/mlplatform/app
+User=labadmin
+
+Id=mlplatform-worker@test.service
+FragmentPath=/etc/systemd/system/mlplatform-worker@.service
+ExecStart={ path=/usr/bin/python3 ; argv[]=/usr/bin/python3 -m mlp.worker --pool test ; ignore_errors=no ; start_time=[n/a] ; stop_time=[n/a] ; pid=0 ; code=(null) ; status=0/0 }
+WorkingDirectory=/srv/mlplatform/app
+User=labadmin
+
+Id=mlplatform-worker@train.service
+FragmentPath=/etc/systemd/system/mlplatform-worker@.service
+ExecStart={ path=/usr/bin/python3 ; argv[]=/usr/bin/python3 -m mlp.worker --pool train ; ignore_errors=no ; start_time=[n/a] ; stop_time=[n/a] ; pid=0 ; code=(null) ; status=0/0 }
+WorkingDirectory=/srv/mlplatform/app
+User=labadmin
+
+Id=frpc-ml.service
+FragmentPath=/etc/systemd/system/frpc-ml.service
+ExecStart={ path=/opt/frp/frpc ; argv[]=/opt/frp/frpc -c /etc/frp/frpc-ml.toml ; ignore_errors=no ; start_time=[Sun 2026-10-25 15:08:30 CST] ; stop_time=[n/a] ; pid=663519 ; code=(null) ; status=0/0 }
+WorkingDirectory=
+User=frp
+
+FORGEJO_USERS
+ID   Username Email              IsActive IsAdmin 2FA
+1    holonova labadmin@lab.local true     true    false
+
+FORGEJO_ACTIONS_RUNNER_SERVICES
+UNIT FILE                   STATE     PRESET
+opt-forgejo\x2dbackup.mount generated -
+srv-mlplatform.mount        generated -
+forgejo-backup.service      static    -
+mlplatform-web.service      enabled   enabled
+mlplatform-worker@.service  indirect  enabled
+forgejo-backup.timer        enabled   enabled
+
+6 unit files listed.
+
+PUBLIC_ENDPOINTS
+{"url": "http://127.0.0.1:8088/", "status": 401, "content_type": "application/json", "body": "{\"detail\":\"缺少请求头 x-ml-key\"}"}
+{"url": "http://127.0.0.1:8088/health", "status": 401, "content_type": "application/json", "body": "{\"detail\":\"缺少请求头 x-ml-key\"}"}
+{"url": "http://127.0.0.1:8088/healthz", "status": 401, "content_type": "application/json", "body": "{\"detail\":\"缺少请求头 x-ml-key\"}"}
+{"url": "http://127.0.0.1:8088/openapi.json", "status": 401, "content_type": "application/json", "body": "{\"detail\":\"缺少请求头 x-ml-key\"}"}
+{"url": "https://ml.campuslink.vip/health", "status": 404, "content_type": "text/html", "body": "<html>\r\n<head><title>404 Not Found</title></head>\r\n<body>\r\n<center><h1>404 Not Found</h1></center>\r\n<hr><center>nginx</center>\r\n</body>\r\n</html>\r\n"}
+{"url": "https://ml.campuslink.vip/openapi.json", "status": 404, "content_type": "text/html", "body": "<html>\r\n<head><title>404 Not Found</title></head>\r\n<body>\r\n<center><h1>404 Not Found</h1></center>\r\n<hr><center>nginx</center>\r\n</body>\r\n</html>\r\n"}
+{"url": "http://10.167.119.250:3000/api/v1/version", "status": 403, "content_type": "application/json;charset=utf-8", "body": "{\"message\":\"Only signed in user is allowed to call APIs.\"}\n"}

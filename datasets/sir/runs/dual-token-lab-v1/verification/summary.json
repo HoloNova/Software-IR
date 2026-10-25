@@ -1,0 +1,30 @@
+{
+  "execution": "SSH lab native systemd user scope; not Forgejo Actions or ML API job",
+  "reference": {
+    "id": "auth-dual-token-v1-reference",
+    "checks_passed": 35,
+    "checks_failed": 0,
+    "gates": {
+      "static": "PASSED",
+      "build": "PASSED",
+      "business": "PASSED",
+      "start": "PASSED"
+    }
+  },
+  "teacher": {
+    "id": "auth-dual-token-v1-teacher-ef9ddc30eb79",
+    "checks_passed": 19,
+    "checks_failed": 14,
+    "gates": {
+      "static": "PASSED",
+      "build": "PASSED",
+      "business": "FAILED",
+      "start": "PASSED"
+    }
+  },
+  "new_teacher_qualified_answers": 0,
+  "qualified_existing_reference_seeds": 1,
+  "new_teacher_api_calls": 0,
+  "reference_archive_sha256": "b08e9a0b130fc72d1bfe26c59adc5afe297c1876f9f1f877d8942eaa3a16dec4",
+  "source_manifest_sha256": "60c59c1828dd99bda4b954deac67e3c4e6b64e872a0f3f7fec07f7aa5abeb86d"
+}

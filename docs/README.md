@@ -26,6 +26,8 @@
 | [`CLAUDE_EXECUTION_POLICY.md`](CLAUDE_EXECUTION_POLICY.md) | 执行者是 Claude 时的提交、测试与资源约定 |
 | [`architecture/`](architecture/) | Accepted ADR：Resolve-once（001）、Application 所有权（003）、项目文档与源快照（021）、批量校验（025）、分层与指令修改（026）、Git 版本历史（027） |
 | [`design/`](design/README.md) | 目标产品设计（课程后端、数据库演进、Docker 交付、Web 平台）；不证明已实现 |
+| [`qualification/SLM_DATA_PILOT_REPORT.md`](qualification/SLM_DATA_PILOT_REPORT.md) | 首批真实教师数据、反馈修复与尚未执行的业务门，不是小模型成绩 |
+| [`qualification/SLM_MODEL_SELECTION.md`](qualification/SLM_MODEL_SELECTION.md) | DeepSeek基线、现代对照、真实长度与云GPU建议 |
 | [`qualification/`](qualification/) | 验证说明、SLM 评测总设计 |
 
 ## 历史材料

@@ -1,0 +1,28 @@
+{
+  "id": "e6c228c7",
+  "created_at": 1792913819.6893632,
+  "started_at": 1792913821.6031408,
+  "finished_at": 1792913826.6150515,
+  "status": "timeout",
+  "owner": "sir-agent-zdw00",
+  "name": "sir-platform-timeout",
+  "cmd": "sleep 20",
+  "image": "ml-base:p312",
+  "cpus": 0.5,
+  "mem_mb": 256,
+  "ttl_sec": 3,
+  "network": "none",
+  "src_name": null,
+  "exit_code": 143,
+  "cancel_requested": 0,
+  "error": null,
+  "pool": "test",
+  "ephemeral": 0,
+  "purge_after": null,
+  "result": {
+    "status": "timeout",
+    "exit_code": 143,
+    "duration_sec": 5.0,
+    "killed_by": "timeout"
+  }
+}

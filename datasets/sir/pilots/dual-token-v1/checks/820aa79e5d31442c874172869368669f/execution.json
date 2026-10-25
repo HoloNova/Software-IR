@@ -1,0 +1,15 @@
+{
+  "command": [
+    "java",
+    "-XX:-UsePerfData",
+    "-XX:ActiveProcessorCount=2",
+    "-Xmx256m",
+    "-XX:MaxMetaspaceSize=128m",
+    "-cp",
+    "C:\\Users\\zdw00\\Desktop\\Software IR\\kcg-cli\\target\\classes;C:\\Users\\zdw00\\Desktop\\Software IR\\sir-toolchain-application\\target\\classes;C:\\Users\\zdw00\\Desktop\\Software IR\\sir-change\\target\\classes;C:\\Users\\zdw00\\Desktop\\Software IR\\sir-project-graph\\target\\classes;C:\\Users\\zdw00\\Desktop\\Software IR\\sir-generator-spring-boot\\target\\classes;C:\\Users\\zdw00\\Desktop\\Software IR\\sir-lowering-spring-boot\\target\\classes;C:\\Users\\zdw00\\Desktop\\Software IR\\sir-lowering-api\\target\\classes;C:\\Users\\zdw00\\Desktop\\Software IR\\sir-semantic\\target\\classes;C:\\Users\\zdw00\\Desktop\\Software IR\\sir-parser\\target\\classes;D:\\maven-repo\\org\\antlr\\antlr4-runtime\\4.13.2\\antlr4-runtime-4.13.2.jar",
+    "io.kcg.cli.KcgCli",
+    "check"
+  ],
+  "input_sha256": "c5d979360b099b26e7bd951566fe3cc0fcccca688a2c026fd74c614671665d9c",
+  "returncode": 0
+}

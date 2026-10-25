@@ -1,0 +1,22 @@
+{
+  "base.bundle": {
+    "sha256": "86b10e2db670c0902772c2a5c8989a10e2946d5d7a3c3690675f81d072739f4e",
+    "bytes": 4619913
+  },
+  "source.tar.gz": {
+    "sha256": "8834b3beccc8a9bdbbf6f4b9efe6071fb656d151c0f63e0fece8074c4b80e4b7",
+    "bytes": 2899819
+  },
+  "source-manifest.json": {
+    "sha256": "094c1c95f0a65fd1d0a32287d7a8089569a051314ac929f56ba070497fd6743b",
+    "bytes": 198459
+  },
+  "maven-cache.tar.gz": {
+    "sha256": "e441b9d6844370910cb54ddf9de0e1ce5320703b3bac9f2cfa8bfd662afc1050",
+    "bytes": 801322118
+  },
+  "maven-tool.tar.gz": {
+    "sha256": "3e5007fc64092ce86d10ec18d38d72976e314c0b4e470915f13eace15247e805",
+    "bytes": 9375730
+  }
+}

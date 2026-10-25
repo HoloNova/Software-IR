@@ -1,0 +1,32 @@
+{
+  "scope": "working-tree byte snapshot, not CI or a committed tree",
+  "git_head": "664fd19145d2e90968f739c523fb3a5a19f733d8",
+  "files": {
+    "datasets/sir/README.md": "a6a064742c0d48db57c95219bc524e2a01cc60db1215e5f60c218e1c68b50a83",
+    "docs/PROJECT_STATUS.md": "4422d8ed1a33c6b2bf1e859a623b5d6376f9847cad9d70957726822dbf7a9c1b",
+    "docs/qualification/README.md": "fa763d16cfb7b45b37d9141cdb6869ffd67b6c83d582332d51840d23fe3ef7a2",
+    "docs/qualification/SLM_DATA_PILOT_REPORT.md": "62723cd76045ba0c279b6131ad7f7fbf1cf010229825e905d5e47daf2f84dd27",
+    "docs/qualification/SLM_GENERATED_PROJECT_EVALUATION_PLAN.md": "4d475c863c7f2337512155a6056bc82c71c1496af69cfccecbde31a49234aafa",
+    "docs/qualification/SLM_MODEL_SELECTION.md": "b4118378ca7d9f799dca91500a3865cae325932b321812536822688cc89eb150",
+    "docs/README.md": "df6925549dbfea077baafd1fdf020f440855204398a808ffe1552e980b433ada",
+    "experiments/slm/.gitignore": "22bc478fc0eb97818e8c2efd9a6c8f9dce55490bdd8074a3f2b6b8653c5c12d5",
+    "experiments/slm/corpus.py": "cc345af9c18948aa5d8ec9bb9faca703ada7ede8b534ac214afe7cf0c8ef43e9",
+    "experiments/slm/data.py": "9d0ff62964f2927772f5287682be89708ccf6f85f2ce02891dd4fa5750bf8d70",
+    "experiments/slm/dataset_io.py": "9dc811c8240fe37f6cdf2ab240e437be25cd8902a05b23888e7b5da2d1aaed61",
+    "experiments/slm/profile_tokens.py": "7cb3d951e9c75120f81d147ecfa67d4a52c7f2d090b320b7559b5bcb60ffb163",
+    "experiments/slm/prompts/repair-auth-v1.md": "a06c956bea95eac814169a9cc7ba936c058053ba67d6db96486f1c0a6a3aa0b7",
+    "experiments/slm/prompts/sir-0.3-auth.md": "dd91c27e64b363d4e3e46359f026e204754bb47dc842ed8fe0fb0b5f0b325bff",
+    "experiments/slm/README.md": "aef8b03c05acdb55e316485bf3fe37f3a7462f0a64d86156c3b89a0b184499d2",
+    "experiments/slm/requirements-profile.txt": "067929ce1bba8a2727427df6b37146bd47bcb84e2e8139c48e3ba9413ccfb17e",
+    "experiments/slm/requirements.txt": "62c5474d0392c3902fe52d505f633cca742928922b645c5940972f1d46923ce6",
+    "experiments/slm/task.schema.json": "07c57556fc8985019c8950a1154cfd0d79d8bb95b415101651311a9a3e434cf9",
+    "experiments/slm/tasks/dual-token-v1.json": "8a1f3b235f1732e0ed51ffd94d1f1aeb495e99f311994f38a62a0de679c2173f",
+    "experiments/slm/tests/test_corpus.py": "4baadec5aee68600f669a8be6d7b3d1f0ca532b201c590229d818b0d7cb95146",
+    "experiments/slm/tests/test_dataset_io.py": "65fb503be3fa260d4e520140eb146ec75b28ea2087adf3c62471c34e72e5e336",
+    "experiments/slm/tests/test_pipeline.py": "26a6482eb63849f79591b6ca90d4903f44ff3ad8ea3b09cd0441e79d08176303",
+    "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BusinessSliceHarness.java": "bea2bbba018ffa9d04a3be27ac1de15b176b8812395372904318f387b0bd25d5",
+    "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/DualTokenBusinessConformanceIT.java": "e9fbdbac3079b5af2ca65468283a1b61d18113dc815189b7ff5b24dd49635ab3",
+    "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/DualTokenCandidateSupport.java": "af7113786cc9e69e6febf7901e26643e2b6493604bc6c58bb036cd729cbdc93c",
+    "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/DualTokenCandidateSupportTest.java": "170d9afef532b911060a1aca403a72a817113198ab5905ba3cc27abbf134df82"
+  }
+}

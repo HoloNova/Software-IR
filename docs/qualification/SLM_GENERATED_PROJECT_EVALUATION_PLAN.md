@@ -1,6 +1,8 @@
 # SLM生成工程真实评测——总设计与限定试跑
 
-> 2026-10-14 更新：SLM 评测**尚未启动**。文中的 Q23、Q22、ACTIVE_WORK 属于已退役的工作单机制（见 [history](../history/README.md)）；`kcg check` 现在校验的是 `sir 0.2` 文档，`sir 0.1` 已删除，下文所说“单文件 0.1 样本”按此理解。两样本限定试跑是历史记录，不是评测集。
+> 2026-10-25 当前状态：负责人已确认先做数据，并委托基座调研。双Token公开题的冻结、5次真实教师调用和静态反馈修复已完成，新增业务门仍NOT_RUN、正式训练输出0条；见[首批报告](SLM_DATA_PILOT_REPORT.md)与[模型建议](SLM_MODEL_SELECTION.md)。小模型评测和训练尚未启动。当前仅使用`sir 0.3`。下面保留历史设计与限定试跑，旧ACTIVE_WORK审批/工作单不是当前任务的前置，不重建已退役机制。
+>
+> 2026-10-14 历史状态：当时SLM评测尚未启动；Q23、Q22、ACTIVE_WORK属于已退役工作单机制（见 [history](../history/README.md)），当时`kcg check`已由0.1升级到0.2。下文旧版本/未实现描述只代表起草时，不覆盖现有0.3、部署能力和数据进展。两样本限定试跑不是评测集。
 
 > 2026-10-09负责人要求“先进行真实工程评测”，按[ACTIVE_WORK §11](../history/roadmap/ACTIVE_WORK.md)仅执行已有课程题目的正/错误两样本试跑，结果见[实际报告](../history/qualification/Q23_REAL_EVALUATION_PILOT.md)。其余通用平台/新SLM题目仍是待审设计。
 

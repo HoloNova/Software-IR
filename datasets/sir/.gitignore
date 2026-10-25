@@ -1,0 +1,6 @@
+# These bounded, redacted files are required by runtime evidence hashes.
+# Do not unignore general archives, build outputs, credentials or model weights.
+!runs/**/runtime/**/*.log
+!runs/**/verification/*.log
+!platform-verification/**/ml-smoke/*.log
+!platform-verification/**/ml-smoke/*.tar.gz

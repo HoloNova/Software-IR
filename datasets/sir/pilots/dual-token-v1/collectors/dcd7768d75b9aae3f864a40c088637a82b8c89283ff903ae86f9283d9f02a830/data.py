@@ -1,0 +1,294 @@
+"""SIR data pilot: freeze inputs, collect candidates, check, export only proven answers.
+
+Run from repository root: python -m experiments.slm.data --help
+No command here builds/starts a generated application or rents GPU resources.
+"""
+from __future__ import annotations
+
+import argparse
+import importlib.metadata
+import json
+import os
+import re
+import subprocess
+import sys
+import uuid
+from datetime import datetime, timezone
+from pathlib import Path
+
+from experiments.slm.corpus import (
+    DataError, GATES, bind_static, decode_response, enforce_split_disjoint,
+    sha256_text, training_record,
+)
+from experiments.slm.dataset_io import (
+    REPO, checker_command, core_inputs, digest_file, fingerprint, git_head,
+    json_text, load_json, load_jsonl, repo_file, verify_artifacts, verify_inputs,
+    write_jsonl, write_new_json,
+)
+
+HERE = Path(__file__).resolve().parent
+
+
+def utc_now() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def read_bundle(root: Path):
+    manifest = load_json(root / "manifest.json")
+    verify_inputs(manifest)
+    for name, expected in manifest["bundle_inputs"].items():
+        if digest_file(root / name) != expected:
+            raise DataError("frozen bundle input changed: " + name)
+    if manifest["task_sha256"] != digest_file(root / "task.json"):
+        raise DataError("task fingerprint does not match the frozen task file")
+    return manifest, load_json(root / "task.json")
+
+
+def validate_candidates(root: Path, manifest: dict, task: dict, rows: list) -> None:
+    enforce_split_disjoint(rows)
+    for row in rows:
+        if not re.fullmatch(r"[a-zA-Z0-9][a-zA-Z0-9._-]{0,159}", str(row.get("id", ""))):
+            raise DataError("invalid candidate id")
+        expected = {"task_id": task["id"], "task_revision": task["revision"],
+                    "family": task["family"], "split": task["split"],
+                    **{key: manifest[key] for key in ("task_sha256", "oracle_sha256", "toolchain_core_sha256")}}
+        if any(row.get(key) != value for key, value in expected.items()):
+            raise DataError("candidate task/split/toolchain binding mismatch")
+        directory = root / "samples" / row["id"]
+        original = load_json(directory / "candidate.json")
+        if any(row.get(key) != value for key, value in original.items() if key != "gates"):
+            raise DataError("candidate metadata changed after collection")
+        if digest_file(directory / "candidate.sir") != row["source_sha256"] or sha256_text(row["sir"]) != row["source_sha256"]:
+            raise DataError("candidate source changed after collection")
+        if row.get("origin") == "teacher":
+            if digest_file(directory / "response.json") != row["raw_response_sha256"]:
+                raise DataError("raw teacher response changed after collection")
+            if digest_file(directory / "request.json") != row["request_sha256"]:
+                raise DataError("teacher request changed after collection")
+            if decode_response(load_json(directory / "response.json")) != row["sir"]:
+                raise DataError("candidate no longer matches the raw teacher response")
+
+
+def prompt_messages(root: Path, task: dict) -> list[dict]:
+    user = (task["requirement"] + "\n\n固定接口合同：\n" + json_text(task["contract"])
+            + "\n已有软件（返回修改后的完整文档）：\n" + (root / "base.sir").read_text(encoding="utf-8"))
+    return [{"role": "system", "content": (root / "system.md").read_text(encoding="utf-8")},
+            {"role": "user", "content": user}]
+
+
+def new_row(manifest: dict, task: dict, sample_id: str, sir: str, messages: list, origin: str) -> dict:
+    return {
+        "schema_version": "sir-candidate/1", "id": sample_id,
+        "task_id": task["id"], "task_revision": task["revision"],
+        "family": task["family"], "split": task["split"], "origin": origin,
+        **{key: manifest[key] for key in ("task_sha256", "oracle_sha256", "toolchain_core_sha256")},
+        "sir": sir, "source_sha256": sha256_text(sir), "messages": messages,
+        "gates": {name: "NOT_RUN" for name in GATES}, "created_at": utc_now(),
+    }
+
+
+def store_candidate(root: Path, row: dict) -> None:
+    directory = root / "samples" / row["id"]
+    directory.mkdir(parents=True, exist_ok=True)
+    with (directory / "candidate.sir").open("x", encoding="utf-8", newline="") as output:
+        output.write(row["sir"])
+    write_new_json(directory / "candidate.json", row)
+    write_jsonl(root / "candidates.jsonl", [row], append=True)
+
+
+def prepare(args) -> None:
+    from jsonschema import Draft202012Validator
+    task = load_json(args.task)
+    issues = list(Draft202012Validator(load_json(HERE / "task.schema.json")).iter_errors(task))
+    if issues:
+        raise DataError("invalid task contract: " + issues[0].message)
+    root = args.bundle.resolve()
+    root.mkdir(parents=True, exist_ok=False)
+    write_new_json(root / "task.json", task)
+    for name, source in (("base.sir", repo_file(task["base_source"])),
+                         ("reference.sir", repo_file(task["reference_source"])),
+                         ("system.md", HERE / "prompts/sir-0.3-auth.md")):
+        (root / name).write_bytes(source.read_bytes())
+    main = core_inputs()
+    oracle = {path: digest_file(repo_file(path)) for path in task["oracle"]["files"]}
+    frozen = {name: digest_file(root / name) for name in ("task.json", "base.sir", "reference.sir", "system.md")}
+    manifest = {
+        "schema_version": "sir-data-bundle/1", "created_at": utc_now(), "git_head": git_head(),
+        "toolchain_inputs": main, "toolchain_core_sha256": fingerprint(main),
+        "oracle_inputs": oracle, "oracle_sha256": fingerprint(oracle),
+        "task_sha256": frozen["task.json"], "bundle_inputs": frozen,
+        "experiment_inputs": {p.relative_to(REPO).as_posix(): digest_file(p)
+                              for p in sorted(HERE.rglob("*")) if p.is_file() and "__pycache__" not in p.parts},
+    }
+    write_new_json(root / "manifest.json", manifest)
+    reference = new_row(manifest, task, task["id"] + "-reference",
+                        (root / "reference.sir").read_text(encoding="utf-8"), prompt_messages(root, task), "existing_reference")
+    store_candidate(root, {**reference, "reference_evidence": task["reference_evidence"]})
+    print(json_text({"bundle": str(root), "reference_seeds": 1, "new_teacher_candidates": 0,
+                     "business_qualified_answers": 0}), end="")
+
+
+def request_payload(model: str, messages: list, max_tokens: int) -> dict:
+    return {"model": model, "messages": messages, "max_tokens": max_tokens,
+            "temperature": 0.6, "stream": False, "thinking": {"type": "disabled"}}
+
+
+def call_teacher(payload: dict) -> dict:
+    from openai import APIError, OpenAI
+    key = os.environ.get("DEEPSEEK_API_KEY")
+    if not key:
+        raise DataError("DEEPSEEK_API_KEY is not configured")
+    try:
+        import logging
+        logging.getLogger("openai").setLevel(logging.WARNING)
+        logging.getLogger("httpx").setLevel(logging.WARNING)
+        with OpenAI(api_key=key, base_url="https://api.deepseek.com", max_retries=0, timeout=180.0) as client:
+            response = client.chat.completions.create(
+                **{key: value for key, value in payload.items() if key != "thinking"},
+                extra_body={"thinking": payload["thinking"]},
+            )
+            return response.model_dump(mode="json")
+    except APIError as error:
+        # SDK messages may contain response bodies: never persist them or Authorization headers.
+        raise DataError(f"teacher request failed: {type(error).__name__} HTTP={getattr(error, 'status_code', None)}; no automatic retry") from None
+
+
+def generate_one(root: Path, manifest: dict, task: dict, payload: dict) -> dict:
+    sample_id = task["id"] + "-teacher-" + uuid.uuid4().hex[:12]
+    directory = root / "samples" / sample_id
+    directory.mkdir(parents=True, exist_ok=False)
+    write_new_json(directory / "request.json", payload)
+    response = call_teacher(payload)
+    write_new_json(directory / "response.json", response)
+    usage = response.get("usage")
+    attempt = {"id": sample_id, "requested_model": payload["model"], "actual_model": response.get("model"),
+               "system_fingerprint": response.get("system_fingerprint"), "usage": usage,
+               "raw_response_sha256": digest_file(directory / "response.json"), "created_at": utc_now()}
+    try:
+        source = decode_response(response)
+    except DataError as error:
+        rejected = {**attempt, "status": "REJECTED", "reason": str(error)}
+        write_new_json(directory / "attempt.json", rejected)
+        write_jsonl(root / "attempts.jsonl", [rejected], append=True)
+        return rejected
+    row = {**new_row(manifest, task, sample_id, source, payload["messages"], "teacher"),
+           **attempt, "request_sha256": digest_file(directory / "request.json"),
+           "sdk": "openai-python/" + importlib.metadata.version("openai"), "extraction": "strip-one-fence-and-final-newline"}
+    store_candidate(root, row)
+    accepted = {**attempt, "status": "CANDIDATE_NOT_YET_QUALIFIED"}
+    write_new_json(directory / "attempt.json", accepted)
+    write_jsonl(root / "attempts.jsonl", [accepted], append=True)
+    return accepted
+
+
+def generate(args) -> None:
+    if not 1 <= args.count <= 5 or not 1 <= args.max_tokens <= 16384:
+        raise DataError("pilot allows 1..5 calls per invocation and 1..16384 output tokens per call")
+    manifest, task = read_bundle(args.bundle)
+    payload = request_payload(args.model, prompt_messages(args.bundle, task), args.max_tokens)
+    for _ in range(args.count):
+        print(json.dumps(generate_one(args.bundle, manifest, task, payload), ensure_ascii=False), flush=True)
+
+
+def _check_rows(root: Path, rows: list, command: list[str]) -> tuple[list, dict]:
+    directory = root / "checks" / uuid.uuid4().hex
+    directory.mkdir(parents=True, exist_ok=False)
+    text = "".join(json.dumps({"id": row["id"], "sir": row["sir"], "stopAfter": "GENERATION"},
+                              ensure_ascii=False) + "\n" for row in rows)
+    (directory / "input.jsonl").write_text(text, encoding="utf-8", newline="\n")
+    result = subprocess.run(command, input=text.encode("utf-8"), capture_output=True, timeout=180, cwd=REPO)
+    (directory / "stdout.jsonl").write_bytes(result.stdout)
+    (directory / "stderr.txt").write_bytes(result.stderr)
+    write_new_json(directory / "execution.json", {"command": command, "returncode": result.returncode,
+                                                  "input_sha256": digest_file(directory / "input.jsonl")})
+    if result.returncode != 0:
+        raise DataError(f"checker transport/internal failure: exit={result.returncode}; evidence={directory}")
+    results = load_jsonl(directory / "stdout.jsonl")
+    if len(results) != len(rows):
+        raise DataError("checker did not return exactly one row for every input")
+    checked = [bind_static(row, output) for row, output in zip(rows, results, strict=True)]
+    return checked, {"directory": str(directory), "stdout_sha256": digest_file(directory / "stdout.jsonl")}
+
+
+def check(args) -> None:
+    manifest, task = read_bundle(args.bundle)
+    rows = load_jsonl(args.bundle / "candidates.jsonl")
+    validate_candidates(args.bundle, manifest, task, rows)
+    checked, execution = _check_rows(args.bundle, rows, checker_command(args.maven_repo))
+    output = args.output or args.bundle / "checked.jsonl"
+    write_jsonl(output, checked)
+    print(json_text({"output": str(output), "samples": len(checked),
+                     "static_passed": sum(row["gates"]["static"] == "PASSED" for row in checked),
+                     "business": "NOT_RUN", "execution": execution}), end="")
+
+
+def export(args) -> None:
+    manifest, task = read_bundle(args.bundle)
+    rows = load_jsonl(args.checked or args.bundle / "checked.jsonl")
+    validate_candidates(args.bundle, manifest, task, rows)
+    proofs = {}
+    for path in args.runtime_evidence:
+        evidence = load_json(path)
+        verify_artifacts(evidence, path)
+        if evidence["id"] in proofs:
+            raise DataError("multiple runtime evidence files for one sample; choose one explicitly")
+        proofs[evidence["id"]] = evidence
+    records, index, seen = [], [], set()
+    for row in rows:
+        record = training_record(row, proofs.get(row["id"]))
+        if record is None:
+            continue
+        identity = (row["task_sha256"], row["static_result"]["digest"])
+        if identity in seen:
+            continue
+        seen.add(identity)
+        records.append(record)
+        index.append({"id": row["id"], "source_sha256": row["source_sha256"],
+                      "task_sha256": row["task_sha256"], "oracle_sha256": row["oracle_sha256"],
+                      "runtime_run_id": proofs[row["id"]]["run_id"]})
+    write_jsonl(args.output, records)
+    write_new_json(args.output.with_suffix(".index.json"), {"count": len(records), "rows": index,
+                   "corpus_sha256": digest_file(args.output), "all_four_gates_required": True})
+    print(json_text({"checked_samples": len(rows), "runtime_evidence_files": len(proofs),
+                     "exported_unique_answers": len(records), "output": str(args.output)}), end="")
+
+
+def parser() -> argparse.ArgumentParser:
+    result = argparse.ArgumentParser(description=__doc__)
+    commands = result.add_subparsers(dest="command", required=True)
+    prepare_args = commands.add_parser("prepare", help="freeze one task and reference seed without model calls")
+    prepare_args.add_argument("--task", type=Path, default=HERE / "tasks/dual-token-v1.json")
+    prepare_args.add_argument("--bundle", type=Path, required=True)
+    prepare_args.set_defaults(run=prepare)
+    generate_args = commands.add_parser("generate", help="bounded DeepSeek teacher calls; no automatic retries")
+    generate_args.add_argument("--bundle", type=Path, required=True)
+    generate_args.add_argument("--model", choices=("deepseek-flash", "deepseek-v4-pro"), default="deepseek-flash")
+    generate_args.add_argument("--count", type=int, default=3)
+    generate_args.add_argument("--max-tokens", type=int, default=6144)
+    generate_args.set_defaults(run=generate)
+    check_args = commands.add_parser("check", help="one JVM, full static GENERATION; no build/start/database")
+    check_args.add_argument("--bundle", type=Path, required=True)
+    check_args.add_argument("--maven-repo", type=Path)
+    check_args.add_argument("--output", type=Path)
+    check_args.set_defaults(run=check)
+    export_args = commands.add_parser("export", help="only four-gate proven training answers; empty export is valid")
+    export_args.add_argument("--bundle", type=Path, required=True)
+    export_args.add_argument("--checked", type=Path)
+    export_args.add_argument("--runtime-evidence", type=Path, nargs="*", default=[])
+    export_args.add_argument("--output", type=Path, required=True)
+    export_args.set_defaults(run=export)
+    return result
+
+
+def main() -> int:
+    try:
+        args = parser().parse_args()
+        args.run(args)
+        return 0
+    except (DataError, OSError, ValueError, subprocess.SubprocessError) as error:
+        print(f"ERROR: {type(error).__name__}: {error}", file=sys.stderr)
+        return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

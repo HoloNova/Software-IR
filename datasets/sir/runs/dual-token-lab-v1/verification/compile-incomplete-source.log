@@ -1,0 +1,276 @@
+[INFO] Scanning for projects...
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Build Order:
+[INFO] 
+[INFO] KCG-Code                                                           [pom]
+[INFO] SIR Parser                                                         [jar]
+[INFO] SIR Semantic                                                       [jar]
+[INFO] SIR Lowering API                                                   [jar]
+[INFO] SIR Change                                                         [jar]
+[INFO] SIR Spring Boot Lowering                                           [jar]
+[INFO] SIR Generator Spring Boot                                          [jar]
+[INFO] SIR Project Graph                                                  [jar]
+[INFO] SIR Toolchain Application                                          [jar]
+[INFO] KCG CLI                                                            [jar]
+[INFO] 
+[INFO] --------------------------< io.kcg:kcg-code >---------------------------
+[INFO] Building KCG-Code 0.1.0-SNAPSHOT                                  [1/10]
+[INFO]   from pom.xml
+[INFO] --------------------------------[ pom ]---------------------------------
+[INFO] 
+[INFO] -------------------------< io.kcg:sir-parser >--------------------------
+[INFO] Building SIR Parser 0.1.0-SNAPSHOT                                [2/10]
+[INFO]   from sir-parser/pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- antlr4:4.13.2:antlr4 (generate-sir-parser) @ sir-parser ---
+[INFO] No grammars to process
+[INFO] ANTLR 4: Processing source directory /home/labadmin/sir-reference/20261025-pilot/repo/sir-parser/src/main/antlr4
+[INFO] 
+[INFO] --- resources:3.4.0:resources (default-resources) @ sir-parser ---
+[INFO] skip non existing resourceDirectory /home/labadmin/sir-reference/20261025-pilot/repo/sir-parser/src/main/resources
+[INFO] 
+[INFO] --- compiler:3.14.1:compile (default-compile) @ sir-parser ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 126 source files with javac [debug release 21] to target/classes
+[INFO] 
+[INFO] --- resources:3.4.0:testResources (default-testResources) @ sir-parser ---
+[INFO] Copying 10 resources from src/test/resources to target/test-classes
+[INFO] 
+[INFO] --- compiler:3.14.1:testCompile (default-testCompile) @ sir-parser ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 22 source files with javac [debug release 21] to target/test-classes
+[INFO] 
+[INFO] --- surefire:3.5.6:test (default-test) @ sir-parser ---
+[INFO] Tests are skipped.
+[INFO] 
+[INFO] --- jar:3.5.0:jar (default-jar) @ sir-parser ---
+[INFO] Building jar: /home/labadmin/sir-reference/20261025-pilot/repo/sir-parser/target/sir-parser-0.1.0-SNAPSHOT.jar
+[INFO] 
+[INFO] ------------------------< io.kcg:sir-semantic >-------------------------
+[INFO] Building SIR Semantic 0.1.0-SNAPSHOT                              [3/10]
+[INFO]   from sir-semantic/pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.4.0:resources (default-resources) @ sir-semantic ---
+[INFO] Copying 4 resources from src/main/resources to target/classes
+[INFO] 
+[INFO] --- compiler:3.14.1:compile (default-compile) @ sir-semantic ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 95 source files with javac [debug release 21] to target/classes
+[INFO] 
+[INFO] --- resources:3.4.0:testResources (default-testResources) @ sir-semantic ---
+[INFO] Copying 35 resources from src/test/resources to target/test-classes
+[INFO] 
+[INFO] --- compiler:3.14.1:testCompile (default-testCompile) @ sir-semantic ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 53 source files with javac [debug release 21] to target/test-classes
+[INFO] 
+[INFO] --- surefire:3.5.6:test (default-test) @ sir-semantic ---
+[INFO] Tests are skipped.
+[INFO] 
+[INFO] --- jar:3.5.0:jar (default-jar) @ sir-semantic ---
+[INFO] Building jar: /home/labadmin/sir-reference/20261025-pilot/repo/sir-semantic/target/sir-semantic-0.1.0-SNAPSHOT.jar
+[INFO] 
+[INFO] ----------------------< io.kcg:sir-lowering-api >-----------------------
+[INFO] Building SIR Lowering API 0.1.0-SNAPSHOT                          [4/10]
+[INFO]   from sir-lowering-api/pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.4.0:resources (default-resources) @ sir-lowering-api ---
+[INFO] skip non existing resourceDirectory /home/labadmin/sir-reference/20261025-pilot/repo/sir-lowering-api/src/main/resources
+[INFO] 
+[INFO] --- compiler:3.14.1:compile (default-compile) @ sir-lowering-api ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 10 source files with javac [debug release 21] to target/classes
+[INFO] 
+[INFO] --- resources:3.4.0:testResources (default-testResources) @ sir-lowering-api ---
+[INFO] skip non existing resourceDirectory /home/labadmin/sir-reference/20261025-pilot/repo/sir-lowering-api/src/test/resources
+[INFO] 
+[INFO] --- compiler:3.14.1:testCompile (default-testCompile) @ sir-lowering-api ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 1 source file with javac [debug release 21] to target/test-classes
+[INFO] 
+[INFO] --- surefire:3.5.6:test (default-test) @ sir-lowering-api ---
+[INFO] Tests are skipped.
+[INFO] 
+[INFO] --- jar:3.5.0:jar (default-jar) @ sir-lowering-api ---
+[INFO] Building jar: /home/labadmin/sir-reference/20261025-pilot/repo/sir-lowering-api/target/sir-lowering-api-0.1.0-SNAPSHOT.jar
+[INFO] 
+[INFO] -------------------------< io.kcg:sir-change >--------------------------
+[INFO] Building SIR Change 0.1.0-SNAPSHOT                                [5/10]
+[INFO]   from sir-change/pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.4.0:resources (default-resources) @ sir-change ---
+[INFO] skip non existing resourceDirectory /home/labadmin/sir-reference/20261025-pilot/repo/sir-change/src/main/resources
+[INFO] 
+[INFO] --- compiler:3.14.1:compile (default-compile) @ sir-change ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 8 source files with javac [debug release 21] to target/classes
+[INFO] 
+[INFO] --- resources:3.4.0:testResources (default-testResources) @ sir-change ---
+[INFO] Copying 9 resources from src/test/resources to target/test-classes
+[INFO] 
+[INFO] --- compiler:3.14.1:testCompile (default-testCompile) @ sir-change ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 14 source files with javac [debug release 21] to target/test-classes
+[INFO] 
+[INFO] --- surefire:3.5.6:test (default-test) @ sir-change ---
+[INFO] Tests are skipped.
+[INFO] 
+[INFO] --- jar:3.5.0:jar (default-jar) @ sir-change ---
+[INFO] Building jar: /home/labadmin/sir-reference/20261025-pilot/repo/sir-change/target/sir-change-0.1.0-SNAPSHOT.jar
+[INFO] 
+[INFO] ------------------< io.kcg:sir-lowering-spring-boot >-------------------
+[INFO] Building SIR Spring Boot Lowering 0.1.0-SNAPSHOT                  [6/10]
+[INFO]   from sir-lowering-spring-boot/pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.4.0:resources (default-resources) @ sir-lowering-spring-boot ---
+[INFO] skip non existing resourceDirectory /home/labadmin/sir-reference/20261025-pilot/repo/sir-lowering-spring-boot/src/main/resources
+[INFO] 
+[INFO] --- compiler:3.14.1:compile (default-compile) @ sir-lowering-spring-boot ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 39 source files with javac [debug release 21] to target/classes
+[INFO] 
+[INFO] --- resources:3.4.0:testResources (default-testResources) @ sir-lowering-spring-boot ---
+[INFO] Copying 29 resources from src/test/resources to target/test-classes
+[INFO] 
+[INFO] --- compiler:3.14.1:testCompile (default-testCompile) @ sir-lowering-spring-boot ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 33 source files with javac [debug release 21] to target/test-classes
+[INFO] 
+[INFO] --- surefire:3.5.6:test (default-test) @ sir-lowering-spring-boot ---
+[INFO] Tests are skipped.
+[INFO] 
+[INFO] --- jar:3.5.0:jar (default-jar) @ sir-lowering-spring-boot ---
+[INFO] Building jar: /home/labadmin/sir-reference/20261025-pilot/repo/sir-lowering-spring-boot/target/sir-lowering-spring-boot-0.1.0-SNAPSHOT.jar
+[INFO] 
+[INFO] ------------------< io.kcg:sir-generator-spring-boot >------------------
+[INFO] Building SIR Generator Spring Boot 0.1.0-SNAPSHOT                 [7/10]
+[INFO]   from sir-generator-spring-boot/pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.4.0:resources (default-resources) @ sir-generator-spring-boot ---
+[INFO] skip non existing resourceDirectory /home/labadmin/sir-reference/20261025-pilot/repo/sir-generator-spring-boot/src/main/resources
+[INFO] 
+[INFO] --- compiler:3.14.1:compile (default-compile) @ sir-generator-spring-boot ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 44 source files with javac [debug release 21] to target/classes
+[INFO] 
+[INFO] --- resources:3.4.0:testResources (default-testResources) @ sir-generator-spring-boot ---
+[INFO] Copying 34 resources from src/test/resources to target/test-classes
+[INFO] 
+[INFO] --- compiler:3.14.1:testCompile (default-testCompile) @ sir-generator-spring-boot ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 70 source files with javac [debug release 21] to target/test-classes
+[INFO] /home/labadmin/sir-reference/20261025-pilot/repo/sir-generator-spring-boot/src/test/java/io/kcg/sir/generator/springboot/DecimalSessionProbe.java: /home/labadmin/sir-reference/20261025-pilot/repo/sir-generator-spring-boot/src/test/java/io/kcg/sir/generator/springboot/DecimalSessionProbe.java uses or overrides a deprecated API.
+[INFO] /home/labadmin/sir-reference/20261025-pilot/repo/sir-generator-spring-boot/src/test/java/io/kcg/sir/generator/springboot/DecimalSessionProbe.java: Recompile with -Xlint:deprecation for details.
+[INFO] /home/labadmin/sir-reference/20261025-pilot/repo/sir-generator-spring-boot/src/test/java/io/kcg/sir/generator/springboot/G9TopicRuntimeTest.java: Some input files use unchecked or unsafe operations.
+[INFO] /home/labadmin/sir-reference/20261025-pilot/repo/sir-generator-spring-boot/src/test/java/io/kcg/sir/generator/springboot/G9TopicRuntimeTest.java: Recompile with -Xlint:unchecked for details.
+[INFO] 
+[INFO] --- surefire:3.5.6:test (default-test) @ sir-generator-spring-boot ---
+[INFO] Tests are skipped.
+[INFO] 
+[INFO] --- jar:3.5.0:jar (default-jar) @ sir-generator-spring-boot ---
+[INFO] Building jar: /home/labadmin/sir-reference/20261025-pilot/repo/sir-generator-spring-boot/target/sir-generator-spring-boot-0.1.0-SNAPSHOT.jar
+[INFO] 
+[INFO] ----------------------< io.kcg:sir-project-graph >----------------------
+[INFO] Building SIR Project Graph 0.1.0-SNAPSHOT                         [8/10]
+[INFO]   from sir-project-graph/pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.4.0:resources (default-resources) @ sir-project-graph ---
+[INFO] skip non existing resourceDirectory /home/labadmin/sir-reference/20261025-pilot/repo/sir-project-graph/src/main/resources
+[INFO] 
+[INFO] --- compiler:3.14.1:compile (default-compile) @ sir-project-graph ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 29 source files with javac [debug release 21] to target/classes
+[INFO] 
+[INFO] --- resources:3.4.0:testResources (default-testResources) @ sir-project-graph ---
+[INFO] skip non existing resourceDirectory /home/labadmin/sir-reference/20261025-pilot/repo/sir-project-graph/src/test/resources
+[INFO] 
+[INFO] --- compiler:3.14.1:testCompile (default-testCompile) @ sir-project-graph ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 9 source files with javac [debug release 21] to target/test-classes
+[INFO] 
+[INFO] --- surefire:3.5.6:test (default-test) @ sir-project-graph ---
+[INFO] Tests are skipped.
+[INFO] 
+[INFO] --- jar:3.5.0:jar (default-jar) @ sir-project-graph ---
+[INFO] Building jar: /home/labadmin/sir-reference/20261025-pilot/repo/sir-project-graph/target/sir-project-graph-0.1.0-SNAPSHOT.jar
+[INFO] 
+[INFO] ------------------< io.kcg:sir-toolchain-application >------------------
+[INFO] Building SIR Toolchain Application 0.1.0-SNAPSHOT                 [9/10]
+[INFO]   from sir-toolchain-application/pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.4.0:resources (default-resources) @ sir-toolchain-application ---
+[INFO] skip non existing resourceDirectory /home/labadmin/sir-reference/20261025-pilot/repo/sir-toolchain-application/src/main/resources
+[INFO] 
+[INFO] --- compiler:3.14.1:compile (default-compile) @ sir-toolchain-application ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 74 source files with javac [debug release 21] to target/classes
+[INFO] 
+[INFO] --- resources:3.4.0:testResources (default-testResources) @ sir-toolchain-application ---
+[INFO] Copying 100 resources from src/test/resources to target/test-classes
+[INFO] 
+[INFO] --- compiler:3.14.1:testCompile (default-testCompile) @ sir-toolchain-application ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 164 source files with javac [debug release 21] to target/test-classes
+[INFO] -------------------------------------------------------------
+[ERROR] COMPILATION ERROR : 
+[INFO] -------------------------------------------------------------
+[ERROR] /home/labadmin/sir-reference/20261025-pilot/repo/sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/DualTokenBusinessConformanceIT.java:[94,98] package DualTokenCandidateSupport does not exist
+[ERROR] /home/labadmin/sir-reference/20261025-pilot/repo/sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/DualTokenBusinessConformanceIT.java:[69,25] cannot find symbol
+  symbol:   variable DualTokenCandidateSupport
+  location: class io.kcg.sir.application.conformance.DualTokenBusinessConformanceIT
+[ERROR] /home/labadmin/sir-reference/20261025-pilot/repo/sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/DualTokenBusinessConformanceIT.java:[81,40] cannot find symbol
+  symbol:   variable DualTokenCandidateSupport
+  location: class io.kcg.sir.application.conformance.DualTokenBusinessConformanceIT
+[ERROR] /home/labadmin/sir-reference/20261025-pilot/repo/sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/DualTokenBusinessConformanceIT.java:[107,13] cannot find symbol
+  symbol:   variable DualTokenCandidateSupport
+  location: class io.kcg.sir.application.conformance.DualTokenBusinessConformanceIT
+[INFO] 4 errors 
+[INFO] -------------------------------------------------------------
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Summary for KCG-Code 0.1.0-SNAPSHOT:
+[INFO] 
+[INFO] KCG-Code ........................................... SUCCESS [  0.001 s]
+[INFO] SIR Parser ......................................... SUCCESS [ 14.715 s]
+[INFO] SIR Semantic ....................................... SUCCESS [  7.181 s]
+[INFO] SIR Lowering API ................................... SUCCESS [  0.297 s]
+[INFO] SIR Change ......................................... SUCCESS [  1.498 s]
+[INFO] SIR Spring Boot Lowering ........................... SUCCESS [  3.592 s]
+[INFO] SIR Generator Spring Boot .......................... SUCCESS [  4.504 s]
+[INFO] SIR Project Graph .................................. SUCCESS [  1.701 s]
+[INFO] SIR Toolchain Application .......................... FAILURE [  4.791 s]
+[INFO] KCG CLI ............................................ SKIPPED
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  38.890 s
+[INFO] Finished at: 2026-10-25T15:52:19+08:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.14.1:testCompile (default-testCompile) on project sir-toolchain-application: Compilation failure: Compilation failure: 
+[ERROR] /home/labadmin/sir-reference/20261025-pilot/repo/sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/DualTokenBusinessConformanceIT.java:[94,98] package DualTokenCandidateSupport does not exist
+[ERROR] /home/labadmin/sir-reference/20261025-pilot/repo/sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/DualTokenBusinessConformanceIT.java:[69,25] cannot find symbol
+[ERROR]   symbol:   variable DualTokenCandidateSupport
+[ERROR]   location: class io.kcg.sir.application.conformance.DualTokenBusinessConformanceIT
+[ERROR] /home/labadmin/sir-reference/20261025-pilot/repo/sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/DualTokenBusinessConformanceIT.java:[81,40] cannot find symbol
+[ERROR]   symbol:   variable DualTokenCandidateSupport
+[ERROR]   location: class io.kcg.sir.application.conformance.DualTokenBusinessConformanceIT
+[ERROR] /home/labadmin/sir-reference/20261025-pilot/repo/sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/DualTokenBusinessConformanceIT.java:[107,13] cannot find symbol
+[ERROR]   symbol:   variable DualTokenCandidateSupport
+[ERROR]   location: class io.kcg.sir.application.conformance.DualTokenBusinessConformanceIT
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException
+[ERROR] 
+[ERROR] After correcting the problems, you can resume the build with the command
+[ERROR]   mvn <args> -rf :sir-toolchain-application

@@ -1,0 +1,48 @@
+{
+  "classes": 4,
+  "totals": {
+    "tests": 23,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "reports": [
+    {
+      "path": "sir-toolchain-application\\target\\surefire-reports\\TEST-io.kcg.sir.application.conformance.BusinessSliceCompilationTest.xml",
+      "name": "io.kcg.sir.application.conformance.BusinessSliceCompilationTest",
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "4e782ca7b331d523281fbef56571a4a7b1e460ad8bfc554171ac05139187ff00"
+    },
+    {
+      "path": "sir-toolchain-application\\target\\surefire-reports\\TEST-io.kcg.sir.application.conformance.BusinessSliceHarnessEvidenceTest.xml",
+      "name": "io.kcg.sir.application.conformance.BusinessSliceHarnessEvidenceTest",
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "8513ea7ca17f6850a50d4c9b4aad2aed634abd457b446691d77c8d377932192a"
+    },
+    {
+      "path": "sir-toolchain-application\\target\\surefire-reports\\TEST-io.kcg.sir.application.conformance.DualTokenCandidateSupportTest.xml",
+      "name": "io.kcg.sir.application.conformance.DualTokenCandidateSupportTest",
+      "tests": 8,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "7a32b6c6a3e6915a568799bad2b65fbba7ea80371c154009394619ea146b30f0"
+    },
+    {
+      "path": "kcg-cli\\target\\surefire-reports\\TEST-io.kcg.cli.KcgCheckTest.xml",
+      "name": "io.kcg.cli.KcgCheckTest",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "1a8733a3909eae65bf979e0dccab77b7cd24445a10cf9e5478c24c460fb4cfef"
+    }
+  ],
+  "real_mysql_http": "NOT_RUN"
+}

@@ -1,0 +1,80 @@
+=== Dual token (use DualTokenLogin, written out) business conformance ===
+verdict=PASSED
+runId=dual-token-slice-1a1720f89b4-17144
+schemaName=kcg_conf_slm_ad60836b
+advisoryLock=held during the run
+schemaSource=TEST_FIXTURE_DDL
+productInitializeImplemented=false
+productUpdateImplemented=false
+sirResource=EXTERNAL_CANDIDATE:candidate.sir sha256=c0728c4ad9d32dc0a97f71d34ac9837dc64c25ec467710ef0e17e35fe1c83c80
+fixtureDdl=/conformance/mysql/dual-token-ddl.sql sha256=a53eacd46b924564d1b8e3795465751509c153399c30b8e482eff2cbc1a90919
+fixtureSeed=/conformance/mysql/dual-token-seed.sql sha256=a72d9ea66f89a9826f61b1708ecaa347b9413897d844b93af199c05cfe28158a
+generatedFiles=45 combinedSha256=c4661fb1bac99abddc153a53c5660fd27cf97f4e33a4e29c92e198c7bafb8b1c
+generatedProjectBuild=PASSED (exit 0)
+httpReadiness=READY (200 from /api/get-user?id=1)
+mysqlRowsBefore=1 mysqlRowsAfter=2
+mavenOffline=true
+javaVersion=21.0.12.1
+osName=Linux osArch=amd64
+serverPort=18184
+slmMysqlVersion=8.4.11-0ubuntu0.26.04.1
+slmSampleId=auth-dual-token-v1-reference
+slmSourceSha256=c0728c4ad9d32dc0a97f71d34ac9837dc64c25ec467710ef0e17e35fe1c83c80
+slmGeneratedDigest=fc3c187530909078574059b8c973b17a5bfca547c70ca9af13067e9c604dc333
+
+checksPassed=35 checksFailed=0
+PASS the SIR slice compiles without errors (warnings remain visible) (diagnostics=[])
+PASS the compiler emitted a generated project (generatedFileCount=45)
+PASS candidate runtime compilation matches full static generation (sourceSha256=c0728c4ad9d32dc0a97f71d34ac9837dc64c25ec467710ef0e17e35fe1c83c80 generatedDigest=fc3c187530909078574059b8c973b17a5bfca547c70ca9af13067e9c604dc333)
+PASS the generated project builds (mvn clean verify) (exitCode=0)
+PASS the build produced an executable jar (projectRoot=/home/labadmin/sir-reference/20261025-pilot/work/dual-token-slice-1a1720f89b4-17144/generated-project)
+PASS the generated application serves the compiled business route (readinessUrl=http://127.0.0.1:18184/api/get-user?id=1)
+PASS the fixture seed is present in the owned schema (seededRowCount=1)
+PASS registering zoe stores an account (status=201)
+PASS the right password logs in (status=201)
+PASS the login answers an access token and a different refresh token (access=e62f6b67-9395-4798-beec-b11526a672bf refresh=f16e0e2d-8847-41f8-a310-e14c06557766)
+PASS the access token lives about fifteen minutes and the refresh token about seven days (body={"accessToken":"e62f6b67-9395-4798-beec-b11526a672bf","accessExpiresAt":"2026-10-25T08:11:56.868312062Z","refreshToken":"f16e0e2d-8847-41f8-a310-e14c06557766","refreshExpiresAt":"2026-11-01T07:56:56.868417266Z"})
+PASS each token is stored for the account that logged in (access_token=***REDACTED*** 08:11:56.868312] refresh_token=***REDACTED*** 07:56:56.868417])
+PASS a wrong password is the declared 401 (expected=401 actual=401)
+PASS an unknown account is the declared 401 (expected=401 actual=401)
+PASS a wrong password and an unknown account are answered identically (wrong={"code":"BadLogin","message":"BadLogin","fields":[]} unknown={"code":"BadLogin","message":"BadLogin","fields":[]})
+PASS a request without a credential is refused with 401 (expected=401 actual=401)
+PASS the access token authenticates (status=201)
+PASS the note was written as the token's owner (notes=[1|2|with access token])
+PASS a refresh token does not authenticate a request (expected=401 actual=401)
+PASS the refusals wrote no note (notes=[1|2|with access token])
+PASS an expired access token is refused with 401 (expected=401 actual=401)
+PASS a refresh token is exchanged for a new pair (status=201)
+PASS the new pair differs from the old one (body={"accessToken":"6655b61a-99c9-47e0-9063-3af600ce5449","accessExpiresAt":"2026-10-25T08:11:57.846200842Z","refreshToken":"bfc72dbd-4c6f-4496-8df4-6e19c59de60f","refreshExpiresAt":"2026-11-01T07:56:57.846210761Z"})
+PASS the old refresh token is spent and the new one is not (refresh_token=***REDACTED*** 07:56:57.846211, f16e0e2d-8847-41f8-a310-e14c06557766|2|1|2026-11-01 07:56:56.868417])
+PASS the new access token authenticates (status=201)
+PASS a spent refresh token is refused with the declared 401 (expected=401 actual=401)
+PASS the replay wrote no token (access_token=***REDACTED*** refresh_token=***REDACTED***
+PASS exactly one of 6 simultaneous refreshes succeeds (statuses=[201, 401, 401, 401, 401, 401])
+PASS every other simultaneous refresh is refused with 401 (statuses=[201, 401, 401, 401, 401, 401])
+PASS the race created exactly one new pair of tokens (access_token=***REDACTED*** refresh_token=***REDACTED***
+PASS logging out answers 200 (expected=200 actual=200)
+PASS a refresh token that was logged out is refused with 401 (expected=401 actual=401)
+PASS the generated application process exited (stopped=true)
+PASS the owned schema was dropped and its absence proved (schema=kcg_conf_slm_ad60836b)
+PASS the advisory lock for the owned schema was released (released=true)
+
+D0 POST register (zoe): status=201 body={"id":2,"name":"zoe"}
+D1 POST login: status=201 body={"accessToken":"e62f6b67-9395-4798-beec-b11526a672bf","accessExpiresAt":"2026-10-25T08:11:56.868312062Z","refreshToken":"f16e0e2d-8847-41f8-a310-e14c06557766","refreshExpiresAt":"2026-11-01T07:56:56.868417266Z"}
+D1 POST login (wrong password): status=401 body={"code":"BadLogin","message":"BadLogin","fields":[]}
+D1 POST login (unknown account): status=401 body={"code":"BadLogin","message":"BadLogin","fields":[]}
+D2 POST post-note (no credential): status=401 body=
+D2 POST post-note (access token): status=201 body={"id":1,"text":"with access token"}
+D2 POST post-note (refresh token as credential): status=401 body=
+D3 POST post-note (expired access token): status=401 body=
+D4 POST refresh: status=201 body={"accessToken":"6655b61a-99c9-47e0-9063-3af600ce5449","accessExpiresAt":"2026-10-25T08:11:57.846200842Z","refreshToken":"bfc72dbd-4c6f-4496-8df4-6e19c59de60f","refreshExpiresAt":"2026-11-01T07:56:57.846210761Z"}
+D4 POST post-note (new access token): status=201 body={"id":2,"text":"with new access token"}
+D5 POST refresh (replay): status=401 body={"code":"InvalidRefreshToken","message":"InvalidRefreshToken","fields":[]}
+D6 POST refresh (racer 0): status=401 body={"code":"InvalidRefreshToken","message":"InvalidRefreshToken","fields":[]}
+D6 POST refresh (racer 1): status=201 body={"accessToken":"e8b87428-02c6-49e0-ac4f-e2a448b2da59","accessExpiresAt":"2026-10-25T08:11:58.040842113Z","refreshToken":"7d61490b-2e91-4e55-b0d4-2528b78fb4c3","refreshExpiresAt":"2026-11-01T07:56:58.040846041Z"}
+D6 POST refresh (racer 2): status=401 body={"code":"InvalidRefreshToken","message":"InvalidRefreshToken","fields":[]}
+D6 POST refresh (racer 3): status=401 body={"code":"InvalidRefreshToken","message":"InvalidRefreshToken","fields":[]}
+D6 POST refresh (racer 4): status=401 body={"code":"InvalidRefreshToken","message":"InvalidRefreshToken","fields":[]}
+D6 POST refresh (racer 5): status=401 body={"code":"InvalidRefreshToken","message":"InvalidRefreshToken","fields":[]}
+D7 POST logout: status=200 body={"id":"7d61490b-2e91-4e55-b0d4-2528b78fb4c3","used":true}
+D7 POST refresh (after logout): status=401 body={"code":"InvalidRefreshToken","message":"InvalidRefreshToken","fields":[]}

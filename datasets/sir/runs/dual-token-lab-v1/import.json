@@ -1,0 +1,9 @@
+{
+  "candidates_sha256": "192ede2bf53618bdfa7da2f1826c8396d1836dda3490df9ab29b11d0db074f24",
+  "gates_transferred": false,
+  "manifest_sha256": "3fb4ba01ec48976e6bdc2e3d116a6c46dc539679b97fd96053ff7d5ec31cb55b",
+  "new_api_calls": 0,
+  "oracle_sha256": "1aad68b852c0cd079da44d7cd0fa9d3078cb537c4e41b7a49dc758f3f0d219ab",
+  "teacher_responses": 5,
+  "toolchain_core_sha256": "907fdf89982636138a5aa35e33f3fbfe0d22516610f1175573bf01ec58f8c2a4"
+}

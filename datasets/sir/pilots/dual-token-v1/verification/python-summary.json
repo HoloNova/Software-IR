@@ -1,0 +1,22 @@
+{
+  "test_cases": 31,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "aggregation": "latest result per fully qualified Python test; no double-counting reruns",
+  "modules": {
+    "test_corpus": 17,
+    "test_dataset_io": 7,
+    "test_pipeline": 7
+  },
+  "evidence": [
+    {
+      "path": "python-final-import.txt",
+      "sha256": "7fe9cfb758745efe01f1a7116121e7b4de3889228ffab3b1b0857666e51ff107"
+    },
+    {
+      "path": "python-import-pipeline-green.txt",
+      "sha256": "bc5d2dced531ccc608e522a1020c43a54f3dded5d9ea3073213acb1621560706"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "command": [
+    "java",
+    "-XX:-UsePerfData",
+    "-XX:ActiveProcessorCount=2",
+    "-Xmx256m",
+    "-XX:MaxMetaspaceSize=128m",
+    "-cp",
+    "/home/labadmin/sir-reference/20261025-pilot/repo/kcg-cli/target/classes:/home/labadmin/sir-reference/20261025-pilot/repo/sir-toolchain-application/target/classes:/home/labadmin/sir-reference/20261025-pilot/repo/sir-change/target/classes:/home/labadmin/sir-reference/20261025-pilot/repo/sir-project-graph/target/classes:/home/labadmin/sir-reference/20261025-pilot/repo/sir-generator-spring-boot/target/classes:/home/labadmin/sir-reference/20261025-pilot/repo/sir-lowering-spring-boot/target/classes:/home/labadmin/sir-reference/20261025-pilot/repo/sir-lowering-api/target/classes:/home/labadmin/sir-reference/20261025-pilot/repo/sir-semantic/target/classes:/home/labadmin/sir-reference/20261025-pilot/repo/sir-parser/target/classes:/home/labadmin/sir-reference/20261025-pilot/m2/org/antlr/antlr4-runtime/4.13.2/antlr4-runtime-4.13.2.jar",
+    "io.kcg.cli.KcgCli",
+    "check"
+  ],
+  "input_sha256": "c5da9b553df6debec3c431244ef4437ab4b866d433d46f24061b23d1927223b7",
+  "returncode": 0
+}

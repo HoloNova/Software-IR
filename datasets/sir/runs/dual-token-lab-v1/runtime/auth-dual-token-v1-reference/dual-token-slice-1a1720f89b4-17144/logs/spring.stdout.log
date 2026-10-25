@@ -1,0 +1,30 @@
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.5.3)
+
+2026-10-25T07:56:42.936Z  INFO 669542 --- [dual-token-desk] [           main] example.dualtoken.Application            : Starting Application v0.1.0-SNAPSHOT using Java 21.0.12.1 with PID 669542 (/home/labadmin/sir-reference/20261025-pilot/work/dual-token-slice-1a1720f89b4-17144/generated-project/target/dual-token-desk-0.1.0-SNAPSHOT.jar started by labadmin in /home/labadmin/sir-reference/20261025-pilot/repo/sir-toolchain-application)
+2026-10-25T07:56:42.944Z  INFO 669542 --- [dual-token-desk] [           main] example.dualtoken.Application            : No active profile set, falling back to 1 default profile: "default"
+2026-10-25T07:56:49.295Z  INFO 669542 --- [dual-token-desk] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 18184 (http)
+2026-10-25T07:56:49.334Z  INFO 669542 --- [dual-token-desk] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-10-25T07:56:49.335Z  INFO 669542 --- [dual-token-desk] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.42]
+2026-10-25T07:56:49.359Z  INFO 669542 --- [dual-token-desk] [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-10-25T07:56:49.367Z  INFO 669542 --- [dual-token-desk] [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 5929 ms
+ _ _   |_  _ _|_. ___ _ |    _ 
+| | |\/|_)(_| | |_\  |_)||_|_\ 
+     /               |         
+                        3.5.12 
+2026-10-25T07:56:51.944Z  INFO 669542 --- [dual-token-desk] [           main] m.e.s.MybatisPlusApplicationContextAware : Register ApplicationContext instances org.springframework.boot.web.servlet.context.AnnotationConfigServletWebServerApplicationContext@2ea6e30c
+2026-10-25T07:56:52.074Z  INFO 669542 --- [dual-token-desk] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 18184 (http) with context path '/'
+2026-10-25T07:56:52.082Z  INFO 669542 --- [dual-token-desk] [           main] example.dualtoken.Application            : Started Application in 10.596 seconds (process running for 12.909)
+2026-10-25T07:56:52.343Z  INFO 669542 --- [dual-token-desk] [.1-18184-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-10-25T07:56:52.343Z  INFO 669542 --- [dual-token-desk] [.1-18184-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-10-25T07:56:52.345Z  INFO 669542 --- [dual-token-desk] [.1-18184-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 0 ms
+2026-10-25T07:56:52.385Z  INFO 669542 --- [dual-token-desk] [.1-18184-exec-1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-10-25T07:56:53.032Z  INFO 669542 --- [dual-token-desk] [.1-18184-exec-1] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@30b3a043
+2026-10-25T07:56:53.034Z  INFO 669542 --- [dual-token-desk] [.1-18184-exec-1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.

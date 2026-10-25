@@ -1,0 +1,64 @@
+[INFO] Scanning for projects...
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Build Order:
+[INFO] 
+[INFO] KCG-Code                                                           [pom]
+[INFO] SIR Parser                                                         [jar]
+[INFO] SIR Semantic                                                       [jar]
+[INFO] SIR Lowering API                                                   [jar]
+[INFO] SIR Change                                                         [jar]
+[INFO] SIR Spring Boot Lowering                                           [jar]
+[INFO] SIR Generator Spring Boot                                          [jar]
+[INFO] SIR Project Graph                                                  [jar]
+[INFO] SIR Toolchain Application                                          [jar]
+[INFO] KCG CLI                                                            [jar]
+[INFO] 
+[INFO] --------------------------< io.kcg:kcg-code >---------------------------
+[INFO] Building KCG-Code 0.1.0-SNAPSHOT                                  [1/10]
+[INFO]   from pom.xml
+[INFO] --------------------------------[ pom ]---------------------------------
+[INFO] 
+[INFO] -------------------------< io.kcg:sir-parser >--------------------------
+[INFO] Building SIR Parser 0.1.0-SNAPSHOT                                [2/10]
+[INFO]   from sir-parser/pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- antlr4:4.13.2:antlr4 (generate-sir-parser) @ sir-parser ---
+[INFO] ANTLR 4: Processing source directory /home/labadmin/sir-reference/20261025-pilot/repo/sir-parser/src/main/antlr4
+[INFO] Processing grammar: io/kcg/sir/internal/Sir.g4
+[INFO] 
+[INFO] --- resources:3.4.0:resources (default-resources) @ sir-parser ---
+[INFO] skip non existing resourceDirectory /home/labadmin/sir-reference/20261025-pilot/repo/sir-parser/src/main/resources
+[INFO] 
+[INFO] --- compiler:3.14.1:compile (default-compile) @ sir-parser ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 126 source files with javac [debug release 21] to target/classes
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Summary for KCG-Code 0.1.0-SNAPSHOT:
+[INFO] 
+[INFO] KCG-Code ........................................... SUCCESS [  0.002 s]
+[INFO] SIR Parser ......................................... FAILURE [  2.929 s]
+[INFO] SIR Semantic ....................................... SKIPPED
+[INFO] SIR Lowering API ................................... SKIPPED
+[INFO] SIR Change ......................................... SKIPPED
+[INFO] SIR Spring Boot Lowering ........................... SKIPPED
+[INFO] SIR Generator Spring Boot .......................... SKIPPED
+[INFO] SIR Project Graph .................................. SKIPPED
+[INFO] SIR Toolchain Application .......................... SKIPPED
+[INFO] KCG CLI ............................................ SKIPPED
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  3.416 s
+[INFO] Finished at: 2026-10-25T15:47:08+08:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.14.1:compile (default-compile) on project sir-parser: Fatal error compiling: error: release version 21 not supported -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoExecutionException
+[ERROR] 
+[ERROR] After correcting the problems, you can resume the build with the command
+[ERROR]   mvn <args> -rf :sir-parser

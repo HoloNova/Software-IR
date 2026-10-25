@@ -1,0 +1,18 @@
+FINAL_REFERENCE_CLEANUP
+OWNED_HTTP_PORT
+State Recv-Q Send-Q Local Address:Port Peer Address:Port
+LEFTOVER_REFERENCE_DATABASES_AND_USERS
+0
+0
+PRIVATE_DIRECTORY_FILE_COUNT
+0
+RUN_ENVIRONMENT
+openjdk version "21.0.12.1" 2026-08-18
+OpenJDK Runtime Environment (build 21.0.12.1+1-1-26.04.4-Ubuntu)
+OpenJDK 64-Bit Server VM (build 21.0.12.1+1-1-26.04.4-Ubuntu, mixed mode, sharing)
+javac 21.0.12.1
+Apache Maven 3.9.14 (996c630dbc656c76214ce58821dcc58be960875b)
+Maven home: /home/labadmin/sir-reference/20261025-pilot/maven
+Java version: 21.0.12.1, vendor: Ubuntu, runtime: /usr/lib/jvm/java-21-openjdk-amd64
+Default locale: en_US, platform encoding: UTF-8
+OS name: "linux", version: "7.0.0-38-generic", arch: "amd64", family: "unix"

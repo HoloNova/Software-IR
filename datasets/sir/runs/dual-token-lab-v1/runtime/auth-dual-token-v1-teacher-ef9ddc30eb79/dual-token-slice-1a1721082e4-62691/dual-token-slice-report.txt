@@ -1,0 +1,76 @@
+=== Dual token (use DualTokenLogin, written out) business conformance ===
+verdict=FAILED
+runId=dual-token-slice-1a1721082e4-62691
+schemaName=kcg_conf_slm_ad60836b
+advisoryLock=held during the run
+schemaSource=TEST_FIXTURE_DDL
+productInitializeImplemented=false
+productUpdateImplemented=false
+sirResource=EXTERNAL_CANDIDATE:candidate.sir sha256=a5cd4c7155a309916fd111531cbd46f7fea5981b0395e0ad37955b71e606122a
+fixtureDdl=/conformance/mysql/dual-token-ddl.sql sha256=a53eacd46b924564d1b8e3795465751509c153399c30b8e482eff2cbc1a90919
+fixtureSeed=/conformance/mysql/dual-token-seed.sql sha256=a72d9ea66f89a9826f61b1708ecaa347b9413897d844b93af199c05cfe28158a
+generatedFiles=45 combinedSha256=3d2ef72c75e9d3c5d05d6e5b02793c24d2e4a17b5f58a799e6dfd7c87a4724df
+generatedProjectBuild=PASSED (exit 0)
+httpReadiness=READY (200 from /api/get-user?id=1)
+mysqlRowsBefore=1 mysqlRowsAfter=2
+mavenOffline=true
+javaVersion=21.0.12.1
+osName=Linux osArch=amd64
+serverPort=18184
+slmMysqlVersion=8.4.11-0ubuntu0.26.04.1
+slmSampleId=auth-dual-token-v1-teacher-ef9ddc30eb79
+slmSourceSha256=a5cd4c7155a309916fd111531cbd46f7fea5981b0395e0ad37955b71e606122a
+slmGeneratedDigest=4cbb1dff526bd13a0b2324020922da538210f05245eab4dafb9c4e6e60a8123d
+
+checksPassed=19 checksFailed=14
+PASS the SIR slice compiles without errors (warnings remain visible) (diagnostics=[])
+PASS the compiler emitted a generated project (generatedFileCount=45)
+PASS candidate runtime compilation matches full static generation (sourceSha256=a5cd4c7155a309916fd111531cbd46f7fea5981b0395e0ad37955b71e606122a generatedDigest=4cbb1dff526bd13a0b2324020922da538210f05245eab4dafb9c4e6e60a8123d)
+PASS the generated project builds (mvn clean verify) (exitCode=0)
+PASS the build produced an executable jar (projectRoot=/home/labadmin/sir-reference/20261025-pilot/work/dual-token-slice-1a1721082e4-62691/generated-project)
+PASS the generated application serves the compiled business route (readinessUrl=http://127.0.0.1:18184/api/get-user?id=1)
+PASS the fixture seed is present in the owned schema (seededRowCount=1)
+PASS registering zoe stores an account (status=201)
+PASS a wrong password is the declared 401 (expected=401 actual=401)
+PASS an unknown account is the declared 401 (expected=401 actual=401)
+PASS a wrong password and an unknown account are answered identically (wrong={"code":"BadLogin","message":"BadLogin","fields":[]} unknown={"code":"BadLogin","message":"BadLogin","fields":[]})
+PASS a request without a credential is refused with 401 (expected=401 actual=401)
+PASS a refresh token does not authenticate a request (expected=401 actual=401)
+PASS an expired access token is refused with 401 (expected=401 actual=401)
+PASS a spent refresh token is refused with the declared 401 (expected=401 actual=401)
+PASS the replay wrote no token (access_token=***REDACTED*** refresh_token=***REDACTED***
+PASS the generated application process exited (stopped=true)
+PASS the owned schema was dropped and its absence proved (schema=kcg_conf_slm_ad60836b)
+PASS the advisory lock for the owned schema was released (released=true)
+FAIL the right password logs in (status=500)
+FAIL the login answers an access token and a different refresh token (access= refresh=)
+FAIL the access token lives about fifteen minutes and the refresh token about seven days (body={"timestamp":"2026-10-25T07:58:00.928+00:00","status":500,"error":"Internal Server Error","path":"/api/login"})
+FAIL each token is stored for the account that logged in (access_token=***REDACTED*** refresh_token=***REDACTED***
+FAIL the access token authenticates (status=401)
+FAIL the note was written as the token's owner (notes=[])
+FAIL the refusals wrote no note (notes=[])
+FAIL a refresh token is exchanged for a new pair (status=401)
+FAIL the new pair differs from the old one (body={"code":"InvalidRefreshToken","message":"InvalidRefreshToken","fields":[]})
+FAIL the old refresh token is spent and the new one is not (refresh_token=***REDACTED***
+FAIL the new access token authenticates (status=401)
+FAIL exactly one of 6 simultaneous refreshes succeeds (statuses=[401, 401, 401, 401, 401, 401])
+FAIL every other simultaneous refresh is refused with 401 (statuses=[401, 401, 401, 401, 401, 401])
+FAIL the race created exactly one new pair of tokens (access_token=***REDACTED*** refresh_token=***REDACTED***
+
+D0 POST register (zoe): status=201 body={"id":2,"name":"zoe"}
+D1 POST login: status=500 body={"timestamp":"2026-10-25T07:58:00.928+00:00","status":500,"error":"Internal Server Error","path":"/api/login"}
+D1 POST login (wrong password): status=401 body={"code":"BadLogin","message":"BadLogin","fields":[]}
+D1 POST login (unknown account): status=401 body={"code":"BadLogin","message":"BadLogin","fields":[]}
+D2 POST post-note (no credential): status=401 body=
+D2 POST post-note (access token): status=401 body=
+D2 POST post-note (refresh token as credential): status=401 body=
+D3 POST post-note (expired access token): status=401 body=
+D4 POST refresh: status=401 body={"code":"InvalidRefreshToken","message":"InvalidRefreshToken","fields":[]}
+D4 POST post-note (new access token): status=401 body=
+D5 POST refresh (replay): status=401 body={"code":"InvalidRefreshToken","message":"InvalidRefreshToken","fields":[]}
+D6 POST refresh (racer 0): status=401 body={"code":"InvalidRefreshToken","message":"InvalidRefreshToken","fields":[]}
+D6 POST refresh (racer 1): status=401 body={"code":"InvalidRefreshToken","message":"InvalidRefreshToken","fields":[]}
+D6 POST refresh (racer 2): status=401 body={"code":"InvalidRefreshToken","message":"InvalidRefreshToken","fields":[]}
+D6 POST refresh (racer 3): status=401 body={"code":"InvalidRefreshToken","message":"InvalidRefreshToken","fields":[]}
+D6 POST refresh (racer 4): status=401 body={"code":"InvalidRefreshToken","message":"InvalidRefreshToken","fields":[]}
+D6 POST refresh (racer 5): status=401 body={"code":"InvalidRefreshToken","message":"InvalidRefreshToken","fields":[]}

@@ -1,0 +1,18 @@
+{
+  "forgejo-config-followup.json": "2c03cffffaf243da755b0b3421e7250d894bf39b70e2854530d706b4988931f6",
+  "forgejo-result.txt": "44993528487dc72cddd453e2a67681afd61c7bff2bef8219d97c77ff77b23af9",
+  "ml-smoke/4dfe58ba.json": "bff2b9dbcad16be8521ce18c2a91c46c30e0a930fd7f0b4585a3e2242aa1b9e6",
+  "ml-smoke/4dfe58ba.log": "5ac2501cb224c61ae31235309d6771b014e35063ea6423889ffa32b5ebd54934",
+  "ml-smoke/4dfe58ba.tar.gz": "bef0ac379155b264633ba1b7bd65fab33e00151dae7773eaa953fb3bcd2fd228",
+  "ml-smoke/8d6353c5.json": "0e27a0fde7c90474c79294fa1db6f8545cc43bebfa2016daeff23fe598bb42ad",
+  "ml-smoke/8d6353c5.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "ml-smoke/cancel.json": "871df2963c197f5e7a5ebc4ebf6968ef26d512053c73ab6cbc3eae244981cc6c",
+  "ml-smoke/e6c228c7.json": "169d411345c933928916541f50e8e7c59f5b9fd9949a280575cbc1725112ebe4",
+  "ml-smoke/e6c228c7.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "ml-smoke/probe.tar.gz": "6265ceae120be37184f119afff5b4849cc99b3ba32ea6f8ab0877734e697b704",
+  "ml-smoke/result.json": "6766a4971084905fac8f15ea7eeeddf62e307b03c4296097c8882c4734de9780",
+  "README.md": "afd88c8d5f224a1fbd715210350306b1d5a2d730c65648ab643e04e5abf99358",
+  "services.txt": "9a4746ec2901ef453d772cb2587c2f77b536ad659ca368d66d9ae194c9610e65",
+  "sir-reference-prerequisites.txt": "02f134ad64ae5ab1bc7499f4642e67f0bf43dee5e070cc29a3bd8bb434505042",
+  "summary.json": "aeb5ba80be36ce91396ca1fe3f4fe737bba6fe8145def9d0354ce1a4dc9643de"
+}

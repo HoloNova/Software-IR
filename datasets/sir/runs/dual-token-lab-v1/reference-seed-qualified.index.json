@@ -1,0 +1,14 @@
+{
+  "all_four_gates_required": true,
+  "corpus_sha256": "a486496eb709681a1af551090fe3fa9afa06680e72b087a919b846b4d5a51388",
+  "count": 1,
+  "rows": [
+    {
+      "id": "auth-dual-token-v1-reference",
+      "oracle_sha256": "1aad68b852c0cd079da44d7cd0fa9d3078cb537c4e41b7a49dc758f3f0d219ab",
+      "runtime_run_id": "dual-token-slice-1a1720f89b4-17144",
+      "source_sha256": "c0728c4ad9d32dc0a97f71d34ac9837dc64c25ec467710ef0e17e35fe1c83c80",
+      "task_sha256": "14b1a8b8989a925bada29df148475226d66cf9fdbc6585ee80c79f3fbaa773e9"
+    }
+  ]
+}

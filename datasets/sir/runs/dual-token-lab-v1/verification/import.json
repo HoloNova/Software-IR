@@ -1,0 +1,11 @@
+{
+  "bundle": "/home/labadmin/sir-reference/20261025-pilot/repo/datasets/sir/runs/dual-token-lab-v1",
+  "business_qualified_answers": 0,
+  "new_teacher_candidates": 0,
+  "reference_seeds": 1
+}
+{
+  "all_gates": "NOT_RUN",
+  "imported_teacher_candidates": 5,
+  "new_api_calls": 0
+}

@@ -1,0 +1,286 @@
+[INFO] Scanning for projects...
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Build Order:
+[INFO] 
+[INFO] KCG-Code                                                           [pom]
+[INFO] SIR Parser                                                         [jar]
+[INFO] SIR Semantic                                                       [jar]
+[INFO] SIR Lowering API                                                   [jar]
+[INFO] SIR Change                                                         [jar]
+[INFO] SIR Spring Boot Lowering                                           [jar]
+[INFO] SIR Generator Spring Boot                                          [jar]
+[INFO] SIR Project Graph                                                  [jar]
+[INFO] SIR Toolchain Application                                          [jar]
+[INFO] 
+[INFO] --------------------------< io.kcg:kcg-code >---------------------------
+[INFO] Building KCG-Code 0.1.0-SNAPSHOT                                   [1/9]
+[INFO]   from pom.xml
+[INFO] --------------------------------[ pom ]---------------------------------
+[INFO] 
+[INFO] -------------------------< io.kcg:sir-parser >--------------------------
+[INFO] Building SIR Parser 0.1.0-SNAPSHOT                                 [2/9]
+[INFO]   from sir-parser/pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- antlr4:4.13.2:antlr4 (generate-sir-parser) @ sir-parser ---
+[INFO] No grammars to process
+[INFO] ANTLR 4: Processing source directory /home/labadmin/sir-reference/20261025-pilot/repo/sir-parser/src/main/antlr4
+[INFO] 
+[INFO] --- resources:3.4.0:resources (default-resources) @ sir-parser ---
+[INFO] skip non existing resourceDirectory /home/labadmin/sir-reference/20261025-pilot/repo/sir-parser/src/main/resources
+[INFO] 
+[INFO] --- compiler:3.14.1:compile (default-compile) @ sir-parser ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.4.0:testResources (default-testResources) @ sir-parser ---
+[INFO] Copying 10 resources from src/test/resources to target/test-classes
+[INFO] 
+[INFO] --- compiler:3.14.1:testCompile (default-testCompile) @ sir-parser ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- surefire:3.5.6:test (default-test) @ sir-parser ---
+[INFO] 
+[INFO] ------------------------< io.kcg:sir-semantic >-------------------------
+[INFO] Building SIR Semantic 0.1.0-SNAPSHOT                               [3/9]
+[INFO]   from sir-semantic/pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.4.0:resources (default-resources) @ sir-semantic ---
+[INFO] Copying 4 resources from src/main/resources to target/classes
+[INFO] 
+[INFO] --- compiler:3.14.1:compile (default-compile) @ sir-semantic ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.4.0:testResources (default-testResources) @ sir-semantic ---
+[INFO] Copying 35 resources from src/test/resources to target/test-classes
+[INFO] 
+[INFO] --- compiler:3.14.1:testCompile (default-testCompile) @ sir-semantic ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- surefire:3.5.6:test (default-test) @ sir-semantic ---
+[INFO] 
+[INFO] ----------------------< io.kcg:sir-lowering-api >-----------------------
+[INFO] Building SIR Lowering API 0.1.0-SNAPSHOT                           [4/9]
+[INFO]   from sir-lowering-api/pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.4.0:resources (default-resources) @ sir-lowering-api ---
+[INFO] skip non existing resourceDirectory /home/labadmin/sir-reference/20261025-pilot/repo/sir-lowering-api/src/main/resources
+[INFO] 
+[INFO] --- compiler:3.14.1:compile (default-compile) @ sir-lowering-api ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.4.0:testResources (default-testResources) @ sir-lowering-api ---
+[INFO] skip non existing resourceDirectory /home/labadmin/sir-reference/20261025-pilot/repo/sir-lowering-api/src/test/resources
+[INFO] 
+[INFO] --- compiler:3.14.1:testCompile (default-testCompile) @ sir-lowering-api ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- surefire:3.5.6:test (default-test) @ sir-lowering-api ---
+[INFO] 
+[INFO] -------------------------< io.kcg:sir-change >--------------------------
+[INFO] Building SIR Change 0.1.0-SNAPSHOT                                 [5/9]
+[INFO]   from sir-change/pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.4.0:resources (default-resources) @ sir-change ---
+[INFO] skip non existing resourceDirectory /home/labadmin/sir-reference/20261025-pilot/repo/sir-change/src/main/resources
+[INFO] 
+[INFO] --- compiler:3.14.1:compile (default-compile) @ sir-change ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.4.0:testResources (default-testResources) @ sir-change ---
+[INFO] Copying 9 resources from src/test/resources to target/test-classes
+[INFO] 
+[INFO] --- compiler:3.14.1:testCompile (default-testCompile) @ sir-change ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- surefire:3.5.6:test (default-test) @ sir-change ---
+[INFO] 
+[INFO] ------------------< io.kcg:sir-lowering-spring-boot >-------------------
+[INFO] Building SIR Spring Boot Lowering 0.1.0-SNAPSHOT                   [6/9]
+[INFO]   from sir-lowering-spring-boot/pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.4.0:resources (default-resources) @ sir-lowering-spring-boot ---
+[INFO] skip non existing resourceDirectory /home/labadmin/sir-reference/20261025-pilot/repo/sir-lowering-spring-boot/src/main/resources
+[INFO] 
+[INFO] --- compiler:3.14.1:compile (default-compile) @ sir-lowering-spring-boot ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.4.0:testResources (default-testResources) @ sir-lowering-spring-boot ---
+[INFO] Copying 29 resources from src/test/resources to target/test-classes
+[INFO] 
+[INFO] --- compiler:3.14.1:testCompile (default-testCompile) @ sir-lowering-spring-boot ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- surefire:3.5.6:test (default-test) @ sir-lowering-spring-boot ---
+[INFO] 
+[INFO] ------------------< io.kcg:sir-generator-spring-boot >------------------
+[INFO] Building SIR Generator Spring Boot 0.1.0-SNAPSHOT                  [7/9]
+[INFO]   from sir-generator-spring-boot/pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.4.0:resources (default-resources) @ sir-generator-spring-boot ---
+[INFO] skip non existing resourceDirectory /home/labadmin/sir-reference/20261025-pilot/repo/sir-generator-spring-boot/src/main/resources
+[INFO] 
+[INFO] --- compiler:3.14.1:compile (default-compile) @ sir-generator-spring-boot ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.4.0:testResources (default-testResources) @ sir-generator-spring-boot ---
+[INFO] Copying 34 resources from src/test/resources to target/test-classes
+[INFO] 
+[INFO] --- compiler:3.14.1:testCompile (default-testCompile) @ sir-generator-spring-boot ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- surefire:3.5.6:test (default-test) @ sir-generator-spring-boot ---
+[INFO] 
+[INFO] ----------------------< io.kcg:sir-project-graph >----------------------
+[INFO] Building SIR Project Graph 0.1.0-SNAPSHOT                          [8/9]
+[INFO]   from sir-project-graph/pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.4.0:resources (default-resources) @ sir-project-graph ---
+[INFO] skip non existing resourceDirectory /home/labadmin/sir-reference/20261025-pilot/repo/sir-project-graph/src/main/resources
+[INFO] 
+[INFO] --- compiler:3.14.1:compile (default-compile) @ sir-project-graph ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.4.0:testResources (default-testResources) @ sir-project-graph ---
+[INFO] skip non existing resourceDirectory /home/labadmin/sir-reference/20261025-pilot/repo/sir-project-graph/src/test/resources
+[INFO] 
+[INFO] --- compiler:3.14.1:testCompile (default-testCompile) @ sir-project-graph ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- surefire:3.5.6:test (default-test) @ sir-project-graph ---
+[INFO] 
+[INFO] ------------------< io.kcg:sir-toolchain-application >------------------
+[INFO] Building SIR Toolchain Application 0.1.0-SNAPSHOT                  [9/9]
+[INFO]   from sir-toolchain-application/pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.4.0:resources (default-resources) @ sir-toolchain-application ---
+[INFO] skip non existing resourceDirectory /home/labadmin/sir-reference/20261025-pilot/repo/sir-toolchain-application/src/main/resources
+[INFO] 
+[INFO] --- compiler:3.14.1:compile (default-compile) @ sir-toolchain-application ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.4.0:testResources (default-testResources) @ sir-toolchain-application ---
+[INFO] Copying 100 resources from src/test/resources to target/test-classes
+[INFO] 
+[INFO] --- compiler:3.14.1:testCompile (default-testCompile) @ sir-toolchain-application ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 166 source files with javac [debug release 21] to target/test-classes
+[INFO] 
+[INFO] --- surefire:3.5.6:test (default-test) @ sir-toolchain-application ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running io.kcg.sir.application.conformance.DualTokenBusinessConformanceIT
+=== Dual token (use DualTokenLogin, written out) business conformance ===
+verdict=PASSED
+runId=dual-token-slice-1a1720f89b4-17144
+schemaName=kcg_conf_slm_ad60836b
+advisoryLock=held during the run
+schemaSource=TEST_FIXTURE_DDL
+productInitializeImplemented=false
+productUpdateImplemented=false
+sirResource=EXTERNAL_CANDIDATE:candidate.sir sha256=c0728c4ad9d32dc0a97f71d34ac9837dc64c25ec467710ef0e17e35fe1c83c80
+fixtureDdl=/conformance/mysql/dual-token-ddl.sql sha256=a53eacd46b924564d1b8e3795465751509c153399c30b8e482eff2cbc1a90919
+fixtureSeed=/conformance/mysql/dual-token-seed.sql sha256=a72d9ea66f89a9826f61b1708ecaa347b9413897d844b93af199c05cfe28158a
+generatedFiles=45 combinedSha256=c4661fb1bac99abddc153a53c5660fd27cf97f4e33a4e29c92e198c7bafb8b1c
+generatedProjectBuild=PASSED (exit 0)
+httpReadiness=READY (200 from /api/get-user?id=1)
+mysqlRowsBefore=1 mysqlRowsAfter=2
+mavenOffline=true
+javaVersion=21.0.12.1
+osName=Linux osArch=amd64
+serverPort=18184
+slmMysqlVersion=8.4.11-0ubuntu0.26.04.1
+slmSampleId=auth-dual-token-v1-reference
+slmSourceSha256=c0728c4ad9d32dc0a97f71d34ac9837dc64c25ec467710ef0e17e35fe1c83c80
+slmGeneratedDigest=fc3c187530909078574059b8c973b17a5bfca547c70ca9af13067e9c604dc333
+
+checksPassed=35 checksFailed=0
+PASS the SIR slice compiles without errors (warnings remain visible) (diagnostics=[])
+PASS the compiler emitted a generated project (generatedFileCount=45)
+PASS candidate runtime compilation matches full static generation (sourceSha256=c0728c4ad9d32dc0a97f71d34ac9837dc64c25ec467710ef0e17e35fe1c83c80 generatedDigest=fc3c187530909078574059b8c973b17a5bfca547c70ca9af13067e9c604dc333)
+PASS the generated project builds (mvn clean verify) (exitCode=0)
+PASS the build produced an executable jar (projectRoot=/home/labadmin/sir-reference/20261025-pilot/work/dual-token-slice-1a1720f89b4-17144/generated-project)
+PASS the generated application serves the compiled business route (readinessUrl=http://127.0.0.1:18184/api/get-user?id=1)
+PASS the fixture seed is present in the owned schema (seededRowCount=1)
+PASS registering zoe stores an account (status=201)
+PASS the right password logs in (status=201)
+PASS the login answers an access token and a different refresh token (access=e62f6b67-9395-4798-beec-b11526a672bf refresh=f16e0e2d-8847-41f8-a310-e14c06557766)
+PASS the access token lives about fifteen minutes and the refresh token about seven days (body={"accessToken":"e62f6b67-9395-4798-beec-b11526a672bf","accessExpiresAt":"2026-10-25T08:11:56.868312062Z","refreshToken":"f16e0e2d-8847-41f8-a310-e14c06557766","refreshExpiresAt":"2026-11-01T07:56:56.868417266Z"})
+PASS each token is stored for the account that logged in (access_token=[e62f6b67-9395-4798-beec-b11526a672bf|2|2026-10-25 08:11:56.868312] refresh_token=[f16e0e2d-8847-41f8-a310-e14c06557766|2|0|2026-11-01 07:56:56.868417])
+PASS a wrong password is the declared 401 (expected=401 actual=401)
+PASS an unknown account is the declared 401 (expected=401 actual=401)
+PASS a wrong password and an unknown account are answered identically (wrong={"code":"BadLogin","message":"BadLogin","fields":[]} unknown={"code":"BadLogin","message":"BadLogin","fields":[]})
+PASS a request without a credential is refused with 401 (expected=401 actual=401)
+PASS the access token authenticates (status=201)
+PASS the note was written as the token's owner (notes=[1|2|with access token])
+PASS a refresh token does not authenticate a request (expected=401 actual=401)
+PASS the refusals wrote no note (notes=[1|2|with access token])
+PASS an expired access token is refused with 401 (expected=401 actual=401)
+PASS a refresh token is exchanged for a new pair (status=201)
+PASS the new pair differs from the old one (body={"accessToken":"6655b61a-99c9-47e0-9063-3af600ce5449","accessExpiresAt":"2026-10-25T08:11:57.846200842Z","refreshToken":"bfc72dbd-4c6f-4496-8df4-6e19c59de60f","refreshExpiresAt":"2026-11-01T07:56:57.846210761Z"})
+PASS the old refresh token is spent and the new one is not (refresh_token=[bfc72dbd-4c6f-4496-8df4-6e19c59de60f|2|0|2026-11-01 07:56:57.846211, f16e0e2d-8847-41f8-a310-e14c06557766|2|1|2026-11-01 07:56:56.868417])
+PASS the new access token authenticates (status=201)
+PASS a spent refresh token is refused with the declared 401 (expected=401 actual=401)
+PASS the replay wrote no token (access_token=2 refresh_token=2)
+PASS exactly one of 6 simultaneous refreshes succeeds (statuses=[201, 401, 401, 401, 401, 401])
+PASS every other simultaneous refresh is refused with 401 (statuses=[201, 401, 401, 401, 401, 401])
+PASS the race created exactly one new pair of tokens (access_token=3 refresh_token=3)
+PASS logging out answers 200 (expected=200 actual=200)
+PASS a refresh token that was logged out is refused with 401 (expected=401 actual=401)
+PASS the generated application process exited (stopped=true)
+PASS the owned schema was dropped and its absence proved (schema=kcg_conf_slm_ad60836b)
+PASS the advisory lock for the owned schema was released (released=true)
+
+D0 POST register (zoe): status=201 body={"id":2,"name":"zoe"}
+D1 POST login: status=201 body={"accessToken":"e62f6b67-9395-4798-beec-b11526a672bf","accessExpiresAt":"2026-10-25T08:11:56.868312062Z","refreshToken":"f16e0e2d-8847-41f8-a310-e14c06557766","refreshExpiresAt":"2026-11-01T07:56:56.868417266Z"}
+D1 POST login (wrong password): status=401 body={"code":"BadLogin","message":"BadLogin","fields":[]}
+D1 POST login (unknown account): status=401 body={"code":"BadLogin","message":"BadLogin","fields":[]}
+D2 POST post-note (no credential): status=401 body=
+D2 POST post-note (access token): status=201 body={"id":1,"text":"with access token"}
+D2 POST post-note (refresh token as credential): status=401 body=
+D3 POST post-note (expired access token): status=401 body=
+D4 POST refresh: status=201 body={"accessToken":"6655b61a-99c9-47e0-9063-3af600ce5449","accessExpiresAt":"2026-10-25T08:11:57.846200842Z","refreshToken":"bfc72dbd-4c6f-4496-8df4-6e19c59de60f","refreshExpiresAt":"2026-11-01T07:56:57.846210761Z"}
+D4 POST post-note (new access token): status=201 body={"id":2,"text":"with new access token"}
+D5 POST refresh (replay): status=401 body={"code":"InvalidRefreshToken","message":"InvalidRefreshToken","fields":[]}
+D6 POST refresh (racer 0): status=401 body={"code":"InvalidRefreshToken","message":"InvalidRefreshToken","fields":[]}
+D6 POST refresh (racer 1): status=201 body={"accessToken":"e8b87428-02c6-49e0-ac4f-e2a448b2da59","accessExpiresAt":"2026-10-25T08:11:58.040842113Z","refreshToken":"7d61490b-2e91-4e55-b0d4-2528b78fb4c3","refreshExpiresAt":"2026-11-01T07:56:58.040846041Z"}
+D6 POST refresh (racer 2): status=401 body={"code":"InvalidRefreshToken","message":"InvalidRefreshToken","fields":[]}
+D6 POST refresh (racer 3): status=401 body={"code":"InvalidRefreshToken","message":"InvalidRefreshToken","fields":[]}
+D6 POST refresh (racer 4): status=401 body={"code":"InvalidRefreshToken","message":"InvalidRefreshToken","fields":[]}
+D6 POST refresh (racer 5): status=401 body={"code":"InvalidRefreshToken","message":"InvalidRefreshToken","fields":[]}
+D7 POST logout: status=200 body={"id":"7d61490b-2e91-4e55-b0d4-2528b78fb4c3","used":true}
+D7 POST refresh (after logout): status=401 body={"code":"InvalidRefreshToken","message":"InvalidRefreshToken","fields":[]}
+
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 37.60 s -- in io.kcg.sir.application.conformance.DualTokenBusinessConformanceIT
+[INFO] 
+[INFO] Results:
+[INFO] 
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Summary for KCG-Code 0.1.0-SNAPSHOT:
+[INFO] 
+[INFO] KCG-Code ........................................... SUCCESS [  0.006 s]
+[INFO] SIR Parser ......................................... SUCCESS [  2.123 s]
+[INFO] SIR Semantic ....................................... SUCCESS [  0.109 s]
+[INFO] SIR Lowering API ................................... SUCCESS [  0.181 s]
+[INFO] SIR Change ......................................... SUCCESS [  0.207 s]
+[INFO] SIR Spring Boot Lowering ........................... SUCCESS [  0.363 s]
+[INFO] SIR Generator Spring Boot .......................... SUCCESS [  1.510 s]
+[INFO] SIR Project Graph .................................. SUCCESS [  0.107 s]
+[INFO] SIR Toolchain Application .......................... SUCCESS [01:00 min]
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  01:05 min
+[INFO] Finished at: 2026-10-25T15:56:59+08:00
+[INFO] ------------------------------------------------------------------------

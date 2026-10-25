@@ -1,0 +1,10 @@
+{
+  "business": "NOT_RUN",
+  "execution": {
+    "directory": "/home/labadmin/sir-reference/20261025-pilot/repo/datasets/sir/runs/dual-token-lab-v1/checks/f161e86efc4b40819e8edf9d1444efdf",
+    "stdout_sha256": "1f452adc035cdc5c6c1b7b2c2a1cd01e6b3c07c6e13c2681d67bacae0d0f1032"
+  },
+  "output": "/home/labadmin/sir-reference/20261025-pilot/repo/datasets/sir/runs/dual-token-lab-v1/checked.jsonl",
+  "samples": 6,
+  "static_passed": 2
+}

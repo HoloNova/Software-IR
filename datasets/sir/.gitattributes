@@ -1,0 +1,2 @@
+# Evidence and source fingerprints bind exact UTF-8 bytes; do not rewrite line endings on checkout.
+** -text

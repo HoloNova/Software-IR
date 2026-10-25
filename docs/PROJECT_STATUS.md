@@ -93,19 +93,21 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 4. **Git 钩子照常生效。** 提交钩子拒绝时，保存当前版本失败则应用在改动前停止；保存新版本失败只给警告。
 5. **SIR 目录与生成目录必须是仓库内互不包含的两个目录，且在同一文件系统**（原子移动需要）。
 6. 编译与生成是完整的，不是局部增量编译。
-7. 证据范围：只有受控样本，没有真实 SLM 输出集；进程树终止与日志脱敏有边界（见 [R5 报告](history/roadmap/R5-independent-verification-report.md) 第 4–5 节）。
+7. 证据范围：已有首批真实教师候选，但没有新增业务合格训练答案或真实小模型评测集（见[数据首批报告](qualification/SLM_DATA_PILOT_REPORT.md)）；进程树终止与日志脱敏有边界（见 [R5 报告](history/roadmap/R5-independent-verification-report.md) 第 4–5 节）。
 
 ## 6. 尚未作为产品能力发布
 
 - 预构建的发行物与发布渠道、公开构建/运行入口（单文件包能由 `mvn package` 在本地产出，但没有版本化发布）；旧 `register`、`apply`、`recover` 命令不恢复，现有版本应用入口为version-apply。
 - 数据库初始化和Docker／Compose交付的步骤①已由CI #94在本样例上验收；步骤②的Swagger、随包合同测试与独立业务验收包已由CI #95/#96验收；保留数据迁移、Web平台、模块市场、跨项目缓存仍未发布。
 - Redis Extension、第二个目标、Constraint VM、Java 反向解析、GUI/daemon、多用户。
-- SLM 评测：总设计见 [SLM 评测计划](qualification/SLM_GENERATED_PROJECT_EVALUATION_PLAN.md)，尚未启动。
+- SLM 评测/训练尚未启动；已按负责人确认开始数据准备，首批教师采样与静态筛选见[数据报告](qualification/SLM_DATA_PILOT_REPORT.md)，基座与云GPU建议见[模型调研](qualification/SLM_MODEL_SELECTION.md)。[评测总设计](qualification/SLM_GENERATED_PROJECT_EVALUATION_PLAN.md)保留四门口径，不把数据试跑称为小模型成绩。
 - Windows 平台证据；生产、安全认证、性能、高可用资格均未声明。
 
 ## 7. 当前阶段（2026-10-25）
 
-本轮选定的缺口已实现并由#184完整验收，账本83／1／0；G14文件导出等排除项不补做。下面较早的实施记录保留当时的失败／NOT_RUN状态，不作为当前待办；当前验收以第4节和[验证50](qualification/README.md#ci-184-accepted)为准。模型评估尚未启动，模型、样本和评分方式由负责人另行确定。
+本轮选定的缺口已实现并由#184完整验收，账本83／1／0；G14文件导出等排除项不补做。下面较早的实施记录保留当时的失败／NOT_RUN状态，不作为当前待办；当前验收以第4节和[验证50](qualification/README.md#ci-184-accepted)为准。
+
+**当前转入数据准备（负责人已确认）：**公开双Token题目先跑通冻结合同→真实教师采样→编译反馈修复→四门资格导出。3个初始教师候选均解析失败，选一支经2次修复后完整静态生成通过；共5次调用、1个静态合格新候选，后在负责人指定的`ssh lab`参考环境实测：参考35/0、四门全PASSED；新候选静态/构建/启动PASSED，但业务19/14（登录前置UUID取值错误造成500及连带失败），新教师训练导出仍0条。参考合格种子1份单列，不混入教师样本数。数据持久保存在`datasets/sir/pilots/dual-token-v1/`，脚本在`experiments/slm/`；31项Python与4类23项Java定向通过，未改核心编译器。基座建议DeepSeek-Coder-1.3B-Instruct研究基线与Qwen3-4B-Instruct-2507现代对照，未下载权重、租GPU、启动训练或小模型评测。实测完整修复序列最高10489 tokens，不能静默截断。Linux原始运行与证据另存`datasets/sir/runs/dual-token-lab-v1/`；详见[验证52](qualification/README.md#slm-lab-runtime-v1)。本轮历史验收实际走SSH scope，不冒称Forgejo Actions或ML API镜像验收。负责人随后要求删除临时参考目录和平台指南文件，已清理；后续Forgejo仅局域网直连，远程任务通过公网ML API，不以SSH作为工具使用入口。操作指南仅以独立Prompt文本提供；Forgejo runner仍为空。
 
 **语言升级已实施：**负责人 2026-10-17 确认把 SIR 做成 Java 之上的更高层语言——一句声明给出一个功能，作者写语义而不写机器类型，用户可以定义自己的类型和功能，数据库迁移由变更层驱动。[设计 12](design/12-feature-semantics-and-semantic-types.md) 第 9 节的五步已全部实施，结果与留到下一阶段的事项见其第 13 节。迁移由变更层驱动之后，已上线的表支持列改名（带 `@id`）、加可空列、加带默认值的必填列和新建表，这些都由 CI 部署冒烟在真实 MySQL 上核对。
 

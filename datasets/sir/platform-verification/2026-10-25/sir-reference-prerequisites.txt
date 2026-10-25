@@ -1,0 +1,16 @@
+
+REFERENCE_PRIVILEGES
+PASSWORDLESS_SUDO_AVAILABLE
+
+USER_SCOPE
+
+MYSQL_REFERENCE_VERSION
+8.4.11-0ubuntu0.26.04.1	64a4c60a-a6c4-11f1-9311-8c16458dc27b	127.0.0.1
+
+PYTHON_DATA_REQUIREMENTS
+3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0]
+jsonschema available
+
+REPO_CANDIDATES
+/home/labadmin/*/pom.xml
+/home/labadmin/*/*/pom.xml

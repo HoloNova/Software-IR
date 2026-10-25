@@ -1,0 +1,21 @@
+{
+  "actual_model": "deepseek-flash",
+  "created_at": "2026-10-25T04:24:14.371545+00:00",
+  "id": "auth-dual-token-v1-teacher-2f2f819780a2",
+  "raw_response_sha256": "dcfab8c720cc54d720196794ee45963885490eda0ca3fc833845d8b4551f3e57",
+  "requested_model": "deepseek-flash",
+  "status": "CANDIDATE_NOT_YET_QUALIFIED",
+  "system_fingerprint": "e72d3c7f663d3e1383b00b3884cb4501",
+  "usage": {
+    "completion_tokens": 1127,
+    "completion_tokens_details": null,
+    "prompt_cache_hit_tokens": 1280,
+    "prompt_cache_miss_tokens": 253,
+    "prompt_tokens": 1533,
+    "prompt_tokens_details": {
+      "audio_tokens": null,
+      "cached_tokens": 1280
+    },
+    "total_tokens": 2660
+  }
+}
