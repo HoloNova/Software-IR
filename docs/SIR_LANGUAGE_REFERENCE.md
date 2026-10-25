@@ -237,7 +237,7 @@ identity 名字: 类型 generated auto;    // 类型是 Id，数据库自增
 identity 名字: 类型 generated uuid;    // 类型是 Token，由应用生成
 ```
 
-然后是若干 `field`。字段后面可以接修饰，**顺序固定**：约束（`where ...`）、`versioned`、`unique`、`secret`、`default ...`、`@id("...")`。最后可以有 `credential ...;`（见下）和 `scope ...;`（见下）。
+然后是若干 `field`。字段后面可以接修饰，**顺序固定**：约束（`where ...`）、`versioned`、`unique`、`secret`、`default ...`、`@id("...")`。最后可以有 `credential ...;`（见下）和 `scope ...;`（见下）。实体成员的整体顺序固定为 `identity`、`field`、`unique (...)`、`credential`、`scope`，写错位置时报错会说明这个顺序和该挪到哪里。
 
 ```sir-declarations
 entity Account persistent {
@@ -1294,7 +1294,16 @@ capability ActiveCourses {
 create 实体 as 变量 { 字段: 值; ... }
 ```
 
-必须给出所有**必填**字段：除了主键（系统生成）、`versioned` 字段（框架初始化）、`Optional<...>` 字段和带 `default` 的字段之外的每一个，漏了报 `SIR-FLOW-001`。不能绑定主键或 `versioned` 字段，同一个字段也不能绑两次。创建后要 `persist` 才会写入。如果另一行要引用这条新建的行，而它的主键是自增的，要先 `persist` 它拿到主键，再创建引用它的那一行：引用绑定的是创建那一刻的主键值，之后不会自动更新。
+必须给出所有**必填**字段：除了主键（系统生成）、`versioned` 字段（框架初始化）、`Optional<...>` 字段和带 `default` 的字段之外的每一个，漏了报 `SIR-FLOW-001`。不能绑定主键或 `versioned` 字段，同一个字段也不能绑两次。创建后要 `persist` 才会写入。
+
+新建的行在 `persist` 之前**还没有主键**：自增主键由数据库在插入时给出，`generated uuid` 的主键也是在插入时才赋值。所以 `persist` 之前不能读它的主键，否则读到的是空值，要等请求真正写库时才失败。编译器检查这一点（`SIR-FLOW-007`），三种读法都会报错：读 `变量.主键`（例如把 `access.id` 抄进另一行）；把这一行当作引用的值（例如 `basket: basket`），因为引用存的就是它的主键；`return` 这一行时，输出的视图里含有主键。改法都是把 `persist 变量;` 挪到读主键之前。其他字段的值在 `create` 时就定了，`persist` 之前可以照常读（例如 `access.expiresAt`）；视图里不含主键时，也可以直接返回没存下的行。
+
+```
+create AccessToken as access { owner: holder; expiresAt: now() + 15 minutes; }
+persist access;
+create TokenPair as pair { accessToken: access.id; accessExpiresAt: access.expiresAt; }
+persist pair;
+```
 
 ### 5.5 `update` 与 `persist`
 
@@ -2238,6 +2247,7 @@ use Crud {
 | `SIR-WARN-001` | （警告，不阻止编译）先 `exists`／`count` 检查再 `create`，既没有 `for update` 锁也没有 `unique` 兜底，并发时两个请求可能同时通过 |
 | `SIR-FLOW-004` | 只读能力里有 `create`／`update`／`persist`／`delete` |
 | `SIR-FLOW-005`／`006` | `any` 出现在 `find`／`exists`／`count`／`sum` 的谓词之外／`any` 里面又嵌套了 `any` |
+| `SIR-FLOW-007` | 新建的行还没 `persist` 就读了它的主键：读 `变量.主键`、把它当引用的值，或返回含主键的视图 |
 | `SIR-SOURCE-*` | 多文件工程的问题：入口没列出文件、`import` 找不到声明、没 import 就用了别的文件的声明（`SIR-SOURCE-VISIBILITY-001`） |
 | `SIR-LOWER-*` | 软件本身合法，但目标（Java／Spring Boot／MySQL）暂不支持 |
 

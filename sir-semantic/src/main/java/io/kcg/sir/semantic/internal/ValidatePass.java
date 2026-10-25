@@ -380,6 +380,7 @@ final class ValidatePass {
       this.validatePageUsage(capDecl, isQuery);
       this.validateWriteWorkflow(capDecl, failsSet);
       this.validatePersistOrder(capDecl);
+      this.validateIdentityReadsAfterPersist(capDecl);
       this.warnUncheckedCheckThenInsert(capDecl);
       this.validateExistencePlacement(capDecl);
       this.validateSecretUsage(capDecl);
@@ -1364,6 +1365,143 @@ int returnCount = 0;
                      + "（或者用 load … for update 先锁住它）；否则两个并发请求会在外键读锁上互相等待而死锁",
                   steps.get(created).span()));
             }
+         }
+      }
+   }
+
+   private static final String IDENTITY_ORDER_CODE = "SIR-FLOW-007";
+
+   /**
+    * A created row has no identity until it is persisted: an auto key comes from the database on insert, and the
+    * generated service assigns a uuid there too. Reading it earlier copies null into whatever uses it (the token pair
+    * of a login, the foreign key of an order line), which only fails once a request reaches the database. So every
+    * read before the row's persist is refused: the identity as a member, the row as a reference value, and a returned
+    * view that shows the identity. Other fields of the row are set by create itself and stay readable.
+    */
+   private void validateIdentityReadsAfterPersist(AstCapabilityDecl capDecl) {
+      Map<SymbolId, SymbolId> unsaved = new HashMap<>();
+      for (AstStep step : io.kcg.sir.ast.AstSteps.walk(capDecl.workflow().steps()).toList()) {
+         if (step instanceof AstReturnStep ret) {
+            this.checkReturnedIdentity(capDecl, ret, unsaved);
+         } else {
+            for (AstExpression read : this.expressionsOf(step)) this.checkIdentityReads(read, unsaved);
+         }
+
+         if (step instanceof AstCreateStep create) {
+            SymbolId row = this.typed.referenceBindings().get(create.id());
+            SymbolId entity = this.typed.referenceSiteBindings().targetFor(create.entity().id()).orElse(null);
+            SymbolId identity = entity == null ? null : this.entityIdentitySymbolIds.get(entity);
+            if (row != null && identity != null) unsaved.put(row, identity);
+         } else if (step instanceof AstPersistStep persist) {
+            this.typed.referenceSiteBindings().targetFor(persist.target().id()).ifPresent(unsaved::remove);
+         }
+      }
+   }
+
+   /**
+    * The expressions a step evaluates, loop bodies excluded (the walk visits them in order). The switch names every
+    * step so that a new kind of step has to decide what it reads.
+    */
+   private List<AstExpression> expressionsOf(AstStep step) {
+      List<AstExpression> reads = new ArrayList<>();
+      switch (step) {
+         case AstValidateStep s -> reads.add(s.condition());
+         case AstLoadStep s -> reads.add(s.idExpression());
+         case AstFindStep s -> {
+            reads.add(s.predicate());
+            s.page().ifPresent(page -> { reads.add(page.page()); reads.add(page.size()); });
+         }
+         case io.kcg.sir.ast.AstEachStep s -> reads.add(s.predicate());
+         case io.kcg.sir.ast.AstRepeatStep s -> reads.add(s.count());
+         case io.kcg.sir.ast.AstScalarQueryStep s -> reads.add(s.predicate());
+         case io.kcg.sir.ast.AstSumStep s -> reads.add(s.predicate());
+         case io.kcg.sir.ast.AstMonthStep s -> { reads.add(s.month()); reads.add(s.zone()); }
+         case io.kcg.sir.ast.AstGroupedSumStep s -> {
+            reads.add(s.predicate());
+            if (s.page() != null) { reads.add(s.page().page()); reads.add(s.page().size()); }
+         }
+         case AstCreateStep s -> s.bindings().forEach(binding -> reads.add(binding.value()));
+         case AstUpdateStep s -> {
+            s.guard().ifPresent(reads::add);
+            s.bindings().forEach(binding -> reads.add(binding.value()));
+         }
+         case AstReturnStep s -> reads.add(s.value());
+         case AstPersistStep s -> { }
+         case io.kcg.sir.ast.AstDeleteStep s -> { }
+      }
+      reads.removeIf(java.util.Objects::isNull);
+      return reads;
+   }
+
+   private void checkIdentityReads(AstExpression expression, Map<SymbolId, SymbolId> unsaved) {
+      switch (expression) {
+         case AstMemberExpression e -> {
+            if (this.ungroup(e.receiver()) instanceof AstNameExpression row) {
+               // row.field reads the field, not the row as a reference; only the identity has no value yet.
+               SymbolId target = this.typed.referenceSiteBindings().targetFor(row.name().id()).orElse(null);
+               SymbolId identity = target == null ? null : unsaved.get(target);
+               if (identity != null && identity.equals(this.memberTarget(e))) {
+                  String name = row.name().text();
+                  this.diagnostics.add(DiagnosticBuilder.error(IDENTITY_ORDER_CODE,
+                     "新建的行 " + name + " 还没有 persist，主键 " + e.member().text() + " 还没有值：先写 persist " + name
+                        + ";，再读 " + name + "." + e.member().text(), e.span()));
+               }
+            } else {
+               this.checkIdentityReads(e.receiver(), unsaved);
+            }
+         }
+         case AstNameExpression e -> {
+            SymbolId target = this.typed.referenceSiteBindings().targetFor(e.name().id()).orElse(null);
+            if (target != null && unsaved.containsKey(target)) {
+               String name = e.name().text();
+               this.diagnostics.add(DiagnosticBuilder.error(IDENTITY_ORDER_CODE,
+                  "新建的行 " + name + " 还没有 persist，还没有主键，不能当作引用使用：先写 persist " + name + ";，再用它",
+                  e.span()));
+            }
+         }
+         case AstGroupedExpression e -> this.checkIdentityReads(e.inner(), unsaved);
+         case AstUnaryExpression e -> this.checkIdentityReads(e.operand(), unsaved);
+         case AstBinaryExpression e -> {
+            this.checkIdentityReads(e.left(), unsaved);
+            this.checkIdentityReads(e.right(), unsaved);
+         }
+         case AstPresentExpression e -> this.checkIdentityReads(e.target(), unsaved);
+         case AstTimeShiftExpression e -> this.checkIdentityReads(e.base(), unsaved);
+         case AstAnyExpression e -> this.checkIdentityReads(e.conditions(), unsaved);
+         case io.kcg.sir.ast.AstCountExpression e -> this.checkIdentityReads(e.conditions(), unsaved);
+         case AstIntegerLiteral e -> { }
+         case AstDecimalLiteral e -> { }
+         case AstStringLiteral e -> { }
+         case io.kcg.sir.ast.AstBooleanLiteral e -> { }
+         case io.kcg.sir.ast.AstUnitLiteral e -> { }
+         case io.kcg.sir.ast.AstNowExpression e -> { }
+      }
+   }
+
+   /**
+    * Returning a row turns it into the output view. A row that is not persisted yet may be returned (an answer that is
+    * computed and not stored), but only through a view that does not show its identity, which would be null.
+    */
+   private void checkReturnedIdentity(AstCapabilityDecl capDecl, AstReturnStep ret, Map<SymbolId, SymbolId> unsaved) {
+      if (!(this.ungroup(ret.value()) instanceof AstNameExpression row)) {
+         this.checkIdentityReads(ret.value(), unsaved);
+         return;
+      }
+
+      SymbolId target = this.typed.referenceSiteBindings().targetFor(row.name().id()).orElse(null);
+      SymbolId identity = target == null ? null : unsaved.get(target);
+      if (identity == null) return;
+      SirType output = this.typed.typeRefTypes().get(capDecl.output().type().id());
+      AstViewDecl view = output instanceof DeclaredType declared && declared.kind() == DeclaredType.DeclaredKind.VIEW
+         ? this.viewDecls.get(declared.symbolId()) : null;
+      if (view == null) return;
+      for (AstViewField field : view.fields()) {
+         if (identity.equals(this.typed.referenceSiteBindings().targetFor(field.name().id()).orElse(null))) {
+            String name = row.name().text();
+            this.diagnostics.add(DiagnosticBuilder.error(IDENTITY_ORDER_CODE,
+               "新建的行 " + name + " 还没有 persist，返回的 " + view.name().text() + " 会显示还没有值的主键 " + field.name().text()
+                  + "：先写 persist " + name + ";，再返回它", ret.span()));
+            return;
          }
       }
    }

@@ -1,0 +1,66 @@
+sir 0.3
+software IdentityAfterPersist {
+  metadata { displayName "Identity After Persist"; namespace "example.identity"; }
+  target { language java 21; framework spring_boot; persistence mybatis_plus;
+    database mysql; build maven; interface rest; }
+  sources {} imports {}
+  declarations {
+    entity Basket persistent {
+      identity id: Id generated auto;
+      field note: Text;
+    }
+    entity Line persistent {
+      identity id: Id generated auto;
+      field basket: Ref<Basket>;
+      field qty: Count;
+    }
+    entity Ticket persistent {
+      identity code: Token generated uuid;
+      field note: Text;
+    }
+    entity Receipt persistent {
+      identity id: Id generated auto;
+      field ticketCode: Token;
+      field note: Text;
+    }
+    view BasketView from Basket { field id: Id; field note: Text; }
+    view ReceiptView from Receipt { field ticketCode: Token; field note: Text; }
+    input BasketInput { field note: Text; field lines: Count; }
+    input TicketInput { field note: Text; }
+    input DraftInput { field ticketCode: Token; field note: Text; }
+    error TooManyLines http 400;
+    capability MakeBasket {
+      input BasketInput; output BasketView;
+      fails TooManyLines;
+      requires atomic; expose command at "/baskets";
+      workflow {
+        create Basket as basket { note: input.note; }
+        persist basket;
+        repeat input.lines times limit 10 else TooManyLines as at {
+          create Line as line { basket: basket; qty: 1; }
+          persist line;
+        }
+        return basket;
+      }
+    }
+    capability IssueTicket {
+      input TicketInput; output ReceiptView;
+      requires atomic; expose command at "/tickets";
+      workflow {
+        create Ticket as ticket { note: input.note; }
+        persist ticket;
+        create Receipt as receipt { ticketCode: ticket.code; note: ticket.note; }
+        persist receipt;
+        return receipt;
+      }
+    }
+    capability PreviewReceipt {
+      input DraftInput; output ReceiptView;
+      expose command at "/receipts/preview";
+      workflow {
+        create Receipt as draft { ticketCode: input.ticketCode; note: input.note; }
+        return draft;
+      }
+    }
+  }
+}

@@ -25,7 +25,7 @@ final class LexerDiagnosticListener extends BaseErrorListener {
         int endOffset = Math.min(position.codePointOffset() + 1, source.length());
         diagnostics.error(
                 "SIR-LEX-001",
-                "存在 SIR v0.1 不允许的字符",
+                "存在 SIR 不允许的字符",
                 new io.kcg.sir.source.SourceSpan(source.sourceId(), position, source.position(endOffset)));
     }
 }
