@@ -34,7 +34,7 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 - 语义补充（2026-10-18～20）：内置 `use Crud { entity: X; }` 一句给出增删改查，`owner` 让每一行只属于一个账号，`path` 给出 REST 路径；错误可以声明 403，工作流可以读当前用户的字段（`actor.role`），授权就是以 `actor` 为一边的普通检查；`expose … [put|delete] at "/notes/{id}"` 自定 HTTP 方法和带路径参数的路径；已上线的列可以改默认值。部署第二版用 `Crud`（含 `owner`、`path`）管理笔记和标签，CI 冒烟在真实 MySQL 上核对 401／403／404 与 REST 路径。
 - 已上线系统的结构变更（2026-10-20，[设计 12 第 14 节](design/12-feature-semantics-and-semantic-types.md)）：除加列、改名、改默认值外，可以放宽（整数变宽、文本变长或去掉长度、必填变可空），可以删实体、字段，但打包时要写 `--confirm-backup yes`（声明已备份，工具不检查）。本机测试通过；真实 MySQL 上的验证由新增的部署第三版冒烟承担，待提交后的 CI。删掉引用别的表的列、主键列仍不支持。
 - 唯一约束（2026-10-20，[设计 12 第 15 节](design/12-feature-semantics-and-semantic-types.md)）：`persist 变量 else 错误` 能说明新建的行撞上唯一约束时报哪个错误（原来是 500）；实体可写 `unique (a, b);` 声明联合唯一，建表时成为复合唯一索引，保留数据的更新里只能随新建表创建。
-- 选题试写（[报告](qualification/TOPIC_TRIALS.md)）：八个典型后端的 84 条需求，当前 76 条完整写出、6 条带折扣、2 条尚未写出（90.5%／7.1%／2.4%）。带折扣的六条都已实现、等待同源码 CI 真库验收：图书可借数量和逾期罚款，商城的下单、多商品订单和购物车，会议室的每周重复预约；写不出的是图表与导出、优惠券。缺陷 D1 到 D5 都已修，八个题目的生成工程由 CI 逐个离线编译。
+- 选题试写（[报告](qualification/TOPIC_TRIALS.md)）：八个典型后端的 84 条需求，当前 78 条完整写出、5 条带折扣、1 条尚未写出（92.9%／6.0%／1.2%）。图书可借数量和逾期罚款已由 #178 真库验收；带折扣的五条都已实现、等待同源码 CI 真库验收：商城的优惠券、下单、多商品订单和购物车，会议室的每周重复预约；写不出的是图表与导出。缺陷 D1 到 D5 都已修，八个题目的生成工程由 CI 逐个离线编译。
 
 - G7 可选值（2026-10-20，已实现；后续 #140 已回归验收）：`x is none`／`x is present` 判断空值，兼容类型可比较；任一侧为空普通比较均为 false（含 `!=`），`not` 仍普通取反。显式组合空值判断可写可选筛选，不自动省略条件，PATCH `.present` 不变。tasks、market 已更新，Java 真值表与题目内存生成已验证；八题生成工程离线编译和真实 MySQL／HTTP 为 NOT_RUN。Windows 部署导出测试因现有安全读源能力缺失失败，未放宽边界。方案与限制见[设计 12 第 17 节](design/12-feature-semantics-and-semantic-types.md)，定向证据见[验证说明](qualification/README.md)。
 
@@ -111,11 +111,13 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 
 **CI 提速实测：**#155 主验证 8:18（同业务源码 #154 为 19:51），在线预热 0:27、Frozen 3:37，Completion 按预期跳过；真实业务／独立验证／CLI 保留。部署被取消，不能比较整轮时长，也不将全部观测改善归因为编排。详见[验证第 25 节](qualification/README.md#ci-154-accepted)。
 
-**当前实现（G5 第三片：`repeat` 与 `addDays`，待同源码 CI）：**[设计32](design/12-feature-semantics-and-semantic-types.md)；`repeat 次数 times limit N else 错误 as 序号 { }` 按请求里的次数重复（上限是字面量，超限一次都不执行），`addDays(t, n)` 把时刻挪若干整天；booking 由此写出每周重复预约，真库检查接在乘法业务 IT 的预约部分。本机各模块定向测试和语言参考示例通过。
+**当前实现（优惠券，待同源码 CI）：**[设计33](design/12-feature-semantics-and-semantic-types.md)；需求由实现者定义（立减、有效期、起用金额、总次数、一人一张、一单一券、取消退券），全部由已有能力组合，没有新语法；真库检查含八买家抢三次的并发。
+
+**上一实现（G5 第三片：`repeat` 与 `addDays`，待同源码 CI）：**[设计32](design/12-feature-semantics-and-semantic-types.md)；`repeat 次数 times limit N else 错误 as 序号 { }` 按请求里的次数重复（上限是字面量，超限一次都不执行），`addDays(t, n)` 把时刻挪若干整天；booking 由此写出每周重复预约，真库检查接在乘法业务 IT 的预约部分。本机各模块定向测试和语言参考示例通过。
 
 **上一实现（G5 第二片：循环体里新建、删除和累加，待同源码 CI）：**[设计31](design/12-feature-semantics-and-semantic-types.md)放开 `each` 循环体：可以 `create`、`delete`、`exists`／`count`，对循环外的行只能做不带守卫的“本字段 ± 值”累加（一条 `SET total = total + ?`）；已经 `persist` 过的新建行也能做原子累加；`each` 正在处理的行可以删除。shop 由此加了购物车（加入、改数量、移除、查看、清空、结账），结账逐项锁商品扣库存、写明细、累加订单总额并清空购物车，售罄整笔回滚；真库检查接在乘法业务 IT，不新起应用。本机语义、降级、生成与编辑模块的定向测试、八题离线编译和语言参考示例通过；真实 MySQL 由 CI 执行。
 
-**上一实现（daysBetween、max、min 与逾期罚款，待同源码 CI）：**[设计30](design/12-feature-semantics-and-semantic-types.md)；library 还书时按整天数罚 0.50，提前还书不罚。#177 里这两项真库检查已通过，整轮因目录计数预算检查漏 `start()` 失败，`84b8cc7` 修复后待 #178。
+**上一实现（daysBetween、max、min 与逾期罚款，待同源码 CI）：**[设计30](design/12-feature-semantics-and-semantic-types.md)；library 还书时按整天数罚 0.50，提前还书不罚。#177 里这两项真库检查已通过，整轮因目录计数预算检查漏 `start()` 失败；`84b8cc7` 的 #178 全部通过，两项转完整。
 
 **#175探针修复（待同源码CI）：**`61eee79` 已通过预热编译，首次Frozen和完成诊断都只有G9TopicRuntimeTest旧公开读探针不认识Copy.selectMaps的一项失败；业务IT／独立验证／CLI／部署均未执行。上轮只跑新增SQL方法，遗漏同类旧回归，是本机可检出的覆盖选择失误。沿IT顺序核对时还发现并修正了“至少20本”与实际12本种子的失配，改为按观察连接的完整书目ID集、总数、顺序与逐书计数校验，补漏行／重复／额外／错序等反例。完整执行11类122项（零失败／跳过），包含G9整类32项、详情／分页／搜索匿名计数、旧借还／FIFO与图谱／预算；仅测试探针及文档改动，生产逻辑不变。见[验证48](qualification/README.md#ci-175-catalogue-probe-fix)，账本保持76／2／6。负责人已澄清先完成剩余缺口再做小模型评估，评估不是实施前置。
 

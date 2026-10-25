@@ -58,6 +58,7 @@ class MultiplicationBusinessConformanceIT {
             IntervalBookingChecks.verify(s, observer, http);
             ShopCancellationChecks.verify(s,observer,http);
             ShopCheckoutChecks.verify(s,observer,http);
+            ShopCouponChecks.verify(s,observer,http);
             s.setRowsAfter(s.rowsNow(observer));
         }
     }

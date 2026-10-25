@@ -15,6 +15,8 @@ class ShopCancellationChecksTest {
         "SELECT COUNT(*) FROM order_line WHERE purchase_id=?|order_line",
         "SELECT id, product_id FROM order_line ORDER BY product_id ASC, id ASC LIMIT ?|order_line",
         "SELECT id, stock FROM shop_product WHERE id=? FOR UPDATE|shop_product",
+        "SELECT id, coupon_id FROM redemption WHERE purchase_id=? ORDER BY id ASC LIMIT ?|redemption",
+        "SELECT id, used FROM coupon WHERE id=? FOR UPDATE|coupon",
         "SELECT id FROM private_data|unexpected",
         "SELECT @@SESSION.unregistered_probe|unexpected",
         "SELECT id FROM order_line JOIN private_data ON private_data.id=order_line.id|unexpected",

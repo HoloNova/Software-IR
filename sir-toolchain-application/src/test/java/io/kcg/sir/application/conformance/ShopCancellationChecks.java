@@ -117,7 +117,7 @@ final class ShopCancellationChecks {
         if(GroupedSumReadBudget.isSessionProbe(q))return "session";
         if(java.util.regex.Pattern.compile("\\bselect\\b").matcher(q).results().count()!=1
             || java.util.regex.Pattern.compile("\\b(join|union|into)\\b").matcher(q).find())return "unexpected";
-        for(String table:List.of("access_token","user","purchase_order","order_line","shop_product"))
+        for(String table:List.of("access_token","user","purchase_order","order_line","shop_product","redemption","coupon"))
             if(q.matches("select\\b.+\\bfrom "+table+"\\b.*"))return table;
         return "unexpected";
     }

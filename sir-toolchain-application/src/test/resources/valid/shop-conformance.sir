@@ -331,6 +331,120 @@ capability Checkout {
 input OrderRef {
       field id: Id;
     }
+entity Coupon persistent {
+      identity id: Id generated auto;
+      field code: Code unique;
+      field amountOff: Money where min(0);
+      field minSpend: Money where min(0);
+      field startsAt: Moment;
+      field endsAt: Moment;
+      field totalLimit: Count;
+      field used: Count default 0;
+    }
+entity Redemption persistent {
+      identity id: Id generated auto;
+      field coupon: Ref<Coupon>;
+      field buyer: Ref<User>;
+      field purchase: Ref<PurchaseOrder>;
+      field amountOff: Money;
+      unique (coupon, buyer);
+      unique (purchase, buyer);
+    }
+view CouponView from Coupon {
+      field id: Id;
+      field code: Code;
+      field amountOff: Money;
+      field minSpend: Money;
+      field startsAt: Moment;
+      field endsAt: Moment;
+      field totalLimit: Count;
+      field used: Count;
+    }
+input NewCoupon {
+      field code: Code;
+      field amountOff: Money where min(0);
+      field minSpend: Money where min(0);
+      field startsAt: Moment;
+      field endsAt: Moment;
+      field totalLimit: Count;
+    }
+error CouponCodeTaken http 409;
+error InvalidWindow http 400;
+capability AddCoupon {
+      actor Ref<User>;
+      input NewCoupon;
+      output CouponView;
+      fails CouponCodeTaken;
+      fails Forbidden;
+      fails InvalidWindow;
+      requires authenticated;
+      requires atomic;
+      expose command at "/coupons";
+      workflow {
+        validate actor.role == Role.ADMIN else Forbidden;
+        validate input.startsAt < input.endsAt else InvalidWindow;
+        create Coupon as coupon {
+          code: input.code;
+          amountOff: input.amountOff;
+          minSpend: input.minSpend;
+          startsAt: input.startsAt;
+          endsAt: input.endsAt;
+          totalLimit: input.totalLimit;
+        }
+        persist coupon else CouponCodeTaken;
+        return coupon;
+      }
+    }
+input ApplyCouponInput {
+      field orderId: Id;
+      field code: Code;
+    }
+error CouponAlreadyUsed http 409;
+error CouponExhausted http 409;
+error CouponExpired http 409;
+error CouponNotFound http 404;
+error MinSpendNotMet http 409;
+capability ApplyCoupon {
+      actor Ref<User>;
+      input ApplyCouponInput;
+      output OrderView;
+      fails CouponAlreadyUsed;
+      fails CouponExhausted;
+      fails CouponExpired;
+      fails CouponNotFound;
+      fails MinSpendNotMet;
+      fails NotPayable;
+      fails NotYourOrder;
+      fails OrderNotFound;
+      requires authenticated;
+      requires atomic;
+      expose command at "/orders/{orderId}/coupon";
+      workflow {
+        load PurchaseOrder by input.orderId as purchase for update else OrderNotFound;
+        validate purchase.buyer == actor else NotYourOrder;
+        validate purchase.state == OrderState.CREATED else NotPayable;
+        load Coupon by code: input.code as found else CouponNotFound;
+        load Coupon by found.id as coupon for update else CouponNotFound;
+        validate now() >= coupon.startsAt and now() <= coupon.endsAt else CouponExpired;
+        validate purchase.total >= coupon.minSpend and purchase.total >= coupon.amountOff else MinSpendNotMet;
+        update coupon when coupon.used < coupon.totalLimit else CouponExhausted {
+          used: coupon.used + 1;
+        }
+        persist coupon;
+        create Redemption as redemption {
+          coupon: coupon;
+          buyer: actor;
+          purchase: purchase;
+          amountOff: coupon.amountOff;
+        }
+        persist redemption else CouponAlreadyUsed;
+        update purchase {
+          total: purchase.total - coupon.amountOff;
+        }
+        persist purchase;
+        return purchase;
+      }
+    }
 error NotPayable http 409;
 error NotYourOrder http 403;
 error OrderNotFound http 404;
@@ -383,6 +497,7 @@ capability CancelOrder {
       actor Ref<User>;
       input OrderRef;
       output OrderView;
+      fails CouponNotFound;
       fails InconsistentOrder;
       fails NotCancellable;
       fails NotYourOrder;
@@ -411,6 +526,15 @@ capability CancelOrder {
             stock: product.stock + line.quantity;
           }
           persist product;
+        }
+        each Redemption where item.purchase == purchase
+          order by id ascending limit 1 else InconsistentOrder as redeemed {
+          load Coupon by redeemed.coupon as coupon for update else CouponNotFound;
+          update coupon when coupon.used > 0 else InconsistentOrder {
+            used: coupon.used - 1;
+          }
+          persist coupon;
+          delete redeemed;
         }
         return purchase;
       }

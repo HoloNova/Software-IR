@@ -104,6 +104,8 @@ class ShopCancellationRuntimeTest {
                 var rows=new ArrayList<Object>();int id=0;
                 for(int quantity:quantities){var row=type("domain.OrderLine").getConstructor().newInstance();set(row,"Id",(long)++id);set(row,"PurchaseId",51L);set(row,"ProductId",7L);set(row,"Quantity",quantity);set(row,"UnitPrice",new java.math.BigDecimal("1.00"));rows.add(row);}return rows;
             }
+            // The order carries no coupon, so the redemption source answers with nothing and the coupon is never touched.
+            if(entity.equals("Redemption") && method.equals("selectList"))return List.of();
             if(entity.equals("Product") && method.equals("selectOne")) {
                 events.add("Product.lock");if(missingProduct)return null;
                 return product();
