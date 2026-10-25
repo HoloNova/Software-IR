@@ -1,0 +1,111 @@
+sir 0.3
+software CartDesk {
+  metadata {
+    displayName "Cart Desk";
+    namespace "example.cart";
+  }
+  target {
+    language java 21;
+    framework spring_boot;
+    persistence mybatis_plus;
+    database mysql;
+    build maven;
+    interface rest;
+  }
+  sources { }
+  imports { }
+  declarations {
+    entity User persistent {
+      identity id: Id generated auto;
+    }
+    entity Product persistent {
+      identity id: Id generated auto;
+      field price: Money where min(0);
+      field stock: Count where min(0);
+    }
+    entity CartItem persistent {
+      identity id: Id generated auto;
+      field owner: Ref<User>;
+      field product: Ref<Product>;
+      field quantity: Quantity;
+      unique (owner, product);
+    }
+    entity PurchaseOrder persistent {
+      identity id: Id generated auto;
+      field buyer: Ref<User>;
+      field total: Money default 0.00;
+    }
+    entity OrderLine persistent {
+      identity id: Id generated auto;
+      field purchase: Ref<PurchaseOrder>;
+      field product: Ref<Product>;
+      field quantity: Quantity;
+      field unitPrice: Money;
+    }
+    view OrderView from PurchaseOrder {
+      field id: Id;
+      field total: Money;
+    }
+    error CartEmpty http 409;
+    error CartTooLarge http 409;
+    error OutOfStock http 409;
+    error ProductNotFound http 404;
+    capability Checkout {
+      actor Ref<User>;
+      output OrderView;
+      fails CartEmpty;
+      fails CartTooLarge;
+      fails OutOfStock;
+      fails ProductNotFound;
+      requires authenticated;
+      requires atomic;
+      expose command at "/cart/checkout";
+      workflow {
+        exists CartItem where item.owner == actor as hasItems;
+        validate hasItems else CartEmpty;
+        create PurchaseOrder as purchase {
+          buyer: actor;
+        }
+        persist purchase;
+        each CartItem where item.owner == actor
+          order by product ascending, id ascending
+          limit 50 else CartTooLarge as entry {
+          load Product by entry.product as product for update else ProductNotFound;
+          update product when product.stock >= entry.quantity else OutOfStock {
+            stock: product.stock - entry.quantity;
+          }
+          persist product;
+          create OrderLine as line {
+            purchase: purchase;
+            product: product;
+            quantity: entry.quantity;
+            unitPrice: product.price;
+          }
+          persist line;
+          update purchase {
+            total: purchase.total + product.price * entry.quantity;
+          }
+          persist purchase;
+          delete entry;
+        }
+        return purchase;
+      }
+    }
+    capability ClearCart {
+      actor Ref<User>;
+      output Unit;
+      fails CartTooLarge;
+      requires authenticated;
+      requires atomic;
+      expose command at "/cart/clear";
+      workflow {
+        each CartItem where item.owner == actor
+          order by id ascending
+          limit 100 else CartTooLarge as entry {
+          delete entry;
+        }
+        return unit;
+      }
+    }
+  }
+}

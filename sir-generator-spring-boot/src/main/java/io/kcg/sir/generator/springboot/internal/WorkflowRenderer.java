@@ -169,7 +169,12 @@ final class WorkflowRenderer {
       lines.add("            if ($eachRows.size() > "+step.plan().limit()+") throw new "+errorJavaName(ctx,step.errorSymbol(),imports,currentPackage)+"();");
       lines.add("            for (var $eachRow : $eachRows) {");
       var local=new EachNames(names);local.put(step.row().symbol(),"$eachRow");int index=0;
-      for(var child:step.body())if(child instanceof SpringBootWorkflow.LoadStep load)local.put(load.result().symbol(),"$eachLocal"+index++);
+      // Every row or answer a pass declares gets a name no outer variable can have, so a pass never shadows one.
+      for(var child:step.body()) {
+         if(child instanceof SpringBootWorkflow.LoadStep load)local.put(load.result().symbol(),"$eachLocal"+index++);
+         if(child instanceof SpringBootWorkflow.CreateStep create)local.put(create.result().symbol(),"$eachLocal"+index++);
+         if(child instanceof SpringBootWorkflow.ScalarQueryStep scalar)local.put(scalar.result().symbol(),"$eachLocal"+index++);
+      }
       var body=new ArrayList<String>();
       for(var child:step.body())renderStep(ctx,workflow,capability,child,responseRepresentation,inputName,local,imports,currentPackage,body,mappers,stringMatches);
       for(String line:body)lines.add("        "+line);
@@ -759,7 +764,7 @@ final class WorkflowRenderer {
          return;
       }
 
-      renderCandidateChecks(ctx, capability, step, entity, targetName, imports, currentPackage, lines);
+      renderCandidateChecks(ctx, capability, step, entity, targetName, variableNames, imports, currentPackage, lines);
       UpdateStep columnWrite = columnWriteOf(workflow, step);
       if (columnWrite != null) {
          renderColumnPersist(ctx, columnWrite, target, entity, mapper, variableNames, imports, currentPackage, lines);
@@ -866,8 +871,8 @@ final class WorkflowRenderer {
       imports.add("com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper");
       String targetName = variableName(target, variableNames);
       String identity = getterName(entity.identity().javaName());
-      String updated = targetName + "Updated";
-      renderDecimalDeltas(ctx, update, entity, variableNames, lines);
+      String updated = helperName(targetName, variableNames, "Updated");
+      renderDecimalDeltas(ctx, update, entity, targetName, variableNames, lines);
       lines.add("        int " + updated + " = " + mapperAccess(mapper, variableNames) + ".update(null, new LambdaUpdateWrapper<" + entity.javaName() + ">()");
       lines.add("                .eq(" + entity.javaName() + "::" + identity + ", " + targetName + "." + identity + "())");
       if (update.guard().isPresent()) {
@@ -904,7 +909,7 @@ final class WorkflowRenderer {
       lines.add("        }");
       List<Binding> counted = update.bindings().stream().filter(binding -> binding.relative().isPresent()).toList();
       if (!counted.isEmpty()) {
-         String fresh = targetName + "Stored";
+         String fresh = helperName(targetName, variableNames, "Stored");
          lines.add("        " + entity.javaName() + " " + fresh + " = " + mapperAccess(mapper, variableNames) + ".selectById(" + targetName + "." + identity + "());");
          for (Binding binding : counted) {
             lines.add("        " + targetName + "." + setter(binding.targetProperty()) + "(" + fresh + "." + getterName(binding.targetProperty()) + "());");
@@ -912,13 +917,22 @@ final class WorkflowRenderer {
       }
    }
 
+   /**
+    * The name of a local the renderer adds for a row: its checks, its affected-row count, its re-read copy. Inside a
+    * loop pass, a row from outside the loop gets a {@code $each} prefix, because Java does not let a block declare a
+    * name the enclosing method already declared for the same row; a pass-local row already has a {@code $} name.
+    */
+   private static String helperName(String targetName, Map<SymbolId, String> names, String suffix) {
+      return names instanceof EachNames && !targetName.startsWith("$") ? "$each" + targetName + suffix : targetName + suffix;
+   }
+
    private static void renderDecimalDeltas(GenerationContext ctx, UpdateStep update, EntityDeclaration entity,
-         Map<SymbolId, String> names, List<String> lines) {
+         String targetName, Map<SymbolId, String> names, List<String> lines) {
       List<Binding> decimals = update.bindings().stream()
           .filter(binding -> binding.relative().flatMap(SpringBootWorkflow.Relative::decimalShape).isPresent()).toList();
       if (decimals.isEmpty()) return;
       WriteSupport support = WriteSupport.of(ctx.model());
-      String violations = "decimalViolations";
+      String violations = helperName(targetName, names, "DecimalViolations");
       lines.add("        java.util.List<" + support.fieldErrorFqn() + "> " + violations + " = new java.util.ArrayList<>();");
       for (Binding binding : decimals) {
          var relative = binding.relative().orElseThrow();
@@ -950,6 +964,7 @@ final class WorkflowRenderer {
       PersistStep step,
       EntityDeclaration entity,
       String targetName,
+      Map<SymbolId, String> variableNames,
       ImportSorter imports,
       String currentPackage,
       List<String> lines
@@ -977,7 +992,7 @@ final class WorkflowRenderer {
 
       imports.add("java.util.ArrayList");
       imports.add("java.util.List");
-      String violations = targetName + "Violations";
+      String violations = helperName(targetName, variableNames, "Violations");
       lines.add("        List<" + simpleName(fieldError) + "> " + violations + " = new ArrayList<>();");
       for (WorkflowRenderer.CandidateField candidate : candidates) {
          for (SpringBootDeclaration.Constraint constraint : candidate.constraints()) {

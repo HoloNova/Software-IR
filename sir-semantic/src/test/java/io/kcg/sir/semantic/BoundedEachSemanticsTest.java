@@ -17,14 +17,21 @@ class BoundedEachSemanticsTest {
         "else TooMany as|else Unknown as", "fails TooMany;|",
         "return unit;|return line;", "return unit;|validate product.stock >= 0 else InvalidLine; return unit;",
         "as line {|as batch {", "persist product;|persist batch;",
-        "persist product;|return unit;", "persist product;|delete product;",
-        "persist product;|create Product as extra { stock: 0; } persist extra;",
+        "persist product;|return unit;",
         "line.quantity > 0|item.quantity > 0",
         "persist product;|each Line where true order by id ascending limit 1 else TooMany as inner { persist inner; }"
     })
     void unsupportedShapesAndScopeEscapesAreRejectedWithoutThrowing(String from,String to) {
         var result=TestSources.analyze(TestSources.resource("valid/bounded-each.sir").replace(from,to==null?"":to));
         assertFalse(result.isSuccess(),"must reject "+from+" -> "+to);
+    }
+    @ParameterizedTest @CsvSource(delimiter='|',value={
+        "persist product;|persist product; delete product;",
+        "persist product;|persist product; create Product as extra { stock: 0; } persist extra;"
+    })
+    void aPassMayCreateAndDeleteItsOwnRows(String from,String to) {
+        var result=TestSources.analyze(TestSources.resource("valid/bounded-each.sir").replace(from,to));
+        assertTrue(result.isSuccess(),from+" -> "+to+": "+result.diagnostics());
     }
     @Test void aRequestControlledLimitIsRejectedByTheParserRatherThanReinterpretedAsAnExpression() {
         var parsed=io.kcg.sir.api.SirParser.create().parseProject(new io.kcg.sir.api.SirSource(

@@ -1431,7 +1431,7 @@ capability Take {
 
 这样的绑定写成 `SET enrolled = enrolled + ?`，加减由数据库在存着的值上做，所以并发的请求都会被数过，不会各自用读到的旧值覆盖对方；上面的守卫把“还有名额”也放进同一条语句，名额只剩一个时只有一个请求成功。
 
-规则（`SIR-VALID-007`）：形式只有 `字段: 变量.同一个字段 + 值` 和 `字段: 变量.同一个字段 - 值`，值不能读这一行；字段必须是整数（`Count`、`Quantity`、`Serial` 等）或带精度的 `Money`；行必须是 `load` 出来的，不能是本次新建的；实体不能带 `versioned`；这一行只能有这一个 `update`（它整个写成一条语句，只写绑定的那些列）。不带守卫也可以，行不在了会以服务器错误结束。写入后会把这一列重新读回来，所以返回的是存着的值，不是读到的旧值加一。
+规则（`SIR-VALID-007`）：形式只有 `字段: 变量.同一个字段 + 值` 和 `字段: 变量.同一个字段 - 值`，值不能读这一行；字段必须是整数（`Count`、`Quantity`、`Serial` 等）或带精度的 `Money`；行必须是 `load` 出来的，或者是本次新建、并且在这一步之前已经 `persist` 过的（还没存下的行没有值可加）；实体不能带 `versioned`；这一行只能有这一个 `update`（它整个写成一条语句，只写绑定的那些列）。不带守卫也可以，行不在了会以服务器错误结束。写入后会把这一列重新读回来，所以返回的是存着的值，不是读到的旧值加一。
 
 一个常见的搭配是“新建一行并给被引用的行计数”（选课：新建选课记录，课程的已选人数加一）。**先 `persist` 被计数的行，再 `persist` 新建的行**：在 MySQL（InnoDB）里，插入引用了某一行的记录会先给被引用的行加读锁，两个请求若各自拿着读锁再去改同一行，会互相等待而死锁；先改被计数的行，后到的请求在这里排队，就不会。
 
@@ -1443,7 +1443,7 @@ capability Take {
 delete 变量;
 ```
 
-删除 `load` 读出来的这一行。只能删 `load` 出来的变量（不能删刚 `create` 的），删除后不能再 `update`、`persist` 或再次 `delete` 它（`SIR-VALID-012`）；只读能力里不能有（`SIR-FLOW-004`）。
+删除 `load` 读出来的这一行。只能删 `load` 出来的变量或 `each` 正在处理的行（不能删刚 `create` 的），删除后不能再 `update`、`persist` 或再次 `delete` 它（`SIR-VALID-012`）；只读能力里不能有（`SIR-FLOW-004`）。
 
 ```sir-declarations
 entity Memo persistent {
@@ -1692,9 +1692,92 @@ capability RestoreInventory {
 
 只能用在 `requires atomic` 的 command 里；它处理的是数据库里的行，不是请求里的列表。`each`、`limit` 只在这个位置是关键字。来源必须是持久化实体，条件和 `scope` 的规则与普通查询相同，`item` 只在条件里表示来源行。必须写 `order by`，并且以主键收尾，保证顺序稳定；引用字段按它存的主键排序。上限必须是 1 到 100 的整数字面量，不能是表达式；超过上限不会截断了事，而是报错。
 
-循环体里只能写 `validate`、`load`、`update`、`persist`。可以读外面的变量，但只能写本次处理的行或体内 `load` 的行，不能改外面的行。行变量和体内的变量出了循环就不能用。体内不能再嵌套 `each`，也不能有 `return`、`create`、`delete`、查询、求和或 `month`；没有 `break`、`continue` 和累加变量。体内任何一步失败，整笔事务回滚，之前已经执行过的循环也一起撤销。
+循环体里能写 `validate`、`load`、`exists`、`count`、`create`、`update`、`persist`、`delete`（`SIR-FLOW-004`）。可以读外面的变量；能写、能删的是本次处理的行、体内 `load` 的行和体内 `create` 的行。循环外的行只能**累加**：一个不带守卫的 `update`，每个绑定都是“本字段 + 值”或“本字段 - 值”（见 5.6 的计数），后面跟 `persist`。这样每一次循环都是一条 `SET total = total + ?`，由数据库在存着的值上加，前一次的结果不会被后一次覆盖；要累加到本次新建的行上，这一行要在循环前先 `persist`。行变量和体内的变量出了循环就不能用。体内不能再嵌套 `each`，也不能有 `return`、`find`、求和或 `month`；没有 `break`、`continue`。体内任何一步失败，整笔事务回滚，之前已经执行过的循环也一起撤销。
 
-`each` 不会自动加锁。要防止重复操作或子行被并发修改，仍要先锁父行、检查状态，并按固定顺序锁子行。例子里先检查库存加上数量不会超过整数上限，再写带同样条件的守卫，不依赖数据库的严格模式防溢出。[商城样例](../sir-toolchain-application/src/test/resources/topics/shop/project.sir)的取消订单就是这样组合的：锁订单、守卫状态为 `CREATED`、检查明细存在、上限 100 行、按商品和 id 升序退回库存，任何一步失败整笔回滚。这不代表“一个订单多个商品”已经能写。
+下面是购物车结账：先存一张总额为 0 的订单，再逐个购物车条目锁商品、扣库存、写明细、把这一项的金额加到订单上，最后删掉条目。
+
+```sir-declarations
+entity Buyer persistent {
+  identity id: Id generated auto;
+}
+entity Goods persistent {
+  identity id: Id generated auto;
+  field price: Money where min(0);
+  field stock: Count where min(0);
+}
+entity BasketItem persistent {
+  identity id: Id generated auto;
+  field owner: Ref<Buyer>;
+  field goods: Ref<Goods>;
+  field quantity: Quantity;
+  unique (owner, goods);
+}
+entity Sale persistent {
+  identity id: Id generated auto;
+  field buyer: Ref<Buyer>;
+  field total: Money default 0.00;
+}
+entity SaleLine persistent {
+  identity id: Id generated auto;
+  field sale: Ref<Sale>;
+  field goods: Ref<Goods>;
+  field quantity: Quantity;
+  field unitPrice: Money;
+}
+view SaleView from Sale {
+  field id: Id;
+  field total: Money;
+}
+error BasketEmpty http 409;
+error BasketTooLarge http 409;
+error GoodsMissing http 404;
+error SoldOut http 409;
+capability CheckOut {
+  actor Ref<Buyer>;
+  output SaleView;
+  fails BasketEmpty;
+  fails BasketTooLarge;
+  fails GoodsMissing;
+  fails SoldOut;
+  requires authenticated;
+  requires atomic;
+  expose command at "/basket/checkout";
+  workflow {
+    exists BasketItem where item.owner == actor as hasItems;
+    validate hasItems else BasketEmpty;
+    create Sale as sale {
+      buyer: actor;
+    }
+    persist sale;
+    each BasketItem where item.owner == actor
+      order by goods ascending, id ascending
+      limit 50 else BasketTooLarge as entry {
+      load Goods by entry.goods as goods for update else GoodsMissing;
+      update goods when goods.stock >= entry.quantity else SoldOut {
+        stock: goods.stock - entry.quantity;
+      }
+      persist goods;
+      create SaleLine as line {
+        sale: sale;
+        goods: goods;
+        quantity: entry.quantity;
+        unitPrice: goods.price;
+      }
+      persist line;
+      update sale {
+        total: sale.total + goods.price * entry.quantity;
+      }
+      persist sale;
+      delete entry;
+    }
+    return sale;
+  }
+}
+```
+
+商品按 id 升序加锁，几个人同时结账也按同一顺序等锁，不会互相死锁；任何一个商品库存不够，之前扣掉的库存、写下的明细和订单都一起撤销，购物车保持原样。
+
+`each` 不会自动加锁。要防止重复操作或子行被并发修改，仍要先锁父行、检查状态，并按固定顺序锁子行。例子里先检查库存加上数量不会超过整数上限，再写带同样条件的守卫，不依赖数据库的严格模式防溢出。[商城样例](../sir-toolchain-application/src/test/resources/topics/shop/project.sir)的取消订单就是这样组合的：锁订单、守卫状态为 `CREATED`、检查明细存在、上限 100 行、按商品和 id 升序退回库存，任何一步失败整笔回滚；同一个样例里的结账就是上面购物车的写法。
 
 ## 6. 表达式
 
@@ -2014,7 +2097,7 @@ use Crud {
 | `SIR-VALID-009` | 凭据实体的规则 |
 | `SIR-VALID-010` | `default` 的规则：`unique`、`secret`、`versioned` 字段不能有默认值 |
 | `SIR-VALID-011` | `scope` 的规则：不能用 `any(...)` 或 `.present` |
-| `SIR-VALID-012` | `delete` 的规则：只能删 `load` 出来的行，删后不能再用 |
+| `SIR-VALID-012` | `delete` 的规则：只能删 `load` 或 `each` 读出来的行，删后不能再用 |
 | `SIR-VALID-013` | 方法与路径的规则：`put`/`delete` 只用于 command、路径段与路径字段的写法、方法加路径不能重复 |
 | `SIR-TYPE-005` | `type` 声明的问题：名字被语言占用、基类型成环 |
 | `SIR-EXTEND-001` | `extend` 的目标不是实体 |

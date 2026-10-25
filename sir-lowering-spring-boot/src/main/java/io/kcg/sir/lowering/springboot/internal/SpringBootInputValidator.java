@@ -552,13 +552,8 @@ public final class SpringBootInputValidator {
                  var symbol=this.model.symbols().byId(row).orElse(null);
                  if(!(symbol instanceof VariableSymbol variable && variable.type() instanceof RefType ref && ref.entityId().equals(value.entitySymbol())))valid=false;
              }
-             Set<SymbolId> local=new java.util.HashSet<>();local.add(value.rowVariable());
+             if(!LoopBodies.validCore(value.rowVariable(),value.body()))valid=false;
              for(var child:value.body()) {
-                 if(child instanceof NormalizedStep.LoadStep load)local.add(load.resultVariable());
-                 if(!(child instanceof NormalizedStep.ValidateStep || child instanceof NormalizedStep.LoadStep
-                     || child instanceof NormalizedStep.UpdateStep || child instanceof NormalizedStep.PersistStep))valid=false;
-                 SymbolId target=child instanceof NormalizedStep.UpdateStep u?u.targetVariable():child instanceof NormalizedStep.PersistStep p?p.targetVariable():null;
-                 if(target!=null&&!local.contains(target))valid=false;
                  if(!(child instanceof NormalizedStep.EachStep))this.validateStep(child,capability,actorAccess);
              }
              if(!valid)this.error("SIR-LOWER-INPUT-001","invalid bounded source, local body or atomic contract",value.span(),capability.id(),value.sourceNodeId());

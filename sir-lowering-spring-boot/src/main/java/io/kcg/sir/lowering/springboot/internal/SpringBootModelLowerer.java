@@ -876,7 +876,10 @@ public final class SpringBootModelLowerer {
         List<SpringBootWorkflow.Step> body=new ArrayList<>();
         for(NormalizedStep child:source.body()) {
             body.add(this.lowerStep(child,owner,local,actor));
+            // The same provenance rules as at the top level: a created row is new until its first persist.
             if(child instanceof NormalizedStep.LoadStep load)local.put(load.resultVariable(),Provenance.EXISTING);
+            if(child instanceof NormalizedStep.CreateStep create)local.put(create.resultVariable(),Provenance.NEW);
+            if(child instanceof NormalizedStep.PersistStep persist)local.put(persist.targetVariable(),Provenance.EXISTING);
         }
         int budget=EachValidation.bodyStatements(body);
         var entity=this.entities.get(source.entitySymbol());

@@ -538,15 +538,49 @@ int returnCount = 0;
        }
        this.validateStringMatchShape(step.predicate());
        this.rejectArithmeticTheQueryCannotCarry(step.predicate(),false);
+       this.validateLoopBody(step.id(), step.body());
+   }
+
+   /**
+    * What one pass of a bounded loop may do. It may read (validate, load, exists, count), write the row it is on, a row
+    * it loaded or one it created, and delete such a row. A row from outside the loop is only accumulated into: every
+    * binding of its update changes a column by an amount, which the database applies to the stored value, so repeated
+    * passes never overwrite one another. Nested loops, other queries, aggregates and return stay outside.
+    */
+   private void validateLoopBody(io.kcg.sir.ast.AstNodeId loop, List<AstStep> body) {
        Set<SymbolId> local=new java.util.HashSet<>();
-       local.add(this.typed.referenceBindings().get(step.id()));
-       for(AstStep child:step.body()) {
-          if(child instanceof AstLoadStep load) local.add(this.typed.referenceBindings().get(load.id()));
-          if(!(child instanceof AstValidateStep || child instanceof AstLoadStep || child instanceof AstUpdateStep || child instanceof AstPersistStep))
-             this.diagnostics.add(DiagnosticBuilder.error("SIR-FLOW-004","each body only allows validate/load/update/persist",child.span()));
-          AstNameRef target=child instanceof AstUpdateStep update?update.target():child instanceof AstPersistStep persist?persist.target():null;
-          if(target!=null && !local.contains(this.typed.referenceSiteBindings().targetFor(target.id()).orElse(null)))
-             this.diagnostics.add(DiagnosticBuilder.error("SIR-FLOW-004","each body cannot write an outer row",target.span()));
+       SymbolId row=this.typed.referenceBindings().get(loop);
+       if(row!=null) local.add(row);
+       Set<SymbolId> accumulated=new java.util.HashSet<>();
+       for(AstStep child:body) {
+          if(child instanceof AstLoadStep || child instanceof AstCreateStep || child instanceof io.kcg.sir.ast.AstScalarQueryStep) {
+             SymbolId declared=this.typed.referenceBindings().get(child.id());
+             if(declared!=null) local.add(declared);
+          }
+          if(!(child instanceof AstValidateStep || child instanceof AstLoadStep || child instanceof AstUpdateStep
+                || child instanceof AstPersistStep || child instanceof AstCreateStep || child instanceof io.kcg.sir.ast.AstDeleteStep
+                || child instanceof io.kcg.sir.ast.AstScalarQueryStep))
+             this.diagnostics.add(DiagnosticBuilder.error("SIR-FLOW-004",
+                "循环体只允许 validate、load、exists、count、create、update、persist、delete",child.span()));
+          if(child instanceof AstUpdateStep update) {
+             SymbolId target=this.typed.referenceSiteBindings().targetFor(update.target().id()).orElse(null);
+             if(target!=null && !local.contains(target)) {
+                boolean accumulates=update.guard().isEmpty() && !update.bindings().isEmpty()
+                   && update.bindings().stream().allMatch(binding -> this.isSelfRelative(binding, target));
+                if(accumulates) accumulated.add(target);
+                else this.diagnostics.add(DiagnosticBuilder.error("SIR-FLOW-004",
+                   "循环体对循环外的行只能做不带守卫的“本字段 + 值”累加: "+update.target().text(),update.target().span()));
+             }
+          }
+          AstNameRef target=child instanceof AstPersistStep persist?persist.target():child instanceof io.kcg.sir.ast.AstDeleteStep delete?delete.target():null;
+          if(target!=null) {
+             SymbolId symbol=this.typed.referenceSiteBindings().targetFor(target.id()).orElse(null);
+             boolean allowed=local.contains(symbol) || child instanceof AstPersistStep && accumulated.contains(symbol);
+             if(symbol!=null && !allowed)
+                this.diagnostics.add(DiagnosticBuilder.error("SIR-FLOW-004",
+                   child instanceof io.kcg.sir.ast.AstDeleteStep ? "循环体不能删除循环外的行: "+target.text()
+                      : "循环体不能写循环外的行（累加除外）: "+target.text(),target.span()));
+          }
        }
    }
 
@@ -1512,12 +1546,20 @@ int returnCount = 0;
    }
 
    private void validateSelfRelativeTarget(AstUpdateStep step, AstCapabilityDecl capDecl, SymbolId target, List<AstBinding> relative) {
-      boolean loaded = io.kcg.sir.ast.AstSteps.walk(capDecl.workflow().steps())
+      List<AstStep> ordered = io.kcg.sir.ast.AstSteps.walk(capDecl.workflow().steps()).toList();
+      boolean loaded = ordered.stream()
           .anyMatch(other -> (other instanceof AstLoadStep || other instanceof io.kcg.sir.ast.AstEachStep)
               && target.equals(this.typed.referenceBindings().get(other.id())));
-      if (!loaded) {
+      // A created row has a stored value once it has been persisted; adding to it after that is as safe as for a
+      // loaded row (an order's total accumulated line by line).
+      int position = ordered.indexOf(step);
+      boolean stored = ordered.subList(0, Math.max(position, 0)).stream()
+          .anyMatch(other -> other instanceof AstPersistStep persist
+              && this.typed.referenceSiteBindings().targetFor(persist.target().id()).filter(target::equals).isPresent());
+      if (!loaded && !stored) {
          this.diagnostics.add(DiagnosticBuilder.error(
-            "SIR-VALID-007", "“本字段 + 值”只能用于 load 出来的行（新建的行还没有存下来的值）: " + step.target().text(), step.target().span()));
+            "SIR-VALID-007", "“本字段 + 值”只能用于 load 出来的行，或已经 persist 过的新建行（还没存下的行没有值可加）: "
+               + step.target().text(), step.target().span()));
       }
 
       SymbolId entity = this.updateTargetEntitySymId(step);
@@ -1948,10 +1990,15 @@ int returnCount = 0;
       for (AstStep step : io.kcg.sir.ast.AstSteps.walk(capDecl.workflow().steps()).toList()) {
          if (step instanceof io.kcg.sir.ast.AstLoadStep load) {
             loaded.add(load.result().text());
+            deleted.remove(load.result().text());
+         } else if (step instanceof io.kcg.sir.ast.AstEachStep each) {
+            // The row a loop is on was read from the database too; each pass binds a fresh one.
+            loaded.add(each.result().text());
+            deleted.remove(each.result().text());
          } else if (step instanceof io.kcg.sir.ast.AstDeleteStep delete) {
             String name = delete.target().text();
             if (!loaded.contains(name)) {
-               this.diagnostics.add(DiagnosticBuilder.error("SIR-VALID-012", "delete 只能删除 load 读出的记录: " + name, delete.target().span()));
+               this.diagnostics.add(DiagnosticBuilder.error("SIR-VALID-012", "delete 只能删除 load 或 each 读出的记录: " + name, delete.target().span()));
             } else if (!deleted.add(name)) {
                this.diagnostics.add(DiagnosticBuilder.error("SIR-VALID-012", "记录已被删除: " + name, delete.target().span()));
             }

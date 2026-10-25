@@ -12,7 +12,7 @@ final class EachValidation {
     static int bodyStatements(List<SpringBootWorkflow.Step> body) {
         int count=0;
         for(var step:body) {
-            if(step instanceof SpringBootWorkflow.LoadStep)count++;
+            if(step instanceof SpringBootWorkflow.LoadStep || step instanceof SpringBootWorkflow.ScalarQueryStep)count++;
             if(step instanceof SpringBootWorkflow.PersistStep persist) {
                 count++;
                 boolean relative=body.stream().filter(SpringBootWorkflow.UpdateStep.class::isInstance)
@@ -62,18 +62,8 @@ final class EachValidation {
         if(model.projectArtifacts().stream().filter(ProjectArtifact.ApplicationConfig.class::isInstance)
                 .map(ProjectArtifact.ApplicationConfig.class::cast).filter(ProjectArtifact.ApplicationConfig::statementScopedQueryCache).count()!=1)
             errors.add("each requires STATEMENT cache");
-        Set<SymbolId> local=new HashSet<>();local.add(each.row().symbol());
-        for(var child:each.body()) {
-            if(child instanceof SpringBootWorkflow.LoadStep load)local.add(load.result().symbol());
-            if(!(child instanceof SpringBootWorkflow.LoadStep || child instanceof SpringBootWorkflow.ValidateStep
-                    || child instanceof SpringBootWorkflow.UpdateStep || child instanceof SpringBootWorkflow.PersistStep))
-                errors.add("each body permits only validate/load/update/persist");
-            SymbolId target=child instanceof SpringBootWorkflow.UpdateStep update?update.targetVariable()
-                :child instanceof SpringBootWorkflow.PersistStep persist?persist.targetVariable():null;
-            if(target!=null&&!local.contains(target))errors.add("each cannot write an outer variable");
-            if(child instanceof SpringBootWorkflow.PersistStep persist && persist.action()!=PersistenceAction.UPDATE)
-                errors.add("each cannot insert or delete");
-        }
+        if(!LoopBodies.validTarget(each.row().symbol(),each.body()))
+            errors.add("each body may write only its own rows; an outer row only by accumulation");
         return List.copyOf(errors);
     }
 }

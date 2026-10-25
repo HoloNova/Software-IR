@@ -172,6 +172,162 @@ capability BuyNow {
         return purchase;
       }
     }
+entity CartItem persistent {
+      identity id: Id generated auto;
+      field owner: Ref<User>;
+      field product: Ref<ShopProduct>;
+      field quantity: Quantity;
+      unique (owner, product);
+    }
+view CartItemView from CartItem {
+      field id: Id;
+      field product: ShopProductView;
+      field quantity: Quantity;
+    }
+input NewCartItem {
+      field productId: Id;
+      field quantity: Quantity;
+    }
+input CartItemRef {
+      field id: Id;
+    }
+input CartQuantity {
+      field id: Id;
+      field quantity: Quantity;
+    }
+error AlreadyInCart http 409;
+error CartItemNotFound http 404;
+capability AddToCart {
+      actor Ref<User>;
+      input NewCartItem;
+      output CartItemView;
+      fails AlreadyInCart;
+      fails ProductNotFound;
+      requires authenticated;
+      requires atomic;
+      expose command at "/cart";
+      workflow {
+        load ShopProduct by input.productId as product else ProductNotFound;
+        validate product.state == ProductState.ON_SHELF else ProductNotFound;
+        create CartItem as entry {
+          owner: actor;
+          product: product;
+          quantity: input.quantity;
+        }
+        persist entry else AlreadyInCart;
+        return entry;
+      }
+    }
+capability ChangeCartQuantity {
+      actor Ref<User>;
+      input CartQuantity;
+      output CartItemView;
+      fails CartItemNotFound;
+      requires authenticated;
+      requires atomic;
+      expose command at "/cart/{id}/quantity";
+      workflow {
+        load CartItem by input.id as entry else CartItemNotFound;
+        validate entry.owner == actor else CartItemNotFound;
+        update entry {
+          quantity: input.quantity;
+        }
+        persist entry;
+        return entry;
+      }
+    }
+capability RemoveFromCart {
+      actor Ref<User>;
+      input CartItemRef;
+      output Unit;
+      fails CartItemNotFound;
+      requires authenticated;
+      requires atomic;
+      expose command at "/cart/{id}/remove";
+      workflow {
+        load CartItem by input.id as entry else CartItemNotFound;
+        validate entry.owner == actor else CartItemNotFound;
+        delete entry;
+        return unit;
+      }
+    }
+capability MyCart {
+      actor Ref<User>;
+      input PageOnly;
+      output Page<CartItemView>;
+      fails BadPage;
+      requires authenticated;
+      requires readonly;
+      expose query at "/cart";
+      workflow {
+        find CartItem
+          where item.owner == actor
+          order by id ascending
+          Page input.page, input.size else BadPage
+        as rows;
+        return rows;
+      }
+    }
+error CartTooLarge http 409;
+capability ClearCart {
+      actor Ref<User>;
+      output Unit;
+      fails CartTooLarge;
+      requires authenticated;
+      requires atomic;
+      expose command at "/cart/clear";
+      workflow {
+        each CartItem where item.owner == actor
+          order by id ascending
+          limit 50 else CartTooLarge as entry {
+          delete entry;
+        }
+        return unit;
+      }
+    }
+error CartEmpty http 409;
+capability Checkout {
+      actor Ref<User>;
+      output OrderView;
+      fails CartEmpty;
+      fails CartTooLarge;
+      fails OutOfStock;
+      fails ProductNotFound;
+      requires authenticated;
+      requires atomic;
+      expose command at "/cart/checkout";
+      workflow {
+        exists CartItem where item.owner == actor as hasItems;
+        validate hasItems else CartEmpty;
+        create PurchaseOrder as purchase {
+          buyer: actor;
+          total: 0.00;
+        }
+        persist purchase;
+        each CartItem where item.owner == actor
+          order by product ascending, id ascending limit 50 else CartTooLarge as entry {
+          load ShopProduct by entry.product as product for update else ProductNotFound;
+          validate product.state == ProductState.ON_SHELF else ProductNotFound;
+          update product when product.stock >= entry.quantity else OutOfStock {
+            stock: product.stock - entry.quantity;
+          }
+          persist product;
+          create OrderLine as line {
+            purchase: purchase;
+            product: product;
+            quantity: entry.quantity;
+            unitPrice: product.price;
+          }
+          persist line;
+          update purchase {
+            total: purchase.total + product.price * entry.quantity;
+          }
+          persist purchase;
+          delete entry;
+        }
+        return purchase;
+      }
+    }
 input OrderRef {
       field id: Id;
     }

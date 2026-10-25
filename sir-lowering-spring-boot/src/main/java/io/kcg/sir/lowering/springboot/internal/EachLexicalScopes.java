@@ -15,8 +15,7 @@ final class EachLexicalScopes {
         NormalizedSteps.walk(capability.workflow().steps()).filter(NormalizedStep.EachStep.class::isInstance)
             .map(NormalizedStep.EachStep.class::cast).forEach(e -> {
                 all.add(e.rowVariable());all.add(e.itemVariable());
-                e.body().stream().filter(NormalizedStep.LoadStep.class::isInstance).map(NormalizedStep.LoadStep.class::cast)
-                    .forEach(load -> all.add(load.resultVariable()));
+                e.body().forEach(child -> LoopBodies.declaredCore(child).ifPresent(all::add));
             });
         if(all.isEmpty())return List.of();
         var errors=new ArrayList<String>();
@@ -26,7 +25,7 @@ final class EachLexicalScopes {
             var available=new HashSet<SymbolId>();available.add(each.rowVariable());
             for(var child:each.body()) {
                 reject(coreUses(child),all,available,errors);
-                if(child instanceof NormalizedStep.LoadStep load)available.add(load.resultVariable());
+                LoopBodies.declaredCore(child).ifPresent(available::add);
             }
         }
         return List.copyOf(errors);
@@ -37,8 +36,7 @@ final class EachLexicalScopes {
         SpringBootWorkflow.walk(capability.workflow().steps()).filter(SpringBootWorkflow.EachStep.class::isInstance)
             .map(SpringBootWorkflow.EachStep.class::cast).forEach(e -> {
                 all.add(e.row().symbol());all.add(e.itemVariable().symbol());
-                e.body().stream().filter(SpringBootWorkflow.LoadStep.class::isInstance).map(SpringBootWorkflow.LoadStep.class::cast)
-                    .forEach(load -> all.add(load.result().symbol()));
+                e.body().forEach(child -> LoopBodies.declaredTarget(child).ifPresent(all::add));
             });
         if(all.isEmpty())return List.of();
         var errors=new ArrayList<String>();
@@ -48,7 +46,7 @@ final class EachLexicalScopes {
             var available=new HashSet<SymbolId>();available.add(each.row().symbol());
             for(var child:each.body()) {
                 reject(targetUses(child),all,available,errors);
-                if(child instanceof SpringBootWorkflow.LoadStep load)available.add(load.result().symbol());
+                LoopBodies.declaredTarget(child).ifPresent(available::add);
             }
         }
         return List.copyOf(errors);

@@ -70,6 +70,34 @@ final class DecimalSessionProbe {
         }
     }
 
+    /**
+     * Binds a strict-mode session to an active transaction for the given configuration, the way a request's
+     * transaction would, so generated atomic decimal writes can run against stand-in mappers. Close it to unbind.
+     */
+    static AutoCloseable strictTransaction(MybatisConfiguration configuration) {
+        Connection connection = connection("STRICT_TRANS_TABLES", new AtomicInteger());
+        DataSource dataSource = proxy(DataSource.class, (object, method, args) -> connection);
+        configuration.setEnvironment(new Environment("decimal-test", new SpringManagedTransactionFactory(), dataSource));
+        SqlSession session = proxy(SqlSession.class, (object, method, args) -> switch (method.getName()) {
+            case "getConnection" -> connection;
+            case "getConfiguration" -> configuration;
+            default -> null;
+        });
+        SqlSessionFactory factory = proxy(SqlSessionFactory.class, (object, method, args) -> switch (method.getName()) {
+            case "getConfiguration" -> configuration;
+            case "openSession" -> session;
+            default -> null;
+        });
+        GlobalConfigUtils.getGlobalConfig(configuration).setSqlSessionFactory(factory);
+        TransactionSynchronizationManager.initSynchronization();
+        TransactionSynchronizationManager.setActualTransactionActive(true);
+        return () -> {
+            TransactionSynchronizationManager.unbindResourceIfPossible(factory);
+            TransactionSynchronizationManager.clearSynchronization();
+            TransactionSynchronizationManager.setActualTransactionActive(false);
+        };
+    }
+
     private static Connection connection(String mode, AtomicInteger statements) {
         return proxy(Connection.class, (object, method, args) -> {
             if (!method.getName().equals("createStatement")) return null;

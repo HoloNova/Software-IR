@@ -57,6 +57,7 @@ class MultiplicationBusinessConformanceIT {
             courseCapacityCounters(s, observer, http);
             IntervalBookingChecks.verify(s, observer, http);
             ShopCancellationChecks.verify(s,observer,http);
+            ShopCheckoutChecks.verify(s,observer,http);
             s.setRowsAfter(s.rowsNow(observer));
         }
     }
