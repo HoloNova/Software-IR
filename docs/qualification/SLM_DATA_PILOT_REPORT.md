@@ -76,3 +76,22 @@
 实际调用现有导出器：`train-teacher.jsonl`仍为**0条新教师合格答案**；`reference-seed-qualified.jsonl`为1条已实际验收的既有参考，明确单列，不混入新模型数据或小模型成绩。最终检查证明本轮scope/HTTP端口18184、随机schema、两个临时账号与private凭据文件全部清理，保留平台原有MySQL/worker。未提交、推送、触发GitHub或Forgejo CI，未启动模型训练；业务账本83/1/0不变。
 
 后续按负责人要求，已删除`docs/LAB_PLATFORM_GUIDE.md`和部署机的`/home/labadmin/sir-reference`临时目录；上文是历史运行环境，不再作为后续可复用入口。已归档的原始业务证据保留，结论不变。工具操作指南仅以独立Prompt文本提供：Forgejo仅局域网直接访问，任务通过公网ML API派发，不依赖SSH。
+
+## 第三阶段：编译器补漏后的复查与 prompt v2（2026-10-25）
+
+首批暴露的两处编译器缺口已在 `bca868b` 修复，CI #187（`3650f3b`）通过：新建的行在 persist 之前读主键、当作引用的值或经含主键的视图返回，报 `SIR-FLOW-007`；实体成员写错顺序时，报错直接给出固定顺序和该挪到哪里。工具链摘要因此改变，首批与 lab 批次都不能沿用，旧目录保持原样。
+
+复查批次 `datasets/sir/runs/dual-token-recheck-v2/` 用 `import` 从首批导入5份教师原始响应，冻结当前工具链与 oracle，所有门重置为 NOT_RUN，再用真实 CLI 做完整静态检查。新增 API 调用0次。
+
+| 样本 | 首批静态结果 | 复查结果 |
+| --- | --- | --- |
+| 既有参考 | PASSED | PASSED |
+| 3个初始候选 | PARSE 失败，“存在多余的语法元素” | PARSE 失败，提示“这个 field 要写在 credential 之前” |
+| 第一轮修复 `6702e9b70653` | SEMANTIC 失败 | SEMANTIC 失败，另加 `SIR-FLOW-007` |
+| 第二轮修复 `ef9ddc30eb79` | PASSED（后在真库业务 19/14） | SEMANTIC 失败，只有 `SIR-FLOW-007`（4处：两个能力里先读 access.id、refresh.id 再 persist） |
+
+也就是说，lab 批次里花了构建、启动和真库才发现的错误，现在在静态门几秒内就能发现，并可直接走普通 `repair`。
+
+prompt v2 是新文件（`prompts/sir-0.3-auth-v2.md`、`prompts/repair-auth-v2.md`），补实体成员顺序和“先 persist 再读主键”；v1 保持不变，仍是 `prepare`/`repair` 的默认值，`import` 直接冻结来源批次的 `system.md`。Python 测试35项通过（原31项 + 4项 prompt 选择与导入）。
+
+尚未执行（需要 `DEEPSEEK_API_KEY`，本容器没有）：对 `ef9ddc30eb79` 用 v2 反馈做一次 repair；用 v2 新建初始采样批次。静态通过的新候选仍需要真实业务门，而可复用的业务门执行环境尚未建立，所以新教师合格训练答案仍是0条。

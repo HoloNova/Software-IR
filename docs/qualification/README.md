@@ -1475,3 +1475,12 @@ Python31项与Java4类23项定向通过；真实CLI逐样本检查也执行，�
 参考run `dual-token-slice-1a1720f89b4-17144`：四门PASSED、35/0；教师run `dual-token-slice-1a1721082e4-62691`：静态/构建/启动PASSED，业务FAILED、19/14。真实日志与生成Java证明候选在persist前将null UUID复制进TokenPair，登录INSERT缺access_token而500，其余多为连带失败。平台可用不等于候选正确，14个断言失败不算14种独立业务缺陷。
 
 `datasets/sir/runs/dual-token-lab-v1/`封存两次XML、原始报告/日志、四门绑定、失败准备与清理证明、生成Java及oracle快照；附件哈希逐一核对。现有导出器实际输出0条新教师答案、1条单列的既有参考种子。本轮没有新教师API调用，未启动训练/小模型基线。临时scope/应用/端口、schema/账号/凭据文件均已清理；现有平台服务保留。实际业务路径是**SSH原生参考环境**，不能记为ML默认镜像或Forgejo Actions CI通过，#184完整CI基线和83/1/0账本不变。后续按负责人要求删除了临时参考目录和平台指南文件；历史证据保留，不再以SSH目录作为可复用工具入口。详见[数据报告第二阶段](SLM_DATA_PILOT_REPORT.md#第二阶段lab-真实参考环境2026-10-25)。
+
+<a id="ci-187-identity-order"></a>
+## 53. #186/#187：新建行主键读取检查与实体成员顺序报错
+
+首批教师候选 `ef9ddc30eb79` 静态通过却在真库 500（见52），根因是先读未 persist 行的 UUID。`bca868b` 在 ValidatePass 加 `SIR-FLOW-007`：读主键成员、把新建行当引用的值、返回含主键视图的未存行，都要先 persist；其他字段照常可读。三个初始候选都因 credential 写在 field 前只得到“多余的语法元素”，现在报错给出固定顺序及该挪到哪里，错误码不变，通用解析报错去掉“v0.1”。
+
+本机 sir-parser 141 项、sir-semantic 555 项及6类工具链定向测试通过；CLI 扫仓库197份 SIR，`SIR-FLOW-007` 只出现在两份教师候选上。[CI #186](https://github.com/HoloNova/Software-IR/actions/runs/40192574263) 冻结门唯一失败是 ExpressionVariantCoverageTest：ValidatePass 原被登记为有意略过三种叶子表达式，新检查的穷举 switch 提到了它们，清单过时；`3650f3b` 改为空清单，[CI #187](https://github.com/HoloNova/Software-IR/actions/runs/40193494809) 整轮 success。本节只核对了整轮结论，没有逐份复核上传报告。
+
+数据侧复查与 prompt v2 见[数据报告第三阶段](SLM_DATA_PILOT_REPORT.md#第三阶段编译器补漏后的复查与-prompt-v22026-10-25)；业务账本83/1/0不变。

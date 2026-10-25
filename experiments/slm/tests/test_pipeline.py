@@ -134,6 +134,54 @@ class PipelineTests(unittest.TestCase):
                 data.import_candidates(argparse.Namespace(from_bundle=self.root, bundle=destination))
             self.assertFalse(destination.exists())
 
+    def test_v1_stays_the_default_and_a_later_prompt_is_chosen_explicitly(self):
+        v1 = (data.HERE / "prompts/sir-0.3-auth.md").read_bytes()
+        self.assertEqual(v1, (self.root / "system.md").read_bytes())
+        chosen = Path(self.temp.name) / "v2"
+        with contextlib.redirect_stdout(io.StringIO()):
+            data.prepare(argparse.Namespace(bundle=chosen, task=data.HERE / "tasks/dual-token-v1.json",
+                                            system_prompt=data.HERE / "prompts/sir-0.3-auth-v2.md"))
+        self.assertEqual((data.HERE / "prompts/sir-0.3-auth-v2.md").read_bytes(), (chosen / "system.md").read_bytes())
+        self.assertNotEqual(v1, (chosen / "system.md").read_bytes())
+
+    def test_a_prompt_outside_the_reviewed_folder_is_refused_before_anything_is_written(self):
+        outside = Path(self.temp.name) / "my-prompt.md"
+        outside.write_text("anything", encoding="utf-8")
+        destination = Path(self.temp.name) / "refused"
+        with self.assertRaisesRegex(DataError, "prompts"):
+            data.prepare(argparse.Namespace(bundle=destination, task=data.HERE / "tasks/dual-token-v1.json",
+                                            system_prompt=outside))
+        self.assertFalse((destination / "manifest.json").exists())
+
+    def test_repair_sends_the_chosen_feedback_file(self):
+        payload = data.request_payload("deepseek-flash", data.prompt_messages(self.root, self.task), 100)
+        response = {"model": "teacher-test", "choices": [{"finish_reason": "stop",
+                    "message": {"content": "sir 0.3\nsoftware Sample {}\n"}}]}
+        with patch.object(data, "call_teacher", return_value=response):
+            data.generate_one(self.root, self.manifest, self.task, payload)
+        parent = load_jsonl(self.root / "candidates.jsonl")[-1]
+        failed = bind_static(parent, {"id": parent["id"], "sourceSha256": parent["source_sha256"],
+                    "ok": False, "stage": "SEMANTIC", "fileCount": 0, "digest": None,
+                    "diagnostics": [{"severity": "ERROR", "code": "SIR-FLOW-007", "message": "identity before persist"}]})
+        write_jsonl(self.root / "checked.jsonl", [failed])
+        with patch.object(data, "call_teacher", return_value=response) as call, contextlib.redirect_stdout(io.StringIO()):
+            data.repair(argparse.Namespace(bundle=self.root, checked=None, sample_id=parent["id"], max_tokens=100,
+                                           model="deepseek-flash", feedback=data.HERE / "prompts/repair-auth-v2.md"))
+        feedback = call.call_args.args[0]["messages"][-1]["content"]
+        self.assertTrue(feedback.startswith((data.HERE / "prompts/repair-auth-v2.md").read_text(encoding="utf-8")))
+
+    def test_import_freezes_the_origin_system_prompt_not_the_current_default(self):
+        # The origin batch was prepared with v2; its recorded messages carry v2, so the import must too.
+        origin = Path(self.temp.name) / "origin-v2"
+        with contextlib.redirect_stdout(io.StringIO()):
+            data.prepare(argparse.Namespace(bundle=origin, task=data.HERE / "tasks/dual-token-v1.json",
+                                            system_prompt=data.HERE / "prompts/sir-0.3-auth-v2.md"))
+        destination = Path(self.temp.name) / "imported"
+        with patch.object(data, "call_teacher") as call, contextlib.redirect_stdout(io.StringIO()):
+            data.import_candidates(argparse.Namespace(from_bundle=origin, bundle=destination))
+        call.assert_not_called()
+        self.assertEqual((origin / "system.md").read_bytes(), (destination / "system.md").read_bytes())
+
     def test_prompt_changed_after_freeze_is_rejected_before_a_paid_call(self):
         (self.root / "system.md").write_text("changed", encoding="utf-8")
         with patch.object(data, "call_teacher") as call:

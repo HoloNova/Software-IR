@@ -42,6 +42,22 @@ python -m experiments.slm.data check \
 
 没有自动“修到通过”的循环。每轮原始答案、完整 SDK 响应、请求、用量、源哈希和 `parent_id` 都保留。修复反馈包括实际诊断、语法规则澄清和题目原有 DDL，不提供完整参考答案。SDK 序列化的完整响应不是 HTTP 原始字节；`raw_response_sha256` 指保存的 `response.json`。API 模型别名与 `system_fingerprint` 也不是开源权重的固定 revision。
 
+## Prompt 版本
+
+`prompts/` 里每个版本是一个单独的文件，改 prompt 就新建文件，不改已用过的文件：已有批次的 `system.md` 和候选里的 `messages` 都是旧文件的原文，改了旧文件，这些批次就无法复现。`prepare` 默认用 `sir-0.3-auth.md`（v1），`repair` 默认用 `repair-auth-v1.md`；要用新版本时显式传入，只接受 `prompts/` 里的 `.md` 文件。`import` 不看这两个参数，直接冻结来源批次自己的 `system.md`。
+
+v2（2026-10-25）补的是首批暴露的两处提示不足：实体成员的固定顺序；新建的行要先 persist 才有主键（编译器从 `bca868b` 起报 `SIR-FLOW-007`）。
+
+```bash
+python -m experiments.slm.data prepare --bundle datasets/sir/pilots/dual-token-v2 \
+  --system-prompt experiments/slm/prompts/sir-0.3-auth-v2.md
+python -m experiments.slm.data repair --bundle datasets/sir/runs/dual-token-recheck-v2 \
+  --sample-id auth-dual-token-v1-teacher-ef9ddc30eb79 \
+  --feedback experiments/slm/prompts/repair-auth-v2.md
+```
+
+测试：`PYTHONPATH=$PWD:$PWD/experiments/slm/tests python -m unittest experiments.slm.tests.test_pipeline experiments.slm.tests.test_corpus experiments.slm.tests.test_dataset_io`（在仓库根目录运行；`test_dataset_io` 从 tests 目录导入 `test_corpus`）。
+
 ## 跨环境导入
 
 原批次指纹绑定实际源码字节，不能靠换行转换或修改manifest搬到Linux。先在目标环境编译CLI/测试适配器，再执行：

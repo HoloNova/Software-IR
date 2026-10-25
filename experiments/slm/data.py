@@ -27,6 +27,17 @@ from experiments.slm.dataset_io import (
 )
 
 HERE = Path(__file__).resolve().parent
+# v1 stays the default so the commands of a recorded batch reproduce it; a later prompt is a new file chosen explicitly.
+DEFAULT_SYSTEM_PROMPT = HERE / "prompts/sir-0.3-auth.md"
+DEFAULT_FEEDBACK = HERE / "prompts/repair-auth-v1.md"
+
+
+def prompt_file(path: Path | None, default: Path) -> Path:
+    """A prompt is one of the reviewed files under prompts/, never an arbitrary path."""
+    chosen = (path or default).resolve()
+    if chosen.parent != (HERE / "prompts").resolve() or chosen.suffix != ".md" or not chosen.is_file():
+        raise DataError("prompt must be an existing .md file in experiments/slm/prompts: " + str(path))
+    return chosen
 
 
 def utc_now() -> str:
@@ -107,7 +118,7 @@ def prepare(args) -> None:
     write_new_json(root / "task.json", task)
     for name, source in (("base.sir", repo_file(task["base_source"])),
                          ("reference.sir", repo_file(task["reference_source"])),
-                         ("system.md", HERE / "prompts/sir-0.3-auth.md")):
+                         ("system.md", system_source(args))):
         (root / name).write_bytes(source.read_bytes())
     main = core_inputs()
     oracle = {path: digest_file(repo_file(path)) for path in task["oracle"]["files"]}
@@ -126,6 +137,12 @@ def prepare(args) -> None:
     store_candidate(root, {**reference, "reference_evidence": task["reference_evidence"]})
     print(json_text({"bundle": str(root), "reference_seeds": 1, "new_teacher_candidates": 0,
                      "business_qualified_answers": 0}), end="")
+
+
+def system_source(args) -> Path:
+    # An import freezes the origin batch's own system prompt, the one its recorded messages were sent with.
+    frozen = getattr(args, "frozen_system", None)
+    return frozen if frozen is not None else prompt_file(getattr(args, "system_prompt", None), DEFAULT_SYSTEM_PROMPT)
 
 
 def import_candidates(args) -> None:
@@ -148,7 +165,7 @@ def import_candidates(args) -> None:
     validate_candidates(origin, manifest, task, rows)
     # Old host source bytes need not exist here. Responses/inputs remain verified above;
     # prepare freezes the actual destination toolchain/oracle instead of trusting old gates.
-    prepare(argparse.Namespace(task=origin / "task.json", bundle=args.bundle))
+    prepare(argparse.Namespace(task=origin / "task.json", bundle=args.bundle, frozen_system=origin / "system.md"))
     current, _ = read_bundle(args.bundle)
     provenance = {"manifest_sha256": digest_file(origin / "manifest.json"),
                   "candidates_sha256": digest_file(origin / "candidates.jsonl"),
@@ -268,7 +285,7 @@ def repair(args) -> None:
     if not 1 <= args.max_tokens <= 16384:
         raise DataError("repair allows at most 16384 output tokens")
     ddl_path = next(path for path in task["oracle"]["files"] if path.endswith("-ddl.sql"))
-    feedback = ((HERE / "prompts/repair-auth-v1.md").read_text(encoding="utf-8")
+    feedback = (prompt_file(getattr(args, "feedback", None), DEFAULT_FEEDBACK).read_text(encoding="utf-8")
                 + "\n\n原始静态诊断：\n" + json_text(parent["static_result"])
                 + "\n\n题目冻结时已有的 DDL（仅约束物理形状，不允许在 SIR 内嵌 SQL）：\n"
                 + repo_file(ddl_path).read_text(encoding="utf-8"))
@@ -357,6 +374,7 @@ def parser() -> argparse.ArgumentParser:
     prepare_args = commands.add_parser("prepare", help="freeze one task and reference seed without model calls")
     prepare_args.add_argument("--task", type=Path, default=HERE / "tasks/dual-token-v1.json")
     prepare_args.add_argument("--bundle", type=Path, required=True)
+    prepare_args.add_argument("--system-prompt", type=Path, help="file in prompts/; default sir-0.3-auth.md (v1)")
     prepare_args.set_defaults(run=prepare)
     import_args = commands.add_parser("import", help="freeze current host and import raw responses with all gates reset")
     import_args.add_argument("--from-bundle", type=Path, required=True)
@@ -372,6 +390,7 @@ def parser() -> argparse.ArgumentParser:
     repair_args.add_argument("--bundle", type=Path, required=True)
     repair_args.add_argument("--sample-id", required=True)
     repair_args.add_argument("--checked", type=Path)
+    repair_args.add_argument("--feedback", type=Path, help="file in prompts/; default repair-auth-v1.md")
     repair_args.add_argument("--model", choices=("deepseek-flash", "deepseek-v4-pro"), default="deepseek-flash")
     repair_args.add_argument("--max-tokens", type=int, default=6144)
     repair_args.set_defaults(run=repair)

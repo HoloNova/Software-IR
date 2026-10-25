@@ -22,6 +22,10 @@
 - `verification/`保存完整源码清单、运行脚本、两处准备失败、最终清理证明、实际生成Java、oracle源码快照与摘要/文件哈希索引。
 - 本次历史入口是SSH原生systemd scope，不是Forgejo Actions或ML API镜像；该临时目录后按负责人要求删除。后续Forgejo仅局域网直连，任务通过公网ML API派发；工具指南仅以独立Prompt文本提供，不依赖SSH。
 
+## 编译器补漏后的复查
+
+[`runs/dual-token-recheck-v2/`](runs/dual-token-recheck-v2/)：`bca868b` 新增 `SIR-FLOW-007` 并改进实体成员顺序报错后，从首批导入5份教师原始响应、在当前工具链上重做静态检查，API 调用0次。只有既有参考通过；`ef9ddc30eb79` 现在在静态门因先读未 persist 行的主键而失败，正是 lab 批次在真库里发现的错误。所有运行门仍为 NOT_RUN，见[数据报告第三阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#第三阶段编译器补漏后的复查与-prompt-v22026-10-25)。
+
 完整说明：[数据报告](../../docs/qualification/SLM_DATA_PILOT_REPORT.md)、[操作命令](../../experiments/slm/README.md)、[模型选择](../../docs/qualification/SLM_MODEL_SELECTION.md)。API密钥不属于数据或metadata。数据Git属性禁止换行转换，保持证据字节哈希。
 
 跨Windows/Linux或工具链字节变化时，先用实验CLI的`import --from-bundle ... --bundle ...`在目标环境重新冻结输入、导入原响应并重置所有资格，再重做检查；不要修改本批manifest或借用原通过结果。
