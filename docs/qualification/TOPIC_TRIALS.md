@@ -72,7 +72,7 @@
 | G10 | **#147 已验收**：Money 默认 precision(19,2)，可覆写、精确校验、显式 DECIMAL 交付与原子金额；不隐式舍入或自动迁移精度 | market、shop、ledger | 三题已改 Money；#147 金额真库57项、精度漂移拒绝、恢复与新实例链均通过；[设计 12 第 20 节](../design/12-feature-semantics-and-semantic-types.md#g10-money-proposal) | 已验收通用能力 |
 | G11（#150 已验收） | **来源行计算视图**：`field remaining: Count = item.capacity - item.enrolled;`；普通／分页／嵌套共用取值计划，不新增存储列或 SQL；精确金额不按存储精度舍入 | course、library | [设计第 22 节](../design/12-feature-semantics-and-semantic-types.md#g11-computed-view-proposal)；27 类 183 项本机定向通过；`4a1d8c8` 的 #150 关系真库 40 项、乘法真库 56 项（含原子选课与满额后 remaining／full）与完整部署通过 | 已验收通用能力 |
 | G12 | **重复的账号样板**：每个题目都要写 `Register`、`UserView`、`use DualTokenLogin` 共约 35 行，八题一模一样 | 全部 | — | 低 |
-| G13 | **写作上的小磕绊**：`fails` 必须按错误名排序；`order`、`item`、`from` 是关键字不能当名字；这些让模型更容易写错，却不影响能做什么 | 全部 | `SIR-VALID-001`、`SIR-PARSE-001` | 低 |
+| G13（已实现，待同源码 CI） | **写作上的小磕绊**：`fails` 顺序错误现在直接给出排好序的整行；`order`、`item`、`from` 等关键字当名字时，解析器说明它是关键字并建议换名。排序规则本身保留（见[设计第 36 节](../design/12-feature-semantics-and-semantic-types.md)） | 全部 | `SIR-VALID-001`、`SIR-PARSE-001` | 低 |
 | G14 | **本来就不在范围内**：文件上传、发邮件短信、定时任务（订单超时自动取消）、调用外部服务、实时推送、前端 | — | — | 不算缺口，写进边界 |
 
 ## 5. 缺陷（语言检查放过，生成的 Java 编不过或结果不对）

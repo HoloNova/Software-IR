@@ -37,6 +37,9 @@ final class ParserDiagnosticListener extends BaseErrorListener {
         } else if (message != null && message.startsWith("extraneous input")) {
             code = "SIR-PARSE-003";
             localized = "存在多余的语法元素";
+        } else if (token != null && isKeywordWhereNameExpected(recognizer, token)) {
+            code = "SIR-PARSE-001";
+            localized = "“" + token.getText() + "”是 SIR 的关键字，不能用作名字；换一个名字，例如 " + token.getText() + "Value";
         } else {
             code = "SIR-PARSE-001";
             localized = token == null
@@ -49,6 +52,19 @@ final class ParserDiagnosticListener extends BaseErrorListener {
         diagnostics.error(code, localized, missingToken
                 ? source.insertionSpanAfter(previous)
                 : token == null ? source.zeroSpan(null) : source.span(token));
+    }
+
+    /**
+     * A word the language owns (order, item, from, ...) written where a name was expected. The generic message would
+     * only say the content is not valid, which does not tell the author that the word itself is the problem.
+     */
+    private static boolean isKeywordWhereNameExpected(Recognizer<?, ?> recognizer, Token token) {
+        if (!(recognizer instanceof Parser parser)) {
+            return false;
+        }
+        String literal = recognizer.getVocabulary().getLiteralName(token.getType());
+        boolean word = literal != null && literal.length() > 2 && Character.isLetter(literal.charAt(1));
+        return word && parser.getExpectedTokens().contains(SirParser.IDENT);
     }
 
     private static String printable(String text) {

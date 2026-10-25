@@ -2163,7 +2163,12 @@ int returnCount = 0;
 
       for (int i = 1; i < names.size(); i++) {
          if (names.get(i).compareTo(names.get(i - 1)) < 0) {
-            this.diagnostics.add(DiagnosticBuilder.error("SIR-VALID-001", "fails 必须按 Error 名称升序排列", capDecl.failures().get(i).span()));
+            // Say what the sorted list is, so the author can paste it instead of working the order out again.
+            List<String> sorted = names.stream().sorted().toList();
+            this.diagnostics.add(DiagnosticBuilder.error("SIR-VALID-001",
+               "fails 必须按 Error 名称升序排列：" + names.get(i) + " 要排在 " + names.get(i - 1) + " 之前。应写成："
+                  + String.join(" ", sorted.stream().map(name -> "fails " + name + ";").toList()),
+               capDecl.failures().get(i).span()));
             break;
          }
       }
@@ -2196,7 +2201,9 @@ int returnCount = 0;
       for (int i = 1; i < kinds.size(); i++) {
          if (kinds.get(i).ordinal() < kinds.get(i - 1).ordinal()) {
             this.diagnostics
-               .add(DiagnosticBuilder.error("SIR-VALID-001", "requires 必须按 authenticated, atomic, readonly 顺序", capDecl.requirements().get(i).span()));
+               .add(DiagnosticBuilder.error("SIR-VALID-001", "requires 必须按 authenticated, atomic, readonly 顺序：requires "
+                  + kinds.get(i).name().toLowerCase(Locale.ROOT) + " 要排在 requires " + kinds.get(i - 1).name().toLowerCase(Locale.ROOT)
+                  + " 之前", capDecl.requirements().get(i).span()));
             break;
          }
       }
