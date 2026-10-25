@@ -66,9 +66,10 @@ class DualTokenBusinessConformanceIT {
             return;
         }
 
+        var candidate = DualTokenCandidateSupport.read(System::getProperty);
         BusinessSliceHarness slice = new BusinessSliceHarness(FIXTURE, environment);
         try {
-            execute(slice);
+            slice.verify(() -> execute(slice, candidate));
         } catch (java.sql.SQLException unreachable) {
             // The harness's own connection to the reference database is infrastructure, not the
             // product under test: an unreachable server yields no verdict rather than a failure.
@@ -76,9 +77,9 @@ class DualTokenBusinessConformanceIT {
                     + BusinessSliceHarness.describe(unreachable));
         } finally {
             slice.teardown();
+            slice.writeReport();
+            if (candidate.isPresent()) DualTokenCandidateSupport.writeEvidence(candidate.orElseThrow(), slice);
         }
-
-        slice.writeReport();
         if (slice.notRunReason() != null) {
             System.out.println("[DUAL-TOKEN-CONFORMANCE] NOT_RUN: " + slice.notRunReason());
             System.out.println("[DUAL-TOKEN-CONFORMANCE] The dual-token business slice was NOT verified.");
@@ -90,7 +91,7 @@ class DualTokenBusinessConformanceIT {
     }
 
     /** Runs the slice end to end. Every failure is recorded; none is swallowed. */
-    private void execute(BusinessSliceHarness slice) throws Exception {
+    private void execute(BusinessSliceHarness slice, java.util.Optional<DualTokenCandidateSupport.Input> candidate) throws Exception {
         MysqlRuntimeJdbcUrl runtimeUrl = slice.runtimeUrl();
         slice.initializeRedaction(runtimeUrl);
         slice.prepareSchemaAndFixtures();
@@ -98,7 +99,13 @@ class DualTokenBusinessConformanceIT {
             return;
         }
 
-        if (slice.compileAndMaterialize().isEmpty()) {
+        if (candidate.isPresent()) {
+            slice.reportLine("slmMysqlVersion=" + slice.databaseVersion());
+            var input = candidate.orElseThrow();
+            var files = slice.compileAndMaterialize(input.sources());
+            if (files.isEmpty()) return;
+            DualTokenCandidateSupport.verifyGenerated(input, slice, files);
+        } else if (slice.compileAndMaterialize().isEmpty()) {
             return;
         }
 

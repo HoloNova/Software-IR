@@ -1,0 +1,42 @@
+{
+  "schema_version": "sir-task/1",
+  "id": "auth-dual-token-v1",
+  "revision": "1",
+  "family": "auth.dual-token.rotation",
+  "split": "train",
+  "exposure": "public-development-task-not-blind-evaluation",
+  "sir_version": "0.3",
+  "base_source": "sir-toolchain-application/src/test/resources/valid/dual-token-base.sir",
+  "reference_source": "sir-toolchain-application/src/test/resources/valid/dual-token-written.sir",
+  "requirement": "在给定软件上增加双 Token 登录，保留 User、Note、Register、GetUser、PostNote 的现有行为。Login 接收 name 和 password，成功返回访问令牌与刷新令牌，分别在 15 分钟和 7 天后过期，并将令牌与所属账号持久化。账号不存在和口令错误必须返回完全相同的 401 响应。PostNote 只接受有效访问令牌，匿名、错误、过期令牌及作为 Bearer 的刷新令牌均为 401。Refresh 接收刷新令牌，原子地将它作废并返回一对新令牌；重放已作废令牌为 401，六个并发刷新恰有一个成功且只新增一对令牌。Logout 接收刷新令牌并作废它，响应 200；之后该令牌不能刷新。返回完整的 sir 0.3 文档，不要 Java、SQL 或解释。允许组合现有语言能力或使用内置 DualTokenLogin，不能绕过鉴权或并发守卫。",
+  "contract": {
+    "namespace": "example.dualtoken",
+    "capabilities": ["Register", "GetUser", "PostNote", "Login", "Refresh", "Logout"],
+    "entities": ["User", "Note", "AccessToken", "RefreshToken", "TokenPair"],
+    "login_request": ["name", "password"],
+    "token_response": ["accessToken", "accessExpiresAt", "refreshToken", "refreshExpiresAt"],
+    "refresh_request": ["refreshToken"],
+    "readiness": "GET /api/get-user?id=1",
+    "access_minutes": 15,
+    "refresh_days": 7,
+    "race_requests": 6
+  },
+  "oracle": {
+    "id": "dual-token-http-mysql-v1",
+    "files": [
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/DualTokenBusinessConformanceIT.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/DualTokenCandidateSupport.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BusinessSliceHarness.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/HttpAssertionClient.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MysqlObserver.java",
+      "sir-toolchain-application/src/test/resources/conformance/mysql/dual-token-ddl.sql",
+      "sir-toolchain-application/src/test/resources/conformance/mysql/dual-token-seed.sql"
+    ],
+    "behaviors": ["login_pair_and_ownership", "wrong_password_equals_unknown_account", "access_only_authentication", "expired_access_rejected", "refresh_replaces_pair", "replay_writes_nothing", "concurrent_refresh_exactly_once", "logout_revokes_refresh"]
+  },
+  "reference_evidence": {
+    "kind": "existing-reference-only-not-candidate-qualification",
+    "commit": "5972072eb920e5c21ea8d2ac5c4f88ecd98ef66c",
+    "run_url": "https://github.com/HoloNova/Software-IR/actions/runs/40155600764"
+  }
+}

@@ -205,6 +205,7 @@ final class BusinessSliceHarness {
     private String notRunReason;
     private boolean lockHeldDuringRun;
     private String sirDigest;
+    private String sirInputLabel;
     private String ddlDigest;
     private String seedDigest;
     private int generatedFileCount;
@@ -217,6 +218,7 @@ final class BusinessSliceHarness {
 
     BusinessSliceHarness(Fixture fixture, Environment environment) {
         this.fixture = fixture;
+        this.sirInputLabel = fixture.sirResource();
         this.environment = environment;
         this.runToken = fixture.runTokenPrefix() + "-" + Long.toHexString(System.currentTimeMillis())
                 + "-" + ThreadLocalRandom.current().nextInt(0x10000);
@@ -357,12 +359,22 @@ final class BusinessSliceHarness {
 
     /** Compiles the slice (a software written in one source file) and materializes it; returns no files on compilation failure. */
     List<GeneratedFile> compileAndMaterialize() throws IOException {
-        List<ExecutionDiagnostic> diagnostics = new ArrayList<>();
         SourceId entry = SourceId.of(this.fixture.sirResource().substring(this.fixture.sirResource().lastIndexOf('/') + 1));
+        return compileSource(new io.kcg.sir.source.SourceSnapshot(entry, java.util.Map.of(entry,
+                ConformanceFixtures.readResource(this.fixture.sirResource()).getBytes(StandardCharsets.UTF_8))));
+    }
+
+    /** Candidate bytes are already read through the production secure source reader; never reload the golden fixture. */
+    List<GeneratedFile> compileAndMaterialize(io.kcg.sir.source.SourceSnapshot candidate) throws IOException {
+        this.sirInputLabel = "EXTERNAL_CANDIDATE:" + candidate.entry().value();
+        return compileSource(candidate);
+    }
+
+    private List<GeneratedFile> compileSource(io.kcg.sir.source.SourceSnapshot sources) throws IOException {
+        this.sirDigest = ConformanceFixtures.sha256Hex(sources.bytes(sources.entry()));
+        List<ExecutionDiagnostic> diagnostics = new ArrayList<>();
         Optional<ProjectCompilation.Compiled> compiled = ProjectCompilation.compile(
-                new io.kcg.sir.source.SourceSnapshot(entry, java.util.Map.of(entry,
-                        ConformanceFixtures.readResource(this.fixture.sirResource()).getBytes(StandardCharsets.UTF_8))),
-                new SpringBootGenerator()::generate, diagnostics);
+                sources, new SpringBootGenerator()::generate, diagnostics);
         this.check("the SIR slice compiles without errors (warnings remain visible)",
                 compiled.isPresent() && diagnostics.stream().noneMatch(ExecutionDiagnostic::isError),
                 "diagnostics=" + diagnostics);
@@ -398,6 +410,10 @@ final class BusinessSliceHarness {
     }
 
     /** Connects to the owned schema as the runtime user and takes this run's advisory lock. */
+    String databaseVersion() throws SQLException {
+        return this.control.getMetaData().getDatabaseProductVersion();
+    }
+
     MysqlRuntimeJdbcUrl runtimeUrl() {
         return MysqlRuntimeJdbcUrl.fromControlEndpoint(this.environment.controlJdbcUrl(), this.environment.schemaName());
     }
@@ -761,7 +777,7 @@ final class BusinessSliceHarness {
         report.append("schemaSource=TEST_FIXTURE_DDL\n");
         report.append("productInitializeImplemented=false\n");
         report.append("productUpdateImplemented=false\n");
-        report.append("sirResource=").append(this.fixture.sirResource()).append(" sha256=").append(this.sirDigest).append('\n');
+        report.append("sirResource=").append(this.sirInputLabel).append(" sha256=").append(this.sirDigest).append('\n');
         report.append("fixtureDdl=").append(this.fixture.ddlResource()).append(" sha256=").append(this.ddlDigest).append('\n');
         report.append("fixtureSeed=").append(this.fixture.seedResource()).append(" sha256=").append(this.seedDigest).append('\n');
         report.append("generatedFiles=").append(this.generatedFileCount)
