@@ -24,6 +24,8 @@ on:
     paths-ignore:
       - 'docs/**'
       - '**/*.md'
+      # Teacher data and its evidence only; candidates are judged by slm-business-gate.yml on demand.
+      - 'datasets/**'
   workflow_dispatch:
 
 concurrency:
