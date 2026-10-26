@@ -1,0 +1,211 @@
+{
+  "namespace": "com.example.courseadmin",
+  "capabilities": [
+    "GetCourse",
+    "CreateCourse",
+    "UpdateCourse"
+  ],
+  "entities": [
+    "Course"
+  ],
+  "create_request": [
+    "code",
+    "name",
+    "description",
+    "capacity"
+  ],
+  "get_request": [
+    "id"
+  ],
+  "patch_request": {
+    "id": "integer",
+    "expectedVersion": "integer",
+    "changes": [
+      "name",
+      "description",
+      "capacity"
+    ]
+  },
+  "course_response": [
+    "id",
+    "code",
+    "name",
+    "description",
+    "capacity",
+    "version"
+  ],
+  "error_response": [
+    "code",
+    "message",
+    "fields"
+  ],
+  "field_error": [
+    "path",
+    "code",
+    "message"
+  ],
+  "routes": {
+    "GetCourse": "GET /api/get-course",
+    "CreateCourse": "POST /api/create-course",
+    "UpdateCourse": "PATCH /api/update-course"
+  },
+  "readiness": "GET /api/get-course?id=1",
+  "initial_version": 0,
+  "race_requests": 2,
+  "seed": [
+    {
+      "id": 1,
+      "code": "CS101",
+      "name": "Intro to Algorithms",
+      "description": "Asymptotic analysis and recursion",
+      "capacity": 30,
+      "version": 0
+    },
+    {
+      "id": 2,
+      "code": "CS102",
+      "name": "Intro to Patterns",
+      "description": null,
+      "capacity": 20,
+      "version": 0
+    },
+    {
+      "id": 3,
+      "code": "ART101",
+      "name": "Art of Painting",
+      "description": "Studio course on colour mixing",
+      "capacity": 15,
+      "version": 4
+    }
+  ],
+  "interfaces": {
+    "GetCourse": {
+      "route": "GET /api/get-course",
+      "request_fields": [
+        "id"
+      ],
+      "response_fields": [
+        "id",
+        "code",
+        "name",
+        "description",
+        "capacity",
+        "version"
+      ]
+    },
+    "CreateCourse": {
+      "route": "POST /api/create-course",
+      "request_fields": [
+        "code",
+        "name",
+        "description",
+        "capacity"
+      ],
+      "response_fields": [
+        "id",
+        "code",
+        "name",
+        "description",
+        "capacity",
+        "version"
+      ]
+    },
+    "UpdateCourse": {
+      "route": "PATCH /api/update-course",
+      "request_fields": [
+        "id",
+        "expectedVersion",
+        "changes"
+      ],
+      "response_fields": [
+        "id",
+        "code",
+        "name",
+        "description",
+        "capacity",
+        "version"
+      ],
+      "change_fields": [
+        "name",
+        "description",
+        "capacity"
+      ]
+    }
+  },
+  "entity_fields": {
+    "Course": [
+      "id",
+      "code",
+      "name",
+      "description",
+      "capacity",
+      "version"
+    ]
+  },
+  "view_fields": {
+    "CourseDetail": [
+      "id",
+      "code",
+      "name",
+      "description",
+      "capacity",
+      "version"
+    ]
+  },
+  "request_fields_by_type": {
+    "GetCourseInput": [
+      "id"
+    ],
+    "CreateCourseInput": [
+      "code",
+      "name",
+      "description",
+      "capacity"
+    ],
+    "UpdateCourseInput": [
+      "id",
+      "name",
+      "description",
+      "capacity"
+    ]
+  },
+  "enums": {},
+  "declared_errors": {
+    "CourseNotFound": 404,
+    "EmptyChange": 400,
+    "StaleVersion": 409
+  },
+  "database_tables": {
+    "course": [
+      {
+        "name": "id",
+        "storage": "BIGINT"
+      },
+      {
+        "name": "code",
+        "storage": "VARCHAR(32)"
+      },
+      {
+        "name": "name",
+        "storage": "VARCHAR(100)"
+      },
+      {
+        "name": "description",
+        "storage": "VARCHAR(500)"
+      },
+      {
+        "name": "capacity",
+        "storage": "INT"
+      },
+      {
+        "name": "version",
+        "storage": "BIGINT"
+      }
+    ]
+  },
+  "fixtures": {
+    "ddl": "conformance/mysql/course-admin-ddl.sql",
+    "seed": "conformance/mysql/course-admin-seed.sql",
+    "provided_by_oracle": true
+  }
+}

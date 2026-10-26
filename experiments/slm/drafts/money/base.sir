@@ -1,0 +1,308 @@
+sir 0.3
+software MoneyLedger {
+  metadata { displayName "Money Ledger"; namespace "example.money"; }
+  target {
+    language java 21; framework spring_boot; persistence mybatis_plus;
+    database mysql; build maven; interface rest;
+  }
+  sources { }
+  imports { }
+  declarations {
+    type UnitPrice = Money where precision(21, 4);
+    entity Wallet persistent {
+      identity id: Id generated auto;
+      field balance: Money default 0.0;
+      field rebate: Optional<Money>;
+    }
+    view WalletView from Wallet { field id: Id; field balance: Money; field rebate: Optional<Money>; }
+    input Amount { field id: Id; field amount: UnitPrice; field optional: Optional<Money>; }
+    input WalletId { field id: Id; }
+    input Movement { field id: Id; field peer: Id; field amount: UnitPrice; }
+    entity VersionedWallet persistent {
+      identity id: Id generated auto;
+      field balance: Money;
+      field rebate: Optional<Money>;
+      field version: Version;
+    }
+    input WalletPatch patch of VersionedWallet {
+      field id: Id;
+      field balance: Money;
+      field rebate: Optional<Money>;
+    }
+    error Missing http 404;
+    error Refused http 409;
+    capability ShowWallet {
+      input WalletId; output WalletView; fails Missing; requires readonly;
+      expose query at "/wallet/show";
+      workflow { load Wallet by input.id as wallet else Missing; return wallet; }
+    }
+    capability CreateWallet {
+      input Amount; output WalletView; requires atomic;
+      expose command at "/wallet/create";
+      workflow {
+        create Wallet as wallet { balance: input.amount; rebate: input.optional; }
+        persist wallet;
+        return wallet;
+      }
+    }
+    capability PatchWallet {
+      input WalletPatch; output Unit; fails Missing; fails Refused; requires atomic;
+      expose command at "/wallet/patch";
+      workflow {
+        load VersionedWallet by input.id as wallet else Missing;
+        update wallet { balance: input.balance; rebate: input.rebate; }
+        persist wallet else Refused;
+        return unit;
+      }
+    }
+    capability SetBalance {
+      input Amount; output Unit; fails Missing; requires atomic;
+      expose command at "/wallet/set";
+      workflow {
+        load Wallet by input.id as wallet else Missing;
+        update wallet { balance: input.amount; rebate: input.optional; }
+        persist wallet;
+        return unit;
+      }
+    }
+    capability CreditBalance {
+      input Movement; output Unit; fails Missing; fails Refused; requires atomic;
+      expose command at "/wallet/credit";
+      workflow {
+        load Wallet by input.id as wallet else Missing;
+        load Wallet by input.peer as peer else Missing;
+        validate input.id != input.peer else Refused;
+        update peer { rebate: input.amount; }
+        persist peer;
+        update wallet when wallet.balance >= 0.0 else Refused { balance: wallet.balance + input.amount; }
+        persist wallet;
+        return unit;
+      }
+    }
+    capability DebitBalance {
+      input Movement; output Unit; fails Missing; fails Refused; requires atomic;
+      expose command at "/wallet/debit";
+      workflow {
+        load Wallet by input.id as wallet else Missing;
+        validate input.amount >= 0.0 else Refused;
+        update wallet when wallet.balance >= input.amount else Refused { balance: wallet.balance - input.amount; }
+        persist wallet;
+        return unit;
+      }
+    }
+    capability DoubleBalance {
+      input Amount; output Unit; fails Missing; requires atomic;
+      expose command at "/wallet/double";
+      workflow {
+        load Wallet by input.id as wallet else Missing;
+        update wallet { balance: input.amount + input.amount; }
+        persist wallet;
+        return unit;
+      }
+    }
+    capability NegateBalance {
+      input Amount; output Unit; fails Missing; requires atomic;
+      expose command at "/wallet/negate";
+      workflow {
+        load Wallet by input.id as wallet else Missing;
+        update wallet { balance: -input.amount; }
+        persist wallet;
+        return unit;
+      }
+    }
+
+    // G8 conformance rows share this Money application's lifecycle, but do not modify wallet scenarios.
+    type AggregateValue = Money;
+
+    // The average is rounded half up to the cent; an empty or all-null selection answers 0.
+    // Grouped reads share this application's lifecycle, not the mutable wallet rows.
+    entity SummaryCategory persistent {
+      identity id: Id generated auto;
+      field owner: Id;
+      field removed: Flag default false;
+      scope removed == false;
+    }
+    entity SummaryEntry persistent {
+      identity id: Id generated auto;
+      field owner: Id;
+      field category: Ref<SummaryCategory>;
+      field amount: Optional<Money>;
+      field occurredAt: Moment;
+      field label: Text;
+      field removed: Flag default false;
+      scope removed == false;
+    }
+    input GroupProbe {
+      field owner: Id; field page: PageNo; field size: PageSize;
+      field since: Optional<Moment>; field until: Optional<Moment>; field label: Optional<Text>;
+    }
+    error BadGroupPage;
+    error BadGroupRange;
+    capability GroupMeasured {
+      input GroupProbe; output Page<SumGroup<Ref<SummaryCategory>>>;
+      fails BadGroupPage; fails BadGroupRange;
+      requires readonly; expose query at "/measurements/groups";
+      workflow {
+        validate input.until > input.since else BadGroupRange;
+        sum SummaryEntry.amount by category
+          where item.owner == input.owner
+            and any(SummaryCategory, id == item.category and owner == input.owner)
+            and item.occurredAt >= input.since and item.occurredAt < input.until
+            and (input.label is none or item.label == input.label)
+          Page input.page, input.size else BadGroupPage
+        as totals;
+        return totals;
+      }
+    }
+    capability AverageGroupMeasured {
+      input GroupProbe; output Page<SumGroup<Ref<SummaryCategory>>>;
+      fails BadGroupPage; fails BadGroupRange;
+      requires readonly; expose query at "/measurements/average-groups";
+      workflow {
+        validate input.until > input.since else BadGroupRange;
+        avg SummaryEntry.amount by category
+          where item.owner == input.owner
+            and any(SummaryCategory, id == item.category and owner == input.owner)
+            and item.occurredAt >= input.since and item.occurredAt < input.until
+            and (input.label is none or item.label == input.label)
+          Page input.page, input.size else BadGroupPage
+        as means;
+        return means;
+      }
+    }
+
+    // Actual ledger calendar declarations; checked against the topic AST, not a parallel implementation.
+    enum Direction { INCOME, EXPENSE }
+    type ZoneName = Text where timeZone, length(1, 64);
+    entity User persistent {
+      identity id: Id generated auto;
+      field timeZone: Optional<ZoneName>;
+    }
+    use DualTokenLogin {
+      account: User;
+      name: name;
+      password: passwordHash;
+    }
+    input RegisterInput {
+      field name: Name;
+      field password: Text where length(6, 64);
+    }
+    view UserView from User {
+      field id: Id;
+      field name: Name;
+    }
+    error NameTaken http 409;
+    capability Register {
+      input RegisterInput;
+      output UserView;
+      fails NameTaken;
+      requires atomic;
+      expose command at "/register";
+      workflow {
+        create User as user {
+          name: input.name;
+          passwordHash: input.password;
+        }
+        persist user else NameTaken;
+        return user;
+      }
+    }
+    error BadPage;
+    error Forbidden http 403;
+    input PageOnly {
+      field page: PageNo;
+      field size: PageSize;
+    }
+
+    entity Category persistent {
+      identity id: Id generated auto;
+      field owner: Ref<User>;
+      field name: Name;
+      field direction: Direction;
+    }
+    // Exact decimal amounts; 0.01 is the smallest positive value at Money's default scale.
+    entity Entry persistent {
+      identity id: Id generated auto;
+      field owner: Ref<User>;
+      field category: Ref<Category>;
+      field amount: Money where min(0.01);
+      field note: Optional<Remark>;
+      field occurredAt: Moment;
+    }
+    entity Budget persistent {
+      identity id: Id generated auto;
+      field owner: Ref<User>;
+      field category: Ref<Category>;
+      field monthlyLimit: Money where min(0.01);
+    }
+    use Crud {
+      entity: Entry;
+      owner: owner;
+      path: entries;
+    }
+    use Crud {
+      entity: Budget;
+      owner: owner;
+      path: budgets;
+    }
+    // A missing preference is deliberate: old users must choose, never silently inherit the server's zone.
+    view TimeZoneView from User { field timeZone: Optional<Text>; }
+    input PreferredTimeZone { field timeZone: ZoneName where notBlank; }
+    error UserNotFound http 404;
+    error BadPeriod http 400;
+    capability ReadTimeZone {
+      actor Ref<User>; output TimeZoneView; fails UserNotFound;
+      requires authenticated; requires readonly; expose query at "/me/time-zone";
+      workflow {
+        load User by actor as account else UserNotFound;
+        return account;
+      }
+    }
+    capability SetTimeZone {
+      actor Ref<User>; input PreferredTimeZone; output TimeZoneView; fails UserNotFound;
+      requires authenticated; requires atomic; expose command at "/me/time-zone";
+      workflow {
+        load User by actor as account else UserNotFound;
+        update account { timeZone: input.timeZone; }
+        persist account;
+        return account;
+      }
+    }
+    input MonthQuery {
+      field month: Optional<Text>;
+      field page: PageNo;
+      field size: PageSize;
+    }
+    capability TotalsForMonth {
+      actor Ref<User>; input MonthQuery; output Page<SumGroup<Ref<Category>>>;
+      fails BadPage; fails BadPeriod; fails UserNotFound;
+      requires authenticated; requires readonly; expose query at "/entries/monthly-totals";
+      workflow {
+        load User by actor as account else UserNotFound;
+        month input.month in account.timeZone as since, until else BadPeriod;
+        sum Entry.amount by category
+          where item.owner == actor and any(Category, id == item.category and owner == actor)
+            and item.occurredAt >= since and item.occurredAt < until
+          Page input.page, input.size else BadPage as totals;
+        return totals;
+      }
+    }
+    input BudgetMonthQuery { field budgetId: Id; field month: Optional<Text>; }
+    capability BudgetExceededForMonth {
+      actor Ref<User>; input BudgetMonthQuery; output Flag;
+      fails BadPeriod; fails BudgetNotFound; fails UserNotFound;
+      requires authenticated; requires readonly; expose query at "/budgets/{budgetId}/exceeded";
+      workflow {
+        load User by actor as account else UserNotFound;
+        month input.month in account.timeZone as since, until else BadPeriod;
+        load Budget by input.budgetId as budget else BudgetNotFound;
+        validate budget.owner == actor else BudgetNotFound;
+        load Category by budget.category as category else BudgetNotFound;
+        validate category.owner == actor else BudgetNotFound;
+        sum Entry.amount where item.owner == actor and item.category == category
+          and item.occurredAt >= since and item.occurredAt < until as total;
+        return total > budget.monthlyLimit;
+      }
+    }
+  }
+}

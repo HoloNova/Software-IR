@@ -1,0 +1,1 @@
+在给定软件上增加登录签发访问令牌和退出功能，保留 Register、GetUser、PostNote 的现有行为。Login 接收 name、password，正确口令返回 201 及 id、expiresAt；id 是 UUID，令牌关联该账号并保存，15 分钟后到期，错误口令返回 401 BadLogin。PostNote 以 Authorization 的 Bearer 令牌识别作者，方案名不区分大小写；有效令牌的笔记保存到所属用户，匿名、错误方案、缺令牌、非 UUID、未知或已失效令牌均返回 401 且不写笔记。Logout 接收 token，返回 200 并使该令牌立即失效，不影响其他用户令牌；不存在的令牌返回 401 BadToken。返回完整的 sir 0.3 文档，不要 Java、SQL 或解释。

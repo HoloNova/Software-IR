@@ -1,0 +1,1086 @@
+{
+  "namespace": "example.money",
+  "capabilities": [
+    "ShowWallet",
+    "CreateWallet",
+    "PatchWallet",
+    "SetBalance",
+    "CreditBalance",
+    "DebitBalance",
+    "DoubleBalance",
+    "NegateBalance",
+    "SumMeasured",
+    "TaggedSum",
+    "LiteralSum",
+    "AverageMeasured",
+    "GroupMeasured",
+    "AverageGroupMeasured",
+    "Register",
+    "ReadTimeZone",
+    "SetTimeZone",
+    "TotalsForMonth",
+    "BudgetExceededForMonth",
+    "Login",
+    "Refresh",
+    "Logout",
+    "CreateEntry",
+    "GetEntry",
+    "ListEntry",
+    "UpdateEntry",
+    "DeleteEntry",
+    "CreateBudget",
+    "GetBudget",
+    "ListBudget",
+    "UpdateBudget",
+    "DeleteBudget"
+  ],
+  "entities": [
+    "Wallet",
+    "VersionedWallet",
+    "Measurement",
+    "MeasurementTag",
+    "SummaryCategory",
+    "SummaryEntry",
+    "User",
+    "Category",
+    "Entry",
+    "Budget",
+    "AccessToken",
+    "RefreshToken",
+    "TokenPair"
+  ],
+  "routes": {
+    "ShowWallet": "GET /api/wallet/show",
+    "CreateWallet": "POST /api/wallet/create",
+    "PatchWallet": "PATCH /api/wallet/patch",
+    "SetBalance": "POST /api/wallet/set",
+    "CreditBalance": "POST /api/wallet/credit",
+    "DebitBalance": "POST /api/wallet/debit",
+    "DoubleBalance": "POST /api/wallet/double",
+    "NegateBalance": "POST /api/wallet/negate",
+    "SumMeasured": "GET /api/measurements/total",
+    "TaggedSum": "GET /api/measurements/tagged",
+    "LiteralSum": "GET /api/measurements/literal",
+    "AverageMeasured": "GET /api/measurements/average",
+    "GroupMeasured": "GET /api/measurements/groups",
+    "AverageGroupMeasured": "GET /api/measurements/average-groups",
+    "Register": "POST /api/register",
+    "ReadTimeZone": "GET /api/me/time-zone",
+    "SetTimeZone": "POST /api/me/time-zone",
+    "TotalsForMonth": "GET /api/entries/monthly-totals",
+    "BudgetExceededForMonth": "GET /api/budgets/{budgetId}/exceeded",
+    "Login": "POST /api/login",
+    "Refresh": "POST /api/refresh",
+    "Logout": "POST /api/logout",
+    "CreateEntry": "POST /api/entries",
+    "GetEntry": "GET /api/entries/{id}",
+    "ListEntry": "GET /api/entries",
+    "UpdateEntry": "PUT /api/entries/{id}",
+    "DeleteEntry": "DELETE /api/entries/{id}",
+    "CreateBudget": "POST /api/budgets",
+    "GetBudget": "GET /api/budgets/{id}",
+    "ListBudget": "GET /api/budgets",
+    "UpdateBudget": "PUT /api/budgets/{id}",
+    "DeleteBudget": "DELETE /api/budgets/{id}"
+  },
+  "wallet_amount_request": [
+    "id",
+    "amount",
+    "optional"
+  ],
+  "wallet_movement_request": [
+    "id",
+    "peer",
+    "amount"
+  ],
+  "wallet_response": [
+    "id",
+    "balance",
+    "rebate"
+  ],
+  "wallet_patch_request": {
+    "id": "integer",
+    "expectedVersion": "integer",
+    "changes": [
+      "balance",
+      "rebate"
+    ]
+  },
+  "sum_request": [
+    "owner",
+    "minimum"
+  ],
+  "tag_request": [
+    "owner",
+    "tag"
+  ],
+  "group_request": [
+    "owner",
+    "page",
+    "size",
+    "since",
+    "until",
+    "label"
+  ],
+  "group_record": [
+    "key",
+    "total"
+  ],
+  "zone_request_response": [
+    "timeZone"
+  ],
+  "monthly_request": [
+    "month",
+    "page",
+    "size"
+  ],
+  "budget_month_request": [
+    "budgetId",
+    "month"
+  ],
+  "readiness": "GET /api/wallet/show?id=1",
+  "money_precision": [
+    19,
+    2
+  ],
+  "input_unit_price_precision": [
+    21,
+    4
+  ],
+  "money_max": "99999999999999999.99",
+  "large_sum": "199999999999999999.98",
+  "average_rounding": "HALF_UP, scale=2",
+  "credit_racers": 20,
+  "credit_delta": "0.01",
+  "overflow_racers": 2,
+  "group_business_reads": 2,
+  "group_page_default": 1,
+  "group_size_default": 20,
+  "group_page_max": 10000,
+  "group_size_max": 100,
+  "calendar_zone": "America/New_York",
+  "runtime_modes": [
+    {
+      "jvmZone": "UTC",
+      "session_offset_seconds": 0
+    },
+    {
+      "jvmZone": "Pacific/Honolulu",
+      "session_time_zone": "+05:30",
+      "session_offset_seconds": 19800,
+      "sql_mode": ""
+    }
+  ],
+  "calendar_expected_totals": {
+    "New_York_2026_03": "30.00",
+    "UTC_2026_03": "109.00",
+    "UTC_1000_01": "1.00",
+    "UTC_1500_02": "1.00"
+  },
+  "seed_sources": [
+    "conformance/mysql/money-ddl.sql",
+    "conformance/mysql/money-seed.sql"
+  ],
+  "test_injected_routes": [
+    "/api/fixture/aggregate-warning",
+    "/api/fixture/group-warning",
+    "/api/fixture/group-barrier/*",
+    "/api/fixture/calendar/*"
+  ],
+  "test_injected_routes_are_not_product_endpoints": true,
+  "probe_bindings": {
+    "namespace": "example.money",
+    "domain_classes": [
+      "Measurement",
+      "SummaryEntry",
+      "User"
+    ],
+    "persistence_classes": [
+      "MeasurementMapper",
+      "SummaryEntryMapper",
+      "ExactAggregate"
+    ],
+    "group_count_probe": "after actual COUNT(DISTINCT category_id), ExactAggregate.Query owner=99",
+    "calendar_probe": "after actual User read in read-only REPEATABLE_READ transaction"
+  },
+  "measurement_examples": {
+    "owner1_sum": "3.00",
+    "owner1_minimum_1_2300_sum": "3.57",
+    "owner2_sum": "999.99",
+    "owner3_all_null_sum": "0",
+    "owner4_empty_sum": "0",
+    "owner5_sum": "199999999999999999.98",
+    "owner1_target_tag_sum": "3.57",
+    "owner1_literal_underscore_percent_sum": "1.23",
+    "owner1_average": "1.00",
+    "owner1_minimum_1_2300_average": "1.79",
+    "owner5_average": "99999999999999999.99"
+  },
+  "group_examples": {
+    "range": [
+      "2026-01-01T00:00:00Z",
+      "2026-02-01T00:00:00Z"
+    ],
+    "owner1_keys": [
+      101,
+      102,
+      103
+    ],
+    "owner1_sums": [
+      "3.00",
+      "0",
+      "199999999999999999.98"
+    ],
+    "owner1_averages": [
+      "1.00",
+      "0",
+      "99999999999999999.99"
+    ],
+    "snapshot_owner": 99,
+    "snapshot_initial": {
+      "key": 901,
+      "total": "1.00"
+    },
+    "snapshot_inserted": {
+      "key": 902,
+      "total": "2.00"
+    }
+  },
+  "interfaces": {
+    "ShowWallet": {
+      "route": "GET /api/wallet/show",
+      "request_fields": [
+        "id"
+      ],
+      "response_fields": [
+        "id",
+        "balance",
+        "rebate"
+      ]
+    },
+    "CreateWallet": {
+      "route": "POST /api/wallet/create",
+      "request_fields": [
+        "id",
+        "amount",
+        "optional"
+      ],
+      "response_fields": [
+        "id",
+        "balance",
+        "rebate"
+      ]
+    },
+    "PatchWallet": {
+      "route": "PATCH /api/wallet/patch",
+      "request_fields": [
+        "id",
+        "expectedVersion",
+        "changes"
+      ],
+      "response_fields": [],
+      "change_fields": [
+        "balance",
+        "rebate"
+      ]
+    },
+    "SetBalance": {
+      "route": "POST /api/wallet/set",
+      "request_fields": [
+        "id",
+        "amount",
+        "optional"
+      ],
+      "response_fields": []
+    },
+    "CreditBalance": {
+      "route": "POST /api/wallet/credit",
+      "request_fields": [
+        "id",
+        "peer",
+        "amount"
+      ],
+      "response_fields": []
+    },
+    "DebitBalance": {
+      "route": "POST /api/wallet/debit",
+      "request_fields": [
+        "id",
+        "peer",
+        "amount"
+      ],
+      "response_fields": []
+    },
+    "DoubleBalance": {
+      "route": "POST /api/wallet/double",
+      "request_fields": [
+        "id",
+        "amount",
+        "optional"
+      ],
+      "response_fields": []
+    },
+    "NegateBalance": {
+      "route": "POST /api/wallet/negate",
+      "request_fields": [
+        "id",
+        "amount",
+        "optional"
+      ],
+      "response_fields": []
+    },
+    "SumMeasured": {
+      "route": "GET /api/measurements/total",
+      "request_fields": [
+        "owner",
+        "minimum"
+      ],
+      "response_fields": [],
+      "scalar_response": "decimal"
+    },
+    "TaggedSum": {
+      "route": "GET /api/measurements/tagged",
+      "request_fields": [
+        "owner",
+        "tag"
+      ],
+      "response_fields": [],
+      "scalar_response": "decimal"
+    },
+    "LiteralSum": {
+      "route": "GET /api/measurements/literal",
+      "request_fields": [
+        "owner",
+        "tag"
+      ],
+      "response_fields": [],
+      "scalar_response": "decimal"
+    },
+    "AverageMeasured": {
+      "route": "GET /api/measurements/average",
+      "request_fields": [
+        "owner",
+        "minimum"
+      ],
+      "response_fields": [],
+      "scalar_response": "decimal"
+    },
+    "GroupMeasured": {
+      "route": "GET /api/measurements/groups",
+      "request_fields": [
+        "owner",
+        "page",
+        "size",
+        "since",
+        "until",
+        "label"
+      ],
+      "response_fields": [
+        "total",
+        "page",
+        "size",
+        "records"
+      ],
+      "record_fields": [
+        "key",
+        "total"
+      ]
+    },
+    "AverageGroupMeasured": {
+      "route": "GET /api/measurements/average-groups",
+      "request_fields": [
+        "owner",
+        "page",
+        "size",
+        "since",
+        "until",
+        "label"
+      ],
+      "response_fields": [
+        "total",
+        "page",
+        "size",
+        "records"
+      ],
+      "record_fields": [
+        "key",
+        "total"
+      ]
+    },
+    "Register": {
+      "route": "POST /api/register",
+      "request_fields": [
+        "name",
+        "password"
+      ],
+      "response_fields": [
+        "id",
+        "name"
+      ]
+    },
+    "ReadTimeZone": {
+      "route": "GET /api/me/time-zone",
+      "request_fields": [],
+      "response_fields": [
+        "timeZone"
+      ]
+    },
+    "SetTimeZone": {
+      "route": "POST /api/me/time-zone",
+      "request_fields": [
+        "timeZone"
+      ],
+      "response_fields": [
+        "timeZone"
+      ]
+    },
+    "TotalsForMonth": {
+      "route": "GET /api/entries/monthly-totals",
+      "request_fields": [
+        "month",
+        "page",
+        "size"
+      ],
+      "response_fields": [
+        "total",
+        "page",
+        "size",
+        "records"
+      ],
+      "record_fields": [
+        "key",
+        "total"
+      ]
+    },
+    "BudgetExceededForMonth": {
+      "route": "GET /api/budgets/{budgetId}/exceeded",
+      "request_fields": [
+        "budgetId",
+        "month"
+      ],
+      "response_fields": [],
+      "scalar_response": "boolean"
+    },
+    "Login": {
+      "route": "POST /api/login",
+      "request_fields": [
+        "name",
+        "password"
+      ],
+      "response_fields": [
+        "accessToken",
+        "accessExpiresAt",
+        "refreshToken",
+        "refreshExpiresAt"
+      ]
+    },
+    "Refresh": {
+      "route": "POST /api/refresh",
+      "request_fields": [
+        "refreshToken"
+      ],
+      "response_fields": [
+        "accessToken",
+        "accessExpiresAt",
+        "refreshToken",
+        "refreshExpiresAt"
+      ]
+    },
+    "Logout": {
+      "route": "POST /api/logout",
+      "request_fields": [
+        "refreshToken"
+      ],
+      "response_fields": []
+    },
+    "CreateEntry": {
+      "route": "POST /api/entries",
+      "request_fields": [
+        "category",
+        "amount",
+        "note",
+        "occurredAt"
+      ],
+      "response_fields": [
+        "id",
+        "owner",
+        "category",
+        "amount",
+        "note",
+        "occurredAt"
+      ]
+    },
+    "GetEntry": {
+      "route": "GET /api/entries/{id}",
+      "request_fields": [
+        "id"
+      ],
+      "response_fields": [
+        "id",
+        "owner",
+        "category",
+        "amount",
+        "note",
+        "occurredAt"
+      ]
+    },
+    "ListEntry": {
+      "route": "GET /api/entries",
+      "request_fields": [
+        "page",
+        "size"
+      ],
+      "response_fields": [
+        "total",
+        "page",
+        "size",
+        "records"
+      ],
+      "record_fields": [
+        "id",
+        "owner",
+        "category",
+        "amount",
+        "note",
+        "occurredAt"
+      ]
+    },
+    "UpdateEntry": {
+      "route": "PUT /api/entries/{id}",
+      "request_fields": [
+        "id",
+        "category",
+        "amount",
+        "note",
+        "occurredAt"
+      ],
+      "response_fields": [
+        "id",
+        "owner",
+        "category",
+        "amount",
+        "note",
+        "occurredAt"
+      ]
+    },
+    "DeleteEntry": {
+      "route": "DELETE /api/entries/{id}",
+      "request_fields": [
+        "id"
+      ],
+      "response_fields": []
+    },
+    "CreateBudget": {
+      "route": "POST /api/budgets",
+      "request_fields": [
+        "category",
+        "monthlyLimit"
+      ],
+      "response_fields": [
+        "id",
+        "owner",
+        "category",
+        "monthlyLimit"
+      ]
+    },
+    "GetBudget": {
+      "route": "GET /api/budgets/{id}",
+      "request_fields": [
+        "id"
+      ],
+      "response_fields": [
+        "id",
+        "owner",
+        "category",
+        "monthlyLimit"
+      ]
+    },
+    "ListBudget": {
+      "route": "GET /api/budgets",
+      "request_fields": [
+        "page",
+        "size"
+      ],
+      "response_fields": [
+        "total",
+        "page",
+        "size",
+        "records"
+      ],
+      "record_fields": [
+        "id",
+        "owner",
+        "category",
+        "monthlyLimit"
+      ]
+    },
+    "UpdateBudget": {
+      "route": "PUT /api/budgets/{id}",
+      "request_fields": [
+        "id",
+        "category",
+        "monthlyLimit"
+      ],
+      "response_fields": [
+        "id",
+        "owner",
+        "category",
+        "monthlyLimit"
+      ]
+    },
+    "DeleteBudget": {
+      "route": "DELETE /api/budgets/{id}",
+      "request_fields": [
+        "id"
+      ],
+      "response_fields": []
+    }
+  },
+  "entity_fields": {
+    "Wallet": [
+      "id",
+      "balance",
+      "rebate"
+    ],
+    "VersionedWallet": [
+      "id",
+      "balance",
+      "rebate",
+      "version"
+    ],
+    "Measurement": [
+      "id",
+      "owner",
+      "amount",
+      "label",
+      "removed"
+    ],
+    "MeasurementTag": [
+      "id",
+      "measurement",
+      "name"
+    ],
+    "SummaryCategory": [
+      "id",
+      "owner",
+      "removed"
+    ],
+    "SummaryEntry": [
+      "id",
+      "owner",
+      "category",
+      "amount",
+      "occurredAt",
+      "label",
+      "removed"
+    ],
+    "User": [
+      "id",
+      "timeZone",
+      "name",
+      "passwordHash"
+    ],
+    "Category": [
+      "id",
+      "owner",
+      "name",
+      "direction"
+    ],
+    "Entry": [
+      "id",
+      "owner",
+      "category",
+      "amount",
+      "note",
+      "occurredAt"
+    ],
+    "Budget": [
+      "id",
+      "owner",
+      "category",
+      "monthlyLimit"
+    ],
+    "AccessToken": [
+      "id",
+      "owner",
+      "expiresAt"
+    ],
+    "RefreshToken": [
+      "id",
+      "owner",
+      "used",
+      "expiresAt"
+    ],
+    "TokenPair": [
+      "id",
+      "accessToken",
+      "accessExpiresAt",
+      "refreshToken",
+      "refreshExpiresAt"
+    ]
+  },
+  "view_fields": {
+    "WalletView": [
+      "id",
+      "balance",
+      "rebate"
+    ],
+    "UserView": [
+      "id",
+      "name"
+    ],
+    "TimeZoneView": [
+      "timeZone"
+    ]
+  },
+  "request_fields_by_type": {
+    "Amount": [
+      "id",
+      "amount",
+      "optional"
+    ],
+    "WalletId": [
+      "id"
+    ],
+    "Movement": [
+      "id",
+      "peer",
+      "amount"
+    ],
+    "WalletPatch": [
+      "id",
+      "balance",
+      "rebate"
+    ],
+    "SumProbe": [
+      "owner",
+      "minimum"
+    ],
+    "SumTagProbe": [
+      "owner",
+      "tag"
+    ],
+    "GroupProbe": [
+      "owner",
+      "page",
+      "size",
+      "since",
+      "until",
+      "label"
+    ],
+    "RegisterInput": [
+      "name",
+      "password"
+    ],
+    "PageOnly": [
+      "page",
+      "size"
+    ],
+    "PreferredTimeZone": [
+      "timeZone"
+    ],
+    "MonthQuery": [
+      "month",
+      "page",
+      "size"
+    ],
+    "BudgetMonthQuery": [
+      "budgetId",
+      "month"
+    ]
+  },
+  "enums": {
+    "Direction": [
+      "INCOME",
+      "EXPENSE"
+    ]
+  },
+  "declared_errors": {
+    "Missing": 404,
+    "Refused": 409,
+    "BadGroupPage": 400,
+    "BadGroupRange": 400,
+    "NameTaken": 409,
+    "BadPage": 400,
+    "Forbidden": 403,
+    "UserNotFound": 404,
+    "BadPeriod": 400
+  },
+  "paging": {
+    "request": [
+      "page",
+      "size"
+    ],
+    "response": [
+      "total",
+      "page",
+      "size",
+      "records"
+    ],
+    "page_default": 1,
+    "size_default": 20,
+    "page_range": [
+      1,
+      10000
+    ],
+    "size_range": [
+      1,
+      100
+    ]
+  },
+  "access_minutes": 15,
+  "refresh_days": 7,
+  "database_tables": {
+    "wallet": [
+      {
+        "name": "id",
+        "storage": "BIGINT"
+      },
+      {
+        "name": "balance",
+        "storage": "DECIMAL(19,2)"
+      },
+      {
+        "name": "rebate",
+        "storage": "DECIMAL(19,2)"
+      }
+    ],
+    "versioned_wallet": [
+      {
+        "name": "id",
+        "storage": "BIGINT"
+      },
+      {
+        "name": "balance",
+        "storage": "DECIMAL(19,2)"
+      },
+      {
+        "name": "rebate",
+        "storage": "DECIMAL(19,2)"
+      },
+      {
+        "name": "version",
+        "storage": "BIGINT"
+      }
+    ],
+    "measurement": [
+      {
+        "name": "id",
+        "storage": "BIGINT"
+      },
+      {
+        "name": "owner",
+        "storage": "BIGINT"
+      },
+      {
+        "name": "amount",
+        "storage": "DECIMAL(19,2)"
+      },
+      {
+        "name": "label",
+        "storage": "VARCHAR(255)"
+      },
+      {
+        "name": "removed",
+        "storage": "TINYINT(1)"
+      }
+    ],
+    "measurement_tag": [
+      {
+        "name": "id",
+        "storage": "BIGINT"
+      },
+      {
+        "name": "measurement_id",
+        "storage": "BIGINT"
+      },
+      {
+        "name": "name",
+        "storage": "VARCHAR(255)"
+      }
+    ],
+    "summary_category": [
+      {
+        "name": "id",
+        "storage": "BIGINT"
+      },
+      {
+        "name": "owner",
+        "storage": "BIGINT"
+      },
+      {
+        "name": "removed",
+        "storage": "TINYINT(1)"
+      }
+    ],
+    "summary_entry": [
+      {
+        "name": "id",
+        "storage": "BIGINT"
+      },
+      {
+        "name": "owner",
+        "storage": "BIGINT"
+      },
+      {
+        "name": "category_id",
+        "storage": "BIGINT"
+      },
+      {
+        "name": "amount",
+        "storage": "DECIMAL(19,2)"
+      },
+      {
+        "name": "occurred_at",
+        "storage": "DATETIME(6)"
+      },
+      {
+        "name": "label",
+        "storage": "VARCHAR(255)"
+      },
+      {
+        "name": "removed",
+        "storage": "TINYINT(1)"
+      }
+    ],
+    "user": [
+      {
+        "name": "id",
+        "storage": "BIGINT"
+      },
+      {
+        "name": "time_zone",
+        "storage": "VARCHAR(64)"
+      },
+      {
+        "name": "name",
+        "storage": "VARCHAR(100)"
+      },
+      {
+        "name": "password_hash",
+        "storage": "VARCHAR(255)"
+      }
+    ],
+    "access_token": [
+      {
+        "name": "id",
+        "storage": "CHAR(36)"
+      },
+      {
+        "name": "owner_id",
+        "storage": "BIGINT"
+      },
+      {
+        "name": "expires_at",
+        "storage": "DATETIME(6)"
+      }
+    ],
+    "refresh_token": [
+      {
+        "name": "id",
+        "storage": "CHAR(36)"
+      },
+      {
+        "name": "owner_id",
+        "storage": "BIGINT"
+      },
+      {
+        "name": "used",
+        "storage": "TINYINT(1)"
+      },
+      {
+        "name": "expires_at",
+        "storage": "DATETIME(6)"
+      }
+    ],
+    "token_pair": [
+      {
+        "name": "id",
+        "storage": "BIGINT"
+      },
+      {
+        "name": "access_token",
+        "storage": "CHAR(36)"
+      },
+      {
+        "name": "access_expires_at",
+        "storage": "DATETIME(6)"
+      },
+      {
+        "name": "refresh_token",
+        "storage": "CHAR(36)"
+      },
+      {
+        "name": "refresh_expires_at",
+        "storage": "DATETIME(6)"
+      }
+    ],
+    "category": [
+      {
+        "name": "id",
+        "storage": "BIGINT"
+      },
+      {
+        "name": "owner_id",
+        "storage": "BIGINT"
+      },
+      {
+        "name": "name",
+        "storage": "VARCHAR(100)"
+      },
+      {
+        "name": "direction",
+        "storage": "VARCHAR(32)"
+      }
+    ],
+    "entry": [
+      {
+        "name": "id",
+        "storage": "BIGINT"
+      },
+      {
+        "name": "owner_id",
+        "storage": "BIGINT"
+      },
+      {
+        "name": "category_id",
+        "storage": "BIGINT"
+      },
+      {
+        "name": "amount",
+        "storage": "DECIMAL(19,2)"
+      },
+      {
+        "name": "note",
+        "storage": "VARCHAR(500)"
+      },
+      {
+        "name": "occurred_at",
+        "storage": "DATETIME(6)"
+      }
+    ],
+    "budget": [
+      {
+        "name": "id",
+        "storage": "BIGINT"
+      },
+      {
+        "name": "owner_id",
+        "storage": "BIGINT"
+      },
+      {
+        "name": "category_id",
+        "storage": "BIGINT"
+      },
+      {
+        "name": "monthly_limit",
+        "storage": "DECIMAL(19,2)"
+      }
+    ]
+  },
+  "fixtures": {
+    "ddl": "conformance/mysql/money-ddl.sql",
+    "seed": "conformance/mysql/money-seed.sql",
+    "provided_by_oracle": true
+  }
+}

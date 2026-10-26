@@ -1,0 +1,1 @@
+GetCredential 按 id 返回 id、owner、used、expiresAt，不存在返回 404 CredentialNotFound。Refresh 接收 id；未过期且未使用的凭据可轮换一次，成功创建一条同 owner、used=false 的新凭据并返回 id、owner、used、expiresAt，新期限为当前时间起 7 天且使用 ISO UTC 时刻。轮换须原子地把旧凭据标记为已使用并保存新凭据；8 个请求同时轮换同一条凭据时恰有一个成功，其余均为 409 Invalid，总共只新增一行；失败和重放均不写库，也不改变其他凭据。已使用凭据返回 409 Invalid，未使用但过期返回 400 Expired，不存在返回 404 CredentialNotFound。返回完整的 sir 0.3 文档，不要 Java、SQL 或解释。

@@ -1,0 +1,980 @@
+{
+  "namespace": "example.library",
+  "capabilities": [
+    "BrowseItems",
+    "AddCopy",
+    "SearchByTitle",
+    "Borrow",
+    "GiveBack",
+    "Renew",
+    "ReserveBook",
+    "ClaimReservation",
+    "CancelReservation",
+    "MyReservations",
+    "MyLoans",
+    "OverdueLoans",
+    "CreateItem",
+    "GetItem",
+    "ListItem",
+    "UpdateItem",
+    "DeleteItem",
+    "Login",
+    "Refresh",
+    "Logout",
+    "Register",
+    "CreateBook",
+    "GetBook",
+    "ListBook",
+    "UpdateBook",
+    "DeleteBook"
+  ],
+  "entities": [
+    "Item",
+    "User",
+    "Book",
+    "Copy",
+    "Loan",
+    "Reservation",
+    "AccessToken",
+    "RefreshToken",
+    "TokenPair"
+  ],
+  "routes": {
+    "BrowseItems": "GET /api/shop/items",
+    "AddCopy": "POST /api/copies",
+    "SearchByTitle": "GET /api/catalogue",
+    "Borrow": "POST /api/loans",
+    "GiveBack": "POST /api/loans/{id}/return",
+    "Renew": "POST /api/loans/{id}/renew",
+    "ReserveBook": "POST /api/reservations",
+    "ClaimReservation": "POST /api/reservations/{id}/claim",
+    "CancelReservation": "DELETE /api/reservations/{id}",
+    "MyReservations": "GET /api/reservations",
+    "MyLoans": "GET /api/loans",
+    "OverdueLoans": "GET /api/loans/overdue",
+    "CreateItem": "POST /api/items",
+    "GetItem": "GET /api/items/{id}",
+    "ListItem": "GET /api/items",
+    "UpdateItem": "PUT /api/items/{id}",
+    "DeleteItem": "DELETE /api/items/{id}",
+    "Login": "POST /api/login",
+    "Refresh": "POST /api/refresh",
+    "Logout": "POST /api/logout",
+    "Register": "POST /api/register",
+    "CreateBook": "POST /api/books",
+    "GetBook": "GET /api/books/{id}",
+    "ListBook": "GET /api/books",
+    "UpdateBook": "PUT /api/books/{id}",
+    "DeleteBook": "DELETE /api/books/{id}"
+  },
+  "book_request": [
+    "isbn",
+    "title",
+    "author",
+    "publisher"
+  ],
+  "book_read_response": [
+    "id",
+    "isbn",
+    "title",
+    "author",
+    "publisher",
+    "availableCopies"
+  ],
+  "book_write_response": [
+    "id",
+    "isbn",
+    "title",
+    "author",
+    "publisher"
+  ],
+  "add_copy_request": [
+    "bookId",
+    "barcode"
+  ],
+  "copy_response": [
+    "id",
+    "barcode",
+    "status"
+  ],
+  "borrow_request": [
+    "barcode"
+  ],
+  "loan_response": [
+    "id",
+    "copy",
+    "borrowedAt",
+    "dueAt",
+    "renewals",
+    "returned",
+    "returnedAt",
+    "fine"
+  ],
+  "reservation_request": [
+    "bookId"
+  ],
+  "reservation_claim_request": [
+    "id",
+    "barcode"
+  ],
+  "reservation_response": [
+    "id",
+    "book",
+    "queuedAt"
+  ],
+  "item_request": [
+    "title",
+    "description",
+    "price",
+    "condition"
+  ],
+  "item_response": [
+    "id",
+    "seller",
+    "title",
+    "description",
+    "price",
+    "condition",
+    "status",
+    "createdAt"
+  ],
+  "browse_request": [
+    "keyword",
+    "minPrice",
+    "maxPrice",
+    "condition",
+    "page",
+    "size"
+  ],
+  "readiness": "GET /api/books/1",
+  "borrow_limit": 5,
+  "borrow_days": 30,
+  "renew_days_from_now": 44,
+  "max_renewals": 1,
+  "fine_per_whole_day": "0.50",
+  "overdue_probe_hours": 73,
+  "expected_probe_fine": "1.50",
+  "race_requests": 8,
+  "catalogue_page_business_reads": 3,
+  "catalogue_detail_business_reads": 2,
+  "lock_wait_observation_seconds": 5,
+  "seed_sources": [
+    "conformance/mysql/library-ddl.sql",
+    "conformance/mysql/library-seed.sql"
+  ],
+  "token_pattern": "00000000-0000-4000-8000-{actor_id:012d}",
+  "librarian_id": 15,
+  "access_minutes": 15,
+  "refresh_days": 7,
+  "interfaces": {
+    "BrowseItems": {
+      "route": "GET /api/shop/items",
+      "request_fields": [
+        "keyword",
+        "minPrice",
+        "maxPrice",
+        "condition",
+        "page",
+        "size"
+      ],
+      "response_fields": [
+        "total",
+        "page",
+        "size",
+        "records"
+      ],
+      "record_fields": []
+    },
+    "AddCopy": {
+      "route": "POST /api/copies",
+      "request_fields": [
+        "bookId",
+        "barcode"
+      ],
+      "response_fields": [
+        "id",
+        "barcode",
+        "status"
+      ]
+    },
+    "SearchByTitle": {
+      "route": "GET /api/catalogue",
+      "request_fields": [
+        "keyword",
+        "page",
+        "size"
+      ],
+      "response_fields": [
+        "total",
+        "page",
+        "size",
+        "records"
+      ],
+      "record_fields": [
+        "id",
+        "isbn",
+        "title",
+        "author",
+        "publisher",
+        "availableCopies"
+      ]
+    },
+    "Borrow": {
+      "route": "POST /api/loans",
+      "request_fields": [
+        "barcode"
+      ],
+      "response_fields": [
+        "id",
+        "copy",
+        "borrowedAt",
+        "dueAt",
+        "renewals",
+        "returned",
+        "returnedAt",
+        "fine"
+      ]
+    },
+    "GiveBack": {
+      "route": "POST /api/loans/{id}/return",
+      "request_fields": [
+        "id"
+      ],
+      "response_fields": [
+        "id",
+        "copy",
+        "borrowedAt",
+        "dueAt",
+        "renewals",
+        "returned",
+        "returnedAt",
+        "fine"
+      ]
+    },
+    "Renew": {
+      "route": "POST /api/loans/{id}/renew",
+      "request_fields": [
+        "id"
+      ],
+      "response_fields": [
+        "id",
+        "copy",
+        "borrowedAt",
+        "dueAt",
+        "renewals",
+        "returned",
+        "returnedAt",
+        "fine"
+      ]
+    },
+    "ReserveBook": {
+      "route": "POST /api/reservations",
+      "request_fields": [
+        "bookId"
+      ],
+      "response_fields": [
+        "id",
+        "book",
+        "queuedAt"
+      ]
+    },
+    "ClaimReservation": {
+      "route": "POST /api/reservations/{id}/claim",
+      "request_fields": [
+        "id",
+        "barcode"
+      ],
+      "response_fields": [
+        "id",
+        "copy",
+        "borrowedAt",
+        "dueAt",
+        "renewals",
+        "returned",
+        "returnedAt",
+        "fine"
+      ]
+    },
+    "CancelReservation": {
+      "route": "DELETE /api/reservations/{id}",
+      "request_fields": [
+        "id"
+      ],
+      "response_fields": []
+    },
+    "MyReservations": {
+      "route": "GET /api/reservations",
+      "request_fields": [
+        "page",
+        "size"
+      ],
+      "response_fields": [
+        "total",
+        "page",
+        "size",
+        "records"
+      ],
+      "record_fields": [
+        "id",
+        "book",
+        "queuedAt"
+      ]
+    },
+    "MyLoans": {
+      "route": "GET /api/loans",
+      "request_fields": [
+        "page",
+        "size"
+      ],
+      "response_fields": [
+        "total",
+        "page",
+        "size",
+        "records"
+      ],
+      "record_fields": [
+        "id",
+        "copy",
+        "borrowedAt",
+        "dueAt",
+        "renewals",
+        "returned",
+        "returnedAt",
+        "fine"
+      ]
+    },
+    "OverdueLoans": {
+      "route": "GET /api/loans/overdue",
+      "request_fields": [
+        "page",
+        "size"
+      ],
+      "response_fields": [
+        "total",
+        "page",
+        "size",
+        "records"
+      ],
+      "record_fields": [
+        "id",
+        "copy",
+        "borrowedAt",
+        "dueAt",
+        "renewals",
+        "returned",
+        "returnedAt",
+        "fine"
+      ]
+    },
+    "CreateItem": {
+      "route": "POST /api/items",
+      "request_fields": [
+        "title",
+        "description",
+        "price",
+        "condition"
+      ],
+      "response_fields": [
+        "id",
+        "seller",
+        "title",
+        "description",
+        "price",
+        "condition",
+        "status",
+        "createdAt"
+      ]
+    },
+    "GetItem": {
+      "route": "GET /api/items/{id}",
+      "request_fields": [
+        "id"
+      ],
+      "response_fields": [
+        "id",
+        "seller",
+        "title",
+        "description",
+        "price",
+        "condition",
+        "status",
+        "createdAt"
+      ]
+    },
+    "ListItem": {
+      "route": "GET /api/items",
+      "request_fields": [
+        "page",
+        "size"
+      ],
+      "response_fields": [
+        "total",
+        "page",
+        "size",
+        "records"
+      ],
+      "record_fields": [
+        "id",
+        "seller",
+        "title",
+        "description",
+        "price",
+        "condition",
+        "status",
+        "createdAt"
+      ]
+    },
+    "UpdateItem": {
+      "route": "PUT /api/items/{id}",
+      "request_fields": [
+        "id",
+        "title",
+        "description",
+        "price",
+        "condition"
+      ],
+      "response_fields": [
+        "id",
+        "seller",
+        "title",
+        "description",
+        "price",
+        "condition",
+        "status",
+        "createdAt"
+      ]
+    },
+    "DeleteItem": {
+      "route": "DELETE /api/items/{id}",
+      "request_fields": [
+        "id"
+      ],
+      "response_fields": []
+    },
+    "Login": {
+      "route": "POST /api/login",
+      "request_fields": [
+        "name",
+        "password"
+      ],
+      "response_fields": [
+        "accessToken",
+        "accessExpiresAt",
+        "refreshToken",
+        "refreshExpiresAt"
+      ]
+    },
+    "Refresh": {
+      "route": "POST /api/refresh",
+      "request_fields": [
+        "refreshToken"
+      ],
+      "response_fields": [
+        "accessToken",
+        "accessExpiresAt",
+        "refreshToken",
+        "refreshExpiresAt"
+      ]
+    },
+    "Logout": {
+      "route": "POST /api/logout",
+      "request_fields": [
+        "refreshToken"
+      ],
+      "response_fields": []
+    },
+    "Register": {
+      "route": "POST /api/register",
+      "request_fields": [
+        "name",
+        "password"
+      ],
+      "response_fields": [
+        "id",
+        "name",
+        "role"
+      ]
+    },
+    "CreateBook": {
+      "route": "POST /api/books",
+      "request_fields": [
+        "isbn",
+        "title",
+        "author",
+        "publisher"
+      ],
+      "response_fields": [
+        "id",
+        "isbn",
+        "title",
+        "author",
+        "publisher"
+      ]
+    },
+    "GetBook": {
+      "route": "GET /api/books/{id}",
+      "request_fields": [
+        "id"
+      ],
+      "response_fields": [
+        "id",
+        "isbn",
+        "title",
+        "author",
+        "publisher",
+        "availableCopies"
+      ]
+    },
+    "ListBook": {
+      "route": "GET /api/books",
+      "request_fields": [
+        "page",
+        "size"
+      ],
+      "response_fields": [
+        "total",
+        "page",
+        "size",
+        "records"
+      ],
+      "record_fields": [
+        "id",
+        "isbn",
+        "title",
+        "author",
+        "publisher",
+        "availableCopies"
+      ]
+    },
+    "UpdateBook": {
+      "route": "PUT /api/books/{id}",
+      "request_fields": [
+        "id",
+        "isbn",
+        "title",
+        "author",
+        "publisher"
+      ],
+      "response_fields": [
+        "id",
+        "isbn",
+        "title",
+        "author",
+        "publisher"
+      ]
+    },
+    "DeleteBook": {
+      "route": "DELETE /api/books/{id}",
+      "request_fields": [
+        "id"
+      ],
+      "response_fields": []
+    }
+  },
+  "entity_fields": {
+    "Item": [
+      "id",
+      "seller",
+      "title",
+      "description",
+      "price",
+      "condition",
+      "status",
+      "createdAt"
+    ],
+    "User": [
+      "id",
+      "role",
+      "activeLoans",
+      "name",
+      "passwordHash"
+    ],
+    "Book": [
+      "id",
+      "isbn",
+      "title",
+      "author",
+      "publisher"
+    ],
+    "Copy": [
+      "id",
+      "barcode",
+      "book",
+      "status"
+    ],
+    "Loan": [
+      "id",
+      "reader",
+      "copy",
+      "borrowedAt",
+      "dueAt",
+      "renewals",
+      "returned",
+      "returnedAt",
+      "fine"
+    ],
+    "Reservation": [
+      "id",
+      "reader",
+      "book",
+      "queuedAt"
+    ],
+    "AccessToken": [
+      "id",
+      "owner",
+      "expiresAt"
+    ],
+    "RefreshToken": [
+      "id",
+      "owner",
+      "used",
+      "expiresAt"
+    ],
+    "TokenPair": [
+      "id",
+      "accessToken",
+      "accessExpiresAt",
+      "refreshToken",
+      "refreshExpiresAt"
+    ]
+  },
+  "view_fields": {
+    "CatalogueBook": [
+      "id",
+      "isbn",
+      "title",
+      "author",
+      "publisher",
+      "availableCopies"
+    ],
+    "CopyView": [
+      "id",
+      "barcode",
+      "status"
+    ],
+    "LoanView": [
+      "id",
+      "copy",
+      "borrowedAt",
+      "dueAt",
+      "renewals",
+      "returned",
+      "returnedAt",
+      "fine"
+    ],
+    "ReservationView": [
+      "id",
+      "book",
+      "queuedAt"
+    ]
+  },
+  "request_fields_by_type": {
+    "BrowseInput": [
+      "keyword",
+      "minPrice",
+      "maxPrice",
+      "condition",
+      "page",
+      "size"
+    ],
+    "AddCopyInput": [
+      "bookId",
+      "barcode"
+    ],
+    "SearchBooks": [
+      "keyword",
+      "page",
+      "size"
+    ],
+    "BorrowInput": [
+      "barcode"
+    ],
+    "LoanRef": [
+      "id"
+    ],
+    "PageOnly": [
+      "page",
+      "size"
+    ],
+    "ReserveBookInput": [
+      "bookId"
+    ],
+    "ReservationRef": [
+      "id"
+    ],
+    "ClaimReservationInput": [
+      "id",
+      "barcode"
+    ]
+  },
+  "enums": {
+    "ItemStatus": [
+      "ON_SALE",
+      "SOLD",
+      "OFF_SHELF"
+    ],
+    "Role": [
+      "READER",
+      "LIBRARIAN"
+    ],
+    "CopyStatus": [
+      "AVAILABLE",
+      "BORROWED",
+      "LOST"
+    ]
+  },
+  "declared_errors": {
+    "Forbidden": 403,
+    "BadPage": 400,
+    "CopyNotFound": 404,
+    "CopyNotAvailable": 409,
+    "ReaderNotFound": 404,
+    "BorrowLimitExceeded": 409,
+    "LoanCounterMismatch": 409,
+    "AlreadyReturned": 409,
+    "LoanNotFound": 404,
+    "NotRenewable": 409,
+    "AlreadyBorrowingBook": 409,
+    "AlreadyReserved": 409,
+    "NotQueueHead": 409,
+    "NotReservable": 409,
+    "QueueHasPriority": 409,
+    "ReservationNotFound": 404,
+    "WrongBook": 409
+  },
+  "paging": {
+    "request": [
+      "page",
+      "size"
+    ],
+    "response": [
+      "total",
+      "page",
+      "size",
+      "records"
+    ],
+    "page_default": 1,
+    "size_default": 20,
+    "page_range": [
+      1,
+      10000
+    ],
+    "size_range": [
+      1,
+      100
+    ]
+  },
+  "database_tables": {
+    "user": [
+      {
+        "name": "id",
+        "storage": "BIGINT"
+      },
+      {
+        "name": "role",
+        "storage": "VARCHAR(32)"
+      },
+      {
+        "name": "active_loans",
+        "storage": "INT"
+      },
+      {
+        "name": "name",
+        "storage": "VARCHAR(64)"
+      },
+      {
+        "name": "password_hash",
+        "storage": "VARCHAR(255)"
+      }
+    ],
+    "access_token": [
+      {
+        "name": "id",
+        "storage": "CHAR(36)"
+      },
+      {
+        "name": "owner_id",
+        "storage": "BIGINT"
+      },
+      {
+        "name": "expires_at",
+        "storage": "DATETIME(6)"
+      }
+    ],
+    "refresh_token": [
+      {
+        "name": "id",
+        "storage": "CHAR(36)"
+      },
+      {
+        "name": "owner_id",
+        "storage": "BIGINT"
+      },
+      {
+        "name": "used",
+        "storage": "TINYINT(1)"
+      },
+      {
+        "name": "expires_at",
+        "storage": "DATETIME(6)"
+      }
+    ],
+    "token_pair": [
+      {
+        "name": "id",
+        "storage": "BIGINT"
+      },
+      {
+        "name": "access_token",
+        "storage": "CHAR(36)"
+      },
+      {
+        "name": "access_expires_at",
+        "storage": "DATETIME(6)"
+      },
+      {
+        "name": "refresh_token",
+        "storage": "CHAR(36)"
+      },
+      {
+        "name": "refresh_expires_at",
+        "storage": "DATETIME(6)"
+      }
+    ],
+    "book": [
+      {
+        "name": "id",
+        "storage": "BIGINT"
+      },
+      {
+        "name": "isbn",
+        "storage": "VARCHAR(64)"
+      },
+      {
+        "name": "title",
+        "storage": "VARCHAR(64)"
+      },
+      {
+        "name": "author",
+        "storage": "VARCHAR(64)"
+      },
+      {
+        "name": "publisher",
+        "storage": "VARCHAR(64)"
+      }
+    ],
+    "copy": [
+      {
+        "name": "id",
+        "storage": "BIGINT"
+      },
+      {
+        "name": "barcode",
+        "storage": "VARCHAR(64)"
+      },
+      {
+        "name": "book_id",
+        "storage": "BIGINT"
+      },
+      {
+        "name": "status",
+        "storage": "VARCHAR(32)"
+      }
+    ],
+    "loan": [
+      {
+        "name": "id",
+        "storage": "BIGINT"
+      },
+      {
+        "name": "reader_id",
+        "storage": "BIGINT"
+      },
+      {
+        "name": "copy_id",
+        "storage": "BIGINT"
+      },
+      {
+        "name": "borrowed_at",
+        "storage": "DATETIME(6)"
+      },
+      {
+        "name": "due_at",
+        "storage": "DATETIME(6)"
+      },
+      {
+        "name": "renewals",
+        "storage": "INT"
+      },
+      {
+        "name": "returned",
+        "storage": "TINYINT(1)"
+      },
+      {
+        "name": "returned_at",
+        "storage": "DATETIME(6)"
+      },
+      {
+        "name": "fine",
+        "storage": "DECIMAL(19,2)"
+      }
+    ],
+    "reservation": [
+      {
+        "name": "id",
+        "storage": "BIGINT"
+      },
+      {
+        "name": "reader_id",
+        "storage": "BIGINT"
+      },
+      {
+        "name": "book_id",
+        "storage": "BIGINT"
+      },
+      {
+        "name": "queued_at",
+        "storage": "DATETIME(6)"
+      }
+    ],
+    "item": [
+      {
+        "name": "id",
+        "storage": "BIGINT"
+      },
+      {
+        "name": "seller_id",
+        "storage": "BIGINT"
+      },
+      {
+        "name": "title",
+        "storage": "VARCHAR(100)"
+      },
+      {
+        "name": "description",
+        "storage": "VARCHAR(500)"
+      },
+      {
+        "name": "price",
+        "storage": "DECIMAL(19,2)"
+      },
+      {
+        "name": "condition",
+        "storage": "VARCHAR(32)"
+      },
+      {
+        "name": "status",
+        "storage": "VARCHAR(32)"
+      },
+      {
+        "name": "created_at",
+        "storage": "DATETIME(6)"
+      }
+    ]
+  },
+  "fixtures": {
+    "ddl": "conformance/mysql/library-ddl.sql",
+    "seed": "conformance/mysql/library-seed.sql",
+    "provided_by_oracle": true
+  }
+}

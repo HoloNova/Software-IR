@@ -1,0 +1,228 @@
+{
+  "namespace": "example.notes",
+  "capabilities": [
+    "GetUser",
+    "Register",
+    "Login",
+    "Logout",
+    "PostNote"
+  ],
+  "entities": [
+    "User",
+    "AccessToken",
+    "Note"
+  ],
+  "register_request": [
+    "name",
+    "password"
+  ],
+  "user_response": [
+    "id",
+    "name"
+  ],
+  "login_request": [
+    "name",
+    "password"
+  ],
+  "token_response": [
+    "id",
+    "expiresAt"
+  ],
+  "logout_request": [
+    "token"
+  ],
+  "post_note_request": [
+    "text"
+  ],
+  "note_response": [
+    "id",
+    "text"
+  ],
+  "routes": {
+    "GetUser": "GET /api/get-user",
+    "Register": "POST /api/register",
+    "Login": "POST /api/login",
+    "Logout": "POST /api/logout",
+    "PostNote": "POST /api/post-note"
+  },
+  "readiness": "GET /api/get-user?id=1",
+  "access_minutes": 15,
+  "expiry_test_window_minutes": [
+    14,
+    16
+  ],
+  "seed": {
+    "user": {
+      "id": 1,
+      "name": "seed",
+      "password_hash": "not-a-digest"
+    }
+  },
+  "storage": {
+    "access_token": [
+      "id",
+      "owner_id",
+      "expires_at"
+    ],
+    "note": [
+      "id",
+      "author_id",
+      "text"
+    ]
+  },
+  "interfaces": {
+    "GetUser": {
+      "route": "GET /api/get-user",
+      "request_fields": [
+        "id"
+      ],
+      "response_fields": [
+        "id",
+        "name"
+      ]
+    },
+    "Register": {
+      "route": "POST /api/register",
+      "request_fields": [
+        "name",
+        "password"
+      ],
+      "response_fields": [
+        "id",
+        "name"
+      ]
+    },
+    "Login": {
+      "route": "POST /api/login",
+      "request_fields": [
+        "name",
+        "password"
+      ],
+      "response_fields": [
+        "id",
+        "expiresAt"
+      ]
+    },
+    "Logout": {
+      "route": "POST /api/logout",
+      "request_fields": [
+        "token"
+      ],
+      "response_fields": [
+        "id",
+        "expiresAt"
+      ]
+    },
+    "PostNote": {
+      "route": "POST /api/post-note",
+      "request_fields": [
+        "text"
+      ],
+      "response_fields": [
+        "id",
+        "text"
+      ]
+    }
+  },
+  "entity_fields": {
+    "User": [
+      "id",
+      "name",
+      "passwordHash"
+    ],
+    "AccessToken": [
+      "id",
+      "owner",
+      "expiresAt"
+    ],
+    "Note": [
+      "id",
+      "author",
+      "text"
+    ]
+  },
+  "view_fields": {
+    "UserView": [
+      "id",
+      "name"
+    ],
+    "AccessView": [
+      "id",
+      "expiresAt"
+    ],
+    "NoteView": [
+      "id",
+      "text"
+    ]
+  },
+  "request_fields_by_type": {
+    "LoginInput": [
+      "name",
+      "password"
+    ],
+    "UserRef": [
+      "id"
+    ],
+    "TokenInput": [
+      "token"
+    ],
+    "NoteInput": [
+      "text"
+    ]
+  },
+  "enums": {},
+  "declared_errors": {
+    "BadLogin": 401,
+    "BadToken": 401,
+    "UserNotFound": 404
+  },
+  "database_tables": {
+    "user": [
+      {
+        "name": "id",
+        "storage": "BIGINT"
+      },
+      {
+        "name": "name",
+        "storage": "VARCHAR(64)"
+      },
+      {
+        "name": "password_hash",
+        "storage": "VARCHAR(255)"
+      }
+    ],
+    "access_token": [
+      {
+        "name": "id",
+        "storage": "CHAR(36)"
+      },
+      {
+        "name": "owner_id",
+        "storage": "BIGINT"
+      },
+      {
+        "name": "expires_at",
+        "storage": "DATETIME(6)"
+      }
+    ],
+    "note": [
+      {
+        "name": "id",
+        "storage": "BIGINT"
+      },
+      {
+        "name": "author_id",
+        "storage": "BIGINT"
+      },
+      {
+        "name": "text",
+        "storage": "VARCHAR(255)"
+      }
+    ]
+  },
+  "fixtures": {
+    "ddl": "conformance/mysql/bearer-credential-ddl.sql",
+    "seed": "conformance/mysql/bearer-credential-seed.sql",
+    "provided_by_oracle": true
+  }
+}

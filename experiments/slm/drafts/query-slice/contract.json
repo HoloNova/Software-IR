@@ -1,0 +1,185 @@
+{
+  "namespace": "com.example.coursecatalog",
+  "capabilities": [
+    "SearchCourses"
+  ],
+  "entities": [
+    "Course"
+  ],
+  "request": [
+    "keyword",
+    "page",
+    "size"
+  ],
+  "record_response": [
+    "code",
+    "name",
+    "capacity"
+  ],
+  "page_response": [
+    "total",
+    "page",
+    "size",
+    "records"
+  ],
+  "readiness": "GET /api/search-courses?keyword=Intro&page=1&size=2",
+  "page_default": 1,
+  "size_default": 20,
+  "page_min": 1,
+  "page_max": 10000,
+  "size_min": 1,
+  "size_max": 100,
+  "seed": [
+    {
+      "id": 1,
+      "code": "CS103",
+      "name": "Intro to Databases",
+      "description": "Relational modelling and normal forms",
+      "capacity": 40
+    },
+    {
+      "id": 2,
+      "code": "ART101",
+      "name": "Art of 100% Painting",
+      "description": "Studio course on colour mixing",
+      "capacity": 15
+    },
+    {
+      "id": 3,
+      "code": "CS101",
+      "name": "Intro to Algorithms 100%",
+      "description": "Asymptotic analysis and recursion",
+      "capacity": 30
+    },
+    {
+      "id": 4,
+      "code": "MATH201",
+      "name": "Math 9_9 Advanced",
+      "description": "Sequences, series and limits",
+      "capacity": 35
+    },
+    {
+      "id": 5,
+      "code": "MATH202",
+      "name": "Math 919 Applied",
+      "description": "Applied numerical methods",
+      "capacity": 25
+    },
+    {
+      "id": 6,
+      "code": "CS102",
+      "name": "Intro to 9_9 Patterns",
+      "description": "Design patterns in practice",
+      "capacity": 20
+    },
+    {
+      "id": 7,
+      "code": "CS104",
+      "name": "Intro to Compilers",
+      "description": "Lexing, parsing and code generation",
+      "capacity": 45
+    }
+  ],
+  "routes": {
+    "SearchCourses": "GET /api/search-courses"
+  },
+  "interfaces": {
+    "SearchCourses": {
+      "route": "GET /api/search-courses",
+      "request_fields": [
+        "keyword",
+        "page",
+        "size"
+      ],
+      "response_fields": [
+        "total",
+        "page",
+        "size",
+        "records"
+      ],
+      "record_fields": [
+        "code",
+        "name",
+        "capacity"
+      ]
+    }
+  },
+  "entity_fields": {
+    "Course": [
+      "id",
+      "code",
+      "name",
+      "description",
+      "capacity"
+    ]
+  },
+  "view_fields": {
+    "CourseSummary": [
+      "code",
+      "name",
+      "capacity"
+    ]
+  },
+  "request_fields_by_type": {
+    "SearchCoursesInput": [
+      "keyword",
+      "page",
+      "size"
+    ]
+  },
+  "enums": {},
+  "declared_errors": {
+    "InvalidPageParam": 400
+  },
+  "paging": {
+    "request": [
+      "page",
+      "size"
+    ],
+    "response": [
+      "total",
+      "page",
+      "size",
+      "records"
+    ],
+    "page_default": 1,
+    "size_default": 20,
+    "page_range": [
+      1,
+      10000
+    ],
+    "size_range": [
+      1,
+      100
+    ]
+  },
+  "database_tables": {
+    "course": [
+      {
+        "name": "id",
+        "storage": "BIGINT"
+      },
+      {
+        "name": "code",
+        "storage": "VARCHAR(32)"
+      },
+      {
+        "name": "name",
+        "storage": "VARCHAR(100)"
+      },
+      {
+        "name": "description",
+        "storage": "VARCHAR(500)"
+      },
+      {
+        "name": "capacity",
+        "storage": "INT"
+      }
+    ]
+  },
+  "fixtures": {
+    "ddl": "conformance/mysql/course-catalog-ddl.sql",
+    "seed": "conformance/mysql/course-catalog-seed.sql",
+    "provided_by_oracle": true
+  }
+}

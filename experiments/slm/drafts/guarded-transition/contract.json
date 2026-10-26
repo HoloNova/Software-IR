@@ -1,0 +1,142 @@
+{
+  "namespace": "com.example.rotation",
+  "capabilities": [
+    "GetCredential",
+    "Refresh"
+  ],
+  "entities": [
+    "Credential"
+  ],
+  "get_request": [
+    "id"
+  ],
+  "refresh_request": [
+    "id"
+  ],
+  "credential_response": [
+    "id",
+    "owner",
+    "used",
+    "expiresAt"
+  ],
+  "routes": {
+    "GetCredential": "GET /api/get-credential",
+    "Refresh": "POST /api/refresh"
+  },
+  "readiness": "GET /api/get-credential?id=1",
+  "refresh_days": 7,
+  "expiry_test_window_days": [
+    6,
+    8
+  ],
+  "race_requests": 8,
+  "storage": {
+    "credential": [
+      "id",
+      "owner",
+      "used",
+      "expires_at"
+    ]
+  },
+  "seed": [
+    {
+      "id": 1,
+      "owner": "alice",
+      "used": false,
+      "expiresAt": "2099-01-01T00:00:00Z"
+    },
+    {
+      "id": 2,
+      "owner": "bob",
+      "used": true,
+      "expiresAt": "2099-01-01T00:00:00Z"
+    },
+    {
+      "id": 3,
+      "owner": "carol",
+      "used": false,
+      "expiresAt": "2000-01-01T00:00:00Z"
+    }
+  ],
+  "interfaces": {
+    "GetCredential": {
+      "route": "GET /api/get-credential",
+      "request_fields": [
+        "id"
+      ],
+      "response_fields": [
+        "id",
+        "owner",
+        "used",
+        "expiresAt"
+      ]
+    },
+    "Refresh": {
+      "route": "POST /api/refresh",
+      "request_fields": [
+        "id"
+      ],
+      "response_fields": [
+        "id",
+        "owner",
+        "used",
+        "expiresAt"
+      ]
+    }
+  },
+  "entity_fields": {
+    "Credential": [
+      "id",
+      "owner",
+      "used",
+      "expiresAt"
+    ]
+  },
+  "view_fields": {
+    "CredentialView": [
+      "id",
+      "owner",
+      "used",
+      "expiresAt"
+    ]
+  },
+  "request_fields_by_type": {
+    "GetCredentialInput": [
+      "id"
+    ],
+    "RefreshInput": [
+      "id"
+    ]
+  },
+  "enums": {},
+  "declared_errors": {
+    "CredentialNotFound": 404,
+    "Expired": 400,
+    "Invalid": 409
+  },
+  "database_tables": {
+    "credential": [
+      {
+        "name": "id",
+        "storage": "BIGINT"
+      },
+      {
+        "name": "owner",
+        "storage": "VARCHAR(64)"
+      },
+      {
+        "name": "used",
+        "storage": "TINYINT(1)"
+      },
+      {
+        "name": "expires_at",
+        "storage": "DATETIME(6)"
+      }
+    ]
+  },
+  "fixtures": {
+    "ddl": "conformance/mysql/credential-rotation-ddl.sql",
+    "seed": "conformance/mysql/credential-rotation-seed.sql",
+    "provided_by_oracle": true
+  }
+}
