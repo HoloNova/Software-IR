@@ -182,6 +182,40 @@ class PipelineTests(unittest.TestCase):
         call.assert_not_called()
         self.assertEqual((origin / "system.md").read_bytes(), (destination / "system.md").read_bytes())
 
+    def test_import_accepts_a_newer_task_that_only_changes_the_judge_files(self):
+        task = load_json(data.HERE / "tasks/dual-token-v1.json")
+        old_files = [path.replace("SlmCandidateSupport", "DualTokenCandidateSupport") for path in task["oracle"]["files"]]
+        # The origin froze the pre-rename file list; that file no longer exists, so a plain import cannot freeze it.
+        (self.root / "task.json").write_text(data.json_text({**task, "oracle": {**task["oracle"], "files": old_files}}),
+                                             encoding="utf-8")
+        frozen = {**self.manifest["bundle_inputs"], "task.json": data.digest_file(self.root / "task.json")}
+        (self.root / "manifest.json").write_text(data.json_text(
+            {**self.manifest, "bundle_inputs": frozen, "task_sha256": frozen["task.json"]}), encoding="utf-8")
+        rows = [{**row, "task_sha256": frozen["task.json"]} for row in load_jsonl(self.root / "candidates.jsonl")]
+        for row in rows:
+            (self.root / "samples" / row["id"] / "candidate.json").write_text(data.json_text(row), encoding="utf-8")
+        (self.root / "candidates.jsonl").write_text("".join(json.dumps(row) + "\n" for row in rows), encoding="utf-8")
+        with self.assertRaises(FileNotFoundError):
+            with contextlib.redirect_stdout(io.StringIO()):
+                data.import_candidates(argparse.Namespace(from_bundle=self.root, bundle=Path(self.temp.name) / "plain"))
+        destination = Path(self.temp.name) / "renamed"
+        with patch.object(data, "call_teacher") as call, contextlib.redirect_stdout(io.StringIO()):
+            data.import_candidates(argparse.Namespace(from_bundle=self.root, bundle=destination,
+                                                      task=data.HERE / "tasks/dual-token-v1.json"))
+        call.assert_not_called()
+        self.assertEqual(task, load_json(destination / "task.json"))
+        replaced = load_json(destination / "import.json")["task_replaced"]
+        self.assertEqual((frozen["task.json"], "oracle.files"), (replaced["from_task_sha256"], replaced["changed"]))
+
+    def test_import_refuses_a_task_that_asks_a_different_question(self):
+        task = load_json(data.HERE / "tasks/dual-token-v1.json")
+        changed = Path(self.temp.name) / "changed-task.json"
+        changed.write_text(data.json_text({**task, "requirement": task["requirement"] + "另加一条。"}), encoding="utf-8")
+        destination = Path(self.temp.name) / "refused-import"
+        with self.assertRaisesRegex(DataError, "only change oracle.files"):
+            data.import_candidates(argparse.Namespace(from_bundle=self.root, bundle=destination, task=changed))
+        self.assertFalse(destination.exists())
+
     def test_prompt_changed_after_freeze_is_rejected_before_a_paid_call(self):
         (self.root / "system.md").write_text("changed", encoding="utf-8")
         with patch.object(data, "call_teacher") as call:

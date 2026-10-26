@@ -163,14 +163,19 @@ def import_candidates(args) -> None:
             raise DataError("source manifest fingerprint mismatch")
     rows = load_jsonl(origin / "candidates.jsonl")
     validate_candidates(origin, manifest, task, rows)
+    task_file, replaced = origin / "task.json", None
+    if getattr(args, "task", None) is not None:
+        task_file, replaced = args.task, same_question(manifest, task, args.task)
     # Old host source bytes need not exist here. Responses/inputs remain verified above;
     # prepare freezes the actual destination toolchain/oracle instead of trusting old gates.
-    prepare(argparse.Namespace(task=origin / "task.json", bundle=args.bundle, frozen_system=origin / "system.md"))
+    prepare(argparse.Namespace(task=task_file, bundle=args.bundle, frozen_system=origin / "system.md"))
     current, _ = read_bundle(args.bundle)
     provenance = {"manifest_sha256": digest_file(origin / "manifest.json"),
                   "candidates_sha256": digest_file(origin / "candidates.jsonl"),
                   "toolchain_core_sha256": manifest["toolchain_core_sha256"],
                   "oracle_sha256": manifest["oracle_sha256"], "gates_transferred": False}
+    if replaced is not None:
+        provenance["task_replaced"] = replaced
     copied = 0
     for row in rows:
         if row["origin"] != "teacher":
@@ -188,6 +193,19 @@ def import_candidates(args) -> None:
     copy_collectors(origin, args.bundle, rows)
     write_new_json(args.bundle / "import.json", {**provenance, "teacher_responses": copied, "new_api_calls": 0})
     print(json_text({"imported_teacher_candidates": copied, "all_gates": "NOT_RUN", "new_api_calls": 0}), end="")
+
+
+def same_question(manifest: dict, task: dict, task_file: Path) -> dict:
+    """A newer task definition may only change which judge files are frozen, never the question the teacher answered."""
+    current = load_json(task_file)
+    def question(value: dict) -> dict:
+        return {**value, "oracle": {key: item for key, item in value["oracle"].items() if key != "files"}}
+    if question(current) != question(task):
+        raise DataError("--task may only change oracle.files; requirement, contract, base and reference must stay the same")
+    for name, key in (("base.sir", "base_source"), ("reference.sir", "reference_source")):
+        if digest_file(repo_file(current[key])) != manifest["bundle_inputs"][name]:
+            raise DataError("--task " + key + " no longer has the bytes the teacher was shown or judged against")
+    return {"from_task_sha256": manifest["task_sha256"], "task_sha256": digest_file(task_file), "changed": "oracle.files"}
 
 
 def copy_collectors(origin: Path, destination: Path, rows: list[dict]) -> None:
@@ -379,6 +397,8 @@ def parser() -> argparse.ArgumentParser:
     import_args = commands.add_parser("import", help="freeze current host and import raw responses with all gates reset")
     import_args.add_argument("--from-bundle", type=Path, required=True)
     import_args.add_argument("--bundle", type=Path, required=True)
+    import_args.add_argument("--task", type=Path,
+                             help="newer definition of the same task; only oracle.files may differ (e.g. a renamed judge file)")
     import_args.set_defaults(run=import_candidates)
     generate_args = commands.add_parser("generate", help="bounded DeepSeek teacher calls; no automatic retries")
     generate_args.add_argument("--bundle", type=Path, required=True)

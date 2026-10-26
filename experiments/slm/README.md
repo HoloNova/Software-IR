@@ -73,6 +73,8 @@ python -m experiments.slm.data check \
 
 import验证原冻结文件、响应/请求/源码及metadata，保持原批次不变，重新冻结本环境工具链/oracle；`imported_from`保留原指纹。只复制教师原始响应与校验过的收集器，不调用API，不迁移任何PASSED或生成摘要。当前参考另作为种子重新加入。必须在新批次重做静态和实际业务门，再导出；不要把`from-bundle`当运行批次。
 
+判卷文件改名或增删后，旧批次 `task.json` 里的 `oracle.files` 会指向不存在的文件，普通 import 冻结不了。这时加 `--task experiments/slm/tasks/<题目>.json` 用当前定义导入：除 `oracle.files` 外必须与来源批次的题目完全相同，base 与参考答案的字节也必须与来源批次冻结的一致，否则拒绝（那已是另一道题，教师答的不是它）。`import.json` 的 `task_replaced` 记录新旧题目哈希。
+
 ## 参考环境中的真实验收
 
 本机不执行。只在已经配置好受限 MySQL 权限、Maven 依赖和资源限制的 Linux CI/参考环境运行。继续使用原有 `DualTokenBusinessConformanceIT`、DDL、种子、锁、HTTP/JDBC 断言和清理，不另起一套判题。普通 CI 不设置候选属性，仍检查原参考答案。
