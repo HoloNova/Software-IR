@@ -1,0 +1,20 @@
+{
+  "workflow": ".github/workflows/slm-business-gate.yml",
+  "run_id": 40330717774,
+  "run_url": "https://github.com/HoloNova/Software-IR/actions/runs/40330717774",
+  "head_sha": "f58b05e1d3f879a1e0861f9f77e97641f60961d0",
+  "inputs": {
+    "bundle": "datasets/sir/runs/dual-token-gate-v1",
+    "sample_id": "auth-dual-token-v1-teacher-bd870a834f77",
+    "it": "DualTokenBusinessConformanceIT"
+  },
+  "artifacts": {
+    "slm-gate-auth-dual-token-v1-teacher-bd870a834f77": {"id": 12653518511, "zip_sha256": "a58e8dd8d5f6454c8b578615c7142a3d021085929749acfd8d420666b2e0ef11"},
+    "slm-gate-surefire-auth-dual-token-v1-teacher-bd870a834f77": {"id": 12653278585, "zip_sha256": "575837371850b426db3d211222d586e419741759ab86e6cf823278529f7e1635"}
+  },
+  "job_conclusion": "failure",
+  "gates": {"static": "PASSED", "build": "PASSED", "start": "PASSED", "business": "FAILED"},
+  "checks_passed": 34,
+  "checks_failed": 1,
+  "failed_checks": ["logging out answers 200 (expected=200 actual=201)"]
+}

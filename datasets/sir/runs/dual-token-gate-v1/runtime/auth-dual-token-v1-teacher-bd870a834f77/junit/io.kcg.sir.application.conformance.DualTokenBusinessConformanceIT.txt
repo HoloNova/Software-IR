@@ -1,0 +1,98 @@
+-------------------------------------------------------------------------------
+Test set: io.kcg.sir.application.conformance.DualTokenBusinessConformanceIT
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 19.50 s <<< FAILURE! -- in io.kcg.sir.application.conformance.DualTokenBusinessConformanceIT
+io.kcg.sir.application.conformance.DualTokenBusinessConformanceIT.theDualTokenPatternBehavesLikeADualTokenLoginAgainstRealMysql -- Time elapsed: 19.47 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: 
+dual-token business conformance FAILED:
+=== Dual token (use DualTokenLogin, written out) business conformance ===
+verdict=FAILED
+runId=dual-token-slice-1a1786601e4-63224
+schemaName=kcg_conf_run
+advisoryLock=held during the run
+schemaSource=TEST_FIXTURE_DDL
+productInitializeImplemented=false
+productUpdateImplemented=false
+sirResource=EXTERNAL_CANDIDATE:candidate.sir sha256=2a81772ab3856285a092c6e9610ab4f91f8572f9a1a9a14e2fd8078458f439bd
+fixtureDdl=/conformance/mysql/dual-token-ddl.sql sha256=1acb5bb6856dcd28687fe2ca3a7c716f6f1d4e1710fa4b89f8ef69ebd6843158
+fixtureSeed=/conformance/mysql/dual-token-seed.sql sha256=7197ed9144996f06639aa12a27b9b970b8e20be063623b7c5f436f12246075be
+generatedFiles=45 combinedSha256=b02b1199eac5340a05cce049f166e34ce7a0f438b921ad8f1dd996f08b18043f
+generatedProjectBuild=PASSED (exit 0)
+httpReadiness=READY (200 from /api/get-user?id=1)
+mysqlRowsBefore=1 mysqlRowsAfter=2
+mavenOffline=false
+javaVersion=21.0.12.1
+osName=Linux osArch=amd64
+serverPort=18080
+slmMysqlVersion=8.4.13
+slmSampleId=auth-dual-token-v1-teacher-bd870a834f77
+slmSourceSha256=2a81772ab3856285a092c6e9610ab4f91f8572f9a1a9a14e2fd8078458f439bd
+slmGeneratedDigest=7010109bfef704a3f860d069c9a0bdec307ea863c03b62ef1c1a1272925240b6
+
+checksPassed=34 checksFailed=1
+PASS the SIR slice compiles without errors (warnings remain visible) (diagnostics=[])
+PASS the compiler emitted a generated project (generatedFileCount=45)
+PASS candidate runtime compilation matches full static generation (sourceSha256=2a81772ab3856285a092c6e9610ab4f91f8572f9a1a9a14e2fd8078458f439bd generatedDigest=7010109bfef704a3f860d069c9a0bdec307ea863c03b62ef1c1a1272925240b6)
+PASS the generated project builds (mvn clean verify) (exitCode=0)
+PASS the build produced an executable jar (projectRoot=/home/runner/work/Software-IR/Software-IR/ci-work/dual-token-slice-1a1786601e4-63224/generated-project)
+PASS the generated application serves the compiled business route (readinessUrl=http://127.0.0.1:18080/api/get-user?id=1)
+PASS the fixture seed is present in the owned schema (seededRowCount=1)
+PASS registering zoe stores an account (status=201)
+PASS the right password logs in (status=201)
+PASS the login answers an access token and a different refresh token (access=11795e80-cde0-4fcf-804e-f776553e0595 refresh=f6207520-0cec-4bb0-ad9d-05269171233b)
+PASS the access token lives about fifteen minutes and the refresh token about seven days (body={"accessToken":"11795e80-cde0-4fcf-804e-f776553e0595","accessExpiresAt":"2026-10-26T13:43:51.698116904Z","refreshToken":"f6207520-0cec-4bb0-ad9d-05269171233b","refreshExpiresAt":"2026-11-02T13:28:51.698250663Z"})
+PASS each token is stored for the account that logged in (access_token=[11795e80-cde0-4fcf-804e-f776553e0595|2|2026-10-26 13:43:51.698117] refresh_token=[f6207520-0cec-4bb0-ad9d-05269171233b|2|0|2026-11-02 13:28:51.698251])
+PASS a wrong password is the declared 401 (expected=401 actual=401)
+PASS an unknown account is the declared 401 (expected=401 actual=401)
+PASS a wrong password and an unknown account are answered identically (wrong={"code":"BadLogin","message":"BadLogin","fields":[]} unknown={"code":"BadLogin","message":"BadLogin","fields":[]})
+PASS a request without a credential is refused with 401 (expected=401 actual=401)
+PASS the access token authenticates (status=201)
+PASS the note was written as the token's owner (notes=[1|2|with access token])
+PASS a refresh token does not authenticate a request (expected=401 actual=401)
+PASS the refusals wrote no note (notes=[1|2|with access token])
+PASS an expired access token is refused with 401 (expected=401 actual=401)
+PASS a refresh token is exchanged for a new pair (status=201)
+PASS the new pair differs from the old one (body={"accessToken":"1bd60923-a501-4830-b5b1-95d8a95d12da","accessExpiresAt":"2026-10-26T13:43:52.047578690Z","refreshToken":"946bdf49-5f2d-402f-a935-6d8e757ee377","refreshExpiresAt":"2026-11-02T13:28:52.047599168Z"})
+PASS the old refresh token is spent and the new one is not (refresh_token=[946bdf49-5f2d-402f-a935-6d8e757ee377|2|0|2026-11-02 13:28:52.047599, f6207520-0cec-4bb0-ad9d-05269171233b|2|1|2026-11-02 13:28:51.698251])
+PASS the new access token authenticates (status=201)
+PASS a spent refresh token is refused with the declared 401 (expected=401 actual=401)
+PASS the replay wrote no token (access_token=2 refresh_token=2)
+PASS exactly one of 6 simultaneous refreshes succeeds (statuses=[201, 401, 401, 401, 401, 401])
+PASS every other simultaneous refresh is refused with 401 (statuses=[201, 401, 401, 401, 401, 401])
+PASS the race created exactly one new pair of tokens (access_token=3 refresh_token=3)
+PASS a refresh token that was logged out is refused with 401 (expected=401 actual=401)
+PASS the generated application process exited (stopped=true)
+PASS the owned schema was dropped and its absence proved (schema=kcg_conf_run)
+PASS the advisory lock for the owned schema was released (released=true)
+FAIL logging out answers 200 (expected=200 actual=201)
+
+D0 POST register (zoe): status=201 body={"id":2,"name":"zoe"}
+D1 POST login: status=201 body={"accessToken":"11795e80-cde0-4fcf-804e-f776553e0595","accessExpiresAt":"2026-10-26T13:43:51.698116904Z","refreshToken":"f6207520-0cec-4bb0-ad9d-05269171233b","refreshExpiresAt":"2026-11-02T13:28:51.698250663Z"}
+D1 POST login (wrong password): status=401 body={"code":"BadLogin","message":"BadLogin","fields":[]}
+D1 POST login (unknown account): status=401 body={"code":"BadLogin","message":"BadLogin","fields":[]}
+D2 POST post-note (no credential): status=401 body=
+D2 POST post-note (access token): status=201 body={"id":1,"text":"with access token"}
+D2 POST post-note (refresh token as credential): status=401 body=
+D3 POST post-note (expired access token): status=401 body=
+D4 POST refresh: status=201 body={"accessToken":"1bd60923-a501-4830-b5b1-95d8a95d12da","accessExpiresAt":"2026-10-26T13:43:52.047578690Z","refreshToken":"946bdf49-5f2d-402f-a935-6d8e757ee377","refreshExpiresAt":"2026-11-02T13:28:52.047599168Z"}
+D4 POST post-note (new access token): status=201 body={"id":2,"text":"with new access token"}
+D5 POST refresh (replay): status=401 body={"code":"InvalidRefreshToken","message":"InvalidRefreshToken","fields":[]}
+D6 POST refresh (racer 0): status=401 body={"code":"InvalidRefreshToken","message":"InvalidRefreshToken","fields":[]}
+D6 POST refresh (racer 1): status=401 body={"code":"InvalidRefreshToken","message":"InvalidRefreshToken","fields":[]}
+D6 POST refresh (racer 2): status=201 body={"accessToken":"19e48723-d666-4f14-bac8-5910fda58e48","accessExpiresAt":"2026-10-26T13:43:52.106898964Z","refreshToken":"734dd1d0-80f7-4592-b2d9-74acf618bef5","refreshExpiresAt":"2026-11-02T13:28:52.106904434Z"}
+D6 POST refresh (racer 3): status=401 body={"code":"InvalidRefreshToken","message":"InvalidRefreshToken","fields":[]}
+D6 POST refresh (racer 4): status=401 body={"code":"InvalidRefreshToken","message":"InvalidRefreshToken","fields":[]}
+D6 POST refresh (racer 5): status=401 body={"code":"InvalidRefreshToken","message":"InvalidRefreshToken","fields":[]}
+D7 POST logout: status=201 body={"accessToken":"734dd1d0-80f7-4592-b2d9-74acf618bef5","accessExpiresAt":"2026-11-02T13:28:52.106904Z","refreshToken":"734dd1d0-80f7-4592-b2d9-74acf618bef5","refreshExpiresAt":"2026-11-02T13:28:52.106904Z"}
+D7 POST refresh (after logout): status=401 body={"code":"InvalidRefreshToken","message":"InvalidRefreshToken","fields":[]}
+ ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:42)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:191)
+	at io.kcg.sir.application.conformance.DualTokenBusinessConformanceIT.theDualTokenPatternBehavesLikeADualTokenLoginAgainstRealMysql(DualTokenBusinessConformanceIT.java:88)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+

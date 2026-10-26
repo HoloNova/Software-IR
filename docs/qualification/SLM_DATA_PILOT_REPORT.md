@@ -127,3 +127,21 @@ v2 初始批次 `datasets/sir/pilots/dual-token-v2/` 的3份候选全部静态�
 业务门：本轮所有候选的 BUILD/START/BUSINESS 都是 **NOT_RUN**。可复用的业务门执行环境尚未建立（计划第5步），lab 一次性目录已删除。所以 `bd870a834f77` 只是“静态通过的候选”，没有证明登录能成功、令牌轮换或并发正确；新教师合格训练答案仍记 **0条**，本轮也没有运行 `export`。
 
 执行环境：本轮在云端容器（4核/15GiB），没有 systemd，无法用 `systemd-run --scope`。本地 Maven 仓库为空，`mvn -o compile` 因缺 `spring-boot-dependencies:3.5.3` 失败，改为联网单次执行 `mvn -pl kcg-cli -am compile`（`MAVEN_OPTS=-Xmx2g`，不加 `-T`）补齐检查器需要的9个模块 classes 和 ANTLR jar；检查器本身仍按 `dataset_io.checker_command` 限 `-Xmx256m`。调用前 Python 35项单测通过。未运行 Java 测试、全量门或任何业务 IT，未提交、推送或触发 CI；业务账本83/1/0不变。
+
+## 第五阶段：GitHub 上的可复用业务门（2026-10-26）
+
+业务门从这一阶段起在 GitHub 上运行，不再依赖一次性的 lab 目录。12 个业务 IT 共用的 `BusinessSliceHarness` 现在能直接判教师候选（`4b57482`）：传入 `kcg.slm.*` 参数时编译候选而非参考答案，并核对候选所属题目冻结的参考答案与该 IT 判的参考答案逐字节相同，不同就在建库前拒绝。新增只能手动触发的 `.github/workflows/slm-business-gate.yml`（`0c4fb4a`），输入批次、样本 ID 和 IT，复用 verify 的 MySQL 8.4、账号与 Maven 缓存，只有业务门 PASSED 时 job 才为绿。`verify` 不再因 `datasets/**` 触发（`9074891`）。
+
+判卷代码变了，旧批次的 `oracle_sha256` 随之失效；`DualTokenCandidateSupport` 改名后，旧批次的 `task.json` 也指向不存在的文件。`import --task`（`7f6dc33`）允许用当前题目定义导入，但除 `oracle.files` 外题目必须相同，base 与参考答案字节须等于来源批次冻结的。据此从复查批次导入 `datasets/sir/runs/dual-token-gate-v1/`（`f58b05e`，API 调用0次），静态结果与复查批次逐份一致。
+
+[slm-business-gate #1](https://github.com/HoloNova/Software-IR/actions/runs/40330717774)（`f58b05e`）判 `bd870a834f77`：
+
+| Static | Build | Start | Business | 检查 |
+| --- | --- | --- | --- | --- |
+| PASSED | PASSED | PASSED | FAILED | 34通过/1失败 |
+
+唯一失败是“logging out answers 200 (expected=200 actual=201)”。候选的 Logout 声明返回 TokenPairView，为凑这个返回值，在作废刷新令牌后新建了一行 TokenPair，访问令牌与刷新令牌都填成那个已作废的刷新令牌。生成器对会新建实体的能力返回 201（`ControllerRenderer` 的 `createsEntity`），参考答案的 Logout 只更新不新建、返回 LoggedOutView，因此是 200。这是候选的业务设计错误，需求原文要求登出“响应 200”，判卷成立。登录、同样的 401、访问令牌鉴权、过期、刷新与重放、六个并发刷新恰一个成功、登出后刷新被拒都已通过；相比 lab 批次父候选 `ef9ddc30eb79` 的19/14（登录 500），先 persist 再读主键的修复是有效的。
+
+现有 IT 没有检查登出是否多写了行，这次多出的那行 TokenPair 没被发现。是否补检查属于改判卷标准，另行决定，本轮未改。
+
+证据在 `runtime/auth-dual-token-v1-teacher-bd870a834f77/`：`slm-runtime.json`、报告、Maven/Spring 日志、JUnit XML，以及 `gate-run.json`（run URL、提交 SHA、两个 artifact 的 zip 哈希）。下载后核对：题目、判卷、工具链、源码四个哈希与批次一致，5 个附件哈希一致，不含 CI 数据库密码。现有导出器 `train-teacher.jsonl` 为 **0条**：新教师合格训练答案仍是0条。本轮未用运行反馈再修复；业务账本83/1/0不变。

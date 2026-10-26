@@ -1,0 +1,37 @@
+{
+  "schema_version" : "sir-runtime-evidence/1",
+  "id" : "auth-dual-token-v1-teacher-bd870a834f77",
+  "task_sha256" : "9e40f18906c45d3671be2df952ea6b77d8b6795e8a194a36ff22c56fedf880d8",
+  "oracle_sha256" : "1c0e1412b70767cd6d24e1fdae3eae6970a500db87bf2f65b382c727c692b058",
+  "toolchain_core_sha256" : "51d9566d725403473bcfcb3cac229575919c630ade17bb619e317996ca00b163",
+  "source_sha256" : "2a81772ab3856285a092c6e9610ab4f91f8572f9a1a9a14e2fd8078458f439bd",
+  "generated_digest" : "7010109bfef704a3f860d069c9a0bdec307ea863c03b62ef1c1a1272925240b6",
+  "run_id" : "dual-token-slice-1a1786601e4-63224",
+  "gates" : {
+    "business" : "FAILED",
+    "build" : "PASSED",
+    "static" : "PASSED",
+    "start" : "PASSED"
+  },
+  "environment" : {
+    "java" : "21.0.12.1",
+    "test_revision" : "1",
+    "mysql" : "8.4.13"
+  },
+  "artifacts" : [ {
+    "sha256" : "8e283a7a94300d90d6a74bfadccc37d8e8f63f2817b5fb8efa60d345844bae66",
+    "path" : "dual-token-slice-report.txt"
+  }, {
+    "sha256" : "2a8281004afb938ff9c6b2a60a6ada9928462e042882f25329ce903d22ab2d06",
+    "path" : "logs/maven.stdout.log"
+  }, {
+    "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "path" : "logs/maven.stderr.log"
+  }, {
+    "sha256" : "38d2cac21ea03b77ca4f98ad1c3d13104d19bd0c2fc6eefdf6f137498ec9a17a",
+    "path" : "logs/spring.stdout.log"
+  }, {
+    "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "path" : "logs/spring.stderr.log"
+  } ]
+}
