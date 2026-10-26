@@ -95,3 +95,35 @@
 prompt v2 是新文件（`prompts/sir-0.3-auth-v2.md`、`prompts/repair-auth-v2.md`），补实体成员顺序和“先 persist 再读主键”；v1 保持不变，仍是 `prepare`/`repair` 的默认值，`import` 直接冻结来源批次的 `system.md`。Python 测试35项通过（原31项 + 4项 prompt 选择与导入）。
 
 尚未执行（需要 `DEEPSEEK_API_KEY`，本容器没有）：对 `ef9ddc30eb79` 用 v2 反馈做一次 repair；用 v2 新建初始采样批次。静态通过的新候选仍需要真实业务门，而可复用的业务门执行环境尚未建立，所以新教师合格训练答案仍是0条。
+
+## 第四阶段：v2 反馈修复与 v2 初始采样（2026-10-26）
+
+第三阶段留下的两项 API 调用已执行，共4次：对 `ef9ddc30eb79` 用 v2 反馈做1次 repair，用 v2 system prompt 新建批次并初始采样3份。均为 `deepseek-flash`，system_fingerprint 仍是 `e72d3c7f663d3e1383b00b3884cb4501`；没有自动重试，也没有在失败后继续修。
+
+| 调用 | 样本 | input | 其中缓存命中 | output | total |
+| --- | --- | ---: | ---: | ---: | ---: |
+| repair（v2 反馈） | `bd870a834f77` | 9915 | 8064 | 1199 | 11114 |
+| 初始采样 | `75d6da4889cd` | 1635 | 0 | 1047 | 2682 |
+| 初始采样 | `25e7a4ca946e` | 1635 | 1408 | 1130 | 2765 |
+| 初始采样 | `e473808f70e8` | 1635 | 1408 | 1049 | 2684 |
+| 合计 | 4次 | 14820 | 10880 | 4425 | 19245 |
+
+修复结果在 `datasets/sir/runs/dual-token-recheck-v2/checked-r1.jsonl`：`bd870a834f77` 通过完整静态生成（GENERATION，45个文件）。它和父候选 `ef9ddc30eb79` 只差两处：两个能力里把 `persist access; persist refresh;`（Refresh 里连同 `persist old;`）挪到读 `access.id`、`refresh.id` 之前，其余逐字相同。所以登出仍返回 TokenPairView，与参考的 LoggedOutView 不同；这一点静态门不判断，要由业务门决定。修复轨迹现为 `f4b4a6071888 → 6702e9b70653 → ef9ddc30eb79 → bd870a834f77`，仍是同一道题的一条轨迹。注意这次修复的对话前缀是首批的 v1 system prompt，只有最后一轮反馈用 v2。
+
+- ID：`auth-dual-token-v1-teacher-bd870a834f77`。
+- source SHA256：`2a81772ab3856285a092c6e9610ab4f91f8572f9a1a9a14e2fd8078458f439bd`。
+- generated digest（KCG checker域）：`7010109bfef704a3f860d069c9a0bdec307ea863c03b62ef1c1a1272925240b6`。
+
+v2 初始批次 `datasets/sir/pilots/dual-token-v2/` 的3份候选全部静态失败（参考仍通过），但失败点各不相同，不再是首批那样三份同错：
+
+| 样本 | 阶段 | 原因 |
+| --- | --- | --- |
+| `75d6da4889cd` | PARSE | AccessToken 仍把 credential 写在 field 之前；报错已直接给出固定顺序和该挪到哪里。v2 补的成员顺序提示对这一份没起作用 |
+| `25e7a4ca946e` | SEMANTIC | 解析和主键时序都过了；Logout 声明输出 TokenPairView 却 `return old`（RefreshToken 行），`SIR-TYPE-001` 返回类型不匹配。根上是业务设计错，登出不该返回令牌对 |
+| `e473808f70e8` | PARSE | 先 persist 再读 id 做对了，但自创了 `return pair { ... }` 这种 SIR 没有的内联构造返回写法 |
+
+3份里有2份明确按“先 persist 再读主键”写，没有一份出现 `SIR-FLOW-007`；成员顺序仍有1/3写错。样本只有3份，这只是观察，不能当 v1→v2 的通过率对比。
+
+业务门：本轮所有候选的 BUILD/START/BUSINESS 都是 **NOT_RUN**。可复用的业务门执行环境尚未建立（计划第5步），lab 一次性目录已删除。所以 `bd870a834f77` 只是“静态通过的候选”，没有证明登录能成功、令牌轮换或并发正确；新教师合格训练答案仍记 **0条**，本轮也没有运行 `export`。
+
+执行环境：本轮在云端容器（4核/15GiB），没有 systemd，无法用 `systemd-run --scope`。本地 Maven 仓库为空，`mvn -o compile` 因缺 `spring-boot-dependencies:3.5.3` 失败，改为联网单次执行 `mvn -pl kcg-cli -am compile`（`MAVEN_OPTS=-Xmx2g`，不加 `-T`）补齐检查器需要的9个模块 classes 和 ANTLR jar；检查器本身仍按 `dataset_io.checker_command` 限 `-Xmx256m`。调用前 Python 35项单测通过。未运行 Java 测试、全量门或任何业务 IT，未提交、推送或触发 CI；业务账本83/1/0不变。

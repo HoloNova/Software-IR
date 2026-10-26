@@ -26,6 +26,15 @@
 
 [`runs/dual-token-recheck-v2/`](runs/dual-token-recheck-v2/)：`bca868b` 新增 `SIR-FLOW-007` 并改进实体成员顺序报错后，从首批导入5份教师原始响应、在当前工具链上重做静态检查，API 调用0次。只有既有参考通过；`ef9ddc30eb79` 现在在静态门因先读未 persist 行的主键而失败，正是 lab 批次在真库里发现的错误。所有运行门仍为 NOT_RUN，见[数据报告第三阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#第三阶段编译器补漏后的复查与-prompt-v22026-10-25)。
 
+## prompt v2：反馈修复与新初始批次
+
+2026-10-26，4次真实 API 调用（合计 input 14820、output 4425、total 19245 tokens）。
+
+- [`runs/dual-token-recheck-v2/`](runs/dual-token-recheck-v2/) 新增1次 v2 反馈修复：`ef9ddc30eb79 → bd870a834f77`，只把 persist 挪到读主键之前，`checked-r1.jsonl` 里完整静态生成通过。
+- [`pilots/dual-token-v2/`](pilots/dual-token-v2/)：用 `prompts/sir-0.3-auth-v2.md` 新建的初始批次，1份既有参考 + 3份教师初始候选；参考通过，3份候选静态失败（成员顺序、Logout 返回类型、自创内联构造各1份）。
+
+两处的 BUILD/START/BUSINESS 都是 **NOT_RUN**：可复用的业务门执行环境尚未建立，静态通过不等于业务正确，新教师合格训练答案仍为0条。详见[数据报告第四阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#第四阶段v2-反馈修复与-v2-初始采样2026-10-26)。
+
 完整说明：[数据报告](../../docs/qualification/SLM_DATA_PILOT_REPORT.md)、[操作命令](../../experiments/slm/README.md)、[模型选择](../../docs/qualification/SLM_MODEL_SELECTION.md)。API密钥不属于数据或metadata。数据Git属性禁止换行转换，保持证据字节哈希。
 
 跨Windows/Linux或工具链字节变化时，先用实验CLI的`import --from-bundle ... --bundle ...`在目标环境重新冻结输入、导入原响应并重置所有资格，再重做检查；不要修改本批manifest或借用原通过结果。
