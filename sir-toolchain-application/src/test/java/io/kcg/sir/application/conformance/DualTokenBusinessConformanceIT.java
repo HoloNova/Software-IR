@@ -66,10 +66,9 @@ class DualTokenBusinessConformanceIT {
             return;
         }
 
-        var candidate = DualTokenCandidateSupport.read(System::getProperty);
         BusinessSliceHarness slice = new BusinessSliceHarness(FIXTURE, environment);
         try {
-            slice.verify(() -> execute(slice, candidate));
+            slice.verify(() -> execute(slice));
         } catch (java.sql.SQLException unreachable) {
             // The harness's own connection to the reference database is infrastructure, not the
             // product under test: an unreachable server yields no verdict rather than a failure.
@@ -78,7 +77,6 @@ class DualTokenBusinessConformanceIT {
         } finally {
             slice.teardown();
             slice.writeReport();
-            if (candidate.isPresent()) DualTokenCandidateSupport.writeEvidence(candidate.orElseThrow(), slice);
         }
         if (slice.notRunReason() != null) {
             System.out.println("[DUAL-TOKEN-CONFORMANCE] NOT_RUN: " + slice.notRunReason());
@@ -91,7 +89,7 @@ class DualTokenBusinessConformanceIT {
     }
 
     /** Runs the slice end to end. Every failure is recorded; none is swallowed. */
-    private void execute(BusinessSliceHarness slice, java.util.Optional<DualTokenCandidateSupport.Input> candidate) throws Exception {
+    private void execute(BusinessSliceHarness slice) throws Exception {
         MysqlRuntimeJdbcUrl runtimeUrl = slice.runtimeUrl();
         slice.initializeRedaction(runtimeUrl);
         slice.prepareSchemaAndFixtures();
@@ -99,13 +97,7 @@ class DualTokenBusinessConformanceIT {
             return;
         }
 
-        if (candidate.isPresent()) {
-            slice.reportLine("slmMysqlVersion=" + slice.databaseVersion());
-            var input = candidate.orElseThrow();
-            var files = slice.compileAndMaterialize(input.sources());
-            if (files.isEmpty()) return;
-            DualTokenCandidateSupport.verifyGenerated(input, slice, files);
-        } else if (slice.compileAndMaterialize().isEmpty()) {
+        if (slice.compileAndMaterialize().isEmpty()) {
             return;
         }
 

@@ -189,6 +189,7 @@ final class BusinessSliceHarness {
     private final List<String> failedChecks = new ArrayList<>();
     private final StringBuilder httpEvidence = new StringBuilder();
     private final StringBuilder reportLines = new StringBuilder();
+    private final Optional<SlmCandidateSupport.Input> candidate;
 
     private StreamingSecretRedactor redactor;
     private List<String> secrets = List.of();
@@ -217,6 +218,21 @@ final class BusinessSliceHarness {
     private List<String> rowsAfter = List.of();
 
     BusinessSliceHarness(Fixture fixture, Environment environment) {
+        this(fixture, environment, System::getProperty);
+    }
+
+    /**
+     * With the kcg.slm.* properties set, this run judges that teacher candidate instead of the fixture's
+     * reference answer. A broken or foreign candidate fails here, before any schema or process is touched.
+     */
+    BusinessSliceHarness(Fixture fixture, Environment environment, java.util.function.Function<String, String> slmProperties) {
+        try {
+            this.candidate = SlmCandidateSupport.read(slmProperties);
+            if (this.candidate.isPresent()) SlmCandidateSupport.requireSameProblem(this.candidate.orElseThrow(),
+                    ConformanceFixtures.readResource(fixture.sirResource()).getBytes(StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            throw new java.io.UncheckedIOException("SLM candidate could not be read", e);
+        }
         this.fixture = fixture;
         this.sirInputLabel = fixture.sirResource();
         this.environment = environment;
@@ -357,8 +373,25 @@ final class BusinessSliceHarness {
         this.reportLine("sirInput=SOURCE_SET sourceSetSha256=" + sources.sha256Hex());
     }
 
-    /** Compiles the slice (a software written in one source file) and materializes it; returns no files on compilation failure. */
+    /**
+     * Compiles the slice (a software written in one source file) and materializes it; returns no files on compilation failure.
+     * A configured SLM candidate replaces the reference here, and its runtime generation must equal its static check.
+     */
     List<GeneratedFile> compileAndMaterialize() throws IOException {
+        if (this.candidate.isPresent()) {
+            var input = this.candidate.orElseThrow();
+            if (this.control != null) {
+                try {
+                    this.reportLine("slmMysqlVersion=" + this.databaseVersion());
+                } catch (SQLException e) {
+                    // The next database step reports an unreachable server through the IT's own path.
+                    this.reportLine("slmMysqlVersion=UNAVAILABLE");
+                }
+            }
+            List<GeneratedFile> files = this.compileAndMaterialize(input.sources());
+            if (!files.isEmpty()) SlmCandidateSupport.verifyGenerated(input, this, files);
+            return files;
+        }
         SourceId entry = SourceId.of(this.fixture.sirResource().substring(this.fixture.sirResource().lastIndexOf('/') + 1));
         return compileSource(new io.kcg.sir.source.SourceSnapshot(entry, java.util.Map.of(entry,
                 ConformanceFixtures.readResource(this.fixture.sirResource()).getBytes(StandardCharsets.UTF_8))));
@@ -857,6 +890,8 @@ final class BusinessSliceHarness {
             byte[] bytes = this.report().getBytes(StandardCharsets.UTF_8);
             byte[] redacted = this.redactor == null ? bytes : this.redactor.redactBytes(bytes);
             Files.write(this.evidenceRoot.resolve(this.fixture.reportFileName()), redacted);
+            if (this.candidate.isPresent())
+                SlmCandidateSupport.writeEvidence(this.candidate.orElseThrow(), this, this.fixture.reportFileName());
         } catch (IOException e) {
             // Evidence writing must not mask the verification result: the report is also printed.
             System.out.println("[CONFORMANCE] evidence could not be written: " + describe(e));

@@ -21,8 +21,12 @@ import java.util.Optional;
 import java.util.TreeMap;
 import java.util.function.Function;
 
-/** Test-only transport for one frozen dual-token task; uses the existing source reader and oracle. */
-final class DualTokenCandidateSupport {
+/**
+ * Test-only transport that lets a business IT judge one frozen teacher candidate instead of its reference answer.
+ * BusinessSliceHarness reads it once per run; the IT's own checks stay the same, so every slice judges a
+ * candidate by the same requirement it judges the reference by.
+ */
+final class SlmCandidateSupport {
     private static final int MAX_JSON_BYTES = 16 * 1024 * 1024;
     private static final ObjectMapper JSON = new ObjectMapper().enable(JsonParser.Feature.STRICT_DUPLICATE_DETECTION);
     private static final List<String> BINDINGS = List.of("task_sha256", "oracle_sha256", "toolchain_core_sha256");
@@ -36,7 +40,7 @@ final class DualTokenCandidateSupport {
         }
     }
 
-    private DualTokenCandidateSupport() {}
+    private SlmCandidateSupport() {}
 
     static Optional<Input> read(Function<String, String> property) throws IOException {
         String candidateRoot = property.apply("kcg.slm.candidate-root");
@@ -71,6 +75,16 @@ final class DualTokenCandidateSupport {
         return new Input(sources, candidate, manifest);
     }
 
+    /**
+     * A candidate answers one task; that task froze a copy of the reference answer this IT normally judges.
+     * Different bytes mean the candidate belongs to another problem, so this IT must not judge it.
+     */
+    static void requireSameProblem(Input input, byte[] reference) {
+        Object frozen = map(input.manifest(), "bundle_inputs").get("reference.sir");
+        if (!ConformanceFixtures.sha256Hex(reference).equals(frozen))
+            throw new IllegalArgumentException("candidate task " + input.id() + " does not answer the problem this IT judges");
+    }
+
     static void verifyGenerated(Input input, BusinessSliceHarness slice,
                                 List<io.kcg.sir.generator.springboot.api.GeneratedFile> files) throws IOException {
         var checked = input.staticCheck();
@@ -85,7 +99,7 @@ final class DualTokenCandidateSupport {
         slice.reportLine("slmGeneratedDigest=" + digest);
     }
 
-    static void writeEvidence(Input input, BusinessSliceHarness slice) throws IOException {
+    static void writeEvidence(Input input, BusinessSliceHarness slice, String reportFileName) throws IOException {
         Map<String, String> header = header(slice.report());
         String build = outcome(header.get("generatedProjectBuild"));
         String start = header.getOrDefault("httpReadiness", "").startsWith("READY") ? "PASSED" : "NOT_RUN";
@@ -104,14 +118,14 @@ final class DualTokenCandidateSupport {
         result.put("environment", Map.of("java", System.getProperty("java.version"),
                 "mysql", header.getOrDefault("slmMysqlVersion", "NOT_RUN"),
                 "test_revision", text(input.candidate(), "task_revision")));
-        result.put("artifacts", artifacts(slice.evidenceRoot()));
+        result.put("artifacts", artifacts(slice.evidenceRoot(), reportFileName));
         Files.writeString(slice.evidenceRoot().resolve("slm-runtime.json"),
                 JSON.writerWithDefaultPrettyPrinter().writeValueAsString(result) + "\n", StandardCharsets.UTF_8);
     }
 
-    private static List<Map<String, String>> artifacts(Path root) throws IOException {
+    private static List<Map<String, String>> artifacts(Path root, String reportFileName) throws IOException {
         var result = new ArrayList<Map<String, String>>();
-        for (String path : List.of("dual-token-slice-report.txt", "logs/maven.stdout.log", "logs/maven.stderr.log",
+        for (String path : List.of(reportFileName, "logs/maven.stdout.log", "logs/maven.stderr.log",
                 "logs/spring.stdout.log", "logs/spring.stderr.log")) {
             Path file = root.resolve(path);
             if (Files.isRegularFile(file)) result.add(Map.of("path", path, "sha256", ConformanceFixtures.fileDigest(file)));

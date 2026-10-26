@@ -25,7 +25,7 @@
     "id": "dual-token-http-mysql-v1",
     "files": [
       "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/DualTokenBusinessConformanceIT.java",
-      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/DualTokenCandidateSupport.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SlmCandidateSupport.java",
       "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BusinessSliceHarness.java",
       "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/HttpAssertionClient.java",
       "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MysqlObserver.java",
