@@ -1,0 +1,14 @@
+{
+  "candidates_sha256": "202de28841282cca4e68c36d0e562e6d38f6d54eded93f11ba9f4e6c76b76174",
+  "gates_transferred": false,
+  "manifest_sha256": "0fb64dc570354806143eb9ef622d49069f49f3126da8d5c50f7f4a87545bce1a",
+  "new_api_calls": 0,
+  "oracle_sha256": "924cadc8c85379e50244ac711991011ae38cd7b937a2512ccce96dcdadb48af7",
+  "task_replaced": {
+    "changed": "oracle.files",
+    "from_task_sha256": "14b1a8b8989a925bada29df148475226d66cf9fdbc6585ee80c79f3fbaa773e9",
+    "task_sha256": "f859f1317abc24474f19d5ad5dbbc4b0f1f20d6cbef8d8a5f109faa9d0903a1e"
+  },
+  "teacher_responses": 6,
+  "toolchain_core_sha256": "51d9566d725403473bcfcb3cac229575919c630ade17bb619e317996ca00b163"
+}
