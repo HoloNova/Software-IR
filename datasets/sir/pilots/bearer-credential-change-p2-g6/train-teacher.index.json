@@ -1,0 +1,14 @@
+{
+  "all_four_gates_required": true,
+  "corpus_sha256": "4aadbf1da6f35bc8cbd3897d9deff20cb66b3b8e855e25141149f7ae048f53ce",
+  "count": 1,
+  "rows": [
+    {
+      "id": "auth-bearer-credential-change-p2-v1-teacher-f2c07904dfbc",
+      "oracle_sha256": "5c3a07bb8e4a52504fdb53adff9a2cefe7ee2ffe09bcdf58be07fc560520e69b",
+      "runtime_run_id": "bearer-slice-1a181b54ae7-49752",
+      "source_sha256": "1863a93c383666d39c13de519921cc750ea019ff227a1f2aad5d8c122c5bb619",
+      "task_sha256": "f94959bf13745ca56d273328304ca26cdcf5efba669d74d14e358cca65bb405b"
+    }
+  ]
+}

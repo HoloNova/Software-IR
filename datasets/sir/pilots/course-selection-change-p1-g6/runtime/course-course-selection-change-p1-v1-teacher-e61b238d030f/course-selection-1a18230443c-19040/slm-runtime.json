@@ -1,0 +1,31 @@
+{
+  "schema_version" : "sir-runtime-evidence/1",
+  "id" : "course-course-selection-change-p1-v1-teacher-e61b238d030f",
+  "task_sha256" : "1a3db4850080d3511d9d4cb35687da592a167970b7c2961c78c067bbbe974ca6",
+  "oracle_sha256" : "9dea6bbcc7b9defc7807dfa1523ba976704a5b25e6dd6c3b2c95cf090d771d74",
+  "toolchain_core_sha256" : "51d9566d725403473bcfcb3cac229575919c630ade17bb619e317996ca00b163",
+  "source_sha256" : "b108ce02ef7596c89ade01b4210da51ea00b94b7db405f8f0d5b7bad7aef721a",
+  "generated_digest" : "2069145fa41031acbf852b3346bac8ca514b0409b5734b58171f7569d34c5522",
+  "run_id" : "course-selection-1a18230443c-19040",
+  "gates" : {
+    "static" : "PASSED",
+    "build" : "FAILED",
+    "business" : "NOT_RUN",
+    "start" : "NOT_RUN"
+  },
+  "environment" : {
+    "java" : "21.0.12.1",
+    "mysql" : "8.4.13",
+    "test_revision" : "1"
+  },
+  "artifacts" : [ {
+    "sha256" : "a762af6e0648c0df92743ad267024600cf72c9fefaa4807d917dcd47651dbc49",
+    "path" : "course-selection-report.txt"
+  }, {
+    "sha256" : "05bf2c758d8df1157eb8e0e1c7abff32a055d34eb7c9f0d3e6c08b785522673d",
+    "path" : "logs/maven.stdout.log"
+  }, {
+    "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "path" : "logs/maven.stderr.log"
+  } ]
+}

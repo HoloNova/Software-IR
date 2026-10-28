@@ -1,0 +1,14 @@
+{
+  "all_four_gates_required": true,
+  "corpus_sha256": "3e94c86d9f418e6de0c457f783476d0b6acd5ee3fca2efbffa88ddde567a45ab",
+  "count": 1,
+  "rows": [
+    {
+      "id": "auth-crud-access-change-p1-v1-teacher-560b72a650de",
+      "oracle_sha256": "3ac94cb3bfea92c174bb7413daeb3cc6227abc45da03aa78c04a70a7ee1f4786",
+      "runtime_run_id": "crud-access-1a181b55642-9036",
+      "source_sha256": "b4c8621792d4f858dbe3dea0191841ddb8107c30a158175fbee6b089ac1ce478",
+      "task_sha256": "70bbbef2f32080b34a7bfffc39feca9a4b6c9945c6317fb555138f61a518c539"
+    }
+  ]
+}

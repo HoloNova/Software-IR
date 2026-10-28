@@ -1,0 +1,14 @@
+{
+  "all_four_gates_required": true,
+  "corpus_sha256": "3a101bc3d611aa83c8f43841016d37ce8c097ac069f668bd66ddce90799d8113",
+  "count": 1,
+  "rows": [
+    {
+      "id": "course-query-slice-scratch-p1-v1-teacher-0858ac822e7d",
+      "oracle_sha256": "4ac69774f05ae0cba962d91b315baed371dd3e750b6749f1694168bd07573d0a",
+      "runtime_run_id": "query-slice-1a1823071c1-2192",
+      "source_sha256": "dce20d86e757a860157734159b88b9ac6fd84b004c82e47bd21447ec5eaad114",
+      "task_sha256": "b45f9ae71e2fbc3d108a4b59bf38a39f4c0edf1b8ae2e89141db933b7862a7ab"
+    }
+  ]
+}

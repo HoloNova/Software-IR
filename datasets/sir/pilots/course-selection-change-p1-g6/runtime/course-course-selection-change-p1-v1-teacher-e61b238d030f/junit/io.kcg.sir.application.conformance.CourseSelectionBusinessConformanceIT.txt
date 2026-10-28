@@ -1,0 +1,50 @@
+-------------------------------------------------------------------------------
+Test set: io.kcg.sir.application.conformance.CourseSelectionBusinessConformanceIT
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 4.623 s <<< FAILURE! -- in io.kcg.sir.application.conformance.CourseSelectionBusinessConformanceIT
+io.kcg.sir.application.conformance.CourseSelectionBusinessConformanceIT.actualCourseTopicChecksSchedulePrerequisitesAndSeatTransactions -- Time elapsed: 4.606 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: 
+=== Course selection, complete prerequisites, weekly conflicts and consistent seats business conformance ===
+verdict=FAILED
+runId=course-selection-1a18230443c-19040
+schemaName=kcg_conf_run
+advisoryLock=held during the run
+schemaSource=TEST_FIXTURE_DDL
+productInitializeImplemented=false
+productUpdateImplemented=false
+sirResource=EXTERNAL_CANDIDATE:candidate.sir sha256=b108ce02ef7596c89ade01b4210da51ea00b94b7db405f8f0d5b7bad7aef721a
+fixtureDdl=/conformance/mysql/course-ddl.sql sha256=9803573357f1ea92e84d0793560379e6a205b8cab3118d3533a859acad3d1dc2
+fixtureSeed=/conformance/mysql/course-seed.sql sha256=688b88d12b0967fad45e250b8c72015fb2c4efa1ce6af550cc766286bffe2da7
+generatedFiles=95 combinedSha256=b31e54478d9eb014ed26d5d2001a4afa7aaa2b4267e1ccd5a8bcfcb9d83c1353
+generatedProjectBuild=FAILED (exit 1)
+httpReadiness=NOT_RUN
+mysqlRowsBefore=0 mysqlRowsAfter=0
+mavenOffline=false
+javaVersion=21.0.12.1
+osName=Linux osArch=amd64
+serverPort=18080
+slmMysqlVersion=8.4.13
+slmSampleId=course-course-selection-change-p1-v1-teacher-e61b238d030f
+slmSourceSha256=b108ce02ef7596c89ade01b4210da51ea00b94b7db405f8f0d5b7bad7aef721a
+slmGeneratedDigest=2069145fa41031acbf852b3346bac8ca514b0409b5734b58171f7569d34c5522
+
+checksPassed=5 checksFailed=1
+PASS the SIR slice compiles without errors (warnings remain visible) (diagnostics=[])
+PASS the compiler emitted a generated project (generatedFileCount=95)
+PASS candidate runtime compilation matches full static generation (sourceSha256=b108ce02ef7596c89ade01b4210da51ea00b94b7db405f8f0d5b7bad7aef721a generatedDigest=2069145fa41031acbf852b3346bac8ca514b0409b5734b58171f7569d34c5522)
+PASS the owned schema was dropped and its absence proved (schema=kcg_conf_run)
+PASS the advisory lock for the owned schema was released (released=true)
+FAIL the generated project builds (mvn clean verify) (exitCode=1)
+
+failure=the generated project did not build
+ ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:42)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:191)
+	at io.kcg.sir.application.conformance.CourseSelectionBusinessConformanceIT.actualCourseTopicChecksSchedulePrerequisitesAndSeatTransactions(CourseSelectionBusinessConformanceIT.java:40)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+

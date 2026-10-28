@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report.xsd" version="3.0.2" name="io.kcg.sir.application.conformance.GuardedTransitionBusinessConformanceIT" time="10.513" tests="1" errors="0" skipped="0" failures="0" flakes="0">
+  <properties>
+    <property name="java.specification.version" value="21"/>
+    <property name="sun.jnu.encoding" value="UTF-8"/>
+    <property name="java.class.path" value="/home/runner/work/Software-IR/Software-IR/sir-toolchain-application/target/test-classes:/home/runner/work/Software-IR/Software-IR/sir-toolchain-application/target/classes:/home/runner/work/Software-IR/Software-IR/sir-parser/target/classes:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/antlr/antlr4-runtime/4.13.2/antlr4-runtime-4.13.2.jar:/home/runner/work/Software-IR/Software-IR/sir-semantic/target/classes:/home/runner/work/Software-IR/Software-IR/sir-lowering-api/target/classes:/home/runner/work/Software-IR/Software-IR/sir-lowering-spring-boot/target/classes:/home/runner/work/Software-IR/Software-IR/sir-generator-spring-boot/target/classes:/home/runner/work/Software-IR/Software-IR/sir-project-graph/target/classes:/home/runner/work/Software-IR/Software-IR/sir-change/target/classes:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/jupiter/junit-jupiter/5.12.2/junit-jupiter-5.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/jupiter/junit-jupiter-api/5.12.2/junit-jupiter-api-5.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/platform/junit-platform-commons/1.12.2/junit-platform-commons-1.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/jupiter/junit-jupiter-params/5.12.2/junit-jupiter-params-5.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/jupiter/junit-jupiter-engine/5.12.2/junit-jupiter-engine-5.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/platform/junit-platform-engine/1.12.2/junit-platform-engine-1.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/fasterxml/jackson/core/jackson-databind/2.19.4/jackson-databind-2.19.4.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/fasterxml/jackson/core/jackson-annotations/2.19.4/jackson-annotations-2.19.4.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/fasterxml/jackson/core/jackson-core/2.19.4/jackson-core-2.19.4.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/boot/spring-boot/3.5.3/spring-boot-3.5.3.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-core/6.2.8/spring-core-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-jcl/6.2.8/spring-jcl-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-context/6.2.8/spring-context-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-aop/6.2.8/spring-aop-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-beans/6.2.8/spring-beans-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-expression/6.2.8/spring-expression-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/io/micrometer/micrometer-observation/1.14.8/micrometer-observation-1.14.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/io/micrometer/micrometer-commons/1.14.8/micrometer-commons-1.14.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/mysql/mysql-connector-j/9.3.0/mysql-connector-j-9.3.0.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/google/protobuf/protobuf-java/4.29.0/protobuf-java-4.29.0.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/net/java/dev/jna/jna-platform/5.17.0/jna-platform-5.17.0.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/net/java/dev/jna/jna/5.17.0/jna-5.17.0.jar:"/>
+    <property name="kcg.slm.repo-root" value="/home/runner/work/Software-IR/Software-IR"/>
+    <property name="java.vm.vendor" value="Eclipse Adoptium"/>
+    <property name="sun.arch.data.model" value="64"/>
+    <property name="java.vendor.url" value="https://adoptium.net/"/>
+    <property name="user.timezone" value="Etc/UTC"/>
+    <property name="kcg.conformance.evidence-parent" value="/home/runner/work/Software-IR/Software-IR/ci-evidence"/>
+    <property name="os.name" value="Linux"/>
+    <property name="java.vm.specification.version" value="21"/>
+    <property name="sun.java.launcher" value="SUN_STANDARD"/>
+    <property name="kcg.slm.bundle-root" value="/home/runner/work/Software-IR/Software-IR/datasets/sir/pilots/guarded-transition-scratch-p2-g6"/>
+    <property name="sun.boot.library.path" value="/usr/lib/jvm/temurin-21-jdk-amd64/lib"/>
+    <property name="sun.java.command" value="/home/runner/work/Software-IR/Software-IR/sir-toolchain-application/target/surefire/surefirebooter-20261028085156154_3.jar /home/runner/work/Software-IR/Software-IR/sir-toolchain-application/target/surefire 2026-10-28T08-51-45_228-jvmRun1 surefire-20261028085156154_1tmp surefire_0-20261028085156154_2tmp"/>
+    <property name="jdk.debug" value="release"/>
+    <property name="test" value="GuardedTransitionBusinessConformanceIT"/>
+    <property name="surefire.test.class.path" value="/home/runner/work/Software-IR/Software-IR/sir-toolchain-application/target/test-classes:/home/runner/work/Software-IR/Software-IR/sir-toolchain-application/target/classes:/home/runner/work/Software-IR/Software-IR/sir-parser/target/classes:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/antlr/antlr4-runtime/4.13.2/antlr4-runtime-4.13.2.jar:/home/runner/work/Software-IR/Software-IR/sir-semantic/target/classes:/home/runner/work/Software-IR/Software-IR/sir-lowering-api/target/classes:/home/runner/work/Software-IR/Software-IR/sir-lowering-spring-boot/target/classes:/home/runner/work/Software-IR/Software-IR/sir-generator-spring-boot/target/classes:/home/runner/work/Software-IR/Software-IR/sir-project-graph/target/classes:/home/runner/work/Software-IR/Software-IR/sir-change/target/classes:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/jupiter/junit-jupiter/5.12.2/junit-jupiter-5.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/jupiter/junit-jupiter-api/5.12.2/junit-jupiter-api-5.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/platform/junit-platform-commons/1.12.2/junit-platform-commons-1.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/jupiter/junit-jupiter-params/5.12.2/junit-jupiter-params-5.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/jupiter/junit-jupiter-engine/5.12.2/junit-jupiter-engine-5.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/platform/junit-platform-engine/1.12.2/junit-platform-engine-1.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/fasterxml/jackson/core/jackson-databind/2.19.4/jackson-databind-2.19.4.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/fasterxml/jackson/core/jackson-annotations/2.19.4/jackson-annotations-2.19.4.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/fasterxml/jackson/core/jackson-core/2.19.4/jackson-core-2.19.4.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/boot/spring-boot/3.5.3/spring-boot-3.5.3.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-core/6.2.8/spring-core-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-jcl/6.2.8/spring-jcl-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-context/6.2.8/spring-context-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-aop/6.2.8/spring-aop-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-beans/6.2.8/spring-beans-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-expression/6.2.8/spring-expression-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/io/micrometer/micrometer-observation/1.14.8/micrometer-observation-1.14.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/io/micrometer/micrometer-commons/1.14.8/micrometer-commons-1.14.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/mysql/mysql-connector-j/9.3.0/mysql-connector-j-9.3.0.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/google/protobuf/protobuf-java/4.29.0/protobuf-java-4.29.0.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/net/java/dev/jna/jna-platform/5.17.0/jna-platform-5.17.0.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/net/java/dev/jna/jna/5.17.0/jna-5.17.0.jar:"/>
+    <property name="sun.cpu.endian" value="little"/>
+    <property name="user.home" value="/home/runner"/>
+    <property name="user.language" value="en"/>
+    <property name="kcg.conformance.maven-executable" value="/usr/bin/mvn"/>
+    <property name="kcg.guard-conformance.enabled" value="true"/>
+    <property name="java.specification.vendor" value="Oracle Corporation"/>
+    <property name="kcg.conformance.maven-repo" value="/home/runner/work/Software-IR/Software-IR/.m2-ci"/>
+    <property name="java.version.date" value="2026-08-18"/>
+    <property name="java.home" value="/usr/lib/jvm/temurin-21-jdk-amd64"/>
+    <property name="kcg.query-conformance.maven-offline" value="false"/>
+    <property name="file.separator" value="/"/>
+    <property name="basedir" value="/home/runner/work/Software-IR/Software-IR/sir-toolchain-application"/>
+    <property name="java.vm.compressedOopsMode" value="Zero based"/>
+    <property name="line.separator" value="&#10;"/>
+    <property name="java.vm.specification.vendor" value="Oracle Corporation"/>
+    <property name="java.specification.name" value="Java Platform API Specification"/>
+    <property name="kcg.slm.candidate-root" value="/home/runner/work/Software-IR/Software-IR/datasets/sir/pilots/guarded-transition-scratch-p2-g6/samples/auth-guarded-transition-scratch-p2-v1-teacher-3140000df67a"/>
+    <property name="surefire.real.class.path" value="/home/runner/work/Software-IR/Software-IR/sir-toolchain-application/target/surefire/surefirebooter-20261028085156154_3.jar"/>
+    <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
+    <property name="java.runtime.version" value="21.0.12.1+1-LTS"/>
+    <property name="user.name" value="runner"/>
+    <property name="stdout.encoding" value="UTF-8"/>
+    <property name="path.separator" value=":"/>
+    <property name="os.version" value="7.0.0-1017-azure"/>
+    <property name="kcg.conformance.work-parent" value="/home/runner/work/Software-IR/Software-IR/ci-work"/>
+    <property name="java.runtime.name" value="OpenJDK Runtime Environment"/>
+    <property name="file.encoding" value="UTF-8"/>
+    <property name="surefire.failIfNoSpecifiedTests" value="false"/>
+    <property name="java.vm.name" value="OpenJDK 64-Bit Server VM"/>
+    <property name="java.vendor.version" value="Temurin-21.0.12.1+1"/>
+    <property name="localRepository" value="/home/runner/work/Software-IR/Software-IR/.m2-ci"/>
+    <property name="java.vendor.url.bug" value="https://github.com/adoptium/adoptium-support/issues"/>
+    <property name="java.io.tmpdir" value="/tmp"/>
+    <property name="java.version" value="21.0.12.1"/>
+    <property name="user.dir" value="/home/runner/work/Software-IR/Software-IR/sir-toolchain-application"/>
+    <property name="os.arch" value="amd64"/>
+    <property name="java.vm.specification.name" value="Java Virtual Machine Specification"/>
+    <property name="failIfNoTests" value="false"/>
+    <property name="native.encoding" value="UTF-8"/>
+    <property name="java.library.path" value="/usr/java/packages/lib:/usr/lib64:/lib64:/lib:/usr/lib"/>
+    <property name="java.vm.info" value="mixed mode, sharing"/>
+    <property name="stderr.encoding" value="UTF-8"/>
+    <property name="java.vendor" value="Eclipse Adoptium"/>
+    <property name="java.vm.version" value="21.0.12.1+1-LTS"/>
+    <property name="sun.io.unicode.encoding" value="UnicodeLittle"/>
+    <property name="maven.repo.local" value="/home/runner/work/Software-IR/Software-IR/.m2-ci"/>
+    <property name="java.class.version" value="65.0"/>
+  </properties>
+  <testcase name="aCredentialIsRotatedOnceHoweverManyRequestsAskAtTheSameTimeAgainstRealMysql" classname="io.kcg.sir.application.conformance.GuardedTransitionBusinessConformanceIT" time="10.478">
+    <system-out><![CDATA[=== Guarded transition (credential rotation) business conformance ===
+verdict=PASSED
+runId=guard-slice-1a181b57cd8-32226
+schemaName=kcg_conf_run
+advisoryLock=held during the run
+schemaSource=TEST_FIXTURE_DDL
+productInitializeImplemented=false
+productUpdateImplemented=false
+sirResource=EXTERNAL_CANDIDATE:candidate.sir sha256=31d9cf89da957e370a13107c8b18c821d26aac3ac4c129a10b136f759b9b04e3
+fixtureDdl=/conformance/mysql/credential-rotation-ddl.sql sha256=8f898e13a57b530666ccf5917231874dad4ac9dd46b30d65144b94bf4e25d2bd
+fixtureSeed=/conformance/mysql/credential-rotation-seed.sql sha256=7924a60cca80bf6e5900969b54a19b0d3ad89b8e0f76d2c06e39f9602f2d4788
+generatedFiles=19 combinedSha256=e2a195390235bbb4a62ca959bdae524b3656f20be35ebe9c01c4fe71afa59b5f
+generatedProjectBuild=PASSED (exit 0)
+httpReadiness=READY (200 from /api/get-credential?id=1)
+mysqlRowsBefore=3 mysqlRowsAfter=4
+mavenOffline=false
+javaVersion=21.0.12.1
+osName=Linux osArch=amd64
+serverPort=18080
+slmMysqlVersion=8.4.13
+slmSampleId=auth-guarded-transition-scratch-p2-v1-teacher-3140000df67a
+slmSourceSha256=31d9cf89da957e370a13107c8b18c821d26aac3ac4c129a10b136f759b9b04e3
+slmGeneratedDigest=25043c72615bbbb77d23c6d8951a576800c399caa880a376674a37ac19328d9e
+
+checksPassed=25 checksFailed=0
+PASS the SIR slice compiles without errors (warnings remain visible) (diagnostics=[])
+PASS the compiler emitted a generated project (generatedFileCount=19)
+PASS candidate runtime compilation matches full static generation (sourceSha256=31d9cf89da957e370a13107c8b18c821d26aac3ac4c129a10b136f759b9b04e3 generatedDigest=25043c72615bbbb77d23c6d8951a576800c399caa880a376674a37ac19328d9e)
+PASS the generated project builds (mvn clean verify) (exitCode=0)
+PASS the build produced an executable jar (projectRoot=/home/runner/work/Software-IR/Software-IR/ci-work/guard-slice-1a181b57cd8-32226/generated-project)
+PASS the generated application serves the compiled business route (readinessUrl=http://127.0.0.1:18080/api/get-credential?id=1)
+PASS the fixture seed is present in the owned schema (seededRowCount=3)
+PASS an already used credential is refused with the declared 409 (expected=409 actual=409)
+PASS the refusal wrote nothing: still three rows and row 2 unchanged (rows=[1|alice|0|2099-01-01 00:00:00, 2|bob|1|2099-01-01 00:00:00, 3|carol|0|2000-01-01 00:00:00])
+PASS an expired credential is refused with the declared 400 (expected=400 actual=400)
+PASS the refusal wrote nothing: still three rows and row 3 still unused (rows=[1|alice|0|2099-01-01 00:00:00, 2|bob|1|2099-01-01 00:00:00, 3|carol|0|2000-01-01 00:00:00])
+PASS an unknown credential is refused with the declared 404 (expected=404 actual=404)
+PASS exactly one of 8 simultaneous requests rotates the credential (statuses=[201, 409, 409, 409, 409, 409, 409, 409])
+PASS every other simultaneous request is refused with the declared 409 (statuses=[201, 409, 409, 409, 409, 409, 409, 409])
+PASS the rotation created exactly one new credential, so the refused requests left none (rows=[1|alice|1|2099-01-01 00:00:00, 2|bob|1|2099-01-01 00:00:00, 3|carol|0|2000-01-01 00:00:00, 4|alice|0|2026-11-04 08:52:06.976534])
+PASS the rotated credential is marked used exactly once (row=1|alice|1|2099-01-01 00:00:00)
+PASS the winner answers with the new credential, owned by the same owner and unused ({owner=alice, used=false})
+PASS the new credential is stored unused (newId=4 rows=[1|alice|1|2099-01-01 00:00:00, 2|bob|1|2099-01-01 00:00:00, 3|carol|0|2000-01-01 00:00:00, 4|alice|0|2026-11-04 08:52:06.976534])
+PASS the new credential expires about seven days from now (time shift evaluated once) (expiresAt=2026-11-04T08:52:06.976534102Z)
+PASS replaying the rotated credential is refused with the declared 409 (expected=409 actual=409)
+PASS the replay wrote nothing: still four rows (rows=[1|alice|1|2099-01-01 00:00:00, 2|bob|1|2099-01-01 00:00:00, 3|carol|0|2000-01-01 00:00:00, 4|alice|0|2026-11-04 08:52:06.976534])
+PASS the other seeded credentials are unchanged (rows=[1|alice|1|2099-01-01 00:00:00, 2|bob|1|2099-01-01 00:00:00, 3|carol|0|2000-01-01 00:00:00, 4|alice|0|2026-11-04 08:52:06.976534])
+PASS the generated application process exited (stopped=true)
+PASS the owned schema was dropped and its absence proved (schema=kcg_conf_run)
+PASS the advisory lock for the owned schema was released (released=true)
+
+G1 POST refresh (already used): status=409 body={"code":"Invalid","message":"Invalid","fields":[]}
+G2 POST refresh (expired): status=400 body={"code":"Expired","message":"Expired","fields":[]}
+G3 POST refresh (unknown): status=404 body={"code":"CredentialNotFound","message":"CredentialNotFound","fields":[]}
+G4 POST refresh (racer 0): status=409 body={"code":"Invalid","message":"Invalid","fields":[]}
+G4 POST refresh (racer 1): status=409 body={"code":"Invalid","message":"Invalid","fields":[]}
+G4 POST refresh (racer 2): status=201 body={"id":4,"owner":"alice","used":false,"expiresAt":"2026-11-04T08:52:06.976534102Z"}
+G4 POST refresh (racer 3): status=409 body={"code":"Invalid","message":"Invalid","fields":[]}
+G4 POST refresh (racer 4): status=409 body={"code":"Invalid","message":"Invalid","fields":[]}
+G4 POST refresh (racer 5): status=409 body={"code":"Invalid","message":"Invalid","fields":[]}
+G4 POST refresh (racer 6): status=409 body={"code":"Invalid","message":"Invalid","fields":[]}
+G4 POST refresh (racer 7): status=409 body={"code":"Invalid","message":"Invalid","fields":[]}
+G5 POST refresh (replay of the rotated credential): status=409 body={"code":"Invalid","message":"Invalid","fields":[]}
+
+]]></system-out>
+  </testcase>
+</testsuite>

@@ -1,0 +1,14 @@
+{
+  "all_four_gates_required": true,
+  "corpus_sha256": "b85d562a3f93f001d150c9581851a84014e21bb6b9231c9681da3310a91be249",
+  "count": 1,
+  "rows": [
+    {
+      "id": "course-relation-slice-change-p1-v1-teacher-49f7d2232521",
+      "oracle_sha256": "ca7c7c82aa50b855ce35edce573bacb89aec087cf585982134a1cba36703316a",
+      "runtime_run_id": "relation-slice-1a181b5c8c0-48845",
+      "source_sha256": "2da7cafcf4cbcd96f68538ba8e3c1bae52dd33da151324dbe31442c52cf3179b",
+      "task_sha256": "d4fde923df43b012e1453fa1da68f47f33f57cadbf98bbcb98e0f8fc2021aec0"
+    }
+  ]
+}

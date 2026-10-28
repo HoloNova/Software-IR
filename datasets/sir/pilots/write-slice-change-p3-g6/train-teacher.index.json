@@ -1,0 +1,14 @@
+{
+  "all_four_gates_required": true,
+  "corpus_sha256": "12e4a7df27af2a898d9733c6b6352256a0acb38e7920fb3bbb6d72cce74940a6",
+  "count": 1,
+  "rows": [
+    {
+      "id": "course-write-slice-change-p3-v1-teacher-82a766e7e9e3",
+      "oracle_sha256": "d9646bfe65b5061db7ff2e4c3b0ade7f51f3863d28f3b0beff59b69127a3e3da",
+      "runtime_run_id": "write-slice-1a181b68b39-24541",
+      "source_sha256": "81d2f27cce1e7629a8be9cb6a2d888f0a769330e2865603e5c35fefd008d7663",
+      "task_sha256": "1454bd83681817aa310b61bd41c898410e3837b2e3f6f80d1617d13fcca84c89"
+    }
+  ]
+}

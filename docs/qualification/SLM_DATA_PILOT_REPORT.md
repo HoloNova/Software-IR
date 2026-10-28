@@ -267,3 +267,28 @@ v4 这一轮：13 份中静态通过 7 份，四门通过 6 份。样本少、�
 | Qwen3-4B-Instruct-2507 | 3,042 / 1,999 | 10,818 / 5,618 |
 
 全部远低于 16K。最长的是 crud-access 从零写，教师格式长是因为带着两轮修复经过。尚无合格答案的 course-selection 用参考答案估算：改写题训练序列 Qwen3 约 7.0K、deepseek-coder 约 9.1K，从零写约 5.9K / 7.6K，也在 16K 内。这是数据格式，不证明学生能力；业务账本83/1/0不变。
+
+## 第十二阶段：规则手册 v6 与需求变体（2026-10-28）
+
+**做了什么。**三份只读分析（`experiments/slm/drafts/prompt-audit-general-v5.md`、`teacher-error-census.md`、`course-selection/failure-analysis.md`）指出 v5 有 1 条错误规则、35 条不完整，教师初次静态通过率 32%（11/34）。据此起草并采用 `sir-0.3-general-v6`。同时为 train 集 16 份题目各写 3 种需求说法（`drafts/*/requirement-*-p[1-3].md`，逐条对照 `traceability.md` 核对，名字、数字、结尾句全部保留），生成 48 份新题：与原题只差 id 和 requirement，family、split 不变。
+
+**采样。**48 份新题与 dev 集（shop.multiplication）2 题各用 v6 采 1 次（`pilots/*-g6`，input 277,478、其中缓存命中 158,976，output 56,551 tokens）。train 初次静态通过 29/48（60%）；dev 两题都失败。题目难度分布与第七至九阶段不同，60% 与 32% 不能直接比较。21 份静态失败各用 `repair-general-v1` 修 1 轮（input 200,711、其中缓存命中 170,112，output 40,830 tokens），7 份修好；5 份与父候选逐字节相同，其中 crud-access 从零写三份都漏了分页 `else` 错误、course-selection 改写两份约束间漏逗号，编译器只报“遇到不符合 SIR 语法的内容：as/max”，教师无从下手。
+
+**业务门。**36 份静态通过的候选全部送 `slm-business-gate`（run #25–#60），30 份四门通过：
+
+| 题目 | 改写（3 种说法） | 从零写（3 种说法） |
+| --- | --- | --- |
+| bearer-credential | 3 | 1 |
+| guarded-transition | 3 | 3 |
+| token-desk | 3 | 1 |
+| write-slice | 3 | 2 |
+| query-slice | 3 | 2 |
+| relation-slice | 3 | 2 |
+| crud-access | 1 | 0 |
+| course-selection | 0 | 0 |
+
+6 份失败：bearer-credential 从零写 p3 仍把登出做成需要登录（与第九阶段同一错误）；crud-access 改写 p2/p3 让其他管理员越权改到本人文章；bearer-credential 从零写 p1 与 token-desk 从零写 p2 给合同里不要求登录的接口加了认证，生成应用缺身份配置而启动失败；course-selection 改写 p1（修复后静态通过）**生成的 Java 编译失败**：候选把 `exists … as duplicate` 的变量命名为 `duplicate`，与生成器在 `persist … else` 中固定使用的 catch 变量同名。这是生成器缺陷，不是候选错误，单独处理。
+
+36 份证据放入各批次 `runtime/`，72 个 zip 的哈希与 GitHub 记录一致，绑定、生成摘要与附件哈希逐项核对，不含 CI 密码。30 份各导出 1 条：**新教师合格训练答案累计 44 条**（鉴权 23、课程 21），train 16 份原题中仍只有 course-selection 两份没有任何合格答案。学生格式第二版 `datasets/sir/student/train-student-v2.jsonl` 共 44 条，最长训练序列 deepseek-coder-1.3b 3,874、Qwen3-4B 3,042 tokens。
+
+**下一步。**生成器变量撞名需要修；course-selection 的必填问题由“非可选输入必填”改动处理（设计见 `experiments/slm/drafts/design/required-input-design.md`，已确认）。两项都会改变工具链摘要，此后的候选须在新工具链上重新检查。业务账本 83/1/0 不变。

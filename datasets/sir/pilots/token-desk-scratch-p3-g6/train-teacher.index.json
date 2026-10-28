@@ -1,0 +1,14 @@
+{
+  "all_four_gates_required": true,
+  "corpus_sha256": "083a8f978b84dbb54bbfe380a21418dd480c12ae67610dbf0a31e72a62090447",
+  "count": 1,
+  "rows": [
+    {
+      "id": "auth-token-desk-scratch-p3-v1-teacher-54bccb4ce21d",
+      "oracle_sha256": "6af88efd16863d6dc8672cca94a1ba6806c4b09ddc109a78e425ae582b57b373",
+      "runtime_run_id": "token-slice-1a181b6688d-62274",
+      "source_sha256": "68859bdd44cec52a7858ebdba5fc1aec758013b3f80cd9682dc5370563d7720a",
+      "task_sha256": "9debaee024a566937d271cba9af96db99976712bfd46850277e1a38511e2a96b"
+    }
+  ]
+}

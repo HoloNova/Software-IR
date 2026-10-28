@@ -1,0 +1,106 @@
+=== Q10 course write slice business conformance ===
+verdict=PASSED
+runId=write-slice-1a181b67b5d-22230
+schemaName=kcg_conf_run
+advisoryLock=held during the run
+schemaSource=TEST_FIXTURE_DDL
+productInitializeImplemented=false
+productUpdateImplemented=false
+sirResource=EXTERNAL_CANDIDATE:candidate.sir sha256=8d756491ef0c312b916c4883fde8534f8b61402328959712f87765cafb43f7a0
+fixtureDdl=/conformance/mysql/course-admin-ddl.sql sha256=3b9ace8ac9bdcc52ab37cab48cb8b43b0b867fcad18ce40317c47ba1b11a52d3
+fixtureSeed=/conformance/mysql/course-admin-seed.sql sha256=6edb14857616890e7da846b0508d4c2f744ebeb774fdc8f240234e8074bd8c09
+generatedFiles=22 combinedSha256=76ce44c73e700813fc01064014952c9ae607148c02e3eb051f8d3f7b8f54f501
+generatedProjectBuild=PASSED (exit 0)
+httpReadiness=READY (200 from /api/get-course?id=1)
+mysqlRowsBefore=3 mysqlRowsAfter=4
+mavenOffline=false
+javaVersion=21.0.12.1
+osName=Linux osArch=amd64
+serverPort=18080
+slmMysqlVersion=8.4.13
+slmSampleId=course-write-slice-scratch-p2-v1-teacher-c2fcf2d091cf
+slmSourceSha256=8d756491ef0c312b916c4883fde8534f8b61402328959712f87765cafb43f7a0
+slmGeneratedDigest=e3269e123b36d58b9a26d421ebaca2f215c0dff98520a2cc27016ddef6d186fd
+finalRowFingerprint=[1|CS101|Algorithms I|null|77|3, 2|CS102|Intro to Patterns|null|21|1, 3|ART101|Art of Painting|Studio course on colour mixing|5|5, 4|PHY101|Intro to Physics|Mechanics|50|0]
+
+checksPassed=62 checksFailed=0
+PASS the SIR slice compiles without errors (warnings remain visible) (diagnostics=[])
+PASS the compiler emitted a generated project (generatedFileCount=22)
+PASS candidate runtime compilation matches full static generation (sourceSha256=8d756491ef0c312b916c4883fde8534f8b61402328959712f87765cafb43f7a0 generatedDigest=e3269e123b36d58b9a26d421ebaca2f215c0dff98520a2cc27016ddef6d186fd)
+PASS the generated project builds (mvn clean verify) (exitCode=0)
+PASS the build produced an executable jar (projectRoot=/home/runner/work/Software-IR/Software-IR/ci-work/write-slice-1a181b67b5d-22230/generated-project)
+PASS the generated application serves the compiled business route (readinessUrl=http://127.0.0.1:18080/api/get-course?id=1)
+PASS the fixture seed is present in the owned schema (seededRowCount=3)
+PASS a creation returns 201 (expected=201 actual=201)
+PASS the creation answers with the projection it declared ({name=Intro to Physics, capacity=50, description=Mechanics, code=PHY101, version=0, id=4})
+PASS the creation response is the declared projection, not the entity (body={"id":4,"code":"PHY101","name":"Intro to Physics","description":"Mechanics","capacity":50,"version":0})
+PASS the created row is readable (expected=200 actual=200)
+PASS the created row carries what was sent ({id=4, version=0, code=PHY101, name=Intro to Physics})
+PASS the created row is in the database with version 0 (rows=[1|CS101|Intro to Algorithms|Asymptotic analysis and recursion|30|0, 2|CS102|Intro to Patterns|null|20|0, 3|ART101|Art of Painting|Studio course on colour mixing|15|4, 4|PHY101|Intro to Physics|Mechanics|50|0])
+PASS reading an unknown course returns the declared 404 (expected=404 actual=404)
+PASS the 404 carries the declared failure code ({code=CourseNotFound})
+PASS a partial change returns 200 (expected=200 actual=200)
+PASS the partial change answers with the merged row ({name=Intro to Algorithms, capacity=77, description=Asymptotic analysis and recursion, code=CS101, version=1, id=1})
+PASS the partial change wrote the addressed column and nothing else (row=1|CS101|Intro to Algorithms|Asymptotic analysis and recursion|77|1)
+PASS an untouched row keeps its values (row=2|CS102|Intro to Patterns|null|20|0)
+PASS clearing a field with an explicit null returns 200 (expected=200 actual=200)
+PASS the cleared field answers as null and the version advanced ({version=2, id=1, name=Intro to Algorithms})
+PASS the explicit null change cleared the column and left the rest alone (row=1|CS101|Intro to Algorithms|null|77|2)
+PASS a name-only change returns 200 (expected=200 actual=200)
+PASS the name-only change kept the empty description ({version=3, name=Algorithms I})
+PASS the name-only change left the cleared column cleared (row=1|CS101|Algorithms I|null|77|3)
+PASS a change with a stale version is refused with the declared 409 (expected=409 actual=409)
+PASS the stale conflict carries the declared failure code ({code=StaleVersion})
+PASS the refused stale change wrote nothing (row=1|CS101|Algorithms I|null|77|3)
+PASS a change that assumes a fresh version is refused (expected=409 actual=409)
+PASS the refused request left the seeded row untouched (row=3|ART101|Art of Painting|Studio course on colour mixing|15|4)
+PASS a change carrying the stored version returns 200 (expected=200 actual=200)
+PASS the version advanced from the stored value ({capacity=5, id=3, version=5})
+PASS the accepted change advanced the row (row=3|ART101|Art of Painting|Studio course on colour mixing|5|5)
+PASS a blank merged value is refused with 400 (expected=400 actual=400)
+PASS the rejection reports an invalid request ({code=INVALID_REQUEST})
+PASS the rejection names the request property it came from (body={"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"changes.name","code":"notBlank","message":"must not be blank"}]})
+PASS the rejection carries the constraint code (body={"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"changes.name","code":"notBlank","message":"must not be blank"}]})
+PASS the refused blank value wrote nothing (row=2|CS102|Intro to Patterns|null|20|0)
+PASS an undeclared change property is refused with 400 (expected=400 actual=400)
+PASS the rejection names the undeclared property (body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"changes.code","code":"INVALID_REQUEST","message":"must be a well-formed value"}]})
+PASS the refused undeclared change wrote nothing (row=2|CS102|Intro to Patterns|null|20|0)
+PASS a change without expectedVersion is refused with 400 (expected=400 actual=400)
+PASS the rejection names the missing member (body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"expectedVersion","code":"NotNull","message":"must not be null"}]})
+PASS a change without an identity is refused with 400 (expected=400 actual=400)
+PASS the rejection names the missing identity (body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"id","code":"NotNull","message":"must not be null"}]})
+PASS the refused envelopes wrote nothing (row=2|CS102|Intro to Patterns|null|20|0)
+PASS an empty change set is refused with 400 (expected=400 actual=400)
+PASS the empty change set carries the declared failure code ({code=EmptyChange})
+PASS the refused empty change set wrote nothing and did not advance the version (row=2|CS102|Intro to Patterns|null|20|0)
+PASS an unknown envelope property is refused with 400 (expected=400 actual=400)
+PASS the refused unknown envelope property wrote nothing (row=2|CS102|Intro to Patterns|null|20|0)
+PASS a change against an unknown course returns the declared 404 (expected=404 actual=404)
+PASS the 404 carries the declared failure code ({code=CourseNotFound})
+PASS a creation with a blank name is refused with 400 (expected=400 actual=400)
+PASS the creation rejection names the offending payload property (body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"name","code":"NotBlank","message":"must not be blank"}]})
+PASS the refused creation inserted no row (rowCount=4)
+PASS the racing row starts at the version both requests will carry (row=2|CS102|Intro to Patterns|null|20|0)
+PASS exactly one of two concurrent changes with the same version is accepted (statuses=[200, 409])
+PASS the accepted change advanced the version exactly once (row=2|CS102|Intro to Patterns|null|21|1)
+PASS the generated application process exited (stopped=true)
+PASS the owned schema was dropped and its absence proved (schema=kcg_conf_run)
+PASS the advisory lock for the owned schema was released (released=true)
+
+B1 POST create-course: status=201 body={"id":4,"code":"PHY101","name":"Intro to Physics","description":"Mechanics","capacity":50,"version":0}
+B2 GET get-course (created row): status=200 body={"id":4,"code":"PHY101","name":"Intro to Physics","description":"Mechanics","capacity":50,"version":0}
+B3 GET get-course (unknown id): status=404 body={"code":"CourseNotFound","message":"CourseNotFound","fields":[]}
+B4 PATCH capacity only (expectedVersion=0): status=200 body={"id":1,"code":"CS101","name":"Intro to Algorithms","description":"Asymptotic analysis and recursion","capacity":77,"version":1}
+B5 PATCH description=null (expectedVersion=1): status=200 body={"id":1,"code":"CS101","name":"Intro to Algorithms","description":null,"capacity":77,"version":2}
+B6 PATCH name only (expectedVersion=2): status=200 body={"id":1,"code":"CS101","name":"Algorithms I","description":null,"capacity":77,"version":3}
+B6 PATCH stale expectedVersion=2: status=409 body={"code":"StaleVersion","message":"StaleVersion","fields":[]}
+B7 PATCH row 3 with expectedVersion=0 (stored version is 4): status=409 body={"code":"StaleVersion","message":"StaleVersion","fields":[]}
+B7 PATCH row 3 with expectedVersion=4: status=200 body={"id":3,"code":"ART101","name":"Art of Painting","description":"Studio course on colour mixing","capacity":5,"version":5}
+B8 PATCH blank name (expectedVersion=0): status=400 body={"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"changes.name","code":"notBlank","message":"must not be blank"}]}
+B9 PATCH undeclared change property: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"changes.code","code":"INVALID_REQUEST","message":"must be a well-formed value"}]}
+B10 PATCH without expectedVersion: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"expectedVersion","code":"NotNull","message":"must not be null"}]}
+B10 PATCH without id: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"id","code":"NotNull","message":"must not be null"}]}
+B11 PATCH with an empty change set: status=400 body={"code":"EmptyChange","message":"EmptyChange","fields":[]}
+B12 PATCH with an unknown envelope property: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"unexpected","code":"INVALID_REQUEST","message":"must be a well-formed value"}]}
+B13 PATCH unknown identity: status=404 body={"code":"CourseNotFound","message":"CourseNotFound","fields":[]}
+B14 POST create-course with a blank name: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"name","code":"NotBlank","message":"must not be blank"}]}

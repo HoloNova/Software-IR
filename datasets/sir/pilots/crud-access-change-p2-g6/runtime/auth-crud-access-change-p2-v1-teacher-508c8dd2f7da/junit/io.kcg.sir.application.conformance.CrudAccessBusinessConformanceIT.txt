@@ -1,0 +1,117 @@
+-------------------------------------------------------------------------------
+Test set: io.kcg.sir.application.conformance.CrudAccessBusinessConformanceIT
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 11.49 s <<< FAILURE! -- in io.kcg.sir.application.conformance.CrudAccessBusinessConformanceIT
+io.kcg.sir.application.conformance.CrudAccessBusinessConformanceIT.crudAccessAgainstRealMysql -- Time elapsed: 11.45 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: 
+=== G9 Crud roles, public reads, protected fields and versioned ownership business conformance ===
+verdict=FAILED
+runId=crud-access-1a182305c7d-14671
+schemaName=kcg_conf_run
+advisoryLock=held during the run
+schemaSource=TEST_FIXTURE_DDL
+productInitializeImplemented=false
+productUpdateImplemented=false
+sirResource=EXTERNAL_CANDIDATE:candidate.sir sha256=f9b2c5a458bda5165391206d425c2202206b900cec6cbc10783883d9933420dc
+fixtureDdl=/conformance/mysql/crud-access-ddl.sql sha256=0750e6e9044ed53b7f8ceb603e3191eb339ed1c672f7f710a45754be574dbff0
+fixtureSeed=/conformance/mysql/crud-access-seed.sql sha256=941951b0c06ec8a7c4755216cf081adfb99678d913dfa8826c60a9fbaca74732
+generatedFiles=58 combinedSha256=254ebf3b489f65d4cfc73995aebf5fd31b9b95744f8daf4ab066b853dd15e114
+generatedProjectBuild=PASSED (exit 0)
+httpReadiness=READY (public Book route)
+mysqlRowsBefore=2 mysqlRowsAfter=2
+mavenOffline=false
+javaVersion=21.0.12.1
+osName=Linux osArch=amd64
+serverPort=18080
+slmMysqlVersion=8.4.13
+slmSampleId=auth-crud-access-change-p2-v1-teacher-508c8dd2f7da
+slmSourceSha256=f9b2c5a458bda5165391206d425c2202206b900cec6cbc10783883d9933420dc
+slmGeneratedDigest=8aa87aa3c259c06d00916abd9b8d8432d74c2e2066b5bc16e78df4a3de8eefea
+
+checksPassed=44 checksFailed=4
+PASS the SIR slice compiles without errors (warnings remain visible) (diagnostics=[])
+PASS the compiler emitted a generated project (generatedFileCount=58)
+PASS candidate runtime compilation matches full static generation (sourceSha256=f9b2c5a458bda5165391206d425c2202206b900cec6cbc10783883d9933420dc generatedDigest=8aa87aa3c259c06d00916abd9b8d8432d74c2e2066b5bc16e78df4a3de8eefea)
+PASS the generated project builds (mvn clean verify) (exitCode=0)
+PASS the build produced an executable jar (projectRoot=/home/runner/work/Software-IR/Software-IR/ci-work/crud-access-1a182305c7d-14671/generated-project)
+PASS the generated application serves the compiled business route (readinessUrl=http://127.0.0.1:18080/api/library/books/1)
+PASS anonymous book read (expected=200 actual=200)
+PASS anonymous create refused (expected=401 actual=401)
+PASS reader create refused (expected=403 actual=403)
+PASS reader update refused before load (expected=403 actual=403)
+PASS reader delete refused before load (expected=403 actual=403)
+PASS anonymous delete refused (expected=401 actual=401)
+PASS excluded field in create is refused (expected=400 actual=400)
+PASS rejected create wrote nothing ([1|seed book|5])
+PASS admin creates book (expected=201 actual=201)
+PASS excluded stock keeps its server default ([1|seed book|5, 2|published|5])
+PASS refused creates wrote nothing ([1|seed book|5, 2|published|5])
+PASS excluded field in update is refused (expected=400 actual=400)
+PASS rejected update wrote nothing ([1|seed book|5, 2|published|5])
+PASS admin updates without writing excluded stock (expected=200 actual=200)
+PASS update preserved stock ([1|seed book|5, 2|edited|5])
+PASS admin deletes (expected=200 actual=200)
+PASS only the seed book remains ([1|seed book|5])
+PASS public detail regardless of account (expected=200 actual=200)
+PASS public list (expected=200 actual=200)
+PASS public list keeps entity scope ({"total":1,"page":1,"size":20,"records":[{"id":1,"author":1,"body":"visible","state":"open","version":1}]})
+PASS public read still obeys scope (expected=404 actual=404)
+PASS public detail regardless of account (expected=200 actual=200)
+PASS public list (expected=200 actual=200)
+PASS public list keeps entity scope ({"total":1,"page":1,"size":20,"records":[{"id":1,"author":1,"body":"visible","state":"open","version":1}]})
+PASS public read still obeys scope (expected=404 actual=404)
+PASS public detail regardless of account (expected=200 actual=200)
+PASS public list (expected=200 actual=200)
+PASS public list keeps entity scope ({"total":1,"page":1,"size":20,"records":[{"id":1,"author":1,"body":"visible","state":"open","version":1}]})
+PASS public read still obeys scope (expected=404 actual=404)
+PASS anonymous patch refused (expected=401 actual=401)
+PASS wrong role refused (expected=403 actual=403)
+PASS owner patch with an excluded field is refused (expected=400 actual=400)
+PASS the stored state stays open and the version advances once ([1|1|edited|open|2, 2|1|private|hidden|1])
+PASS stale patch is a conflict (expected=409 actual=409)
+PASS stale patch did not overwrite ([1|1|edited|open|2, 2|1|private|hidden|1])
+PASS the generated application process exited (stopped=true)
+PASS the owned schema was dropped and its absence proved (schema=kcg_conf_run)
+PASS the advisory lock for the owned schema was released (released=true)
+FAIL correct role cannot bypass owner (expected=404 actual=200)
+FAIL denied patches wrote nothing ([1|1|edited|open|2, 2|1|private|hidden|1])
+FAIL rejected patch wrote nothing ([1|1|edited|open|2, 2|1|private|hidden|1])
+FAIL owner clean patch (expected=200 actual=409)
+
+anonymous book read: status=200 body={"id":1,"title":"seed book","stock":5}
+anonymous create refused: status=401 body=
+reader create refused: status=403 body={"code":"BookForbidden","message":"BookForbidden","fields":[]}
+reader update refused before load: status=403 body={"code":"BookForbidden","message":"BookForbidden","fields":[]}
+reader delete refused before load: status=403 body={"code":"BookForbidden","message":"BookForbidden","fields":[]}
+anonymous delete refused: status=401 body=
+excluded field in create is refused: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"stock","code":"INVALID_REQUEST","message":"must be a well-formed value"}]}
+admin creates book: status=201 body={"id":2,"title":"published","stock":5}
+excluded field in update is refused: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"stock","code":"INVALID_REQUEST","message":"must be a well-formed value"}]}
+admin updates without writing excluded stock: status=200 body={"id":2,"title":"edited","stock":5}
+admin deletes: status=200 body=
+public detail regardless of account: status=200 body={"id":1,"author":1,"body":"visible","state":"open","version":1}
+public list: status=200 body={"total":1,"page":1,"size":20,"records":[{"id":1,"author":1,"body":"visible","state":"open","version":1}]}
+public read still obeys scope: status=404 body={"code":"PostNotFound","message":"PostNotFound","fields":[]}
+public detail regardless of account: status=200 body={"id":1,"author":1,"body":"visible","state":"open","version":1}
+public list: status=200 body={"total":1,"page":1,"size":20,"records":[{"id":1,"author":1,"body":"visible","state":"open","version":1}]}
+public read still obeys scope: status=404 body={"code":"PostNotFound","message":"PostNotFound","fields":[]}
+public detail regardless of account: status=200 body={"id":1,"author":1,"body":"visible","state":"open","version":1}
+public list: status=200 body={"total":1,"page":1,"size":20,"records":[{"id":1,"author":1,"body":"visible","state":"open","version":1}]}
+public read still obeys scope: status=404 body={"code":"PostNotFound","message":"PostNotFound","fields":[]}
+anonymous patch refused: status=401 body=
+wrong role refused: status=403 body={"code":"PostForbidden","message":"PostForbidden","fields":[]}
+correct role cannot bypass owner: status=200 body={"id":1,"author":1,"body":"edited","state":"open","version":2}
+owner patch with an excluded field is refused: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"changes.state","code":"INVALID_REQUEST","message":"must be a well-formed value"}]}
+owner clean patch: status=409 body={"code":"StaleVersion","message":"StaleVersion","fields":[]}
+stale patch is a conflict: status=409 body={"code":"StaleVersion","message":"StaleVersion","fields":[]}
+ ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:42)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:191)
+	at io.kcg.sir.application.conformance.CrudAccessBusinessConformanceIT.crudAccessAgainstRealMysql(CrudAccessBusinessConformanceIT.java:38)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+

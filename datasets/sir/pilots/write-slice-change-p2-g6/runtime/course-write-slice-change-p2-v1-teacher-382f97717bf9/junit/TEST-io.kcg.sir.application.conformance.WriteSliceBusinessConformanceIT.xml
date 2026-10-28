@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report.xsd" version="3.0.2" name="io.kcg.sir.application.conformance.WriteSliceBusinessConformanceIT" time="7.786" tests="1" errors="0" skipped="0" failures="0" flakes="0">
+  <properties>
+    <property name="java.specification.version" value="21"/>
+    <property name="sun.jnu.encoding" value="UTF-8"/>
+    <property name="java.class.path" value="/home/runner/work/Software-IR/Software-IR/sir-toolchain-application/target/test-classes:/home/runner/work/Software-IR/Software-IR/sir-toolchain-application/target/classes:/home/runner/work/Software-IR/Software-IR/sir-parser/target/classes:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/antlr/antlr4-runtime/4.13.2/antlr4-runtime-4.13.2.jar:/home/runner/work/Software-IR/Software-IR/sir-semantic/target/classes:/home/runner/work/Software-IR/Software-IR/sir-lowering-api/target/classes:/home/runner/work/Software-IR/Software-IR/sir-lowering-spring-boot/target/classes:/home/runner/work/Software-IR/Software-IR/sir-generator-spring-boot/target/classes:/home/runner/work/Software-IR/Software-IR/sir-project-graph/target/classes:/home/runner/work/Software-IR/Software-IR/sir-change/target/classes:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/jupiter/junit-jupiter/5.12.2/junit-jupiter-5.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/jupiter/junit-jupiter-api/5.12.2/junit-jupiter-api-5.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/platform/junit-platform-commons/1.12.2/junit-platform-commons-1.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/jupiter/junit-jupiter-params/5.12.2/junit-jupiter-params-5.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/jupiter/junit-jupiter-engine/5.12.2/junit-jupiter-engine-5.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/platform/junit-platform-engine/1.12.2/junit-platform-engine-1.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/fasterxml/jackson/core/jackson-databind/2.19.4/jackson-databind-2.19.4.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/fasterxml/jackson/core/jackson-annotations/2.19.4/jackson-annotations-2.19.4.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/fasterxml/jackson/core/jackson-core/2.19.4/jackson-core-2.19.4.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/boot/spring-boot/3.5.3/spring-boot-3.5.3.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-core/6.2.8/spring-core-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-jcl/6.2.8/spring-jcl-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-context/6.2.8/spring-context-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-aop/6.2.8/spring-aop-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-beans/6.2.8/spring-beans-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-expression/6.2.8/spring-expression-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/io/micrometer/micrometer-observation/1.14.8/micrometer-observation-1.14.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/io/micrometer/micrometer-commons/1.14.8/micrometer-commons-1.14.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/mysql/mysql-connector-j/9.3.0/mysql-connector-j-9.3.0.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/google/protobuf/protobuf-java/4.29.0/protobuf-java-4.29.0.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/net/java/dev/jna/jna-platform/5.17.0/jna-platform-5.17.0.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/net/java/dev/jna/jna/5.17.0/jna-5.17.0.jar:"/>
+    <property name="kcg.slm.repo-root" value="/home/runner/work/Software-IR/Software-IR"/>
+    <property name="java.vm.vendor" value="Eclipse Adoptium"/>
+    <property name="sun.arch.data.model" value="64"/>
+    <property name="java.vendor.url" value="https://adoptium.net/"/>
+    <property name="user.timezone" value="Etc/UTC"/>
+    <property name="kcg.conformance.evidence-parent" value="/home/runner/work/Software-IR/Software-IR/ci-evidence"/>
+    <property name="os.name" value="Linux"/>
+    <property name="java.vm.specification.version" value="21"/>
+    <property name="sun.java.launcher" value="SUN_STANDARD"/>
+    <property name="kcg.slm.bundle-root" value="/home/runner/work/Software-IR/Software-IR/datasets/sir/pilots/write-slice-change-p2-g6"/>
+    <property name="sun.boot.library.path" value="/usr/lib/jvm/temurin-21-jdk-amd64/lib"/>
+    <property name="sun.java.command" value="/home/runner/work/Software-IR/Software-IR/sir-toolchain-application/target/surefire/surefirebooter-20261028085303157_3.jar /home/runner/work/Software-IR/Software-IR/sir-toolchain-application/target/surefire 2026-10-28T08-52-55_847-jvmRun1 surefire-20261028085303157_1tmp surefire_0-20261028085303157_2tmp"/>
+    <property name="jdk.debug" value="release"/>
+    <property name="test" value="WriteSliceBusinessConformanceIT"/>
+    <property name="surefire.test.class.path" value="/home/runner/work/Software-IR/Software-IR/sir-toolchain-application/target/test-classes:/home/runner/work/Software-IR/Software-IR/sir-toolchain-application/target/classes:/home/runner/work/Software-IR/Software-IR/sir-parser/target/classes:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/antlr/antlr4-runtime/4.13.2/antlr4-runtime-4.13.2.jar:/home/runner/work/Software-IR/Software-IR/sir-semantic/target/classes:/home/runner/work/Software-IR/Software-IR/sir-lowering-api/target/classes:/home/runner/work/Software-IR/Software-IR/sir-lowering-spring-boot/target/classes:/home/runner/work/Software-IR/Software-IR/sir-generator-spring-boot/target/classes:/home/runner/work/Software-IR/Software-IR/sir-project-graph/target/classes:/home/runner/work/Software-IR/Software-IR/sir-change/target/classes:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/jupiter/junit-jupiter/5.12.2/junit-jupiter-5.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/jupiter/junit-jupiter-api/5.12.2/junit-jupiter-api-5.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/platform/junit-platform-commons/1.12.2/junit-platform-commons-1.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/jupiter/junit-jupiter-params/5.12.2/junit-jupiter-params-5.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/jupiter/junit-jupiter-engine/5.12.2/junit-jupiter-engine-5.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/platform/junit-platform-engine/1.12.2/junit-platform-engine-1.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/fasterxml/jackson/core/jackson-databind/2.19.4/jackson-databind-2.19.4.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/fasterxml/jackson/core/jackson-annotations/2.19.4/jackson-annotations-2.19.4.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/fasterxml/jackson/core/jackson-core/2.19.4/jackson-core-2.19.4.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/boot/spring-boot/3.5.3/spring-boot-3.5.3.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-core/6.2.8/spring-core-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-jcl/6.2.8/spring-jcl-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-context/6.2.8/spring-context-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-aop/6.2.8/spring-aop-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-beans/6.2.8/spring-beans-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-expression/6.2.8/spring-expression-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/io/micrometer/micrometer-observation/1.14.8/micrometer-observation-1.14.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/io/micrometer/micrometer-commons/1.14.8/micrometer-commons-1.14.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/mysql/mysql-connector-j/9.3.0/mysql-connector-j-9.3.0.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/google/protobuf/protobuf-java/4.29.0/protobuf-java-4.29.0.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/net/java/dev/jna/jna-platform/5.17.0/jna-platform-5.17.0.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/net/java/dev/jna/jna/5.17.0/jna-5.17.0.jar:"/>
+    <property name="sun.cpu.endian" value="little"/>
+    <property name="user.home" value="/home/runner"/>
+    <property name="user.language" value="en"/>
+    <property name="kcg.conformance.maven-executable" value="/usr/bin/mvn"/>
+    <property name="java.specification.vendor" value="Oracle Corporation"/>
+    <property name="kcg.conformance.maven-repo" value="/home/runner/work/Software-IR/Software-IR/.m2-ci"/>
+    <property name="java.version.date" value="2026-08-18"/>
+    <property name="java.home" value="/usr/lib/jvm/temurin-21-jdk-amd64"/>
+    <property name="kcg.query-conformance.maven-offline" value="false"/>
+    <property name="file.separator" value="/"/>
+    <property name="basedir" value="/home/runner/work/Software-IR/Software-IR/sir-toolchain-application"/>
+    <property name="java.vm.compressedOopsMode" value="Zero based"/>
+    <property name="line.separator" value="&#10;"/>
+    <property name="java.vm.specification.vendor" value="Oracle Corporation"/>
+    <property name="java.specification.name" value="Java Platform API Specification"/>
+    <property name="kcg.slm.candidate-root" value="/home/runner/work/Software-IR/Software-IR/datasets/sir/pilots/write-slice-change-p2-g6/samples/course-write-slice-change-p2-v1-teacher-382f97717bf9"/>
+    <property name="surefire.real.class.path" value="/home/runner/work/Software-IR/Software-IR/sir-toolchain-application/target/surefire/surefirebooter-20261028085303157_3.jar"/>
+    <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
+    <property name="java.runtime.version" value="21.0.12.1+1-LTS"/>
+    <property name="user.name" value="runner"/>
+    <property name="stdout.encoding" value="UTF-8"/>
+    <property name="path.separator" value=":"/>
+    <property name="os.version" value="7.0.0-1017-azure"/>
+    <property name="kcg.conformance.work-parent" value="/home/runner/work/Software-IR/Software-IR/ci-work"/>
+    <property name="java.runtime.name" value="OpenJDK Runtime Environment"/>
+    <property name="file.encoding" value="UTF-8"/>
+    <property name="surefire.failIfNoSpecifiedTests" value="false"/>
+    <property name="java.vm.name" value="OpenJDK 64-Bit Server VM"/>
+    <property name="java.vendor.version" value="Temurin-21.0.12.1+1"/>
+    <property name="localRepository" value="/home/runner/work/Software-IR/Software-IR/.m2-ci"/>
+    <property name="java.vendor.url.bug" value="https://github.com/adoptium/adoptium-support/issues"/>
+    <property name="java.io.tmpdir" value="/tmp"/>
+    <property name="kcg.write-conformance.enabled" value="true"/>
+    <property name="java.version" value="21.0.12.1"/>
+    <property name="user.dir" value="/home/runner/work/Software-IR/Software-IR/sir-toolchain-application"/>
+    <property name="os.arch" value="amd64"/>
+    <property name="java.vm.specification.name" value="Java Virtual Machine Specification"/>
+    <property name="failIfNoTests" value="false"/>
+    <property name="native.encoding" value="UTF-8"/>
+    <property name="java.library.path" value="/usr/java/packages/lib:/usr/lib64:/lib64:/lib:/usr/lib"/>
+    <property name="java.vm.info" value="mixed mode, sharing"/>
+    <property name="stderr.encoding" value="UTF-8"/>
+    <property name="java.vendor" value="Eclipse Adoptium"/>
+    <property name="java.vm.version" value="21.0.12.1+1-LTS"/>
+    <property name="sun.io.unicode.encoding" value="UnicodeLittle"/>
+    <property name="maven.repo.local" value="/home/runner/work/Software-IR/Software-IR/.m2-ci"/>
+    <property name="java.class.version" value="65.0"/>
+  </properties>
+  <testcase name="compiledCourseWritesAreCreatedReadMergedGuardedAndRefusedAgainstRealMysql" classname="io.kcg.sir.application.conformance.WriteSliceBusinessConformanceIT" time="7.755">
+    <system-out><![CDATA[=== Q10 course write slice business conformance ===
+verdict=PASSED
+runId=write-slice-1a181b680e1-28821
+schemaName=kcg_conf_run
+advisoryLock=held during the run
+schemaSource=TEST_FIXTURE_DDL
+productInitializeImplemented=false
+productUpdateImplemented=false
+sirResource=EXTERNAL_CANDIDATE:candidate.sir sha256=81d2f27cce1e7629a8be9cb6a2d888f0a769330e2865603e5c35fefd008d7663
+fixtureDdl=/conformance/mysql/course-admin-ddl.sql sha256=3b9ace8ac9bdcc52ab37cab48cb8b43b0b867fcad18ce40317c47ba1b11a52d3
+fixtureSeed=/conformance/mysql/course-admin-seed.sql sha256=6edb14857616890e7da846b0508d4c2f744ebeb774fdc8f240234e8074bd8c09
+generatedFiles=22 combinedSha256=55aff659a577ad5a7b29f5f7839557b3bbda6a757b10c65d6c21a39350551db0
+generatedProjectBuild=PASSED (exit 0)
+httpReadiness=READY (200 from /api/get-course?id=1)
+mysqlRowsBefore=3 mysqlRowsAfter=4
+mavenOffline=false
+javaVersion=21.0.12.1
+osName=Linux osArch=amd64
+serverPort=18080
+slmMysqlVersion=8.4.13
+slmSampleId=course-write-slice-change-p2-v1-teacher-382f97717bf9
+slmSourceSha256=81d2f27cce1e7629a8be9cb6a2d888f0a769330e2865603e5c35fefd008d7663
+slmGeneratedDigest=a038834a8160cdf824693fbae8bc077923bb198db13b5bee5bd21b062de06c58
+finalRowFingerprint=[1|CS101|Algorithms I|null|77|3, 2|CS102|Intro to Patterns|null|21|1, 3|ART101|Art of Painting|Studio course on colour mixing|5|5, 4|PHY101|Intro to Physics|Mechanics|50|0]
+
+checksPassed=62 checksFailed=0
+PASS the SIR slice compiles without errors (warnings remain visible) (diagnostics=[])
+PASS the compiler emitted a generated project (generatedFileCount=22)
+PASS candidate runtime compilation matches full static generation (sourceSha256=81d2f27cce1e7629a8be9cb6a2d888f0a769330e2865603e5c35fefd008d7663 generatedDigest=a038834a8160cdf824693fbae8bc077923bb198db13b5bee5bd21b062de06c58)
+PASS the generated project builds (mvn clean verify) (exitCode=0)
+PASS the build produced an executable jar (projectRoot=/home/runner/work/Software-IR/Software-IR/ci-work/write-slice-1a181b680e1-28821/generated-project)
+PASS the generated application serves the compiled business route (readinessUrl=http://127.0.0.1:18080/api/get-course?id=1)
+PASS the fixture seed is present in the owned schema (seededRowCount=3)
+PASS a creation returns 201 (expected=201 actual=201)
+PASS the creation answers with the projection it declared ({description=Mechanics, code=PHY101, version=0, id=4, name=Intro to Physics, capacity=50})
+PASS the creation response is the declared projection, not the entity (body={"id":4,"code":"PHY101","name":"Intro to Physics","description":"Mechanics","capacity":50,"version":0})
+PASS the created row is readable (expected=200 actual=200)
+PASS the created row carries what was sent ({version=0, code=PHY101, name=Intro to Physics, id=4})
+PASS the created row is in the database with version 0 (rows=[1|CS101|Intro to Algorithms|Asymptotic analysis and recursion|30|0, 2|CS102|Intro to Patterns|null|20|0, 3|ART101|Art of Painting|Studio course on colour mixing|15|4, 4|PHY101|Intro to Physics|Mechanics|50|0])
+PASS reading an unknown course returns the declared 404 (expected=404 actual=404)
+PASS the 404 carries the declared failure code ({code=CourseNotFound})
+PASS a partial change returns 200 (expected=200 actual=200)
+PASS the partial change answers with the merged row ({description=Asymptotic analysis and recursion, code=CS101, version=1, id=1, name=Intro to Algorithms, capacity=77})
+PASS the partial change wrote the addressed column and nothing else (row=1|CS101|Intro to Algorithms|Asymptotic analysis and recursion|77|1)
+PASS an untouched row keeps its values (row=2|CS102|Intro to Patterns|null|20|0)
+PASS clearing a field with an explicit null returns 200 (expected=200 actual=200)
+PASS the cleared field answers as null and the version advanced ({name=Intro to Algorithms, version=2, id=1})
+PASS the explicit null change cleared the column and left the rest alone (row=1|CS101|Intro to Algorithms|null|77|2)
+PASS a name-only change returns 200 (expected=200 actual=200)
+PASS the name-only change kept the empty description ({name=Algorithms I, version=3})
+PASS the name-only change left the cleared column cleared (row=1|CS101|Algorithms I|null|77|3)
+PASS a change with a stale version is refused with the declared 409 (expected=409 actual=409)
+PASS the stale conflict carries the declared failure code ({code=StaleVersion})
+PASS the refused stale change wrote nothing (row=1|CS101|Algorithms I|null|77|3)
+PASS a change that assumes a fresh version is refused (expected=409 actual=409)
+PASS the refused request left the seeded row untouched (row=3|ART101|Art of Painting|Studio course on colour mixing|15|4)
+PASS a change carrying the stored version returns 200 (expected=200 actual=200)
+PASS the version advanced from the stored value ({version=5, capacity=5, id=3})
+PASS the accepted change advanced the row (row=3|ART101|Art of Painting|Studio course on colour mixing|5|5)
+PASS a blank merged value is refused with 400 (expected=400 actual=400)
+PASS the rejection reports an invalid request ({code=INVALID_REQUEST})
+PASS the rejection names the request property it came from (body={"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"changes.name","code":"notBlank","message":"must not be blank"}]})
+PASS the rejection carries the constraint code (body={"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"changes.name","code":"notBlank","message":"must not be blank"}]})
+PASS the refused blank value wrote nothing (row=2|CS102|Intro to Patterns|null|20|0)
+PASS an undeclared change property is refused with 400 (expected=400 actual=400)
+PASS the rejection names the undeclared property (body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"changes.code","code":"INVALID_REQUEST","message":"must be a well-formed value"}]})
+PASS the refused undeclared change wrote nothing (row=2|CS102|Intro to Patterns|null|20|0)
+PASS a change without expectedVersion is refused with 400 (expected=400 actual=400)
+PASS the rejection names the missing member (body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"expectedVersion","code":"NotNull","message":"must not be null"}]})
+PASS a change without an identity is refused with 400 (expected=400 actual=400)
+PASS the rejection names the missing identity (body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"id","code":"NotNull","message":"must not be null"}]})
+PASS the refused envelopes wrote nothing (row=2|CS102|Intro to Patterns|null|20|0)
+PASS an empty change set is refused with 400 (expected=400 actual=400)
+PASS the empty change set carries the declared failure code ({code=EmptyChange})
+PASS the refused empty change set wrote nothing and did not advance the version (row=2|CS102|Intro to Patterns|null|20|0)
+PASS an unknown envelope property is refused with 400 (expected=400 actual=400)
+PASS the refused unknown envelope property wrote nothing (row=2|CS102|Intro to Patterns|null|20|0)
+PASS a change against an unknown course returns the declared 404 (expected=404 actual=404)
+PASS the 404 carries the declared failure code ({code=CourseNotFound})
+PASS a creation with a blank name is refused with 400 (expected=400 actual=400)
+PASS the creation rejection names the offending payload property (body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"name","code":"NotBlank","message":"must not be blank"}]})
+PASS the refused creation inserted no row (rowCount=4)
+PASS the racing row starts at the version both requests will carry (row=2|CS102|Intro to Patterns|null|20|0)
+PASS exactly one of two concurrent changes with the same version is accepted (statuses=[200, 409])
+PASS the accepted change advanced the version exactly once (row=2|CS102|Intro to Patterns|null|21|1)
+PASS the generated application process exited (stopped=true)
+PASS the owned schema was dropped and its absence proved (schema=kcg_conf_run)
+PASS the advisory lock for the owned schema was released (released=true)
+
+B1 POST create-course: status=201 body={"id":4,"code":"PHY101","name":"Intro to Physics","description":"Mechanics","capacity":50,"version":0}
+B2 GET get-course (created row): status=200 body={"id":4,"code":"PHY101","name":"Intro to Physics","description":"Mechanics","capacity":50,"version":0}
+B3 GET get-course (unknown id): status=404 body={"code":"CourseNotFound","message":"CourseNotFound","fields":[]}
+B4 PATCH capacity only (expectedVersion=0): status=200 body={"id":1,"code":"CS101","name":"Intro to Algorithms","description":"Asymptotic analysis and recursion","capacity":77,"version":1}
+B5 PATCH description=null (expectedVersion=1): status=200 body={"id":1,"code":"CS101","name":"Intro to Algorithms","description":null,"capacity":77,"version":2}
+B6 PATCH name only (expectedVersion=2): status=200 body={"id":1,"code":"CS101","name":"Algorithms I","description":null,"capacity":77,"version":3}
+B6 PATCH stale expectedVersion=2: status=409 body={"code":"StaleVersion","message":"StaleVersion","fields":[]}
+B7 PATCH row 3 with expectedVersion=0 (stored version is 4): status=409 body={"code":"StaleVersion","message":"StaleVersion","fields":[]}
+B7 PATCH row 3 with expectedVersion=4: status=200 body={"id":3,"code":"ART101","name":"Art of Painting","description":"Studio course on colour mixing","capacity":5,"version":5}
+B8 PATCH blank name (expectedVersion=0): status=400 body={"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"changes.name","code":"notBlank","message":"must not be blank"}]}
+B9 PATCH undeclared change property: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"changes.code","code":"INVALID_REQUEST","message":"must be a well-formed value"}]}
+B10 PATCH without expectedVersion: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"expectedVersion","code":"NotNull","message":"must not be null"}]}
+B10 PATCH without id: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"id","code":"NotNull","message":"must not be null"}]}
+B11 PATCH with an empty change set: status=400 body={"code":"EmptyChange","message":"EmptyChange","fields":[]}
+B12 PATCH with an unknown envelope property: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"unexpected","code":"INVALID_REQUEST","message":"must be a well-formed value"}]}
+B13 PATCH unknown identity: status=404 body={"code":"CourseNotFound","message":"CourseNotFound","fields":[]}
+B14 POST create-course with a blank name: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"name","code":"NotBlank","message":"must not be blank"}]}
+
+]]></system-out>
+  </testcase>
+</testsuite>

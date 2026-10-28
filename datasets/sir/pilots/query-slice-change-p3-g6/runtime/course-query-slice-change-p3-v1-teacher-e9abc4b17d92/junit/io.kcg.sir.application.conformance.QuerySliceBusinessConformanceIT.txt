@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: io.kcg.sir.application.conformance.QuerySliceBusinessConformanceIT
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 7.495 s -- in io.kcg.sir.application.conformance.QuerySliceBusinessConformanceIT

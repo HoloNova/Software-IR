@@ -1,0 +1,80 @@
+=== Bearer credential (login issues a token, a Bearer header authenticates) business conformance ===
+verdict=FAILED
+runId=bearer-slice-1a181b567c8-5655
+schemaName=kcg_conf_run
+advisoryLock=held during the run
+schemaSource=TEST_FIXTURE_DDL
+productInitializeImplemented=false
+productUpdateImplemented=false
+sirResource=EXTERNAL_CANDIDATE:candidate.sir sha256=aadd4a4d964af83a6c60339c86301f3d30fa138a1f78bd66f4e6feabfba479a7
+fixtureDdl=/conformance/mysql/bearer-credential-ddl.sql sha256=dfc62cda249f58d3d36ebbff29cbbff9a99ededea8a0b0052cb55d65a58d404e
+fixtureSeed=/conformance/mysql/bearer-credential-seed.sql sha256=ab5695c601ac810da1c4fb74e243d09679779b64802b714fae211418aa1ec2f0
+generatedFiles=37 combinedSha256=d265296355ab8f715804223b89fbb908b195ae43d3dddd5fedb0118181e76ccd
+generatedProjectBuild=PASSED (exit 0)
+httpReadiness=READY (200 from /api/get-user?id=1)
+mysqlRowsBefore=1 mysqlRowsAfter=3
+mavenOffline=false
+javaVersion=21.0.12.1
+osName=Linux osArch=amd64
+serverPort=18080
+slmMysqlVersion=8.4.13
+slmSampleId=auth-bearer-credential-scratch-p3-v1-teacher-addf74ed9fa5
+slmSourceSha256=aadd4a4d964af83a6c60339c86301f3d30fa138a1f78bd66f4e6feabfba479a7
+slmGeneratedDigest=483c735ab8f816ea317551d7f1d24674a20923b1796eff1af9e90592c73d4544
+
+checksPassed=33 checksFailed=3
+PASS the SIR slice compiles without errors (warnings remain visible) (diagnostics=[])
+PASS the compiler emitted a generated project (generatedFileCount=37)
+PASS candidate runtime compilation matches full static generation (sourceSha256=aadd4a4d964af83a6c60339c86301f3d30fa138a1f78bd66f4e6feabfba479a7 generatedDigest=483c735ab8f816ea317551d7f1d24674a20923b1796eff1af9e90592c73d4544)
+PASS the generated project builds (mvn clean verify) (exitCode=0)
+PASS the build produced an executable jar (projectRoot=/home/runner/work/Software-IR/Software-IR/ci-work/bearer-slice-1a181b567c8-5655/generated-project)
+PASS the generated application serves the compiled business route (readinessUrl=http://127.0.0.1:18080/api/get-user?id=1)
+PASS the fixture seed is present in the owned schema (seededRowCount=1)
+PASS registering zoe stores an account (status=201)
+PASS registering ann stores an account (status=201)
+PASS the right password logs zoe in (a login creates the token row, so it answers 201) (expected=201 actual=201)
+PASS the login answers a well-formed token (token=***REDACTED***
+PASS the token is stored for zoe and expires in about fifteen minutes (row=90cb3b06-7ef2-429f-9aa5-d670dacbf98b|2|2026-10-28 09:07:03.991479)
+PASS a wrong password is the declared 401 (expected=401 actual=401)
+PASS the right password logs ann in (a login creates the token row, so it answers 201) (expected=201 actual=201)
+PASS the login answers a well-formed token (token=***REDACTED***
+PASS the token is stored for ann and expires in about fifteen minutes (row=ae3fe644-aeaf-4502-8d15-a9f45fe2dfd0|3|2026-10-28 09:07:04.361273)
+PASS a wrong password is the declared 401 (expected=401 actual=401)
+PASS a request without a credential is refused with 401 (expected=401 actual=401)
+PASS the refusal wrote no note (notes=[])
+PASS a valid token authenticates (status=201)
+PASS the scheme name is not case sensitive (status=201)
+PASS each note was written as the owner of the token it carried (notes=[1|2|zoe's note, 2|3|ann's note])
+PASS 'Basic 90cb3b06-7ef2-429f-9aa5-d670dacbf98b' is refused with 401 (expected=401 actual=401)
+PASS 'Bearer not-a-uuid' is refused with 401 (expected=401 actual=401)
+PASS 'Bearer 99999999-9999-4999-8999-999999999999' is refused with 401 (expected=401 actual=401)
+PASS 'Bearer' is refused with 401 (expected=401 actual=401)
+PASS '90cb3b06-7ef2-429f-9aa5-d670dacbf98b' is refused with 401 (expected=401 actual=401)
+PASS the refusals wrote no note (notes=[1|2|zoe's note, 2|3|ann's note])
+PASS another account's token is unaffected (status=201)
+PASS logging out a token that does not exist is the declared 401 (expected=401 actual=401)
+PASS the generated application process exited (stopped=true)
+PASS the owned schema was dropped and its absence proved (schema=kcg_conf_run)
+PASS the advisory lock for the owned schema was released (released=true)
+FAIL logging out answers 200 (expected=200 actual=401)
+FAIL a token that was logged out is refused with 401 (expected=401 actual=201)
+FAIL only the two accepted notes and the one after remain (notes=[1|2|zoe's note, 2|3|ann's note, 3|2|after logout, 4|3|ann again])
+
+B1 POST register (zoe): status=201 body={"id":2,"name":"zoe"}
+B1 POST register (ann): status=201 body={"id":3,"name":"ann"}
+B2 POST login (zoe): status=201 body={"id":"90cb3b06-7ef2-429f-9aa5-d670dacbf98b","expiresAt":"2026-10-28T09:07:03.991479381Z"}
+B2 POST login (zoe, wrong password): status=401 body={"code":"BadLogin","message":"BadLogin","fields":[]}
+B2 POST login (ann): status=201 body={"id":"ae3fe644-aeaf-4502-8d15-a9f45fe2dfd0","expiresAt":"2026-10-28T09:07:04.361273479Z"}
+B2 POST login (ann, wrong password): status=401 body={"code":"BadLogin","message":"BadLogin","fields":[]}
+B3 POST post-note (no Authorization header): status=401 body=
+B4 POST post-note (zoe's token): status=201 body={"id":1,"text":"zoe's note"}
+B4 POST post-note (ann's token, lower-case scheme): status=201 body={"id":2,"text":"ann's note"}
+B5 POST post-note (Authorization: Basic 90cb3b06-7ef2-429f-9aa5-d670dacbf98b): status=401 body=
+B5 POST post-note (Authorization: Bearer not-a-uuid): status=401 body=
+B5 POST post-note (Authorization: Bearer 99999999-9999-4999-8999-999999999999): status=401 body=
+B5 POST post-note (Authorization: Bearer): status=401 body=
+B5 POST post-note (Authorization: 90cb3b06-7ef2-429f-9aa5-d670dacbf98b): status=401 body=
+B6 POST logout: status=401 body=
+B6 POST post-note (zoe's token after logout): status=201 body={"id":3,"text":"after logout"}
+B6 POST post-note (ann's token after zoe logged out): status=201 body={"id":4,"text":"ann again"}
+B6 POST logout (unknown token): status=401 body=

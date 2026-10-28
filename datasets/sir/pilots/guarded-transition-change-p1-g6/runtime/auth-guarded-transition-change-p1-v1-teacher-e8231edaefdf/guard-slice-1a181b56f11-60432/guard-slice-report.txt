@@ -1,0 +1,63 @@
+=== Guarded transition (credential rotation) business conformance ===
+verdict=PASSED
+runId=guard-slice-1a181b56f11-60432
+schemaName=kcg_conf_run
+advisoryLock=held during the run
+schemaSource=TEST_FIXTURE_DDL
+productInitializeImplemented=false
+productUpdateImplemented=false
+sirResource=EXTERNAL_CANDIDATE:candidate.sir sha256=2e3df4edb830485ab0c11f5ba690a3a16e52ba33de65f72ae1c1c52721b1754d
+fixtureDdl=/conformance/mysql/credential-rotation-ddl.sql sha256=8f898e13a57b530666ccf5917231874dad4ac9dd46b30d65144b94bf4e25d2bd
+fixtureSeed=/conformance/mysql/credential-rotation-seed.sql sha256=7924a60cca80bf6e5900969b54a19b0d3ad89b8e0f76d2c06e39f9602f2d4788
+generatedFiles=19 combinedSha256=6274cf161261df7bc22ae79d403bf0428e1c158f2842bdc1878e0a49330f0f25
+generatedProjectBuild=PASSED (exit 0)
+httpReadiness=READY (200 from /api/get-credential?id=1)
+mysqlRowsBefore=3 mysqlRowsAfter=4
+mavenOffline=false
+javaVersion=21.0.12.1
+osName=Linux osArch=amd64
+serverPort=18080
+slmMysqlVersion=8.4.13
+slmSampleId=auth-guarded-transition-change-p1-v1-teacher-e8231edaefdf
+slmSourceSha256=2e3df4edb830485ab0c11f5ba690a3a16e52ba33de65f72ae1c1c52721b1754d
+slmGeneratedDigest=ba0a72bb976b145b429604b3f583f325eca683229d1bd670c7356648835b461d
+
+checksPassed=25 checksFailed=0
+PASS the SIR slice compiles without errors (warnings remain visible) (diagnostics=[])
+PASS the compiler emitted a generated project (generatedFileCount=19)
+PASS candidate runtime compilation matches full static generation (sourceSha256=2e3df4edb830485ab0c11f5ba690a3a16e52ba33de65f72ae1c1c52721b1754d generatedDigest=ba0a72bb976b145b429604b3f583f325eca683229d1bd670c7356648835b461d)
+PASS the generated project builds (mvn clean verify) (exitCode=0)
+PASS the build produced an executable jar (projectRoot=/home/runner/work/Software-IR/Software-IR/ci-work/guard-slice-1a181b56f11-60432/generated-project)
+PASS the generated application serves the compiled business route (readinessUrl=http://127.0.0.1:18080/api/get-credential?id=1)
+PASS the fixture seed is present in the owned schema (seededRowCount=3)
+PASS an already used credential is refused with the declared 409 (expected=409 actual=409)
+PASS the refusal wrote nothing: still three rows and row 2 unchanged (rows=[1|alice|0|2099-01-01 00:00:00, 2|bob|1|2099-01-01 00:00:00, 3|carol|0|2000-01-01 00:00:00])
+PASS an expired credential is refused with the declared 400 (expected=400 actual=400)
+PASS the refusal wrote nothing: still three rows and row 3 still unused (rows=[1|alice|0|2099-01-01 00:00:00, 2|bob|1|2099-01-01 00:00:00, 3|carol|0|2000-01-01 00:00:00])
+PASS an unknown credential is refused with the declared 404 (expected=404 actual=404)
+PASS exactly one of 8 simultaneous requests rotates the credential (statuses=[201, 409, 409, 409, 409, 409, 409, 409])
+PASS every other simultaneous request is refused with the declared 409 (statuses=[201, 409, 409, 409, 409, 409, 409, 409])
+PASS the rotation created exactly one new credential, so the refused requests left none (rows=[1|alice|1|2099-01-01 00:00:00, 2|bob|1|2099-01-01 00:00:00, 3|carol|0|2000-01-01 00:00:00, 4|alice|0|2026-11-04 08:52:02.538814])
+PASS the rotated credential is marked used exactly once (row=1|alice|1|2099-01-01 00:00:00)
+PASS the winner answers with the new credential, owned by the same owner and unused ({used=false, owner=alice})
+PASS the new credential is stored unused (newId=4 rows=[1|alice|1|2099-01-01 00:00:00, 2|bob|1|2099-01-01 00:00:00, 3|carol|0|2000-01-01 00:00:00, 4|alice|0|2026-11-04 08:52:02.538814])
+PASS the new credential expires about seven days from now (time shift evaluated once) (expiresAt=2026-11-04T08:52:02.538813854Z)
+PASS replaying the rotated credential is refused with the declared 409 (expected=409 actual=409)
+PASS the replay wrote nothing: still four rows (rows=[1|alice|1|2099-01-01 00:00:00, 2|bob|1|2099-01-01 00:00:00, 3|carol|0|2000-01-01 00:00:00, 4|alice|0|2026-11-04 08:52:02.538814])
+PASS the other seeded credentials are unchanged (rows=[1|alice|1|2099-01-01 00:00:00, 2|bob|1|2099-01-01 00:00:00, 3|carol|0|2000-01-01 00:00:00, 4|alice|0|2026-11-04 08:52:02.538814])
+PASS the generated application process exited (stopped=true)
+PASS the owned schema was dropped and its absence proved (schema=kcg_conf_run)
+PASS the advisory lock for the owned schema was released (released=true)
+
+G1 POST refresh (already used): status=409 body={"code":"Invalid","message":"Invalid","fields":[]}
+G2 POST refresh (expired): status=400 body={"code":"Expired","message":"Expired","fields":[]}
+G3 POST refresh (unknown): status=404 body={"code":"CredentialNotFound","message":"CredentialNotFound","fields":[]}
+G4 POST refresh (racer 0): status=409 body={"code":"Invalid","message":"Invalid","fields":[]}
+G4 POST refresh (racer 1): status=201 body={"id":4,"owner":"alice","used":false,"expiresAt":"2026-11-04T08:52:02.538813854Z"}
+G4 POST refresh (racer 2): status=409 body={"code":"Invalid","message":"Invalid","fields":[]}
+G4 POST refresh (racer 3): status=409 body={"code":"Invalid","message":"Invalid","fields":[]}
+G4 POST refresh (racer 4): status=409 body={"code":"Invalid","message":"Invalid","fields":[]}
+G4 POST refresh (racer 5): status=409 body={"code":"Invalid","message":"Invalid","fields":[]}
+G4 POST refresh (racer 6): status=409 body={"code":"Invalid","message":"Invalid","fields":[]}
+G4 POST refresh (racer 7): status=409 body={"code":"Invalid","message":"Invalid","fields":[]}
+G5 POST refresh (replay of the rotated credential): status=409 body={"code":"Invalid","message":"Invalid","fields":[]}

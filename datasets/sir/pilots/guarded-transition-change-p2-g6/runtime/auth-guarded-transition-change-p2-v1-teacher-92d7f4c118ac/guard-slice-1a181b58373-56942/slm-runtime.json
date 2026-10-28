@@ -1,0 +1,37 @@
+{
+  "schema_version" : "sir-runtime-evidence/1",
+  "id" : "auth-guarded-transition-change-p2-v1-teacher-92d7f4c118ac",
+  "task_sha256" : "c26cb2b26297fe0ed10fc0506db266975a09c76f5a3467dc95e4cc648b19c526",
+  "oracle_sha256" : "1b97ef9a4e5b00653767547f4913ec55176bdb5b364e8a193895f520c6e27ea8",
+  "toolchain_core_sha256" : "51d9566d725403473bcfcb3cac229575919c630ade17bb619e317996ca00b163",
+  "source_sha256" : "11de450e33518947a1a5c97c5043852b873f2c7dedeb9ac99abae8190c80d427",
+  "generated_digest" : "2eceea0611577ffbe4e90c3b08303fae11781343751a7ac61f37fda296120103",
+  "run_id" : "guard-slice-1a181b58373-56942",
+  "gates" : {
+    "start" : "PASSED",
+    "business" : "PASSED",
+    "build" : "PASSED",
+    "static" : "PASSED"
+  },
+  "environment" : {
+    "test_revision" : "1",
+    "mysql" : "8.4.13",
+    "java" : "21.0.12.1"
+  },
+  "artifacts" : [ {
+    "path" : "guard-slice-report.txt",
+    "sha256" : "dccf2169b6cfbe78add56f5140a2fa199b0b53c920eafa15736dd4a9af301ab2"
+  }, {
+    "path" : "logs/maven.stdout.log",
+    "sha256" : "a24c20e02d000118df1479fca6beb675b675dd4a7f9205e220f4e27822b76bb6"
+  }, {
+    "path" : "logs/maven.stderr.log",
+    "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }, {
+    "path" : "logs/spring.stdout.log",
+    "sha256" : "d66673e662aca51ff876262f323b231d68c4acf021eb6e9aba687fc18ac73f4e"
+  }, {
+    "path" : "logs/spring.stderr.log",
+    "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  } ]
+}

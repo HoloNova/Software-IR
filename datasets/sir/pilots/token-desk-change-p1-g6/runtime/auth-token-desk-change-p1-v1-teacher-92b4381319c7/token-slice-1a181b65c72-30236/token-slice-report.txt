@@ -1,0 +1,73 @@
+=== Token desk (Uuid keys, no-op guarded update, unique lookup) business conformance ===
+verdict=PASSED
+runId=token-slice-1a181b65c72-30236
+schemaName=kcg_conf_run
+advisoryLock=held during the run
+schemaSource=TEST_FIXTURE_DDL
+productInitializeImplemented=false
+productUpdateImplemented=false
+sirResource=EXTERNAL_CANDIDATE:candidate.sir sha256=36165e96a311e02489fa6475e2fd11e9c243807e856b29c6229775f01cb58dae
+fixtureDdl=/conformance/mysql/token-desk-ddl.sql sha256=fec003ab48d0e4f1e1bd6949cb884ec2d3ec6b100e3c050f630f006425aac072
+fixtureSeed=/conformance/mysql/token-desk-seed.sql sha256=a2b431d018c4213aa3c27934298f8da8c0f8d9a555d4e84d29b96a3ce8737741
+generatedFiles=37 combinedSha256=2948e088213d92519c64e3ddb9f64f8b118eb311107a2235c4164eb066bcb597
+generatedProjectBuild=PASSED (exit 0)
+httpReadiness=READY (200 from /api/get-credential?id=11111111-1111-4111-8111-111111111111)
+mysqlRowsBefore=3 mysqlRowsAfter=4
+mavenOffline=false
+javaVersion=21.0.12.1
+osName=Linux osArch=amd64
+serverPort=18080
+slmMysqlVersion=8.4.13
+slmSampleId=auth-token-desk-change-p1-v1-teacher-92b4381319c7
+slmSourceSha256=36165e96a311e02489fa6475e2fd11e9c243807e856b29c6229775f01cb58dae
+slmGeneratedDigest=2d3afb75301c0dd3d3345a8ef8221a808a724c3c52619e5a31ceca767df6bcda
+
+checksPassed=34 checksFailed=0
+PASS the SIR slice compiles without errors (warnings remain visible) (diagnostics=[])
+PASS the compiler emitted a generated project (generatedFileCount=37)
+PASS candidate runtime compilation matches full static generation (sourceSha256=36165e96a311e02489fa6475e2fd11e9c243807e856b29c6229775f01cb58dae generatedDigest=2d3afb75301c0dd3d3345a8ef8221a808a724c3c52619e5a31ceca767df6bcda)
+PASS the generated project builds (mvn clean verify) (exitCode=0)
+PASS the build produced an executable jar (projectRoot=/home/runner/work/Software-IR/Software-IR/ci-work/token-slice-1a181b65c72-30236/generated-project)
+PASS the generated application serves the compiled business route (readinessUrl=http://127.0.0.1:18080/api/get-credential?id=11111111-1111-4111-8111-111111111111)
+PASS the fixture seed is present in the owned schema (seededRowCount=3)
+PASS a credential with a Uuid key is rotated (status=201)
+PASS the new credential has a different, well-formed Uuid key (newId=ed49d84a-cad6-4a27-8b91-29be07b9ef6d)
+PASS the rotation stored exactly one new credential under that key (rows=[11111111-1111-4111-8111-111111111111|alice|1|2099-01-01 00:00:00, 22222222-2222-4222-8222-222222222222|alice|1|2099-01-01 00:00:00, 33333333-3333-4333-8333-333333333333|bob|0|2099-01-01 00:00:00, ed49d84a-cad6-4a27-8b91-29be07b9ef6d|alice|0|2026-11-04 08:53:05.091930])
+PASS the rotated credential is marked used and the new one is not (rows=[11111111-1111-4111-8111-111111111111|alice|1|2099-01-01 00:00:00, 22222222-2222-4222-8222-222222222222|alice|1|2099-01-01 00:00:00, 33333333-3333-4333-8333-333333333333|bob|0|2099-01-01 00:00:00, ed49d84a-cad6-4a27-8b91-29be07b9ef6d|alice|0|2026-11-04 08:53:05.091930])
+PASS replaying the rotated credential is refused with the declared 409 (expected=409 actual=409)
+PASS an unknown Uuid key is the declared 409 (expected=409 actual=409)
+PASS the refusals wrote nothing (rows=[11111111-1111-4111-8111-111111111111|alice|1|2099-01-01 00:00:00, 22222222-2222-4222-8222-222222222222|alice|1|2099-01-01 00:00:00, 33333333-3333-4333-8333-333333333333|bob|0|2099-01-01 00:00:00, ed49d84a-cad6-4a27-8b91-29be07b9ef6d|alice|0|2026-11-04 08:53:05.091930])
+PASS an update that changes nothing is a match, not a refused guard (status=200)
+PASS the touched credential is as it was (rows=[11111111-1111-4111-8111-111111111111|alice|1|2099-01-01 00:00:00, 22222222-2222-4222-8222-222222222222|alice|1|2099-01-01 00:00:00, 33333333-3333-4333-8333-333333333333|bob|0|2099-01-01 00:00:00, ed49d84a-cad6-4a27-8b91-29be07b9ef6d|alice|0|2026-11-04 08:53:05.091930])
+PASS a row the guard does not accept is the declared 409 (expected=409 actual=409)
+PASS the refused credential was not written (rows=[11111111-1111-4111-8111-111111111111|alice|1|2099-01-01 00:00:00, 22222222-2222-4222-8222-222222222222|alice|1|2099-01-01 00:00:00, 33333333-3333-4333-8333-333333333333|bob|0|2099-01-01 00:00:00, ed49d84a-cad6-4a27-8b91-29be07b9ef6d|alice|0|2026-11-04 08:53:05.091930])
+PASS a unique name finds its row (expected=200 actual=200)
+PASS the row found is the one with that name ({name=ann, id=1})
+PASS a name with no row is the declared 404 (expected=404 actual=404)
+PASS a name held by two rows is an internal error, not an arbitrary one of them (expected=500 actual=500)
+PASS registering stores an account (status=201)
+PASS the response does not carry the password or its digest (body={"id":4,"name":"zoe"})
+PASS the stored text is a salted digest and does not contain the password (row=4|zoe|pbkdf2-sha256$600000$uoZHrRI35N4CozwQ4IuKrw$uFoUgAhhcFDyA5/eIb/szbliNna0EkgnmZK3xbtP5Co)
+PASS the right password logs in (expected=200 actual=200)
+PASS the login answers the account without its secret ({name=zoe})
+PASS a wrong password is the declared 401 (expected=401 actual=401)
+PASS an unknown account is the declared 401 (expected=401 actual=401)
+PASS a wrong password and an unknown account are answered identically (wrong={"code":"BadLogin","message":"BadLogin","fields":[]} unknown={"code":"BadLogin","message":"BadLogin","fields":[]})
+PASS a stored text that is not a digest never matches, even when the candidate equals it (expected=401 actual=401)
+PASS the generated application process exited (stopped=true)
+PASS the owned schema was dropped and its absence proved (schema=kcg_conf_run)
+PASS the advisory lock for the owned schema was released (released=true)
+
+U1 POST refresh (Uuid key): status=201 body={"id":"ed49d84a-cad6-4a27-8b91-29be07b9ef6d","owner":"alice","expiresAt":"2026-11-04T08:53:05.091929650Z"}
+U2 POST refresh (replay): status=409 body={"code":"Invalid","message":"Invalid","fields":[]}
+U3 POST refresh (unknown key): status=409 body={"code":"Invalid","message":"Invalid","fields":[]}
+N1 POST touch (the update changes nothing): status=200 body={"id":"22222222-2222-4222-8222-222222222222","owner":"alice","expiresAt":"2099-01-01T00:00:00Z"}
+N2 POST touch (guard false): status=409 body={"code":"Invalid","message":"Invalid","fields":[]}
+K1 GET find-account (hit): status=200 body={"id":1,"name":"ann"}
+K2 GET find-account (miss): status=404 body={"code":"AccountNotFound","message":"AccountNotFound","fields":[]}
+K3 GET find-account (two rows): status=500 body={"timestamp":"2026-10-28T08:53:05.439+00:00","status":500,"error":"Internal Server Error","path":"/api/find-account"}
+S1 POST register: status=201 body={"id":4,"name":"zoe"}
+S2 POST login (right password): status=200 body={"id":4,"name":"zoe"}
+S3 POST login (wrong password): status=401 body={"code":"BadLogin","message":"BadLogin","fields":[]}
+S4 POST login (unknown account): status=401 body={"code":"BadLogin","message":"BadLogin","fields":[]}
+S5 POST login (stored text is not a digest): status=401 body={"code":"BadLogin","message":"BadLogin","fields":[]}

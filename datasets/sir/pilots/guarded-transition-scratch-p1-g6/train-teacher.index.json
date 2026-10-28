@@ -1,0 +1,14 @@
+{
+  "all_four_gates_required": true,
+  "corpus_sha256": "5bcd59cfa1fe4b741f53c63506ac6b8d5f4be30679fb122cca81c724ce58cc5f",
+  "count": 1,
+  "rows": [
+    {
+      "id": "auth-guarded-transition-scratch-p1-v1-teacher-cf4580ad32c3",
+      "oracle_sha256": "1b97ef9a4e5b00653767547f4913ec55176bdb5b364e8a193895f520c6e27ea8",
+      "runtime_run_id": "guard-slice-1a181b591f7-59203",
+      "source_sha256": "98235652f0614b71e8fa9a6574a382fe4765f34868f25bad6e16fa7a72f37b3a",
+      "task_sha256": "194471e752ae33ada9aeeced278e97ccd04fa257286f54f19a2322de46233c41"
+    }
+  ]
+}

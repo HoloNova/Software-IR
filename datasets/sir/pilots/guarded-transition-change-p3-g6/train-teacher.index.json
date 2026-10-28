@@ -1,0 +1,14 @@
+{
+  "all_four_gates_required": true,
+  "corpus_sha256": "f75d0ee35770b58353001128bdf2c639840519b6a88d2372109190006f7aa581",
+  "count": 1,
+  "rows": [
+    {
+      "id": "auth-guarded-transition-change-p3-v1-teacher-b000648105c3",
+      "oracle_sha256": "1b97ef9a4e5b00653767547f4913ec55176bdb5b364e8a193895f520c6e27ea8",
+      "runtime_run_id": "guard-slice-1a181b57adb-3663",
+      "source_sha256": "11de450e33518947a1a5c97c5043852b873f2c7dedeb9ac99abae8190c80d427",
+      "task_sha256": "46746c44d46793c862b52f524571a1016f4f26b39607446ce37cfc788ca3ae09"
+    }
+  ]
+}

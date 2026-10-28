@@ -1,0 +1,14 @@
+{
+  "all_four_gates_required": true,
+  "corpus_sha256": "9d3915cb635e81cc5a45ffb15f30c03d49cae762236820053a1c3404b73b0653",
+  "count": 1,
+  "rows": [
+    {
+      "id": "auth-token-desk-change-p3-v1-teacher-3560e49d8021",
+      "oracle_sha256": "6af88efd16863d6dc8672cca94a1ba6806c4b09ddc109a78e425ae582b57b373",
+      "runtime_run_id": "token-slice-1a181b66caf-46528",
+      "source_sha256": "c9178f88ed49882eef1fd271880f60a28ebf668f57ace08d77406ed1dbb125e0",
+      "task_sha256": "823a45272a2598e43675b55c00be9e21d8162cbf4f4d6c943b0cd33f5f570ba3"
+    }
+  ]
+}

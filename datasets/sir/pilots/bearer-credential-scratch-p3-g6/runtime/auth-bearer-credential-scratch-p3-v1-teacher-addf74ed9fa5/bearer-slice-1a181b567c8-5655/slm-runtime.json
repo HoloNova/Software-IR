@@ -1,0 +1,37 @@
+{
+  "schema_version" : "sir-runtime-evidence/1",
+  "id" : "auth-bearer-credential-scratch-p3-v1-teacher-addf74ed9fa5",
+  "task_sha256" : "7036254e1f2a6ed7d3790e5a12ca2f92eeac13880ae997c31b69f8fe5bca9af9",
+  "oracle_sha256" : "5c3a07bb8e4a52504fdb53adff9a2cefe7ee2ffe09bcdf58be07fc560520e69b",
+  "toolchain_core_sha256" : "51d9566d725403473bcfcb3cac229575919c630ade17bb619e317996ca00b163",
+  "source_sha256" : "aadd4a4d964af83a6c60339c86301f3d30fa138a1f78bd66f4e6feabfba479a7",
+  "generated_digest" : "483c735ab8f816ea317551d7f1d24674a20923b1796eff1af9e90592c73d4544",
+  "run_id" : "bearer-slice-1a181b567c8-5655",
+  "gates" : {
+    "static" : "PASSED",
+    "build" : "PASSED",
+    "business" : "FAILED",
+    "start" : "PASSED"
+  },
+  "environment" : {
+    "test_revision" : "1",
+    "java" : "21.0.12.1",
+    "mysql" : "8.4.13"
+  },
+  "artifacts" : [ {
+    "sha256" : "02bd41e311368c821211771d59f5794ea6354a1d139a29f2249045ef0a1085ff",
+    "path" : "bearer-slice-report.txt"
+  }, {
+    "sha256" : "de58796c017abb5e2f0f75f53b816d30bbc5af1c6f218f61ca46c963c2d60e6e",
+    "path" : "logs/maven.stdout.log"
+  }, {
+    "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "path" : "logs/maven.stderr.log"
+  }, {
+    "sha256" : "e5be3b5559330b03020e880a6534b29cf9803b371c78e02154cd18f8ef39229c",
+    "path" : "logs/spring.stdout.log"
+  }, {
+    "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "path" : "logs/spring.stderr.log"
+  } ]
+}

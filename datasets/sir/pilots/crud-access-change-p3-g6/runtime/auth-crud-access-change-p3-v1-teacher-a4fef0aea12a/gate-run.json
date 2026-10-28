@@ -1,0 +1,36 @@
+{
+  "workflow": ".github/workflows/slm-business-gate.yml",
+  "run_id": 40677203781,
+  "run_url": "https://github.com/HoloNova/Software-IR/actions/runs/40677203781",
+  "head_sha": "ebd82c73e7676df90fa6725b376d43caa17389b6",
+  "inputs": {
+    "bundle": "datasets/sir/pilots/crud-access-change-p3-g6",
+    "sample_id": "auth-crud-access-change-p3-v1-teacher-a4fef0aea12a",
+    "it": "CrudAccessBusinessConformanceIT"
+  },
+  "artifacts": {
+    "slm-gate-auth-crud-access-change-p3-v1-teacher-a4fef0aea12a": {
+      "id": 12811037884,
+      "zip_sha256": "0be43bbacfd4aa0e0b74896edc3f146d4f8371ca79b1fe62f4437d95bcc8d830"
+    },
+    "slm-gate-surefire-auth-crud-access-change-p3-v1-teacher-a4fef0aea12a": {
+      "id": 12810468971,
+      "zip_sha256": "fbd799d75574e38707cccabcba42536a61b380704d960abc79f8301141cad130"
+    }
+  },
+  "job_conclusion": "failure",
+  "gates": {
+    "start": "PASSED",
+    "business": "FAILED",
+    "build": "PASSED",
+    "static": "PASSED"
+  },
+  "checks_passed": 44,
+  "checks_failed": 4,
+  "failed_checks": [
+    "correct role cannot bypass owner (expected=404 actual=200)",
+    "denied patches wrote nothing ([1|1|edited|open|2, 2|1|private|hidden|1])",
+    "rejected patch wrote nothing ([1|1|edited|open|2, 2|1|private|hidden|1])",
+    "owner clean patch (expected=200 actual=409)"
+  ]
+}

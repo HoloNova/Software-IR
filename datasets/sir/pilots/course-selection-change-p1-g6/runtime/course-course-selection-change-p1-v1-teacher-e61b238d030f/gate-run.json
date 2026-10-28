@@ -1,0 +1,33 @@
+{
+  "workflow": ".github/workflows/slm-business-gate.yml",
+  "run_id": 40677194943,
+  "run_url": "https://github.com/HoloNova/Software-IR/actions/runs/40677194943",
+  "head_sha": "ebd82c73e7676df90fa6725b376d43caa17389b6",
+  "inputs": {
+    "bundle": "datasets/sir/pilots/course-selection-change-p1-g6",
+    "sample_id": "course-course-selection-change-p1-v1-teacher-e61b238d030f",
+    "it": "CourseSelectionBusinessConformanceIT"
+  },
+  "artifacts": {
+    "slm-gate-course-course-selection-change-p1-v1-teacher-e61b238d030f": {
+      "id": 12811545425,
+      "zip_sha256": "d5a73af2bdebb5036dedcdf2fa7f9d1a6b7237d07f2d8a8102dadd7158d47d66"
+    },
+    "slm-gate-surefire-course-course-selection-change-p1-v1-teacher-e61b238d030f": {
+      "id": 12810358115,
+      "zip_sha256": "2a63ab9291324415bca7add92cc2fa790cf0bc1cdf83a805490eb0e949723611"
+    }
+  },
+  "job_conclusion": "failure",
+  "gates": {
+    "static": "PASSED",
+    "build": "FAILED",
+    "business": "NOT_RUN",
+    "start": "NOT_RUN"
+  },
+  "checks_passed": 5,
+  "checks_failed": 1,
+  "failed_checks": [
+    "the generated project builds (mvn clean verify) (exitCode=1)"
+  ]
+}

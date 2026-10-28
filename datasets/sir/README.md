@@ -55,9 +55,13 @@
 
 随后对业务失败的 3 份用 `repair --runtime-evidence` 各修一轮（结果在 `checked-r2.jsonl`）：bearer-credential 从零写 `efbdfe58ef70` 与 crud-access 从零写 `3062e8f8e07b` 四门通过，证据在 `runtime/`，`train-teacher.jsonl` 各 1 条；course-selection 改写的修复结果与原候选逐字节相同，未送业务门。**新教师合格训练答案累计 14 条。**详见[数据报告第十阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#第十阶段业务失败候选的运行反馈修复2026-10-28)。
 
+## v6 与需求变体
+
+`pilots/*-g6` 是用 `sir-0.3-general-v6` 对 48 份需求变体题（train 16 份题目各 3 种说法）与 dev 集 2 题的采样；静态失败的又各修一轮（`checked-r1.jsonl`）。36 份送业务门，30 份四门通过，证据在各批次 `runtime/`，`train-teacher.jsonl` 各 1 条。**新教师合格训练答案累计 44 条。**详见[数据报告第十二阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#第十二阶段规则手册-v6-与需求变体2026-10-28)。
+
 ## 学生训练格式
 
-[`student/train-student-v1.jsonl`](student/) 是上面 14 条合格答案用 `student` 命令重新包装的学生训练数据：固定短 system（`experiments/slm/prompts/student-v1.md`）+ 与教师相同的题目 + 最终合格 SIR，不带教师规则手册和修复经过。`.index.json` 记录来源批次、样本与业务门 run；`.tokens.json` 是实测 token 长度，最长训练序列 3,874（deepseek-coder-1.3b）/ 3,042（Qwen3-4B），远低于 16K。详见[数据报告第十一阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#第十一阶段学生训练格式2026-10-28)。
+[`student/train-student-v2.jsonl`](student/) 是全部 44 条合格答案（v1 是当时的 14 条）用 `student` 命令重新包装的学生训练数据：固定短 system（`experiments/slm/prompts/student-v1.md`）+ 与教师相同的题目 + 最终合格 SIR，不带教师规则手册和修复经过。`.index.json` 记录来源批次、样本与业务门 run；`.tokens.json` 是实测 token 长度，两版最长训练序列都是 3,874（deepseek-coder-1.3b）/ 3,042（Qwen3-4B），远低于 16K。详见[数据报告第十一阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#第十一阶段学生训练格式2026-10-28)。
 
 完整说明：[数据报告](../../docs/qualification/SLM_DATA_PILOT_REPORT.md)、[操作命令](../../experiments/slm/README.md)、[模型选择](../../docs/qualification/SLM_MODEL_SELECTION.md)。API密钥不属于数据或metadata。数据Git属性禁止换行转换，保持证据字节哈希。
 

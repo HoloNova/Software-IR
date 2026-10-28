@@ -1,0 +1,33 @@
+{
+  "workflow": ".github/workflows/slm-business-gate.yml",
+  "run_id": 40659729708,
+  "run_url": "https://github.com/HoloNova/Software-IR/actions/runs/40659729708",
+  "head_sha": "0034e20c77bd2413af3bfd83dc4bfb7082487447",
+  "inputs": {
+    "bundle": "datasets/sir/pilots/bearer-credential-scratch-p1-g6",
+    "sample_id": "auth-bearer-credential-scratch-p1-v1-teacher-8ad4880d28dc",
+    "it": "BearerCredentialBusinessConformanceIT"
+  },
+  "artifacts": {
+    "slm-gate-auth-bearer-credential-scratch-p1-v1-teacher-8ad4880d28dc": {
+      "id": 12802224980,
+      "zip_sha256": "e9392b2a63e34aa82b91bb89ed97d87c31397ebda85407d1023b427334b9a515"
+    },
+    "slm-gate-surefire-auth-bearer-credential-scratch-p1-v1-teacher-8ad4880d28dc": {
+      "id": 12802304426,
+      "zip_sha256": "1ecd162079c92e88d87a19ed9ee8b7d4885dae5360649323c0bc036e935ac78b"
+    }
+  },
+  "job_conclusion": "failure",
+  "gates": {
+    "business": "NOT_RUN",
+    "start": "FAILED",
+    "static": "PASSED",
+    "build": "PASSED"
+  },
+  "checks_passed": 8,
+  "checks_failed": 1,
+  "failed_checks": [
+    "the generated application serves the compiled business route (readinessUrl=http://127.0.0.1:18080/api/get-user?id=1)"
+  ]
+}
