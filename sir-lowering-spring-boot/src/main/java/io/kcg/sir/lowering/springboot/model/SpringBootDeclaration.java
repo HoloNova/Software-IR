@@ -56,7 +56,7 @@ public sealed interface SpringBootDeclaration
       LoweredJavaType outputType,
       List<SymbolId> failures,
       SpringBootWorkflow workflow,
-       List<RequiredArithmeticInput> arithmeticInputs
+       List<RequiredInput> requiredInputs
    ) implements SpringBootDeclaration {
       public CapabilityDeclaration(LoweredNodeId id, LoweredOrigin origin, SymbolId sourceSymbol, String javaName,
             String serviceName, String controllerName, String methodName, HttpMethod httpMethod, String route,
@@ -85,14 +85,18 @@ public sealed interface SpringBootDeclaration
          Objects.requireNonNull(outputType, "outputType");
          failures = List.copyOf(Objects.requireNonNull(failures, "failures"));
          Objects.requireNonNull(workflow, "workflow");
-         arithmeticInputs = List.copyOf(Objects.requireNonNull(arithmeticInputs, "arithmeticInputs"));
+         requiredInputs = List.copyOf(Objects.requireNonNull(requiredInputs, "requiredInputs"));
       }
    }
 
-   /** A formally bound input field required by this capability's numeric operations. */
-   record RequiredArithmeticInput(LoweredNodeId id, LoweredOrigin origin, SymbolId inputSymbol,
+   /**
+    * An input field this capability requires a value for before its workflow runs: a missing or null value is
+    * 400 INVALID_REQUEST with NotNull at {@code fieldPath}. Which fields are required is decided by lowering
+    * (every non-Optional field except paging-only page/size); see the language reference on inputs.
+    */
+   record RequiredInput(LoweredNodeId id, LoweredOrigin origin, SymbolId inputSymbol,
          SymbolId fieldSymbol, String propertyName, String fieldPath) {
-      public RequiredArithmeticInput {
+      public RequiredInput {
          Objects.requireNonNull(id, "id");
          Objects.requireNonNull(origin, "origin");
          Objects.requireNonNull(inputSymbol, "inputSymbol");

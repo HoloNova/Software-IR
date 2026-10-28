@@ -701,12 +701,13 @@ public final class SpringBootModelLowerer {
         Optional<ActorBinding> actorBinding = value.actorSymbol().map(this::lowerActorBinding);
         TransportPlan transportPlan = this.lowerTransportPlan(value, httpMethod, input.isPresent());
         SpringBootWorkflow workflow = this.lowerWorkflow(value);
-        var arithmeticInputs = input.map(variable -> ArithmeticInputs.members(workflow, variable.symbol()).stream()
-                .map(member -> new SpringBootDeclaration.RequiredArithmeticInput(
-                        this.nodeId(value.id().value() + "/" + member.resolvedMember().value(), "arithmetic-input"),
-                        member.origin(), variable.symbol(), member.resolvedMember(), member.targetMember(),
-                        member.targetMember())).toList()).orElse(List.of());
-        return new SpringBootDeclaration.CapabilityDeclaration(this.symbolId(value.id(), "capability"), this.origin(value.id(), value.sourceNodeId(), value.span()), value.id(), value.name(), value.name() + "Service", value.name() + "Controller", this.lowerFirst(value.name()), httpMethod, "/api" + value.path().orElse("/" + this.kebab(value.name())), kind, transactionMode, authenticated, actor, input, actorBinding, transportPlan, this.lowerType(value.outputType()), value.fails(), workflow, arithmeticInputs);
+        var requiredInputs = input.flatMap(variable -> this.inputDeclaration(variable.symbol())
+                .map(payload -> RequiredInputs.members(this.lowerInput(payload), workflow, variable.symbol()).stream()
+                        .map(member -> new SpringBootDeclaration.RequiredInput(
+                                this.nodeId(value.id().value() + "/" + member.field().value(), "required-input"),
+                                member.origin(), variable.symbol(), member.field(), member.property(),
+                                member.property())).toList())).orElse(List.of());
+        return new SpringBootDeclaration.CapabilityDeclaration(this.symbolId(value.id(), "capability"), this.origin(value.id(), value.sourceNodeId(), value.span()), value.id(), value.name(), value.name() + "Service", value.name() + "Controller", this.lowerFirst(value.name()), httpMethod, "/api" + value.path().orElse("/" + this.kebab(value.name())), kind, transactionMode, authenticated, actor, input, actorBinding, transportPlan, this.lowerType(value.outputType()), value.fails(), workflow, requiredInputs);
     }
 
     private ActorBinding lowerActorBinding(SymbolId actorSymbol) {
@@ -1470,7 +1471,7 @@ public final class SpringBootModelLowerer {
     }
 
     private SpringExpression decimalOperand(SpringExpression expression, LoweredJavaType resultType) {
-        return ArithmeticInputs.integral(expression.type())
+        return RequiredInputs.integral(expression.type())
                 ? new SpringExpression.IntegralToDecimal(this.nodeId(expression.id().value(), "integral-to-decimal"),
                         expression.origin(), resultType, expression)
                 : expression;

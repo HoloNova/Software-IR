@@ -53,7 +53,7 @@ final class WorkflowRenderer {
       List<SpringExpression.StringMatch> stringMatches = new ArrayList<>();
       SpringBootWorkflow workflow = capability.workflow();
       String inputName = capability.input().map(Variable::targetName).orElse(null);
-      renderArithmeticInputs(ctx, capability, inputName, lines);
+      renderRequiredInputs(ctx, capability, inputName, lines);
 
       for (Step step : workflow.steps()) {
          renderStep(ctx, workflow, capability, step, capability.transportPlan().responseRepresentation(), inputName, variableNames, imports, currentPackage, lines, mappers, stringMatches);
@@ -62,18 +62,19 @@ final class WorkflowRenderer {
       return new WorkflowRenderer.RenderedWorkflow(List.copyOf(lines), List.copyOf(mappers.values()), List.copyOf(stringMatches));
    }
 
-   private static void renderArithmeticInputs(GenerationContext ctx, CapabilityDeclaration capability,
+   /** Missing or null required input fields answer 400 INVALID_REQUEST with NotNull before any step runs. */
+   private static void renderRequiredInputs(GenerationContext ctx, CapabilityDeclaration capability,
          String inputName, List<String> lines) {
-      if (capability.arithmeticInputs().isEmpty()) return;
+      if (capability.requiredInputs().isEmpty()) return;
       WriteSupport support = WriteSupport.of(ctx.model());
       lines.add("        {");
       lines.add("            if (" + inputName + " == null) throw " + support.exceptionBaseFqn() + ".missingMember(\"input\");");
-      lines.add("            var arithmeticInputErrors = new java.util.ArrayList<" + support.fieldErrorFqn() + ">();");
-      for (var field : capability.arithmeticInputs()) {
-         lines.add("            " + support.validationSupportFqn() + ".notNull(arithmeticInputErrors, "
+      lines.add("            var requiredInputErrors = new java.util.ArrayList<" + support.fieldErrorFqn() + ">();");
+      for (var field : capability.requiredInputs()) {
+         lines.add("            " + support.validationSupportFqn() + ".notNull(requiredInputErrors, "
                + StringEscape.javaString(field.fieldPath()) + ", " + inputName + "." + getterName(field.propertyName()) + "());");
       }
-      lines.add("            if (!arithmeticInputErrors.isEmpty()) throw " + support.exceptionBaseFqn() + ".invalidRequest(arithmeticInputErrors);");
+      lines.add("            if (!requiredInputErrors.isEmpty()) throw " + support.exceptionBaseFqn() + ".invalidRequest(requiredInputErrors);");
       lines.add("        }");
    }
 

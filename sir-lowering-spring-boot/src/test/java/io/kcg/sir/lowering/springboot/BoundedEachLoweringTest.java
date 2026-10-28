@@ -28,7 +28,7 @@ class BoundedEachLoweringTest {
             var steps=new java.util.ArrayList<>(c.workflow().steps());steps.add(2,new SpringBootWorkflow.ValidateStep(
                 new io.kcg.sir.lowering.api.LoweredNodeId(escaped.id().value()+"/escape"),escaped.origin(),copyForEscape(escaped.condition()),escaped.errorSymbol()));
             return (SpringBootDeclaration)new SpringBootDeclaration.CapabilityDeclaration(c.id(),c.origin(),c.sourceSymbol(),c.javaName(),c.serviceName(),c.controllerName(),c.methodName(),c.httpMethod(),c.route(),c.kind(),c.transactionMode(),c.authenticated(),c.actor(),c.input(),c.actorBinding(),c.transportPlan(),c.outputType(),c.failures(),
-                new SpringBootWorkflow(c.workflow().id(),c.workflow().origin(),c.workflow().variables(),steps),c.arithmeticInputs());
+                new SpringBootWorkflow(c.workflow().id(),c.workflow().origin(),c.workflow().variables(),steps),c.requiredInputs());
         }).toList();
         var damaged=new SpringBootLoweredModel(source.irVersion(),source.profile(),source.softwareName(),source.displayName(),source.basePackage(),declarations,source.artifacts(),source.mavenProject(),source.applicationMain(),source.projectArtifacts());
         var diagnostics=new io.kcg.sir.lowering.springboot.api.SpringBootLoweredIrValidator().validate(damaged);
@@ -56,7 +56,7 @@ class BoundedEachLoweringTest {
             }).toList();
             return (SpringBootDeclaration)new SpringBootDeclaration.CapabilityDeclaration(c.id(),c.origin(),c.sourceSymbol(),c.javaName(),c.serviceName(),c.controllerName(),c.methodName(),c.httpMethod(),c.route(),c.kind(),
                 damage.equals("transaction")?SpringBootDeclaration.TransactionMode.REQUIRED:c.transactionMode(),c.authenticated(),c.actor(),c.input(),c.actorBinding(),c.transportPlan(),c.outputType(),damage.equals("failure")?java.util.List.of():c.failures(),
-                new SpringBootWorkflow(c.workflow().id(),c.workflow().origin(),c.workflow().variables(),steps),c.arithmeticInputs());
+                new SpringBootWorkflow(c.workflow().id(),c.workflow().origin(),c.workflow().variables(),steps),c.requiredInputs());
         }).toList();
         var artifacts=model.projectArtifacts().stream().map(a -> a instanceof ProjectArtifact.ApplicationConfig config && damage.equals("cache")?
             (ProjectArtifact)new ProjectArtifact.ApplicationConfig(config.id(),config.origin(),config.path(),config.applicationName(),config.rejectUnknownRequestProperties(),false):a).toList();

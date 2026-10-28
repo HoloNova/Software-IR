@@ -12,8 +12,11 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/** The input policy is capability-local, not a global NotNull change to a shared DTO. */
-class ArithmeticInputRuntimeTest {
+/**
+ * Every non-Optional input field must carry a value before the workflow runs, whatever the workflow does with it.
+ * The policy is capability-local, not a NotNull on the shared DTO: a capability that pages keeps its page/size defaults.
+ */
+class RequiredInputRuntimeTest {
     private static URLClassLoader loader;
     private static final String SOURCE = """
             sir 0.3
@@ -30,6 +33,15 @@ class ArithmeticInputRuntimeTest {
                   field page: PageNo; field size: PageSize; field flag: Flag;
                 }
                 input Reference { field entry: Ref<Entry>; }
+                enum Color { RED, BLUE }
+                input Kinds {
+                  field happenedAt: Moment; field active: Flag; field label: Text; field entry: Ref<Entry>; field color: Color;
+                  field note: Optional<Text>;
+                }
+                capability Kinded {
+                  input Kinds; output Unit; fails Refused; requires readonly; expose query;
+                  workflow { validate input.active else Refused; return unit; }
+                }
                 error Refused http 409;
                 capability ReferenceMath {
                   input Reference; output Unit; fails Refused; requires readonly; expose query;
@@ -67,17 +79,23 @@ class ArithmeticInputRuntimeTest {
     }
     @AfterAll static void close() throws Exception { if (loader != null) loader.close(); }
 
-    @Test void missingArithmeticValuesAreStructuredFieldErrorsInsteadOfUnboxingFailures() throws Exception {
+    @Test void everyMissingNonOptionalFieldIsAStructuredFieldErrorInDeclaredOrder() throws Exception {
         Object input = numbers();
         input.getClass().getMethod("setExpected", Integer.class).invoke(input, 3);
         Throwable failure = failure("Add", input);
         assertEquals("ApiException", failure.getClass().getSimpleName());
         assertEquals("INVALID_REQUEST", failure.getClass().getMethod("code").invoke(failure));
+        // Add does not page, so page and size are ordinary required fields here; expected is only compared.
+        assertEquals(List.of("left", "right", "page", "size", "flag"), paths(failure));
+    }
+
+    @Test void fieldsThatAreOnlyComparedStoredOrUnreadAreRequiredForEveryTypeButOptional() throws Exception {
+        Object input = loader.loadClass("example.numeric.api.Kinds").getConstructor().newInstance();
+        Throwable failure = failure("Kinded", input);
+        assertEquals("INVALID_REQUEST", failure.getClass().getMethod("code").invoke(failure));
+        assertEquals(List.of("happenedAt", "active", "label", "entryId", "color"), paths(failure));
         var fields = (List<?>) failure.getClass().getMethod("fields").invoke(failure);
-        assertEquals(List.of("left", "right"), fields.stream().map(field -> {
-            try { return (String) field.getClass().getMethod("path").invoke(field); }
-            catch (ReflectiveOperationException error) { throw new AssertionError(error); }
-        }).toList());
+        for (Object field : fields) assertEquals("NotNull", field.getClass().getMethod("code").invoke(field));
     }
 
     @Test void referenceIdentityReportsTheActualDtoFieldAndAcceptsItsNumericValue() throws Exception {
@@ -107,6 +125,9 @@ class ArithmeticInputRuntimeTest {
         Object input = numbers();
         input.getClass().getMethod("setRight", Integer.class).invoke(input, 2);
         input.getClass().getMethod("setExpected", Integer.class).invoke(input, 12);
+        input.getClass().getMethod("setPage", Integer.class).invoke(input, 1);
+        input.getClass().getMethod("setSize", Integer.class).invoke(input, 1);
+        input.getClass().getMethod("setFlag", Boolean.class).invoke(input, false);
         var serviceType = loader.loadClass("example.numeric.application.AddService");
         try (var factory = jakarta.validation.Validation.byDefaultProvider().configure()
                 .messageInterpolator(new org.hibernate.validator.messageinterpolation.ParameterMessageInterpolator()).buildValidatorFactory()) {
@@ -121,7 +142,7 @@ class ArithmeticInputRuntimeTest {
         }
     }
 
-    @Test void theSameDtoCanStillUseDefaultPaginationWithoutArithmeticValues() throws Exception {
+    @Test void aCapabilityThatPagesKeepsPageAndSizeDefaultsOnTheSameDto() throws Exception {
         Object input = numbers();
         try (var factory = jakarta.validation.Validation.byDefaultProvider().configure()
                 .messageInterpolator(new org.hibernate.validator.messageinterpolation.ParameterMessageInterpolator()).buildValidatorFactory()) {
@@ -134,9 +155,23 @@ class ArithmeticInputRuntimeTest {
             default -> throw new AssertionError(method);
         });
         var service = loader.loadClass("example.numeric.application.PagedService").getConstructor(mapper).newInstance(proxy);
+        var paged = service.getClass().getMethod("paged", input.getClass());
+        // The fields Paged does not page with are still required; only page and size may be left out.
+        Throwable missing = assertThrows(InvocationTargetException.class, () -> paged.invoke(service, input)).getCause();
+        assertEquals(List.of("left", "right", "expected", "flag"), paths(missing));
+        for (String setter : List.of("setLeft", "setRight", "setExpected")) input.getClass().getMethod(setter, Integer.class).invoke(input, 0);
+        input.getClass().getMethod("setFlag", Boolean.class).invoke(input, false);
         Object page = assertDoesNotThrow(() -> service.getClass().getMethod("paged", input.getClass()).invoke(service, input));
         assertEquals(1, page.getClass().getMethod("getPage").invoke(page));
         assertTrue((Integer) page.getClass().getMethod("getSize").invoke(page) > 0);
+    }
+
+    private static List<String> paths(Throwable failure) throws Exception {
+        var fields = (List<?>) failure.getClass().getMethod("fields").invoke(failure);
+        return fields.stream().map(field -> {
+            try { return (String) field.getClass().getMethod("path").invoke(field); }
+            catch (ReflectiveOperationException error) { throw new AssertionError(error); }
+        }).toList();
     }
 
     private static Object numbers() throws Exception { return loader.loadClass("example.numeric.api.Numbers").getConstructor().newInstance(); }

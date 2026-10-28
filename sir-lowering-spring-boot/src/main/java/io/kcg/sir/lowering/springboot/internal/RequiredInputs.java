@@ -1,18 +1,67 @@
 package io.kcg.sir.lowering.springboot.internal;
 
+import io.kcg.sir.lowering.api.LoweredOrigin;
 import io.kcg.sir.lowering.springboot.model.LoweredJavaType;
+import io.kcg.sir.lowering.springboot.model.SpringBootDeclaration;
 import io.kcg.sir.lowering.springboot.model.SpringBootWorkflow;
 import io.kcg.sir.lowering.springboot.model.SpringExpression;
 import io.kcg.sir.semantic.symbol.SymbolId;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
-/** The formal INPUT members that numeric operations actually depend on, in first-use order. */
-final class ArithmeticInputs {
-    private ArithmeticInputs() {}
+/**
+ * The INPUT fields a capability checks for a value before its workflow runs.
+ *
+ * <p>Every non-Optional field of a plain payload is required, whether the workflow compares it, stores it,
+ * computes with it or never reads it: "not Optional" is the author's way of saying "the request must carry it".
+ * The one exception is a field the capability uses only as the page or size of a paged step; the target fills
+ * those with its paging defaults. Paging is told by the step's binding, not by the field's name, and a page or
+ * size that also feeds arithmetic, a built-in function or a repeat count is required like any other operand.
+ * A PATCH payload keeps the earlier rule: only its arithmetic operands are listed, because its changes keep
+ * "absent means unchanged" (IR validation rejects a change used as an operand) and the envelope already requires
+ * the identity and expected version.
+ */
+final class RequiredInputs {
+    private RequiredInputs() {}
 
-    static List<SpringExpression.MemberExpression> members(SpringBootWorkflow workflow, SymbolId input) {
+    /** One required field: the formal field, its transport property and where the requirement comes from. */
+    record Member(SymbolId field, String property, LoweredOrigin origin) {}
+
+    static List<Member> members(SpringBootDeclaration.InputDeclaration payload, SpringBootWorkflow workflow, SymbolId input) {
+        List<SpringExpression.MemberExpression> arithmetic = operands(workflow, input);
+        if (payload.patch().isPresent()) {
+            return arithmetic.stream().map(member -> new Member(member.resolvedMember(), member.targetMember(), member.origin())).toList();
+        }
+        Set<SymbolId> operands = new HashSet<>();
+        arithmetic.forEach(member -> operands.add(member.resolvedMember()));
+        Set<SymbolId> pagingOnly = new HashSet<>();
+        for (var step : SpringBootWorkflow.walk(workflow.steps()).toList()) {
+            switch (step) {
+                case SpringBootWorkflow.FindStep value -> value.page().ifPresent(page -> paging(page, pagingOnly));
+                case SpringBootWorkflow.GroupedSumStep value -> paging(value.page(), pagingOnly);
+                default -> { }
+            }
+        }
+        pagingOnly.removeAll(operands);
+        List<Member> required = new ArrayList<>();
+        for (var field : payload.fields()) {
+            if (field.type() instanceof LoweredJavaType.OptionalValue || pagingOnly.contains(field.sourceSymbol())) continue;
+            required.add(new Member(field.sourceSymbol(), field.javaName(), field.origin()));
+        }
+        return List.copyOf(required);
+    }
+
+    private static void paging(SpringBootWorkflow.PageSpec page, Set<SymbolId> fields) {
+        fields.add(page.pageFieldSymbol());
+        fields.add(page.sizeFieldSymbol());
+    }
+
+    /** The INPUT members that numeric operations, built-in functions or a repeat count depend on, in first-use order. */
+    private static List<SpringExpression.MemberExpression> operands(SpringBootWorkflow workflow, SymbolId input) {
         Map<SymbolId, SpringExpression.MemberExpression> fields = new LinkedHashMap<>();
         for (var step : io.kcg.sir.lowering.springboot.model.SpringBootWorkflow.walk(workflow.steps()).toList()) {
             switch (step) {

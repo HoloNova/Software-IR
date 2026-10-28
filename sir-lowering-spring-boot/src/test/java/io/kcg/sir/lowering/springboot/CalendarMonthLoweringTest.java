@@ -24,7 +24,7 @@ class CalendarMonthLoweringTest {
             return (SpringBootDeclaration)new SpringBootDeclaration.CapabilityDeclaration(c.id(),c.origin(),c.sourceSymbol(),c.javaName(),c.serviceName(),c.controllerName(),c.methodName(),c.httpMethod(),c.route(),
                 damage.equals("command")?SpringBootDeclaration.CapabilityKind.COMMAND:c.kind(),
                 damage.equals("transaction")?SpringBootDeclaration.TransactionMode.READ_ONLY:c.transactionMode(),c.authenticated(),c.actor(),c.input(),c.actorBinding(),c.transportPlan(),c.outputType(),
-                damage.equals("failure")?java.util.List.of():c.failures(),flow,c.arithmeticInputs());
+                damage.equals("failure")?java.util.List.of():c.failures(),flow,c.requiredInputs());
         }).toList();
         var artifacts=model.projectArtifacts().stream().map(a -> a instanceof ProjectArtifact.ValidationSupport v && (damage.equals("support") || damage.equals("binding"))
             ?(ProjectArtifact)new ProjectArtifact.ValidationSupport(v.id(),v.origin(),v.path(),v.packageName(),v.simpleName(),v.fieldErrorSimpleName(),v.constraintCodes().stream().filter(x -> !damage.equals("support") || !x.equals("timeZone")).toList()):a).toList();

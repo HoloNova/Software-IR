@@ -44,7 +44,7 @@ class MultiplicationToolchainContractTest {
         var capability = compiled.loweredModel().declarations().stream().filter(SpringBootDeclaration.CapabilityDeclaration.class::isInstance)
                 .map(SpringBootDeclaration.CapabilityDeclaration.class::cast).filter(cap -> cap.javaName().equals("Multiply"))
                 .findFirst().orElseThrow();
-        assertTrue(capability.arithmeticInputs().stream().anyMatch(input -> input.fieldPath().equals("units") && input.propertyName().equals("units")));
+        assertTrue(capability.requiredInputs().stream().anyMatch(input -> input.fieldPath().equals("units") && input.propertyName().equals("units")));
         assertTrue(content(compiled, "MultiplyService.java").contains("java.math.BigDecimal.valueOf(input.getUnits())"));
         assertTrue(content(compiled, "PurchaseProductService.java").contains("java.math.BigDecimal.valueOf(input.getQuantity())"));
     }
