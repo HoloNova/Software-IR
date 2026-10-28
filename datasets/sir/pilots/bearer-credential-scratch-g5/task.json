@@ -1,0 +1,155 @@
+{
+  "base_source": null,
+  "contract": {
+    "access_minutes": 15,
+    "capabilities": [
+      "GetUser",
+      "Register",
+      "Login",
+      "Logout",
+      "PostNote"
+    ],
+    "declared_errors": {
+      "BadLogin": 401,
+      "BadToken": 401,
+      "UserNotFound": 404
+    },
+    "entities": [
+      "User",
+      "AccessToken",
+      "Note"
+    ],
+    "enums": {},
+    "interfaces": {
+      "GetUser": {
+        "request_fields": [
+          "id"
+        ],
+        "response_fields": [
+          "id",
+          "name"
+        ],
+        "route": "GET /api/get-user"
+      },
+      "Login": {
+        "request_fields": [
+          "name",
+          "password"
+        ],
+        "response_fields": [
+          "id",
+          "expiresAt"
+        ],
+        "route": "POST /api/login"
+      },
+      "Logout": {
+        "request_fields": [
+          "token"
+        ],
+        "response_fields": [
+          "id",
+          "expiresAt"
+        ],
+        "route": "POST /api/logout"
+      },
+      "PostNote": {
+        "request_fields": [
+          "text"
+        ],
+        "response_fields": [
+          "id",
+          "text"
+        ],
+        "route": "POST /api/post-note"
+      },
+      "Register": {
+        "request_fields": [
+          "name",
+          "password"
+        ],
+        "response_fields": [
+          "id",
+          "name"
+        ],
+        "route": "POST /api/register"
+      }
+    },
+    "login_request": [
+      "name",
+      "password"
+    ],
+    "logout_request": [
+      "token"
+    ],
+    "namespace": "example.notes",
+    "note_response": [
+      "id",
+      "text"
+    ],
+    "post_note_request": [
+      "text"
+    ],
+    "readiness": "GET /api/get-user?id=1",
+    "register_request": [
+      "name",
+      "password"
+    ],
+    "token_response": [
+      "id",
+      "expiresAt"
+    ],
+    "user_response": [
+      "id",
+      "name"
+    ]
+  },
+  "ddl_source": "sir-toolchain-application/src/test/resources/conformance/mysql/bearer-credential-ddl.sql",
+  "family": "auth.bearer-credential",
+  "id": "auth-bearer-credential-scratch-v1",
+  "oracle": {
+    "files": [
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/AdvisoryLockKey.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BearerCredentialBusinessConformanceIT.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BusinessEndpointReadiness.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BusinessSliceHarness.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/ChildEnvironmentBuilder.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/ConformanceFixtures.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/ConformanceJvmLimits.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/DiskTree.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceDirectory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceOwnershipInventory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceRootProof.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceSecretScanner.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/HttpAssertionClient.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MavenProjectRunner.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MysqlObserver.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MysqlRuntimeJdbcUrl.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MysqlRuntimeTrace.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/OwnedPathEntry.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/OwnedPathInventory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/OwnedRunDirectory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SchemaName.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SchemaSqlRenderer.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SecretCatalog.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SlmCandidateSupport.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SpringApplicationProcess.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/StreamingSecretRedactor.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/StrongFileIdentity.java",
+      "sir-toolchain-application/src/test/resources/conformance/mysql/bearer-credential-ddl.sql",
+      "sir-toolchain-application/src/test/resources/conformance/mysql/bearer-credential-seed.sql",
+      "sir-toolchain-application/src/test/resources/valid/bearer-credential.sir"
+    ],
+    "id": "bearer-credential-http-mysql-v1"
+  },
+  "reference_evidence": {
+    "commit": "0c4fb4a4c30b14658f874d3cc21f3aabe0c27457",
+    "kind": "existing-reference-only-not-candidate-qualification",
+    "run_url": "https://github.com/HoloNova/Software-IR/actions/runs/40330013391"
+  },
+  "reference_source": "sir-toolchain-application/src/test/resources/valid/bearer-credential.sir",
+  "requirement": "Register 接收 name、password，创建并保存账号，成功返回账号 id、name，不返回口令；GetUser 按 id 查询并返回 id、name，不存在返回 404 UserNotFound。PostNote 接收非空白 text，成功创建笔记并返回 id、text。Login 接收 name、password，正确口令返回 201 及 id、expiresAt；id 是 UUID，令牌关联该账号并保存，15 分钟后到期，错误口令返回 401 BadLogin。PostNote 以 Authorization 的 Bearer 令牌识别作者，方案名不区分大小写；有效令牌的笔记保存到所属用户，匿名、错误方案、缺令牌、非 UUID、未知或已失效令牌均返回 401 且不写笔记。Logout 接收 token，返回 200 并使该令牌立即失效，不影响其他用户令牌；不存在的令牌返回 401 BadToken。返回完整的 sir 0.3 文档，不要 Java、SQL 或解释。",
+  "revision": "1",
+  "schema_version": "sir-task/1",
+  "sir_version": "0.3",
+  "split": "train"
+}

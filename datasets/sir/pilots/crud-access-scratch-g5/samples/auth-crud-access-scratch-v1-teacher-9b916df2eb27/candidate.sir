@@ -1,0 +1,260 @@
+sir 0.3
+software CrudAccess {
+  metadata { displayName "CrudAccess"; namespace "example.crudaccess"; }
+  target { language java 21; framework spring_boot; persistence mybatis_plus; database mysql; build maven; interface rest; }
+  sources { }
+  imports { }
+  declarations {
+    enum Role { READER, ADMIN }
+
+    entity User persistent {
+      identity id: Id generated auto;
+      field role: Role default Role.READER;
+    }
+
+    entity AccessToken persistent {
+      identity id: Token generated uuid;
+      field owner: Ref<User>;
+      field expiresAt: Moment;
+      credential subject owner expires expiresAt;
+    }
+
+    entity Book persistent {
+      identity id: Id generated auto;
+      field title: Name where length(1, 64);
+      field stock: Count default 5;
+    }
+
+    entity Post persistent {
+      identity id: Id generated auto;
+      field author: Ref<User>;
+      field body: Text where length(1, 255);
+      field state: Code default "open";
+      field version: Version;
+    }
+
+    view BookView from Book {
+      field id: Id;
+      field title: Name;
+      field stock: Count;
+    }
+
+    view PostView from Post {
+      field id: Id;
+      field author: Ref<User>;
+      field body: Text;
+      field state: Code;
+      field version: Version;
+    }
+
+    input CreateBookInput {
+      field title: Name where length(1, 64);
+    }
+
+    input UpdateBookInput {
+      field id: Id;
+      field title: Name where length(1, 64);
+    }
+
+    input BookIdInput {
+      field id: Id;
+    }
+
+    input ListBookInput {
+      field page: PageNo;
+      field size: PageSize;
+    }
+
+    input CreatePostInput {
+      field body: Text where length(1, 255);
+    }
+
+    input UpdatePostInput patch of Post {
+      field id: Id;
+      field body: Text;
+    }
+
+    input PostIdInput {
+      field id: Id;
+    }
+
+    input ListPostInput {
+      field page: PageNo;
+      field size: PageSize;
+    }
+
+    error BookNotFound http 404;
+    error PostNotFound http 404;
+    error Forbidden http 403;
+    error StalePost http 409;
+    error EmptyChange http 400;
+    error BadPage http 400;
+
+    capability CreateBook {
+      actor Ref<User>;
+      input CreateBookInput;
+      output BookView;
+      fails Forbidden;
+      requires authenticated;
+      requires atomic;
+      expose command at "/library/books";
+      workflow {
+        validate actor.role == Role.ADMIN else Forbidden;
+        create Book as made {
+          title: input.title;
+          stock: 5;
+        }
+        persist made;
+        return made;
+      }
+    }
+
+    capability GetBook {
+      input BookIdInput;
+      output BookView;
+      fails BookNotFound;
+      requires readonly;
+      expose query at "/library/books/{id}";
+      workflow {
+        load Book by input.id as found else BookNotFound;
+        return found;
+      }
+    }
+
+    capability ListBook {
+      input ListBookInput;
+      output Page<BookView>;
+      fails BadPage;
+      requires readonly;
+      expose query at "/library/books";
+      workflow {
+        find Book where true order by id ascending Page input.page, input.size else BadPage as rows;
+        return rows;
+      }
+    }
+
+    capability UpdateBook {
+      actor Ref<User>;
+      input UpdateBookInput;
+      output BookView;
+      fails BookNotFound;
+      fails Forbidden;
+      requires authenticated;
+      requires atomic;
+      expose command put at "/library/books/{id}";
+      workflow {
+        validate actor.role == Role.ADMIN else Forbidden;
+        load Book by input.id as found else BookNotFound;
+        update found {
+          title: input.title;
+        }
+        persist found;
+        return found;
+      }
+    }
+
+    capability DeleteBook {
+      actor Ref<User>;
+      input BookIdInput;
+      output Unit;
+      fails BookNotFound;
+      fails Forbidden;
+      requires authenticated;
+      requires atomic;
+      expose command delete at "/library/books/{id}";
+      workflow {
+        validate actor.role == Role.ADMIN else Forbidden;
+        load Book by input.id as found else BookNotFound;
+        delete found;
+        return unit;
+      }
+    }
+
+    capability CreatePost {
+      actor Ref<User>;
+      input CreatePostInput;
+      output PostView;
+      fails Forbidden;
+      requires authenticated;
+      requires atomic;
+      expose command at "/public/posts";
+      workflow {
+        validate actor.role == Role.ADMIN else Forbidden;
+        create Post as made {
+          author: actor;
+          body: input.body;
+          state: "open";
+          version: 1;
+        }
+        persist made;
+        return made;
+      }
+    }
+
+    capability GetPost {
+      input PostIdInput;
+      output PostView;
+      fails PostNotFound;
+      requires readonly;
+      expose query at "/public/posts/{id}";
+      workflow {
+        load Post by input.id as found else PostNotFound;
+        return found;
+      }
+    }
+
+    capability ListPost {
+      input ListPostInput;
+      output Page<PostView>;
+      fails BadPage;
+      requires readonly;
+      expose query at "/public/posts";
+      workflow {
+        find Post where item.state != "hidden" order by id ascending Page input.page, input.size else BadPage as rows;
+        return rows;
+      }
+    }
+
+    capability UpdatePost {
+      actor Ref<User>;
+      input UpdatePostInput;
+      output PostView;
+      fails EmptyChange;
+      fails Forbidden;
+      fails PostNotFound;
+      fails StalePost;
+      requires authenticated;
+      requires atomic;
+      expose command at "/public/posts/{id}";
+      workflow {
+        validate actor.role == Role.ADMIN else Forbidden;
+        load Post by input.id as found else PostNotFound;
+        validate found.author == actor else PostNotFound;
+        validate input.body.present else EmptyChange;
+        update found {
+          body: input.body;
+        }
+        persist found else StalePost;
+        return found;
+      }
+    }
+
+    capability DeletePost {
+      actor Ref<User>;
+      input PostIdInput;
+      output Unit;
+      fails Forbidden;
+      fails PostNotFound;
+      requires authenticated;
+      requires atomic;
+      expose command delete at "/public/posts/{id}";
+      workflow {
+        validate actor.role == Role.ADMIN else Forbidden;
+        load Post by input.id as found else PostNotFound;
+        validate found.author == actor else PostNotFound;
+        delete found;
+        return unit;
+      }
+    }
+  }
+}
