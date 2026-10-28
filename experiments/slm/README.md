@@ -64,6 +64,8 @@ v2（2026-10-25）补的是首批暴露的两处提示不足：实体成员的�
 
 `sir-0.3-general-v4.md`（2026-10-28）再补一条：patch 字段在 `update` 里直接绑定 `input.字段`，没传的字段自动保留原值，SIR 没有 `? :` 三元表达式。
 
+`sir-0.3-general-v5.md`（2026-10-28）补 v4 跑完 train 集暴露的六条：按主键加载不写字段名；`expose command` 后只能接 `put`／`delete`；`persist … else` 只用于版本冲突和 unique 冲突；变量名也不能用保留字；字段修饰顺序给出例子；`.present` 只用于 patch 输入。
+
 ```bash
 python -m experiments.slm.data prepare --bundle datasets/sir/pilots/dual-token-v2 \
   --system-prompt experiments/slm/prompts/sir-0.3-auth-v2.md
