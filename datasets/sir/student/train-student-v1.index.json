@@ -1,0 +1,161 @@
+{
+  "corpus_sha256": "ab8ee0a3830fa8998a47ea4ace097340b187ca79b21e383fbf13d9bd5c301ee2",
+  "count": 14,
+  "rows": [
+    {
+      "bundle": "datasets/sir/pilots/bearer-credential-change-g1",
+      "completion_chars": 2998,
+      "family": "auth.bearer-credential",
+      "id": "auth-bearer-credential-change-v1-teacher-07b9ea18ef67",
+      "prompt_chars": 4906,
+      "runtime_run_id": "bearer-slice-1a180461027-12008",
+      "source_sha256": "96fa6ef4fc48b76dd934ef49753f3ea7e4a0563b1284ec4d6891152f367708d6",
+      "split": "train",
+      "task_id": "auth-bearer-credential-change-v1"
+    },
+    {
+      "bundle": "datasets/sir/pilots/bearer-credential-scratch-g5",
+      "completion_chars": 3189,
+      "family": "auth.bearer-credential",
+      "id": "auth-bearer-credential-scratch-v1-teacher-efbdfe58ef70",
+      "prompt_chars": 3126,
+      "runtime_run_id": "bearer-slice-1a1806c6c10-22353",
+      "source_sha256": "bea181ad9ddb3e739820ea5b349e3c8be5c273294ea74b5ae3fdf5ec159d2325",
+      "split": "train",
+      "task_id": "auth-bearer-credential-scratch-v1"
+    },
+    {
+      "bundle": "datasets/sir/pilots/crud-access-change-g4",
+      "completion_chars": 3722,
+      "family": "auth.crud-access",
+      "id": "auth-crud-access-change-v1-teacher-d6b3dce267c8",
+      "prompt_chars": 5938,
+      "runtime_run_id": "crud-access-1a18054c65b-44841",
+      "source_sha256": "b351532a58f5da01292734000e0e01e4da1a6851b5a8ae1e87d61d16b26bc1aa",
+      "split": "train",
+      "task_id": "auth-crud-access-change-v1"
+    },
+    {
+      "bundle": "datasets/sir/pilots/crud-access-scratch-g5",
+      "completion_chars": 6420,
+      "family": "auth.crud-access",
+      "id": "auth-crud-access-scratch-v1-teacher-3062e8f8e07b",
+      "prompt_chars": 5216,
+      "runtime_run_id": "crud-access-1a1806c98ca-27832",
+      "source_sha256": "a7622607d73792b5f14a4a0e0e36ab027a40ef3ac64855cd15973dc7e5b2f7f1",
+      "split": "train",
+      "task_id": "auth-crud-access-scratch-v1"
+    },
+    {
+      "bundle": "datasets/sir/pilots/guarded-transition-change-g5",
+      "completion_chars": 1916,
+      "family": "auth.guarded-transition",
+      "id": "auth-guarded-transition-change-v1-teacher-857fcfe57b22",
+      "prompt_chars": 3258,
+      "runtime_run_id": "guard-slice-1a180638e19-42593",
+      "source_sha256": "cc8f47168b208c0465efc287b44ff4683694561750d90b26f8fd5659be43efe1",
+      "split": "train",
+      "task_id": "auth-guarded-transition-change-v1"
+    },
+    {
+      "bundle": "datasets/sir/pilots/guarded-transition-scratch-g4",
+      "completion_chars": 1847,
+      "family": "auth.guarded-transition",
+      "id": "auth-guarded-transition-scratch-v1-teacher-1dff8d4a8a1c",
+      "prompt_chars": 2233,
+      "runtime_run_id": "guard-slice-1a18056d9c8-932",
+      "source_sha256": "3f577ab64bb46cf5ba3d41248f77e553048805b086fed64d20bb2c98aee05233",
+      "split": "train",
+      "task_id": "auth-guarded-transition-scratch-v1"
+    },
+    {
+      "bundle": "datasets/sir/pilots/query-slice-change-g4",
+      "completion_chars": 1209,
+      "family": "course.query-slice",
+      "id": "course-query-slice-change-v1-teacher-905d204a57e4",
+      "prompt_chars": 4318,
+      "runtime_run_id": "query-slice-1a18056c86f-61216",
+      "source_sha256": "c739207378be3a7c7d29d95375752b4b93f45fd97d1a231ccb797de145e1a09c",
+      "split": "train",
+      "task_id": "course-query-slice-change-v1"
+    },
+    {
+      "bundle": "datasets/sir/pilots/query-slice-scratch-g3",
+      "completion_chars": 1206,
+      "family": "course.query-slice",
+      "id": "course-query-slice-scratch-v1-teacher-cadd5a148bb8",
+      "prompt_chars": 3444,
+      "runtime_run_id": "query-slice-1a1804b0d09-57715",
+      "source_sha256": "975e41b319a6c2c5d9542894a09414c4918659c2b12dec24601eec2a563c6e5e",
+      "split": "train",
+      "task_id": "course-query-slice-scratch-v1"
+    },
+    {
+      "bundle": "datasets/sir/pilots/relation-slice-change-g4",
+      "completion_chars": 2088,
+      "family": "course.relation-slice",
+      "id": "course-relation-slice-change-v1-teacher-d3c1df26ed80",
+      "prompt_chars": 6963,
+      "runtime_run_id": "relation-slice-1a18056ba97-39897",
+      "source_sha256": "e4602703518dd54d9e3f71721b9c19515c611929c6600d00955071054a4a3802",
+      "split": "train",
+      "task_id": "course-relation-slice-change-v1"
+    },
+    {
+      "bundle": "datasets/sir/pilots/relation-slice-scratch-g5",
+      "completion_chars": 2112,
+      "family": "course.relation-slice",
+      "id": "course-relation-slice-scratch-v1-teacher-561bdfe9ead2",
+      "prompt_chars": 5255,
+      "runtime_run_id": "relation-slice-1a1805fe862-3761",
+      "source_sha256": "216e3841d50c0879c464d018e13c8114f92cd1a0bc323e6cd2afba8bea8c43ab",
+      "split": "train",
+      "task_id": "course-relation-slice-scratch-v1"
+    },
+    {
+      "bundle": "datasets/sir/pilots/token-desk-change-g4",
+      "completion_chars": 3581,
+      "family": "auth.token-desk",
+      "id": "auth-token-desk-change-v1-teacher-b38e01722cc0",
+      "prompt_chars": 6111,
+      "runtime_run_id": "token-slice-1a18056c206-42176",
+      "source_sha256": "d34b5047839fbd80459ca9a2542f8fea83ecb4b9d5950eb7903a6fc52dfe7e06",
+      "split": "train",
+      "task_id": "auth-token-desk-change-v1"
+    },
+    {
+      "bundle": "datasets/sir/pilots/token-desk-scratch-g4",
+      "completion_chars": 3805,
+      "family": "auth.token-desk",
+      "id": "auth-token-desk-scratch-v1-teacher-bd4698114bcb",
+      "prompt_chars": 3835,
+      "runtime_run_id": "token-slice-1a18056d43b-18715",
+      "source_sha256": "db0ef78f519b887ec32069e955c80c78a7f29823fd97898ae7ce538e79c214f8",
+      "split": "train",
+      "task_id": "auth-token-desk-scratch-v1"
+    },
+    {
+      "bundle": "datasets/sir/pilots/write-slice-change-g4",
+      "completion_chars": 2525,
+      "family": "course.write-slice",
+      "id": "course-write-slice-change-v1-teacher-51ab2996a20e",
+      "prompt_chars": 5160,
+      "runtime_run_id": "write-slice-1a1804ca431-57162",
+      "source_sha256": "bbc68210d9add2d0eee212f64e42d6d888acaab287297f7642433a6a38417b2b",
+      "split": "train",
+      "task_id": "course-write-slice-change-v1"
+    },
+    {
+      "bundle": "datasets/sir/pilots/write-slice-scratch-g5",
+      "completion_chars": 2639,
+      "family": "course.write-slice",
+      "id": "course-write-slice-scratch-v1-teacher-be9817697402",
+      "prompt_chars": 3640,
+      "runtime_run_id": "write-slice-1a180634a4c-49910",
+      "source_sha256": "9e3dbf84d541483f1fd63cccf2ef85b80be10561026302fc8af20d2ca955378a",
+      "split": "train",
+      "task_id": "course-write-slice-scratch-v1"
+    }
+  ],
+  "system_prompt_sha256": "b99ba68b6bd96ef4ff2ea42b3791950bbb14008d4f258ccb1b1090dfd4cf0b23"
+}

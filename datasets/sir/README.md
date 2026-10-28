@@ -55,6 +55,10 @@
 
 随后对业务失败的 3 份用 `repair --runtime-evidence` 各修一轮（结果在 `checked-r2.jsonl`）：bearer-credential 从零写 `efbdfe58ef70` 与 crud-access 从零写 `3062e8f8e07b` 四门通过，证据在 `runtime/`，`train-teacher.jsonl` 各 1 条；course-selection 改写的修复结果与原候选逐字节相同，未送业务门。**新教师合格训练答案累计 14 条。**详见[数据报告第十阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#第十阶段业务失败候选的运行反馈修复2026-10-28)。
 
+## 学生训练格式
+
+[`student/train-student-v1.jsonl`](student/) 是上面 14 条合格答案用 `student` 命令重新包装的学生训练数据：固定短 system（`experiments/slm/prompts/student-v1.md`）+ 与教师相同的题目 + 最终合格 SIR，不带教师规则手册和修复经过。`.index.json` 记录来源批次、样本与业务门 run；`.tokens.json` 是实测 token 长度，最长训练序列 3,874（deepseek-coder-1.3b）/ 3,042（Qwen3-4B），远低于 16K。详见[数据报告第十一阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#第十一阶段学生训练格式2026-10-28)。
+
 完整说明：[数据报告](../../docs/qualification/SLM_DATA_PILOT_REPORT.md)、[操作命令](../../experiments/slm/README.md)、[模型选择](../../docs/qualification/SLM_MODEL_SELECTION.md)。API密钥不属于数据或metadata。数据Git属性禁止换行转换，保持证据字节哈希。
 
 跨Windows/Linux或工具链字节变化时，先用实验CLI的`import --from-bundle ... --bundle ...`在目标环境重新冻结输入、导入原响应并重置所有资格，再重做检查；不要修改本批manifest或借用原通过结果。

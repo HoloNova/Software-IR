@@ -1,0 +1,246 @@
+{
+  "corpus_sha256": "ab8ee0a3830fa8998a47ea4ace097340b187ca79b21e383fbf13d9bd5c301ee2",
+  "models": {
+    "Qwen/Qwen2.5-Coder-3B-Instruct": {
+      "max_student_training_sequence_tokens": 3042,
+      "max_teacher_format_training_sequence_tokens": 10818,
+      "resolved_revision": "488639f1ff808d1d3d0ba301aef8c11461451ec5",
+      "student": {
+        "auth-bearer-credential-change-v1": {
+          "prompt_tokens": 1437,
+          "training_sequence_tokens": 2087
+        },
+        "auth-bearer-credential-scratch-v1": {
+          "prompt_tokens": 1056,
+          "training_sequence_tokens": 1753
+        },
+        "auth-crud-access-change-v1": {
+          "prompt_tokens": 1751,
+          "training_sequence_tokens": 2564
+        },
+        "auth-crud-access-scratch-v1": {
+          "prompt_tokens": 1665,
+          "training_sequence_tokens": 3042
+        },
+        "auth-guarded-transition-change-v1": {
+          "prompt_tokens": 1001,
+          "training_sequence_tokens": 1401
+        },
+        "auth-guarded-transition-scratch-v1": {
+          "prompt_tokens": 773,
+          "training_sequence_tokens": 1160
+        },
+        "auth-token-desk-change-v1": {
+          "prompt_tokens": 1689,
+          "training_sequence_tokens": 2442
+        },
+        "auth-token-desk-scratch-v1": {
+          "prompt_tokens": 1323,
+          "training_sequence_tokens": 2124
+        },
+        "course-query-slice-change-v1": {
+          "prompt_tokens": 1340,
+          "training_sequence_tokens": 1605
+        },
+        "course-query-slice-scratch-v1": {
+          "prompt_tokens": 1115,
+          "training_sequence_tokens": 1380
+        },
+        "course-relation-slice-change-v1": {
+          "prompt_tokens": 2092,
+          "training_sequence_tokens": 2552
+        },
+        "course-relation-slice-scratch-v1": {
+          "prompt_tokens": 1687,
+          "training_sequence_tokens": 2167
+        },
+        "course-write-slice-change-v1": {
+          "prompt_tokens": 1457,
+          "training_sequence_tokens": 1982
+        },
+        "course-write-slice-scratch-v1": {
+          "prompt_tokens": 1165,
+          "training_sequence_tokens": 1728
+        }
+      },
+      "teacher_format_training_sequence_tokens": {
+        "auth-bearer-credential-change-v1": 4489,
+        "auth-bearer-credential-scratch-v1": 8038,
+        "auth-crud-access-change-v1": 5406,
+        "auth-crud-access-scratch-v1": 10818,
+        "auth-guarded-transition-change-v1": 5486,
+        "auth-guarded-transition-scratch-v1": 4002,
+        "auth-token-desk-change-v1": 5284,
+        "auth-token-desk-scratch-v1": 4966,
+        "course-query-slice-change-v1": 4447,
+        "course-query-slice-scratch-v1": 4157,
+        "course-relation-slice-change-v1": 5394,
+        "course-relation-slice-scratch-v1": 5177,
+        "course-write-slice-change-v1": 4824,
+        "course-write-slice-scratch-v1": 6169
+      },
+      "tokenizer_sha256": "c0382117ea329cdf097041132f6d735924b697924d6f6fc3945713e96ce87539"
+    },
+    "Qwen/Qwen3-4B-Instruct-2507": {
+      "max_student_training_sequence_tokens": 3042,
+      "max_teacher_format_training_sequence_tokens": 10818,
+      "resolved_revision": "cdbee75f17c01a7cc42f958dc650907174af0554",
+      "student": {
+        "auth-bearer-credential-change-v1": {
+          "prompt_tokens": 1437,
+          "training_sequence_tokens": 2087
+        },
+        "auth-bearer-credential-scratch-v1": {
+          "prompt_tokens": 1056,
+          "training_sequence_tokens": 1753
+        },
+        "auth-crud-access-change-v1": {
+          "prompt_tokens": 1751,
+          "training_sequence_tokens": 2564
+        },
+        "auth-crud-access-scratch-v1": {
+          "prompt_tokens": 1665,
+          "training_sequence_tokens": 3042
+        },
+        "auth-guarded-transition-change-v1": {
+          "prompt_tokens": 1001,
+          "training_sequence_tokens": 1401
+        },
+        "auth-guarded-transition-scratch-v1": {
+          "prompt_tokens": 773,
+          "training_sequence_tokens": 1160
+        },
+        "auth-token-desk-change-v1": {
+          "prompt_tokens": 1689,
+          "training_sequence_tokens": 2442
+        },
+        "auth-token-desk-scratch-v1": {
+          "prompt_tokens": 1323,
+          "training_sequence_tokens": 2124
+        },
+        "course-query-slice-change-v1": {
+          "prompt_tokens": 1340,
+          "training_sequence_tokens": 1605
+        },
+        "course-query-slice-scratch-v1": {
+          "prompt_tokens": 1115,
+          "training_sequence_tokens": 1380
+        },
+        "course-relation-slice-change-v1": {
+          "prompt_tokens": 2092,
+          "training_sequence_tokens": 2552
+        },
+        "course-relation-slice-scratch-v1": {
+          "prompt_tokens": 1687,
+          "training_sequence_tokens": 2167
+        },
+        "course-write-slice-change-v1": {
+          "prompt_tokens": 1457,
+          "training_sequence_tokens": 1982
+        },
+        "course-write-slice-scratch-v1": {
+          "prompt_tokens": 1165,
+          "training_sequence_tokens": 1728
+        }
+      },
+      "teacher_format_training_sequence_tokens": {
+        "auth-bearer-credential-change-v1": 4489,
+        "auth-bearer-credential-scratch-v1": 8038,
+        "auth-crud-access-change-v1": 5406,
+        "auth-crud-access-scratch-v1": 10818,
+        "auth-guarded-transition-change-v1": 5486,
+        "auth-guarded-transition-scratch-v1": 4002,
+        "auth-token-desk-change-v1": 5284,
+        "auth-token-desk-scratch-v1": 4966,
+        "course-query-slice-change-v1": 4447,
+        "course-query-slice-scratch-v1": 4157,
+        "course-relation-slice-change-v1": 5394,
+        "course-relation-slice-scratch-v1": 5177,
+        "course-write-slice-change-v1": 4824,
+        "course-write-slice-scratch-v1": 6169
+      },
+      "tokenizer_sha256": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4"
+    },
+    "deepseek-ai/deepseek-coder-1.3b-instruct": {
+      "max_student_training_sequence_tokens": 3874,
+      "max_teacher_format_training_sequence_tokens": 13432,
+      "resolved_revision": "e063262dac8366fc1f28a4da0ff3c50ea66259ca",
+      "student": {
+        "auth-bearer-credential-change-v1": {
+          "prompt_tokens": 1839,
+          "training_sequence_tokens": 2671
+        },
+        "auth-bearer-credential-scratch-v1": {
+          "prompt_tokens": 1345,
+          "training_sequence_tokens": 2230
+        },
+        "auth-crud-access-change-v1": {
+          "prompt_tokens": 2227,
+          "training_sequence_tokens": 3267
+        },
+        "auth-crud-access-scratch-v1": {
+          "prompt_tokens": 2090,
+          "training_sequence_tokens": 3874
+        },
+        "auth-guarded-transition-change-v1": {
+          "prompt_tokens": 1291,
+          "training_sequence_tokens": 1840
+        },
+        "auth-guarded-transition-scratch-v1": {
+          "prompt_tokens": 968,
+          "training_sequence_tokens": 1492
+        },
+        "auth-token-desk-change-v1": {
+          "prompt_tokens": 2150,
+          "training_sequence_tokens": 3125
+        },
+        "auth-token-desk-scratch-v1": {
+          "prompt_tokens": 1627,
+          "training_sequence_tokens": 2663
+        },
+        "course-query-slice-change-v1": {
+          "prompt_tokens": 1640,
+          "training_sequence_tokens": 1987
+        },
+        "course-query-slice-scratch-v1": {
+          "prompt_tokens": 1344,
+          "training_sequence_tokens": 1683
+        },
+        "course-relation-slice-change-v1": {
+          "prompt_tokens": 2651,
+          "training_sequence_tokens": 3262
+        },
+        "course-relation-slice-scratch-v1": {
+          "prompt_tokens": 2105,
+          "training_sequence_tokens": 2721
+        },
+        "course-write-slice-change-v1": {
+          "prompt_tokens": 1842,
+          "training_sequence_tokens": 2521
+        },
+        "course-write-slice-scratch-v1": {
+          "prompt_tokens": 1448,
+          "training_sequence_tokens": 2162
+        }
+      },
+      "teacher_format_training_sequence_tokens": {
+        "auth-bearer-credential-change-v1": 5571,
+        "auth-bearer-credential-scratch-v1": 9848,
+        "auth-crud-access-change-v1": 6677,
+        "auth-crud-access-scratch-v1": 13432,
+        "auth-guarded-transition-change-v1": 6821,
+        "auth-guarded-transition-scratch-v1": 4902,
+        "auth-token-desk-change-v1": 6535,
+        "auth-token-desk-scratch-v1": 6073,
+        "course-query-slice-change-v1": 5397,
+        "course-query-slice-scratch-v1": 5010,
+        "course-relation-slice-change-v1": 6672,
+        "course-relation-slice-scratch-v1": 6327,
+        "course-write-slice-change-v1": 5931,
+        "course-write-slice-scratch-v1": 7521
+      },
+      "tokenizer_sha256": "ef48ebdc8546c2d8092349d321f1d162de804a1c8900df2b615c7dc8b02ce141"
+    }
+  },
+  "scope": "observed chat-template token lengths only (experiments/slm/profile_tokens.measure); truncation disabled, no weights run"
+}
