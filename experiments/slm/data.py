@@ -83,6 +83,10 @@ def validate_candidates(root: Path, manifest: dict, task: dict, rows: list) -> N
 
 def prompt_messages(root: Path, task: dict) -> list[dict]:
     user = task["requirement"] + "\n\n固定接口合同：\n" + json_text(task["contract"])
+    # The judge's tables are fixed, like the database of a real project; a task without ddl_source keeps its old prompt.
+    if task.get("ddl_source") is not None:
+        user += ("\n数据库表结构已经确定（表名、列名须与之对应；SIR 中不写 SQL）：\n"
+                 + repo_file(task["ddl_source"]).read_text(encoding="utf-8"))
     # A from-scratch task has no existing software: its frozen base.sir is empty and is not shown to the teacher.
     if task["base_source"] is not None:
         user += "\n已有软件（返回修改后的完整文档）：\n" + (root / "base.sir").read_text(encoding="utf-8")
@@ -116,6 +120,8 @@ def prepare(args) -> None:
     issues = list(Draft202012Validator(load_json(HERE / "task.schema.json")).iter_errors(task))
     if issues:
         raise DataError("invalid task contract: " + issues[0].message)
+    if task.get("ddl_source") is not None and task["ddl_source"] not in task["oracle"]["files"]:
+        raise DataError("ddl_source must be one of the oracle files, so its bytes are frozen with the bundle")
     root = args.bundle.resolve()
     root.mkdir(parents=True, exist_ok=False)
     write_new_json(root / "task.json", task)

@@ -6,6 +6,7 @@
   "split": "train",
   "sir_version": "0.3",
   "base_source": null,
+  "ddl_source": "sir-toolchain-application/src/test/resources/conformance/mysql/course-catalog-ddl.sql",
   "reference_source": "sir-toolchain-application/src/test/resources/valid/course-catalog.sir",
   "requirement": "SearchCourses 通过 GET /api/search-courses 按 keyword 对课程 name 作字面包含搜索，百分号和下划线都是普通字符，不是通配符；按 code 升序、相同时按 id 升序返回，记录仅含 code、name、capacity，不泄露 id、description，整个查询不改数据库。分页响应为 total、page、size、records，total 是全部匹配数；page、size 缺省为 1、20，合法范围分别为 1～10000、1～100；越界返回 400 InvalidPageParam 且不含 records，超过末页则返回 200、空 records 和原总数。keyword 缺失或纯空白返回 400。返回完整的 sir 0.3 文档，不要 Java、SQL 或解释。",
   "contract": {
@@ -39,60 +40,6 @@
     "page_max": 10000,
     "size_min": 1,
     "size_max": 100,
-    "seed": [
-      {
-        "id": 1,
-        "code": "CS103",
-        "name": "Intro to Databases",
-        "description": "Relational modelling and normal forms",
-        "capacity": 40
-      },
-      {
-        "id": 2,
-        "code": "ART101",
-        "name": "Art of 100% Painting",
-        "description": "Studio course on colour mixing",
-        "capacity": 15
-      },
-      {
-        "id": 3,
-        "code": "CS101",
-        "name": "Intro to Algorithms 100%",
-        "description": "Asymptotic analysis and recursion",
-        "capacity": 30
-      },
-      {
-        "id": 4,
-        "code": "MATH201",
-        "name": "Math 9_9 Advanced",
-        "description": "Sequences, series and limits",
-        "capacity": 35
-      },
-      {
-        "id": 5,
-        "code": "MATH202",
-        "name": "Math 919 Applied",
-        "description": "Applied numerical methods",
-        "capacity": 25
-      },
-      {
-        "id": 6,
-        "code": "CS102",
-        "name": "Intro to 9_9 Patterns",
-        "description": "Design patterns in practice",
-        "capacity": 20
-      },
-      {
-        "id": 7,
-        "code": "CS104",
-        "name": "Intro to Compilers",
-        "description": "Lexing, parsing and code generation",
-        "capacity": 45
-      }
-    ],
-    "routes": {
-      "SearchCourses": "GET /api/search-courses"
-    },
     "interfaces": {
       "SearchCourses": {
         "route": "GET /api/search-courses",
@@ -113,29 +60,6 @@
           "capacity"
         ]
       }
-    },
-    "entity_fields": {
-      "Course": [
-        "id",
-        "code",
-        "name",
-        "description",
-        "capacity"
-      ]
-    },
-    "view_fields": {
-      "CourseSummary": [
-        "code",
-        "name",
-        "capacity"
-      ]
-    },
-    "request_fields_by_type": {
-      "SearchCoursesInput": [
-        "keyword",
-        "page",
-        "size"
-      ]
     },
     "enums": {},
     "declared_errors": {
@@ -162,35 +86,6 @@
         1,
         100
       ]
-    },
-    "database_tables": {
-      "course": [
-        {
-          "name": "id",
-          "storage": "BIGINT"
-        },
-        {
-          "name": "code",
-          "storage": "VARCHAR(32)"
-        },
-        {
-          "name": "name",
-          "storage": "VARCHAR(100)"
-        },
-        {
-          "name": "description",
-          "storage": "VARCHAR(500)"
-        },
-        {
-          "name": "capacity",
-          "storage": "INT"
-        }
-      ]
-    },
-    "fixtures": {
-      "ddl": "conformance/mysql/course-catalog-ddl.sql",
-      "seed": "conformance/mysql/course-catalog-seed.sql",
-      "provided_by_oracle": true
     }
   },
   "oracle": {

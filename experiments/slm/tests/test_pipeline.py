@@ -289,6 +289,24 @@ class PipelineTests(unittest.TestCase):
                 data.repair(args)
         call.assert_not_called()
 
+    def test_a_task_with_ddl_source_shows_the_frozen_tables_and_the_ddl_must_be_an_oracle_file(self):
+        task = load_json(data.HERE / "tasks/dual-token-v1.json")
+        ddl = next(path for path in task["oracle"]["files"] if path.endswith("-ddl.sql"))
+        with_ddl = Path(self.temp.name) / "ddl-task.json"
+        with_ddl.write_text(data.json_text({**task, "ddl_source": ddl}), encoding="utf-8")
+        bundle = Path(self.temp.name) / "with-ddl"
+        with contextlib.redirect_stdout(io.StringIO()):
+            data.prepare(argparse.Namespace(bundle=bundle, task=with_ddl))
+        user = data.prompt_messages(bundle, data.read_bundle(bundle)[1])[1]["content"]
+        self.assertIn("数据库表结构已经确定", user)
+        self.assertIn((data.REPO / ddl).read_text(encoding="utf-8"), user)
+        self.assertNotIn("数据库表结构已经确定", data.prompt_messages(self.root, self.task)[1]["content"])
+        outside = Path(self.temp.name) / "outside-ddl-task.json"
+        outside.write_text(data.json_text({**task, "ddl_source": "experiments/slm/README.md"}), encoding="utf-8")
+        with self.assertRaisesRegex(DataError, "oracle files"):
+            data.prepare(argparse.Namespace(bundle=Path(self.temp.name) / "refused-ddl", task=outside))
+        self.assertFalse((Path(self.temp.name) / "refused-ddl").exists())
+
     def test_prompt_changed_after_freeze_is_rejected_before_a_paid_call(self):
         (self.root / "system.md").write_text("changed", encoding="utf-8")
         with patch.object(data, "call_teacher") as call:

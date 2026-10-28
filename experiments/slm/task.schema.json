@@ -12,6 +12,7 @@
     "exposure": {"type": "string", "minLength": 1},
     "sir_version": {"const": "0.3"},
     "base_source": {"type": ["string", "null"], "minLength": 1},
+    "ddl_source": {"type": "string", "minLength": 1},
     "reference_source": {"type": "string", "minLength": 1},
     "requirement": {"type": "string", "minLength": 30},
     "contract": {"type": "object", "minProperties": 1},

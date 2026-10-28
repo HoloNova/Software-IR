@@ -6,6 +6,7 @@
   "split": "train",
   "sir_version": "0.3",
   "base_source": "experiments/slm/drafts/token-desk/base.sir",
+  "ddl_source": "sir-toolchain-application/src/test/resources/conformance/mysql/token-desk-ddl.sql",
   "reference_source": "sir-toolchain-application/src/test/resources/valid/token-desk.sir",
   "requirement": "在给定软件上增加账号注册与口令登录，保留 GetCredential、Refresh、Touch、FindAccount 的现有行为。Register 接收 name、password，创建并保存账号，成功返回 id、name，不包含口令或摘要；数据库口令必须为带独立盐的 pbkdf2-sha256$ 格式摘要，不能存明文。Login 接收 name、password，正确口令返回 200 和账号 id、name；错误口令和不存在账号都返回完全相同的 401 BadLogin；数据库中不是摘要格式的旧文本，即使与输入相同也不得登录。返回完整的 sir 0.3 文档，不要 Java、SQL 或解释。",
   "contract": {
@@ -44,67 +45,8 @@
       "id",
       "name"
     ],
-    "routes": {
-      "GetCredential": "GET /api/get-credential",
-      "Refresh": "POST /api/refresh",
-      "Touch": "POST /api/touch",
-      "Register": "POST /api/register",
-      "Login": "POST /api/login",
-      "FindAccount": "GET /api/find-account"
-    },
     "readiness": "GET /api/get-credential?id=11111111-1111-4111-8111-111111111111",
     "refresh_days": 7,
-    "touch_owner": "alice",
-    "digest_prefix": "pbkdf2-sha256$",
-    "seed_credentials": [
-      {
-        "id": "11111111-1111-4111-8111-111111111111",
-        "owner": "alice",
-        "used": false
-      },
-      {
-        "id": "22222222-2222-4222-8222-222222222222",
-        "owner": "alice",
-        "used": true
-      },
-      {
-        "id": "33333333-3333-4333-8333-333333333333",
-        "owner": "bob",
-        "used": false
-      }
-    ],
-    "seed_expiry": "2099-01-01T00:00:00Z",
-    "seed_accounts": [
-      {
-        "id": 1,
-        "name": "ann",
-        "password_hash": "not-a-digest"
-      },
-      {
-        "id": 2,
-        "name": "dup",
-        "password_hash": "not-a-digest"
-      },
-      {
-        "id": 3,
-        "name": "dup",
-        "password_hash": "not-a-digest"
-      }
-    ],
-    "storage": {
-      "credential": [
-        "id",
-        "owner",
-        "used",
-        "expires_at"
-      ],
-      "account": [
-        "id",
-        "name",
-        "password_hash"
-      ]
-    },
-    "unknown_uuid": "99999999-9999-4999-8999-999999999999",
     "interfaces": {
       "GetCredential": {
         "route": "GET /api/get-credential",
@@ -172,45 +114,6 @@
         ]
       }
     },
-    "entity_fields": {
-      "Credential": [
-        "id",
-        "owner",
-        "used",
-        "expiresAt"
-      ],
-      "Account": [
-        "id",
-        "name",
-        "passwordHash"
-      ]
-    },
-    "view_fields": {
-      "CredentialView": [
-        "id",
-        "owner",
-        "expiresAt"
-      ],
-      "AccountView": [
-        "id",
-        "name"
-      ]
-    },
-    "request_fields_by_type": {
-      "CredentialRef": [
-        "token"
-      ],
-      "GetCredentialInput": [
-        "id"
-      ],
-      "AccountName": [
-        "name"
-      ],
-      "Credentials": [
-        "name",
-        "password"
-      ]
-    },
     "enums": {},
     "declared_errors": {
       "Expired": 400,
@@ -218,45 +121,6 @@
       "AccountNotFound": 404,
       "CredentialNotFound": 404,
       "BadLogin": 401
-    },
-    "database_tables": {
-      "credential": [
-        {
-          "name": "id",
-          "storage": "CHAR(36)"
-        },
-        {
-          "name": "owner",
-          "storage": "VARCHAR(64)"
-        },
-        {
-          "name": "used",
-          "storage": "TINYINT(1)"
-        },
-        {
-          "name": "expires_at",
-          "storage": "DATETIME(6)"
-        }
-      ],
-      "account": [
-        {
-          "name": "id",
-          "storage": "BIGINT"
-        },
-        {
-          "name": "name",
-          "storage": "VARCHAR(64)"
-        },
-        {
-          "name": "password_hash",
-          "storage": "VARCHAR(255)"
-        }
-      ]
-    },
-    "fixtures": {
-      "ddl": "conformance/mysql/token-desk-ddl.sql",
-      "seed": "conformance/mysql/token-desk-seed.sql",
-      "provided_by_oracle": true
     }
   },
   "oracle": {

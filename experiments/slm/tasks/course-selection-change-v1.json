@@ -6,6 +6,7 @@
   "split": "train",
   "sir_version": "0.3",
   "base_source": "experiments/slm/drafts/course-selection/base.sir",
+  "ddl_source": "sir-toolchain-application/src/test/resources/conformance/mysql/course-ddl.sql",
   "reference_source": "sir-toolchain-application/src/test/resources/topics/course/project.sir",
   "requirement": "在给定软件上增加管理员课程建档、先修配置、发布与通过成绩登记，保留账号登录、课程公开查询、选退课、本人选课列表和教师名单的现有行为。只有 ADMIN 可创建课程、配置先修、发布和记录通过成绩，学生尝试这些操作均为 403 Forbidden，所有拒绝不得改变课程、选课、先修和成绩记录。创建课程接收 code、name、teacherId、capacity、weekday、startPeriod、endPeriod，成功返回 201 与课程字段，初始 published=false、enrolled=0；weekday 为 1～7、startPeriod 为 1～12、endPeriod 不超过 13 且必须大于 startPeriod、capacity 至少为 1；这些数值缺失或 null 返回 400 INVALID_REQUEST，fields 指明原字段路径及 NotNull，范围错误或空/倒序时段返回 400，不能落库。管理员可为未发布课程增加或删除任意多条直接先修要求，重复关系返回 409 PrerequisiteExists，自身或尚未发布的先修课返回 400 InvalidPrerequisite；发布成功为 200，之后增删先修或重复发布都返回 409 CoursePublished，不能改变既定课程要求。管理员向指定 studentId、courseId 追加通过记录，成功为 201，重复为 409 CompletionExists；刚提交的通过记录须立即影响后续选课，学生不能自报通过。返回完整的 sir 0.3 文档，不要 Java、SQL 或解释。",
   "contract": {
@@ -36,22 +37,6 @@
       "RefreshToken",
       "TokenPair"
     ],
-    "routes": {
-      "CreateCourse": "POST /api/courses",
-      "SearchCourses": "GET /api/courses",
-      "Enroll": "POST /api/courses/{id}/enroll",
-      "Drop": "DELETE /api/enrollments/{id}",
-      "AddPrerequisite": "POST /api/courses/{courseId}/prerequisites",
-      "RemovePrerequisite": "DELETE /api/prerequisites/{id}",
-      "PublishCourse": "POST /api/courses/{id}/publish",
-      "RecordCompletion": "POST /api/completions",
-      "MyEnrollments": "GET /api/enrollments",
-      "Roster": "GET /api/courses/{courseId}/roster",
-      "Login": "POST /api/login",
-      "Refresh": "POST /api/refresh",
-      "Logout": "POST /api/logout",
-      "Register": "POST /api/register"
-    },
     "create_course_request": [
       "code",
       "name",
@@ -109,39 +94,9 @@
     ],
     "end_period_max": 13,
     "minimum_capacity": 1,
-    "seat_racers": 8,
     "seat_capacity": 3,
-    "drop_racers": 8,
-    "lock_wait_observation_seconds": 5,
     "access_minutes": 15,
     "refresh_days": 7,
-    "seed_actor_ids": [
-      1,
-      2,
-      10,
-      11,
-      12,
-      13,
-      14,
-      15,
-      16,
-      22,
-      24,
-      25,
-      30,
-      31,
-      32,
-      33,
-      34,
-      35,
-      36,
-      37
-    ],
-    "token_pattern": "00000000-0000-4000-8000-{actor_id:012d}",
-    "seed_sources": [
-      "conformance/mysql/course-ddl.sql",
-      "conformance/mysql/course-seed.sql"
-    ],
     "interfaces": {
       "CreateCourse": {
         "route": "POST /api/courses",
@@ -340,124 +295,6 @@
         ]
       }
     },
-    "entity_fields": {
-      "User": [
-        "id",
-        "role",
-        "name",
-        "passwordHash"
-      ],
-      "Course": [
-        "id",
-        "code",
-        "name",
-        "teacher",
-        "capacity",
-        "enrolled",
-        "weekday",
-        "startPeriod",
-        "endPeriod",
-        "published"
-      ],
-      "Enrollment": [
-        "id",
-        "student",
-        "course",
-        "createdAt"
-      ],
-      "Prerequisite": [
-        "id",
-        "targetCourse",
-        "required"
-      ],
-      "CompletedCourse": [
-        "id",
-        "student",
-        "course",
-        "completedAt"
-      ],
-      "AccessToken": [
-        "id",
-        "owner",
-        "expiresAt"
-      ],
-      "RefreshToken": [
-        "id",
-        "owner",
-        "used",
-        "expiresAt"
-      ],
-      "TokenPair": [
-        "id",
-        "accessToken",
-        "accessExpiresAt",
-        "refreshToken",
-        "refreshExpiresAt"
-      ]
-    },
-    "view_fields": {
-      "CourseView": [
-        "id",
-        "code",
-        "name",
-        "teacher",
-        "capacity",
-        "enrolled",
-        "remaining",
-        "full",
-        "weekday",
-        "startPeriod",
-        "endPeriod",
-        "published"
-      ],
-      "EnrollmentView": [
-        "id",
-        "course",
-        "createdAt"
-      ]
-    },
-    "request_fields_by_type": {
-      "PageOnly": [
-        "page",
-        "size"
-      ],
-      "NewCourse": [
-        "code",
-        "name",
-        "teacherId",
-        "capacity",
-        "weekday",
-        "startPeriod",
-        "endPeriod"
-      ],
-      "CourseSearch": [
-        "keyword",
-        "page",
-        "size"
-      ],
-      "CourseRef": [
-        "id"
-      ],
-      "EnrollmentRef": [
-        "id"
-      ],
-      "PrerequisiteInput": [
-        "courseId",
-        "requiredId"
-      ],
-      "PrerequisiteRef": [
-        "id"
-      ],
-      "CompletionInput": [
-        "studentId",
-        "courseId"
-      ],
-      "RosterQuery": [
-        "courseId",
-        "page",
-        "size"
-      ]
-    },
     "enums": {
       "Role": [
         "STUDENT",
@@ -506,177 +343,6 @@
         1,
         100
       ]
-    },
-    "database_tables": {
-      "user": [
-        {
-          "name": "id",
-          "storage": "BIGINT"
-        },
-        {
-          "name": "role",
-          "storage": "VARCHAR(32)"
-        },
-        {
-          "name": "name",
-          "storage": "VARCHAR(64)"
-        },
-        {
-          "name": "password_hash",
-          "storage": "VARCHAR(255)"
-        }
-      ],
-      "access_token": [
-        {
-          "name": "id",
-          "storage": "CHAR(36)"
-        },
-        {
-          "name": "owner_id",
-          "storage": "BIGINT"
-        },
-        {
-          "name": "expires_at",
-          "storage": "DATETIME(6)"
-        }
-      ],
-      "refresh_token": [
-        {
-          "name": "id",
-          "storage": "CHAR(36)"
-        },
-        {
-          "name": "owner_id",
-          "storage": "BIGINT"
-        },
-        {
-          "name": "used",
-          "storage": "TINYINT(1)"
-        },
-        {
-          "name": "expires_at",
-          "storage": "DATETIME(6)"
-        }
-      ],
-      "token_pair": [
-        {
-          "name": "id",
-          "storage": "BIGINT"
-        },
-        {
-          "name": "access_token",
-          "storage": "CHAR(36)"
-        },
-        {
-          "name": "access_expires_at",
-          "storage": "DATETIME(6)"
-        },
-        {
-          "name": "refresh_token",
-          "storage": "CHAR(36)"
-        },
-        {
-          "name": "refresh_expires_at",
-          "storage": "DATETIME(6)"
-        }
-      ],
-      "course": [
-        {
-          "name": "id",
-          "storage": "BIGINT"
-        },
-        {
-          "name": "code",
-          "storage": "VARCHAR(64)"
-        },
-        {
-          "name": "name",
-          "storage": "VARCHAR(64)"
-        },
-        {
-          "name": "teacher_id",
-          "storage": "BIGINT"
-        },
-        {
-          "name": "capacity",
-          "storage": "INT"
-        },
-        {
-          "name": "enrolled",
-          "storage": "INT"
-        },
-        {
-          "name": "weekday",
-          "storage": "INT"
-        },
-        {
-          "name": "start_period",
-          "storage": "INT"
-        },
-        {
-          "name": "end_period",
-          "storage": "INT"
-        },
-        {
-          "name": "published",
-          "storage": "TINYINT(1)"
-        }
-      ],
-      "enrollment": [
-        {
-          "name": "id",
-          "storage": "BIGINT"
-        },
-        {
-          "name": "student_id",
-          "storage": "BIGINT"
-        },
-        {
-          "name": "course_id",
-          "storage": "BIGINT"
-        },
-        {
-          "name": "created_at",
-          "storage": "DATETIME(6)"
-        }
-      ],
-      "prerequisite": [
-        {
-          "name": "id",
-          "storage": "BIGINT"
-        },
-        {
-          "name": "target_course_id",
-          "storage": "BIGINT"
-        },
-        {
-          "name": "required_id",
-          "storage": "BIGINT"
-        }
-      ],
-      "completed_course": [
-        {
-          "name": "id",
-          "storage": "BIGINT"
-        },
-        {
-          "name": "student_id",
-          "storage": "BIGINT"
-        },
-        {
-          "name": "course_id",
-          "storage": "BIGINT"
-        },
-        {
-          "name": "completed_at",
-          "storage": "DATETIME(6)"
-        }
-      ]
-    },
-    "fixtures": {
-      "ddl": "conformance/mysql/course-ddl.sql",
-      "seed": "conformance/mysql/course-seed.sql",
-      "provided_by_oracle": true
     }
   },
   "oracle": {

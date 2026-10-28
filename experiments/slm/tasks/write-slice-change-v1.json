@@ -6,6 +6,7 @@
   "split": "train",
   "sir_version": "0.3",
   "base_source": "experiments/slm/drafts/write-slice/base.sir",
+  "ddl_source": "sir-toolchain-application/src/test/resources/conformance/mysql/course-admin-ddl.sql",
   "reference_source": "sir-toolchain-application/src/test/resources/valid/course-admin.sir",
   "requirement": "在给定软件上增加课程局部修改与并发版本保护，保留 CreateCourse、GetCourse 的现有行为。UpdateCourse 使用 PATCH /api/update-course，接收 id、expectedVersion、changes，changes 只可包含 name、description、capacity；没传的字段保持原值，description 显式 null 才清空，code 不可修改；成功返回合并后的完整课程字段，version 从数据库当前值加一。必须按记录实际版本比较 expectedVersion，过旧返回 409 StaleVersion；两个持相同版本的请求竞争时恰有一个 200、另一个 409，数据库只更新一次，其他行不变；所有被拒请求均不写库、不推进版本。changes 为空返回 400 EmptyChange；id 不存在返回 404 CourseNotFound；缺 id 或 expectedVersion、未知外层字段或未知 changes 字段均为 400，错误中须指出缺失或未知字段路径；name 纯空白返回 400 INVALID_REQUEST，fields 中包含 path=changes.name、code=notBlank。返回完整的 sir 0.3 文档，不要 Java、SQL 或解释。",
   "contract": {
@@ -54,40 +55,8 @@
       "code",
       "message"
     ],
-    "routes": {
-      "GetCourse": "GET /api/get-course",
-      "CreateCourse": "POST /api/create-course",
-      "UpdateCourse": "PATCH /api/update-course"
-    },
     "readiness": "GET /api/get-course?id=1",
     "initial_version": 0,
-    "race_requests": 2,
-    "seed": [
-      {
-        "id": 1,
-        "code": "CS101",
-        "name": "Intro to Algorithms",
-        "description": "Asymptotic analysis and recursion",
-        "capacity": 30,
-        "version": 0
-      },
-      {
-        "id": 2,
-        "code": "CS102",
-        "name": "Intro to Patterns",
-        "description": null,
-        "capacity": 20,
-        "version": 0
-      },
-      {
-        "id": 3,
-        "code": "ART101",
-        "name": "Art of Painting",
-        "description": "Studio course on colour mixing",
-        "capacity": 15,
-        "version": 4
-      }
-    ],
     "interfaces": {
       "GetCourse": {
         "route": "GET /api/get-course",
@@ -142,81 +111,11 @@
         ]
       }
     },
-    "entity_fields": {
-      "Course": [
-        "id",
-        "code",
-        "name",
-        "description",
-        "capacity",
-        "version"
-      ]
-    },
-    "view_fields": {
-      "CourseDetail": [
-        "id",
-        "code",
-        "name",
-        "description",
-        "capacity",
-        "version"
-      ]
-    },
-    "request_fields_by_type": {
-      "GetCourseInput": [
-        "id"
-      ],
-      "CreateCourseInput": [
-        "code",
-        "name",
-        "description",
-        "capacity"
-      ],
-      "UpdateCourseInput": [
-        "id",
-        "name",
-        "description",
-        "capacity"
-      ]
-    },
     "enums": {},
     "declared_errors": {
       "CourseNotFound": 404,
       "EmptyChange": 400,
       "StaleVersion": 409
-    },
-    "database_tables": {
-      "course": [
-        {
-          "name": "id",
-          "storage": "BIGINT"
-        },
-        {
-          "name": "code",
-          "storage": "VARCHAR(32)"
-        },
-        {
-          "name": "name",
-          "storage": "VARCHAR(100)"
-        },
-        {
-          "name": "description",
-          "storage": "VARCHAR(500)"
-        },
-        {
-          "name": "capacity",
-          "storage": "INT"
-        },
-        {
-          "name": "version",
-          "storage": "BIGINT"
-        }
-      ]
-    },
-    "fixtures": {
-      "ddl": "conformance/mysql/course-admin-ddl.sql",
-      "seed": "conformance/mysql/course-admin-seed.sql",
-      "provided_by_oracle": true
     }
   },
   "oracle": {

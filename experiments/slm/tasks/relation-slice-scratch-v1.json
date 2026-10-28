@@ -6,6 +6,7 @@
   "split": "train",
   "sir_version": "0.3",
   "base_source": null,
+  "ddl_source": "sir-toolchain-application/src/test/resources/conformance/mysql/course-enrollment-ddl.sql",
   "reference_source": "sir-toolchain-application/src/test/resources/valid/course-enrollment.sir",
   "requirement": "SearchCourseEnrollments 通过 GET /api/search-course-enrollments 查询至少有一条 ACTIVE 报名的课程，每门课只出现一次，且 ACTIVE 必须属于这门课本身；只有 CANCELLED 或没有报名的课程不入选，按 code 升序分页。每项返回 id、code、name、capacity、doubledCapacity 及 enrollments，doubledCapacity 为该课 capacity 的两倍；enrollments 包含该课全部报名而不只 ACTIVE，按报名 id 升序且不截断，30 条也全部返回；报名含 id、status、active、student，active 表示自身 status 是否 ACTIVE，student 含 id、studentNo、name、label，label 等于该学生 name，不能串用其他课程或学生的值。响应为 total、page、size、records，total 统计匹配课程数而非报名数；page、size 默认 1、20，范围为 1～10000 和 1～100，超过末页为 200 空 records 且保留真实 total，page=0 返回 400 InvalidPage。一次有课程结果的请求恰好执行 4 次业务表读取：总数、当前页、按本页课程编号集合批量读报名、按所需学生编号集合批量读学生；空页只执行前 2 次，非法分页不读取业务表；不能逐门课或逐名学生额外读取，其他读取只能是连接会话变量探测。数据库中课程筛选必须体现与当前课程关联的存在性检查，报名和学生批量读取必须按已取得的编号集合筛选；一次请求的全部读取必须处于同一个只读事务，查询不得改变任何表。返回完整的 sir 0.3 文档，不要 Java、SQL 或解释。",
   "contract": {
@@ -55,31 +56,7 @@
     "page_max": 10000,
     "size_min": 1,
     "size_max": 100,
-    "nonempty_page_business_reads": 4,
-    "empty_page_business_reads": 2,
-    "invalid_page_business_reads": 0,
-    "per_request_transactions": 1,
-    "read_only_transactions": 1,
-    "matching_seed_codes": [
-      "CS101",
-      "CS102",
-      "MAT101",
-      "ZOO101"
-    ],
-    "bulk_enrollments": 30,
-    "seed_sources": [
-      "conformance/mysql/course-enrollment-ddl.sql",
-      "conformance/mysql/course-enrollment-seed.sql"
-    ],
-    "database_read_contract": {
-      "root_filter": "correlated EXISTS over enrollment",
-      "enrollment_batch_key": "course_id IN",
-      "student_batch_key": "id IN"
-    },
     "computed_capacity_factor": 2,
-    "routes": {
-      "SearchCourseEnrollments": "GET /api/search-course-enrollments"
-    },
     "interfaces": {
       "SearchCourseEnrollments": {
         "route": "GET /api/search-course-enrollments",
@@ -102,53 +79,6 @@
           "enrollments"
         ]
       }
-    },
-    "entity_fields": {
-      "Student": [
-        "id",
-        "studentNo",
-        "name"
-      ],
-      "Course": [
-        "id",
-        "code",
-        "name",
-        "capacity"
-      ],
-      "Enrollment": [
-        "id",
-        "course",
-        "student",
-        "status"
-      ]
-    },
-    "view_fields": {
-      "StudentSummary": [
-        "id",
-        "studentNo",
-        "name",
-        "label"
-      ],
-      "EnrollmentSummary": [
-        "id",
-        "student",
-        "status",
-        "active"
-      ],
-      "CourseEnrollmentItem": [
-        "id",
-        "code",
-        "name",
-        "capacity",
-        "doubledCapacity",
-        "enrollments"
-      ]
-    },
-    "request_fields_by_type": {
-      "SearchCourseEnrollmentsInput": [
-        "page",
-        "size"
-      ]
     },
     "enums": {
       "EnrollmentStatus": [
@@ -180,63 +110,6 @@
         1,
         100
       ]
-    },
-    "database_tables": {
-      "student": [
-        {
-          "name": "id",
-          "storage": "BIGINT"
-        },
-        {
-          "name": "student_no",
-          "storage": "VARCHAR(16)"
-        },
-        {
-          "name": "name",
-          "storage": "VARCHAR(100)"
-        }
-      ],
-      "course": [
-        {
-          "name": "id",
-          "storage": "BIGINT"
-        },
-        {
-          "name": "code",
-          "storage": "VARCHAR(32)"
-        },
-        {
-          "name": "name",
-          "storage": "VARCHAR(100)"
-        },
-        {
-          "name": "capacity",
-          "storage": "INT"
-        }
-      ],
-      "enrollment": [
-        {
-          "name": "id",
-          "storage": "BIGINT"
-        },
-        {
-          "name": "course_id",
-          "storage": "BIGINT"
-        },
-        {
-          "name": "student_id",
-          "storage": "BIGINT"
-        },
-        {
-          "name": "status",
-          "storage": "VARCHAR(32)"
-        }
-      ]
-    },
-    "fixtures": {
-      "ddl": "conformance/mysql/course-enrollment-ddl.sql",
-      "seed": "conformance/mysql/course-enrollment-seed.sql",
-      "provided_by_oracle": true
     }
   },
   "oracle": {

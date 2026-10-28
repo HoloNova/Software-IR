@@ -6,6 +6,7 @@
   "split": "train",
   "sir_version": "0.3",
   "base_source": "experiments/slm/drafts/crud-access/base.sir",
+  "ddl_source": "sir-toolchain-application/src/test/resources/conformance/mysql/crud-access-ddl.sql",
   "reference_source": "sir-toolchain-application/src/test/resources/valid/crud-access.sir",
   "requirement": "在给定软件上增加馆员图书目录管理，保留公开文章读取、作者归属、管理员写权限及文章版本更新的现有行为。增加图书目录：匿名可读详情和分页列表，只有 ADMIN 可创建、更新和删除，匿名写入为 401，READER 写入为 403，必须先判角色再判断图书是否存在。创建图书只接收 title，成功返回 201 与 id、title、stock，stock 固定由服务端初始化为 5；更新只接收 title，成功返回 200 且保留 stock，删除成功返回 200 并真正删除记录；请求夹带 stock 返回 400，所有拒绝均不改数据库。返回完整的 sir 0.3 文档，不要 Java、SQL 或解释。",
   "contract": {
@@ -62,56 +63,10 @@
       "size",
       "records"
     ],
-    "routes": {
-      "CreateBook": "POST /api/library/books",
-      "GetBook": "GET /api/library/books/{id}",
-      "ListBook": "GET /api/library/books",
-      "UpdateBook": "PUT /api/library/books/{id}",
-      "DeleteBook": "DELETE /api/library/books/{id}",
-      "CreatePost": "POST /api/public/posts",
-      "GetPost": "GET /api/public/posts/{id}",
-      "ListPost": "GET /api/public/posts",
-      "UpdatePost": "PATCH /api/public/posts/{id}",
-      "DeletePost": "DELETE /api/public/posts/{id}"
-    },
     "readiness": "GET /api/library/books/1",
     "book_default_stock": 5,
     "post_default_state": "open",
     "post_initial_version": 1,
-    "seed_tokens": {
-      "ADMIN_owner": "00000000-0000-4000-8000-000000000001",
-      "READER": "00000000-0000-4000-8000-000000000002",
-      "ADMIN_other": "00000000-0000-4000-8000-000000000003"
-    },
-    "seed_user_ids": [
-      1,
-      2,
-      3
-    ],
-    "seed_token_expiry": "2099-01-01T00:00:00Z",
-    "seed_books": [
-      {
-        "id": 1,
-        "title": "seed book",
-        "stock": 5
-      }
-    ],
-    "seed_posts": [
-      {
-        "id": 1,
-        "author": 1,
-        "body": "visible",
-        "state": "open",
-        "version": 1
-      },
-      {
-        "id": 2,
-        "author": 1,
-        "body": "private",
-        "state": "hidden",
-        "version": 1
-      }
-    ],
     "interfaces": {
       "CreateBook": {
         "route": "POST /api/library/books",
@@ -244,31 +199,6 @@
         "response_fields": []
       }
     },
-    "entity_fields": {
-      "User": [
-        "id",
-        "role"
-      ],
-      "AccessToken": [
-        "id",
-        "owner",
-        "expiresAt"
-      ],
-      "Book": [
-        "id",
-        "title",
-        "stock"
-      ],
-      "Post": [
-        "id",
-        "author",
-        "body",
-        "state",
-        "version"
-      ]
-    },
-    "view_fields": {},
-    "request_fields_by_type": {},
     "enums": {
       "Role": [
         "READER",
@@ -297,73 +227,6 @@
         1,
         100
       ]
-    },
-    "database_tables": {
-      "user": [
-        {
-          "name": "id",
-          "storage": "BIGINT"
-        },
-        {
-          "name": "role",
-          "storage": "VARCHAR(32)"
-        }
-      ],
-      "access_token": [
-        {
-          "name": "id",
-          "storage": "CHAR(36)"
-        },
-        {
-          "name": "owner_id",
-          "storage": "BIGINT"
-        },
-        {
-          "name": "expires_at",
-          "storage": "DATETIME(6)"
-        }
-      ],
-      "book": [
-        {
-          "name": "id",
-          "storage": "BIGINT"
-        },
-        {
-          "name": "title",
-          "storage": "VARCHAR(64)"
-        },
-        {
-          "name": "stock",
-          "storage": "INT"
-        }
-      ],
-      "post": [
-        {
-          "name": "id",
-          "storage": "BIGINT"
-        },
-        {
-          "name": "author_id",
-          "storage": "BIGINT"
-        },
-        {
-          "name": "body",
-          "storage": "VARCHAR(255)"
-        },
-        {
-          "name": "state",
-          "storage": "VARCHAR(64)"
-        },
-        {
-          "name": "version",
-          "storage": "BIGINT"
-        }
-      ]
-    },
-    "fixtures": {
-      "ddl": "conformance/mysql/crud-access-ddl.sql",
-      "seed": "conformance/mysql/crud-access-seed.sql",
-      "provided_by_oracle": true
     }
   },
   "oracle": {

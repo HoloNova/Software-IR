@@ -46,6 +46,8 @@ python -m experiments.slm.data check \
 
 一道业务题出两种题型，共用同一个判卷 IT 与接口合同：改写题的 `base_source` 指向“已有软件”，prompt 末尾附上它，要求返回修改后的完整文档；从零写题的 `base_source` 为 `null`，批次仍冻结一个空的 `base.sir`（保持每个批次的冻结输入相同），prompt 只有需求和接口合同。同一道题的两种题型属于同一 family，必须进同一个 train/dev/blind 集合。
 
+判卷用的数据库表结构是固定的，就像真实项目里已有的数据库。题目写了 `ddl_source`（必须是 `oracle.files` 中的一个，随批次冻结）时，prompt 在接口合同之后附上这份 DDL；没写的旧题目 prompt 逐字不变。接口合同只写用户会说明的东西：namespace、能力与实体名、每个接口的路由与请求/响应字段、错误、枚举、分页和业务常量；参考答案的实体/视图字段、表结构和判卷用的种子、探针、并发数等测试细节不写进合同。
+
 `split` 取 `train`、`development`（dev）或 `test`（blind）。blind 的意思是不给教师看、不用于训练和调参；题目和参考答案本身都在公开仓库里，谈不上保密。`exposure` 是早期的说明文字，没有代码读取，与 `split` 重复，因此改为可选，新题不再写；`dual-token-v1.json` 保留原样，以免已有批次的 `import --task` 同题检查失效。`oracle.behaviors` 同理改为可选：它同样没有代码读取，每项检查对应哪句需求见各题的 `traceability.md`。
 
 ## Prompt 版本

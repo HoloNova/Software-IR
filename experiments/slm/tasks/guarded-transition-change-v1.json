@@ -6,6 +6,7 @@
   "split": "train",
   "sir_version": "0.3",
   "base_source": "experiments/slm/drafts/guarded-transition/base.sir",
+  "ddl_source": "sir-toolchain-application/src/test/resources/conformance/mysql/credential-rotation-ddl.sql",
   "reference_source": "sir-toolchain-application/src/test/resources/valid/guarded-transition.sir",
   "requirement": "在给定软件上增加凭据一次性轮换功能，保留 GetCredential 的现有行为。Refresh 接收 id；未过期且未使用的凭据可轮换一次，成功创建一条同 owner、used=false 的新凭据并返回 id、owner、used、expiresAt，新期限为当前时间起 7 天且使用 ISO UTC 时刻。轮换须原子地把旧凭据标记为已使用并保存新凭据；8 个请求同时轮换同一条凭据时恰有一个成功，其余均为 409 Invalid，总共只新增一行；失败和重放均不写库，也不改变其他凭据。已使用凭据返回 409 Invalid，未使用但过期返回 400 Expired，不存在返回 404 CredentialNotFound。返回完整的 sir 0.3 文档，不要 Java、SQL 或解释。",
   "contract": {
@@ -29,45 +30,8 @@
       "used",
       "expiresAt"
     ],
-    "routes": {
-      "GetCredential": "GET /api/get-credential",
-      "Refresh": "POST /api/refresh"
-    },
     "readiness": "GET /api/get-credential?id=1",
     "refresh_days": 7,
-    "expiry_test_window_days": [
-      6,
-      8
-    ],
-    "race_requests": 8,
-    "storage": {
-      "credential": [
-        "id",
-        "owner",
-        "used",
-        "expires_at"
-      ]
-    },
-    "seed": [
-      {
-        "id": 1,
-        "owner": "alice",
-        "used": false,
-        "expiresAt": "2099-01-01T00:00:00Z"
-      },
-      {
-        "id": 2,
-        "owner": "bob",
-        "used": true,
-        "expiresAt": "2099-01-01T00:00:00Z"
-      },
-      {
-        "id": 3,
-        "owner": "carol",
-        "used": false,
-        "expiresAt": "2000-01-01T00:00:00Z"
-      }
-    ],
     "interfaces": {
       "GetCredential": {
         "route": "GET /api/get-credential",
@@ -94,60 +58,11 @@
         ]
       }
     },
-    "entity_fields": {
-      "Credential": [
-        "id",
-        "owner",
-        "used",
-        "expiresAt"
-      ]
-    },
-    "view_fields": {
-      "CredentialView": [
-        "id",
-        "owner",
-        "used",
-        "expiresAt"
-      ]
-    },
-    "request_fields_by_type": {
-      "GetCredentialInput": [
-        "id"
-      ],
-      "RefreshInput": [
-        "id"
-      ]
-    },
     "enums": {},
     "declared_errors": {
       "CredentialNotFound": 404,
       "Expired": 400,
       "Invalid": 409
-    },
-    "database_tables": {
-      "credential": [
-        {
-          "name": "id",
-          "storage": "BIGINT"
-        },
-        {
-          "name": "owner",
-          "storage": "VARCHAR(64)"
-        },
-        {
-          "name": "used",
-          "storage": "TINYINT(1)"
-        },
-        {
-          "name": "expires_at",
-          "storage": "DATETIME(6)"
-        }
-      ]
-    },
-    "fixtures": {
-      "ddl": "conformance/mysql/credential-rotation-ddl.sql",
-      "seed": "conformance/mysql/credential-rotation-seed.sql",
-      "provided_by_oracle": true
     }
   },
   "oracle": {
