@@ -1,0 +1,155 @@
+{
+  "base_source": null,
+  "contract": {
+    "capabilities": [
+      "SearchCourseEnrollments"
+    ],
+    "computed_capacity_factor": 2,
+    "course_response": [
+      "id",
+      "code",
+      "name",
+      "capacity",
+      "doubledCapacity",
+      "enrollments"
+    ],
+    "declared_errors": {
+      "InvalidPage": 400
+    },
+    "enrollment_response": [
+      "id",
+      "student",
+      "status",
+      "active"
+    ],
+    "entities": [
+      "Student",
+      "Course",
+      "Enrollment"
+    ],
+    "enums": {
+      "EnrollmentStatus": [
+        "ACTIVE",
+        "CANCELLED"
+      ]
+    },
+    "interfaces": {
+      "SearchCourseEnrollments": {
+        "record_fields": [
+          "id",
+          "code",
+          "name",
+          "capacity",
+          "doubledCapacity",
+          "enrollments"
+        ],
+        "request_fields": [
+          "page",
+          "size"
+        ],
+        "response_fields": [
+          "total",
+          "page",
+          "size",
+          "records"
+        ],
+        "route": "GET /api/search-course-enrollments"
+      }
+    },
+    "namespace": "com.example.courseenrollment",
+    "page_default": 1,
+    "page_max": 10000,
+    "page_min": 1,
+    "page_response": [
+      "total",
+      "page",
+      "size",
+      "records"
+    ],
+    "paging": {
+      "page_default": 1,
+      "page_range": [
+        1,
+        10000
+      ],
+      "request": [
+        "page",
+        "size"
+      ],
+      "response": [
+        "total",
+        "page",
+        "size",
+        "records"
+      ],
+      "size_default": 20,
+      "size_range": [
+        1,
+        100
+      ]
+    },
+    "readiness": "GET /api/search-course-enrollments?page=1&size=10",
+    "request": [
+      "page",
+      "size"
+    ],
+    "size_default": 20,
+    "size_max": 100,
+    "size_min": 1,
+    "student_response": [
+      "id",
+      "studentNo",
+      "name",
+      "label"
+    ]
+  },
+  "ddl_source": "sir-toolchain-application/src/test/resources/conformance/mysql/course-enrollment-ddl.sql",
+  "family": "course.relation-slice",
+  "id": "course-relation-slice-scratch-v1",
+  "oracle": {
+    "files": [
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/AdvisoryLockKey.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BusinessEndpointReadiness.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BusinessSliceHarness.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/ChildEnvironmentBuilder.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/ConformanceFixtures.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/ConformanceJvmLimits.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/DiskTree.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceDirectory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceOwnershipInventory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceRootProof.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceSecretScanner.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/HttpAssertionClient.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MavenProjectRunner.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MysqlObserver.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MysqlRuntimeJdbcUrl.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MysqlRuntimeTrace.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/OwnedPathEntry.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/OwnedPathInventory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/OwnedRunDirectory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/RelationSliceBusinessConformanceIT.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SchemaName.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SchemaSqlRenderer.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SecretCatalog.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SlmCandidateSupport.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SpringApplicationProcess.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/StreamingSecretRedactor.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/StrongFileIdentity.java",
+      "sir-toolchain-application/src/test/resources/conformance/mysql/course-enrollment-ddl.sql",
+      "sir-toolchain-application/src/test/resources/conformance/mysql/course-enrollment-seed.sql",
+      "sir-toolchain-application/src/test/resources/valid/course-enrollment.sir"
+    ],
+    "id": "relation-slice-http-mysql-v1"
+  },
+  "reference_evidence": {
+    "commit": "0c4fb4a4c30b14658f874d3cc21f3aabe0c27457",
+    "kind": "existing-reference-only-not-candidate-qualification",
+    "run_url": "https://github.com/HoloNova/Software-IR/actions/runs/40330013391"
+  },
+  "reference_source": "sir-toolchain-application/src/test/resources/valid/course-enrollment.sir",
+  "requirement": "SearchCourseEnrollments 通过 GET /api/search-course-enrollments 查询至少有一条 ACTIVE 报名的课程，每门课只出现一次，且 ACTIVE 必须属于这门课本身；只有 CANCELLED 或没有报名的课程不入选，按 code 升序分页。每项返回 id、code、name、capacity、doubledCapacity 及 enrollments，doubledCapacity 为该课 capacity 的两倍；enrollments 包含该课全部报名而不只 ACTIVE，按报名 id 升序且不截断，30 条也全部返回；报名含 id、status、active、student，active 表示自身 status 是否 ACTIVE，student 含 id、studentNo、name、label，label 等于该学生 name，不能串用其他课程或学生的值。响应为 total、page、size、records，total 统计匹配课程数而非报名数；page、size 默认 1、20，范围为 1～10000 和 1～100，超过末页为 200 空 records 且保留真实 total，page=0 返回 400 InvalidPage。一次有课程结果的请求恰好执行 4 次业务表读取：总数、当前页、按本页课程编号集合批量读报名、按所需学生编号集合批量读学生；空页只执行前 2 次，非法分页不读取业务表；不能逐门课或逐名学生额外读取，其他读取只能是连接会话变量探测。数据库中课程筛选必须体现与当前课程关联的存在性检查，报名和学生批量读取必须按已取得的编号集合筛选；一次请求的全部读取必须处于同一个只读事务，查询不得改变任何表。返回完整的 sir 0.3 文档，不要 Java、SQL 或解释。",
+  "revision": "1",
+  "schema_version": "sir-task/1",
+  "sir_version": "0.3",
+  "split": "train"
+}

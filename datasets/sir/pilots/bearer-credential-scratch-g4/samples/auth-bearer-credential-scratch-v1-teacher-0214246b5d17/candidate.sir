@@ -1,0 +1,148 @@
+sir 0.3
+software Notes {
+  metadata { displayName "Notes"; namespace "example.notes"; }
+  target { language java 21; framework spring_boot; persistence mybatis_plus; database mysql; build maven; interface rest; }
+  sources { }
+  imports { }
+  declarations {
+    entity User persistent {
+      identity id: Id generated auto;
+      field name: Name unique;
+      field passwordHash: Secret;
+    }
+
+    entity AccessToken persistent {
+      identity id: Token generated uuid;
+      field owner: Ref<User>;
+      field expiresAt: Moment;
+      credential subject owner expires expiresAt;
+    }
+
+    entity Note persistent {
+      identity id: Id generated auto;
+      field author: Ref<User>;
+      field text: Text where notBlank;
+    }
+
+    view UserView from User {
+      field id: Id;
+      field name: Name;
+    }
+
+    view TokenView from AccessToken {
+      field id: Token;
+      field expiresAt: Moment;
+    }
+
+    view NoteView from Note {
+      field id: Id;
+      field text: Text;
+    }
+
+    error UserNotFound http 404;
+    error BadLogin http 401;
+    error BadToken http 401;
+
+    input RegisterInput {
+      field name: Name where length(1, 64);
+      field password: Text where notBlank;
+    }
+
+    input GetUserInput {
+      field id: Id;
+    }
+
+    input LoginInput {
+      field name: Name where length(1, 64);
+      field password: Text where notBlank;
+    }
+
+    input LogoutInput {
+      field token: Text where notBlank;
+    }
+
+    input PostNoteInput {
+      field text: Text where notBlank;
+    }
+
+    capability Register {
+      input RegisterInput;
+      output UserView;
+      fails BadLogin;
+      requires atomic;
+      expose command;
+      workflow {
+        create User as user {
+          name: input.name;
+          passwordHash: input.password;
+        }
+        persist user;
+        return user;
+      }
+    }
+
+    capability GetUser {
+      input GetUserInput;
+      output UserView;
+      fails UserNotFound;
+      requires readonly;
+      expose query;
+      workflow {
+        load User by input.id as user else UserNotFound;
+        return user;
+      }
+    }
+
+    capability Login {
+      input LoginInput;
+      output TokenView;
+      fails BadLogin;
+      requires atomic;
+      expose command;
+      workflow {
+        load User by name: input.name as user else BadLogin;
+        validate user.passwordHash matches input.password else BadLogin;
+        create AccessToken as access {
+          owner: user;
+          expiresAt: now() + 15 minutes;
+        }
+        persist access;
+        return access;
+      }
+    }
+
+    capability Logout {
+      actor Ref<User>;
+      input LogoutInput;
+      output TokenView;
+      fails BadToken;
+      requires authenticated;
+      requires atomic;
+      expose command;
+      workflow {
+        load AccessToken by id: input.token as access else BadToken;
+        validate access.owner == actor else BadToken;
+        delete access;
+        return access;
+      }
+    }
+
+    capability PostNote {
+      actor Ref<User>;
+      input PostNoteInput;
+      output NoteView;
+      fails BadToken;
+      requires authenticated;
+      requires atomic;
+      expose command;
+      workflow {
+        create Note as note {
+          author: actor;
+          text: input.text;
+        }
+        persist note;
+        return note;
+      }
+    }
+  }
+}

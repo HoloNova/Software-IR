@@ -1,0 +1,73 @@
+sir 0.3
+software CourseEnrollment {
+  metadata { displayName "CourseEnrollment"; namespace "com.example.courseenrollment"; }
+  target { language java 21; framework spring_boot; persistence mybatis_plus; database mysql; build maven; interface rest; }
+  sources { }
+  imports { }
+  declarations {
+    enum EnrollmentStatus { ACTIVE, CANCELLED }
+
+    entity Student persistent {
+      identity id: Id generated auto;
+      field studentNo: Code unique;
+      field name: Name;
+    }
+
+    entity Course persistent {
+      identity id: Id generated auto;
+      field code: Code unique;
+      field name: Name;
+      field capacity: Quantity;
+    }
+
+    entity Enrollment persistent {
+      identity id: Id generated auto;
+      field course: Ref<Course>;
+      field student: Ref<Student>;
+      field status: EnrollmentStatus;
+    }
+
+    input SearchCourseEnrollmentsInput {
+      field page: PageNo;
+      field size: PageSize;
+    }
+
+    view StudentSummary from Student {
+      field id: Id;
+      field studentNo: Code;
+      field name: Name;
+      field label: Name = item.name;
+    }
+
+    view EnrollmentView from Enrollment {
+      field id: Id;
+      field status: EnrollmentStatus;
+      field active: Flag = item.status == EnrollmentStatus.ACTIVE;
+      field student: StudentSummary;
+    }
+
+    view CourseEnrollmentView from Course {
+      field id: Id;
+      field code: Code;
+      field name: Name;
+      field capacity: Quantity;
+      field doubledCapacity: Count = item.capacity * 2;
+      field enrollments: List<EnrollmentView>;
+    }
+
+    error InvalidPage http 400;
+
+    capability SearchCourseEnrollments {
+      input SearchCourseEnrollmentsInput;
+      output Page<CourseEnrollmentView>;
+      fails InvalidPage;
+      requires readonly;
+      expose query;
+      workflow {
+        validate input.page >= 1 and input.page <= 10000 and input.size >= 1 and input.size <= 100 else InvalidPage;
+        find Course where any(Enrollment, course == item) order by code ascending, id ascending Page input.page, input.size else InvalidPage as courses;
+        return courses;
+      }
+    }
+  }
+}

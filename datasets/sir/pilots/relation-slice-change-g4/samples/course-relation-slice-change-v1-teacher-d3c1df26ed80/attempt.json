@@ -1,0 +1,21 @@
+{
+  "actual_model": "deepseek-flash",
+  "created_at": "2026-10-28T02:24:43.045479+00:00",
+  "id": "course-relation-slice-change-v1-teacher-d3c1df26ed80",
+  "raw_response_sha256": "5f8cb7c4fe5f47b64c42ce37e1e4c3106044788963fdf9b36fb92c2b2338a72e",
+  "requested_model": "deepseek-flash",
+  "status": "CANDIDATE_NOT_YET_QUALIFIED",
+  "system_fingerprint": "bc19ba97cbe016479903222bb1578db6",
+  "usage": {
+    "completion_tokens": 469,
+    "completion_tokens_details": null,
+    "prompt_cache_hit_tokens": 2560,
+    "prompt_cache_miss_tokens": 2149,
+    "prompt_tokens": 4709,
+    "prompt_tokens_details": {
+      "audio_tokens": null,
+      "cached_tokens": 2560
+    },
+    "total_tokens": 5178
+  }
+}
