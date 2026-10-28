@@ -60,6 +60,8 @@ v2（2026-10-25）补的是首批暴露的两处提示不足：实体成员的�
 
 `sir-0.3-general-v2.md`（2026-10-28）在 general-v1 上补两条试采样暴露的规则：输入字段不能写 `default`，分页缺省值与上限由生成器提供（`SpringBootQueryPolicy`）；`patch of` 输入只写主键和可改字段，PATCH 请求体外层的 `expectedVersion`/`changes` 由生成器包装（`SpringBootWritePolicy`）。
 
+`sir-0.3-general-v3.md`（2026-10-28）再补四条：约束只写在字段的 `where` 里、不能当表达式；`at` 路径会自动加 `/api`；patch 字段用去掉规则的类型（`Name` 写成 `Text`、`Quantity` 写成 `Count`）；带 Version 的实体不能写守卫更新或原子加减。
+
 ```bash
 python -m experiments.slm.data prepare --bundle datasets/sir/pilots/dual-token-v2 \
   --system-prompt experiments/slm/prompts/sir-0.3-auth-v2.md
