@@ -84,6 +84,18 @@ python -m experiments.slm.data repair --bundle datasets/sir/runs/dual-token-rech
 
 静态已通过、但业务门失败的候选，用 `repair --runtime-evidence <slm-runtime.json>` 修复（默认反馈 `prompts/repair-runtime-v1.md`）。证据须与该候选的四个绑定哈希和生成摘要一致、附件哈希一致，且四门为 PASSED/PASSED/PASSED/FAILED；只把判卷报告里失败的检查和 HTTP 记录发给教师，通过的检查与日志不发，不提示改法。新候选记 `generation_mode: runtime-feedback-repair` 和所用证据的哈希。
 
+## 学生训练数据
+
+`export` 产出的是教师原样输入：带着各版本的长规则手册，修出来的答案还带着完整修复经过。学生要把规则学进模型，上线时也只拿到题目，所以用 `student` 重新包装：
+
+```bash
+python -m experiments.slm.data student \
+  --bundle datasets/sir/pilots/*-g4 datasets/sir/pilots/*-g5 … \
+  --output datasets/sir/student/train-student-v1.jsonl
+```
+
+每条是固定的短 system（`prompts/student-v1.md`）+ 与教师逐字节相同的题目（需求、合同、表结构、已有软件）+ 最终合格 SIR，不带修复经过。哪些答案合格只由 `export` 决定：`student` 只读各批次的 `train-teacher.jsonl`，按其 `.index.json` 核对文件哈希、答案哈希和样本源码，不重新判卷；只收 train 批次，dev/test 批次直接拒绝。index 记录每条来自的批次、样本、业务门 run 和字数。
+
 ## 跨环境导入
 
 原批次指纹绑定实际源码字节，不能靠换行转换或修改manifest搬到Linux。先在目标环境编译CLI/测试适配器，再执行：

@@ -307,6 +307,38 @@ class PipelineTests(unittest.TestCase):
             data.prepare(argparse.Namespace(bundle=Path(self.temp.name) / "refused-ddl", task=outside))
         self.assertFalse((Path(self.temp.name) / "refused-ddl").exists())
 
+    def test_student_data_rewraps_only_exported_answers_without_the_teacher_manual(self):
+        parent, evidence, _ = self._statically_passed_candidate_with_evidence("PASSED")
+        with contextlib.redirect_stdout(io.StringIO()):
+            data.export(argparse.Namespace(bundle=self.root, checked=None, runtime_evidence=[evidence],
+                                           output=self.root / "train-teacher.jsonl"))
+        output = Path(self.temp.name) / "student.jsonl"
+        args = argparse.Namespace(bundle=[self.root], teacher_file="train-teacher.jsonl", system_prompt=None, output=output)
+        with contextlib.redirect_stdout(io.StringIO()):
+            data.student(args)
+        [record] = load_jsonl(output)
+        system, user = record["prompt"]
+        self.assertEqual((data.HERE / "prompts/student-v1.md").read_text(encoding="utf-8"), system["content"])
+        self.assertNotIn((self.root / "system.md").read_text(encoding="utf-8"), system["content"])
+        self.assertEqual(data.prompt_messages(self.root, self.task)[1]["content"], user["content"])
+        self.assertEqual(parent["sir"], record["completion"][0]["content"])
+        # An answer edited after export is refused, so the student file cannot carry an unjudged SIR.
+        corpus = self.root / "train-teacher.jsonl"
+        corpus.write_text(corpus.read_text(encoding="utf-8").replace("Sample", "Other"), encoding="utf-8")
+        with self.assertRaisesRegex(DataError, "changed after export"):
+            data.student(argparse.Namespace(**{**vars(args), "output": Path(self.temp.name) / "again.jsonl"}))
+
+    def test_student_data_refuses_a_development_or_test_bundle(self):
+        task = load_json(data.HERE / "tasks/dual-token-v1.json")
+        dev_file = Path(self.temp.name) / "dev-task.json"
+        dev_file.write_text(data.json_text({**task, "id": "auth-dual-token-dev", "split": "development"}), encoding="utf-8")
+        dev = Path(self.temp.name) / "dev"
+        with contextlib.redirect_stdout(io.StringIO()):
+            data.prepare(argparse.Namespace(bundle=dev, task=dev_file))
+        with self.assertRaisesRegex(DataError, "train bundles only"):
+            data.student(argparse.Namespace(bundle=[dev], teacher_file="train-teacher.jsonl", system_prompt=None,
+                                            output=Path(self.temp.name) / "student.jsonl"))
+
     def test_prompt_changed_after_freeze_is_rejected_before_a_paid_call(self):
         (self.root / "system.md").write_text("changed", encoding="utf-8")
         with patch.object(data, "call_teacher") as call:

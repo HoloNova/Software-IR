@@ -31,6 +31,7 @@ HERE = Path(__file__).resolve().parent
 DEFAULT_SYSTEM_PROMPT = HERE / "prompts/sir-0.3-auth.md"
 DEFAULT_FEEDBACK = HERE / "prompts/repair-auth-v1.md"
 DEFAULT_RUNTIME_FEEDBACK = HERE / "prompts/repair-runtime-v1.md"
+DEFAULT_STUDENT_PROMPT = HERE / "prompts/student-v1.md"
 
 
 def prompt_file(path: Path | None, default: Path) -> Path:
@@ -81,7 +82,8 @@ def validate_candidates(root: Path, manifest: dict, task: dict, rows: list) -> N
                 raise DataError("candidate no longer matches the raw teacher response")
 
 
-def prompt_messages(root: Path, task: dict) -> list[dict]:
+def task_message(root: Path, task: dict) -> str:
+    """The question itself; teacher and student see the same bytes, only the system prompt differs."""
     user = task["requirement"] + "\n\n固定接口合同：\n" + json_text(task["contract"])
     # The judge's tables are fixed, like the database of a real project; a task without ddl_source keeps its old prompt.
     if task.get("ddl_source") is not None:
@@ -90,8 +92,12 @@ def prompt_messages(root: Path, task: dict) -> list[dict]:
     # A from-scratch task has no existing software: its frozen base.sir is empty and is not shown to the teacher.
     if task["base_source"] is not None:
         user += "\n已有软件（返回修改后的完整文档）：\n" + (root / "base.sir").read_text(encoding="utf-8")
+    return user
+
+
+def prompt_messages(root: Path, task: dict) -> list[dict]:
     return [{"role": "system", "content": (root / "system.md").read_text(encoding="utf-8")},
-            {"role": "user", "content": user}]
+            {"role": "user", "content": task_message(root, task)}]
 
 
 def new_row(manifest: dict, task: dict, sample_id: str, sir: str, messages: list, origin: str) -> dict:
@@ -432,6 +438,50 @@ def export(args) -> None:
                      "exported_unique_answers": len(records), "output": str(args.output)}), end="")
 
 
+def student(args) -> None:
+    """Re-wrap exported answers for the student: short fixed system prompt, the frozen question, the final SIR.
+
+    Which answers qualify is decided only by export (four gates); this command trusts nothing but its outputs,
+    checked by their recorded hashes, and never re-judges. Repair history is dropped: question -> final answer.
+    """
+    system = prompt_file(args.system_prompt, DEFAULT_STUDENT_PROMPT).read_text(encoding="utf-8")
+    records, index, seen = [], [], set()
+    for bundle in args.bundle:
+        manifest, task = read_bundle(bundle)
+        if task["split"] != "train":
+            raise DataError("student data takes train bundles only: " + str(bundle))
+        corpus = bundle / args.teacher_file
+        summary = load_json(corpus.with_suffix(".index.json"))
+        if summary.get("corpus_sha256") != digest_file(corpus):
+            raise DataError("exported answers changed after export: " + str(corpus))
+        answers = load_jsonl(corpus)
+        if len(answers) != summary["count"] or len(summary["rows"]) != summary["count"]:
+            raise DataError("export index does not match its answers: " + str(corpus))
+        for answer, proof in zip(answers, summary["rows"]):
+            sir = answer["completion"][0]["content"]
+            if sha256_text(sir) != proof["source_sha256"] or proof["task_sha256"] != manifest["task_sha256"]:
+                raise DataError("exported answer does not match its index row: " + proof["id"])
+            if digest_file(bundle / "samples" / proof["id"] / "candidate.sir") != proof["source_sha256"]:
+                raise DataError("exported answer is not the collected candidate: " + proof["id"])
+            if (task["id"], proof["source_sha256"]) in seen:
+                continue
+            seen.add((task["id"], proof["source_sha256"]))
+            user = task_message(bundle, task)
+            records.append({"prompt": [{"role": "system", "content": system}, {"role": "user", "content": user}],
+                            "completion": [{"role": "assistant", "content": sir}]})
+            index.append({"id": proof["id"], "bundle": bundle.as_posix(), "task_id": task["id"],
+                          "family": task["family"], "split": task["split"], "source_sha256": proof["source_sha256"],
+                          "runtime_run_id": proof["runtime_run_id"],
+                          "prompt_chars": len(system) + len(user), "completion_chars": len(sir)})
+    enforce_split_disjoint([{"id": row["id"], "family": row["family"], "split": row["split"],
+                             "source_sha256": row["source_sha256"]} for row in index])
+    write_jsonl(args.output, records)
+    write_new_json(args.output.with_suffix(".index.json"), {
+        "count": len(records), "system_prompt_sha256": sha256_text(system), "rows": index,
+        "corpus_sha256": digest_file(args.output)})
+    print(json_text({"bundles": len(args.bundle), "student_records": len(records), "output": str(args.output)}), end="")
+
+
 def parser() -> argparse.ArgumentParser:
     result = argparse.ArgumentParser(description=__doc__)
     commands = result.add_subparsers(dest="command", required=True)
@@ -474,6 +524,13 @@ def parser() -> argparse.ArgumentParser:
     export_args.add_argument("--runtime-evidence", type=Path, nargs="*", default=[])
     export_args.add_argument("--output", type=Path, required=True)
     export_args.set_defaults(run=export)
+    student_args = commands.add_parser("student", help="re-wrap exported train answers with the short student prompt")
+    student_args.add_argument("--bundle", type=Path, nargs="+", required=True)
+    student_args.add_argument("--teacher-file", default="train-teacher.jsonl",
+                              help="export output inside each bundle; its .index.json must sit beside it")
+    student_args.add_argument("--system-prompt", type=Path, help="file in prompts/; default student-v1.md")
+    student_args.add_argument("--output", type=Path, required=True)
+    student_args.set_defaults(run=student)
     return result
 
 
