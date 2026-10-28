@@ -42,6 +42,12 @@ python -m experiments.slm.data check \
 
 没有自动“修到通过”的循环。每轮原始答案、完整 SDK 响应、请求、用量、源哈希和 `parent_id` 都保留。修复反馈包括实际诊断、语法规则澄清和题目原有 DDL，不提供完整参考答案。SDK 序列化的完整响应不是 HTTP 原始字节；`raw_response_sha256` 指保存的 `response.json`。API 模型别名与 `system_fingerprint` 也不是开源权重的固定 revision。
 
+## 题型
+
+一道业务题出两种题型，共用同一个判卷 IT 与接口合同：改写题的 `base_source` 指向“已有软件”，prompt 末尾附上它，要求返回修改后的完整文档；从零写题的 `base_source` 为 `null`，批次仍冻结一个空的 `base.sir`（保持每个批次的冻结输入相同），prompt 只有需求和接口合同。同一道题的两种题型属于同一 family，必须进同一个 train/dev/blind 集合。
+
+`split` 取 `train`、`development`（dev）或 `test`（blind）。blind 的意思是不给教师看、不用于训练和调参；题目和参考答案本身都在公开仓库里，谈不上保密。`exposure` 是早期的说明文字，没有代码读取，与 `split` 重复，因此改为可选，新题不再写；`dual-token-v1.json` 保留原样，以免已有批次的 `import --task` 同题检查失效。`oracle.behaviors` 同理改为可选：它同样没有代码读取，每项检查对应哪句需求见各题的 `traceability.md`。
+
 ## Prompt 版本
 
 `prompts/` 里每个版本是一个单独的文件，改 prompt 就新建文件，不改已用过的文件：已有批次的 `system.md` 和候选里的 `messages` 都是旧文件的原文，改了旧文件，这些批次就无法复现。`prepare` 默认用 `sir-0.3-auth.md`（v1），`repair` 默认用 `repair-auth-v1.md`；要用新版本时显式传入，只接受 `prompts/` 里的 `.md` 文件。`import` 不看这两个参数，直接冻结来源批次自己的 `system.md`。

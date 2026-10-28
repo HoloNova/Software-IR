@@ -216,6 +216,23 @@ class PipelineTests(unittest.TestCase):
             data.import_candidates(argparse.Namespace(from_bundle=self.root, bundle=destination, task=changed))
         self.assertFalse(destination.exists())
 
+    def test_a_from_scratch_task_freezes_an_empty_base_and_shows_no_existing_software(self):
+        task = load_json(data.HERE / "tasks/dual-token-v1.json")
+        scratch_file = Path(self.temp.name) / "scratch-task.json"
+        scratch_file.write_text(data.json_text({**task, "id": "auth-dual-token-scratch", "base_source": None}), encoding="utf-8")
+        scratch = Path(self.temp.name) / "scratch"
+        with contextlib.redirect_stdout(io.StringIO()):
+            data.prepare(argparse.Namespace(bundle=scratch, task=scratch_file))
+        manifest, frozen = data.read_bundle(scratch)
+        self.assertEqual(b"", (scratch / "base.sir").read_bytes())
+        user = data.prompt_messages(scratch, frozen)[1]["content"]
+        self.assertTrue(user.startswith(task["requirement"]))
+        self.assertNotIn("已有软件", user)
+        base_text = (data.REPO / task["base_source"]).read_text(encoding="utf-8")
+        # The change-type prompt keeps its exact bytes: existing bundles must still reproduce their requests.
+        change = data.prompt_messages(self.root, self.task)[1]["content"]
+        self.assertTrue(change.endswith("\n已有软件（返回修改后的完整文档）：\n" + base_text))
+
     def test_prompt_changed_after_freeze_is_rejected_before_a_paid_call(self):
         (self.root / "system.md").write_text("changed", encoding="utf-8")
         with patch.object(data, "call_teacher") as call:

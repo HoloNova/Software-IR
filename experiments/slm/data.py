@@ -81,8 +81,10 @@ def validate_candidates(root: Path, manifest: dict, task: dict, rows: list) -> N
 
 
 def prompt_messages(root: Path, task: dict) -> list[dict]:
-    user = (task["requirement"] + "\n\n固定接口合同：\n" + json_text(task["contract"])
-            + "\n已有软件（返回修改后的完整文档）：\n" + (root / "base.sir").read_text(encoding="utf-8"))
+    user = task["requirement"] + "\n\n固定接口合同：\n" + json_text(task["contract"])
+    # A from-scratch task has no existing software: its frozen base.sir is empty and is not shown to the teacher.
+    if task["base_source"] is not None:
+        user += "\n已有软件（返回修改后的完整文档）：\n" + (root / "base.sir").read_text(encoding="utf-8")
     return [{"role": "system", "content": (root / "system.md").read_text(encoding="utf-8")},
             {"role": "user", "content": user}]
 
@@ -116,9 +118,9 @@ def prepare(args) -> None:
     root = args.bundle.resolve()
     root.mkdir(parents=True, exist_ok=False)
     write_new_json(root / "task.json", task)
-    for name, source in (("base.sir", repo_file(task["base_source"])),
-                         ("reference.sir", repo_file(task["reference_source"])),
-                         ("system.md", system_source(args))):
+    # base.sir is always frozen so every bundle has the same inputs; a from-scratch task freezes it empty.
+    (root / "base.sir").write_bytes(b"" if task["base_source"] is None else repo_file(task["base_source"]).read_bytes())
+    for name, source in (("reference.sir", repo_file(task["reference_source"])), ("system.md", system_source(args))):
         (root / name).write_bytes(source.read_bytes())
     main = core_inputs()
     oracle = {path: digest_file(repo_file(path)) for path in task["oracle"]["files"]}
@@ -203,7 +205,8 @@ def same_question(manifest: dict, task: dict, task_file: Path) -> dict:
     if question(current) != question(task):
         raise DataError("--task may only change oracle.files; requirement, contract, base and reference must stay the same")
     for name, key in (("base.sir", "base_source"), ("reference.sir", "reference_source")):
-        if digest_file(repo_file(current[key])) != manifest["bundle_inputs"][name]:
+        actual = sha256_text("") if current[key] is None else digest_file(repo_file(current[key]))
+        if actual != manifest["bundle_inputs"][name]:
             raise DataError("--task " + key + " no longer has the bytes the teacher was shown or judged against")
     return {"from_task_sha256": manifest["task_sha256"], "task_sha256": digest_file(task_file), "changed": "oracle.files"}
 
