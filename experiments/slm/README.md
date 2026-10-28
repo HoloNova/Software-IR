@@ -56,6 +56,8 @@ python -m experiments.slm.data check \
 
 v2（2026-10-25）补的是首批暴露的两处提示不足：实体成员的固定顺序；新建的行要先 persist 才有主键（编译器从 `bca868b` 起报 `SIR-FLOW-007`）。
 
+`sir-0.3-general-v1.md`（2026-10-28）是不限于鉴权的通用版本，供课程、资金、商店、图书馆等题使用：写法全部取自 `docs/SIR_LANGUAGE_REFERENCE.md` 的已测试示例，另写明表名/列名与实体/字段的对应（题目附 DDL 时用得上）和成功状态码规则（工作流里有 `create` 就是 201，否则 200）。用 `prepare --system-prompt experiments/slm/prompts/sir-0.3-general-v1.md` 选用；默认仍是 v1。
+
 ```bash
 python -m experiments.slm.data prepare --bundle datasets/sir/pilots/dual-token-v2 \
   --system-prompt experiments/slm/prompts/sir-0.3-auth-v2.md
