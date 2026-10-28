@@ -1,0 +1,723 @@
+{
+  "schema_version": "sir-task/1",
+  "id": "course-course-selection-scratch-v1",
+  "revision": "1",
+  "family": "course.course-selection",
+  "split": "train",
+  "sir_version": "0.3",
+  "base_source": null,
+  "reference_source": "sir-toolchain-application/src/test/resources/topics/course/project.sir",
+  "requirement": "账号注册接收 name、password，返回 id、name、role，默认 STUDENT；登录返回访问及刷新令牌，期限为 15 分钟与 7 天，刷新令牌使用一次后失效，退出使刷新令牌失效；需身份的路由只接受有效访问令牌，匿名为 401。公开课程搜索接收 keyword、page、size，只列 published=true 且 name 或 code 字面包含 keyword 的课程，按 code、id 升序分页；返回含 teacher、capacity、enrolled、remaining、full 和周课表字段，remaining=capacity-enrolled，full 表示人数已达容量。只有 ADMIN 可创建课程、配置先修、发布和记录通过成绩，学生尝试这些操作均为 403 Forbidden，所有拒绝不得改变课程、选课、先修和成绩记录。创建课程接收 code、name、teacherId、capacity、weekday、startPeriod、endPeriod，成功返回 201 与课程字段，初始 published=false、enrolled=0；weekday 为 1～7、startPeriod 为 1～12、endPeriod 不超过 13 且必须大于 startPeriod、capacity 至少为 1；这些数值缺失或 null 返回 400 INVALID_REQUEST，fields 指明原字段路径及 NotNull，范围错误或空/倒序时段返回 400，不能落库。管理员可为未发布课程增加或删除任意多条直接先修要求，重复关系返回 409 PrerequisiteExists，自身或尚未发布的先修课返回 400 InvalidPrerequisite；发布成功为 200，之后增删先修或重复发布都返回 409 CoursePublished，不能改变既定课程要求。管理员向指定 studentId、courseId 追加通过记录，成功为 201，重复为 409 CompletionExists；刚提交的通过记录须立即影响后续选课，学生不能自报通过。本人选课接收课程 id，成功为 201 且保存唯一的学生/课程选课记录并占一个座位；未知课程为 404 CourseNotFound，未发布为 409 CourseNotOpen，重复为 409 AlreadyEnrolled，必须通过所有直接先修课程，否则为 409 MissingPrerequisites，不能用数量相等但课程不同的成绩集合冒充。同一学生同星期且半开节次区间重叠的选课返回 409 TimeConflict，首尾相接允许，不同星期互不冲突；同一学生并发选两门重叠课只能一个成功，另一个为 409 TimeConflict，等待该学生已有事务提交后须重新检查冲突并看到刚提交的选课。八名学生竞争三个座位恰好三个 201、五个 409 CourseFull；退课只允许本人，别人为 403 Forbidden，本人成功为 200 并删记录、释放一个座位，重复为 404 EnrollmentNotFound，八路并发退同一条记录只一个 200、七个 404，退后可以重选。课程 enrolled 始终等于实际选课数且在 0～capacity 内；选课晚发生唯一冲突时返回 409 AlreadyEnrolled 并撤销座位增加，退课晚发生外键删除失败时返回 500 并撤销座位减少，旧计数为零却有选课记录时为 409 EnrollmentCounterMismatch，不得删记录；所有失败都不改四类业务记录。选课必须在其他事务锁住该学生行时真实等待，不能绕过学生级串行检查；本人列表按 createdAt、id 降序，教师仅能查询自己课程的名单并按 createdAt、id 升序，越权为 403 Forbidden；分页响应统一为 total、page、size、records，默认 1/20、上限 10000/100，非法为 400 BadPage。返回完整的 sir 0.3 文档，不要 Java、SQL 或解释。",
+  "contract": {
+    "namespace": "example.course",
+    "capabilities": [
+      "CreateCourse",
+      "SearchCourses",
+      "Enroll",
+      "Drop",
+      "AddPrerequisite",
+      "RemovePrerequisite",
+      "PublishCourse",
+      "RecordCompletion",
+      "MyEnrollments",
+      "Roster",
+      "Login",
+      "Refresh",
+      "Logout",
+      "Register"
+    ],
+    "entities": [
+      "User",
+      "Course",
+      "Enrollment",
+      "Prerequisite",
+      "CompletedCourse",
+      "AccessToken",
+      "RefreshToken",
+      "TokenPair"
+    ],
+    "routes": {
+      "CreateCourse": "POST /api/courses",
+      "SearchCourses": "GET /api/courses",
+      "Enroll": "POST /api/courses/{id}/enroll",
+      "Drop": "DELETE /api/enrollments/{id}",
+      "AddPrerequisite": "POST /api/courses/{courseId}/prerequisites",
+      "RemovePrerequisite": "DELETE /api/prerequisites/{id}",
+      "PublishCourse": "POST /api/courses/{id}/publish",
+      "RecordCompletion": "POST /api/completions",
+      "MyEnrollments": "GET /api/enrollments",
+      "Roster": "GET /api/courses/{courseId}/roster",
+      "Login": "POST /api/login",
+      "Refresh": "POST /api/refresh",
+      "Logout": "POST /api/logout",
+      "Register": "POST /api/register"
+    },
+    "create_course_request": [
+      "code",
+      "name",
+      "teacherId",
+      "capacity",
+      "weekday",
+      "startPeriod",
+      "endPeriod"
+    ],
+    "search_request": [
+      "keyword",
+      "page",
+      "size"
+    ],
+    "prerequisite_request": [
+      "courseId",
+      "requiredId"
+    ],
+    "completion_request": [
+      "studentId",
+      "courseId"
+    ],
+    "enrollment_response": [
+      "id",
+      "course",
+      "createdAt"
+    ],
+    "course_response": [
+      "id",
+      "code",
+      "name",
+      "teacher",
+      "capacity",
+      "enrolled",
+      "remaining",
+      "full",
+      "weekday",
+      "startPeriod",
+      "endPeriod",
+      "published"
+    ],
+    "user_response": [
+      "id",
+      "name",
+      "role"
+    ],
+    "readiness": "GET /api/courses?keyword=TARGET&page=1&size=1",
+    "weekday_range": [
+      1,
+      7
+    ],
+    "start_period_range": [
+      1,
+      12
+    ],
+    "end_period_max": 13,
+    "minimum_capacity": 1,
+    "seat_racers": 8,
+    "seat_capacity": 3,
+    "drop_racers": 8,
+    "lock_wait_observation_seconds": 5,
+    "access_minutes": 15,
+    "refresh_days": 7,
+    "seed_actor_ids": [
+      1,
+      2,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      22,
+      24,
+      25,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37
+    ],
+    "token_pattern": "00000000-0000-4000-8000-{actor_id:012d}",
+    "seed_sources": [
+      "conformance/mysql/course-ddl.sql",
+      "conformance/mysql/course-seed.sql"
+    ],
+    "interfaces": {
+      "CreateCourse": {
+        "route": "POST /api/courses",
+        "request_fields": [
+          "code",
+          "name",
+          "teacherId",
+          "capacity",
+          "weekday",
+          "startPeriod",
+          "endPeriod"
+        ],
+        "response_fields": [
+          "id",
+          "code",
+          "name",
+          "teacher",
+          "capacity",
+          "enrolled",
+          "remaining",
+          "full",
+          "weekday",
+          "startPeriod",
+          "endPeriod",
+          "published"
+        ]
+      },
+      "SearchCourses": {
+        "route": "GET /api/courses",
+        "request_fields": [
+          "keyword",
+          "page",
+          "size"
+        ],
+        "response_fields": [
+          "total",
+          "page",
+          "size",
+          "records"
+        ],
+        "record_fields": [
+          "id",
+          "code",
+          "name",
+          "teacher",
+          "capacity",
+          "enrolled",
+          "remaining",
+          "full",
+          "weekday",
+          "startPeriod",
+          "endPeriod",
+          "published"
+        ]
+      },
+      "Enroll": {
+        "route": "POST /api/courses/{id}/enroll",
+        "request_fields": [
+          "id"
+        ],
+        "response_fields": [
+          "id",
+          "course",
+          "createdAt"
+        ]
+      },
+      "Drop": {
+        "route": "DELETE /api/enrollments/{id}",
+        "request_fields": [
+          "id"
+        ],
+        "response_fields": []
+      },
+      "AddPrerequisite": {
+        "route": "POST /api/courses/{courseId}/prerequisites",
+        "request_fields": [
+          "courseId",
+          "requiredId"
+        ],
+        "response_fields": []
+      },
+      "RemovePrerequisite": {
+        "route": "DELETE /api/prerequisites/{id}",
+        "request_fields": [
+          "id"
+        ],
+        "response_fields": []
+      },
+      "PublishCourse": {
+        "route": "POST /api/courses/{id}/publish",
+        "request_fields": [
+          "id"
+        ],
+        "response_fields": [
+          "id",
+          "code",
+          "name",
+          "teacher",
+          "capacity",
+          "enrolled",
+          "remaining",
+          "full",
+          "weekday",
+          "startPeriod",
+          "endPeriod",
+          "published"
+        ]
+      },
+      "RecordCompletion": {
+        "route": "POST /api/completions",
+        "request_fields": [
+          "studentId",
+          "courseId"
+        ],
+        "response_fields": []
+      },
+      "MyEnrollments": {
+        "route": "GET /api/enrollments",
+        "request_fields": [
+          "page",
+          "size"
+        ],
+        "response_fields": [
+          "total",
+          "page",
+          "size",
+          "records"
+        ],
+        "record_fields": [
+          "id",
+          "course",
+          "createdAt"
+        ]
+      },
+      "Roster": {
+        "route": "GET /api/courses/{courseId}/roster",
+        "request_fields": [
+          "courseId",
+          "page",
+          "size"
+        ],
+        "response_fields": [
+          "total",
+          "page",
+          "size",
+          "records"
+        ],
+        "record_fields": [
+          "id",
+          "course",
+          "createdAt"
+        ]
+      },
+      "Login": {
+        "route": "POST /api/login",
+        "request_fields": [
+          "name",
+          "password"
+        ],
+        "response_fields": [
+          "accessToken",
+          "accessExpiresAt",
+          "refreshToken",
+          "refreshExpiresAt"
+        ]
+      },
+      "Refresh": {
+        "route": "POST /api/refresh",
+        "request_fields": [
+          "refreshToken"
+        ],
+        "response_fields": [
+          "accessToken",
+          "accessExpiresAt",
+          "refreshToken",
+          "refreshExpiresAt"
+        ]
+      },
+      "Logout": {
+        "route": "POST /api/logout",
+        "request_fields": [
+          "refreshToken"
+        ],
+        "response_fields": []
+      },
+      "Register": {
+        "route": "POST /api/register",
+        "request_fields": [
+          "name",
+          "password"
+        ],
+        "response_fields": [
+          "id",
+          "name",
+          "role"
+        ]
+      }
+    },
+    "entity_fields": {
+      "User": [
+        "id",
+        "role",
+        "name",
+        "passwordHash"
+      ],
+      "Course": [
+        "id",
+        "code",
+        "name",
+        "teacher",
+        "capacity",
+        "enrolled",
+        "weekday",
+        "startPeriod",
+        "endPeriod",
+        "published"
+      ],
+      "Enrollment": [
+        "id",
+        "student",
+        "course",
+        "createdAt"
+      ],
+      "Prerequisite": [
+        "id",
+        "targetCourse",
+        "required"
+      ],
+      "CompletedCourse": [
+        "id",
+        "student",
+        "course",
+        "completedAt"
+      ],
+      "AccessToken": [
+        "id",
+        "owner",
+        "expiresAt"
+      ],
+      "RefreshToken": [
+        "id",
+        "owner",
+        "used",
+        "expiresAt"
+      ],
+      "TokenPair": [
+        "id",
+        "accessToken",
+        "accessExpiresAt",
+        "refreshToken",
+        "refreshExpiresAt"
+      ]
+    },
+    "view_fields": {
+      "CourseView": [
+        "id",
+        "code",
+        "name",
+        "teacher",
+        "capacity",
+        "enrolled",
+        "remaining",
+        "full",
+        "weekday",
+        "startPeriod",
+        "endPeriod",
+        "published"
+      ],
+      "EnrollmentView": [
+        "id",
+        "course",
+        "createdAt"
+      ]
+    },
+    "request_fields_by_type": {
+      "PageOnly": [
+        "page",
+        "size"
+      ],
+      "NewCourse": [
+        "code",
+        "name",
+        "teacherId",
+        "capacity",
+        "weekday",
+        "startPeriod",
+        "endPeriod"
+      ],
+      "CourseSearch": [
+        "keyword",
+        "page",
+        "size"
+      ],
+      "CourseRef": [
+        "id"
+      ],
+      "EnrollmentRef": [
+        "id"
+      ],
+      "PrerequisiteInput": [
+        "courseId",
+        "requiredId"
+      ],
+      "PrerequisiteRef": [
+        "id"
+      ],
+      "CompletionInput": [
+        "studentId",
+        "courseId"
+      ],
+      "RosterQuery": [
+        "courseId",
+        "page",
+        "size"
+      ]
+    },
+    "enums": {
+      "Role": [
+        "STUDENT",
+        "TEACHER",
+        "ADMIN"
+      ]
+    },
+    "declared_errors": {
+      "BadPage": 400,
+      "Forbidden": 403,
+      "InvalidSchedule": 400,
+      "TeacherNotFound": 404,
+      "AlreadyEnrolled": 409,
+      "CourseFull": 409,
+      "CourseNotFound": 404,
+      "CourseNotOpen": 409,
+      "CoursePublished": 409,
+      "InvalidPrerequisite": 400,
+      "MissingPrerequisites": 409,
+      "StudentNotFound": 404,
+      "TimeConflict": 409,
+      "EnrollmentCounterMismatch": 409,
+      "PrerequisiteExists": 409,
+      "PrerequisiteNotFound": 404,
+      "CompletionExists": 409,
+      "EnrollmentNotFound": 404
+    },
+    "paging": {
+      "request": [
+        "page",
+        "size"
+      ],
+      "response": [
+        "total",
+        "page",
+        "size",
+        "records"
+      ],
+      "page_default": 1,
+      "size_default": 20,
+      "page_range": [
+        1,
+        10000
+      ],
+      "size_range": [
+        1,
+        100
+      ]
+    },
+    "database_tables": {
+      "user": [
+        {
+          "name": "id",
+          "storage": "BIGINT"
+        },
+        {
+          "name": "role",
+          "storage": "VARCHAR(32)"
+        },
+        {
+          "name": "name",
+          "storage": "VARCHAR(64)"
+        },
+        {
+          "name": "password_hash",
+          "storage": "VARCHAR(255)"
+        }
+      ],
+      "access_token": [
+        {
+          "name": "id",
+          "storage": "CHAR(36)"
+        },
+        {
+          "name": "owner_id",
+          "storage": "BIGINT"
+        },
+        {
+          "name": "expires_at",
+          "storage": "DATETIME(6)"
+        }
+      ],
+      "refresh_token": [
+        {
+          "name": "id",
+          "storage": "CHAR(36)"
+        },
+        {
+          "name": "owner_id",
+          "storage": "BIGINT"
+        },
+        {
+          "name": "used",
+          "storage": "TINYINT(1)"
+        },
+        {
+          "name": "expires_at",
+          "storage": "DATETIME(6)"
+        }
+      ],
+      "token_pair": [
+        {
+          "name": "id",
+          "storage": "BIGINT"
+        },
+        {
+          "name": "access_token",
+          "storage": "CHAR(36)"
+        },
+        {
+          "name": "access_expires_at",
+          "storage": "DATETIME(6)"
+        },
+        {
+          "name": "refresh_token",
+          "storage": "CHAR(36)"
+        },
+        {
+          "name": "refresh_expires_at",
+          "storage": "DATETIME(6)"
+        }
+      ],
+      "course": [
+        {
+          "name": "id",
+          "storage": "BIGINT"
+        },
+        {
+          "name": "code",
+          "storage": "VARCHAR(64)"
+        },
+        {
+          "name": "name",
+          "storage": "VARCHAR(64)"
+        },
+        {
+          "name": "teacher_id",
+          "storage": "BIGINT"
+        },
+        {
+          "name": "capacity",
+          "storage": "INT"
+        },
+        {
+          "name": "enrolled",
+          "storage": "INT"
+        },
+        {
+          "name": "weekday",
+          "storage": "INT"
+        },
+        {
+          "name": "start_period",
+          "storage": "INT"
+        },
+        {
+          "name": "end_period",
+          "storage": "INT"
+        },
+        {
+          "name": "published",
+          "storage": "TINYINT(1)"
+        }
+      ],
+      "enrollment": [
+        {
+          "name": "id",
+          "storage": "BIGINT"
+        },
+        {
+          "name": "student_id",
+          "storage": "BIGINT"
+        },
+        {
+          "name": "course_id",
+          "storage": "BIGINT"
+        },
+        {
+          "name": "created_at",
+          "storage": "DATETIME(6)"
+        }
+      ],
+      "prerequisite": [
+        {
+          "name": "id",
+          "storage": "BIGINT"
+        },
+        {
+          "name": "target_course_id",
+          "storage": "BIGINT"
+        },
+        {
+          "name": "required_id",
+          "storage": "BIGINT"
+        }
+      ],
+      "completed_course": [
+        {
+          "name": "id",
+          "storage": "BIGINT"
+        },
+        {
+          "name": "student_id",
+          "storage": "BIGINT"
+        },
+        {
+          "name": "course_id",
+          "storage": "BIGINT"
+        },
+        {
+          "name": "completed_at",
+          "storage": "DATETIME(6)"
+        }
+      ]
+    },
+    "fixtures": {
+      "ddl": "conformance/mysql/course-ddl.sql",
+      "seed": "conformance/mysql/course-seed.sql",
+      "provided_by_oracle": true
+    }
+  },
+  "oracle": {
+    "id": "course-selection-http-mysql-v1",
+    "files": [
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/AdvisoryLockKey.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BusinessEndpointReadiness.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BusinessSliceHarness.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/ChildEnvironmentBuilder.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/ConformanceFixtures.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/ConformanceJvmLimits.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/CourseSelectionBusinessConformanceIT.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/CourseSelectionChecks.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/DiskTree.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceDirectory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceOwnershipInventory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceRootProof.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceSecretScanner.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/HttpAssertionClient.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MavenProjectRunner.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MysqlObserver.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MysqlRuntimeJdbcUrl.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MysqlRuntimeTrace.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/OwnedPathEntry.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/OwnedPathInventory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/OwnedRunDirectory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SchemaName.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SchemaSqlRenderer.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SecretCatalog.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SlmCandidateSupport.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SpringApplicationProcess.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/StreamingSecretRedactor.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/StrongFileIdentity.java",
+      "sir-toolchain-application/src/test/resources/conformance/mysql/course-ddl.sql",
+      "sir-toolchain-application/src/test/resources/conformance/mysql/course-seed.sql",
+      "sir-toolchain-application/src/test/resources/topics/course/project.sir"
+    ]
+  },
+  "reference_evidence": {
+    "kind": "existing-reference-only-not-candidate-qualification",
+    "commit": "0c4fb4a4c30b14658f874d3cc21f3aabe0c27457",
+    "run_url": "https://github.com/HoloNova/Software-IR/actions/runs/40330013391"
+  }
+}

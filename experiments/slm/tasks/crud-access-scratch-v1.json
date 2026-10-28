@@ -1,0 +1,409 @@
+{
+  "schema_version": "sir-task/1",
+  "id": "auth-crud-access-scratch-v1",
+  "revision": "1",
+  "family": "auth.crud-access",
+  "split": "train",
+  "sir_version": "0.3",
+  "base_source": null,
+  "reference_source": "sir-toolchain-application/src/test/resources/valid/crud-access.sir",
+  "requirement": "增加图书目录：匿名可读详情和分页列表，只有 ADMIN 可创建、更新和删除，匿名写入为 401，READER 写入为 403，必须先判角色再判断图书是否存在。创建图书只接收 title，成功返回 201 与 id、title、stock，stock 固定由服务端初始化为 5；更新只接收 title，成功返回 200 且保留 stock，删除成功返回 200 并真正删除记录；请求夹带 stock 返回 400，所有拒绝均不改数据库。文章详情和分页列表公开，无论匿名、READER 或其他 ADMIN 均可读，但 state=hidden 的文章不出现在列表，详情为 404 PostNotFound。文章创建、修改和删除同时要求 ADMIN 角色及本人作者归属：匿名为 401，错误角色为 403，其他管理员不得越权访问本人写入路径，按 404 PostNotFound 处理。创建文章接收 body，author 由当前用户确定，state 默认 open、version 初始为 1；文章修改为 PATCH，接收 expectedVersion 和 changes.body，成功只改传入内容且 version 加一，版本过旧返回 409 StalePost，不得覆盖新值；夹带 state 为 400，拒绝或版本冲突不得改库，state 保持 open；删除成功为 200 并删除本人文章。返回完整的 sir 0.3 文档，不要 Java、SQL 或解释。",
+  "contract": {
+    "namespace": "example.crudaccess",
+    "capabilities": [
+      "CreateBook",
+      "GetBook",
+      "ListBook",
+      "UpdateBook",
+      "DeleteBook",
+      "CreatePost",
+      "GetPost",
+      "ListPost",
+      "UpdatePost",
+      "DeletePost"
+    ],
+    "entities": [
+      "User",
+      "AccessToken",
+      "Book",
+      "Post"
+    ],
+    "book_create_update_request": [
+      "title"
+    ],
+    "book_response": [
+      "id",
+      "title",
+      "stock"
+    ],
+    "post_create_request": [
+      "body"
+    ],
+    "post_patch_request": {
+      "expectedVersion": "integer",
+      "changes": [
+        "body"
+      ]
+    },
+    "post_response": [
+      "id",
+      "author",
+      "body",
+      "state",
+      "version"
+    ],
+    "page_request": [
+      "page",
+      "size"
+    ],
+    "page_response": [
+      "total",
+      "page",
+      "size",
+      "records"
+    ],
+    "routes": {
+      "CreateBook": "POST /api/library/books",
+      "GetBook": "GET /api/library/books/{id}",
+      "ListBook": "GET /api/library/books",
+      "UpdateBook": "PUT /api/library/books/{id}",
+      "DeleteBook": "DELETE /api/library/books/{id}",
+      "CreatePost": "POST /api/public/posts",
+      "GetPost": "GET /api/public/posts/{id}",
+      "ListPost": "GET /api/public/posts",
+      "UpdatePost": "PATCH /api/public/posts/{id}",
+      "DeletePost": "DELETE /api/public/posts/{id}"
+    },
+    "readiness": "GET /api/library/books/1",
+    "book_default_stock": 5,
+    "post_default_state": "open",
+    "post_initial_version": 1,
+    "seed_tokens": {
+      "ADMIN_owner": "00000000-0000-4000-8000-000000000001",
+      "READER": "00000000-0000-4000-8000-000000000002",
+      "ADMIN_other": "00000000-0000-4000-8000-000000000003"
+    },
+    "seed_user_ids": [
+      1,
+      2,
+      3
+    ],
+    "seed_token_expiry": "2099-01-01T00:00:00Z",
+    "seed_books": [
+      {
+        "id": 1,
+        "title": "seed book",
+        "stock": 5
+      }
+    ],
+    "seed_posts": [
+      {
+        "id": 1,
+        "author": 1,
+        "body": "visible",
+        "state": "open",
+        "version": 1
+      },
+      {
+        "id": 2,
+        "author": 1,
+        "body": "private",
+        "state": "hidden",
+        "version": 1
+      }
+    ],
+    "interfaces": {
+      "CreateBook": {
+        "route": "POST /api/library/books",
+        "request_fields": [
+          "title"
+        ],
+        "response_fields": [
+          "id",
+          "title",
+          "stock"
+        ]
+      },
+      "GetBook": {
+        "route": "GET /api/library/books/{id}",
+        "request_fields": [
+          "id"
+        ],
+        "response_fields": [
+          "id",
+          "title",
+          "stock"
+        ]
+      },
+      "ListBook": {
+        "route": "GET /api/library/books",
+        "request_fields": [
+          "page",
+          "size"
+        ],
+        "response_fields": [
+          "total",
+          "page",
+          "size",
+          "records"
+        ],
+        "record_fields": [
+          "id",
+          "title",
+          "stock"
+        ]
+      },
+      "UpdateBook": {
+        "route": "PUT /api/library/books/{id}",
+        "request_fields": [
+          "id",
+          "title"
+        ],
+        "response_fields": [
+          "id",
+          "title",
+          "stock"
+        ]
+      },
+      "DeleteBook": {
+        "route": "DELETE /api/library/books/{id}",
+        "request_fields": [
+          "id"
+        ],
+        "response_fields": []
+      },
+      "CreatePost": {
+        "route": "POST /api/public/posts",
+        "request_fields": [
+          "body"
+        ],
+        "response_fields": [
+          "id",
+          "author",
+          "body",
+          "state",
+          "version"
+        ]
+      },
+      "GetPost": {
+        "route": "GET /api/public/posts/{id}",
+        "request_fields": [
+          "id"
+        ],
+        "response_fields": [
+          "id",
+          "author",
+          "body",
+          "state",
+          "version"
+        ]
+      },
+      "ListPost": {
+        "route": "GET /api/public/posts",
+        "request_fields": [
+          "page",
+          "size"
+        ],
+        "response_fields": [
+          "total",
+          "page",
+          "size",
+          "records"
+        ],
+        "record_fields": [
+          "id",
+          "author",
+          "body",
+          "state",
+          "version"
+        ]
+      },
+      "UpdatePost": {
+        "route": "PATCH /api/public/posts/{id}",
+        "request_fields": [
+          "id",
+          "expectedVersion",
+          "changes"
+        ],
+        "response_fields": [
+          "id",
+          "author",
+          "body",
+          "state",
+          "version"
+        ],
+        "change_fields": [
+          "body"
+        ]
+      },
+      "DeletePost": {
+        "route": "DELETE /api/public/posts/{id}",
+        "request_fields": [
+          "id"
+        ],
+        "response_fields": []
+      }
+    },
+    "entity_fields": {
+      "User": [
+        "id",
+        "role"
+      ],
+      "AccessToken": [
+        "id",
+        "owner",
+        "expiresAt"
+      ],
+      "Book": [
+        "id",
+        "title",
+        "stock"
+      ],
+      "Post": [
+        "id",
+        "author",
+        "body",
+        "state",
+        "version"
+      ]
+    },
+    "view_fields": {},
+    "request_fields_by_type": {},
+    "enums": {
+      "Role": [
+        "READER",
+        "ADMIN"
+      ]
+    },
+    "declared_errors": {},
+    "paging": {
+      "request": [
+        "page",
+        "size"
+      ],
+      "response": [
+        "total",
+        "page",
+        "size",
+        "records"
+      ],
+      "page_default": 1,
+      "size_default": 20,
+      "page_range": [
+        1,
+        10000
+      ],
+      "size_range": [
+        1,
+        100
+      ]
+    },
+    "database_tables": {
+      "user": [
+        {
+          "name": "id",
+          "storage": "BIGINT"
+        },
+        {
+          "name": "role",
+          "storage": "VARCHAR(32)"
+        }
+      ],
+      "access_token": [
+        {
+          "name": "id",
+          "storage": "CHAR(36)"
+        },
+        {
+          "name": "owner_id",
+          "storage": "BIGINT"
+        },
+        {
+          "name": "expires_at",
+          "storage": "DATETIME(6)"
+        }
+      ],
+      "book": [
+        {
+          "name": "id",
+          "storage": "BIGINT"
+        },
+        {
+          "name": "title",
+          "storage": "VARCHAR(64)"
+        },
+        {
+          "name": "stock",
+          "storage": "INT"
+        }
+      ],
+      "post": [
+        {
+          "name": "id",
+          "storage": "BIGINT"
+        },
+        {
+          "name": "author_id",
+          "storage": "BIGINT"
+        },
+        {
+          "name": "body",
+          "storage": "VARCHAR(255)"
+        },
+        {
+          "name": "state",
+          "storage": "VARCHAR(64)"
+        },
+        {
+          "name": "version",
+          "storage": "BIGINT"
+        }
+      ]
+    },
+    "fixtures": {
+      "ddl": "conformance/mysql/crud-access-ddl.sql",
+      "seed": "conformance/mysql/crud-access-seed.sql",
+      "provided_by_oracle": true
+    }
+  },
+  "oracle": {
+    "id": "crud-access-http-mysql-v1",
+    "files": [
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/AdvisoryLockKey.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BusinessEndpointReadiness.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BusinessSliceHarness.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/ChildEnvironmentBuilder.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/ConformanceFixtures.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/ConformanceJvmLimits.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/CrudAccessBusinessConformanceIT.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/DiskTree.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceDirectory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceOwnershipInventory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceRootProof.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceSecretScanner.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/HttpAssertionClient.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MavenProjectRunner.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MysqlObserver.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MysqlRuntimeJdbcUrl.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MysqlRuntimeTrace.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/OwnedPathEntry.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/OwnedPathInventory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/OwnedRunDirectory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SchemaName.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SchemaSqlRenderer.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SecretCatalog.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SlmCandidateSupport.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SpringApplicationProcess.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/StreamingSecretRedactor.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/StrongFileIdentity.java",
+      "sir-toolchain-application/src/test/resources/conformance/mysql/crud-access-ddl.sql",
+      "sir-toolchain-application/src/test/resources/conformance/mysql/crud-access-seed.sql",
+      "sir-toolchain-application/src/test/resources/valid/crud-access.sir"
+    ]
+  },
+  "reference_evidence": {
+    "kind": "existing-reference-only-not-candidate-qualification",
+    "commit": "0c4fb4a4c30b14658f874d3cc21f3aabe0c27457",
+    "run_url": "https://github.com/HoloNova/Software-IR/actions/runs/40330013391"
+  }
+}

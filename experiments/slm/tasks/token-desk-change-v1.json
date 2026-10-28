@@ -1,0 +1,302 @@
+{
+  "schema_version": "sir-task/1",
+  "id": "auth-token-desk-change-v1",
+  "revision": "1",
+  "family": "auth.token-desk",
+  "split": "train",
+  "sir_version": "0.3",
+  "base_source": "experiments/slm/drafts/token-desk/base.sir",
+  "reference_source": "sir-toolchain-application/src/test/resources/valid/token-desk.sir",
+  "requirement": "在给定软件上增加账号注册与口令登录，保留 GetCredential、Refresh、Touch、FindAccount 的现有行为。Register 接收 name、password，创建并保存账号，成功返回 id、name，不包含口令或摘要；数据库口令必须为带独立盐的 pbkdf2-sha256$ 格式摘要，不能存明文。Login 接收 name、password，正确口令返回 200 和账号 id、name；错误口令和不存在账号都返回完全相同的 401 BadLogin；数据库中不是摘要格式的旧文本，即使与输入相同也不得登录。返回完整的 sir 0.3 文档，不要 Java、SQL 或解释。",
+  "contract": {
+    "namespace": "com.example.tokendesk",
+    "capabilities": [
+      "GetCredential",
+      "Refresh",
+      "Touch",
+      "Register",
+      "Login",
+      "FindAccount"
+    ],
+    "entities": [
+      "Credential",
+      "Account"
+    ],
+    "credential_get_request": [
+      "id"
+    ],
+    "credential_write_request": [
+      "token"
+    ],
+    "credential_response": [
+      "id",
+      "owner",
+      "expiresAt"
+    ],
+    "find_account_request": [
+      "name"
+    ],
+    "account_credentials": [
+      "name",
+      "password"
+    ],
+    "account_response": [
+      "id",
+      "name"
+    ],
+    "routes": {
+      "GetCredential": "GET /api/get-credential",
+      "Refresh": "POST /api/refresh",
+      "Touch": "POST /api/touch",
+      "Register": "POST /api/register",
+      "Login": "POST /api/login",
+      "FindAccount": "GET /api/find-account"
+    },
+    "readiness": "GET /api/get-credential?id=11111111-1111-4111-8111-111111111111",
+    "refresh_days": 7,
+    "touch_owner": "alice",
+    "digest_prefix": "pbkdf2-sha256$",
+    "seed_credentials": [
+      {
+        "id": "11111111-1111-4111-8111-111111111111",
+        "owner": "alice",
+        "used": false
+      },
+      {
+        "id": "22222222-2222-4222-8222-222222222222",
+        "owner": "alice",
+        "used": true
+      },
+      {
+        "id": "33333333-3333-4333-8333-333333333333",
+        "owner": "bob",
+        "used": false
+      }
+    ],
+    "seed_expiry": "2099-01-01T00:00:00Z",
+    "seed_accounts": [
+      {
+        "id": 1,
+        "name": "ann",
+        "password_hash": "not-a-digest"
+      },
+      {
+        "id": 2,
+        "name": "dup",
+        "password_hash": "not-a-digest"
+      },
+      {
+        "id": 3,
+        "name": "dup",
+        "password_hash": "not-a-digest"
+      }
+    ],
+    "storage": {
+      "credential": [
+        "id",
+        "owner",
+        "used",
+        "expires_at"
+      ],
+      "account": [
+        "id",
+        "name",
+        "password_hash"
+      ]
+    },
+    "unknown_uuid": "99999999-9999-4999-8999-999999999999",
+    "interfaces": {
+      "GetCredential": {
+        "route": "GET /api/get-credential",
+        "request_fields": [
+          "id"
+        ],
+        "response_fields": [
+          "id",
+          "owner",
+          "expiresAt"
+        ]
+      },
+      "Refresh": {
+        "route": "POST /api/refresh",
+        "request_fields": [
+          "token"
+        ],
+        "response_fields": [
+          "id",
+          "owner",
+          "expiresAt"
+        ]
+      },
+      "Touch": {
+        "route": "POST /api/touch",
+        "request_fields": [
+          "token"
+        ],
+        "response_fields": [
+          "id",
+          "owner",
+          "expiresAt"
+        ]
+      },
+      "Register": {
+        "route": "POST /api/register",
+        "request_fields": [
+          "name",
+          "password"
+        ],
+        "response_fields": [
+          "id",
+          "name"
+        ]
+      },
+      "Login": {
+        "route": "POST /api/login",
+        "request_fields": [
+          "name",
+          "password"
+        ],
+        "response_fields": [
+          "id",
+          "name"
+        ]
+      },
+      "FindAccount": {
+        "route": "GET /api/find-account",
+        "request_fields": [
+          "name"
+        ],
+        "response_fields": [
+          "id",
+          "name"
+        ]
+      }
+    },
+    "entity_fields": {
+      "Credential": [
+        "id",
+        "owner",
+        "used",
+        "expiresAt"
+      ],
+      "Account": [
+        "id",
+        "name",
+        "passwordHash"
+      ]
+    },
+    "view_fields": {
+      "CredentialView": [
+        "id",
+        "owner",
+        "expiresAt"
+      ],
+      "AccountView": [
+        "id",
+        "name"
+      ]
+    },
+    "request_fields_by_type": {
+      "CredentialRef": [
+        "token"
+      ],
+      "GetCredentialInput": [
+        "id"
+      ],
+      "AccountName": [
+        "name"
+      ],
+      "Credentials": [
+        "name",
+        "password"
+      ]
+    },
+    "enums": {},
+    "declared_errors": {
+      "Expired": 400,
+      "Invalid": 409,
+      "AccountNotFound": 404,
+      "CredentialNotFound": 404,
+      "BadLogin": 401
+    },
+    "database_tables": {
+      "credential": [
+        {
+          "name": "id",
+          "storage": "CHAR(36)"
+        },
+        {
+          "name": "owner",
+          "storage": "VARCHAR(64)"
+        },
+        {
+          "name": "used",
+          "storage": "TINYINT(1)"
+        },
+        {
+          "name": "expires_at",
+          "storage": "DATETIME(6)"
+        }
+      ],
+      "account": [
+        {
+          "name": "id",
+          "storage": "BIGINT"
+        },
+        {
+          "name": "name",
+          "storage": "VARCHAR(64)"
+        },
+        {
+          "name": "password_hash",
+          "storage": "VARCHAR(255)"
+        }
+      ]
+    },
+    "fixtures": {
+      "ddl": "conformance/mysql/token-desk-ddl.sql",
+      "seed": "conformance/mysql/token-desk-seed.sql",
+      "provided_by_oracle": true
+    }
+  },
+  "oracle": {
+    "id": "token-desk-http-mysql-v1",
+    "files": [
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/AdvisoryLockKey.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BusinessEndpointReadiness.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BusinessSliceHarness.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/ChildEnvironmentBuilder.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/ConformanceFixtures.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/ConformanceJvmLimits.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/DiskTree.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceDirectory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceOwnershipInventory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceRootProof.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceSecretScanner.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/HttpAssertionClient.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MavenProjectRunner.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MysqlObserver.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MysqlRuntimeJdbcUrl.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MysqlRuntimeTrace.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/OwnedPathEntry.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/OwnedPathInventory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/OwnedRunDirectory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SchemaName.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SchemaSqlRenderer.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SecretCatalog.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SlmCandidateSupport.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SpringApplicationProcess.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/StreamingSecretRedactor.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/StrongFileIdentity.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/TokenDeskBusinessConformanceIT.java",
+      "sir-toolchain-application/src/test/resources/conformance/mysql/token-desk-ddl.sql",
+      "sir-toolchain-application/src/test/resources/conformance/mysql/token-desk-seed.sql",
+      "sir-toolchain-application/src/test/resources/valid/token-desk.sir"
+    ]
+  },
+  "reference_evidence": {
+    "kind": "existing-reference-only-not-candidate-qualification",
+    "commit": "0c4fb4a4c30b14658f874d3cc21f3aabe0c27457",
+    "run_url": "https://github.com/HoloNova/Software-IR/actions/runs/40330013391"
+  }
+}
