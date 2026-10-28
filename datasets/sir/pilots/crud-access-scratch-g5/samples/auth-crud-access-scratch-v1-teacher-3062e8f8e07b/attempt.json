@@ -1,0 +1,21 @@
+{
+  "actual_model": "deepseek-flash",
+  "created_at": "2026-10-28T02:50:56.374124+00:00",
+  "id": "auth-crud-access-scratch-v1-teacher-3062e8f8e07b",
+  "raw_response_sha256": "8056ef5483222646a1b5ac675413d5185fa917406c11e4762e6dc83a221c177f",
+  "requested_model": "deepseek-flash",
+  "status": "CANDIDATE_NOT_YET_QUALIFIED",
+  "system_fingerprint": "bc19ba97cbe016479903222bb1578db6",
+  "usage": {
+    "completion_tokens": 1414,
+    "completion_tokens_details": null,
+    "prompt_cache_hit_tokens": 7936,
+    "prompt_cache_miss_tokens": 1250,
+    "prompt_tokens": 9186,
+    "prompt_tokens_details": {
+      "audio_tokens": null,
+      "cached_tokens": 7936
+    },
+    "total_tokens": 10600
+  }
+}
