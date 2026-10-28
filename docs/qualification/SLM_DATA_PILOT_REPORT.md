@@ -220,3 +220,22 @@ v4 这一轮：13 份中静态通过 7 份，四门通过 6 份。样本少、�
 判卷时发现 `slm-business-gate` 的并发组按分支设置，GitHub 每组只保留一个排队中的 run，连续触发 7 个时 #6～#10 被取消（未判任何东西，不留证据）。`306cc67` 改为按样本分组后重新触发，各 run 并行完成。
 
 7 份证据都放入各批次 `runtime/`（含失败那份），下载的 zip 哈希与 GitHub 记录一致，绑定哈希、生成摘要与附件哈希逐项核对，不含 CI 密码。现有导出器在 6 个通过的批次各导出 1 条：**新教师合格训练答案累计 9 条**，全部为 train 集（鉴权 5 条、课程 4 条），覆盖 16 份 train 题目中的 9 份。尚无合格答案的 7 份：bearer-credential 从零写、crud-access 从零写、guarded-transition 改写、course-selection 两种题型、relation-slice 从零写、write-slice 从零写。业务账本83/1/0不变。
+
+## 第九阶段：v5 补采与通用静态修复（2026-10-28）
+
+对 v4 一轮未合格的 7 份题目用 `sir-0.3-general-v5` 各采 1 次（`*-g5`，input 33893、其中缓存命中 16128，output 9547 tokens）：只有 relation-slice 从零写静态通过。v5 明确写了的规则仍被违反（course-selection 两份再次用 `target` 当变量名，guarded-transition 再次在守卫更新后写 `persist … else`），另有 create 绑定 Version 字段、`actor` 写成 `Ref<AccessToken>`。继续加 prompt 规则的收益已经很小。
+
+改为用编译器诊断修复：新增 `prompts/repair-general-v1.md`（只说明按诊断逐条改、需求与接口不变，不提示改法），对 6 份静态失败各修 1 轮（input 44730、其中缓存命中 38144，output 9053 tokens），5 份修复后静态通过；course-selection 从零写引用了未定义的 `TokenPairView`，按约定不再修。
+
+| 题目 | 候选 | 来源 | 业务门 | 检查 | 结果 |
+| --- | --- | --- | --- | --- | --- |
+| relation-slice 从零写 | `561bdfe9ead2` | v5 初始 | [#17](https://github.com/HoloNova/Software-IR/actions/runs/40622055593) | 41/0 | 四门通过 |
+| guarded-transition 改写 | `857fcfe57b22` | 静态修复 | [#20](https://github.com/HoloNova/Software-IR/actions/runs/40622425058) | 25/0 | 四门通过 |
+| write-slice 从零写 | `be9817697402` | 静态修复 | [#22](https://github.com/HoloNova/Software-IR/actions/runs/40622430172) | 62/0 | 四门通过 |
+| bearer-credential 从零写 | `c9ab97cd12d2` | 静态修复 | [#18](https://github.com/HoloNova/Software-IR/actions/runs/40622420133) | 33/3 | 业务失败：登出返回 401，登出后令牌仍有效 |
+| crud-access 从零写 | `b6e7a5435998` | 静态修复 | [#19](https://github.com/HoloNova/Software-IR/actions/runs/40622422717) | 45/3 | 业务失败：公开读取没有遵守软删除 scope |
+| course-selection 改写 | `dbbbac2d45bc` | 静态修复 | [#21](https://github.com/HoloNova/Software-IR/actions/runs/40622427838) | 128/24 | 业务失败：星期为空时 500 而非 400 等 |
+
+6 份证据都放入各批次 `runtime/`，zip 哈希与 GitHub 记录一致，绑定哈希、生成摘要与附件哈希逐项核对，不含 CI 密码。修复出的候选，其静态结果在 `checked-r1.jsonl`，导出时以此文件为准。3 个通过的批次各导出 1 条：**新教师合格训练答案累计 12 条**（鉴权 6、课程 6），覆盖 16 份 train 题目中的 12 份。仍无合格答案的 4 份：bearer-credential 从零写、crud-access 从零写、course-selection 改写（均为业务失败）与 course-selection 从零写（修复后仍静态失败）。
+
+修复轨迹是有用的数据：两份修复后的合格答案带着“初次失败 → 编译器诊断 → 修好”的完整记录（`generation_mode: feedback-repair`、`parent_id`）。业务失败的三份，可以用 `repair --runtime-evidence` 把判卷报告发回教师修一轮，未做。业务账本83/1/0不变。

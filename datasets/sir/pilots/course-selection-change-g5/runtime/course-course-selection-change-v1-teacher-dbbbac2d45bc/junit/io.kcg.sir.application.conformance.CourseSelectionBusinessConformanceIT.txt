@@ -1,0 +1,262 @@
+-------------------------------------------------------------------------------
+Test set: io.kcg.sir.application.conformance.CourseSelectionBusinessConformanceIT
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 13.99 s <<< FAILURE! -- in io.kcg.sir.application.conformance.CourseSelectionBusinessConformanceIT
+io.kcg.sir.application.conformance.CourseSelectionBusinessConformanceIT.actualCourseTopicChecksSchedulePrerequisitesAndSeatTransactions -- Time elapsed: 13.96 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: 
+=== Course selection, complete prerequisites, weekly conflicts and consistent seats business conformance ===
+verdict=FAILED
+runId=course-selection-1a180634ab7-5103
+schemaName=kcg_conf_run
+advisoryLock=held during the run
+schemaSource=TEST_FIXTURE_DDL
+productInitializeImplemented=false
+productUpdateImplemented=false
+sirResource=EXTERNAL_CANDIDATE:candidate.sir sha256=c252b63f41c237f2576a557b416c3dc0ca6e05bed9000818345f60745b2a0f71
+fixtureDdl=/conformance/mysql/course-ddl.sql sha256=9803573357f1ea92e84d0793560379e6a205b8cab3118d3533a859acad3d1dc2
+fixtureSeed=/conformance/mysql/course-seed.sql sha256=688b88d12b0967fad45e250b8c72015fb2c4efa1ce6af550cc766286bffe2da7
+generatedFiles=95 combinedSha256=d8f1d8c734491a72056be0b7782c1338495fcf597fcfdc6d1734a27881643cff
+generatedProjectBuild=PASSED (exit 0)
+httpReadiness=READY (actual topic public course route)
+mysqlRowsBefore=1 mysqlRowsAfter=12
+mavenOffline=false
+javaVersion=21.0.12.1
+osName=Linux osArch=amd64
+serverPort=18080
+slmMysqlVersion=8.4.13
+slmSampleId=course-course-selection-change-v1-teacher-dbbbac2d45bc
+slmSourceSha256=c252b63f41c237f2576a557b416c3dc0ca6e05bed9000818345f60745b2a0f71
+slmGeneratedDigest=773e55bd9b75d3d745be85c1cfb5667c9763da5230ad0f76682c496d3f314f1d
+
+checksPassed=128 checksFailed=24
+PASS the SIR slice compiles without errors (warnings remain visible) (diagnostics=[])
+PASS the compiler emitted a generated project (generatedFileCount=95)
+PASS candidate runtime compilation matches full static generation (sourceSha256=c252b63f41c237f2576a557b416c3dc0ca6e05bed9000818345f60745b2a0f71 generatedDigest=773e55bd9b75d3d745be85c1cfb5667c9763da5230ad0f76682c496d3f314f1d)
+PASS the generated project builds (mvn clean verify) (exitCode=0)
+PASS the build produced an executable jar (projectRoot=/home/runner/work/Software-IR/Software-IR/ci-work/course-selection-1a180634ab7-5103/generated-project)
+PASS the generated application serves the compiled business route (readinessUrl=http://127.0.0.1:18080/api/courses?keyword=TARGET&page=1&size=1)
+PASS seed seat counters match actual enrollments (Snapshot[courses=[1|A|Prior A|2|20|0|5|1|2|1, 2|B|Prior B|2|20|0|5|2|3|1, 3|C|Prior C|2|20|0|5|3|4|1, 4|D|Prior D|2|20|0|5|4|5|1, 10|TARGET|Needs A and B|2|10|0|1|1|3|1, 11|ADJACENT|Touches target|2|10|0|1|3|5|1, 12|OVERLAP|Overlaps target|2|10|0|1|2|4|1, 13|FOUR|Needs four courses|2|10|0|3|1|2|1, 14|DRAFT|Unpublished|2|10|0|4|1|2|0, 15|CONFIG|Configure then publish|2|10|0|4|4|5|0, 21|RACE-A|Concurrent A|2|10|0|2|1|4|1, 22|RACE-B|Concurrent B|2|10|0|2|3|5|1, 23|DAY3|Independent day3|2|10|0|3|1|2|1, 24|DAY4|Independent day4|2|10|0|4|1|2|1, 30|SEATS|Three seats|2|3|0|6|1|2|1, 40|ROLLBACK|Late failure|2|10|1|7|1|2|1], enrollments=[400|25|40|2026-10-28 02:42:33.988573], prerequisites=[1|10|1, 2|10|2, 3|13|1, 4|13|2, 5|13|3, 6|13|4], completions=[1|11|1|2026-10-28 02:42:33.986814, 2|12|1|2026-10-28 02:42:33.986814, 3|12|2|2026-10-28 02:42:33.986814, 4|13|2|2026-10-28 02:42:33.986814, 5|24|1|2026-10-28 02:42:33.986814, 6|24|2|2026-10-28 02:42:33.986814, 7|24|3|2026-10-28 02:42:33.986814, 8|24|4|2026-10-28 02:42:33.986814, 9|25|1|2026-10-28 02:42:33.986814, 10|25|3|2026-10-28 02:42:33.986814]])
+PASS anonymous selection is refused (expected=401 actual=401)
+PASS draft course is not open (expected=409 actual=409)
+PASS draft course is not open error code ({code=CourseNotOpen})
+PASS unknown course is not found (expected=404 actual=404)
+PASS unknown course is not found error code ({code=CourseNotFound})
+PASS none, partial and same-count wrong prerequisite sets are refused for 10 (expected=409 actual=409)
+PASS none, partial and same-count wrong prerequisite sets are refused for 10 error code ({code=MissingPrerequisites})
+PASS none, partial and same-count wrong prerequisite sets are refused for 11 (expected=409 actual=409)
+PASS none, partial and same-count wrong prerequisite sets are refused for 11 error code ({code=MissingPrerequisites})
+PASS none, partial and same-count wrong prerequisite sets are refused for 13 (expected=409 actual=409)
+PASS none, partial and same-count wrong prerequisite sets are refused for 13 error code ({code=MissingPrerequisites})
+PASS none, partial and same-count wrong prerequisite sets are refused for 25 (expected=409 actual=409)
+PASS none, partial and same-count wrong prerequisite sets are refused for 25 error code ({code=MissingPrerequisites})
+PASS prerequisite refusals and authentication never reserve seats (Snapshot[courses=[1|A|Prior A|2|20|0|5|1|2|1, 2|B|Prior B|2|20|0|5|2|3|1, 3|C|Prior C|2|20|0|5|3|4|1, 4|D|Prior D|2|20|0|5|4|5|1, 10|TARGET|Needs A and B|2|10|0|1|1|3|1, 11|ADJACENT|Touches target|2|10|0|1|3|5|1, 12|OVERLAP|Overlaps target|2|10|0|1|2|4|1, 13|FOUR|Needs four courses|2|10|0|3|1|2|1, 14|DRAFT|Unpublished|2|10|0|4|1|2|0, 15|CONFIG|Configure then publish|2|10|0|4|4|5|0, 21|RACE-A|Concurrent A|2|10|0|2|1|4|1, 22|RACE-B|Concurrent B|2|10|0|2|3|5|1, 23|DAY3|Independent day3|2|10|0|3|1|2|1, 24|DAY4|Independent day4|2|10|0|4|1|2|1, 30|SEATS|Three seats|2|3|0|6|1|2|1, 40|ROLLBACK|Late failure|2|10|1|7|1|2|1], enrollments=[400|25|40|2026-10-28 02:42:33.988573], prerequisites=[1|10|1, 2|10|2, 3|13|1, 4|13|2, 5|13|3, 6|13|4], completions=[1|11|1|2026-10-28 02:42:33.986814, 2|12|1|2026-10-28 02:42:33.986814, 3|12|2|2026-10-28 02:42:33.986814, 4|13|2|2026-10-28 02:42:33.986814, 5|24|1|2026-10-28 02:42:33.986814, 6|24|2|2026-10-28 02:42:33.986814, 7|24|3|2026-10-28 02:42:33.986814, 8|24|4|2026-10-28 02:42:33.986814, 9|25|1|2026-10-28 02:42:33.986814, 10|25|3|2026-10-28 02:42:33.986814]])
+PASS all required courses allow selection (expected=201 actual=201)
+PASS repeat selection has its specific declared failure (expected=409 actual=409)
+PASS repeat selection has its specific declared failure error code ({code=AlreadyEnrolled})
+PASS overlapping weekly periods are refused (expected=409 actual=409)
+PASS overlapping weekly periods are refused error code ({code=TimeConflict})
+PASS duplicate and time-conflict checks do not write (Snapshot[courses=[1|A|Prior A|2|20|0|5|1|2|1, 2|B|Prior B|2|20|0|5|2|3|1, 3|C|Prior C|2|20|0|5|3|4|1, 4|D|Prior D|2|20|0|5|4|5|1, 10|TARGET|Needs A and B|2|10|1|1|1|3|1, 11|ADJACENT|Touches target|2|10|0|1|3|5|1, 12|OVERLAP|Overlaps target|2|10|0|1|2|4|1, 13|FOUR|Needs four courses|2|10|0|3|1|2|1, 14|DRAFT|Unpublished|2|10|0|4|1|2|0, 15|CONFIG|Configure then publish|2|10|0|4|4|5|0, 21|RACE-A|Concurrent A|2|10|0|2|1|4|1, 22|RACE-B|Concurrent B|2|10|0|2|3|5|1, 23|DAY3|Independent day3|2|10|0|3|1|2|1, 24|DAY4|Independent day4|2|10|0|4|1|2|1, 30|SEATS|Three seats|2|3|0|6|1|2|1, 40|ROLLBACK|Late failure|2|10|1|7|1|2|1], enrollments=[400|25|40|2026-10-28 02:42:33.988573, 401|12|10|2026-10-28 02:42:44.689977], prerequisites=[1|10|1, 2|10|2, 3|13|1, 4|13|2, 5|13|3, 6|13|4], completions=[1|11|1|2026-10-28 02:42:33.986814, 2|12|1|2026-10-28 02:42:33.986814, 3|12|2|2026-10-28 02:42:33.986814, 4|13|2|2026-10-28 02:42:33.986814, 5|24|1|2026-10-28 02:42:33.986814, 6|24|2|2026-10-28 02:42:33.986814, 7|24|3|2026-10-28 02:42:33.986814, 8|24|4|2026-10-28 02:42:33.986814, 9|25|1|2026-10-28 02:42:33.986814, 10|25|3|2026-10-28 02:42:33.986814]])
+PASS adjacent half-open periods are allowed (expected=201 actual=201)
+PASS two passed courses do not satisfy a four-course requirement (expected=409 actual=409)
+PASS two passed courses do not satisfy a four-course requirement error code ({code=MissingPrerequisites})
+PASS all four direct prerequisites work without an artificial one-course limit (expected=201 actual=201)
+PASS another student cannot drop this enrollment (expected=403 actual=403)
+PASS another student cannot drop this enrollment error code ({code=Forbidden})
+PASS foreign drop does not change any seat (Snapshot[courses=[1|A|Prior A|2|20|0|5|1|2|1, 2|B|Prior B|2|20|0|5|2|3|1, 3|C|Prior C|2|20|0|5|3|4|1, 4|D|Prior D|2|20|0|5|4|5|1, 10|TARGET|Needs A and B|2|10|1|1|1|3|1, 11|ADJACENT|Touches target|2|10|1|1|3|5|1, 12|OVERLAP|Overlaps target|2|10|0|1|2|4|1, 13|FOUR|Needs four courses|2|10|1|3|1|2|1, 14|DRAFT|Unpublished|2|10|0|4|1|2|0, 15|CONFIG|Configure then publish|2|10|0|4|4|5|0, 21|RACE-A|Concurrent A|2|10|0|2|1|4|1, 22|RACE-B|Concurrent B|2|10|0|2|3|5|1, 23|DAY3|Independent day3|2|10|0|3|1|2|1, 24|DAY4|Independent day4|2|10|0|4|1|2|1, 30|SEATS|Three seats|2|3|0|6|1|2|1, 40|ROLLBACK|Late failure|2|10|1|7|1|2|1], enrollments=[400|25|40|2026-10-28 02:42:33.988573, 401|12|10|2026-10-28 02:42:44.689977, 402|12|11|2026-10-28 02:42:44.778743, 403|24|13|2026-10-28 02:42:44.820650], prerequisites=[1|10|1, 2|10|2, 3|13|1, 4|13|2, 5|13|3, 6|13|4], completions=[1|11|1|2026-10-28 02:42:33.986814, 2|12|1|2026-10-28 02:42:33.986814, 3|12|2|2026-10-28 02:42:33.986814, 4|13|2|2026-10-28 02:42:33.986814, 5|24|1|2026-10-28 02:42:33.986814, 6|24|2|2026-10-28 02:42:33.986814, 7|24|3|2026-10-28 02:42:33.986814, 8|24|4|2026-10-28 02:42:33.986814, 9|25|1|2026-10-28 02:42:33.986814, 10|25|3|2026-10-28 02:42:33.986814]])
+PASS owner can drop a course (expected=200 actual=200)
+PASS duplicate drop is not a second seat release (expected=404 actual=404)
+PASS duplicate drop is not a second seat release error code ({code=EnrollmentNotFound})
+PASS duplicate drop preserves the course counter (Snapshot[courses=[1|A|Prior A|2|20|0|5|1|2|1, 2|B|Prior B|2|20|0|5|2|3|1, 3|C|Prior C|2|20|0|5|3|4|1, 4|D|Prior D|2|20|0|5|4|5|1, 10|TARGET|Needs A and B|2|10|0|1|1|3|1, 11|ADJACENT|Touches target|2|10|1|1|3|5|1, 12|OVERLAP|Overlaps target|2|10|0|1|2|4|1, 13|FOUR|Needs four courses|2|10|1|3|1|2|1, 14|DRAFT|Unpublished|2|10|0|4|1|2|0, 15|CONFIG|Configure then publish|2|10|0|4|4|5|0, 21|RACE-A|Concurrent A|2|10|0|2|1|4|1, 22|RACE-B|Concurrent B|2|10|0|2|3|5|1, 23|DAY3|Independent day3|2|10|0|3|1|2|1, 24|DAY4|Independent day4|2|10|0|4|1|2|1, 30|SEATS|Three seats|2|3|0|6|1|2|1, 40|ROLLBACK|Late failure|2|10|1|7|1|2|1], enrollments=[400|25|40|2026-10-28 02:42:33.988573, 402|12|11|2026-10-28 02:42:44.778743, 403|24|13|2026-10-28 02:42:44.820650], prerequisites=[1|10|1, 2|10|2, 3|13|1, 4|13|2, 5|13|3, 6|13|4], completions=[1|11|1|2026-10-28 02:42:33.986814, 2|12|1|2026-10-28 02:42:33.986814, 3|12|2|2026-10-28 02:42:33.986814, 4|13|2|2026-10-28 02:42:33.986814, 5|24|1|2026-10-28 02:42:33.986814, 6|24|2|2026-10-28 02:42:33.986814, 7|24|3|2026-10-28 02:42:33.986814, 8|24|4|2026-10-28 02:42:33.986814, 9|25|1|2026-10-28 02:42:33.986814, 10|25|3|2026-10-28 02:42:33.986814]])
+PASS a dropped course can be selected again (expected=201 actual=201)
+PASS students cannot add their own prerequisite exemptions (expected=403 actual=403)
+PASS students cannot add their own prerequisite exemptions error code ({code=Forbidden})
+PASS students cannot publish courses (expected=403 actual=403)
+PASS students cannot publish courses error code ({code=Forbidden})
+PASS students cannot assert a passed transcript (expected=403 actual=403)
+PASS students cannot assert a passed transcript error code ({code=Forbidden})
+PASS configuration authorization is checked before writing (Snapshot[courses=[1|A|Prior A|2|20|0|5|1|2|1, 2|B|Prior B|2|20|0|5|2|3|1, 3|C|Prior C|2|20|0|5|3|4|1, 4|D|Prior D|2|20|0|5|4|5|1, 10|TARGET|Needs A and B|2|10|1|1|1|3|1, 11|ADJACENT|Touches target|2|10|1|1|3|5|1, 12|OVERLAP|Overlaps target|2|10|0|1|2|4|1, 13|FOUR|Needs four courses|2|10|1|3|1|2|1, 14|DRAFT|Unpublished|2|10|0|4|1|2|0, 15|CONFIG|Configure then publish|2|10|0|4|4|5|0, 21|RACE-A|Concurrent A|2|10|0|2|1|4|1, 22|RACE-B|Concurrent B|2|10|0|2|3|5|1, 23|DAY3|Independent day3|2|10|0|3|1|2|1, 24|DAY4|Independent day4|2|10|0|4|1|2|1, 30|SEATS|Three seats|2|3|0|6|1|2|1, 40|ROLLBACK|Late failure|2|10|1|7|1|2|1], enrollments=[400|25|40|2026-10-28 02:42:33.988573, 402|12|11|2026-10-28 02:42:44.778743, 403|24|13|2026-10-28 02:42:44.820650, 404|12|10|2026-10-28 02:42:44.912564], prerequisites=[1|10|1, 2|10|2, 3|13|1, 4|13|2, 5|13|3, 6|13|4], completions=[1|11|1|2026-10-28 02:42:33.986814, 2|12|1|2026-10-28 02:42:33.986814, 3|12|2|2026-10-28 02:42:33.986814, 4|13|2|2026-10-28 02:42:33.986814, 5|24|1|2026-10-28 02:42:33.986814, 6|24|2|2026-10-28 02:42:33.986814, 7|24|3|2026-10-28 02:42:33.986814, 8|24|4|2026-10-28 02:42:33.986814, 9|25|1|2026-10-28 02:42:33.986814, 10|25|3|2026-10-28 02:42:33.986814]])
+PASS administrator records the missing passed course (expected=201 actual=201)
+PASS completion facts are unique (expected=409 actual=409)
+PASS completion facts are unique error code ({code=CompletionExists})
+PASS duplicate completion does not alter transcript or seat counts (Snapshot[courses=[1|A|Prior A|2|20|0|5|1|2|1, 2|B|Prior B|2|20|0|5|2|3|1, 3|C|Prior C|2|20|0|5|3|4|1, 4|D|Prior D|2|20|0|5|4|5|1, 10|TARGET|Needs A and B|2|10|1|1|1|3|1, 11|ADJACENT|Touches target|2|10|1|1|3|5|1, 12|OVERLAP|Overlaps target|2|10|0|1|2|4|1, 13|FOUR|Needs four courses|2|10|1|3|1|2|1, 14|DRAFT|Unpublished|2|10|0|4|1|2|0, 15|CONFIG|Configure then publish|2|10|0|4|4|5|0, 21|RACE-A|Concurrent A|2|10|0|2|1|4|1, 22|RACE-B|Concurrent B|2|10|0|2|3|5|1, 23|DAY3|Independent day3|2|10|0|3|1|2|1, 24|DAY4|Independent day4|2|10|0|4|1|2|1, 30|SEATS|Three seats|2|3|0|6|1|2|1, 40|ROLLBACK|Late failure|2|10|1|7|1|2|1], enrollments=[400|25|40|2026-10-28 02:42:33.988573, 402|12|11|2026-10-28 02:42:44.778743, 403|24|13|2026-10-28 02:42:44.820650, 404|12|10|2026-10-28 02:42:44.912564], prerequisites=[1|10|1, 2|10|2, 3|13|1, 4|13|2, 5|13|3, 6|13|4], completions=[1|11|1|2026-10-28 02:42:33.986814, 2|12|1|2026-10-28 02:42:33.986814, 3|12|2|2026-10-28 02:42:33.986814, 4|13|2|2026-10-28 02:42:33.986814, 5|24|1|2026-10-28 02:42:33.986814, 6|24|2|2026-10-28 02:42:33.986814, 7|24|3|2026-10-28 02:42:33.986814, 8|24|4|2026-10-28 02:42:33.986814, 9|25|1|2026-10-28 02:42:33.986814, 10|25|3|2026-10-28 02:42:33.986814, 11|11|2|2026-10-28 02:42:44.965968]])
+PASS selection sees newly committed completion (expected=201 actual=201)
+PASS draft prerequisite is configurable (expected=201 actual=201)
+PASS duplicate prerequisite is a declared conflict (expected=409 actual=409)
+PASS duplicate prerequisite is a declared conflict error code ({code=PrerequisiteExists})
+PASS self prerequisite is rejected (expected=400 actual=400)
+PASS self prerequisite is rejected error code ({code=InvalidPrerequisite})
+PASS unpublished prerequisite cannot create a cycle (expected=400 actual=400)
+PASS unpublished prerequisite cannot create a cycle error code ({code=InvalidPrerequisite})
+PASS students cannot remove a prerequisite (expected=403 actual=403)
+PASS students cannot remove a prerequisite error code ({code=Forbidden})
+PASS administrator may remove a draft prerequisite (expected=200 actual=200)
+PASS removed draft prerequisite may be added again (expected=201 actual=201)
+PASS draft can require a second course (expected=201 actual=201)
+PASS publishing fixes the set of required courses (expected=200 actual=200)
+PASS published prerequisites cannot be added (expected=409 actual=409)
+PASS published prerequisites cannot be added error code ({code=CoursePublished})
+PASS published prerequisites cannot be removed (expected=409 actual=409)
+PASS published prerequisites cannot be removed error code ({code=CoursePublished})
+PASS published state cannot be replayed (expected=409 actual=409)
+PASS published state cannot be replayed error code ({code=CoursePublished})
+PASS a published curriculum cannot change beneath an enrollment check (Snapshot[courses=[1|A|Prior A|2|20|0|5|1|2|1, 2|B|Prior B|2|20|0|5|2|3|1, 3|C|Prior C|2|20|0|5|3|4|1, 4|D|Prior D|2|20|0|5|4|5|1, 10|TARGET|Needs A and B|2|10|2|1|1|3|1, 11|ADJACENT|Touches target|2|10|1|1|3|5|1, 12|OVERLAP|Overlaps target|2|10|0|1|2|4|1, 13|FOUR|Needs four courses|2|10|1|3|1|2|1, 14|DRAFT|Unpublished|2|10|0|4|1|2|0, 15|CONFIG|Configure then publish|2|10|0|4|4|5|1, 21|RACE-A|Concurrent A|2|10|0|2|1|4|1, 22|RACE-B|Concurrent B|2|10|0|2|3|5|1, 23|DAY3|Independent day3|2|10|0|3|1|2|1, 24|DAY4|Independent day4|2|10|0|4|1|2|1, 30|SEATS|Three seats|2|3|0|6|1|2|1, 40|ROLLBACK|Late failure|2|10|1|7|1|2|1], enrollments=[400|25|40|2026-10-28 02:42:33.988573, 402|12|11|2026-10-28 02:42:44.778743, 403|24|13|2026-10-28 02:42:44.820650, 404|12|10|2026-10-28 02:42:44.912564, 405|11|10|2026-10-28 02:42:44.998664], prerequisites=[1|10|1, 2|10|2, 3|13|1, 4|13|2, 5|13|3, 6|13|4, 8|15|1, 9|15|2], completions=[1|11|1|2026-10-28 02:42:33.986814, 2|12|1|2026-10-28 02:42:33.986814, 3|12|2|2026-10-28 02:42:33.986814, 4|13|2|2026-10-28 02:42:33.986814, 5|24|1|2026-10-28 02:42:33.986814, 6|24|2|2026-10-28 02:42:33.986814, 7|24|3|2026-10-28 02:42:33.986814, 8|24|4|2026-10-28 02:42:33.986814, 9|25|1|2026-10-28 02:42:33.986814, 10|25|3|2026-10-28 02:42:33.986814, 11|11|2|2026-10-28 02:42:44.965968]])
+PASS configured published course checks the complete transcript (expected=201 actual=201)
+PASS out-of-range, empty or reverse schedule is rejected (expected=400 actual=400)
+PASS out-of-range, empty or reverse schedule is rejected (expected=400 actual=400)
+PASS out-of-range, empty or reverse schedule is rejected (expected=400 actual=400)
+PASS out-of-range, empty or reverse schedule is rejected (expected=400 actual=400)
+PASS out-of-range, empty or reverse schedule is rejected (expected=400 actual=400)
+PASS invalid schedules create no course and change no business table (Snapshot[courses=[1|A|Prior A|2|20|0|5|1|2|1, 2|B|Prior B|2|20|0|5|2|3|1, 3|C|Prior C|2|20|0|5|3|4|1, 4|D|Prior D|2|20|0|5|4|5|1, 10|TARGET|Needs A and B|2|10|2|1|1|3|1, 11|ADJACENT|Touches target|2|10|1|1|3|5|1, 12|OVERLAP|Overlaps target|2|10|0|1|2|4|1, 13|FOUR|Needs four courses|2|10|1|3|1|2|1, 14|DRAFT|Unpublished|2|10|0|4|1|2|0, 15|CONFIG|Configure then publish|2|10|1|4|4|5|1, 21|RACE-A|Concurrent A|2|10|0|2|1|4|1, 22|RACE-B|Concurrent B|2|10|0|2|3|5|1, 23|DAY3|Independent day3|2|10|0|3|1|2|1, 24|DAY4|Independent day4|2|10|0|4|1|2|1, 30|SEATS|Three seats|2|3|0|6|1|2|1, 40|ROLLBACK|Late failure|2|10|1|7|1|2|1], enrollments=[400|25|40|2026-10-28 02:42:33.988573, 402|12|11|2026-10-28 02:42:44.778743, 403|24|13|2026-10-28 02:42:44.820650, 404|12|10|2026-10-28 02:42:44.912564, 405|11|10|2026-10-28 02:42:44.998664, 406|11|15|2026-10-28 02:42:45.183102], prerequisites=[1|10|1, 2|10|2, 3|13|1, 4|13|2, 5|13|3, 6|13|4, 8|15|1, 9|15|2], completions=[1|11|1|2026-10-28 02:42:33.986814, 2|12|1|2026-10-28 02:42:33.986814, 3|12|2|2026-10-28 02:42:33.986814, 4|13|2|2026-10-28 02:42:33.986814, 5|24|1|2026-10-28 02:42:33.986814, 6|24|2|2026-10-28 02:42:33.986814, 7|24|3|2026-10-28 02:42:33.986814, 8|24|4|2026-10-28 02:42:33.986814, 9|25|1|2026-10-28 02:42:33.986814, 10|25|3|2026-10-28 02:42:33.986814, 11|11|2|2026-10-28 02:42:44.965968]])
+PASS last valid weekly period creates a draft (expected=201 actual=201)
+PASS new course is not implicitly published ({published=false})
+PASS one student cannot concurrently enter two overlapping courses ([201, 409])
+PASS losing concurrent selection sees a time conflict (expected=409 actual=409)
+PASS losing concurrent selection sees a time conflict error code ({code=TimeConflict})
+PASS same periods on different weekdays remain independent ([201, 201])
+PASS eight students claim exactly three seats ([201, 201, 409, 409, 409, 201, 409, 409])
+PASS full course keeps its declared error (expected=409 actual=409)
+PASS full course keeps its declared error error code ({code=CourseFull})
+PASS full course keeps its declared error (expected=409 actual=409)
+PASS full course keeps its declared error error code ({code=CourseFull})
+PASS full course keeps its declared error (expected=409 actual=409)
+PASS full course keeps its declared error error code ({code=CourseFull})
+PASS full course keeps its declared error (expected=409 actual=409)
+PASS full course keeps its declared error error code ({code=CourseFull})
+PASS full course keeps its declared error (expected=409 actual=409)
+PASS full course keeps its declared error error code ({code=CourseFull})
+PASS stored roster contains exactly three seats ([410|31|30|2026-10-28 02:42:46.092029, 411|30|30|2026-10-28 02:42:46.111748, 412|35|30|2026-10-28 02:42:46.126164])
+PASS eight drops release only one seat ([404, 404, 404, 404, 404, 200, 404, 404])
+PASS replayed drop follows not-found (expected=404 actual=404)
+PASS replayed drop follows not-found error code ({code=EnrollmentNotFound})
+PASS replayed drop follows not-found (expected=404 actual=404)
+PASS replayed drop follows not-found error code ({code=EnrollmentNotFound})
+PASS replayed drop follows not-found (expected=404 actual=404)
+PASS replayed drop follows not-found error code ({code=EnrollmentNotFound})
+PASS replayed drop follows not-found (expected=404 actual=404)
+PASS replayed drop follows not-found error code ({code=EnrollmentNotFound})
+PASS replayed drop follows not-found (expected=404 actual=404)
+PASS replayed drop follows not-found error code ({code=EnrollmentNotFound})
+PASS replayed drop follows not-found (expected=404 actual=404)
+PASS replayed drop follows not-found error code ({code=EnrollmentNotFound})
+PASS replayed drop follows not-found (expected=404 actual=404)
+PASS replayed drop follows not-found error code ({code=EnrollmentNotFound})
+PASS all concurrent choices and drops preserve seat accounting (Snapshot[courses=[1|A|Prior A|2|20|0|5|1|2|1, 2|B|Prior B|2|20|0|5|2|3|1, 3|C|Prior C|2|20|0|5|3|4|1, 4|D|Prior D|2|20|0|5|4|5|1, 10|TARGET|Needs A and B|2|10|2|1|1|3|1, 11|ADJACENT|Touches target|2|10|1|1|3|5|1, 12|OVERLAP|Overlaps target|2|10|0|1|2|4|1, 13|FOUR|Needs four courses|2|10|1|3|1|2|1, 14|DRAFT|Unpublished|2|10|0|4|1|2|0, 15|CONFIG|Configure then publish|2|10|1|4|4|5|1, 21|RACE-A|Concurrent A|2|10|1|2|1|4|1, 22|RACE-B|Concurrent B|2|10|0|2|3|5|1, 23|DAY3|Independent day3|2|10|1|3|1|2|1, 24|DAY4|Independent day4|2|10|1|4|1|2|1, 30|SEATS|Three seats|2|3|2|6|1|2|1, 40|ROLLBACK|Late failure|2|10|1|7|1|2|1, 41|NEW|New Course|2|6|0|7|12|13|0], enrollments=[400|25|40|2026-10-28 02:42:33.988573, 402|12|11|2026-10-28 02:42:44.778743, 403|24|13|2026-10-28 02:42:44.820650, 404|12|10|2026-10-28 02:42:44.912564, 405|11|10|2026-10-28 02:42:44.998664, 406|11|15|2026-10-28 02:42:45.183102, 407|14|21|2026-10-28 02:42:46.021019, 408|15|24|2026-10-28 02:42:46.052723, 409|15|23|2026-10-28 02:42:46.063766, 411|30|30|2026-10-28 02:42:46.111748, 412|35|30|2026-10-28 02:42:46.126164], prerequisites=[1|10|1, 2|10|2, 3|13|1, 4|13|2, 5|13|3, 6|13|4, 8|15|1, 9|15|2], completions=[1|11|1|2026-10-28 02:42:33.986814, 2|12|1|2026-10-28 02:42:33.986814, 3|12|2|2026-10-28 02:42:33.986814, 4|13|2|2026-10-28 02:42:33.986814, 5|24|1|2026-10-28 02:42:33.986814, 6|24|2|2026-10-28 02:42:33.986814, 7|24|3|2026-10-28 02:42:33.986814, 8|24|4|2026-10-28 02:42:33.986814, 9|25|1|2026-10-28 02:42:33.986814, 10|25|3|2026-10-28 02:42:33.986814, 11|11|2|2026-10-28 02:42:44.965968]])
+PASS enrollment demonstrably waits on the common student lock (performance_schema.data_lock_waits)
+PASS after waiting, the request sees the committed conflicting course (expected=409 actual=409)
+PASS after waiting, the request sees the committed conflicting course error code ({code=TimeConflict})
+PASS waiting student has only the fixture's committed enrollment ([400|25|40|2026-10-28 02:42:33.988573, 402|12|11|2026-10-28 02:42:44.778743, 403|24|13|2026-10-28 02:42:44.820650, 404|12|10|2026-10-28 02:42:44.912564, 405|11|10|2026-10-28 02:42:44.998664, 406|11|15|2026-10-28 02:42:45.183102, 407|14|21|2026-10-28 02:42:46.021019, 408|15|24|2026-10-28 02:42:46.052723, 409|15|23|2026-10-28 02:42:46.063766, 411|30|30|2026-10-28 02:42:46.111748, 412|35|30|2026-10-28 02:42:46.126164, 413|16|22|2026-10-28 02:42:46.278748])
+PASS late insert collision rolls back the seat increment (expected=409 actual=409)
+PASS late insert collision rolls back the seat increment error code ({code=AlreadyEnrolled})
+PASS seat and enrollment rows roll back together after the late insert error (Snapshot[courses=[1|A|Prior A|2|20|0|5|1|2|1, 2|B|Prior B|2|20|0|5|2|3|1, 3|C|Prior C|2|20|0|5|3|4|1, 4|D|Prior D|2|20|0|5|4|5|1, 10|TARGET|Needs A and B|2|10|2|1|1|3|1, 11|ADJACENT|Touches target|2|10|1|1|3|5|1, 12|OVERLAP|Overlaps target|2|10|0|1|2|4|1, 13|FOUR|Needs four courses|2|10|1|3|1|2|1, 14|DRAFT|Unpublished|2|10|0|4|1|2|0, 15|CONFIG|Configure then publish|2|10|1|4|4|5|1, 21|RACE-A|Concurrent A|2|10|1|2|1|4|1, 22|RACE-B|Concurrent B|2|10|1|2|3|5|1, 23|DAY3|Independent day3|2|10|1|3|1|2|1, 24|DAY4|Independent day4|2|10|1|4|1|2|1, 30|SEATS|Three seats|2|3|2|6|1|2|1, 40|ROLLBACK|Late failure|2|10|1|7|1|2|1, 41|NEW|New Course|2|6|0|7|12|13|0], enrollments=[400|25|40|2026-10-28 02:42:33.988573, 402|12|11|2026-10-28 02:42:44.778743, 403|24|13|2026-10-28 02:42:44.820650, 404|12|10|2026-10-28 02:42:44.912564, 405|11|10|2026-10-28 02:42:44.998664, 406|11|15|2026-10-28 02:42:45.183102, 407|14|21|2026-10-28 02:42:46.021019, 408|15|24|2026-10-28 02:42:46.052723, 409|15|23|2026-10-28 02:42:46.063766, 411|30|30|2026-10-28 02:42:46.111748, 412|35|30|2026-10-28 02:42:46.126164, 413|16|22|2026-10-28 02:42:46.278748], prerequisites=[1|10|1, 2|10|2, 3|13|1, 4|13|2, 5|13|3, 6|13|4, 8|15|1, 9|15|2], completions=[1|11|1|2026-10-28 02:42:33.986814, 2|12|1|2026-10-28 02:42:33.986814, 3|12|2|2026-10-28 02:42:33.986814, 4|13|2|2026-10-28 02:42:33.986814, 5|24|1|2026-10-28 02:42:33.986814, 6|24|2|2026-10-28 02:42:33.986814, 7|24|3|2026-10-28 02:42:33.986814, 8|24|4|2026-10-28 02:42:33.986814, 9|25|1|2026-10-28 02:42:33.986814, 10|25|3|2026-10-28 02:42:33.986814, 11|11|2|2026-10-28 02:42:44.965968]])
+PASS late fixture FK delete failure is not a successful drop (expected=500 actual=500)
+PASS seat decrement rolls back if the following enrollment delete fails (Snapshot[courses=[1|A|Prior A|2|20|0|5|1|2|1, 2|B|Prior B|2|20|0|5|2|3|1, 3|C|Prior C|2|20|0|5|3|4|1, 4|D|Prior D|2|20|0|5|4|5|1, 10|TARGET|Needs A and B|2|10|2|1|1|3|1, 11|ADJACENT|Touches target|2|10|1|1|3|5|1, 12|OVERLAP|Overlaps target|2|10|0|1|2|4|1, 13|FOUR|Needs four courses|2|10|1|3|1|2|1, 14|DRAFT|Unpublished|2|10|0|4|1|2|0, 15|CONFIG|Configure then publish|2|10|1|4|4|5|1, 21|RACE-A|Concurrent A|2|10|1|2|1|4|1, 22|RACE-B|Concurrent B|2|10|1|2|3|5|1, 23|DAY3|Independent day3|2|10|1|3|1|2|1, 24|DAY4|Independent day4|2|10|1|4|1|2|1, 30|SEATS|Three seats|2|3|2|6|1|2|1, 40|ROLLBACK|Late failure|2|10|1|7|1|2|1, 41|NEW|New Course|2|6|0|7|12|13|0], enrollments=[400|25|40|2026-10-28 02:42:33.988573, 402|12|11|2026-10-28 02:42:44.778743, 403|24|13|2026-10-28 02:42:44.820650, 404|12|10|2026-10-28 02:42:44.912564, 405|11|10|2026-10-28 02:42:44.998664, 406|11|15|2026-10-28 02:42:45.183102, 407|14|21|2026-10-28 02:42:46.021019, 408|15|24|2026-10-28 02:42:46.052723, 409|15|23|2026-10-28 02:42:46.063766, 411|30|30|2026-10-28 02:42:46.111748, 412|35|30|2026-10-28 02:42:46.126164, 413|16|22|2026-10-28 02:42:46.278748], prerequisites=[1|10|1, 2|10|2, 3|13|1, 4|13|2, 5|13|3, 6|13|4, 8|15|1, 9|15|2], completions=[1|11|1|2026-10-28 02:42:33.986814, 2|12|1|2026-10-28 02:42:33.986814, 3|12|2|2026-10-28 02:42:33.986814, 4|13|2|2026-10-28 02:42:33.986814, 5|24|1|2026-10-28 02:42:33.986814, 6|24|2|2026-10-28 02:42:33.986814, 7|24|3|2026-10-28 02:42:33.986814, 8|24|4|2026-10-28 02:42:33.986814, 9|25|1|2026-10-28 02:42:33.986814, 10|25|3|2026-10-28 02:42:33.986814, 11|11|2|2026-10-28 02:42:44.965968]])
+PASS invalid old counter cannot be decremented below zero (expected=409 actual=409)
+PASS invalid old counter cannot be decremented below zero error code ({code=EnrollmentCounterMismatch})
+PASS inconsistent counter is refused rather than silently deleting a roster row (Snapshot[courses=[1|A|Prior A|2|20|0|5|1|2|1, 2|B|Prior B|2|20|0|5|2|3|1, 3|C|Prior C|2|20|0|5|3|4|1, 4|D|Prior D|2|20|0|5|4|5|1, 10|TARGET|Needs A and B|2|10|2|1|1|3|1, 11|ADJACENT|Touches target|2|10|1|1|3|5|1, 12|OVERLAP|Overlaps target|2|10|0|1|2|4|1, 13|FOUR|Needs four courses|2|10|1|3|1|2|1, 14|DRAFT|Unpublished|2|10|0|4|1|2|0, 15|CONFIG|Configure then publish|2|10|1|4|4|5|1, 21|RACE-A|Concurrent A|2|10|1|2|1|4|1, 22|RACE-B|Concurrent B|2|10|1|2|3|5|1, 23|DAY3|Independent day3|2|10|1|3|1|2|1, 24|DAY4|Independent day4|2|10|1|4|1|2|1, 30|SEATS|Three seats|2|3|2|6|1|2|1, 40|ROLLBACK|Late failure|2|10|0|7|1|2|1, 41|NEW|New Course|2|6|0|7|12|13|0], enrollments=[400|25|40|2026-10-28 02:42:33.988573, 402|12|11|2026-10-28 02:42:44.778743, 403|24|13|2026-10-28 02:42:44.820650, 404|12|10|2026-10-28 02:42:44.912564, 405|11|10|2026-10-28 02:42:44.998664, 406|11|15|2026-10-28 02:42:45.183102, 407|14|21|2026-10-28 02:42:46.021019, 408|15|24|2026-10-28 02:42:46.052723, 409|15|23|2026-10-28 02:42:46.063766, 411|30|30|2026-10-28 02:42:46.111748, 412|35|30|2026-10-28 02:42:46.126164, 413|16|22|2026-10-28 02:42:46.278748], prerequisites=[1|10|1, 2|10|2, 3|13|1, 4|13|2, 5|13|3, 6|13|4, 8|15|1, 9|15|2], completions=[1|11|1|2026-10-28 02:42:33.986814, 2|12|1|2026-10-28 02:42:33.986814, 3|12|2|2026-10-28 02:42:33.986814, 4|13|2|2026-10-28 02:42:33.986814, 5|24|1|2026-10-28 02:42:33.986814, 6|24|2|2026-10-28 02:42:33.986814, 7|24|3|2026-10-28 02:42:33.986814, 8|24|4|2026-10-28 02:42:33.986814, 9|25|1|2026-10-28 02:42:33.986814, 10|25|3|2026-10-28 02:42:33.986814, 11|11|2|2026-10-28 02:42:44.965968]])
+PASS all final counters match enrollments and capacity (Snapshot[courses=[1|A|Prior A|2|20|0|5|1|2|1, 2|B|Prior B|2|20|0|5|2|3|1, 3|C|Prior C|2|20|0|5|3|4|1, 4|D|Prior D|2|20|0|5|4|5|1, 10|TARGET|Needs A and B|2|10|2|1|1|3|1, 11|ADJACENT|Touches target|2|10|1|1|3|5|1, 12|OVERLAP|Overlaps target|2|10|0|1|2|4|1, 13|FOUR|Needs four courses|2|10|1|3|1|2|1, 14|DRAFT|Unpublished|2|10|0|4|1|2|0, 15|CONFIG|Configure then publish|2|10|1|4|4|5|1, 21|RACE-A|Concurrent A|2|10|1|2|1|4|1, 22|RACE-B|Concurrent B|2|10|1|2|3|5|1, 23|DAY3|Independent day3|2|10|1|3|1|2|1, 24|DAY4|Independent day4|2|10|1|4|1|2|1, 30|SEATS|Three seats|2|3|2|6|1|2|1, 40|ROLLBACK|Late failure|2|10|1|7|1|2|1, 41|NEW|New Course|2|6|0|7|12|13|0], enrollments=[400|25|40|2026-10-28 02:42:33.988573, 402|12|11|2026-10-28 02:42:44.778743, 403|24|13|2026-10-28 02:42:44.820650, 404|12|10|2026-10-28 02:42:44.912564, 405|11|10|2026-10-28 02:42:44.998664, 406|11|15|2026-10-28 02:42:45.183102, 407|14|21|2026-10-28 02:42:46.021019, 408|15|24|2026-10-28 02:42:46.052723, 409|15|23|2026-10-28 02:42:46.063766, 411|30|30|2026-10-28 02:42:46.111748, 412|35|30|2026-10-28 02:42:46.126164, 413|16|22|2026-10-28 02:42:46.278748], prerequisites=[1|10|1, 2|10|2, 3|13|1, 4|13|2, 5|13|3, 6|13|4, 8|15|1, 9|15|2], completions=[1|11|1|2026-10-28 02:42:33.986814, 2|12|1|2026-10-28 02:42:33.986814, 3|12|2|2026-10-28 02:42:33.986814, 4|13|2|2026-10-28 02:42:33.986814, 5|24|1|2026-10-28 02:42:33.986814, 6|24|2|2026-10-28 02:42:33.986814, 7|24|3|2026-10-28 02:42:33.986814, 8|24|4|2026-10-28 02:42:33.986814, 9|25|1|2026-10-28 02:42:33.986814, 10|25|3|2026-10-28 02:42:33.986814, 11|11|2|2026-10-28 02:42:44.965968]])
+PASS the generated application process exited (stopped=true)
+PASS the owned schema was dropped and its absence proved (schema=kcg_conf_run)
+PASS the advisory lock for the owned schema was released (released=true)
+FAIL missing or null weekday is refused before SQL (expected=400 actual=500)
+FAIL numeric null is a structured input failure ([code= (expected INVALID_REQUEST)])
+FAIL the parsed payload identifies the actual missing number weekday ({"timestamp":"2026-10-28T02:42:45.832+00:00","status":500,"error":"Internal Server Error","path":"/api/courses"})
+FAIL missing or null weekday is refused before SQL (expected=400 actual=500)
+FAIL numeric null is a structured input failure ([code= (expected INVALID_REQUEST)])
+FAIL the parsed payload identifies the actual missing number weekday ({"timestamp":"2026-10-28T02:42:45.854+00:00","status":500,"error":"Internal Server Error","path":"/api/courses"})
+FAIL missing or null startPeriod is refused before SQL (expected=400 actual=500)
+FAIL numeric null is a structured input failure ([code= (expected INVALID_REQUEST)])
+FAIL the parsed payload identifies the actual missing number startPeriod ({"timestamp":"2026-10-28T02:42:45.865+00:00","status":500,"error":"Internal Server Error","path":"/api/courses"})
+FAIL missing or null startPeriod is refused before SQL (expected=400 actual=500)
+FAIL numeric null is a structured input failure ([code= (expected INVALID_REQUEST)])
+FAIL the parsed payload identifies the actual missing number startPeriod ({"timestamp":"2026-10-28T02:42:45.874+00:00","status":500,"error":"Internal Server Error","path":"/api/courses"})
+FAIL missing or null endPeriod is refused before SQL (expected=400 actual=500)
+FAIL numeric null is a structured input failure ([code= (expected INVALID_REQUEST)])
+FAIL the parsed payload identifies the actual missing number endPeriod ({"timestamp":"2026-10-28T02:42:45.883+00:00","status":500,"error":"Internal Server Error","path":"/api/courses"})
+FAIL missing or null endPeriod is refused before SQL (expected=400 actual=500)
+FAIL numeric null is a structured input failure ([code= (expected INVALID_REQUEST)])
+FAIL the parsed payload identifies the actual missing number endPeriod ({"timestamp":"2026-10-28T02:42:45.891+00:00","status":500,"error":"Internal Server Error","path":"/api/courses"})
+FAIL missing or null capacity is refused before SQL (expected=400 actual=500)
+FAIL numeric null is a structured input failure ([code= (expected INVALID_REQUEST)])
+FAIL the parsed payload identifies the actual missing number capacity ({"timestamp":"2026-10-28T02:42:45.902+00:00","status":500,"error":"Internal Server Error","path":"/api/courses"})
+FAIL missing or null capacity is refused before SQL (expected=400 actual=500)
+FAIL numeric null is a structured input failure ([code= (expected INVALID_REQUEST)])
+FAIL the parsed payload identifies the actual missing number capacity ({"timestamp":"2026-10-28T02:42:45.911+00:00","status":500,"error":"Internal Server Error","path":"/api/courses"})
+
+anonymous selection is refused: status=401 body=
+draft course is not open: status=409 body={"code":"CourseNotOpen","message":"CourseNotOpen","fields":[]}
+unknown course is not found: status=404 body={"code":"CourseNotFound","message":"CourseNotFound","fields":[]}
+none, partial and same-count wrong prerequisite sets are refused for 10: status=409 body={"code":"MissingPrerequisites","message":"MissingPrerequisites","fields":[]}
+none, partial and same-count wrong prerequisite sets are refused for 11: status=409 body={"code":"MissingPrerequisites","message":"MissingPrerequisites","fields":[]}
+none, partial and same-count wrong prerequisite sets are refused for 13: status=409 body={"code":"MissingPrerequisites","message":"MissingPrerequisites","fields":[]}
+none, partial and same-count wrong prerequisite sets are refused for 25: status=409 body={"code":"MissingPrerequisites","message":"MissingPrerequisites","fields":[]}
+all required courses allow selection: status=201 body={"id":401,"course":{"id":10,"code":"TARGET","name":"Needs A and B","teacher":{"id":2,"name":"teacher","role":"TEACHER"},"capacity":10,"enrolled":1,"remaining":9,"full":false,"weekday":1,"startPeriod":1,"endPeriod":3,"published":true},"createdAt":"2026-10-28T02:42:44.689976973Z"}
+repeat selection has its specific declared failure: status=409 body={"code":"AlreadyEnrolled","message":"AlreadyEnrolled","fields":[]}
+overlapping weekly periods are refused: status=409 body={"code":"TimeConflict","message":"TimeConflict","fields":[]}
+adjacent half-open periods are allowed: status=201 body={"id":402,"course":{"id":11,"code":"ADJACENT","name":"Touches target","teacher":{"id":2,"name":"teacher","role":"TEACHER"},"capacity":10,"enrolled":1,"remaining":9,"full":false,"weekday":1,"startPeriod":3,"endPeriod":5,"published":true},"createdAt":"2026-10-28T02:42:44.778743120Z"}
+two passed courses do not satisfy a four-course requirement: status=409 body={"code":"MissingPrerequisites","message":"MissingPrerequisites","fields":[]}
+all four direct prerequisites work without an artificial one-course limit: status=201 body={"id":403,"course":{"id":13,"code":"FOUR","name":"Needs four courses","teacher":{"id":2,"name":"teacher","role":"TEACHER"},"capacity":10,"enrolled":1,"remaining":9,"full":false,"weekday":3,"startPeriod":1,"endPeriod":2,"published":true},"createdAt":"2026-10-28T02:42:44.820650250Z"}
+another student cannot drop this enrollment: status=403 body={"code":"Forbidden","message":"Forbidden","fields":[]}
+owner can drop a course: status=200 body=
+duplicate drop is not a second seat release: status=404 body={"code":"EnrollmentNotFound","message":"EnrollmentNotFound","fields":[]}
+a dropped course can be selected again: status=201 body={"id":404,"course":{"id":10,"code":"TARGET","name":"Needs A and B","teacher":{"id":2,"name":"teacher","role":"TEACHER"},"capacity":10,"enrolled":1,"remaining":9,"full":false,"weekday":1,"startPeriod":1,"endPeriod":3,"published":true},"createdAt":"2026-10-28T02:42:44.912564427Z"}
+students cannot add their own prerequisite exemptions: status=403 body={"code":"Forbidden","message":"Forbidden","fields":[]}
+students cannot publish courses: status=403 body={"code":"Forbidden","message":"Forbidden","fields":[]}
+students cannot assert a passed transcript: status=403 body={"code":"Forbidden","message":"Forbidden","fields":[]}
+administrator records the missing passed course: status=201 body=
+completion facts are unique: status=409 body={"code":"CompletionExists","message":"CompletionExists","fields":[]}
+selection sees newly committed completion: status=201 body={"id":405,"course":{"id":10,"code":"TARGET","name":"Needs A and B","teacher":{"id":2,"name":"teacher","role":"TEACHER"},"capacity":10,"enrolled":2,"remaining":8,"full":false,"weekday":1,"startPeriod":1,"endPeriod":3,"published":true},"createdAt":"2026-10-28T02:42:44.998663755Z"}
+draft prerequisite is configurable: status=201 body=
+duplicate prerequisite is a declared conflict: status=409 body={"code":"PrerequisiteExists","message":"PrerequisiteExists","fields":[]}
+self prerequisite is rejected: status=400 body={"code":"InvalidPrerequisite","message":"InvalidPrerequisite","fields":[]}
+unpublished prerequisite cannot create a cycle: status=400 body={"code":"InvalidPrerequisite","message":"InvalidPrerequisite","fields":[]}
+students cannot remove a prerequisite: status=403 body={"code":"Forbidden","message":"Forbidden","fields":[]}
+administrator may remove a draft prerequisite: status=200 body=
+removed draft prerequisite may be added again: status=201 body=
+draft can require a second course: status=201 body=
+publishing fixes the set of required courses: status=200 body={"id":15,"code":"CONFIG","name":"Configure then publish","teacher":{"id":2,"name":"teacher","role":"TEACHER"},"capacity":10,"enrolled":0,"remaining":10,"full":false,"weekday":4,"startPeriod":4,"endPeriod":5,"published":true}
+published prerequisites cannot be added: status=409 body={"code":"CoursePublished","message":"CoursePublished","fields":[]}
+published prerequisites cannot be removed: status=409 body={"code":"CoursePublished","message":"CoursePublished","fields":[]}
+published state cannot be replayed: status=409 body={"code":"CoursePublished","message":"CoursePublished","fields":[]}
+configured published course checks the complete transcript: status=201 body={"id":406,"course":{"id":15,"code":"CONFIG","name":"Configure then publish","teacher":{"id":2,"name":"teacher","role":"TEACHER"},"capacity":10,"enrolled":1,"remaining":9,"full":false,"weekday":4,"startPeriod":4,"endPeriod":5,"published":true},"createdAt":"2026-10-28T02:42:45.183101600Z"}
+missing or null weekday is refused before SQL: status=500 body={"timestamp":"2026-10-28T02:42:45.832+00:00","status":500,"error":"Internal Server Error","path":"/api/courses"}
+missing or null weekday is refused before SQL: status=500 body={"timestamp":"2026-10-28T02:42:45.854+00:00","status":500,"error":"Internal Server Error","path":"/api/courses"}
+missing or null startPeriod is refused before SQL: status=500 body={"timestamp":"2026-10-28T02:42:45.865+00:00","status":500,"error":"Internal Server Error","path":"/api/courses"}
+missing or null startPeriod is refused before SQL: status=500 body={"timestamp":"2026-10-28T02:42:45.874+00:00","status":500,"error":"Internal Server Error","path":"/api/courses"}
+missing or null endPeriod is refused before SQL: status=500 body={"timestamp":"2026-10-28T02:42:45.883+00:00","status":500,"error":"Internal Server Error","path":"/api/courses"}
+missing or null endPeriod is refused before SQL: status=500 body={"timestamp":"2026-10-28T02:42:45.891+00:00","status":500,"error":"Internal Server Error","path":"/api/courses"}
+missing or null capacity is refused before SQL: status=500 body={"timestamp":"2026-10-28T02:42:45.902+00:00","status":500,"error":"Internal Server Error","path":"/api/courses"}
+missing or null capacity is refused before SQL: status=500 body={"timestamp":"2026-10-28T02:42:45.911+00:00","status":500,"error":"Internal Server Error","path":"/api/courses"}
+out-of-range, empty or reverse schedule is rejected: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"weekday","code":"DecimalMax","message":"must be less than or equal to 7"}]}
+out-of-range, empty or reverse schedule is rejected: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"startPeriod","code":"DecimalMin","message":"must be greater than or equal to 1"}]}
+out-of-range, empty or reverse schedule is rejected: status=400 body={"code":"InvalidSchedule","message":"InvalidSchedule","fields":[]}
+out-of-range, empty or reverse schedule is rejected: status=400 body={"code":"InvalidSchedule","message":"InvalidSchedule","fields":[]}
+out-of-range, empty or reverse schedule is rejected: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"capacity","code":"DecimalMin","message":"must be greater than or equal to 1"}]}
+last valid weekly period creates a draft: status=201 body={"id":41,"code":"NEW","name":"New Course","teacher":{"id":2,"name":"teacher","role":"TEACHER"},"capacity":6,"enrolled":0,"remaining":6,"full":false,"weekday":7,"startPeriod":12,"endPeriod":13,"published":false}
+losing concurrent selection sees a time conflict: status=409 body={"code":"TimeConflict","message":"TimeConflict","fields":[]}
+full course keeps its declared error: status=409 body={"code":"CourseFull","message":"CourseFull","fields":[]}
+full course keeps its declared error: status=409 body={"code":"CourseFull","message":"CourseFull","fields":[]}
+full course keeps its declared error: status=409 body={"code":"CourseFull","message":"CourseFull","fields":[]}
+full course keeps its declared error: status=409 body={"code":"CourseFull","message":"CourseFull","fields":[]}
+full course keeps its declared error: status=409 body={"code":"CourseFull","message":"CourseFull","fields":[]}
+replayed drop follows not-found: status=404 body={"code":"EnrollmentNotFound","message":"EnrollmentNotFound","fields":[]}
+replayed drop follows not-found: status=404 body={"code":"EnrollmentNotFound","message":"EnrollmentNotFound","fields":[]}
+replayed drop follows not-found: status=404 body={"code":"EnrollmentNotFound","message":"EnrollmentNotFound","fields":[]}
+replayed drop follows not-found: status=404 body={"code":"EnrollmentNotFound","message":"EnrollmentNotFound","fields":[]}
+replayed drop follows not-found: status=404 body={"code":"EnrollmentNotFound","message":"EnrollmentNotFound","fields":[]}
+replayed drop follows not-found: status=404 body={"code":"EnrollmentNotFound","message":"EnrollmentNotFound","fields":[]}
+replayed drop follows not-found: status=404 body={"code":"EnrollmentNotFound","message":"EnrollmentNotFound","fields":[]}
+after waiting, the request sees the committed conflicting course: status=409 body={"code":"TimeConflict","message":"TimeConflict","fields":[]}
+late insert collision rolls back the seat increment: status=409 body={"code":"AlreadyEnrolled","message":"AlreadyEnrolled","fields":[]}
+late fixture FK delete failure is not a successful drop: status=500 body={"timestamp":"2026-10-28T02:42:46.344+00:00","status":500,"error":"Internal Server Error","path":"/api/enrollments/400"}
+invalid old counter cannot be decremented below zero: status=409 body={"code":"EnrollmentCounterMismatch","message":"EnrollmentCounterMismatch","fields":[]}
+ ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:42)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:191)
+	at io.kcg.sir.application.conformance.CourseSelectionBusinessConformanceIT.actualCourseTopicChecksSchedulePrerequisitesAndSeatTransactions(CourseSelectionBusinessConformanceIT.java:40)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+

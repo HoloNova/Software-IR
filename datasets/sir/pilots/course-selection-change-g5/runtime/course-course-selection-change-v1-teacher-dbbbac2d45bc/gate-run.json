@@ -1,0 +1,56 @@
+{
+  "workflow": ".github/workflows/slm-business-gate.yml",
+  "run_id": 40622427838,
+  "run_url": "https://github.com/HoloNova/Software-IR/actions/runs/40622427838",
+  "head_sha": "fb668386c9a131bb62606515aee1fbaad3b7b920",
+  "inputs": {
+    "bundle": "datasets/sir/pilots/course-selection-change-g5",
+    "sample_id": "course-course-selection-change-v1-teacher-dbbbac2d45bc",
+    "it": "CourseSelectionBusinessConformanceIT"
+  },
+  "artifacts": {
+    "slm-gate-course-course-selection-change-v1-teacher-dbbbac2d45bc": {
+      "id": 12787712860,
+      "zip_sha256": "c4b288f2400ac7b902a671e6efecb0d52647674d146655b2c4051d8c87467cb2"
+    },
+    "slm-gate-surefire-course-course-selection-change-v1-teacher-dbbbac2d45bc": {
+      "id": 12788340555,
+      "zip_sha256": "ab9c9b7e6d4066dcd0ecfa2abff0490614646ff489a8618016cc3e489a372f97"
+    }
+  },
+  "job_conclusion": "failure",
+  "gates": {
+    "start": "PASSED",
+    "business": "FAILED",
+    "build": "PASSED",
+    "static": "PASSED"
+  },
+  "checks_passed": 128,
+  "checks_failed": 24,
+  "failed_checks": [
+    "missing or null weekday is refused before SQL (expected=400 actual=500)",
+    "numeric null is a structured input failure ([code= (expected INVALID_REQUEST)])",
+    "the parsed payload identifies the actual missing number weekday ({\"timestamp\":\"2026-10-28T02:42:45.832+00:00\",\"status\":500,\"error\":\"Internal Server Error\",\"path\":\"/api/courses\"})",
+    "missing or null weekday is refused before SQL (expected=400 actual=500)",
+    "numeric null is a structured input failure ([code= (expected INVALID_REQUEST)])",
+    "the parsed payload identifies the actual missing number weekday ({\"timestamp\":\"2026-10-28T02:42:45.854+00:00\",\"status\":500,\"error\":\"Internal Server Error\",\"path\":\"/api/courses\"})",
+    "missing or null startPeriod is refused before SQL (expected=400 actual=500)",
+    "numeric null is a structured input failure ([code= (expected INVALID_REQUEST)])",
+    "the parsed payload identifies the actual missing number startPeriod ({\"timestamp\":\"2026-10-28T02:42:45.865+00:00\",\"status\":500,\"error\":\"Internal Server Error\",\"path\":\"/api/courses\"})",
+    "missing or null startPeriod is refused before SQL (expected=400 actual=500)",
+    "numeric null is a structured input failure ([code= (expected INVALID_REQUEST)])",
+    "the parsed payload identifies the actual missing number startPeriod ({\"timestamp\":\"2026-10-28T02:42:45.874+00:00\",\"status\":500,\"error\":\"Internal Server Error\",\"path\":\"/api/courses\"})",
+    "missing or null endPeriod is refused before SQL (expected=400 actual=500)",
+    "numeric null is a structured input failure ([code= (expected INVALID_REQUEST)])",
+    "the parsed payload identifies the actual missing number endPeriod ({\"timestamp\":\"2026-10-28T02:42:45.883+00:00\",\"status\":500,\"error\":\"Internal Server Error\",\"path\":\"/api/courses\"})",
+    "missing or null endPeriod is refused before SQL (expected=400 actual=500)",
+    "numeric null is a structured input failure ([code= (expected INVALID_REQUEST)])",
+    "the parsed payload identifies the actual missing number endPeriod ({\"timestamp\":\"2026-10-28T02:42:45.891+00:00\",\"status\":500,\"error\":\"Internal Server Error\",\"path\":\"/api/courses\"})",
+    "missing or null capacity is refused before SQL (expected=400 actual=500)",
+    "numeric null is a structured input failure ([code= (expected INVALID_REQUEST)])",
+    "the parsed payload identifies the actual missing number capacity ({\"timestamp\":\"2026-10-28T02:42:45.902+00:00\",\"status\":500,\"error\":\"Internal Server Error\",\"path\":\"/api/courses\"})",
+    "missing or null capacity is refused before SQL (expected=400 actual=500)",
+    "numeric null is a structured input failure ([code= (expected INVALID_REQUEST)])",
+    "the parsed payload identifies the actual missing number capacity ({\"timestamp\":\"2026-10-28T02:42:45.911+00:00\",\"status\":500,\"error\":\"Internal Server Error\",\"path\":\"/api/courses\"})"
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "workflow": ".github/workflows/slm-business-gate.yml",
+  "run_id": 40622055593,
+  "run_url": "https://github.com/HoloNova/Software-IR/actions/runs/40622055593",
+  "head_sha": "94255509afaf3ba40917398986e068196f6297fc",
+  "inputs": {
+    "bundle": "datasets/sir/pilots/relation-slice-scratch-g5",
+    "sample_id": "course-relation-slice-scratch-v1-teacher-561bdfe9ead2",
+    "it": "RelationSliceBusinessConformanceIT"
+  },
+  "artifacts": {
+    "slm-gate-course-relation-slice-scratch-v1-teacher-561bdfe9ead2": {
+      "id": 12787498721,
+      "zip_sha256": "b66bfbefe7b846a63d86c896efbd345145898aa3c10f1d4bafc995eaddcd8c83"
+    },
+    "slm-gate-surefire-course-relation-slice-scratch-v1-teacher-561bdfe9ead2": {
+      "id": 12787428807,
+      "zip_sha256": "088338d84da5fe198846c2b1530f7b54610463981fa6704aa8537d4c5a4dfd7b"
+    }
+  },
+  "job_conclusion": "success",
+  "gates": {
+    "business": "PASSED",
+    "build": "PASSED",
+    "static": "PASSED",
+    "start": "PASSED"
+  },
+  "checks_passed": 41,
+  "checks_failed": 0
+}

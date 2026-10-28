@@ -1,0 +1,35 @@
+{
+  "workflow": ".github/workflows/slm-business-gate.yml",
+  "run_id": 40622420133,
+  "run_url": "https://github.com/HoloNova/Software-IR/actions/runs/40622420133",
+  "head_sha": "fb668386c9a131bb62606515aee1fbaad3b7b920",
+  "inputs": {
+    "bundle": "datasets/sir/pilots/bearer-credential-scratch-g5",
+    "sample_id": "auth-bearer-credential-scratch-v1-teacher-c9ab97cd12d2",
+    "it": "BearerCredentialBusinessConformanceIT"
+  },
+  "artifacts": {
+    "slm-gate-auth-bearer-credential-scratch-v1-teacher-c9ab97cd12d2": {
+      "id": 12788286380,
+      "zip_sha256": "822800075990e80a0105f4a473be282971c7fe44f8a5f98d453b7f74f5c67e5a"
+    },
+    "slm-gate-surefire-auth-bearer-credential-scratch-v1-teacher-c9ab97cd12d2": {
+      "id": 12787987114,
+      "zip_sha256": "1c3cca2fecd20b38efdbc632bfa89da870a98dc2395f470a3712689e6970ce3e"
+    }
+  },
+  "job_conclusion": "failure",
+  "gates": {
+    "static": "PASSED",
+    "build": "PASSED",
+    "business": "FAILED",
+    "start": "PASSED"
+  },
+  "checks_passed": 33,
+  "checks_failed": 3,
+  "failed_checks": [
+    "logging out answers 200 (expected=200 actual=401)",
+    "a token that was logged out is refused with 401 (expected=401 actual=201)",
+    "only the two accepted notes and the one after remain (notes=[1|2|zoe's note, 2|3|ann's note, 3|2|after logout, 4|3|ann again])"
+  ]
+}

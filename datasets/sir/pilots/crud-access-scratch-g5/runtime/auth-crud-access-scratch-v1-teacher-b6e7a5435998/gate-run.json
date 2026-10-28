@@ -1,0 +1,35 @@
+{
+  "workflow": ".github/workflows/slm-business-gate.yml",
+  "run_id": 40622422717,
+  "run_url": "https://github.com/HoloNova/Software-IR/actions/runs/40622422717",
+  "head_sha": "fb668386c9a131bb62606515aee1fbaad3b7b920",
+  "inputs": {
+    "bundle": "datasets/sir/pilots/crud-access-scratch-g5",
+    "sample_id": "auth-crud-access-scratch-v1-teacher-b6e7a5435998",
+    "it": "CrudAccessBusinessConformanceIT"
+  },
+  "artifacts": {
+    "slm-gate-auth-crud-access-scratch-v1-teacher-b6e7a5435998": {
+      "id": 12787503427,
+      "zip_sha256": "1a9eac64ce178d61631e56a1fc59b966bdeeef84d25724e0800933a5cdd9f8b7"
+    },
+    "slm-gate-surefire-auth-crud-access-scratch-v1-teacher-b6e7a5435998": {
+      "id": 12787168964,
+      "zip_sha256": "6ceb70129e87c0fa261f88f4cb7f2e8dbb45b2c8d467129bda7beae60b94f758"
+    }
+  },
+  "job_conclusion": "failure",
+  "gates": {
+    "start": "PASSED",
+    "business": "FAILED",
+    "build": "PASSED",
+    "static": "PASSED"
+  },
+  "checks_passed": 45,
+  "checks_failed": 3,
+  "failed_checks": [
+    "public read still obeys scope (expected=404 actual=200)",
+    "public read still obeys scope (expected=404 actual=200)",
+    "public read still obeys scope (expected=404 actual=200)"
+  ]
+}
