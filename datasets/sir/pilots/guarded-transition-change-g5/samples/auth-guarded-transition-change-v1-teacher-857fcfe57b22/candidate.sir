@@ -1,0 +1,77 @@
+sir 0.3
+
+software CredentialRotation {
+  metadata {
+    displayName "Credential Rotation";
+    namespace "com.example.rotation";
+  }
+  target {
+    language java 21;
+    framework spring_boot;
+    persistence mybatis_plus;
+    database mysql;
+    build maven;
+    interface rest;
+  }
+  sources { }
+  imports { }
+  declarations {
+    entity Credential persistent {
+      identity id: Id generated auto;
+      field owner: Text;
+      field used: Flag;
+      field expiresAt: Moment;
+    }
+    view CredentialView from Credential {
+      field id: Id;
+      field owner: Text;
+      field used: Flag;
+      field expiresAt: Moment;
+    }
+    input GetCredentialInput {
+      field id: Id;
+    }
+    input RefreshInput {
+      field id: Id;
+    }
+    error CredentialNotFound http 404;
+    error Expired http 400;
+    error Invalid http 409;
+    capability GetCredential {
+      input GetCredentialInput;
+      output CredentialView;
+      fails CredentialNotFound;
+      requires readonly;
+      expose query;
+      workflow {
+        load Credential by input.id as credential else CredentialNotFound;
+        return credential;
+      }
+    }
+    capability Refresh {
+      input RefreshInput;
+      output CredentialView;
+      fails CredentialNotFound;
+      fails Expired;
+      fails Invalid;
+      requires atomic;
+      expose command;
+      workflow {
+        load Credential by input.id as credential else CredentialNotFound;
+        validate credential.used == false else Invalid;
+        validate credential.expiresAt > now() else Expired;
+        update credential when credential.used == false and credential.expiresAt > now() else Invalid {
+          used: true;
+        }
+        persist credential;
+        create Credential as made {
+          owner: credential.owner;
+          used: false;
+          expiresAt: now() + 7 days;
+        }
+        persist made;
+        return made;
+      }
+    }
+  }
+}
