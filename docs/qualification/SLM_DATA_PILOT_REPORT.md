@@ -145,3 +145,23 @@ v2 初始批次 `datasets/sir/pilots/dual-token-v2/` 的3份候选全部静态�
 现有 IT 没有检查登出是否多写了行，这次多出的那行 TokenPair 没被发现。是否补检查属于改判卷标准，另行决定，本轮未改。
 
 证据在 `runtime/auth-dual-token-v1-teacher-bd870a834f77/`：`slm-runtime.json`、报告、Maven/Spring 日志、JUnit XML，以及 `gate-run.json`（run URL、提交 SHA、两个 artifact 的 zip 哈希）。下载后核对：题目、判卷、工具链、源码四个哈希与批次一致，5 个附件哈希一致，不含 CI 数据库密码。现有导出器 `train-teacher.jsonl` 为 **0条**：新教师合格训练答案仍是0条。本轮未用运行反馈再修复；业务账本83/1/0不变。
+
+## 第六阶段：业务门反馈修复与 22 份新题（2026-10-28）
+
+`repair` 新增 `--runtime-evidence`（`def7973`）：只接受静态已通过、构建与启动通过而业务失败的候选，证据的绑定哈希、生成摘要与附件哈希必须一致；发给教师的只有判卷报告里失败的检查和 HTTP 记录，前缀为新文件 `prompts/repair-runtime-v1.md`，不提示改法。
+
+对 `bd870a834f77` 用第五阶段的业务门证据修复1次：
+
+| 调用 | 样本 | input | 其中缓存命中 | output | total |
+| --- | --- | ---: | ---: | ---: | ---: |
+| 业务门反馈修复 | `e2c157051e10` | 12480 | 10880 | 1199 | 13679 |
+
+`system_fingerprint` 为 `bc19ba97cbe016479903222bb1578db6`，此前各次均为 `e72d3c7f663d3e1383b00b3884cb4501`，服务端模型可能已更新；请求的仍是 `deepseek-flash`。
+
+结果在 `datasets/sir/runs/dual-token-gate-v1/checked-r1.jsonl`：`e2c157051e10` **静态失败**。教师只把 Logout 的 `expose command` 改成 `expose query`，以为 201 来自接口类型；但 query 必须只读，而登出要更新、persist 并（仍然）新建 TokenPair，于是报 `SIR-VALID-001`（query 必须声明 readonly）和3条 `SIR-FLOW-004`。真正原因（登出时新建了一行 TokenPair）没有找到。按约定不自动继续修复，业务门未运行；新教师合格训练答案仍是0条。修复轨迹现为 `f4b4a6071888 → 6702e9b70653 → ef9ddc30eb79 → bd870a834f77 → e2c157051e10`。
+
+出题方面，另一个 Agent 交付了 11 道题的草稿（`224f6b0`，base、两种需求、接口合同、追溯表、备注）。核对：11 份 base 均通过完整静态生成，且都是参考答案只删不改；22 份需求不含 SIR 写法；追溯表共 717 项检查，未覆盖的 28 项全是夹具自检或总报告汇总。据此生成 22 份正式题目（`5916fd3`，每题改写与从零写各一）：鉴权与课程为 train，商店为 development，资金与图书馆为 test。`task.schema.json` 允许 `base_source` 为 null（从零写题），`exposure` 与 `oracle.behaviors` 改为可选（`d8d9c09`）。query-slice 与 relation-slice 的参考软件只有一个接口，改写题即“表结构已定，补上这个接口”。
+
+题目的接口合同起初混入了参考答案的实体/视图字段、表结构和判卷用的种子、探针、并发数，商店改写题 prompt 达 4.4 万字（需求本身 604 字）。`b036f2a` 改为由新字段 `ddl_source` 在 prompt 中附上判卷 DDL，合同只留 namespace、能力与实体名、接口清单、错误、枚举、分页和业务常量，合同总量减半，商店改写题降到约 3.6 万字。被删字段对应的要求需求原文均已写明。
+
+采样前还缺一份通用 system prompt：现有 `sir-0.3-auth*.md` 只讲双 Token 的写法，课程、资金、商店等题要用的分页、小数汇总、加锁等都没有。业务账本83/1/0不变。

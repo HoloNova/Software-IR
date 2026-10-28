@@ -39,6 +39,8 @@
 
 [`runs/dual-token-gate-v1/`](runs/dual-token-gate-v1/)：判卷代码改到共用底座后，用 `import --task` 从复查批次重新导入（API 调用0次），静态结果与复查批次一致。`bd870a834f77` 经 [slm-business-gate #1](https://github.com/HoloNova/Software-IR/actions/runs/40330717774) 实际判卷：静态/构建/启动 PASSED，业务 FAILED（34/1），唯一失败是登出返回 201 而非 200，因为候选在登出时新建了一行 TokenPair。证据在 `runtime/`，`gate-run.json` 记 run URL、提交 SHA 与 artifact 哈希；`train-teacher.jsonl` 为0条。详见[数据报告第五阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#第五阶段github-上的可复用业务门2026-10-26)。
 
+同一批次随后对 `bd870a834f77` 做了1次业务门反馈修复（`repair --runtime-evidence`，input 12480、output 1199 tokens）：新候选 `e2c157051e10` 只把 Logout 改成 query，静态失败（query 必须只读），见 `checked-r1.jsonl` 与[数据报告第六阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#第六阶段业务门反馈修复与-22-份新题2026-10-28)。新教师合格训练答案仍为0条。
+
 完整说明：[数据报告](../../docs/qualification/SLM_DATA_PILOT_REPORT.md)、[操作命令](../../experiments/slm/README.md)、[模型选择](../../docs/qualification/SLM_MODEL_SELECTION.md)。API密钥不属于数据或metadata。数据Git属性禁止换行转换，保持证据字节哈希。
 
 跨Windows/Linux或工具链字节变化时，先用实验CLI的`import --from-bundle ... --bundle ...`在目标环境重新冻结输入、导入原响应并重置所有资格，再重做检查；不要修改本批manifest或借用原通过结果。
