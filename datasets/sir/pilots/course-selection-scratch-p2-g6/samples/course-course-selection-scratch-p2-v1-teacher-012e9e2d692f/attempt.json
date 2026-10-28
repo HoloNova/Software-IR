@@ -1,0 +1,21 @@
+{
+  "actual_model": "deepseek-flash",
+  "created_at": "2026-10-28T11:03:26.924734+00:00",
+  "id": "course-course-selection-scratch-p2-v1-teacher-012e9e2d692f",
+  "raw_response_sha256": "1815373961b774a19c5b6151a51d601c4da8af970f0e49ba831adb05fc19f6a1",
+  "requested_model": "deepseek-flash",
+  "status": "CANDIDATE_NOT_YET_QUALIFIED",
+  "system_fingerprint": "bc19ba97cbe016479903222bb1578db6",
+  "usage": {
+    "completion_tokens": 3265,
+    "completion_tokens_details": null,
+    "prompt_cache_hit_tokens": 10112,
+    "prompt_cache_miss_tokens": 1338,
+    "prompt_tokens": 11450,
+    "prompt_tokens_details": {
+      "audio_tokens": null,
+      "cached_tokens": 10112
+    },
+    "total_tokens": 14715
+  }
+}

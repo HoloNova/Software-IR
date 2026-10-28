@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "sir 0.3\nsoftware TokenDesk {\n  metadata { displayName \"TokenDesk\"; namespace \"com.example.tokendesk\"; }\n  target { language java 21; framework spring_boot; persistence mybatis_plus; database mysql; build maven; interface rest; }\n  sources { }\n  imports { }\n  declarations {\n    entity Account persistent {\n      identity id: Id generated auto;\n      field name: Name where length(1, 64) unique;\n      field passwordHash: Secret;\n    }\n\n    entity Credential persistent {\n      identity id: Token generated uuid;\n      field owner: Ref<Account>;\n      field used: Flag default false;\n      field expiresAt: Moment;\n    }\n\n    view AccountView from Account {\n      field id: Id;\n      field name: Name;\n    }\n\n    view CredentialView from Credential {\n      field id: Token;\n      field owner: Ref<Account>;\n      field expiresAt: Moment;\n    }\n\n    input GetCredentialInput {\n      field id: Token;\n    }\n\n    input RefreshInput {\n      field token: Token;\n    }\n\n    input TouchInput {\n      field token: Token;\n    }\n\n    input FindAccountInput {\n      field name: Name;\n    }\n\n    input RegisterInput {\n      field name: Name where length(1, 64);\n      field password: Secret;\n    }\n\n    input LoginInput {\n      field name: Name where length(1, 64);\n      field password: Secret;\n    }\n\n    error CredentialNotFound http 404;\n    error Invalid http 409;\n    error Expired http 400;\n    error AccountNotFound http 404;\n    error BadLogin http 401;\n\n    capability GetCredential {\n      input GetCredentialInput;\n      output CredentialView;\n      fails CredentialNotFound;\n      requires readonly;\n      expose query at \"/get-credential\";\n      workflow {\n        load Credential by input.id as credential else CredentialNotFound;\n        return credential;\n      }\n    }\n\n    capability Refresh {\n      input RefreshInput;\n      output CredentialView;\n      fails Expired;\n      fails Invalid;\n      requires atomic;\n      expose command at \"/refresh\";\n      workflow {\n        load Credential by input.token as old else Invalid;\n        validate old.used == false else Invalid;\n        validate old.expiresAt > now() else Expired;\n        update old { used: true; }\n        persist old;\n        create Credential as made {\n          owner: old.owner;\n          used: false;\n          expiresAt: now() + 7 days;\n        }\n        persist made;\n        return made;\n      }\n    }\n\n    capability Touch {\n      input TouchInput;\n      output CredentialView;\n      fails Invalid;\n      requires atomic;\n      expose command at \"/touch\";\n      workflow {\n        load Credential by input.token as credential else Invalid;\n        validate credential.owner == alice else Invalid;\n        update credential { used: true; }\n        persist credential;\n        return credential;\n      }\n    }\n\n    capability FindAccount {\n      input FindAccountInput;\n      output AccountView;\n      fails AccountNotFound;\n      requires readonly;\n      expose query at \"/find-account\";\n      workflow {\n        load Account by name: input.name as account else AccountNotFound;\n        return account;\n      }\n    }\n\n    capability Register {\n      input RegisterInput;\n      output AccountView;\n      requires atomic;\n      expose command at \"/register\";\n      workflow {\n        create Account as account {\n          name: input.name;\n          passwordHash: input.password;\n        }\n        persist account;\n        return account;\n      }\n    }\n\n    capability Login {\n      input LoginInput;\n      output AccountView;\n      fails BadLogin;\n      requires readonly;\n      expose command at \"/login\";\n      workflow {\n        load Account by name: input.name as account else BadLogin;\n        validate account.passwordHash matches input.password else BadLogin;\n        return account;\n      }\n    }\n  }\n}",
+        "function_call": null,
+        "refusal": null,
+        "role": "assistant",
+        "tool_calls": null
+      }
+    }
+  ],
+  "created": 1793185414,
+  "id": "4042f7a3-bb3b-4710-b906-97f178731981",
+  "model": "deepseek-flash",
+  "object": "chat.completion",
+  "service_tier": null,
+  "system_fingerprint": "bc19ba97cbe016479903222bb1578db6",
+  "usage": {
+    "completion_tokens": 810,
+    "completion_tokens_details": null,
+    "prompt_cache_hit_tokens": 5504,
+    "prompt_cache_miss_tokens": 1057,
+    "prompt_tokens": 6561,
+    "prompt_tokens_details": {
+      "audio_tokens": null,
+      "cached_tokens": 5504
+    },
+    "total_tokens": 7371
+  }
+}

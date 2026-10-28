@@ -1,0 +1,745 @@
+sir 0.3
+software Multiplication {
+  metadata { displayName "Exact Multiplication"; namespace "example.multiplication"; }
+  target { language java 21; framework spring_boot; persistence mybatis_plus;
+    database mysql; build maven; interface rest; }
+  sources { } imports { }
+  declarations {
+    enum Role { CUSTOMER, ADMIN }
+    enum ProductState { ON_SHELF, OFF_SHELF }
+    enum OrderState { CREATED, PAID, SHIPPED, CANCELLED }
+    entity User persistent {
+      identity id: Id generated auto;
+      field role: Role default Role.CUSTOMER;
+      field name: Name unique;
+      field passwordHash: Secret;
+    }
+    use DualTokenLogin {
+      account: User;
+    }
+    use AccountRegistration {
+      account: User;
+      show: [role];
+    }
+    error BadPage;
+    error Forbidden http 403;
+    input PageOnly {
+      field page: PageNo;
+      field size: PageSize;
+    }
+    entity ShopProduct persistent {
+      identity id: Id generated auto;
+      field name: Name;
+      field description: Optional<Remark>;
+      field price: Money where min(0);
+      field stock: Count where min(0);
+      field state: ProductState default ProductState.ON_SHELF;
+    }
+    entity PurchaseOrder persistent {
+      identity id: Id generated auto;
+      field buyer: Ref<User>;
+      field state: OrderState default OrderState.CREATED;
+      field total: Money;
+      field createdAt: Moment default now();
+    }
+    entity OrderLine persistent {
+      identity id: Id generated auto;
+      field purchase: Ref<PurchaseOrder>;
+      field product: Ref<ShopProduct>;
+      field quantity: Quantity;
+      field unitPrice: Money;
+    }
+    entity CartItem persistent {
+      identity id: Id generated auto;
+      field owner: Ref<User>;
+      field product: Ref<ShopProduct>;
+      field quantity: Quantity;
+      unique (owner, product);
+    }
+    view ShopProductView from ShopProduct {
+      field id: Id;
+      field name: Name;
+      field description: Optional<Remark>;
+      field price: Money;
+      field stock: Count;
+      field state: ProductState;
+    }
+    view LineView from OrderLine {
+      field id: Id;
+      field product: ShopProductView;
+      field quantity: Quantity;
+      field unitPrice: Money;
+    }
+    view OrderView from PurchaseOrder {
+      field id: Id;
+      field state: OrderState;
+      field total: Money;
+      field createdAt: Moment;
+    }
+    view CartItemView from CartItem {
+      field id: Id;
+      field product: ShopProductView;
+      field quantity: Quantity;
+    }
+    input NewProduct {
+      field name: Name;
+      field description: Optional<Remark>;
+      field price: Money where min(0);
+      field stock: Count where min(0);
+    }
+    capability AddProduct {
+      actor Ref<User>;
+      input NewProduct;
+      output ShopProductView;
+      fails Forbidden;
+      requires authenticated;
+      requires atomic;
+      expose command at "/products";
+      workflow {
+        validate actor.role == Role.ADMIN else Forbidden;
+        create ShopProduct as product {
+          name: input.name;
+          description: input.description;
+          price: input.price;
+          stock: input.stock;
+        }
+        persist product;
+        return product;
+      }
+    }
+    input ProductSearch {
+      field keyword: Text;
+      field page: PageNo;
+      field size: PageSize;
+    }
+    capability SearchProducts {
+      input ProductSearch;
+      output Page<ShopProductView>;
+      fails BadPage;
+      requires readonly;
+      expose query at "/products";
+      workflow {
+        find ShopProduct
+          where item.state == ProductState.ON_SHELF and item.name containsLiteral input.keyword
+          order by name ascending, id ascending
+          Page input.page, input.size else BadPage
+          as rows;
+        return rows;
+      }
+    }
+    input BuyRequest {
+      field productId: Id;
+      field quantity: Quantity;
+    }
+    error ProductNotFound http 404;
+    error OutOfStock http 409;
+    capability BuyNow {
+      actor Ref<User>;
+      input BuyRequest;
+      output OrderView;
+      fails OutOfStock;
+      fails ProductNotFound;
+      requires authenticated;
+      requires atomic;
+      expose command at "/orders";
+      workflow {
+        load ShopProduct by input.productId as product else ProductNotFound;
+        validate product.state == ProductState.ON_SHELF else ProductNotFound;
+        update product when product.stock >= input.quantity else OutOfStock {
+          stock: product.stock - input.quantity;
+        }
+        create PurchaseOrder as purchase {
+          buyer: actor;
+          total: product.price * input.quantity;
+        }
+        persist product;
+        persist purchase;
+        create OrderLine as line {
+          purchase: purchase;
+          product: product;
+          quantity: input.quantity;
+          unitPrice: product.price;
+        }
+        persist line;
+        return purchase;
+      }
+    }
+    input CartAddInput {
+      field productId: Id;
+      field quantity: Quantity;
+    }
+    error AlreadyInCart http 409;
+    capability AddToCart {
+      actor Ref<User>;
+      input CartAddInput;
+      output CartItemView;
+      fails AlreadyInCart;
+      fails ProductNotFound;
+      requires authenticated;
+      requires atomic;
+      expose command at "/cart";
+      workflow {
+        load ShopProduct by input.productId as product else ProductNotFound;
+        validate product.state == ProductState.ON_SHELF else ProductNotFound;
+        create CartItem as entry {
+          owner: actor;
+          product: product;
+          quantity: input.quantity;
+        }
+        persist entry else AlreadyInCart;
+        return entry;
+      }
+    }
+    input CartQuantityInput {
+      field id: Id;
+      field quantity: Quantity;
+    }
+    error CartItemNotFound http 404;
+    capability ChangeCartQuantity {
+      actor Ref<User>;
+      input CartQuantityInput;
+      output CartItemView;
+      fails CartItemNotFound;
+      requires authenticated;
+      requires atomic;
+      expose command at "/cart/{id}/quantity";
+      workflow {
+        load CartItem by input.id as entry else CartItemNotFound;
+        validate entry.owner == actor else CartItemNotFound;
+        update entry {
+          quantity: input.quantity;
+        }
+        persist entry;
+        return entry;
+      }
+    }
+    input CartItemRef {
+      field id: Id;
+    }
+    capability RemoveFromCart {
+      actor Ref<User>;
+      input CartItemRef;
+      output Unit;
+      fails CartItemNotFound;
+      requires authenticated;
+      requires atomic;
+      expose command at "/cart/{id}/remove";
+      workflow {
+        load CartItem by input.id as entry else CartItemNotFound;
+        validate entry.owner == actor else CartItemNotFound;
+        delete entry;
+        return unit;
+      }
+    }
+    capability MyCart {
+      actor Ref<User>;
+      input PageOnly;
+      output Page<CartItemView>;
+      fails BadPage;
+      requires authenticated;
+      requires readonly;
+      expose query at "/cart";
+      workflow {
+        find CartItem
+          where item.owner == actor
+          order by id ascending
+          Page input.page, input.size else BadPage
+          as rows;
+        return rows;
+      }
+    }
+    error CartTooLarge http 409;
+    capability ClearCart {
+      actor Ref<User>;
+      output Unit;
+      fails CartTooLarge;
+      requires authenticated;
+      requires atomic;
+      expose command at "/cart/clear";
+      workflow {
+        each CartItem where item.owner == actor
+          order by id ascending limit 100 else CartTooLarge as entry {
+          delete entry;
+        }
+        return unit;
+      }
+    }
+    error CartEmpty http 409;
+    capability Checkout {
+      actor Ref<User>;
+      output OrderView;
+      fails CartEmpty;
+      fails CartTooLarge;
+      fails OutOfStock;
+      fails ProductNotFound;
+      requires authenticated;
+      requires atomic;
+      expose command at "/cart/checkout";
+      workflow {
+        count CartItem where item.owner == actor as cartSize;
+        validate cartSize > 0 else CartEmpty;
+        validate cartSize <= 50 else CartTooLarge;
+        create PurchaseOrder as purchase {
+          buyer: actor;
+          total: 0;
+        }
+        persist purchase;
+        each CartItem where item.owner == actor
+          order by id ascending limit 50 else CartTooLarge as entry {
+          load ShopProduct by entry.product as product for update else ProductNotFound;
+          validate product.state == ProductState.ON_SHELF else ProductNotFound;
+          update product when product.stock >= entry.quantity else OutOfStock {
+            stock: product.stock - entry.quantity;
+          }
+          persist product;
+          create OrderLine as line {
+            purchase: purchase;
+            product: product;
+            quantity: entry.quantity;
+            unitPrice: product.price;
+          }
+          persist line;
+          update purchase {
+            total: purchase.total + product.price * entry.quantity;
+          }
+          persist purchase;
+          delete entry;
+        }
+        return purchase;
+      }
+    }
+    input OrderRef {
+      field id: Id;
+    }
+    entity Coupon persistent {
+      identity id: Id generated auto;
+      field code: Code unique;
+      field amountOff: Money where min(0);
+      field minSpend: Money where min(0);
+      field startsAt: Moment;
+      field endsAt: Moment;
+      field totalLimit: Count;
+      field used: Count default 0;
+    }
+    entity Redemption persistent {
+      identity id: Id generated auto;
+      field coupon: Ref<Coupon>;
+      field buyer: Ref<User>;
+      field purchase: Ref<PurchaseOrder>;
+      field amountOff: Money;
+      unique (coupon, buyer);
+      unique (purchase, buyer);
+    }
+    view CouponView from Coupon {
+      field id: Id;
+      field code: Code;
+      field amountOff: Money;
+      field minSpend: Money;
+      field startsAt: Moment;
+      field endsAt: Moment;
+      field totalLimit: Count;
+      field used: Count;
+    }
+    input NewCoupon {
+      field code: Code;
+      field amountOff: Money where min(0);
+      field minSpend: Money where min(0);
+      field startsAt: Moment;
+      field endsAt: Moment;
+      field totalLimit: Count;
+    }
+    error CouponCodeTaken http 409;
+    error InvalidWindow http 400;
+    capability AddCoupon {
+      actor Ref<User>;
+      input NewCoupon;
+      output CouponView;
+      fails CouponCodeTaken;
+      fails Forbidden;
+      fails InvalidWindow;
+      requires authenticated;
+      requires atomic;
+      expose command at "/coupons";
+      workflow {
+        validate actor.role == Role.ADMIN else Forbidden;
+        validate input.startsAt < input.endsAt else InvalidWindow;
+        create Coupon as coupon {
+          code: input.code;
+          amountOff: input.amountOff;
+          minSpend: input.minSpend;
+          startsAt: input.startsAt;
+          endsAt: input.endsAt;
+          totalLimit: input.totalLimit;
+        }
+        persist coupon else CouponCodeTaken;
+        return coupon;
+      }
+    }
+    input ApplyCouponInput {
+      field orderId: Id;
+      field code: Code;
+    }
+    error CouponAlreadyUsed http 409;
+    error CouponExhausted http 409;
+    error CouponExpired http 409;
+    error CouponNotFound http 404;
+    error MinSpendNotMet http 409;
+    capability ApplyCoupon {
+      actor Ref<User>;
+      input ApplyCouponInput;
+      output OrderView;
+      fails CouponAlreadyUsed;
+      fails CouponExhausted;
+      fails CouponExpired;
+      fails CouponNotFound;
+      fails MinSpendNotMet;
+      fails NotPayable;
+      fails NotYourOrder;
+      fails OrderNotFound;
+      requires authenticated;
+      requires atomic;
+      expose command at "/orders/{orderId}/coupon";
+      workflow {
+        load PurchaseOrder by input.orderId as purchase for update else OrderNotFound;
+        validate purchase.buyer == actor else NotYourOrder;
+        validate purchase.state == OrderState.CREATED else NotPayable;
+        load Coupon by code: input.code as found else CouponNotFound;
+        load Coupon by found.id as coupon for update else CouponNotFound;
+        validate now() >= coupon.startsAt and now() <= coupon.endsAt else CouponExpired;
+        validate purchase.total >= coupon.minSpend and purchase.total >= coupon.amountOff else MinSpendNotMet;
+        create Redemption as redemption {
+          coupon: coupon;
+          buyer: actor;
+          purchase: purchase;
+          amountOff: coupon.amountOff;
+        }
+        persist redemption else CouponAlreadyUsed;
+        update coupon when coupon.used < coupon.totalLimit else CouponExhausted {
+          used: coupon.used + 1;
+        }
+        persist coupon;
+        update purchase {
+          total: purchase.total - coupon.amountOff;
+        }
+        persist purchase;
+        return purchase;
+      }
+    }
+    error NotPayable http 409;
+    error NotYourOrder http 403;
+    error OrderNotFound http 404;
+    capability Pay {
+      actor Ref<User>;
+      input OrderRef;
+      output OrderView;
+      fails NotPayable;
+      fails NotYourOrder;
+      fails OrderNotFound;
+      requires authenticated;
+      requires atomic;
+      expose command at "/orders/{id}/pay";
+      workflow {
+        load PurchaseOrder by input.id as purchase else OrderNotFound;
+        validate purchase.buyer == actor else NotYourOrder;
+        update purchase when purchase.state == OrderState.CREATED else NotPayable {
+          state: OrderState.PAID;
+        }
+        persist purchase;
+        return purchase;
+      }
+    }
+    error NotShippable http 409;
+    capability Ship {
+      actor Ref<User>;
+      input OrderRef;
+      output OrderView;
+      fails Forbidden;
+      fails NotShippable;
+      fails OrderNotFound;
+      requires authenticated;
+      requires atomic;
+      expose command at "/orders/{id}/ship";
+      workflow {
+        validate actor.role == Role.ADMIN else Forbidden;
+        load PurchaseOrder by input.id as purchase else OrderNotFound;
+        update purchase when purchase.state == OrderState.PAID else NotShippable {
+          state: OrderState.SHIPPED;
+        }
+        persist purchase;
+        return purchase;
+      }
+    }
+    error NotCancellable http 409;
+    error InconsistentOrder http 409;
+    error OrderTooLarge http 409;
+    error StockLimit http 409;
+    capability CancelOrder {
+      actor Ref<User>;
+      input OrderRef;
+      output OrderView;
+      fails CouponNotFound;
+      fails InconsistentOrder;
+      fails NotCancellable;
+      fails NotYourOrder;
+      fails OrderNotFound;
+      fails OrderTooLarge;
+      fails ProductNotFound;
+      fails StockLimit;
+      requires authenticated;
+      requires atomic;
+      expose command at "/orders/{id}/cancel";
+      workflow {
+        load PurchaseOrder by input.id as purchase for update else OrderNotFound;
+        validate purchase.buyer == actor else NotYourOrder;
+        update purchase when purchase.state == OrderState.CREATED else NotCancellable {
+          state: OrderState.CANCELLED;
+        }
+        persist purchase;
+        exists OrderLine where item.purchase == purchase as hasLines;
+        validate hasLines else InconsistentOrder;
+        each OrderLine where item.purchase == purchase
+          order by product ascending, id ascending limit 100 else OrderTooLarge as line {
+          validate line.quantity > 0 else InconsistentOrder;
+          load ShopProduct by line.product as product for update else ProductNotFound;
+          validate product.stock >= 0 and product.stock <= 2147483647 - line.quantity else StockLimit;
+          update product when product.stock >= 0 and product.stock <= 2147483647 - line.quantity else StockLimit {
+            stock: product.stock + line.quantity;
+          }
+          persist product;
+        }
+        each Redemption where item.purchase == purchase
+          order by id ascending limit 1 else InconsistentOrder as redeemed {
+          load Coupon by redeemed.coupon as coupon for update else CouponNotFound;
+          update coupon when coupon.used > 0 else InconsistentOrder {
+            used: coupon.used - 1;
+          }
+          persist coupon;
+          delete redeemed;
+        }
+        return purchase;
+      }
+    }
+    capability MyOrders {
+      actor Ref<User>;
+      input PageOnly;
+      output Page<OrderView>;
+      fails BadPage;
+      requires authenticated;
+      requires readonly;
+      expose query at "/orders";
+      workflow {
+        find PurchaseOrder
+          where item.buyer == actor
+          order by createdAt descending, id descending
+          Page input.page, input.size else BadPage
+        as rows;
+        return rows;
+      }
+    }
+    input LinesQuery {
+      field orderId: Id;
+      field page: PageNo;
+      field size: PageSize;
+    }
+    capability OrderLines {
+      actor Ref<User>;
+      input LinesQuery;
+      output Page<LineView>;
+      fails BadPage;
+      fails NotYourOrder;
+      fails OrderNotFound;
+      requires authenticated;
+      requires readonly;
+      expose query at "/orders/{orderId}/lines";
+      workflow {
+        load PurchaseOrder by input.orderId as purchase else OrderNotFound;
+        validate purchase.buyer == actor else NotYourOrder;
+        find OrderLine
+          where item.purchase == purchase
+          order by id ascending
+          Page input.page, input.size else BadPage
+        as rows;
+        return rows;
+      }
+    }
+    type UnitPrice = Money where precision(21, 4);
+    entity Calculation persistent {
+      identity id: Id generated auto;
+      field amount: Money;
+      field count: Count;
+      field wide: Id;
+    }
+    view CalculationView from Calculation {
+      field id: Id; field amount: Money; field count: Count; field wide: Id;
+    }
+    input Numbers {
+      field price: UnitPrice; field quantity: Count;
+      field left: Count; field right: Count; field wide: Id;
+    }
+    capability Multiply {
+      input Numbers; output CalculationView; requires atomic; expose command;
+      workflow {
+        create Calculation as result {
+          amount: input.price * input.quantity;
+          count: input.left * input.right;
+          wide: input.wide * 2;
+        }
+        persist result;
+        return result;
+      }
+    }
+    capability Wide {
+      input Numbers; output CalculationView; requires atomic; expose command;
+      workflow {
+        create Calculation as result {
+          amount: input.price * input.wide;
+          count: 0;
+          wide: input.wide;
+        }
+        persist result;
+        return result;
+      }
+    }
+    capability Reverse {
+      input Numbers; output CalculationView; requires atomic; expose command;
+      workflow {
+        create Calculation as result {
+          amount: input.quantity * input.price;
+          count: input.left * (input.right + 1);
+          wide: input.wide * (2 * input.wide);
+        }
+        persist result;
+        return result;
+      }
+    }
+    entity Product persistent {
+      identity id: Id generated auto;
+      field price: UnitPrice;
+      field stock: Count where min(0);
+    }
+    entity Receipt persistent {
+      identity id: Id generated auto;
+      field product: Ref<Product>;
+      field total: Money;
+      field quantity: Quantity;
+    }
+    entity ReceiptLine persistent {
+      identity id: Id generated auto;
+      field receipt: Ref<Receipt>;
+      field quantity: Quantity;
+      field unitPrice: UnitPrice;
+    }
+    view ProductView from Product {
+      field id: Id; field price: UnitPrice; field stock: Count;
+      field inventoryValue: Money = item.price * item.stock;
+      field soldOut: Flag = item.stock == 0;
+    }
+    view ReceiptView from Receipt {
+      field id: Id; field total: Money; field quantity: Quantity;
+      field doubledTotal: Money = item.total * 2;
+    }
+    input Purchase { field id: Id; field quantity: Quantity; }
+    input ProductRef { field id: Id; }
+    error Missing http 404;
+    capability PurchaseProduct {
+      input Purchase; output ReceiptView; fails Missing; fails OutOfStock; requires atomic; expose command at "/purchase";
+      workflow {
+        load Product by input.id as product else Missing;
+        update product when product.stock >= input.quantity else OutOfStock { stock: product.stock - input.quantity; }
+        persist product;
+        create Receipt as receipt { product: product; total: product.price * input.quantity; quantity: input.quantity; }
+        persist receipt;
+        create ReceiptLine as line { receipt: receipt; quantity: input.quantity; unitPrice: product.price; }
+        persist line;
+        return receipt;
+      }
+    }
+    entity Course persistent {
+      identity id: Id generated auto;
+      field capacity: Quantity;
+      field enrolled: Count default 0;
+    }
+    view CourseCounterView from Course {
+      field id: Id; field capacity: Quantity; field enrolled: Count;
+      field remaining: Count = item.capacity - item.enrolled;
+      field full: Flag = item.enrolled >= item.capacity;
+    }
+    input CourseKey { field id: Id; }
+    error Full http 409;
+    capability EnrollCourse {
+      input CourseKey; output CourseCounterView; fails Full; fails Missing;
+      requires atomic; expose command at "/courses/enroll";
+      workflow {
+        load Course by input.id as course else Missing;
+        update course when course.enrolled < course.capacity else Full { enrolled: course.enrolled + 1; }
+        persist course;
+        return course;
+      }
+    }
+    capability ShowCourse {
+      input CourseKey; output CourseCounterView; fails Missing;
+      requires readonly; expose query at "/courses/show";
+      workflow { load Course by input.id as course else Missing; return course; }
+    }
+    capability ShowProduct {
+      input ProductRef; output ProductView; fails Missing; requires readonly; expose query at "/products/show";
+      workflow { load Product by input.id as product else Missing; return product; }
+    }
+    entity Room persistent { identity id: Id generated auto; field name: Text unique; }
+    entity Booking persistent {
+      identity id: Id generated auto;
+      field room: Ref<Room>; field startsAt: Moment; field endsAt: Moment;
+    }
+    input NewBooking { field roomId: Id; field startsAt: Moment; field endsAt: Moment; }
+    view BookingView from Booking { field id: Id; field startsAt: Moment; field endsAt: Moment; }
+    error RoomMissing http 404; error SlotTaken http 409; error InvalidInterval http 400;
+    capability Book {
+      input NewBooking; output BookingView;
+      fails InvalidInterval; fails RoomMissing; fails SlotTaken;
+      requires atomic; expose command at "/bookings";
+      workflow {
+        validate input.startsAt < input.endsAt else InvalidInterval;
+        load Room by input.roomId as room for update else RoomMissing;
+        exists Booking where item.room == room and item.startsAt < input.endsAt and item.endsAt > input.startsAt as taken;
+        validate not taken else SlotTaken;
+        create Booking as made { room: room; startsAt: input.startsAt; endsAt: input.endsAt; }
+        persist made;
+        return made;
+      }
+    }
+    input WeeklyBooking { field roomId: Id; field startsAt: Moment; field endsAt: Moment; field weeks: Quantity; }
+    error TooManyWeeks http 409;
+    capability BookWeekly {
+      input WeeklyBooking; output Unit;
+      fails InvalidInterval; fails RoomMissing; fails SlotTaken; fails TooManyWeeks;
+      requires atomic; expose command at "/bookings/weekly";
+      workflow {
+        validate input.startsAt < input.endsAt else InvalidInterval;
+        load Room by input.roomId as room for update else RoomMissing;
+        repeat input.weeks times limit 12 else TooManyWeeks as week {
+          exists Booking where item.room == room and item.startsAt < addDays(input.endsAt, week * 7) and item.endsAt > addDays(input.startsAt, week * 7) as taken;
+          validate not taken else SlotTaken;
+          create Booking as made { room: room; startsAt: addDays(input.startsAt, week * 7); endsAt: addDays(input.endsAt, week * 7); }
+          persist made;
+        }
+        return unit;
+      }
+    }
+    capability BookAfterRead {
+      input NewBooking; output BookingView;
+      fails InvalidInterval; fails RoomMissing; fails SlotTaken;
+      requires atomic; expose command at "/bookings/after-read";
+      workflow {
+        validate input.startsAt < input.endsAt else InvalidInterval;
+        load Room by input.roomId as preview else RoomMissing;
+        exists Booking where item.room == preview and item.startsAt < input.endsAt and item.endsAt > input.startsAt as beforeLock;
+        load Room by input.roomId as room for update else RoomMissing;
+        exists Booking where item.room == room and item.startsAt < input.endsAt and item.endsAt > input.startsAt as taken;
+        validate not taken else SlotTaken;
+        create Booking as made { room: room; startsAt: input.startsAt; endsAt: input.endsAt; }
+        persist made;
+        return made;
+      }
+    }
+  }
+}

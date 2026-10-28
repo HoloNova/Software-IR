@@ -1,0 +1,51 @@
+sir 0.3
+
+software CourseCatalog {
+  metadata {
+    displayName "Course Catalog";
+    namespace "com.example.coursecatalog";
+  }
+
+  target {
+    language java 21;
+    framework spring_boot;
+    persistence mybatis_plus;
+    database mysql;
+    build maven;
+    interface rest;
+  }
+
+  sources { }
+  imports { }
+  declarations {
+    entity Course persistent {
+      identity id: Id generated auto;
+      field code: Code;
+      field name: Name;
+      field description: Optional<Remark>;
+      field capacity: Quantity;
+    }
+    view CourseSummary from Course {
+      field code: Text;
+      field name: Text;
+      field capacity: Count;
+    }
+    input SearchCoursesInput {
+      field keyword: Name where length(1, 50);
+      field page: PageNo;
+      field size: PageSize;
+    }
+    error InvalidPageParam;
+    capability SearchCourses {
+      input SearchCoursesInput;
+      output Page<CourseSummary>;
+      fails InvalidPageParam;
+      requires readonly;
+      expose query at "/search-courses";
+      workflow {
+        find Course where item.name containsLiteral input.keyword order by code ascending, id ascending Page input.page, input.size else InvalidPageParam as found;
+        return found;
+      }
+    }
+  }
+}
