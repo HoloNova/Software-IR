@@ -36,8 +36,10 @@ on:
           - TokenDeskBusinessConformanceIT
           - WriteSliceBusinessConformanceIT
 
+# Each run has its own runner and MySQL container, so different samples judge in parallel; only
+# re-dispatching the same sample waits. A group per ref kept a single pending run and cancelled the rest.
 concurrency:
-  group: slm-business-gate-${{ github.ref }}
+  group: slm-business-gate-${{ inputs.sample_id }}
   cancel-in-progress: false
 
 jobs:
