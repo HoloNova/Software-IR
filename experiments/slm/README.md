@@ -66,6 +66,8 @@ v2（2026-10-25）补的是首批暴露的两处提示不足：实体成员的�
 
 `sir-0.3-general-v5.md`（2026-10-28）补 v4 跑完 train 集暴露的六条：按主键加载不写字段名；`expose command` 后只能接 `put`／`delete`；`persist … else` 只用于版本冲突和 unique 冲突；变量名也不能用保留字；字段修饰顺序给出例子；`.present` 只用于 patch 输入。
 
+`sir-0.3-general-v6.md`（2026-10-28）按三份只读分析（`drafts/prompt-audit-general-v5.md`、`drafts/teacher-error-census.md`、`drafts/course-selection/failure-analysis.md`）修订，逐条改动与依据见 `drafts/prompt-v6/changes.md`：改正“守卫更新只有一个赢家”的错误说法；补算术输入必填（min/max 不管 null）、Optional 空比较、find/exists/count 与 any 的作用域和两种连接、凭据 actor 是 subject 实体、scope 对所有读取生效、引用声明必须闭合；易错点前加四项自查清单。篇幅约 9,000 字。
+
 ```bash
 python -m experiments.slm.data prepare --bundle datasets/sir/pilots/dual-token-v2 \
   --system-prompt experiments/slm/prompts/sir-0.3-auth-v2.md
