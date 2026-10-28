@@ -62,6 +62,8 @@ v2（2026-10-25）补的是首批暴露的两处提示不足：实体成员的�
 
 `sir-0.3-general-v3.md`（2026-10-28）再补四条：约束只写在字段的 `where` 里、不能当表达式；`at` 路径会自动加 `/api`；patch 字段用去掉规则的类型（`Name` 写成 `Text`、`Quantity` 写成 `Count`）；带 Version 的实体不能写守卫更新或原子加减。
 
+`sir-0.3-general-v4.md`（2026-10-28）再补一条：patch 字段在 `update` 里直接绑定 `input.字段`，没传的字段自动保留原值，SIR 没有 `? :` 三元表达式。
+
 ```bash
 python -m experiments.slm.data prepare --bundle datasets/sir/pilots/dual-token-v2 \
   --system-prompt experiments/slm/prompts/sir-0.3-auth-v2.md
