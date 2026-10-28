@@ -43,7 +43,7 @@
 
 ## 通用 prompt 试采样与首批合格答案
 
-`pilots/` 下的 `*-g1`～`*-g4` 是用通用 system prompt（`sir-0.3-general-v1`～`v4`）对 train 集三道题的试采样批次，每个批次 1 份教师候选。`bearer-credential-change-g1` 的 `07b9ea18ef67` 与 `query-slice-scratch-g3` 的 `cadd5a148bb8` 经 GitHub 业务门四门全部通过，证据在各自的 `runtime/`，`train-teacher.jsonl` 各 1 条，**这是首批 2 条新教师合格训练答案**；`write-slice-change-g4` 的 `51ab2996a20e` 静态通过，业务门待归档。详见[数据报告第七阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#第七阶段通用-prompt-试采样与首批合格教师答案2026-10-28)。
+`pilots/` 下的 `*-g1`～`*-g4` 是用通用 system prompt（`sir-0.3-general-v1`～`v4`）对 train 集三道题的试采样批次，每个批次 1 份教师候选。`bearer-credential-change-g1` 的 `07b9ea18ef67`、`query-slice-scratch-g3` 的 `cadd5a148bb8` 和 `write-slice-change-g4` 的 `51ab2996a20e` 经 GitHub 业务门四门全部通过，证据在各自的 `runtime/`，`train-teacher.jsonl` 各 1 条，**这是首批 3 条新教师合格训练答案**。详见[数据报告第七阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#第七阶段通用-prompt-试采样与首批合格教师答案2026-10-28)。
 
 完整说明：[数据报告](../../docs/qualification/SLM_DATA_PILOT_REPORT.md)、[操作命令](../../experiments/slm/README.md)、[模型选择](../../docs/qualification/SLM_MODEL_SELECTION.md)。API密钥不属于数据或metadata。数据Git属性禁止换行转换，保持证据字节哈希。
 
