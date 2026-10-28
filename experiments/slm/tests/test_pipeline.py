@@ -233,6 +233,62 @@ class PipelineTests(unittest.TestCase):
         change = data.prompt_messages(self.root, self.task)[1]["content"]
         self.assertTrue(change.endswith("\n已有软件（返回修改后的完整文档）：\n" + base_text))
 
+    def _statically_passed_candidate_with_evidence(self, business):
+        payload = data.request_payload("deepseek-flash", data.prompt_messages(self.root, self.task), 100)
+        response = {"model": "teacher-test", "choices": [{"finish_reason": "stop",
+                    "message": {"content": "sir 0.3\nsoftware Sample {}\n"}}]}
+        with patch.object(data, "call_teacher", return_value=response):
+            data.generate_one(self.root, self.manifest, self.task, payload)
+        parent = load_jsonl(self.root / "candidates.jsonl")[-1]
+        checked = bind_static(parent, {"id": parent["id"], "sourceSha256": parent["source_sha256"], "ok": True,
+                              "stage": "GENERATION", "fileCount": 3, "digest": "d" * 64, "diagnostics": []})
+        write_jsonl(self.root / "checked.jsonl", [checked])
+        run = Path(self.temp.name) / "evidence" / "slice-run"
+        (run / "logs").mkdir(parents=True)
+        (run / "report.txt").write_text(
+            "verdict=FAILED\nrunId=slice-run\n\nchecksPassed=1 checksFailed=1\n"
+            "PASS login works (status=201)\nFAIL logging out answers 200 (expected=200 actual=201)\n\n"
+            "D7 POST logout: status=201 body={}\n", encoding="utf-8")
+        (run / "logs/spring.stdout.log").write_text("secret application log", encoding="utf-8")
+        evidence = {"schema_version": "sir-runtime-evidence/1", "run_id": "slice-run",
+                    **{key: checked[key] for key in ("id", "task_sha256", "oracle_sha256", "toolchain_core_sha256", "source_sha256")},
+                    "generated_digest": "d" * 64,
+                    "gates": {"static": "PASSED", "build": "PASSED", "start": "PASSED", "business": business},
+                    "environment": {"java": "21", "mysql": "8.4", "test_revision": "1"},
+                    "artifacts": [{"path": name, "sha256": data.digest_file(run / name)}
+                                  for name in ("report.txt", "logs/spring.stdout.log")]}
+        (run / "slm-runtime.json").write_text(data.json_text(evidence), encoding="utf-8")
+        return parent, run / "slm-runtime.json", response
+
+    def test_runtime_repair_sends_only_the_judges_failed_checks_and_http_record(self):
+        parent, evidence, response = self._statically_passed_candidate_with_evidence("FAILED")
+        with patch.object(data, "call_teacher", return_value=response) as call, contextlib.redirect_stdout(io.StringIO()):
+            data.repair(argparse.Namespace(bundle=self.root, checked=None, sample_id=parent["id"], max_tokens=100,
+                                           model="deepseek-flash", feedback=None, runtime_evidence=evidence))
+        feedback = call.call_args.args[0]["messages"][-1]["content"]
+        self.assertTrue(feedback.startswith((data.HERE / "prompts/repair-runtime-v1.md").read_text(encoding="utf-8")))
+        self.assertIn("FAIL logging out answers 200 (expected=200 actual=201)", feedback)
+        self.assertIn("D7 POST logout: status=201", feedback)
+        self.assertNotIn("PASS login works", feedback)
+        self.assertNotIn("secret application log", feedback)
+        child = load_jsonl(self.root / "candidates.jsonl")[-1]
+        self.assertEqual((parent["id"], "runtime-feedback-repair"), (child["parent_id"], child["generation_mode"]))
+        self.assertEqual(data.digest_file(evidence), child["runtime_feedback"]["evidence_sha256"])
+
+    def test_runtime_repair_refuses_a_passed_gate_or_altered_evidence_before_a_paid_call(self):
+        parent, evidence, _ = self._statically_passed_candidate_with_evidence("PASSED")
+        args = argparse.Namespace(bundle=self.root, checked=None, sample_id=parent["id"], max_tokens=100,
+                                  model="deepseek-flash", feedback=None, runtime_evidence=evidence)
+        with patch.object(data, "call_teacher") as call:
+            with self.assertRaisesRegex(DataError, "failed the business gate"):
+                data.repair(args)
+            gate = load_json(evidence)
+            evidence.write_text(data.json_text({**gate, "gates": {**gate["gates"], "business": "FAILED"}}), encoding="utf-8")
+            (evidence.parent / "report.txt").write_text("FAIL invented\n", encoding="utf-8")
+            with self.assertRaisesRegex(DataError, "fingerprint"):
+                data.repair(args)
+        call.assert_not_called()
+
     def test_prompt_changed_after_freeze_is_rejected_before_a_paid_call(self):
         (self.root / "system.md").write_text("changed", encoding="utf-8")
         with patch.object(data, "call_teacher") as call:

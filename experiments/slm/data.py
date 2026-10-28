@@ -17,8 +17,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from experiments.slm.corpus import (
-    DataError, GATES, bind_static, decode_response, enforce_split_disjoint,
-    sha256_text, training_record,
+    DataError, GATES, _check_runtime_binding, _require_runtime_provenance, bind_static, decode_response,
+    enforce_split_disjoint, sha256_text, training_record,
 )
 from experiments.slm.dataset_io import (
     REPO, checker_command, core_inputs, digest_file, fingerprint, git_head,
@@ -30,6 +30,7 @@ HERE = Path(__file__).resolve().parent
 # v1 stays the default so the commands of a recorded batch reproduce it; a later prompt is a new file chosen explicitly.
 DEFAULT_SYSTEM_PROMPT = HERE / "prompts/sir-0.3-auth.md"
 DEFAULT_FEEDBACK = HERE / "prompts/repair-auth-v1.md"
+DEFAULT_RUNTIME_FEEDBACK = HERE / "prompts/repair-runtime-v1.md"
 
 
 def prompt_file(path: Path | None, default: Path) -> Path:
@@ -253,7 +254,8 @@ def call_teacher(payload: dict) -> dict:
         raise DataError(f"teacher request failed: {type(error).__name__} HTTP={getattr(error, 'status_code', None)}; no automatic retry") from None
 
 
-def generate_one(root: Path, manifest: dict, task: dict, payload: dict, parent_id: str | None = None) -> dict:
+def generate_one(root: Path, manifest: dict, task: dict, payload: dict, parent_id: str | None = None,
+                 lineage: dict | None = None) -> dict:
     sample_id = task["id"] + "-teacher-" + uuid.uuid4().hex[:12]
     directory = root / "samples" / sample_id
     directory.mkdir(parents=True, exist_ok=False)
@@ -275,7 +277,7 @@ def generate_one(root: Path, manifest: dict, task: dict, payload: dict, parent_i
            **attempt, "request_sha256": digest_file(directory / "request.json"),
            "sdk": "openai-python/" + importlib.metadata.version("openai"), "extraction": "strip-one-fence-and-final-newline",
            "generation_mode": "feedback-repair" if parent_id else "initial", "parent_id": parent_id,
-           "collector_sha256": snapshot_collector(root)}
+           "collector_sha256": snapshot_collector(root), **(lineage or {})}
     store_candidate(root, row)
     accepted = {**attempt, "status": "CANDIDATE_NOT_YET_QUALIFIED"}
     write_new_json(directory / "attempt.json", accepted)
@@ -301,20 +303,55 @@ def repair(args) -> None:
     rows = load_jsonl(args.checked or args.bundle / "checked.jsonl")
     validate_candidates(args.bundle, manifest, task, rows)
     parent = next((row for row in rows if row["id"] == args.sample_id), None)
-    if parent is None or parent["gates"]["static"] != "FAILED":
-        raise DataError("repair requires an explicitly selected statically failed candidate")
+    evidence_file = getattr(args, "runtime_evidence", None)
+    if parent is None or parent["gates"]["static"] != ("FAILED" if evidence_file is None else "PASSED"):
+        raise DataError("repair requires an explicitly selected statically failed candidate, or a statically "
+                        "passed one together with its business-gate evidence")
     if not 1 <= args.max_tokens <= 16384:
         raise DataError("repair allows at most 16384 output tokens")
     ddl_path = next(path for path in task["oracle"]["files"] if path.endswith("-ddl.sql"))
-    feedback = (prompt_file(getattr(args, "feedback", None), DEFAULT_FEEDBACK).read_text(encoding="utf-8")
-                + "\n\n原始静态诊断：\n" + json_text(parent["static_result"])
-                + "\n\n题目冻结时已有的 DDL（仅约束物理形状，不允许在 SIR 内嵌 SQL）：\n"
-                + repo_file(ddl_path).read_text(encoding="utf-8"))
+    if evidence_file is None:
+        feedback = (prompt_file(getattr(args, "feedback", None), DEFAULT_FEEDBACK).read_text(encoding="utf-8")
+                    + "\n\n原始静态诊断：\n" + json_text(parent["static_result"]))
+        lineage = None
+    else:
+        report, lineage = business_failure(parent, evidence_file)
+        feedback = (prompt_file(getattr(args, "feedback", None), DEFAULT_RUNTIME_FEEDBACK).read_text(encoding="utf-8")
+                    + "\n\n业务判卷报告（失败的检查与判卷时的 HTTP 记录）：\n" + report)
+    feedback += ("\n\n题目冻结时已有的 DDL（仅约束物理形状，不允许在 SIR 内嵌 SQL）：\n"
+                 + repo_file(ddl_path).read_text(encoding="utf-8"))
     messages = parent["messages"] + [{"role": "assistant", "content": parent["sir"]},
                                     {"role": "user", "content": feedback}]
     result = generate_one(args.bundle, manifest, task,
-                          request_payload(args.model, messages, args.max_tokens), parent["id"])
+                          request_payload(args.model, messages, args.max_tokens), parent["id"], lineage)
     print(json.dumps(result, ensure_ascii=False), flush=True)
+
+
+def business_failure(parent: dict, evidence_file: Path) -> tuple[str, dict]:
+    """The judge's own words for a candidate that built and started but failed the business gate.
+
+    Only the failed checks and the HTTP exchanges the judge recorded go to the teacher; the passed checks and
+    the logs stay out, and nothing hints at a fix. The evidence must be this exact candidate's, unaltered.
+    """
+    evidence = load_json(evidence_file)
+    _check_runtime_binding(parent, evidence)
+    _require_runtime_provenance(evidence)
+    verify_artifacts(evidence, evidence_file)
+    gates = evidence.get("gates", {})
+    if [gates.get(gate) for gate in ("static", "build", "start", "business")] != ["PASSED", "PASSED", "PASSED", "FAILED"]:
+        raise DataError("runtime repair needs evidence of a candidate that built and started but failed the business gate")
+    reports = [a["path"] for a in evidence["artifacts"] if not a["path"].startswith("logs/")]
+    if len(reports) != 1:
+        raise DataError("runtime evidence must carry exactly one judge report")
+    blocks = (evidence_file.resolve().parent / reports[0]).read_text(encoding="utf-8").split("\n\n")
+    checks = next((i for i, block in enumerate(blocks) if block.startswith("checksPassed=")), None)
+    failed = [] if checks is None else [line for line in blocks[checks].splitlines() if line.startswith("FAIL ")]
+    if not failed:
+        raise DataError("judge report lists no failed check")
+    http = "\n\n".join(block.strip() for block in blocks[checks + 1:] if block.strip())
+    lineage = {"generation_mode": "runtime-feedback-repair",
+               "runtime_feedback": {"run_id": evidence["run_id"], "evidence_sha256": digest_file(evidence_file)}}
+    return "\n".join(failed) + "\n\n" + http + "\n", lineage
 
 
 def generate(args) -> None:
@@ -413,7 +450,10 @@ def parser() -> argparse.ArgumentParser:
     repair_args.add_argument("--bundle", type=Path, required=True)
     repair_args.add_argument("--sample-id", required=True)
     repair_args.add_argument("--checked", type=Path)
-    repair_args.add_argument("--feedback", type=Path, help="file in prompts/; default repair-auth-v1.md")
+    repair_args.add_argument("--feedback", type=Path,
+                             help="file in prompts/; default repair-auth-v1.md, or repair-runtime-v1.md with --runtime-evidence")
+    repair_args.add_argument("--runtime-evidence", type=Path,
+                             help="slm-runtime.json of a statically passed candidate that failed the business gate")
     repair_args.add_argument("--model", choices=("deepseek-flash", "deepseek-v4-pro"), default="deepseek-flash")
     repair_args.add_argument("--max-tokens", type=int, default=6144)
     repair_args.set_defaults(run=repair)
