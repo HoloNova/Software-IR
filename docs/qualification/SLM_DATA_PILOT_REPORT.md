@@ -239,3 +239,17 @@ v4 这一轮：13 份中静态通过 7 份，四门通过 6 份。样本少、�
 6 份证据都放入各批次 `runtime/`，zip 哈希与 GitHub 记录一致，绑定哈希、生成摘要与附件哈希逐项核对，不含 CI 密码。修复出的候选，其静态结果在 `checked-r1.jsonl`，导出时以此文件为准。3 个通过的批次各导出 1 条：**新教师合格训练答案累计 12 条**（鉴权 6、课程 6），覆盖 16 份 train 题目中的 12 份。仍无合格答案的 4 份：bearer-credential 从零写、crud-access 从零写、course-selection 改写（均为业务失败）与 course-selection 从零写（修复后仍静态失败）。
 
 修复轨迹是有用的数据：两份修复后的合格答案带着“初次失败 → 编译器诊断 → 修好”的完整记录（`generation_mode: feedback-repair`、`parent_id`）。业务失败的三份，可以用 `repair --runtime-evidence` 把判卷报告发回教师修一轮，未做。业务账本83/1/0不变。
+
+## 第十阶段：业务失败候选的运行反馈修复（2026-10-28）
+
+对第九阶段业务失败的 3 份候选，用 `repair --runtime-evidence`（`prompts/repair-runtime-v1.md`）把判卷报告中的失败检查和 HTTP 记录发回教师，各修 1 轮（input 34756、其中缓存命中 28160，output 4882 tokens），结果在各批次 `checked-r2.jsonl`，3 份均静态通过。
+
+| 题目 | 候选（父候选） | 改动 | 业务门 | 检查 | 结果 |
+| --- | --- | --- | --- | --- | --- |
+| bearer-credential 从零写 | `efbdfe58ef70`（`c9ab97cd12d2`） | 登出不再要求登录，凭请求令牌作废 | [#23](https://github.com/HoloNova/Software-IR/actions/runs/40623376143) | 36/0 | 四门通过 |
+| crud-access 从零写 | `3062e8f8e07b`（`b6e7a5435998`） | 公开读取时隐藏帖子返回 404 | [#24](https://github.com/HoloNova/Software-IR/actions/runs/40623378433) | 48/0 | 四门通过 |
+| course-selection 改写 | `1cc5c4027a2d`（`dbbbac2d45bc`） | 与父候选逐字节相同，教师未作修改 | 未送 | — | 同一份代码重判结果不会变 |
+
+两份通过的证据放入各批次 `runtime/`，zip 哈希与 GitHub 记录一致，绑定哈希、生成摘要与附件哈希逐项核对，不含 CI 密码；以 `checked-r2.jsonl` 导出，各 1 条。**新教师合格训练答案累计 14 条**（鉴权 8、课程 6），覆盖 16 份 train 题目中的 14 份。这两条答案带着“静态失败 → 编译器诊断修复 → 业务失败 → 运行反馈修复 → 通过”的完整修复链（`generation_mode: runtime-feedback-repair`，`parent_id` 逐级可追）。
+
+仍无合格答案的只剩 course-selection 两份：改写题业务失败 24 项，运行反馈修复没有产出新代码；从零写题修复后仍静态失败。两份都是最大的题（改写题生成 95 个文件、判卷 152 项检查）。业务账本83/1/0不变。

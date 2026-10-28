@@ -51,7 +51,9 @@
 
 ## v5 补采与静态修复
 
-`pilots/*-g5` 是用 `sir-0.3-general-v5` 对 v4 一轮未合格的 7 份题目的补采，静态失败的 6 份又用 `repair-general-v1` 各修一轮（结果在各批次 `checked-r1.jsonl`）。四门通过 3 份：relation-slice 从零写、guarded-transition 改写、write-slice 从零写，`train-teacher.jsonl` 各 1 条；业务失败 3 份，证据同样保留在 `runtime/`。**新教师合格训练答案累计 12 条。**详见[数据报告第九阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#第九阶段v5-补采与通用静态修复2026-10-28)。
+`pilots/*-g5` 是用 `sir-0.3-general-v5` 对 v4 一轮未合格的 7 份题目的补采，静态失败的 6 份又用 `repair-general-v1` 各修一轮（结果在各批次 `checked-r1.jsonl`）。四门通过 3 份：relation-slice 从零写、guarded-transition 改写、write-slice 从零写，`train-teacher.jsonl` 各 1 条；业务失败 3 份，证据同样保留在 `runtime/`。详见[数据报告第九阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#第九阶段v5-补采与通用静态修复2026-10-28)。
+
+随后对业务失败的 3 份用 `repair --runtime-evidence` 各修一轮（结果在 `checked-r2.jsonl`）：bearer-credential 从零写 `efbdfe58ef70` 与 crud-access 从零写 `3062e8f8e07b` 四门通过，证据在 `runtime/`，`train-teacher.jsonl` 各 1 条；course-selection 改写的修复结果与原候选逐字节相同，未送业务门。**新教师合格训练答案累计 14 条。**详见[数据报告第十阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#第十阶段业务失败候选的运行反馈修复2026-10-28)。
 
 完整说明：[数据报告](../../docs/qualification/SLM_DATA_PILOT_REPORT.md)、[操作命令](../../experiments/slm/README.md)、[模型选择](../../docs/qualification/SLM_MODEL_SELECTION.md)。API密钥不属于数据或metadata。数据Git属性禁止换行转换，保持证据字节哈希。
 
