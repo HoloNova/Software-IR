@@ -189,8 +189,8 @@ v2 初始批次 `datasets/sir/pilots/dual-token-v2/` 的3份候选全部静态�
 | --- | --- | --- | --- | --- | --- | --- |
 | bearer-credential `07b9ea18ef67` | [#2](https://github.com/HoloNova/Software-IR/actions/runs/40619277037)（`fcb8de9`） | PASSED | PASSED | PASSED | PASSED | 36/0 |
 | query-slice `cadd5a148bb8` | [#3](https://github.com/HoloNova/Software-IR/actions/runs/40619824442)（`c509c4c`） | PASSED | PASSED | PASSED | PASSED | 41/0 |
-| write-slice `51ab2996a20e` | [#4](https://github.com/HoloNova/Software-IR/actions/runs/40619980837)（`d445309`） | PASSED | 运行中 | | | |
+| write-slice `51ab2996a20e` | [#4](https://github.com/HoloNova/Software-IR/actions/runs/40619980837)（`d445309`） | PASSED | PASSED | PASSED | PASSED | 62/0 |
 
-两份通过的证据放入各批次的 `runtime/<样本>/`（`slm-runtime.json`、报告、日志、JUnit XML 与 `gate-run.json`）；下载的 zip 哈希与 GitHub 记录的 artifact 摘要一致，四个绑定哈希、生成摘要与附件哈希逐项核对，不含 CI 数据库密码。现有导出器在 `bearer-credential-change-g1/` 与 `query-slice-scratch-g3/` 各导出 `train-teacher.jsonl` 1 条：**新教师合格训练答案首次为 2 条**（均为 train 集，一道鉴权改写、一道课程从零写）。
+三份通过的证据放入各批次的 `runtime/<样本>/`（`slm-runtime.json`、报告、日志、JUnit XML 与 `gate-run.json`）；下载的 zip 哈希与 GitHub 记录的 artifact 摘要一致，四个绑定哈希、生成摘要与附件哈希逐项核对，不含 CI 数据库密码。现有导出器在 `bearer-credential-change-g1/`、`query-slice-scratch-g3/` 与 `write-slice-change-g4/` 各导出 `train-teacher.jsonl` 1 条：**新教师合格训练答案首次为 3 条**（均为 train 集：鉴权改写、课程从零写、课程改写各一）。
 
-这 2 条只说明流程可以产出四门合格的答案，不是教师或小模型的通过率：样本很少，prompt 在采样过程中逐版修改，题目只覆盖两个家族。导出的 prompt 里 system 约 6～7 千字，学生模型（1.3B，16K 上下文）训练时是否沿用、如何截短，留到训练阶段决定。业务账本83/1/0不变。
+这 3 条只说明流程可以产出四门合格的答案，不是教师或小模型的通过率：样本很少，prompt 在采样过程中逐版修改，题目只覆盖两个家族。导出的 prompt 里 system 约 6～7 千字，学生模型（1.3B，16K 上下文）训练时是否沿用、如何截短，留到训练阶段决定。业务账本83/1/0不变。
