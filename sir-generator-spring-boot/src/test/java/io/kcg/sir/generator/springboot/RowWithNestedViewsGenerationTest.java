@@ -16,12 +16,12 @@ class RowWithNestedViewsGenerationTest {
         List<GeneratedFile> files = GeneratorTestSupport.generateSuccess("valid/row-with-nested-views.sir");
         for (String service : new String[] {"GetBookService", "AddBookService"}) {
             String java = content(files, service);
-            assertTrue(java.contains("var returnedRows = java.util.List.of("), service + "\n" + java.substring(java.indexOf("public")));
+            assertTrue(java.contains("var $returnedRows = java.util.List.of("), service + "\n" + java.substring(java.indexOf("public")));
             assertTrue(java.contains("authorMapper.selectList") && java.contains("reviewMapper.selectList"), service);
             assertTrue(java.contains("new BookDetail(") && java.contains(".orElse(null)") && java.contains("getOrDefault("), service);
         }
         String card = content(files, "GetBookCardService");
-        assertFalse(card.contains("returnedRows"), "nothing nested, nothing to read");
+        assertFalse(card.contains("$returnedRows"), "nothing nested, nothing to read");
         assertTrue(card.contains("new BookCard(book.getId(), book.getTitle())"), card);
     }
 

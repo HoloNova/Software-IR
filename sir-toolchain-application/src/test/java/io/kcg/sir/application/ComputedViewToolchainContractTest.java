@@ -32,7 +32,7 @@ class ComputedViewToolchainContractTest {
     @Test void theActualNestedHttpFixtureGeneratesComputationsAtEveryRowScope() throws Exception {
         var compiled = compile(ProjectTestSupport.oneFile("project.sir", ProjectTestSupport.resource("valid/course-enrollment.sir")));
         String service = content(compiled, "SearchCourseEnrollmentsService.java");
-        assertTrue(service.contains("Math.multiplyExact(row.getCapacity(), 2)"), service);
+        assertTrue(service.contains("Math.multiplyExact($row.getCapacity(), 2)"), service);
         assertTrue(service.contains(".getStatus()"), service);
         assertTrue(service.contains("EnrollmentStatus.ACTIVE"), service);
         assertTrue(service.contains(".getName()"), service);

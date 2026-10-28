@@ -32,15 +32,15 @@ class GeneratorRelationSliceContractTest {
     @Test
     void everyAssociationIsReadOnceByTheKeysOfTheRowsAlreadyLoaded() {
         assertTrue(
-                service.contains("var related0Keys = coursesRecords.stream().map(Course::getId).distinct().toList();"),
+                service.contains("var $related0Keys = $coursesRecords.stream().map(Course::getId).distinct().toList();"),
                 service);
         assertTrue(
-                service.contains("var related0 = related0Keys.isEmpty() ? java.util.List.<Enrollment>of() :"
+                service.contains("var $related0 = $related0Keys.isEmpty() ? java.util.List.<Enrollment>of() :"
                         + " enrollmentMapper.selectList(new LambdaQueryWrapper<Enrollment>()"
-                        + ".in(Enrollment::getCourseId, related0Keys).orderByAsc(Enrollment::getId));"),
+                        + ".in(Enrollment::getCourseId, $related0Keys).orderByAsc(Enrollment::getId));"),
                 service);
         assertTrue(
-                service.contains("var related0Index = related0.stream().collect("
+                service.contains("var $related0Index = $related0.stream().collect("
                         + "java.util.stream.Collectors.groupingBy(Enrollment::getCourseId));"),
                 service);
     }
@@ -48,29 +48,29 @@ class GeneratorRelationSliceContractTest {
     @Test
     void aSingleRelatedRowIsReadByItsOwnIdentityAndIndexedByIdentity() {
         assertTrue(
-                service.contains("var related1Keys = related0.stream().map(Enrollment::getStudentId)"
+                service.contains("var $related1Keys = $related0.stream().map(Enrollment::getStudentId)"
                         + ".filter(java.util.Objects::nonNull).distinct().toList();"),
                 service);
         assertTrue(
-                service.contains("var related1 = related1Keys.isEmpty() ? java.util.List.<Student>of() :"
-                        + " studentMapper.selectList(new LambdaQueryWrapper<Student>().in(Student::getId, related1Keys));"),
+                service.contains("var $related1 = $related1Keys.isEmpty() ? java.util.List.<Student>of() :"
+                        + " studentMapper.selectList(new LambdaQueryWrapper<Student>().in(Student::getId, $related1Keys));"),
                 service);
         assertTrue(
-                service.contains("var related1Index = related1.stream().collect("
-                        + "java.util.stream.Collectors.toMap(Student::getId, related -> related));"),
+                service.contains("var $related1Index = $related1.stream().collect("
+                        + "java.util.stream.Collectors.toMap(Student::getId, $related -> $related));"),
                 service);
     }
 
     @Test
     void theResponseProjectsTheRelatedRowsWithoutAQueryPerRow() {
         assertTrue(
-                service.contains("related0Index.getOrDefault(row.getId(), java.util.List.of()).stream()"
-                        + ".map(related0Row -> new EnrollmentSummary("),
+                service.contains("$related0Index.getOrDefault($row.getId(), java.util.List.of()).stream()"
+                        + ".map($related0Row -> new EnrollmentSummary("),
                 service);
         assertTrue(
-                service.contains("java.util.Optional.ofNullable(related1Index.get(related0Row.getStudentId()))"
-                        + ".map(related1Row -> new StudentSummary(related1Row.getId(), related1Row.getStudentNo(),"
-                        + " related1Row.getName())).orElse(null)"),
+                service.contains("java.util.Optional.ofNullable($related1Index.get($related0Row.getStudentId()))"
+                        + ".map($related1Row -> new StudentSummary($related1Row.getId(), $related1Row.getStudentNo(),"
+                        + " $related1Row.getName())).orElse(null)"),
                 service);
     }
 

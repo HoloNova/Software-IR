@@ -53,17 +53,17 @@ class GeneratorQuerySliceContractTest {
                 GeneratorTestSupport.generateSuccess(COURSE_CATALOG), "application/SearchCoursesService.java");
 
         assertTrue(service.contains("public PageResponse<CourseSummary> searchCourses(SearchCoursesInput input)"), service);
-        assertTrue(service.contains("int coursesPage = input.getPage() == null ? 1 : input.getPage();"), service);
-        assertTrue(service.contains("int coursesSize = input.getSize() == null ? 20 : input.getSize();"), service);
-        assertTrue(service.contains("if (coursesPage < 1 || coursesPage > 10000 || coursesSize < 1 || coursesSize > 100) {"), service);
+        assertTrue(service.contains("int $coursesPage = input.getPage() == null ? 1 : input.getPage();"), service);
+        assertTrue(service.contains("int $coursesSize = input.getSize() == null ? 20 : input.getSize();"), service);
+        assertTrue(service.contains("if ($coursesPage < 1 || $coursesPage > 10000 || $coursesSize < 1 || $coursesSize > 100) {"), service);
         assertTrue(service.contains("throw new InvalidPageParamException();"), service);
         assertTrue(service.contains(".orderByAsc(Course::getCode)"), service);
         assertTrue(service.contains(".orderByAsc(Course::getId)"), service);
-        assertTrue(service.contains(".selectCount(wrapper)"), service);
-        assertTrue(service.contains(".selectList(wrapper.last(\"LIMIT \" + (coursesPage - 1) * coursesSize + \", \" + coursesSize))"), service);
-        assertTrue(service.contains("long coursesTotal = courseMapper.selectCount(wrapper);"), service);
-        assertTrue(service.contains("new PageResponse<>(coursesTotal, coursesPage, coursesSize,"), service);
-        assertTrue(service.contains("new CourseSummary(row.getCode(), row.getName(), row.getCapacity())"), service);
+        assertTrue(service.contains(".selectCount($wrapper)"), service);
+        assertTrue(service.contains(".selectList($wrapper.last(\"LIMIT \" + ($coursesPage - 1) * $coursesSize + \", \" + $coursesSize))"), service);
+        assertTrue(service.contains("long $coursesTotal = courseMapper.selectCount($wrapper);"), service);
+        assertTrue(service.contains("new PageResponse<>($coursesTotal, $coursesPage, $coursesSize,"), service);
+        assertTrue(service.contains("new CourseSummary($row.getCode(), $row.getName(), $row.getCapacity())"), service);
     }
 
     @Test

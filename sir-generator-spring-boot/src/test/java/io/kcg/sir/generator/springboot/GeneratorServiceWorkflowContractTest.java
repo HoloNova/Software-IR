@@ -57,9 +57,9 @@ class GeneratorServiceWorkflowContractTest {
                 "throw new NotFoundException();",
                 "user.setState(State.ACTIVE);",
                 "userMapper.updateById(user);",
-                "var wrapper = new LambdaQueryWrapper<User>()",
+                "var $wrapper = new LambdaQueryWrapper<User>()",
                 "User::getState",
-                "var users = userMapper.selectList(wrapper);",
+                "var users = userMapper.selectList($wrapper);",
                 "return users;");
         assertFalse(service.contains("userMapper.insert(user);"), service);
     }

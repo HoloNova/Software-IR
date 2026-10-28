@@ -78,7 +78,7 @@ class UniqueConflictTest {
         var compiled = compile(SOURCE);
         assertTrue(compiled.isPresent());
         String register = service(compiled.get(), "RegisterService"), addNote = service(compiled.get(), "AddNoteService");
-        assertTrue(register.contains("catch (org.springframework.dao.DuplicateKeyException duplicate)"), register);
+        assertTrue(register.contains("catch (org.springframework.dao.DuplicateKeyException $duplicate)"), register);
         assertTrue(register.contains("throw new NameTakenException();"), register);
         // No else, nothing caught: the behaviour of a persist without it is unchanged.
         assertTrue(!addNote.contains("DuplicateKeyException"), addNote);

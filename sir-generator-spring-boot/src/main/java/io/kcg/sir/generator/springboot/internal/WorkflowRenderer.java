@@ -463,10 +463,10 @@ final class WorkflowRenderer {
       String resultName = variableName(step.result(), variableNames);
       String wrapperChain = renderPredicateChain(ctx, step.predicate(), step.itemVariable(), entity, matches, variableNames, imports, currentPackage)
          + renderOrderClause(entity, step.orderKeys());
-      lines.add("        var wrapper = " + wrapperChain + ";");
+      lines.add("        var $wrapper = " + wrapperChain + ";");
 
       if (step.page().isEmpty()) {
-         lines.add("        var " + resultName + " = " + mapper.mapperFieldName() + ".selectList(wrapper);");
+         lines.add("        var " + resultName + " = " + mapper.mapperFieldName() + ".selectList($wrapper);");
          return;
       }
 
@@ -475,23 +475,23 @@ final class WorkflowRenderer {
          throw new IllegalStateException("a paged find requires a capability input: " + step.id());
       }
 
-      String pageName = resultName + "Page";
-      String sizeName = resultName + "Size";
+      String pageName = "$" + resultName + "Page";
+      String sizeName = "$" + resultName + "Size";
       lines.add("        int " + pageName + " = " + inputName + "." + getterName(page.pagePropertyName()) + "() == null ? 1 : " + inputName + "." + getterName(page.pagePropertyName()) + "();");
       lines.add("        int " + sizeName + " = " + inputName + "." + getterName(page.sizePropertyName()) + "() == null ? " + page.defaultSize() + " : " + inputName + "." + getterName(page.sizePropertyName()) + "();");
       lines.add("        if (" + pageName + " < 1 || " + pageName + " > " + page.maxPageNumber()
          + " || " + sizeName + " < 1 || " + sizeName + " > " + page.maxSize() + ") {");
       lines.add("            throw new " + errorJavaName(ctx, page.errorSymbol(), imports, currentPackage) + "();");
       lines.add("        }");
-      lines.add("        long " + resultName + "Total = " + mapper.mapperFieldName() + ".selectCount(wrapper);");
-      String recordsName = resultName + "Records";
-      lines.add("        var " + recordsName + " = " + mapper.mapperFieldName() + ".selectList(wrapper.last(\"LIMIT \" + (" + pageName + " - 1) * " + sizeName + " + \", \" + " + sizeName + "));");
+      lines.add("        long $" + resultName + "Total = " + mapper.mapperFieldName() + ".selectCount($wrapper);");
+      String recordsName = "$" + resultName + "Records";
+      lines.add("        var " + recordsName + " = " + mapper.mapperFieldName() + ".selectList($wrapper.last(\"LIMIT \" + (" + pageName + " - 1) * " + sizeName + " + \", \" + " + sizeName + "));");
       ViewDeclaration view = responseView(ctx, step);
       Map<String, WorkflowRenderer.ProjectionRead> reads = new LinkedHashMap<>();
       readAssociations(ctx, view, recordsName, reads, imports, currentPackage, lines, mappers, new int[]{0}, "");
-      lines.add("        var " + resultName + " = new PageResponse<>(" + resultName + "Total, " + pageName + ", " + sizeName + ", "
-         + recordsName + ".stream().map(row -> "
-         + renderProjectionRow(ctx, view, "row", reads, "", imports, currentPackage) + ").toList());");
+      lines.add("        var " + resultName + " = new PageResponse<>($" + resultName + "Total, " + pageName + ", " + sizeName + ", "
+         + recordsName + ".stream().map($row -> "
+         + renderProjectionRow(ctx, view, "$row", reads, "", imports, currentPackage) + ").toList());");
    }
 
    /**
@@ -538,8 +538,8 @@ final class WorkflowRenderer {
          boolean collection = plan.cardinality() == SpringBootDeclaration.RelationCardinality.TO_MANY;
          String site = path.isEmpty() ? field.javaName() : path + "." + field.javaName();
          String suffix = Integer.toString(counter[0]++);
-         String keys = "related" + suffix + "Keys";
-         String relatedRows = "related" + suffix;
+         String keys = "$related" + suffix + "Keys";
+         String relatedRows = "$related" + suffix;
          String index = relatedRows + "Index";
          lines.add("        var " + keys + " = " + rows + ".stream().map(" + owner.javaName() + "::"
             + getterName(plan.sourceKeyPropertyName()) + ")" + (collection ? "" : ".filter(java.util.Objects::nonNull)")
@@ -552,13 +552,13 @@ final class WorkflowRenderer {
          lines.add("        var " + index + " = " + relatedRows + ".stream().collect(" + (collection
             ? "java.util.stream.Collectors.groupingBy(" + relatedEntity.javaName() + "::" + getterName(plan.indexKeyPropertyName()) + ")"
             : "java.util.stream.Collectors.toMap(" + relatedEntity.javaName() + "::" + getterName(plan.indexKeyPropertyName())
-               + ", related -> related)") + ");");
+               + ", $related -> $related)") + ");");
          ViewDeclaration targetView = ctx.declaration(plan.targetViewSymbol()) instanceof ViewDeclaration value ? value : null;
          if (targetView == null) {
             throw new IllegalStateException("a relation must target a declared view: " + plan.targetViewSymbol());
          }
 
-         reads.put(site, new WorkflowRenderer.RelationRead(plan, index, "related" + suffix + "Row"));
+         reads.put(site, new WorkflowRenderer.RelationRead(plan, index, "$related" + suffix + "Row"));
          readAssociations(ctx, targetView, relatedRows, reads, imports, currentPackage, lines, mappers, counter, site);
       }
    }
@@ -818,7 +818,7 @@ final class WorkflowRenderer {
                String duplicate = errorJavaName(ctx, step.failure().orElseThrow(), imports, currentPackage);
                lines.add("        try {");
                lines.add("            " + mapperAccess(mapper, variableNames) + ".insert(" + targetName + ");");
-               lines.add("        } catch (org.springframework.dao.DuplicateKeyException duplicate) {");
+               lines.add("        } catch (org.springframework.dao.DuplicateKeyException $duplicate) {");
                lines.add("            throw new " + duplicate + "();");
                lines.add("        }");
                return;
@@ -1198,9 +1198,9 @@ final class WorkflowRenderer {
             throw new IllegalStateException("a projected response must declare a view output: " + capability.javaName());
          }
 
-         lines.add("        var returnedRows = java.util.List.of(" + value + ");");
+         lines.add("        var $returnedRows = java.util.List.of(" + value + ");");
          Map<String, WorkflowRenderer.ProjectionRead> reads = new LinkedHashMap<>();
-         readAssociations(ctx, view, "returnedRows", reads, imports, currentPackage, lines, mappers, new int[]{0}, "");
+         readAssociations(ctx, view, "$returnedRows", reads, imports, currentPackage, lines, mappers, new int[]{0}, "");
          lines.add("        return " + renderProjectionRow(ctx, view, value, reads, "", imports, currentPackage) + ";");
          return;
       }
