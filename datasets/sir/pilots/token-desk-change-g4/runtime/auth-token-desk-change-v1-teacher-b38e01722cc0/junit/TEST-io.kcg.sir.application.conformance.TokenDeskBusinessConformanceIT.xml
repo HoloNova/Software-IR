@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report.xsd" version="3.0.2" name="io.kcg.sir.application.conformance.TokenDeskBusinessConformanceIT" time="10.669" tests="1" errors="0" skipped="0" failures="0" flakes="0">
+  <properties>
+    <property name="java.specification.version" value="21"/>
+    <property name="sun.jnu.encoding" value="UTF-8"/>
+    <property name="java.class.path" value="/home/runner/work/Software-IR/Software-IR/sir-toolchain-application/target/test-classes:/home/runner/work/Software-IR/Software-IR/sir-toolchain-application/target/classes:/home/runner/work/Software-IR/Software-IR/sir-parser/target/classes:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/antlr/antlr4-runtime/4.13.2/antlr4-runtime-4.13.2.jar:/home/runner/work/Software-IR/Software-IR/sir-semantic/target/classes:/home/runner/work/Software-IR/Software-IR/sir-lowering-api/target/classes:/home/runner/work/Software-IR/Software-IR/sir-lowering-spring-boot/target/classes:/home/runner/work/Software-IR/Software-IR/sir-generator-spring-boot/target/classes:/home/runner/work/Software-IR/Software-IR/sir-project-graph/target/classes:/home/runner/work/Software-IR/Software-IR/sir-change/target/classes:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/jupiter/junit-jupiter/5.12.2/junit-jupiter-5.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/jupiter/junit-jupiter-api/5.12.2/junit-jupiter-api-5.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/platform/junit-platform-commons/1.12.2/junit-platform-commons-1.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/jupiter/junit-jupiter-params/5.12.2/junit-jupiter-params-5.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/jupiter/junit-jupiter-engine/5.12.2/junit-jupiter-engine-5.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/platform/junit-platform-engine/1.12.2/junit-platform-engine-1.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/fasterxml/jackson/core/jackson-databind/2.19.4/jackson-databind-2.19.4.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/fasterxml/jackson/core/jackson-annotations/2.19.4/jackson-annotations-2.19.4.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/fasterxml/jackson/core/jackson-core/2.19.4/jackson-core-2.19.4.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/boot/spring-boot/3.5.3/spring-boot-3.5.3.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-core/6.2.8/spring-core-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-jcl/6.2.8/spring-jcl-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-context/6.2.8/spring-context-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-aop/6.2.8/spring-aop-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-beans/6.2.8/spring-beans-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-expression/6.2.8/spring-expression-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/io/micrometer/micrometer-observation/1.14.8/micrometer-observation-1.14.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/io/micrometer/micrometer-commons/1.14.8/micrometer-commons-1.14.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/mysql/mysql-connector-j/9.3.0/mysql-connector-j-9.3.0.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/google/protobuf/protobuf-java/4.29.0/protobuf-java-4.29.0.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/net/java/dev/jna/jna-platform/5.17.0/jna-platform-5.17.0.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/net/java/dev/jna/jna/5.17.0/jna-5.17.0.jar:"/>
+    <property name="kcg.slm.repo-root" value="/home/runner/work/Software-IR/Software-IR"/>
+    <property name="java.vm.vendor" value="Eclipse Adoptium"/>
+    <property name="sun.arch.data.model" value="64"/>
+    <property name="java.vendor.url" value="https://adoptium.net/"/>
+    <property name="user.timezone" value="Etc/UTC"/>
+    <property name="kcg.conformance.evidence-parent" value="/home/runner/work/Software-IR/Software-IR/ci-evidence"/>
+    <property name="os.name" value="Linux"/>
+    <property name="java.vm.specification.version" value="21"/>
+    <property name="sun.java.launcher" value="SUN_STANDARD"/>
+    <property name="kcg.slm.bundle-root" value="/home/runner/work/Software-IR/Software-IR/datasets/sir/pilots/token-desk-change-g4"/>
+    <property name="sun.boot.library.path" value="/usr/lib/jvm/temurin-21-jdk-amd64/lib"/>
+    <property name="sun.java.command" value="/home/runner/work/Software-IR/Software-IR/sir-toolchain-application/target/surefire/surefirebooter-20261028022850697_3.jar /home/runner/work/Software-IR/Software-IR/sir-toolchain-application/target/surefire 2026-10-28T02-28-42_217-jvmRun1 surefire-20261028022850697_1tmp surefire_0-20261028022850697_2tmp"/>
+    <property name="jdk.debug" value="release"/>
+    <property name="test" value="TokenDeskBusinessConformanceIT"/>
+    <property name="surefire.test.class.path" value="/home/runner/work/Software-IR/Software-IR/sir-toolchain-application/target/test-classes:/home/runner/work/Software-IR/Software-IR/sir-toolchain-application/target/classes:/home/runner/work/Software-IR/Software-IR/sir-parser/target/classes:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/antlr/antlr4-runtime/4.13.2/antlr4-runtime-4.13.2.jar:/home/runner/work/Software-IR/Software-IR/sir-semantic/target/classes:/home/runner/work/Software-IR/Software-IR/sir-lowering-api/target/classes:/home/runner/work/Software-IR/Software-IR/sir-lowering-spring-boot/target/classes:/home/runner/work/Software-IR/Software-IR/sir-generator-spring-boot/target/classes:/home/runner/work/Software-IR/Software-IR/sir-project-graph/target/classes:/home/runner/work/Software-IR/Software-IR/sir-change/target/classes:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/jupiter/junit-jupiter/5.12.2/junit-jupiter-5.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/jupiter/junit-jupiter-api/5.12.2/junit-jupiter-api-5.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/platform/junit-platform-commons/1.12.2/junit-platform-commons-1.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/jupiter/junit-jupiter-params/5.12.2/junit-jupiter-params-5.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/jupiter/junit-jupiter-engine/5.12.2/junit-jupiter-engine-5.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/platform/junit-platform-engine/1.12.2/junit-platform-engine-1.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/fasterxml/jackson/core/jackson-databind/2.19.4/jackson-databind-2.19.4.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/fasterxml/jackson/core/jackson-annotations/2.19.4/jackson-annotations-2.19.4.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/fasterxml/jackson/core/jackson-core/2.19.4/jackson-core-2.19.4.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/boot/spring-boot/3.5.3/spring-boot-3.5.3.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-core/6.2.8/spring-core-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-jcl/6.2.8/spring-jcl-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-context/6.2.8/spring-context-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-aop/6.2.8/spring-aop-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-beans/6.2.8/spring-beans-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-expression/6.2.8/spring-expression-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/io/micrometer/micrometer-observation/1.14.8/micrometer-observation-1.14.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/io/micrometer/micrometer-commons/1.14.8/micrometer-commons-1.14.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/mysql/mysql-connector-j/9.3.0/mysql-connector-j-9.3.0.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/google/protobuf/protobuf-java/4.29.0/protobuf-java-4.29.0.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/net/java/dev/jna/jna-platform/5.17.0/jna-platform-5.17.0.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/net/java/dev/jna/jna/5.17.0/jna-5.17.0.jar:"/>
+    <property name="sun.cpu.endian" value="little"/>
+    <property name="user.home" value="/home/runner"/>
+    <property name="user.language" value="en"/>
+    <property name="kcg.conformance.maven-executable" value="/usr/bin/mvn"/>
+    <property name="java.specification.vendor" value="Oracle Corporation"/>
+    <property name="kcg.conformance.maven-repo" value="/home/runner/work/Software-IR/Software-IR/.m2-ci"/>
+    <property name="java.version.date" value="2026-08-18"/>
+    <property name="java.home" value="/usr/lib/jvm/temurin-21-jdk-amd64"/>
+    <property name="kcg.query-conformance.maven-offline" value="false"/>
+    <property name="file.separator" value="/"/>
+    <property name="basedir" value="/home/runner/work/Software-IR/Software-IR/sir-toolchain-application"/>
+    <property name="java.vm.compressedOopsMode" value="Zero based"/>
+    <property name="line.separator" value="&#10;"/>
+    <property name="java.vm.specification.vendor" value="Oracle Corporation"/>
+    <property name="java.specification.name" value="Java Platform API Specification"/>
+    <property name="kcg.slm.candidate-root" value="/home/runner/work/Software-IR/Software-IR/datasets/sir/pilots/token-desk-change-g4/samples/auth-token-desk-change-v1-teacher-b38e01722cc0"/>
+    <property name="surefire.real.class.path" value="/home/runner/work/Software-IR/Software-IR/sir-toolchain-application/target/surefire/surefirebooter-20261028022850697_3.jar"/>
+    <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
+    <property name="java.runtime.version" value="21.0.12.1+1-LTS"/>
+    <property name="user.name" value="runner"/>
+    <property name="stdout.encoding" value="UTF-8"/>
+    <property name="path.separator" value=":"/>
+    <property name="os.version" value="7.0.0-1017-azure"/>
+    <property name="kcg.conformance.work-parent" value="/home/runner/work/Software-IR/Software-IR/ci-work"/>
+    <property name="java.runtime.name" value="OpenJDK Runtime Environment"/>
+    <property name="file.encoding" value="UTF-8"/>
+    <property name="surefire.failIfNoSpecifiedTests" value="false"/>
+    <property name="java.vm.name" value="OpenJDK 64-Bit Server VM"/>
+    <property name="java.vendor.version" value="Temurin-21.0.12.1+1"/>
+    <property name="localRepository" value="/home/runner/work/Software-IR/Software-IR/.m2-ci"/>
+    <property name="java.vendor.url.bug" value="https://github.com/adoptium/adoptium-support/issues"/>
+    <property name="java.io.tmpdir" value="/tmp"/>
+    <property name="java.version" value="21.0.12.1"/>
+    <property name="kcg.token-conformance.enabled" value="true"/>
+    <property name="user.dir" value="/home/runner/work/Software-IR/Software-IR/sir-toolchain-application"/>
+    <property name="os.arch" value="amd64"/>
+    <property name="java.vm.specification.name" value="Java Virtual Machine Specification"/>
+    <property name="failIfNoTests" value="false"/>
+    <property name="native.encoding" value="UTF-8"/>
+    <property name="java.library.path" value="/usr/java/packages/lib:/usr/lib64:/lib64:/lib:/usr/lib"/>
+    <property name="java.vm.info" value="mixed mode, sharing"/>
+    <property name="stderr.encoding" value="UTF-8"/>
+    <property name="java.vendor" value="Eclipse Adoptium"/>
+    <property name="java.vm.version" value="21.0.12.1+1-LTS"/>
+    <property name="sun.io.unicode.encoding" value="UnicodeLittle"/>
+    <property name="maven.repo.local" value="/home/runner/work/Software-IR/Software-IR/.m2-ci"/>
+    <property name="java.class.version" value="65.0"/>
+  </properties>
+  <testcase name="uuidKeysNoOpGuardedUpdatesAndBrokenUniquenessBehaveAgainstRealMysql" classname="io.kcg.sir.application.conformance.TokenDeskBusinessConformanceIT" time="10.64">
+    <system-out><![CDATA[=== Token desk (Uuid keys, no-op guarded update, unique lookup) business conformance ===
+verdict=PASSED
+runId=token-slice-1a18056c206-42176
+schemaName=kcg_conf_run
+advisoryLock=held during the run
+schemaSource=TEST_FIXTURE_DDL
+productInitializeImplemented=false
+productUpdateImplemented=false
+sirResource=EXTERNAL_CANDIDATE:candidate.sir sha256=d34b5047839fbd80459ca9a2542f8fea83ecb4b9d5950eb7903a6fc52dfe7e06
+fixtureDdl=/conformance/mysql/token-desk-ddl.sql sha256=fec003ab48d0e4f1e1bd6949cb884ec2d3ec6b100e3c050f630f006425aac072
+fixtureSeed=/conformance/mysql/token-desk-seed.sql sha256=a2b431d018c4213aa3c27934298f8da8c0f8d9a555d4e84d29b96a3ce8737741
+generatedFiles=37 combinedSha256=31661ec510ff84a6497d4132181ac1fba53ab92bcc069b70220f931ab5feb4d7
+generatedProjectBuild=PASSED (exit 0)
+httpReadiness=READY (200 from /api/get-credential?id=11111111-1111-4111-8111-111111111111)
+mysqlRowsBefore=3 mysqlRowsAfter=4
+mavenOffline=false
+javaVersion=21.0.12.1
+osName=Linux osArch=amd64
+serverPort=18080
+slmMysqlVersion=8.4.13
+slmSampleId=auth-token-desk-change-v1-teacher-b38e01722cc0
+slmSourceSha256=d34b5047839fbd80459ca9a2542f8fea83ecb4b9d5950eb7903a6fc52dfe7e06
+slmGeneratedDigest=791a0459db23123c8713baed604f748b59a5be1148e587b84603ffddf95efd0a
+
+checksPassed=34 checksFailed=0
+PASS the SIR slice compiles without errors (warnings remain visible) (diagnostics=[])
+PASS the compiler emitted a generated project (generatedFileCount=37)
+PASS candidate runtime compilation matches full static generation (sourceSha256=d34b5047839fbd80459ca9a2542f8fea83ecb4b9d5950eb7903a6fc52dfe7e06 generatedDigest=791a0459db23123c8713baed604f748b59a5be1148e587b84603ffddf95efd0a)
+PASS the generated project builds (mvn clean verify) (exitCode=0)
+PASS the build produced an executable jar (projectRoot=/home/runner/work/Software-IR/Software-IR/ci-work/token-slice-1a18056c206-42176/generated-project)
+PASS the generated application serves the compiled business route (readinessUrl=http://127.0.0.1:18080/api/get-credential?id=11111111-1111-4111-8111-111111111111)
+PASS the fixture seed is present in the owned schema (seededRowCount=3)
+PASS a credential with a Uuid key is rotated (status=201)
+PASS the new credential has a different, well-formed Uuid key (newId=1c5d1990-cbdb-402a-861c-e08f232c8dbc)
+PASS the rotation stored exactly one new credential under that key (rows=[11111111-1111-4111-8111-111111111111|alice|1|2099-01-01 00:00:00, 1c5d1990-cbdb-402a-861c-e08f232c8dbc|alice|0|2026-11-04 02:29:01.019540, 22222222-2222-4222-8222-222222222222|alice|1|2099-01-01 00:00:00, 33333333-3333-4333-8333-333333333333|bob|0|2099-01-01 00:00:00])
+PASS the rotated credential is marked used and the new one is not (rows=[11111111-1111-4111-8111-111111111111|alice|1|2099-01-01 00:00:00, 1c5d1990-cbdb-402a-861c-e08f232c8dbc|alice|0|2026-11-04 02:29:01.019540, 22222222-2222-4222-8222-222222222222|alice|1|2099-01-01 00:00:00, 33333333-3333-4333-8333-333333333333|bob|0|2099-01-01 00:00:00])
+PASS replaying the rotated credential is refused with the declared 409 (expected=409 actual=409)
+PASS an unknown Uuid key is the declared 409 (expected=409 actual=409)
+PASS the refusals wrote nothing (rows=[11111111-1111-4111-8111-111111111111|alice|1|2099-01-01 00:00:00, 1c5d1990-cbdb-402a-861c-e08f232c8dbc|alice|0|2026-11-04 02:29:01.019540, 22222222-2222-4222-8222-222222222222|alice|1|2099-01-01 00:00:00, 33333333-3333-4333-8333-333333333333|bob|0|2099-01-01 00:00:00])
+PASS an update that changes nothing is a match, not a refused guard (status=200)
+PASS the touched credential is as it was (rows=[11111111-1111-4111-8111-111111111111|alice|1|2099-01-01 00:00:00, 1c5d1990-cbdb-402a-861c-e08f232c8dbc|alice|0|2026-11-04 02:29:01.019540, 22222222-2222-4222-8222-222222222222|alice|1|2099-01-01 00:00:00, 33333333-3333-4333-8333-333333333333|bob|0|2099-01-01 00:00:00])
+PASS a row the guard does not accept is the declared 409 (expected=409 actual=409)
+PASS the refused credential was not written (rows=[11111111-1111-4111-8111-111111111111|alice|1|2099-01-01 00:00:00, 1c5d1990-cbdb-402a-861c-e08f232c8dbc|alice|0|2026-11-04 02:29:01.019540, 22222222-2222-4222-8222-222222222222|alice|1|2099-01-01 00:00:00, 33333333-3333-4333-8333-333333333333|bob|0|2099-01-01 00:00:00])
+PASS a unique name finds its row (expected=200 actual=200)
+PASS the row found is the one with that name ({name=ann, id=1})
+PASS a name with no row is the declared 404 (expected=404 actual=404)
+PASS a name held by two rows is an internal error, not an arbitrary one of them (expected=500 actual=500)
+PASS registering stores an account (status=201)
+PASS the response does not carry the password or its digest (body={"id":4,"name":"zoe"})
+PASS the stored text is a salted digest and does not contain the password (row=4|zoe|pbkdf2-sha256$600000$q6M+AQTwBfpx1tDjeJd0YQ$hSPUCdEOnoXJ+42+L/9zegQ39wD5m4yvhlfTn9yQQTM)
+PASS the right password logs in (expected=200 actual=200)
+PASS the login answers the account without its secret ({name=zoe})
+PASS a wrong password is the declared 401 (expected=401 actual=401)
+PASS an unknown account is the declared 401 (expected=401 actual=401)
+PASS a wrong password and an unknown account are answered identically (wrong={"code":"BadLogin","message":"BadLogin","fields":[]} unknown={"code":"BadLogin","message":"BadLogin","fields":[]})
+PASS a stored text that is not a digest never matches, even when the candidate equals it (expected=401 actual=401)
+PASS the generated application process exited (stopped=true)
+PASS the owned schema was dropped and its absence proved (schema=kcg_conf_run)
+PASS the advisory lock for the owned schema was released (released=true)
+
+U1 POST refresh (Uuid key): status=201 body={"id":"1c5d1990-cbdb-402a-861c-e08f232c8dbc","owner":"alice","expiresAt":"2026-11-04T02:29:01.019539961Z"}
+U2 POST refresh (replay): status=409 body={"code":"Invalid","message":"Invalid","fields":[]}
+U3 POST refresh (unknown key): status=409 body={"code":"Invalid","message":"Invalid","fields":[]}
+N1 POST touch (the update changes nothing): status=200 body={"id":"22222222-2222-4222-8222-222222222222","owner":"alice","expiresAt":"2099-01-01T00:00:00Z"}
+N2 POST touch (guard false): status=409 body={"code":"Invalid","message":"Invalid","fields":[]}
+K1 GET find-account (hit): status=200 body={"id":1,"name":"ann"}
+K2 GET find-account (miss): status=404 body={"code":"AccountNotFound","message":"AccountNotFound","fields":[]}
+K3 GET find-account (two rows): status=500 body={"timestamp":"2026-10-28T02:29:01.270+00:00","status":500,"error":"Internal Server Error","path":"/api/find-account"}
+S1 POST register: status=201 body={"id":4,"name":"zoe"}
+S2 POST login (right password): status=200 body={"id":4,"name":"zoe"}
+S3 POST login (wrong password): status=401 body={"code":"BadLogin","message":"BadLogin","fields":[]}
+S4 POST login (unknown account): status=401 body={"code":"BadLogin","message":"BadLogin","fields":[]}
+S5 POST login (stored text is not a digest): status=401 body={"code":"BadLogin","message":"BadLogin","fields":[]}
+
+]]></system-out>
+  </testcase>
+</testsuite>

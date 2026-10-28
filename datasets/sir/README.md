@@ -45,6 +45,10 @@
 
 `pilots/` 下的 `*-g1`～`*-g4` 是用通用 system prompt（`sir-0.3-general-v1`～`v4`）对 train 集三道题的试采样批次，每个批次 1 份教师候选。`bearer-credential-change-g1` 的 `07b9ea18ef67`、`query-slice-scratch-g3` 的 `cadd5a148bb8` 和 `write-slice-change-g4` 的 `51ab2996a20e` 经 GitHub 业务门四门全部通过，证据在各自的 `runtime/`，`train-teacher.jsonl` 各 1 条，**这是首批 3 条新教师合格训练答案**。详见[数据报告第七阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#第七阶段通用-prompt-试采样与首批合格教师答案2026-10-28)。
 
+## v4 跑完 train 集一轮
+
+固定用 `sir-0.3-general-v4` 对 train 集其余 13 份题目各采 1 次（`pilots/*-g4`）：静态通过 7 份，四门通过 6 份（crud-access 改写、guarded-transition 从零写、token-desk 两种题型、query-slice 改写、relation-slice 改写），证据在各批次 `runtime/`，`train-teacher.jsonl` 各 1 条。relation-slice 从零写业务失败（漏了 ACTIVE 条件），证据同样保留。**新教师合格训练答案累计 9 条。**详见[数据报告第八阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#第八阶段通用-prompt-v4-跑完-train-集一轮2026-10-28)。
+
 完整说明：[数据报告](../../docs/qualification/SLM_DATA_PILOT_REPORT.md)、[操作命令](../../experiments/slm/README.md)、[模型选择](../../docs/qualification/SLM_MODEL_SELECTION.md)。API密钥不属于数据或metadata。数据Git属性禁止换行转换，保持证据字节哈希。
 
 跨Windows/Linux或工具链字节变化时，先用实验CLI的`import --from-bundle ... --bundle ...`在目标环境重新冻结输入、导入原响应并重置所有资格，再重做检查；不要修改本批manifest或借用原通过结果。

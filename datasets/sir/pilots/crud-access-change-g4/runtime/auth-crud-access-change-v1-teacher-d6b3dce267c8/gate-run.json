@@ -1,0 +1,30 @@
+{
+  "workflow": ".github/workflows/slm-business-gate.yml",
+  "run_id": 40620875519,
+  "run_url": "https://github.com/HoloNova/Software-IR/actions/runs/40620875519",
+  "head_sha": "cd752b3b2896e84a9ebedec7957083a85ab00027",
+  "inputs": {
+    "bundle": "datasets/sir/pilots/crud-access-change-g4",
+    "sample_id": "auth-crud-access-change-v1-teacher-d6b3dce267c8",
+    "it": "CrudAccessBusinessConformanceIT"
+  },
+  "artifacts": {
+    "slm-gate-auth-crud-access-change-v1-teacher-d6b3dce267c8": {
+      "id": 12786898739,
+      "zip_sha256": "e57baef13117415bb2ca98dac7372525505054cc9bc46e9f2f3d5b01c31296ba"
+    },
+    "slm-gate-surefire-auth-crud-access-change-v1-teacher-d6b3dce267c8": {
+      "id": 12786749489,
+      "zip_sha256": "80a614be136b1018a25c644a900e709d87ad5c3d6201fe89be4be5c9c42ef5af"
+    }
+  },
+  "job_conclusion": "success",
+  "gates": {
+    "static": "PASSED",
+    "build": "PASSED",
+    "business": "PASSED",
+    "start": "PASSED"
+  },
+  "checks_passed": 48,
+  "checks_failed": 0
+}

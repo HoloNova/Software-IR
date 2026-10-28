@@ -194,3 +194,29 @@ v2 初始批次 `datasets/sir/pilots/dual-token-v2/` 的3份候选全部静态�
 三份通过的证据放入各批次的 `runtime/<样本>/`（`slm-runtime.json`、报告、日志、JUnit XML 与 `gate-run.json`）；下载的 zip 哈希与 GitHub 记录的 artifact 摘要一致，四个绑定哈希、生成摘要与附件哈希逐项核对，不含 CI 数据库密码。现有导出器在 `bearer-credential-change-g1/`、`query-slice-scratch-g3/` 与 `write-slice-change-g4/` 各导出 `train-teacher.jsonl` 1 条：**新教师合格训练答案首次为 3 条**（均为 train 集：鉴权改写、课程从零写、课程改写各一）。
 
 这 3 条只说明流程可以产出四门合格的答案，不是教师或小模型的通过率：样本很少，prompt 在采样过程中逐版修改，题目只覆盖两个家族。导出的 prompt 里 system 约 6～7 千字，学生模型（1.3B，16K 上下文）训练时是否沿用、如何截短，留到训练阶段决定。业务账本83/1/0不变。
+
+## 第八阶段：通用 prompt v4 跑完 train 集一轮（2026-10-28）
+
+固定用 `sir-0.3-general-v4`，对 train 集此前未采的 13 份题目各采 1 次，中途不改 prompt（`*-g4` 批次）。13 次调用合计 input 57613（其中缓存命中 33280）、output 13133 tokens。
+
+| 题目 | 候选 | 静态 | 业务门 | 检查 | 失败原因 |
+| --- | --- | --- | --- | --- | --- |
+| crud-access 改写 | `d6b3dce267c8` | PASSED | [#5](https://github.com/HoloNova/Software-IR/actions/runs/40620875519) PASSED | 48/0 | |
+| guarded-transition 从零写 | `1dff8d4a8a1c` | PASSED | [#12](https://github.com/HoloNova/Software-IR/actions/runs/40621086545) PASSED | 25/0 | |
+| token-desk 改写 | `b38e01722cc0` | PASSED | [#13](https://github.com/HoloNova/Software-IR/actions/runs/40621089007) PASSED | 34/0 | |
+| token-desk 从零写 | `bd4698114bcb` | PASSED | [#14](https://github.com/HoloNova/Software-IR/actions/runs/40621091701) PASSED | 34/0 | |
+| query-slice 改写 | `905d204a57e4` | PASSED | [#15](https://github.com/HoloNova/Software-IR/actions/runs/40621094499) PASSED | 41/0 | |
+| relation-slice 改写 | `d3c1df26ed80` | PASSED | [#16](https://github.com/HoloNova/Software-IR/actions/runs/40621097340) PASSED | 41/0 | |
+| relation-slice 从零写 | `c6167c316f44` | PASSED | [#11](https://github.com/HoloNova/Software-IR/actions/runs/40620893330) FAILED | 35/6 | 筛选写成 `any(Enrollment, course == item)`，漏了需求要求的 `status == ACTIVE`，只有已取消报名的课程也被查出（总数 6，应为 4） |
+| bearer-credential 从零写 | `0214246b5d17` | FAILED | | | 按主键加载写了字段名 `by id:` |
+| crud-access 从零写 | `1df6bb81718e` | FAILED | | | `expose command post at …`，只能写 put/delete |
+| guarded-transition 改写 | `bd642066c9d7` | FAILED | | | 守卫更新后写 `persist … else` |
+| course-selection 改写 | `6ec3685a54cd` | FAILED | | | 变量名用了保留字 `target` |
+| course-selection 从零写 | `eb0ce1da4119` | FAILED | | | 字段修饰写成 `unique where`，顺序应为 where 在前 |
+| write-slice 从零写 | `036fa8e447e7` | FAILED | | | 普通输入用 `.present`；没有 unique 的新行写 `persist … else` |
+
+v4 这一轮：13 份中静态通过 7 份，四门通过 6 份。样本少、题目难度不一，只作参考。6 份静态失败都能对应到语言参考里已有、但 prompt 没写明或没给例子的规则，留给 v5；业务失败的那份是业务逻辑漏条件，属于真正的答错，业务门正确拦下。
+
+判卷时发现 `slm-business-gate` 的并发组按分支设置，GitHub 每组只保留一个排队中的 run，连续触发 7 个时 #6～#10 被取消（未判任何东西，不留证据）。`306cc67` 改为按样本分组后重新触发，各 run 并行完成。
+
+7 份证据都放入各批次 `runtime/`（含失败那份），下载的 zip 哈希与 GitHub 记录一致，绑定哈希、生成摘要与附件哈希逐项核对，不含 CI 密码。现有导出器在 6 个通过的批次各导出 1 条：**新教师合格训练答案累计 9 条**，全部为 train 集（鉴权 5 条、课程 4 条），覆盖 16 份 train 题目中的 9 份。尚无合格答案的 7 份：bearer-credential 从零写、crud-access 从零写、guarded-transition 改写、course-selection 两种题型、relation-slice 从零写、write-slice 从零写。业务账本83/1/0不变。

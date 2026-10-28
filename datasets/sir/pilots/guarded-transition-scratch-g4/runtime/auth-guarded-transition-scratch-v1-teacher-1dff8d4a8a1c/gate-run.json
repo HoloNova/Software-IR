@@ -1,0 +1,30 @@
+{
+  "workflow": ".github/workflows/slm-business-gate.yml",
+  "run_id": 40621086545,
+  "run_url": "https://github.com/HoloNova/Software-IR/actions/runs/40621086545",
+  "head_sha": "306cc67196cd3a438b2d4f4eaf41d740aad5ac51",
+  "inputs": {
+    "bundle": "datasets/sir/pilots/guarded-transition-scratch-g4",
+    "sample_id": "auth-guarded-transition-scratch-v1-teacher-1dff8d4a8a1c",
+    "it": "GuardedTransitionBusinessConformanceIT"
+  },
+  "artifacts": {
+    "slm-gate-auth-guarded-transition-scratch-v1-teacher-1dff8d4a8a1c": {
+      "id": 12787795173,
+      "zip_sha256": "d538a1d0bccca93b757609d1c8a487d881160c3bcee0851bd13821a92366aca6"
+    },
+    "slm-gate-surefire-auth-guarded-transition-scratch-v1-teacher-1dff8d4a8a1c": {
+      "id": 12786943995,
+      "zip_sha256": "5b35cd1252bc5ea1892e5b11a23ce6193c2c88405cb03bf5d8746d45def21d11"
+    }
+  },
+  "job_conclusion": "success",
+  "gates": {
+    "start": "PASSED",
+    "business": "PASSED",
+    "build": "PASSED",
+    "static": "PASSED"
+  },
+  "checks_passed": 25,
+  "checks_failed": 0
+}

@@ -1,0 +1,30 @@
+{
+  "workflow": ".github/workflows/slm-business-gate.yml",
+  "run_id": 40621091701,
+  "run_url": "https://github.com/HoloNova/Software-IR/actions/runs/40621091701",
+  "head_sha": "306cc67196cd3a438b2d4f4eaf41d740aad5ac51",
+  "inputs": {
+    "bundle": "datasets/sir/pilots/token-desk-scratch-g4",
+    "sample_id": "auth-token-desk-scratch-v1-teacher-bd4698114bcb",
+    "it": "TokenDeskBusinessConformanceIT"
+  },
+  "artifacts": {
+    "slm-gate-auth-token-desk-scratch-v1-teacher-bd4698114bcb": {
+      "id": 12787357330,
+      "zip_sha256": "cc40c738dd06002753961a998b1b351ea430e094d445b8df2c4eb1d55ec94d19"
+    },
+    "slm-gate-surefire-auth-token-desk-scratch-v1-teacher-bd4698114bcb": {
+      "id": 12787357333,
+      "zip_sha256": "2bec3f16ab045996a5793bcaf044e96368d744ee2366162e1c6d4edd78f90bda"
+    }
+  },
+  "job_conclusion": "success",
+  "gates": {
+    "start": "PASSED",
+    "business": "PASSED",
+    "build": "PASSED",
+    "static": "PASSED"
+  },
+  "checks_passed": 34,
+  "checks_failed": 0
+}
