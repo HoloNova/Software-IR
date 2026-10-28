@@ -165,3 +165,32 @@ v2 初始批次 `datasets/sir/pilots/dual-token-v2/` 的3份候选全部静态�
 题目的接口合同起初混入了参考答案的实体/视图字段、表结构和判卷用的种子、探针、并发数，商店改写题 prompt 达 4.4 万字（需求本身 604 字）。`b036f2a` 改为由新字段 `ddl_source` 在 prompt 中附上判卷 DDL，合同只留 namespace、能力与实体名、接口清单、错误、枚举、分页和业务常量，合同总量减半，商店改写题降到约 3.6 万字。被删字段对应的要求需求原文均已写明。
 
 采样前还缺一份通用 system prompt：现有 `sir-0.3-auth*.md` 只讲双 Token 的写法，课程、资金、商店等题要用的分页、小数汇总、加锁等都没有。业务账本83/1/0不变。
+
+## 第七阶段：通用 prompt 试采样与首批合格教师答案（2026-10-28）
+
+`sir-0.3-auth*.md` 只讲双 Token，其他家族要用的分页、小数汇总、加锁等写法都没有，所以新写了通用 system prompt：写法全部取自语言参考的已测试示例，另写明表名/列名与实体/字段的对应和成功状态码规则（工作流里有 `create` 就是 201）。试采样只用 train 集的三道题，每轮失败都能对应到一条没写明的规则，补上后同样的错误不再出现：
+
+| prompt | 题目 | 候选 | 静态 | 失败原因 |
+| --- | --- | --- | --- | --- |
+| general-v1 | bearer-credential 改写 | `07b9ea18ef67` | PASSED | |
+| general-v1 | query-slice 从零写 | `82872fe06240` | FAILED | 输入字段写 `default` |
+| general-v1 | write-slice 改写 | `ab5caa38a15d` | FAILED | 把 PATCH 请求体的 `expectedVersion`/`changes` 写进 patch 输入 |
+| general-v2 | query-slice 从零写 | `182e9f50beb7` | FAILED | 约束当表达式用；`at` 路径重复 `/api` |
+| general-v2 | write-slice 改写 | `e52b33f4295b` | FAILED | patch 字段用带规则的类型；对带 Version 的实体写守卫 |
+| general-v3 | query-slice 从零写 | `cadd5a148bb8` | PASSED | |
+| general-v3 | write-slice 改写 | `75ff6c7c1924` | FAILED | 自创三元表达式 `? :` |
+| general-v4 | write-slice 改写 | `51ab2996a20e` | PASSED | |
+
+8 次调用合计 input 29861、output 3807 tokens（各批次 `candidates.jsonl` 记有逐次用量）；`system_fingerprint` 均为 `bc19ba97cbe016479903222bb1578db6`。每条新规则都先在参考文档或生成器源码中核实（如分页缺省值见 `SpringBootQueryPolicy`，PATCH 包装见 `SpringBootWritePolicy`），并把新写法拼成完整文档经 `kcg check` 通过。
+
+静态通过的三份送 GitHub 业务门：
+
+| 候选 | run | Static | Build | Start | Business | 检查 |
+| --- | --- | --- | --- | --- | --- | --- |
+| bearer-credential `07b9ea18ef67` | [#2](https://github.com/HoloNova/Software-IR/actions/runs/40619277037)（`fcb8de9`） | PASSED | PASSED | PASSED | PASSED | 36/0 |
+| query-slice `cadd5a148bb8` | [#3](https://github.com/HoloNova/Software-IR/actions/runs/40619824442)（`c509c4c`） | PASSED | PASSED | PASSED | PASSED | 41/0 |
+| write-slice `51ab2996a20e` | [#4](https://github.com/HoloNova/Software-IR/actions/runs/40619980837)（`d445309`） | PASSED | 运行中 | | | |
+
+两份通过的证据放入各批次的 `runtime/<样本>/`（`slm-runtime.json`、报告、日志、JUnit XML 与 `gate-run.json`）；下载的 zip 哈希与 GitHub 记录的 artifact 摘要一致，四个绑定哈希、生成摘要与附件哈希逐项核对，不含 CI 数据库密码。现有导出器在 `bearer-credential-change-g1/` 与 `query-slice-scratch-g3/` 各导出 `train-teacher.jsonl` 1 条：**新教师合格训练答案首次为 2 条**（均为 train 集，一道鉴权改写、一道课程从零写）。
+
+这 2 条只说明流程可以产出四门合格的答案，不是教师或小模型的通过率：样本很少，prompt 在采样过程中逐版修改，题目只覆盖两个家族。导出的 prompt 里 system 约 6～7 千字，学生模型（1.3B，16K 上下文）训练时是否沿用、如何截短，留到训练阶段决定。业务账本83/1/0不变。

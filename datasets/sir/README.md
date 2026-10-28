@@ -41,6 +41,10 @@
 
 同一批次随后对 `bd870a834f77` 做了1次业务门反馈修复（`repair --runtime-evidence`，input 12480、output 1199 tokens）：新候选 `e2c157051e10` 只把 Logout 改成 query，静态失败（query 必须只读），见 `checked-r1.jsonl` 与[数据报告第六阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#第六阶段业务门反馈修复与-22-份新题2026-10-28)。新教师合格训练答案仍为0条。
 
+## 通用 prompt 试采样与首批合格答案
+
+`pilots/` 下的 `*-g1`～`*-g4` 是用通用 system prompt（`sir-0.3-general-v1`～`v4`）对 train 集三道题的试采样批次，每个批次 1 份教师候选。`bearer-credential-change-g1` 的 `07b9ea18ef67` 与 `query-slice-scratch-g3` 的 `cadd5a148bb8` 经 GitHub 业务门四门全部通过，证据在各自的 `runtime/`，`train-teacher.jsonl` 各 1 条，**这是首批 2 条新教师合格训练答案**；`write-slice-change-g4` 的 `51ab2996a20e` 静态通过，业务门待归档。详见[数据报告第七阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#第七阶段通用-prompt-试采样与首批合格教师答案2026-10-28)。
+
 完整说明：[数据报告](../../docs/qualification/SLM_DATA_PILOT_REPORT.md)、[操作命令](../../experiments/slm/README.md)、[模型选择](../../docs/qualification/SLM_MODEL_SELECTION.md)。API密钥不属于数据或metadata。数据Git属性禁止换行转换，保持证据字节哈希。
 
 跨Windows/Linux或工具链字节变化时，先用实验CLI的`import --from-bundle ... --bundle ...`在目标环境重新冻结输入、导入原响应并重置所有资格，再重做检查；不要修改本批manifest或借用原通过结果。

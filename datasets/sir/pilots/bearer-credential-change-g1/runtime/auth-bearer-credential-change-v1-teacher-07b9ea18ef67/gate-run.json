@@ -1,0 +1,30 @@
+{
+  "workflow": ".github/workflows/slm-business-gate.yml",
+  "run_id": 40619277037,
+  "run_url": "https://github.com/HoloNova/Software-IR/actions/runs/40619277037",
+  "head_sha": "fcb8de95c3db9939655e136f8db562f3017a2313",
+  "inputs": {
+    "bundle": "datasets/sir/pilots/bearer-credential-change-g1",
+    "sample_id": "auth-bearer-credential-change-v1-teacher-07b9ea18ef67",
+    "it": "BearerCredentialBusinessConformanceIT"
+  },
+  "artifacts": {
+    "slm-gate-auth-bearer-credential-change-v1-teacher-07b9ea18ef67": {
+      "id": 12786064293,
+      "zip_sha256": "811539d1a8458e9cb93be69744cb3a6f8ba8668e4ef90481e27a6a9b83f68c2d"
+    },
+    "slm-gate-surefire-auth-bearer-credential-change-v1-teacher-07b9ea18ef67": {
+      "id": 12786706731,
+      "zip_sha256": "70169bf010da8b19bb1f26fab356cf81b1c635fbdac9f00f2eac4c32b7bbcca4"
+    }
+  },
+  "job_conclusion": "success",
+  "gates": {
+    "business": "PASSED",
+    "start": "PASSED",
+    "static": "PASSED",
+    "build": "PASSED"
+  },
+  "checks_passed": 36,
+  "checks_failed": 0
+}
