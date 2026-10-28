@@ -1,0 +1,144 @@
+sir 0.3
+software TokenDesk {
+  metadata {
+    displayName "Token Desk";
+    namespace "com.example.tokendesk";
+  }
+  target {
+    language java 21;
+    framework spring_boot;
+    persistence mybatis_plus;
+    database mysql;
+    build maven;
+    interface rest;
+  }
+  sources { }
+  imports { }
+  declarations {
+    entity Credential persistent {
+      identity id: Token generated uuid;
+      field owner: Text;
+      field used: Flag;
+      field expiresAt: Moment;
+    }
+    entity Account persistent {
+      identity id: Id generated auto;
+      field name: Text unique;
+      field passwordHash: Secret;
+    }
+    view CredentialView from Credential {
+      field id: Token;
+      field owner: Text;
+      field expiresAt: Moment;
+    }
+    view AccountView from Account {
+      field id: Id;
+      field name: Text;
+    }
+    input CredentialRef {
+      field token: Token;
+    }
+    input GetCredentialInput {
+      field id: Token;
+    }
+    input AccountName {
+      field name: Text;
+    }
+    input RegisterInput {
+      field name: Name where length(1, 64);
+      field password: Secret;
+    }
+    input LoginInput {
+      field name: Text where notBlank;
+      field password: Secret;
+    }
+    error Expired;
+    error Invalid http 409;
+    error AccountNotFound http 404;
+    error CredentialNotFound http 404;
+    error BadLogin http 401;
+    capability GetCredential {
+      input GetCredentialInput;
+      output CredentialView;
+      fails CredentialNotFound;
+      requires readonly;
+      expose query;
+      workflow {
+        load Credential by input.id as found else CredentialNotFound;
+        return found;
+      }
+    }
+    capability Refresh {
+      input CredentialRef;
+      output CredentialView;
+      fails Expired;
+      fails Invalid;
+      requires atomic;
+      expose command;
+      workflow {
+        load Credential by input.token as old else Invalid;
+        validate old.expiresAt > now() else Expired;
+        update old when old.used == false and old.expiresAt > now() else Invalid { used: true; }
+        create Credential as fresh {
+          owner: old.owner;
+          used: false;
+          expiresAt: now() + 7 days;
+        }
+        persist old;
+        persist fresh;
+        return fresh;
+      }
+    }
+    capability Touch {
+      input CredentialRef;
+      output CredentialView;
+      fails Invalid;
+      requires atomic;
+      expose command;
+      workflow {
+        load Credential by input.token as held else Invalid;
+        update held when held.owner == "alice" else Invalid { used: true; }
+        persist held;
+        return held;
+      }
+    }
+    capability Register {
+      input RegisterInput;
+      output AccountView;
+      fails Invalid;
+      requires atomic;
+      expose command;
+      workflow {
+        create Account as made {
+          name: input.name;
+          passwordHash: input.password;
+        }
+        persist made else Invalid;
+        return made;
+      }
+    }
+    capability Login {
+      input LoginInput;
+      output AccountView;
+      fails BadLogin;
+      requires readonly;
+      expose command;
+      workflow {
+        load Account by name: input.name as account else BadLogin;
+        validate account.passwordHash matches input.password else BadLogin;
+        return account;
+      }
+    }
+    capability FindAccount {
+      input AccountName;
+      output AccountView;
+      fails AccountNotFound;
+      requires readonly;
+      expose query;
+      workflow {
+        load Account by name: input.name as account else AccountNotFound;
+        return account;
+      }
+    }
+  }
+}

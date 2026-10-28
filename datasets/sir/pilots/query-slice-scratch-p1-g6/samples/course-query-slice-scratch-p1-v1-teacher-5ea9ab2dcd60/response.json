@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "sir 0.3\nsoftware CourseCatalog {\n  metadata { displayName \"CourseCatalog\"; namespace \"com.example.coursecatalog\"; }\n  target { language java 21; framework spring_boot; persistence mybatis_plus; database mysql; build maven; interface rest; }\n  sources { }\n  imports { }\n  declarations {\n    entity Course persistent {\n      identity id: Id generated auto;\n      field code: Code where length(1, 32);\n      field name: Name where length(1, 100);\n      field description: Optional<Text> where length(0, 500);\n      field capacity: Quantity;\n    }\n\n    view CourseSummary from Course {\n      field code: Code;\n      field name: Name;\n      field capacity: Quantity;\n    }\n\n    input SearchCoursesInput {\n      field keyword: Text;\n      field page: PageNo;\n      field size: PageSize;\n    }\n\n    error InvalidPageParam http 400;\n\n    capability SearchCourses {\n      input SearchCoursesInput;\n      output Page<CourseSummary>;\n      fails InvalidPageParam;\n      requires readonly;\n      expose query at \"/search-courses\";\n      workflow {\n        validate input.keyword is present else InvalidPageParam;\n        validate input.keyword != \"\" else InvalidPageParam;\n        find Course where item.name containsLiteral input.keyword order by code ascending, id ascending Page input.page, input.size else InvalidPageParam as found;\n        return found;\n      }\n    }\n  }\n}",
+        "function_call": null,
+        "refusal": null,
+        "role": "assistant",
+        "tool_calls": null
+      }
+    }
+  ],
+  "created": 1793177297,
+  "id": "be1cf05e-9415-444d-8dc4-a2c2af91e79e",
+  "model": "deepseek-flash",
+  "object": "chat.completion",
+  "service_tier": null,
+  "system_fingerprint": "bc19ba97cbe016479903222bb1578db6",
+  "usage": {
+    "completion_tokens": 304,
+    "completion_tokens_details": null,
+    "prompt_cache_hit_tokens": 3456,
+    "prompt_cache_miss_tokens": 1209,
+    "prompt_tokens": 4665,
+    "prompt_tokens_details": {
+      "audio_tokens": null,
+      "cached_tokens": 3456
+    },
+    "total_tokens": 4969
+  }
+}

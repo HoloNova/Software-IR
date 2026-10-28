@@ -1,0 +1,21 @@
+{
+  "actual_model": "deepseek-flash",
+  "created_at": "2026-10-28T08:48:38.505414+00:00",
+  "id": "course-write-slice-change-p2-v1-teacher-382f97717bf9",
+  "raw_response_sha256": "4dc2a35f06294da35da44491b766fb4cdbf2ccd871e46b010fa338f8b5bf1f15",
+  "requested_model": "deepseek-flash",
+  "status": "CANDIDATE_NOT_YET_QUALIFIED",
+  "system_fingerprint": "bc19ba97cbe016479903222bb1578db6",
+  "usage": {
+    "completion_tokens": 532,
+    "completion_tokens_details": null,
+    "prompt_cache_hit_tokens": 3456,
+    "prompt_cache_miss_tokens": 1632,
+    "prompt_tokens": 5088,
+    "prompt_tokens_details": {
+      "audio_tokens": null,
+      "cached_tokens": 3456
+    },
+    "total_tokens": 5620
+  }
+}

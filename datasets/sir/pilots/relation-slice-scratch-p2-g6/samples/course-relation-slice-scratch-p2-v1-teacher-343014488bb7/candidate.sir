@@ -1,0 +1,71 @@
+sir 0.3
+software CourseEnrollment {
+  metadata { displayName "CourseEnrollment"; namespace "com.example.courseenrollment"; }
+  target { language java 21; framework spring_boot; persistence mybatis_plus; database mysql; build maven; interface rest; }
+  sources { }
+  imports { }
+  declarations {
+    enum EnrollmentStatus { ACTIVE, CANCELLED }
+
+    entity Student persistent {
+      identity id: Id generated auto;
+      field studentNo: Code where length(1, 16) unique;
+      field name: Name where length(1, 100);
+    }
+
+    entity Course persistent {
+      identity id: Id generated auto;
+      field code: Code where length(1, 32) unique;
+      field name: Name where length(1, 100);
+      field capacity: Quantity;
+    }
+
+    entity Enrollment persistent {
+      identity id: Id generated auto;
+      field course: Ref<Course>;
+      field student: Ref<Student>;
+      field status: EnrollmentStatus;
+    }
+
+    view StudentView from Student {
+      field id: Id;
+      field studentNo: Code;
+      field name: Name;
+      field label: Name = item.name;
+    }
+
+    view EnrollmentView from Enrollment {
+      field id: Id;
+      field status: EnrollmentStatus;
+      field active: Flag = item.status == EnrollmentStatus.ACTIVE;
+      field student: StudentView;
+    }
+
+    view CourseView from Course {
+      field id: Id;
+      field code: Code;
+      field name: Name;
+      field capacity: Quantity;
+      field doubledCapacity: Count = item.capacity + item.capacity;
+      field enrollments: List<EnrollmentView>;
+    }
+
+    error InvalidPage http 400;
+
+    capability SearchCourseEnrollments {
+      input {
+        field page: PageNo;
+        field size: PageSize;
+      }
+      output Page<CourseView>;
+      fails InvalidPage;
+      requires readonly;
+      expose query;
+      workflow {
+        validate input.page >= 1 else InvalidPage;
+        find Course where exists(Enrollment, course == item and status == EnrollmentStatus.ACTIVE) order by code ascending, id ascending Page input.page, input.size else InvalidPage as courses;
+        return courses;
+      }
+    }
+  }
+}

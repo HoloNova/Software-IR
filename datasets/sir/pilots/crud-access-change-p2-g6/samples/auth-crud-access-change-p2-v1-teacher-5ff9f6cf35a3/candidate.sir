@@ -1,0 +1,238 @@
+sir 0.3
+software CrudAccess {
+  metadata { displayName "Crud Access"; namespace "example.crudaccess"; }
+  target { language java 21; framework spring_boot; persistence mybatis_plus; database mysql; build maven; interface rest; }
+  sources { }
+  imports { }
+  declarations {
+    enum Role { READER, ADMIN }
+
+    entity User persistent {
+      identity id: Id generated auto;
+      field role: Role default Role.READER;
+    }
+
+    entity AccessToken persistent {
+      identity id: Token generated uuid;
+      field owner: Ref<User>;
+      field expiresAt: Moment;
+      credential subject owner expires expiresAt;
+    }
+
+    entity Post persistent {
+      identity id: Id generated auto;
+      field author: Ref<User>;
+      field body: Text;
+      field state: Text default "open";
+      field version: Version;
+      scope state != "hidden";
+    }
+
+    entity Book persistent {
+      identity id: Id generated auto;
+      field title: Name;
+      field stock: Count default 5;
+    }
+
+    view PostView from Post {
+      field id: Id;
+      field author: Ref<User>;
+      field body: Text;
+      field state: Text;
+      field version: Version;
+    }
+
+    view BookView from Book {
+      field id: Id;
+      field title: Name;
+      field stock: Count;
+    }
+
+    input CreatePostInput {
+      field body: Text where notBlank;
+    }
+
+    input UpdatePostInput patch of Post {
+      field id: Id;
+      field body: Text;
+    }
+
+    input CreateBookInput {
+      field title: Name;
+    }
+
+    input UpdateBookInput {
+      field id: Id;
+      field title: Name;
+    }
+
+    error PostNotFound http 404;
+    error PostForbidden http 403;
+    error BookNotFound http 404;
+    error BookForbidden http 403;
+    error EmptyChange http 400;
+
+    capability CreatePost {
+      actor Ref<User>;
+      input CreatePostInput;
+      output PostView;
+      fails PostForbidden;
+      requires authenticated;
+      requires atomic;
+      expose command at "/public/posts";
+      workflow {
+        validate actor.role == Role.ADMIN else PostForbidden;
+        create Post as made {
+          author: actor;
+          body: input.body;
+        }
+        persist made;
+        return made;
+      }
+    }
+
+    capability GetPost {
+      input GetPostInput;
+      output PostView;
+      fails PostNotFound;
+      requires readonly;
+      expose query at "/public/posts/{id}";
+      workflow {
+        load Post by input.id as found else PostNotFound;
+        return found;
+      }
+    }
+
+    capability ListPost {
+      input ListPostInput;
+      output Page<PostView>;
+      fails BadPage;
+      requires readonly;
+      expose query at "/public/posts";
+      workflow {
+        find Post where true order by id ascending Page input.page, input.size else BadPage as rows;
+        return rows;
+      }
+    }
+
+    capability UpdatePost {
+      actor Ref<User>;
+      input UpdatePostInput;
+      output PostView;
+      fails PostNotFound;
+      fails PostForbidden;
+      fails EmptyChange;
+      fails StaleVersion;
+      requires authenticated;
+      requires atomic;
+      expose command at "/public/posts/{id}";
+      workflow {
+        validate actor.role == Role.ADMIN else PostForbidden;
+        validate input.body.present else EmptyChange;
+        load Post by input.id as found else PostNotFound;
+        update found {
+          body: input.body;
+        }
+        persist found else StaleVersion;
+        return found;
+      }
+    }
+
+    capability DeletePost {
+      actor Ref<User>;
+      input DeletePostInput;
+      output Unit;
+      fails PostNotFound;
+      fails PostForbidden;
+      requires authenticated;
+      requires atomic;
+      expose command delete at "/public/posts/{id}";
+      workflow {
+        validate actor.role == Role.ADMIN else PostForbidden;
+        load Post by input.id as found else PostNotFound;
+        delete found;
+        return unit;
+      }
+    }
+
+    capability CreateBook {
+      actor Ref<User>;
+      input CreateBookInput;
+      output BookView;
+      fails BookForbidden;
+      requires authenticated;
+      requires atomic;
+      expose command at "/library/books";
+      workflow {
+        validate actor.role == Role.ADMIN else BookForbidden;
+        create Book as made {
+          title: input.title;
+          stock: 5;
+        }
+        persist made;
+        return made;
+      }
+    }
+
+    capability GetBook {
+      input GetBookInput;
+      output BookView;
+      fails BookNotFound;
+      requires readonly;
+      expose query at "/library/books/{id}";
+      workflow {
+        load Book by input.id as found else BookNotFound;
+        return found;
+      }
+    }
+
+    capability ListBook {
+      input ListBookInput;
+      output Page<BookView>;
+      fails BadPage;
+      requires readonly;
+      expose query at "/library/books";
+      workflow {
+        find Book where true order by id ascending Page input.page, input.size else BadPage as rows;
+        return rows;
+      }
+    }
+
+    capability UpdateBook {
+      actor Ref<User>;
+      input UpdateBookInput;
+      output BookView;
+      fails BookNotFound;
+      fails BookForbidden;
+      requires authenticated;
+      requires atomic;
+      expose command put at "/library/books/{id}";
+      workflow {
+        validate actor.role == Role.ADMIN else BookForbidden;
+        load Book by input.id as found else BookNotFound;
+        update found {
+          title: input.title;
+        }
+        persist found;
+        return found;
+      }
+    }
+
+    capability DeleteBook {
+      actor Ref<User>;
+      input DeleteBookInput;
+      output Unit;
+      fails BookNotFound;
+      fails BookForbidden;
+      requires authenticated;
+      requires atomic;
+      expose command delete at "/library/books/{id}";
+      workflow {
+        validate actor.role == Role.ADMIN else BookForbidden;
+        load Book by input.id as found else BookNotFound;
+        delete found;
+        return unit;
+      }
+    }
+  }
+}

@@ -1,0 +1,101 @@
+sir 0.3
+software CourseAdmin {
+  metadata { displayName "CourseAdmin"; namespace "com.example.courseadmin"; }
+  target { language java 21; framework spring_boot; persistence mybatis_plus; database mysql; build maven; interface rest; }
+  sources { }
+  imports { }
+  declarations {
+    entity Course persistent {
+      identity id: Id generated auto;
+      field code: Code unique;
+      field name: Name;
+      field description: Optional<Text> where length(0, 500);
+      field capacity: Quantity;
+      field version: Version versioned;
+    }
+
+    view CourseView from Course {
+      field id: Id;
+      field code: Code;
+      field name: Name;
+      field description: Optional<Text>;
+      field capacity: Quantity;
+      field version: Version;
+    }
+
+    input CreateCourseInput {
+      field code: Code;
+      field name: Name where notBlank;
+      field description: Optional<Text> where length(0, 500);
+      field capacity: Quantity;
+    }
+
+    input GetCourseInput {
+      field id: Id;
+    }
+
+    input UpdateCourseInput patch of Course {
+      field id: Id;
+      field name: Text;
+      field description: Optional<Text>;
+      field capacity: Count;
+    }
+
+    error CourseNotFound http 404;
+    error EmptyChange http 400;
+    error StaleVersion http 409;
+
+    capability CreateCourse {
+      input CreateCourseInput;
+      output CourseView;
+      fails CourseNotFound;
+      requires atomic;
+      expose command at "/create-course";
+      workflow {
+        validate input.name is present else CourseNotFound;
+        create Course as made {
+          code: input.code;
+          name: input.name;
+          description: input.description;
+          capacity: input.capacity;
+        }
+        persist made;
+        return made;
+      }
+    }
+
+    capability GetCourse {
+      input GetCourseInput;
+      output CourseView;
+      fails CourseNotFound;
+      requires readonly;
+      expose query at "/get-course";
+      workflow {
+        load Course by input.id as found else CourseNotFound;
+        return found;
+      }
+    }
+
+    capability UpdateCourse {
+      input UpdateCourseInput;
+      output CourseView;
+      fails CourseNotFound;
+      fails EmptyChange;
+      fails StaleVersion;
+      requires atomic;
+      expose command at "/update-course";
+      workflow {
+        validate input.name.present or input.description.present or input.capacity.present else EmptyChange;
+        load Course by input.id as course for update else CourseNotFound;
+        validate course.version == input.expectedVersion else StaleVersion;
+        update course {
+          name: input.name;
+          description: input.description;
+          capacity: input.capacity;
+        }
+        persist course else StaleVersion;
+        return course;
+      }
+    }
+  }
+}

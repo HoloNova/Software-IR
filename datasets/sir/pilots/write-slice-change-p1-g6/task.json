@@ -1,0 +1,161 @@
+{
+  "base_source": "experiments/slm/drafts/write-slice/base.sir",
+  "contract": {
+    "capabilities": [
+      "GetCourse",
+      "CreateCourse",
+      "UpdateCourse"
+    ],
+    "course_response": [
+      "id",
+      "code",
+      "name",
+      "description",
+      "capacity",
+      "version"
+    ],
+    "create_request": [
+      "code",
+      "name",
+      "description",
+      "capacity"
+    ],
+    "declared_errors": {
+      "CourseNotFound": 404,
+      "EmptyChange": 400,
+      "StaleVersion": 409
+    },
+    "entities": [
+      "Course"
+    ],
+    "enums": {},
+    "error_response": [
+      "code",
+      "message",
+      "fields"
+    ],
+    "field_error": [
+      "path",
+      "code",
+      "message"
+    ],
+    "get_request": [
+      "id"
+    ],
+    "initial_version": 0,
+    "interfaces": {
+      "CreateCourse": {
+        "request_fields": [
+          "code",
+          "name",
+          "description",
+          "capacity"
+        ],
+        "response_fields": [
+          "id",
+          "code",
+          "name",
+          "description",
+          "capacity",
+          "version"
+        ],
+        "route": "POST /api/create-course"
+      },
+      "GetCourse": {
+        "request_fields": [
+          "id"
+        ],
+        "response_fields": [
+          "id",
+          "code",
+          "name",
+          "description",
+          "capacity",
+          "version"
+        ],
+        "route": "GET /api/get-course"
+      },
+      "UpdateCourse": {
+        "change_fields": [
+          "name",
+          "description",
+          "capacity"
+        ],
+        "request_fields": [
+          "id",
+          "expectedVersion",
+          "changes"
+        ],
+        "response_fields": [
+          "id",
+          "code",
+          "name",
+          "description",
+          "capacity",
+          "version"
+        ],
+        "route": "PATCH /api/update-course"
+      }
+    },
+    "namespace": "com.example.courseadmin",
+    "patch_request": {
+      "changes": [
+        "name",
+        "description",
+        "capacity"
+      ],
+      "expectedVersion": "integer",
+      "id": "integer"
+    },
+    "readiness": "GET /api/get-course?id=1"
+  },
+  "ddl_source": "sir-toolchain-application/src/test/resources/conformance/mysql/course-admin-ddl.sql",
+  "family": "course.write-slice",
+  "id": "course-write-slice-change-p1-v1",
+  "oracle": {
+    "files": [
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/AdvisoryLockKey.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BusinessEndpointReadiness.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BusinessSliceHarness.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/ChildEnvironmentBuilder.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/ConformanceFixtures.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/ConformanceJvmLimits.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/DiskTree.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceDirectory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceOwnershipInventory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceRootProof.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceSecretScanner.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/HttpAssertionClient.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MavenProjectRunner.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MysqlObserver.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MysqlRuntimeJdbcUrl.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MysqlRuntimeTrace.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/OwnedPathEntry.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/OwnedPathInventory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/OwnedRunDirectory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SchemaName.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SchemaSqlRenderer.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SecretCatalog.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SlmCandidateSupport.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SpringApplicationProcess.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/StreamingSecretRedactor.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/StrongFileIdentity.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/WriteSliceBusinessConformanceIT.java",
+      "sir-toolchain-application/src/test/resources/conformance/mysql/course-admin-ddl.sql",
+      "sir-toolchain-application/src/test/resources/conformance/mysql/course-admin-seed.sql",
+      "sir-toolchain-application/src/test/resources/valid/course-admin.sir"
+    ],
+    "id": "write-slice-http-mysql-v1"
+  },
+  "reference_evidence": {
+    "commit": "0c4fb4a4c30b14658f874d3cc21f3aabe0c27457",
+    "kind": "existing-reference-only-not-candidate-qualification",
+    "run_url": "https://github.com/HoloNova/Software-IR/actions/runs/40330013391"
+  },
+  "reference_source": "sir-toolchain-application/src/test/resources/valid/course-admin.sir",
+  "requirement": "在给定软件上加课程局部修改和并发版本保护。保留 CreateCourse、GetCourse 的现有行为。\n\nUpdateCourse 用 PATCH /api/update-course，传 id、expectedVersion、changes。changes 里只能放 name、description、capacity。\n\n没传的字段别动。description 只有明确传 null 才清空，code 不让改。\n\n改成功后返回合并后的完整课程字段，version 按数据库当前值加一。\n\nexpectedVersion 要跟记录的实际版本比。版本旧了返回 409 StaleVersion。\n\n两个拿着相同版本的请求同时竞争，只能一个 200、另一个 409。数据库只更新一次，别的行不动。\n\n所有被拒的请求都别写库，也别推进版本。\n\nchanges 是空的就返回 400 EmptyChange。\n\nid 找不到就返回 404 CourseNotFound。\n\n缺 id 或 expectedVersion，或者外层、changes 里混了未知字段，都返回 400。错误里要说清缺失或未知字段的路径。\n\nname 全是空白就返回 400 INVALID_REQUEST，fields 里要有 path=changes.name、code=notBlank。\n\n返回完整的 sir 0.3 文档，不要 Java、SQL 或解释。",
+  "revision": "1",
+  "schema_version": "sir-task/1",
+  "sir_version": "0.3",
+  "split": "train"
+}

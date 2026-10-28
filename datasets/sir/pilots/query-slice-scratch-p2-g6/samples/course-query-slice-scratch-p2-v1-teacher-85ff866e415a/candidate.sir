@@ -1,0 +1,42 @@
+sir 0.3
+software CourseCatalog {
+  metadata { displayName "CourseCatalog"; namespace "com.example.coursecatalog"; }
+  target { language java 21; framework spring_boot; persistence mybatis_plus; database mysql; build maven; interface rest; }
+  sources { }
+  imports { }
+  declarations {
+    entity Course persistent {
+      identity id: Id generated auto;
+      field code: Code where length(1, 32);
+      field name: Name where length(1, 100);
+      field description: Optional<Text> where length(0, 500);
+      field capacity: Quantity;
+    }
+
+    input SearchCoursesInput {
+      field keyword: Text where notBlank;
+      field page: PageNo;
+      field size: PageSize;
+    }
+
+    view CourseSummary from Course {
+      field code: Code;
+      field name: Name;
+      field capacity: Quantity;
+    }
+
+    error InvalidPageParam http 400;
+
+    capability SearchCourses {
+      input SearchCoursesInput;
+      output Page<CourseSummary>;
+      fails InvalidPageParam;
+      requires readonly;
+      expose query at "/search-courses";
+      workflow {
+        find Course where item.name containsLiteral input.keyword order by code ascending, id ascending Page input.page, input.size else InvalidPageParam as found;
+        return found;
+      }
+    }
+  }
+}

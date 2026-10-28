@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "sir 0.3\nsoftware CredentialRotation {\n  metadata {\n    displayName \"Credential Rotation\";\n    namespace \"com.example.rotation\";\n  }\n  target {\n    language java 21;\n    framework spring_boot;\n    persistence mybatis_plus;\n    database mysql;\n    build maven;\n    interface rest;\n  }\n  sources { }\n  imports { }\n  declarations {\n    entity Credential persistent {\n      identity id: Id generated auto;\n      field owner: Text;\n      field used: Flag;\n      field expiresAt: Moment;\n    }\n    view CredentialView from Credential {\n      field id: Id;\n      field owner: Text;\n      field used: Flag;\n      field expiresAt: Moment;\n    }\n    input GetCredentialInput {\n      field id: Id;\n    }\n    input RefreshInput {\n      field id: Id;\n    }\n    error CredentialNotFound http 404;\n    error Expired http 400;\n    error Invalid http 409;\n    capability GetCredential {\n      input GetCredentialInput;\n      output CredentialView;\n      fails CredentialNotFound;\n      requires readonly;\n      expose query;\n      workflow {\n        load Credential by input.id as credential else CredentialNotFound;\n        return credential;\n      }\n    }\n    capability Refresh {\n      input RefreshInput;\n      output CredentialView;\n      fails CredentialNotFound;\n      fails Expired;\n      fails Invalid;\n      requires atomic;\n      expose command;\n      workflow {\n        load Credential by input.id as credential for update else CredentialNotFound;\n        validate credential.used == false else Invalid;\n        validate credential.expiresAt > now() else Expired;\n        update credential when credential.used == false else Invalid {\n          used: true;\n        }\n        persist credential;\n        create Credential as made {\n          owner: credential.owner;\n          used: false;\n          expiresAt: now() + 7 days;\n        }\n        persist made;\n        return made;\n      }\n    }\n  }\n}",
+        "function_call": null,
+        "refusal": null,
+        "role": "assistant",
+        "tool_calls": null
+      }
+    }
+  ],
+  "created": 1793177289,
+  "id": "bc245ea1-df5b-42a2-b1f8-db49d1698bf2",
+  "model": "deepseek-flash",
+  "object": "chat.completion",
+  "service_tier": null,
+  "system_fingerprint": "bc19ba97cbe016479903222bb1578db6",
+  "usage": {
+    "completion_tokens": 412,
+    "completion_tokens_details": null,
+    "prompt_cache_hit_tokens": 3456,
+    "prompt_cache_miss_tokens": 1219,
+    "prompt_tokens": 4675,
+    "prompt_tokens_details": {
+      "audio_tokens": null,
+      "cached_tokens": 3456
+    },
+    "total_tokens": 5087
+  }
+}

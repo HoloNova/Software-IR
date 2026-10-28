@@ -1,0 +1,21 @@
+{
+  "actual_model": "deepseek-flash",
+  "created_at": "2026-10-28T08:48:42.902767+00:00",
+  "id": "course-write-slice-scratch-p3-v1-teacher-e52924e6d4a2",
+  "raw_response_sha256": "f1961d71858459377801d577c6702b17acc65c39fe2fd2c69de5f88b10087406",
+  "requested_model": "deepseek-flash",
+  "status": "CANDIDATE_NOT_YET_QUALIFIED",
+  "system_fingerprint": "bc19ba97cbe016479903222bb1578db6",
+  "usage": {
+    "completion_tokens": 563,
+    "completion_tokens_details": null,
+    "prompt_cache_hit_tokens": 3456,
+    "prompt_cache_miss_tokens": 1373,
+    "prompt_tokens": 4829,
+    "prompt_tokens_details": {
+      "audio_tokens": null,
+      "cached_tokens": 3456
+    },
+    "total_tokens": 5392
+  }
+}

@@ -1,0 +1,166 @@
+{
+  "schema_version": "sir-task/1",
+  "id": "auth-token-desk-scratch-p2-v1",
+  "revision": "1",
+  "family": "auth.token-desk",
+  "split": "train",
+  "sir_version": "0.3",
+  "base_source": null,
+  "ddl_source": "sir-toolchain-application/src/test/resources/conformance/mysql/token-desk-ddl.sql",
+  "reference_source": "sir-toolchain-application/src/test/resources/valid/token-desk.sir",
+  "requirement": "- GetCredential：按 UUID id 返回 id、owner、expiresAt。\n\n- 不存在时返回 404 CredentialNotFound。\n\n- 凭据主键：按标准 UUID 文本保存。\n\n- Refresh：接收 token，仅轮换未使用且未过期的凭据。\n\n- 原子地标记旧记录已使用并保存恰好一条新记录，新记录 owner 相同、used=false、期限为当前起 7 天、主键为不同 UUID。\n\n- 返回 id、owner、expiresAt。\n\n- Refresh 的失败：重放、未知 token 返回 409 Invalid，过期返回 400 Expired。\n\n- 失败不新增记录。\n\n- Touch：接收 token，仅当 owner 为 alice 时将 used 设为 true，返回 200 及凭据字段。\n\n- Touch 的匹配规则：used 原值已为 true 仍须成功。\n\n- owner 不符或 token 不存在时返回 409 Invalid，且不改行。\n\n- FindAccount：按 name 查询账号，唯一命中返回 200 及 id、name，未命中返回 404 AccountNotFound。\n\n- FindAccount 的多行错误：数据库脏数据造成同名多行时必须返回 500，不得任选一行。\n\n- Register：接收 name、password，创建并保存账号。\n\n- 成功返回 id、name，不包含口令或摘要。\n\n- 口令存储：必须使用带独立盐的 pbkdf2-sha256$ 格式摘要，禁止保存明文。\n\n- Login：接收 name、password，正确口令返回 200 及账号 id、name。\n\n- Login 失败一致性：错误口令与账号不存在，均返回完全相同的 401 BadLogin。\n\n- 旧口令文本：数据库中的非摘要格式旧文本，即使等于输入，也不得用于登录成功。\n\n返回完整的 sir 0.3 文档，不要 Java、SQL 或解释。",
+  "contract": {
+    "namespace": "com.example.tokendesk",
+    "capabilities": [
+      "GetCredential",
+      "Refresh",
+      "Touch",
+      "Register",
+      "Login",
+      "FindAccount"
+    ],
+    "entities": [
+      "Credential",
+      "Account"
+    ],
+    "credential_get_request": [
+      "id"
+    ],
+    "credential_write_request": [
+      "token"
+    ],
+    "credential_response": [
+      "id",
+      "owner",
+      "expiresAt"
+    ],
+    "find_account_request": [
+      "name"
+    ],
+    "account_credentials": [
+      "name",
+      "password"
+    ],
+    "account_response": [
+      "id",
+      "name"
+    ],
+    "readiness": "GET /api/get-credential?id=11111111-1111-4111-8111-111111111111",
+    "refresh_days": 7,
+    "interfaces": {
+      "GetCredential": {
+        "route": "GET /api/get-credential",
+        "request_fields": [
+          "id"
+        ],
+        "response_fields": [
+          "id",
+          "owner",
+          "expiresAt"
+        ]
+      },
+      "Refresh": {
+        "route": "POST /api/refresh",
+        "request_fields": [
+          "token"
+        ],
+        "response_fields": [
+          "id",
+          "owner",
+          "expiresAt"
+        ]
+      },
+      "Touch": {
+        "route": "POST /api/touch",
+        "request_fields": [
+          "token"
+        ],
+        "response_fields": [
+          "id",
+          "owner",
+          "expiresAt"
+        ]
+      },
+      "Register": {
+        "route": "POST /api/register",
+        "request_fields": [
+          "name",
+          "password"
+        ],
+        "response_fields": [
+          "id",
+          "name"
+        ]
+      },
+      "Login": {
+        "route": "POST /api/login",
+        "request_fields": [
+          "name",
+          "password"
+        ],
+        "response_fields": [
+          "id",
+          "name"
+        ]
+      },
+      "FindAccount": {
+        "route": "GET /api/find-account",
+        "request_fields": [
+          "name"
+        ],
+        "response_fields": [
+          "id",
+          "name"
+        ]
+      }
+    },
+    "enums": {},
+    "declared_errors": {
+      "Expired": 400,
+      "Invalid": 409,
+      "AccountNotFound": 404,
+      "CredentialNotFound": 404,
+      "BadLogin": 401
+    }
+  },
+  "oracle": {
+    "id": "token-desk-http-mysql-v1",
+    "files": [
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/AdvisoryLockKey.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BusinessEndpointReadiness.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BusinessSliceHarness.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/ChildEnvironmentBuilder.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/ConformanceFixtures.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/ConformanceJvmLimits.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/DiskTree.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceDirectory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceOwnershipInventory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceRootProof.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceSecretScanner.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/HttpAssertionClient.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MavenProjectRunner.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MysqlObserver.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MysqlRuntimeJdbcUrl.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MysqlRuntimeTrace.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/OwnedPathEntry.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/OwnedPathInventory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/OwnedRunDirectory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SchemaName.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SchemaSqlRenderer.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SecretCatalog.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SlmCandidateSupport.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SpringApplicationProcess.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/StreamingSecretRedactor.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/StrongFileIdentity.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/TokenDeskBusinessConformanceIT.java",
+      "sir-toolchain-application/src/test/resources/conformance/mysql/token-desk-ddl.sql",
+      "sir-toolchain-application/src/test/resources/conformance/mysql/token-desk-seed.sql",
+      "sir-toolchain-application/src/test/resources/valid/token-desk.sir"
+    ]
+  },
+  "reference_evidence": {
+    "kind": "existing-reference-only-not-candidate-qualification",
+    "commit": "0c4fb4a4c30b14658f874d3cc21f3aabe0c27457",
+    "run_url": "https://github.com/HoloNova/Software-IR/actions/runs/40330013391"
+  }
+}

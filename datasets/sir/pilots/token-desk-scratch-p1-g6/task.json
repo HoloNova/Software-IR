@@ -1,0 +1,166 @@
+{
+  "base_source": null,
+  "contract": {
+    "account_credentials": [
+      "name",
+      "password"
+    ],
+    "account_response": [
+      "id",
+      "name"
+    ],
+    "capabilities": [
+      "GetCredential",
+      "Refresh",
+      "Touch",
+      "Register",
+      "Login",
+      "FindAccount"
+    ],
+    "credential_get_request": [
+      "id"
+    ],
+    "credential_response": [
+      "id",
+      "owner",
+      "expiresAt"
+    ],
+    "credential_write_request": [
+      "token"
+    ],
+    "declared_errors": {
+      "AccountNotFound": 404,
+      "BadLogin": 401,
+      "CredentialNotFound": 404,
+      "Expired": 400,
+      "Invalid": 409
+    },
+    "entities": [
+      "Credential",
+      "Account"
+    ],
+    "enums": {},
+    "find_account_request": [
+      "name"
+    ],
+    "interfaces": {
+      "FindAccount": {
+        "request_fields": [
+          "name"
+        ],
+        "response_fields": [
+          "id",
+          "name"
+        ],
+        "route": "GET /api/find-account"
+      },
+      "GetCredential": {
+        "request_fields": [
+          "id"
+        ],
+        "response_fields": [
+          "id",
+          "owner",
+          "expiresAt"
+        ],
+        "route": "GET /api/get-credential"
+      },
+      "Login": {
+        "request_fields": [
+          "name",
+          "password"
+        ],
+        "response_fields": [
+          "id",
+          "name"
+        ],
+        "route": "POST /api/login"
+      },
+      "Refresh": {
+        "request_fields": [
+          "token"
+        ],
+        "response_fields": [
+          "id",
+          "owner",
+          "expiresAt"
+        ],
+        "route": "POST /api/refresh"
+      },
+      "Register": {
+        "request_fields": [
+          "name",
+          "password"
+        ],
+        "response_fields": [
+          "id",
+          "name"
+        ],
+        "route": "POST /api/register"
+      },
+      "Touch": {
+        "request_fields": [
+          "token"
+        ],
+        "response_fields": [
+          "id",
+          "owner",
+          "expiresAt"
+        ],
+        "route": "POST /api/touch"
+      }
+    },
+    "namespace": "com.example.tokendesk",
+    "readiness": "GET /api/get-credential?id=11111111-1111-4111-8111-111111111111",
+    "refresh_days": 7
+  },
+  "ddl_source": "sir-toolchain-application/src/test/resources/conformance/mysql/token-desk-ddl.sql",
+  "family": "auth.token-desk",
+  "id": "auth-token-desk-scratch-p1-v1",
+  "oracle": {
+    "files": [
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/AdvisoryLockKey.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BusinessEndpointReadiness.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BusinessSliceHarness.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/ChildEnvironmentBuilder.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/ConformanceFixtures.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/ConformanceJvmLimits.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/DiskTree.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceDirectory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceOwnershipInventory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceRootProof.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceSecretScanner.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/HttpAssertionClient.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MavenProjectRunner.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MysqlObserver.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MysqlRuntimeJdbcUrl.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MysqlRuntimeTrace.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/OwnedPathEntry.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/OwnedPathInventory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/OwnedRunDirectory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SchemaName.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SchemaSqlRenderer.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SecretCatalog.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SlmCandidateSupport.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SpringApplicationProcess.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/StreamingSecretRedactor.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/StrongFileIdentity.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/TokenDeskBusinessConformanceIT.java",
+      "sir-toolchain-application/src/test/resources/conformance/mysql/token-desk-ddl.sql",
+      "sir-toolchain-application/src/test/resources/conformance/mysql/token-desk-seed.sql",
+      "sir-toolchain-application/src/test/resources/valid/token-desk.sir"
+    ],
+    "id": "token-desk-http-mysql-v1"
+  },
+  "reference_evidence": {
+    "commit": "0c4fb4a4c30b14658f874d3cc21f3aabe0c27457",
+    "kind": "existing-reference-only-not-candidate-qualification",
+    "run_url": "https://github.com/HoloNova/Software-IR/actions/runs/40330013391"
+  },
+  "reference_source": "sir-toolchain-application/src/test/resources/valid/token-desk.sir",
+  "requirement": "GetCredential 按 UUID id 查，返回 id、owner、expiresAt。不存在就返回 404 CredentialNotFound。\n\n凭据主键要存成标准 UUID 文本。\n\nRefresh 传 token，只有没用过也没过期的凭据能换。旧记录标成已使用，同时保存恰好一条新记录，必须原子完成。新记录 owner 相同、used=false，从现在起 7 天到期，主键是不同的 UUID。返回 id、owner、expiresAt。\n\nRefresh 重放或者 token 未知，返回 409 Invalid。过期返回 400 Expired。失败别新增记录。\n\nTouch 传 token，只能在 owner 是 alice 时把 used 设成 true，返回 200 和凭据字段。\n\nTouch 符合 owner 条件时，used 原来就是 true 也得成功。owner 不对或者 token 不存在，返回 409 Invalid，别改那一行。\n\nFindAccount 按 name 查账号。只找到一条就返回 200 和 id、name；没找到返回 404 AccountNotFound。\n\n库里脏数据让同名账号有多行时，必须返回 500，不能随便挑一条。\n\nRegister 传 name、password，创建并保存账号。成功返回 id、name，别带口令或摘要。\n\n数据库别存明文口令，要存带独立盐的 pbkdf2-sha256$ 格式摘要。\n\nLogin 传 name、password。口令对了返回 200 和账号 id、name。\n\n口令错了和账号不存在，必须返回完全相同的 401 BadLogin。\n\n库里那些不是摘要格式的旧文本，就算和输入一样也不能登录。\n\n返回完整的 sir 0.3 文档，不要 Java、SQL 或解释。",
+  "revision": "1",
+  "schema_version": "sir-task/1",
+  "sir_version": "0.3",
+  "split": "train"
+}

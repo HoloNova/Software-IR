@@ -1,0 +1,161 @@
+{
+  "schema_version": "sir-task/1",
+  "id": "course-write-slice-scratch-p3-v1",
+  "revision": "1",
+  "family": "course.write-slice",
+  "split": "train",
+  "sir_version": "0.3",
+  "base_source": null,
+  "ddl_source": "sir-toolchain-application/src/test/resources/conformance/mysql/course-admin-ddl.sql",
+  "reference_source": "sir-toolchain-application/src/test/resources/valid/course-admin.sir",
+  "requirement": "课程维护者要创建和查看课程，也要在多人同时修改时保住已经保存的新内容。\n\n维护者用 code、name、可空的 description、capacity 调用 CreateCourse，创建后得到 201 和 id、code、name、description、capacity、version，数据库保存的 version 初始为 0。\n\n若创建课程时 name 只有空白，返回 400，错误指出 path=name，数据库不能新增行。\n\n维护者查看课程时，GetCourse 根据 id 返回 200 和全部课程字段；若 id 未知，则返回 404 且 code=CourseNotFound。\n\n维护者通过 PATCH /api/update-course 调用 UpdateCourse，提交 id、expectedVersion、changes，其中 changes 只能包含 name、description、capacity。\n\n维护者没有提交的字段保持原值，只有明确将 description 传为 null 才清空它，code 则不能修改。\n\n修改成功后，维护者拿到合并后的完整课程字段，version 必须从数据库当前值加一。\n\n请求中的 expectedVersion 要和该记录的实际版本比较，维护者持有的版本若已过旧，则返回 409 StaleVersion。\n\n当两个请求带着相同版本竞争修改时，恰好一个得到 200，另一个得到 409，数据库只能更新一次，其他行不能改变。\n\n维护者的请求只要被拒绝，就不能写数据库，也不能使版本前进。\n\n维护者提交空 changes 时，UpdateCourse 返回 400 EmptyChange。\n\n如果要修改的 id 不存在，返回 404 CourseNotFound。\n\n请求漏掉 id 或 expectedVersion，或者在外层或 changes 中带入未知字段时，维护者会得到 400，错误中必须指出缺失或未知字段的路径。\n\n维护者把 name 填成纯空白时，返回 400 INVALID_REQUEST，fields 中必须包含 path=changes.name、code=notBlank。\n\n返回完整的 sir 0.3 文档，不要 Java、SQL 或解释。",
+  "contract": {
+    "namespace": "com.example.courseadmin",
+    "capabilities": [
+      "GetCourse",
+      "CreateCourse",
+      "UpdateCourse"
+    ],
+    "entities": [
+      "Course"
+    ],
+    "create_request": [
+      "code",
+      "name",
+      "description",
+      "capacity"
+    ],
+    "get_request": [
+      "id"
+    ],
+    "patch_request": {
+      "id": "integer",
+      "expectedVersion": "integer",
+      "changes": [
+        "name",
+        "description",
+        "capacity"
+      ]
+    },
+    "course_response": [
+      "id",
+      "code",
+      "name",
+      "description",
+      "capacity",
+      "version"
+    ],
+    "error_response": [
+      "code",
+      "message",
+      "fields"
+    ],
+    "field_error": [
+      "path",
+      "code",
+      "message"
+    ],
+    "readiness": "GET /api/get-course?id=1",
+    "initial_version": 0,
+    "interfaces": {
+      "GetCourse": {
+        "route": "GET /api/get-course",
+        "request_fields": [
+          "id"
+        ],
+        "response_fields": [
+          "id",
+          "code",
+          "name",
+          "description",
+          "capacity",
+          "version"
+        ]
+      },
+      "CreateCourse": {
+        "route": "POST /api/create-course",
+        "request_fields": [
+          "code",
+          "name",
+          "description",
+          "capacity"
+        ],
+        "response_fields": [
+          "id",
+          "code",
+          "name",
+          "description",
+          "capacity",
+          "version"
+        ]
+      },
+      "UpdateCourse": {
+        "route": "PATCH /api/update-course",
+        "request_fields": [
+          "id",
+          "expectedVersion",
+          "changes"
+        ],
+        "response_fields": [
+          "id",
+          "code",
+          "name",
+          "description",
+          "capacity",
+          "version"
+        ],
+        "change_fields": [
+          "name",
+          "description",
+          "capacity"
+        ]
+      }
+    },
+    "enums": {},
+    "declared_errors": {
+      "CourseNotFound": 404,
+      "EmptyChange": 400,
+      "StaleVersion": 409
+    }
+  },
+  "oracle": {
+    "id": "write-slice-http-mysql-v1",
+    "files": [
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/AdvisoryLockKey.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BusinessEndpointReadiness.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BusinessSliceHarness.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/ChildEnvironmentBuilder.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/ConformanceFixtures.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/ConformanceJvmLimits.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/DiskTree.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceDirectory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceOwnershipInventory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceRootProof.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceSecretScanner.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/HttpAssertionClient.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MavenProjectRunner.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MysqlObserver.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MysqlRuntimeJdbcUrl.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MysqlRuntimeTrace.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/OwnedPathEntry.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/OwnedPathInventory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/OwnedRunDirectory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SchemaName.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SchemaSqlRenderer.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SecretCatalog.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SlmCandidateSupport.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SpringApplicationProcess.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/StreamingSecretRedactor.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/StrongFileIdentity.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/WriteSliceBusinessConformanceIT.java",
+      "sir-toolchain-application/src/test/resources/conformance/mysql/course-admin-ddl.sql",
+      "sir-toolchain-application/src/test/resources/conformance/mysql/course-admin-seed.sql",
+      "sir-toolchain-application/src/test/resources/valid/course-admin.sir"
+    ]
+  },
+  "reference_evidence": {
+    "kind": "existing-reference-only-not-candidate-qualification",
+    "commit": "0c4fb4a4c30b14658f874d3cc21f3aabe0c27457",
+    "run_url": "https://github.com/HoloNova/Software-IR/actions/runs/40330013391"
+  }
+}

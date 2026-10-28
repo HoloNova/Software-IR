@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "sir 0.3\n\nsoftware CourseCatalog {\n  metadata {\n    displayName \"Course Catalog\";\n    namespace \"com.example.coursecatalog\";\n  }\n\n  target {\n    language java 21;\n    framework spring_boot;\n    persistence mybatis_plus;\n    database mysql;\n    build maven;\n    interface rest;\n  }\n\n  sources { }\n  imports { }\n  declarations {\n    entity Course persistent {\n      identity id: Id generated auto;\n      field code: Code;\n      field name: Name;\n      field description: Optional<Remark>;\n      field capacity: Quantity;\n    }\n    view CourseSummary from Course {\n      field code: Text;\n      field name: Text;\n      field capacity: Count;\n    }\n    input SearchCoursesInput {\n      field keyword: Name where length(1, 50);\n      field page: PageNo;\n      field size: PageSize;\n    }\n    error InvalidPageParam;\n    capability SearchCourses {\n      input SearchCoursesInput;\n      output Page<CourseSummary>;\n      fails InvalidPageParam;\n      requires readonly;\n      expose query at \"/search-courses\";\n      workflow {\n        validate input.keyword is present else InvalidPageParam;\n        find Course where item.name containsLiteral input.keyword order by code ascending, id ascending Page input.page, input.size else InvalidPageParam as found;\n        return found;\n      }\n    }\n  }\n}",
+        "function_call": null,
+        "refusal": null,
+        "role": "assistant",
+        "tool_calls": null
+      }
+    }
+  ],
+  "created": 1793177294,
+  "id": "f8b12600-39bd-410c-8617-77dd3b6c4ba4",
+  "model": "deepseek-flash",
+  "object": "chat.completion",
+  "service_tier": null,
+  "system_fingerprint": "bc19ba97cbe016479903222bb1578db6",
+  "usage": {
+    "completion_tokens": 284,
+    "completion_tokens_details": null,
+    "prompt_cache_hit_tokens": 3456,
+    "prompt_cache_miss_tokens": 1458,
+    "prompt_tokens": 4914,
+    "prompt_tokens_details": {
+      "audio_tokens": null,
+      "cached_tokens": 3456
+    },
+    "total_tokens": 5198
+  }
+}

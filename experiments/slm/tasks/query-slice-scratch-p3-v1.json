@@ -1,0 +1,131 @@
+{
+  "schema_version": "sir-task/1",
+  "id": "course-query-slice-scratch-p3-v1",
+  "revision": "1",
+  "family": "course.query-slice",
+  "split": "train",
+  "sir_version": "0.3",
+  "base_source": null,
+  "ddl_source": "sir-toolchain-application/src/test/resources/conformance/mysql/course-catalog-ddl.sql",
+  "reference_source": "sir-toolchain-application/src/test/resources/valid/course-catalog.sir",
+  "requirement": "查课的人想用关键词找到名称中包含该文字的课程，并按页查看简要信息。\n\n用户通过 GET /api/search-courses 调用 SearchCourses，用 keyword 查找 name 字面包含该文字的课程；输入的百分号和下划线只代表这些字符本身，不是通配符。\n\n用户看到的结果先按 code 升序排列，同 code 的再按 id 升序排列；每条仅展示 code、name、capacity，不泄露 id、description，这次查询也不能改变数据库。\n\n翻页响应包含 total、page、size、records，total 始终表示所有匹配课程的数量。\n\n用户不传 page 时使用 1，不传 size 时使用 20；传入时 page 必须在 1～10000，size 必须在 1～100。\n\n用户传的分页参数越界时，得到不含 records 的 400 InvalidPageParam；若参数合法但已翻过末页，则得到 200、空 records 以及原来的总数。\n\n用户漏填 keyword 或只填空白时，搜索返回 400。\n\n返回完整的 sir 0.3 文档，不要 Java、SQL 或解释。",
+  "contract": {
+    "namespace": "com.example.coursecatalog",
+    "capabilities": [
+      "SearchCourses"
+    ],
+    "entities": [
+      "Course"
+    ],
+    "request": [
+      "keyword",
+      "page",
+      "size"
+    ],
+    "record_response": [
+      "code",
+      "name",
+      "capacity"
+    ],
+    "page_response": [
+      "total",
+      "page",
+      "size",
+      "records"
+    ],
+    "readiness": "GET /api/search-courses?keyword=Intro&page=1&size=2",
+    "page_default": 1,
+    "size_default": 20,
+    "page_min": 1,
+    "page_max": 10000,
+    "size_min": 1,
+    "size_max": 100,
+    "interfaces": {
+      "SearchCourses": {
+        "route": "GET /api/search-courses",
+        "request_fields": [
+          "keyword",
+          "page",
+          "size"
+        ],
+        "response_fields": [
+          "total",
+          "page",
+          "size",
+          "records"
+        ],
+        "record_fields": [
+          "code",
+          "name",
+          "capacity"
+        ]
+      }
+    },
+    "enums": {},
+    "declared_errors": {
+      "InvalidPageParam": 400
+    },
+    "paging": {
+      "request": [
+        "page",
+        "size"
+      ],
+      "response": [
+        "total",
+        "page",
+        "size",
+        "records"
+      ],
+      "page_default": 1,
+      "size_default": 20,
+      "page_range": [
+        1,
+        10000
+      ],
+      "size_range": [
+        1,
+        100
+      ]
+    }
+  },
+  "oracle": {
+    "id": "query-slice-http-mysql-v1",
+    "files": [
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/AdvisoryLockKey.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BusinessEndpointReadiness.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BusinessSliceHarness.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/ChildEnvironmentBuilder.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/ConformanceFixtures.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/ConformanceJvmLimits.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/DiskTree.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceDirectory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceOwnershipInventory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceRootProof.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceSecretScanner.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/HttpAssertionClient.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MavenProjectRunner.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MysqlObserver.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MysqlRuntimeJdbcUrl.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MysqlRuntimeTrace.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/OwnedPathEntry.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/OwnedPathInventory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/OwnedRunDirectory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/QuerySliceBusinessConformanceIT.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SchemaName.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SchemaSqlRenderer.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SecretCatalog.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SlmCandidateSupport.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SpringApplicationProcess.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/StreamingSecretRedactor.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/StrongFileIdentity.java",
+      "sir-toolchain-application/src/test/resources/conformance/mysql/course-catalog-ddl.sql",
+      "sir-toolchain-application/src/test/resources/conformance/mysql/course-catalog-seed.sql",
+      "sir-toolchain-application/src/test/resources/valid/course-catalog.sir"
+    ]
+  },
+  "reference_evidence": {
+    "kind": "existing-reference-only-not-candidate-qualification",
+    "commit": "0c4fb4a4c30b14658f874d3cc21f3aabe0c27457",
+    "run_url": "https://github.com/HoloNova/Software-IR/actions/runs/40330013391"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "actual_model": "deepseek-flash",
+  "created_at": "2026-10-28T08:48:30.496697+00:00",
+  "id": "auth-token-desk-change-p3-v1-teacher-3560e49d8021",
+  "raw_response_sha256": "d15f39b15425d2df1389bfb4411292841969fd4829e4b3f29a1f96c53239974d",
+  "requested_model": "deepseek-flash",
+  "status": "CANDIDATE_NOT_YET_QUALIFIED",
+  "system_fingerprint": "bc19ba97cbe016479903222bb1578db6",
+  "usage": {
+    "completion_tokens": 775,
+    "completion_tokens_details": null,
+    "prompt_cache_hit_tokens": 3456,
+    "prompt_cache_miss_tokens": 1868,
+    "prompt_tokens": 5324,
+    "prompt_tokens_details": {
+      "audio_tokens": null,
+      "cached_tokens": 3456
+    },
+    "total_tokens": 6099
+  }
+}

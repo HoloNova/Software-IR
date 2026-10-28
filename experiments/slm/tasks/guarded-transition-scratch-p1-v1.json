@@ -1,0 +1,108 @@
+{
+  "schema_version": "sir-task/1",
+  "id": "auth-guarded-transition-scratch-p1-v1",
+  "revision": "1",
+  "family": "auth.guarded-transition",
+  "split": "train",
+  "sir_version": "0.3",
+  "base_source": null,
+  "ddl_source": "sir-toolchain-application/src/test/resources/conformance/mysql/credential-rotation-ddl.sql",
+  "reference_source": "sir-toolchain-application/src/test/resources/valid/guarded-transition.sir",
+  "requirement": "GetCredential 按 id 查，返回 id、owner、used、expiresAt。没有就返回 404 CredentialNotFound。\n\nRefresh 传 id。\n\n没过期、没用过的凭据只能轮换一次。成功创建一条 owner 相同、used=false 的新凭据，返回 id、owner、used、expiresAt。新期限从现在起算 7 天，用 ISO UTC 时刻。\n\n旧凭据标成已使用、新凭据保存，这两件事必须原子完成。\n\n8 个请求同时换同一条凭据，正好一个成功，其他全是 409 Invalid，总共只新增一行。\n\n失败或重放都不能写库，也不能动其他凭据。\n\n用过的返回 409 Invalid。没用过但过期的返回 400 Expired。不存在的返回 404 CredentialNotFound。\n\n返回完整的 sir 0.3 文档，不要 Java、SQL 或解释。",
+  "contract": {
+    "namespace": "com.example.rotation",
+    "capabilities": [
+      "GetCredential",
+      "Refresh"
+    ],
+    "entities": [
+      "Credential"
+    ],
+    "get_request": [
+      "id"
+    ],
+    "refresh_request": [
+      "id"
+    ],
+    "credential_response": [
+      "id",
+      "owner",
+      "used",
+      "expiresAt"
+    ],
+    "readiness": "GET /api/get-credential?id=1",
+    "refresh_days": 7,
+    "interfaces": {
+      "GetCredential": {
+        "route": "GET /api/get-credential",
+        "request_fields": [
+          "id"
+        ],
+        "response_fields": [
+          "id",
+          "owner",
+          "used",
+          "expiresAt"
+        ]
+      },
+      "Refresh": {
+        "route": "POST /api/refresh",
+        "request_fields": [
+          "id"
+        ],
+        "response_fields": [
+          "id",
+          "owner",
+          "used",
+          "expiresAt"
+        ]
+      }
+    },
+    "enums": {},
+    "declared_errors": {
+      "CredentialNotFound": 404,
+      "Expired": 400,
+      "Invalid": 409
+    }
+  },
+  "oracle": {
+    "id": "guarded-transition-http-mysql-v1",
+    "files": [
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/AdvisoryLockKey.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BusinessEndpointReadiness.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BusinessSliceHarness.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/ChildEnvironmentBuilder.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/ConformanceFixtures.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/ConformanceJvmLimits.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/DiskTree.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceDirectory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceOwnershipInventory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceRootProof.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceSecretScanner.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/GuardedTransitionBusinessConformanceIT.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/HttpAssertionClient.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MavenProjectRunner.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MysqlObserver.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MysqlRuntimeJdbcUrl.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MysqlRuntimeTrace.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/OwnedPathEntry.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/OwnedPathInventory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/OwnedRunDirectory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SchemaName.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SchemaSqlRenderer.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SecretCatalog.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SlmCandidateSupport.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SpringApplicationProcess.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/StreamingSecretRedactor.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/StrongFileIdentity.java",
+      "sir-toolchain-application/src/test/resources/conformance/mysql/credential-rotation-ddl.sql",
+      "sir-toolchain-application/src/test/resources/conformance/mysql/credential-rotation-seed.sql",
+      "sir-toolchain-application/src/test/resources/valid/guarded-transition.sir"
+    ]
+  },
+  "reference_evidence": {
+    "kind": "existing-reference-only-not-candidate-qualification",
+    "commit": "0c4fb4a4c30b14658f874d3cc21f3aabe0c27457",
+    "run_url": "https://github.com/HoloNova/Software-IR/actions/runs/40330013391"
+  }
+}
