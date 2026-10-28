@@ -76,6 +76,10 @@ python -m experiments.slm.data repair --bundle datasets/sir/runs/dual-token-rech
 
 测试：`PYTHONPATH=$PWD:$PWD/experiments/slm/tests python -m unittest experiments.slm.tests.test_pipeline experiments.slm.tests.test_corpus experiments.slm.tests.test_dataset_io`（在仓库根目录运行；`test_dataset_io` 从 tests 目录导入 `test_corpus`）。
 
+## 通用静态修复
+
+`prompts/repair-general-v1.md` 是不限题型的静态反馈前缀：说明这是同一道题的修复、按编译器诊断逐条改、需求与接口不变，不提示具体改法；诊断原文与 DDL 由 `repair` 自动附上。用法：`repair --bundle … --sample-id … --feedback experiments/slm/prompts/repair-general-v1.md`。每个失败候选只修一轮。
+
 ## 运行反馈修复
 
 静态已通过、但业务门失败的候选，用 `repair --runtime-evidence <slm-runtime.json>` 修复（默认反馈 `prompts/repair-runtime-v1.md`）。证据须与该候选的四个绑定哈希和生成摘要一致、附件哈希一致，且四门为 PASSED/PASSED/PASSED/FAILED；只把判卷报告里失败的检查和 HTTP 记录发给教师，通过的检查与日志不发，不提示改法。新候选记 `generation_mode: runtime-feedback-repair` 和所用证据的哈希。
