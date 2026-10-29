@@ -376,3 +376,31 @@ v4 这一轮：13 份中静态通过 7 份，四门通过 6 份。样本少、�
 **错误推进而非循环修到通过。**前三份选课改写仍使用 `where min(1) and max(7)`，CRUD p1 的分页仍漏 `else`，四份新答案的源码哈希与父候选完全相同；保留新请求和响应，但不送业务门。选课改写 p3 修复保留字后暴露 `UserView` 重复定义；选课从零写仍有错误的查询表达式、可选值／身份类型、`any` 缺关联条件、未声明字段／错误及 `fails` 顺序问题。乘法从零写暴露输出类型、错误声明、锁条件和更新守卫问题；补采的乘法改写有 `each` 未声明失败与 `total` 绑定类型错误。两份乘法答案各自保留一条 SIR-WARN-001，判失败依据是 ERROR，不是告警。源码原样交回的事实不推断为服务端缓存故障，报错改善也不在本轮擅自实施。
 
 **业务门边界。**本次仅有上述 3 份 CRUD 候选具备送 `CrudAccessBusinessConformanceIT` 的静态前提，均无诊断。提交批次后按样本分别派发，运行证据由负责人通知结果后再归档；本报告当前 BUILD／START／BUSINESS 均为 **NOT_RUN**，不能把静态通过记成合格。合格教师答案仍为 **45 条**，学生 v2 保持 44 条；本轮不新增训练输出、不启动训练，dev 答案不进入 train。业务门完成并核对原始附件后，再导出合格答案并统一生成下一版学生数据。
+
+<a id="slm-prompt-v7-qualified"></a>
+
+## 第十六阶段：v7 业务门归档与学生格式 v3（2026-10-29）
+
+负责人要求继续后，一次性查看第十五阶段派发的三个指定业务门，均已 completed/success；没有定时轮询或重复派发。受测源码统一为 **`e1a51bb775aaeab52d30b9dd3d1758f74e4c0a7d`**。随后用原归档器下载两类 artifact，核对 ZIP 摘要与 GitHub 记录、候选／task／oracle／工具链／生成摘要绑定、每个运行附件哈希和无 CI 口令，再用原 `export` 导出，不能只按工作流绿色计合格。
+
+| 批次 | 候选短 ID | GitHub 业务门 | 四门 | 业务检查 | 导出 |
+| --- | --- | --- | --- | --- | --- |
+| crud-access-scratch-g7 | `4a6b10922574` | [#62 / 40801380578](https://github.com/HoloNova/Software-IR/actions/runs/40801380578) | 全 PASSED | 48/0 | 1 条 |
+| crud-access-scratch-p2-g7 | `976fd70bd19f` | [#63 / 40801384180](https://github.com/HoloNova/Software-IR/actions/runs/40801384180) | 全 PASSED | 48/0 | 1 条 |
+| crud-access-scratch-p3-g7 | `3a97ea60acea` | [#64 / 40801387816](https://github.com/HoloNova/Software-IR/actions/runs/40801387816) | 全 PASSED | 48/0 | 1 条 |
+
+三个批次的 `runtime/<sample>/` 保存 `slm-runtime.json`、原始业务报告、4 份 Maven/Spring 日志、JUnit 报告与 `gate-run.json`，`train-teacher.jsonl` 各 1 条。汇总在 `datasets/sir/research/2026-10-29/v7-business-gate-summary.json`，每个 `gate-run.json` 记录运行 URL、受测 SHA、artifact ID 和 ZIP 哈希。本机生成的 gate 元数据统一为 LF；原始 CI 附件不改字节。日志受 `*.log` 忽略规则影响，必须显式纳入 Git 并按实际 Git blob 核对；原始日志的行尾空白作为证据格式例外保留，不清洗。**本轮新增 3 条，累计合格教师答案 48 条（鉴权 26、课程 22）**；v7 此轮未使选课从零写或 dev 乘法题合格，不追加修复或放宽判卷。
+
+**学生 v3 的跨工具链包装。**旧 44 条绑定 `51d9566d…`，新 4 条（第十三阶段选课改写 1 条及本阶段 CRUD 3 条）绑定 `7275f533…`，历史 oracle 也有不同版本。`student` 会经 `read_bundle` 校验当前工具链／oracle，不能直接在新源码下混跑，更不能改 manifest 或跳过校验。因此保留已封存 `train-student-v2.jsonl` 的 44 条原始字节，仅在 LF 快照中用原 `student --bundle` 包装上述 4 个新合格批次为增量，再拼成 `train-student-v3.jsonl`；新 index 的 `assembly` 记录基座哈希、原字节保留数、增量批次及增量哈希。v2 及其 index/token 报告不改，旧成功不冒充新候选或新工具链的证据。
+
+合成后逐条核对 48 条的 teacher 导出文件及索引哈希、冻结 task/base/contract 输入、原候选源码、完整题目、短 system、运行证据绑定和四门结果；与所有非空教师导出的 ID 集合完全一致，按同题／源码去重且全部 split=train，无 dev/test 或修复过程混入。v3 的 `corpus_sha256=a123b56fdb1bbe92a65a30a5c37e12ee7d1cf132cb5bd9cf8b29486c67245578`。这只是已验收答案的训练格式，不是学生模型训练或评测成绩。
+
+使用 `profile_tokens.measure`、冻结的三个 Hugging Face revision 和原缓存分词器在 CPU 上实测，关闭截断／padding；核对模型元信息、chat 配置与既有分词器摘要，没有下载或执行模型权重：
+
+| 分词器 | 冻结 revision | 48 条平均长度（四舍五入） | 最长完整训练序列 |
+| --- | --- | ---: | ---: |
+| deepseek-coder-1.3b-instruct | `e063262dac8366fc1f28a4da0ff3c50ea66259ca` | 2,733 | **9,311** |
+| Qwen2.5-Coder-3B-Instruct | `488639f1ff808d1d3d0ba301aef8c11461451ec5` | 2,141 | **7,102** |
+| Qwen3-4B-Instruct-2507 | `cdbee75f17c01a7cc42f958dc650907174af0554` | 2,141 | **7,102** |
+
+最长项均为选课改写 p1 `e61b238d030f`，不能沿用 v2 的 3,874／3,042 上限；当前实测仍小于 16K，完整逐条结果在 `train-student-v3.tokens.json`。本次归档／包装／计数 API 调用 **0 次**，没有 Maven 构建、全量测试、本机业务 IT、应用／数据库进程或训练。第十五阶段费用统计不变：已知累计 325,948 tokens，首轮连接错误用量仍未知。

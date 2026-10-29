@@ -1,0 +1,30 @@
+{
+  "artifacts": {
+    "slm-gate-auth-crud-access-scratch-p3-v1-teacher-3a97ea60acea": {
+      "id": 12866461379,
+      "zip_sha256": "ccdf82ed33b804a7f1b07a2f79492305ab55d6eb9cce288f128f9ef9e8bd0ecd"
+    },
+    "slm-gate-surefire-auth-crud-access-scratch-p3-v1-teacher-3a97ea60acea": {
+      "id": 12865808130,
+      "zip_sha256": "25bba81efc321417bd9c6841b50ddca2c379f0cbdee3ec3bed306f1983a24d98"
+    }
+  },
+  "checks_failed": 0,
+  "checks_passed": 48,
+  "gates": {
+    "build": "PASSED",
+    "business": "PASSED",
+    "start": "PASSED",
+    "static": "PASSED"
+  },
+  "head_sha": "e1a51bb775aaeab52d30b9dd3d1758f74e4c0a7d",
+  "inputs": {
+    "bundle": "datasets/sir/pilots/crud-access-scratch-p3-g7",
+    "it": "CrudAccessBusinessConformanceIT",
+    "sample_id": "auth-crud-access-scratch-p3-v1-teacher-3a97ea60acea"
+  },
+  "job_conclusion": "success",
+  "run_id": 40801387816,
+  "run_url": "https://github.com/HoloNova/Software-IR/actions/runs/40801387816",
+  "workflow": ".github/workflows/slm-business-gate.yml"
+}

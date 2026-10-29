@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: io.kcg.sir.application.conformance.CrudAccessBusinessConformanceIT
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 11.74 s -- in io.kcg.sir.application.conformance.CrudAccessBusinessConformanceIT

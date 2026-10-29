@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report.xsd" version="3.0.2" name="io.kcg.sir.application.conformance.CrudAccessBusinessConformanceIT" time="11.745" tests="1" errors="0" skipped="0" failures="0" flakes="0">
+  <properties>
+    <property name="java.specification.version" value="21"/>
+    <property name="sun.jnu.encoding" value="UTF-8"/>
+    <property name="java.class.path" value="/home/runner/work/Software-IR/Software-IR/sir-toolchain-application/target/test-classes:/home/runner/work/Software-IR/Software-IR/sir-toolchain-application/target/classes:/home/runner/work/Software-IR/Software-IR/sir-parser/target/classes:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/antlr/antlr4-runtime/4.13.2/antlr4-runtime-4.13.2.jar:/home/runner/work/Software-IR/Software-IR/sir-semantic/target/classes:/home/runner/work/Software-IR/Software-IR/sir-lowering-api/target/classes:/home/runner/work/Software-IR/Software-IR/sir-lowering-spring-boot/target/classes:/home/runner/work/Software-IR/Software-IR/sir-generator-spring-boot/target/classes:/home/runner/work/Software-IR/Software-IR/sir-project-graph/target/classes:/home/runner/work/Software-IR/Software-IR/sir-change/target/classes:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/jupiter/junit-jupiter/5.12.2/junit-jupiter-5.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/jupiter/junit-jupiter-api/5.12.2/junit-jupiter-api-5.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/platform/junit-platform-commons/1.12.2/junit-platform-commons-1.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/jupiter/junit-jupiter-params/5.12.2/junit-jupiter-params-5.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/jupiter/junit-jupiter-engine/5.12.2/junit-jupiter-engine-5.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/platform/junit-platform-engine/1.12.2/junit-platform-engine-1.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/fasterxml/jackson/core/jackson-databind/2.19.4/jackson-databind-2.19.4.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/fasterxml/jackson/core/jackson-annotations/2.19.4/jackson-annotations-2.19.4.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/fasterxml/jackson/core/jackson-core/2.19.4/jackson-core-2.19.4.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/boot/spring-boot/3.5.3/spring-boot-3.5.3.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-core/6.2.8/spring-core-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-jcl/6.2.8/spring-jcl-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-context/6.2.8/spring-context-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-aop/6.2.8/spring-aop-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-beans/6.2.8/spring-beans-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-expression/6.2.8/spring-expression-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/io/micrometer/micrometer-observation/1.14.8/micrometer-observation-1.14.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/io/micrometer/micrometer-commons/1.14.8/micrometer-commons-1.14.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/mysql/mysql-connector-j/9.3.0/mysql-connector-j-9.3.0.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/google/protobuf/protobuf-java/4.29.0/protobuf-java-4.29.0.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/net/java/dev/jna/jna-platform/5.17.0/jna-platform-5.17.0.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/net/java/dev/jna/jna/5.17.0/jna-5.17.0.jar:"/>
+    <property name="kcg.slm.repo-root" value="/home/runner/work/Software-IR/Software-IR"/>
+    <property name="java.vm.vendor" value="Eclipse Adoptium"/>
+    <property name="sun.arch.data.model" value="64"/>
+    <property name="kcg.crud-conformance.enabled" value="true"/>
+    <property name="java.vendor.url" value="https://adoptium.net/"/>
+    <property name="user.timezone" value="Etc/UTC"/>
+    <property name="kcg.conformance.evidence-parent" value="/home/runner/work/Software-IR/Software-IR/ci-evidence"/>
+    <property name="os.name" value="Linux"/>
+    <property name="java.vm.specification.version" value="21"/>
+    <property name="sun.java.launcher" value="SUN_STANDARD"/>
+    <property name="kcg.slm.bundle-root" value="/home/runner/work/Software-IR/Software-IR/datasets/sir/pilots/crud-access-scratch-g7"/>
+    <property name="sun.boot.library.path" value="/usr/lib/jvm/temurin-21-jdk-amd64/lib"/>
+    <property name="sun.java.command" value="/home/runner/work/Software-IR/Software-IR/sir-toolchain-application/target/surefire/surefirebooter-20261029013655658_3.jar /home/runner/work/Software-IR/Software-IR/sir-toolchain-application/target/surefire 2026-10-29T01-36-46_482-jvmRun1 surefire-20261029013655658_1tmp surefire_0-20261029013655658_2tmp"/>
+    <property name="jdk.debug" value="release"/>
+    <property name="test" value="CrudAccessBusinessConformanceIT"/>
+    <property name="surefire.test.class.path" value="/home/runner/work/Software-IR/Software-IR/sir-toolchain-application/target/test-classes:/home/runner/work/Software-IR/Software-IR/sir-toolchain-application/target/classes:/home/runner/work/Software-IR/Software-IR/sir-parser/target/classes:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/antlr/antlr4-runtime/4.13.2/antlr4-runtime-4.13.2.jar:/home/runner/work/Software-IR/Software-IR/sir-semantic/target/classes:/home/runner/work/Software-IR/Software-IR/sir-lowering-api/target/classes:/home/runner/work/Software-IR/Software-IR/sir-lowering-spring-boot/target/classes:/home/runner/work/Software-IR/Software-IR/sir-generator-spring-boot/target/classes:/home/runner/work/Software-IR/Software-IR/sir-project-graph/target/classes:/home/runner/work/Software-IR/Software-IR/sir-change/target/classes:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/jupiter/junit-jupiter/5.12.2/junit-jupiter-5.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/jupiter/junit-jupiter-api/5.12.2/junit-jupiter-api-5.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/platform/junit-platform-commons/1.12.2/junit-platform-commons-1.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/jupiter/junit-jupiter-params/5.12.2/junit-jupiter-params-5.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/jupiter/junit-jupiter-engine/5.12.2/junit-jupiter-engine-5.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/platform/junit-platform-engine/1.12.2/junit-platform-engine-1.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/fasterxml/jackson/core/jackson-databind/2.19.4/jackson-databind-2.19.4.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/fasterxml/jackson/core/jackson-annotations/2.19.4/jackson-annotations-2.19.4.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/fasterxml/jackson/core/jackson-core/2.19.4/jackson-core-2.19.4.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/boot/spring-boot/3.5.3/spring-boot-3.5.3.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-core/6.2.8/spring-core-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-jcl/6.2.8/spring-jcl-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-context/6.2.8/spring-context-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-aop/6.2.8/spring-aop-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-beans/6.2.8/spring-beans-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-expression/6.2.8/spring-expression-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/io/micrometer/micrometer-observation/1.14.8/micrometer-observation-1.14.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/io/micrometer/micrometer-commons/1.14.8/micrometer-commons-1.14.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/mysql/mysql-connector-j/9.3.0/mysql-connector-j-9.3.0.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/google/protobuf/protobuf-java/4.29.0/protobuf-java-4.29.0.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/net/java/dev/jna/jna-platform/5.17.0/jna-platform-5.17.0.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/net/java/dev/jna/jna/5.17.0/jna-5.17.0.jar:"/>
+    <property name="sun.cpu.endian" value="little"/>
+    <property name="user.home" value="/home/runner"/>
+    <property name="user.language" value="en"/>
+    <property name="kcg.conformance.maven-executable" value="/usr/bin/mvn"/>
+    <property name="java.specification.vendor" value="Oracle Corporation"/>
+    <property name="kcg.conformance.maven-repo" value="/home/runner/work/Software-IR/Software-IR/.m2-ci"/>
+    <property name="java.version.date" value="2026-10-20"/>
+    <property name="java.home" value="/usr/lib/jvm/temurin-21-jdk-amd64"/>
+    <property name="kcg.query-conformance.maven-offline" value="false"/>
+    <property name="file.separator" value="/"/>
+    <property name="basedir" value="/home/runner/work/Software-IR/Software-IR/sir-toolchain-application"/>
+    <property name="java.vm.compressedOopsMode" value="Zero based"/>
+    <property name="line.separator" value="&#10;"/>
+    <property name="java.vm.specification.vendor" value="Oracle Corporation"/>
+    <property name="java.specification.name" value="Java Platform API Specification"/>
+    <property name="kcg.slm.candidate-root" value="/home/runner/work/Software-IR/Software-IR/datasets/sir/pilots/crud-access-scratch-g7/samples/auth-crud-access-scratch-v1-teacher-4a6b10922574"/>
+    <property name="surefire.real.class.path" value="/home/runner/work/Software-IR/Software-IR/sir-toolchain-application/target/surefire/surefirebooter-20261029013655658_3.jar"/>
+    <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
+    <property name="java.runtime.version" value="21.0.13+9-LTS"/>
+    <property name="user.name" value="runner"/>
+    <property name="stdout.encoding" value="UTF-8"/>
+    <property name="path.separator" value=":"/>
+    <property name="os.version" value="7.0.0-1017-azure"/>
+    <property name="kcg.conformance.work-parent" value="/home/runner/work/Software-IR/Software-IR/ci-work"/>
+    <property name="java.runtime.name" value="OpenJDK Runtime Environment"/>
+    <property name="file.encoding" value="UTF-8"/>
+    <property name="surefire.failIfNoSpecifiedTests" value="false"/>
+    <property name="java.vm.name" value="OpenJDK 64-Bit Server VM"/>
+    <property name="java.vendor.version" value="Temurin-21.0.13+9"/>
+    <property name="localRepository" value="/home/runner/work/Software-IR/Software-IR/.m2-ci"/>
+    <property name="java.vendor.url.bug" value="https://github.com/adoptium/adoptium-support/issues"/>
+    <property name="java.io.tmpdir" value="/tmp"/>
+    <property name="java.version" value="21.0.13"/>
+    <property name="user.dir" value="/home/runner/work/Software-IR/Software-IR/sir-toolchain-application"/>
+    <property name="os.arch" value="amd64"/>
+    <property name="java.vm.specification.name" value="Java Virtual Machine Specification"/>
+    <property name="failIfNoTests" value="false"/>
+    <property name="native.encoding" value="UTF-8"/>
+    <property name="java.library.path" value="/usr/java/packages/lib:/usr/lib64:/lib64:/lib:/usr/lib"/>
+    <property name="java.vm.info" value="mixed mode, sharing"/>
+    <property name="stderr.encoding" value="UTF-8"/>
+    <property name="java.vendor" value="Eclipse Adoptium"/>
+    <property name="java.vm.version" value="21.0.13+9-LTS"/>
+    <property name="sun.io.unicode.encoding" value="UnicodeLittle"/>
+    <property name="maven.repo.local" value="/home/runner/work/Software-IR/Software-IR/.m2-ci"/>
+    <property name="java.class.version" value="65.0"/>
+  </properties>
+  <testcase name="crudAccessAgainstRealMysql" classname="io.kcg.sir.application.conformance.CrudAccessBusinessConformanceIT" time="11.725">
+    <system-out><![CDATA[=== G9 Crud roles, public reads, protected fields and versioned ownership business conformance ===
+verdict=PASSED
+runId=crud-access-1a1854d95d8-551
+schemaName=kcg_conf_run
+advisoryLock=held during the run
+schemaSource=TEST_FIXTURE_DDL
+productInitializeImplemented=false
+productUpdateImplemented=false
+sirResource=EXTERNAL_CANDIDATE:candidate.sir sha256=0bdea67aea968773418fcc587f9fe6dc69de4f152e5570e6e9fa416b4d1a8880
+fixtureDdl=/conformance/mysql/crud-access-ddl.sql sha256=0750e6e9044ed53b7f8ceb603e3191eb339ed1c672f7f710a45754be574dbff0
+fixtureSeed=/conformance/mysql/crud-access-seed.sql sha256=941951b0c06ec8a7c4755216cf081adfb99678d913dfa8826c60a9fbaca74732
+generatedFiles=58 combinedSha256=6cd34b8b0d9829f4c5ca204b82eb44fce80e558a59aa659e508337f1e587f4c0
+generatedProjectBuild=PASSED (exit 0)
+httpReadiness=READY (public Book route)
+mysqlRowsBefore=2 mysqlRowsAfter=2
+mavenOffline=false
+javaVersion=21.0.13
+osName=Linux osArch=amd64
+serverPort=18080
+slmMysqlVersion=8.4.13
+slmSampleId=auth-crud-access-scratch-v1-teacher-4a6b10922574
+slmSourceSha256=0bdea67aea968773418fcc587f9fe6dc69de4f152e5570e6e9fa416b4d1a8880
+slmGeneratedDigest=5be11981438bd4183869b4ebfae4aefd83e8af66dd19ff5ae2f9cd3331c03ca3
+
+checksPassed=48 checksFailed=0
+PASS the SIR slice compiles without errors (warnings remain visible) (diagnostics=[])
+PASS the compiler emitted a generated project (generatedFileCount=58)
+PASS candidate runtime compilation matches full static generation (sourceSha256=0bdea67aea968773418fcc587f9fe6dc69de4f152e5570e6e9fa416b4d1a8880 generatedDigest=5be11981438bd4183869b4ebfae4aefd83e8af66dd19ff5ae2f9cd3331c03ca3)
+PASS the generated project builds (mvn clean verify) (exitCode=0)
+PASS the build produced an executable jar (projectRoot=/home/runner/work/Software-IR/Software-IR/ci-work/crud-access-1a1854d95d8-551/generated-project)
+PASS the generated application serves the compiled business route (readinessUrl=http://127.0.0.1:18080/api/library/books/1)
+PASS anonymous book read (expected=200 actual=200)
+PASS anonymous create refused (expected=401 actual=401)
+PASS reader create refused (expected=403 actual=403)
+PASS reader update refused before load (expected=403 actual=403)
+PASS reader delete refused before load (expected=403 actual=403)
+PASS anonymous delete refused (expected=401 actual=401)
+PASS excluded field in create is refused (expected=400 actual=400)
+PASS rejected create wrote nothing ([1|seed book|5])
+PASS admin creates book (expected=201 actual=201)
+PASS excluded stock keeps its server default ([1|seed book|5, 2|published|5])
+PASS refused creates wrote nothing ([1|seed book|5, 2|published|5])
+PASS excluded field in update is refused (expected=400 actual=400)
+PASS rejected update wrote nothing ([1|seed book|5, 2|published|5])
+PASS admin updates without writing excluded stock (expected=200 actual=200)
+PASS update preserved stock ([1|seed book|5, 2|edited|5])
+PASS admin deletes (expected=200 actual=200)
+PASS only the seed book remains ([1|seed book|5])
+PASS public detail regardless of account (expected=200 actual=200)
+PASS public list (expected=200 actual=200)
+PASS public list keeps entity scope ({"total":1,"page":1,"size":20,"records":[{"id":1,"author":1,"body":"visible","state":"open","version":1}]})
+PASS public read still obeys scope (expected=404 actual=404)
+PASS public detail regardless of account (expected=200 actual=200)
+PASS public list (expected=200 actual=200)
+PASS public list keeps entity scope ({"total":1,"page":1,"size":20,"records":[{"id":1,"author":1,"body":"visible","state":"open","version":1}]})
+PASS public read still obeys scope (expected=404 actual=404)
+PASS public detail regardless of account (expected=200 actual=200)
+PASS public list (expected=200 actual=200)
+PASS public list keeps entity scope ({"total":1,"page":1,"size":20,"records":[{"id":1,"author":1,"body":"visible","state":"open","version":1}]})
+PASS public read still obeys scope (expected=404 actual=404)
+PASS anonymous patch refused (expected=401 actual=401)
+PASS wrong role refused (expected=403 actual=403)
+PASS correct role cannot bypass owner (expected=404 actual=404)
+PASS denied patches wrote nothing ([1|1|visible|open|1, 2|1|private|hidden|1])
+PASS owner patch with an excluded field is refused (expected=400 actual=400)
+PASS rejected patch wrote nothing ([1|1|visible|open|1, 2|1|private|hidden|1])
+PASS owner clean patch (expected=200 actual=200)
+PASS the stored state stays open and the version advances once ([1|1|edited|open|2, 2|1|private|hidden|1])
+PASS stale patch is a conflict (expected=409 actual=409)
+PASS stale patch did not overwrite ([1|1|edited|open|2, 2|1|private|hidden|1])
+PASS the generated application process exited (stopped=true)
+PASS the owned schema was dropped and its absence proved (schema=kcg_conf_run)
+PASS the advisory lock for the owned schema was released (released=true)
+
+anonymous book read: status=200 body={"id":1,"title":"seed book","stock":5}
+anonymous create refused: status=401 body=
+reader create refused: status=403 body={"code":"NotAdmin","message":"NotAdmin","fields":[]}
+reader update refused before load: status=403 body={"code":"NotAdmin","message":"NotAdmin","fields":[]}
+reader delete refused before load: status=403 body={"code":"NotAdmin","message":"NotAdmin","fields":[]}
+anonymous delete refused: status=401 body=
+excluded field in create is refused: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"stock","code":"INVALID_REQUEST","message":"must be a well-formed value"}]}
+admin creates book: status=201 body={"id":2,"title":"published","stock":5}
+excluded field in update is refused: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"stock","code":"INVALID_REQUEST","message":"must be a well-formed value"}]}
+admin updates without writing excluded stock: status=200 body={"id":2,"title":"edited","stock":5}
+admin deletes: status=200 body=
+public detail regardless of account: status=200 body={"id":1,"author":1,"body":"visible","state":"open","version":1}
+public list: status=200 body={"total":1,"page":1,"size":20,"records":[{"id":1,"author":1,"body":"visible","state":"open","version":1}]}
+public read still obeys scope: status=404 body={"code":"PostNotFound","message":"PostNotFound","fields":[]}
+public detail regardless of account: status=200 body={"id":1,"author":1,"body":"visible","state":"open","version":1}
+public list: status=200 body={"total":1,"page":1,"size":20,"records":[{"id":1,"author":1,"body":"visible","state":"open","version":1}]}
+public read still obeys scope: status=404 body={"code":"PostNotFound","message":"PostNotFound","fields":[]}
+public detail regardless of account: status=200 body={"id":1,"author":1,"body":"visible","state":"open","version":1}
+public list: status=200 body={"total":1,"page":1,"size":20,"records":[{"id":1,"author":1,"body":"visible","state":"open","version":1}]}
+public read still obeys scope: status=404 body={"code":"PostNotFound","message":"PostNotFound","fields":[]}
+anonymous patch refused: status=401 body=
+wrong role refused: status=403 body={"code":"NotAdmin","message":"NotAdmin","fields":[]}
+correct role cannot bypass owner: status=404 body={"code":"PostNotFound","message":"PostNotFound","fields":[]}
+owner patch with an excluded field is refused: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"changes.state","code":"INVALID_REQUEST","message":"must be a well-formed value"}]}
+owner clean patch: status=200 body={"id":1,"author":1,"body":"edited","state":"open","version":2}
+stale patch is a conflict: status=409 body={"code":"StalePost","message":"StalePost","fields":[]}
+
+]]></system-out>
+  </testcase>
+</testsuite>

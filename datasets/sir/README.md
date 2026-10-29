@@ -67,15 +67,17 @@
 
 负责人确认预算后，14 个 `pilots/*-g7/` 新批次完成 14 次初始请求：13 份答卷全部静态失败（10 PARSE、3 SEMANTIC），乘法改写 1 次 APIConnectionError 无响应、用量未知，未自动重试。14 份参考静态通过，原始请求／响应、候选、诊断及冻结来源均保留；汇总见 [`research/2026-10-29/v7-initial-sampling.json`](research/2026-10-29/v7-initial-sampling.json)，原因与逐次用量见[数据报告第十四阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-prompt-v7-initial)。已知输入 91,358（缓存命中 43,776）、输出 36,182，合计 127,540 tokens；失败网络请求的未知用量不算 0。未调用反馈修复或派发业务门，新增合格答案 0，累计仍为 45；dev 两题不进入学生训练。本阶段尚未执行修复；后续获批的一轮修复见下节，不手改答案或放宽判卷。
 
-## v7 一轮修复与补采（业务资格待验收）
+## v7 一轮修复与补采（新增 3 条合格答案）
 
-13 份失败答案各修一轮，并补采网络失败的乘法改写题一次，14 次均收到响应。结果保存在 `checked-r1.jsonl`／`checked-resample.jsonl`，首轮结果与所有原始附件不覆盖。3 份 CRUD 静态通过：原题 `4a6b10922574`（58 文件）、p2 `976fd70bd19f`（58）、p3 `3a97ea60acea`（55）；其余 11 份失败，其中 4 份修复源码与父候选完全相同。只将 3 份通过者提交后派发业务门，BUILD／START／BUSINESS 当前 NOT_RUN；合格总数仍 45，学生 v2 仍 44。dev 两题均失败且不进入 train，未追加第二轮修复。
+13 份失败答案各修一轮，并补采网络失败的乘法改写题一次，14 次均收到响应。结果保存在 `checked-r1.jsonl`／`checked-resample.jsonl`，首轮结果与所有原始附件不覆盖。3 份 CRUD 静态通过：原题 `4a6b10922574`（58 文件）、p2 `976fd70bd19f`（58）、p3 `3a97ea60acea`（55）；其余 11 份失败，其中 4 份修复源码与父候选完全相同。只将 3 份通过者提交后派发业务门：受测 SHA `e1a51bb775aaeab52d30b9dd3d1758f74e4c0a7d`，[#62](https://github.com/HoloNova/Software-IR/actions/runs/40801380578)、[#63](https://github.com/HoloNova/Software-IR/actions/runs/40801384180)、[#64](https://github.com/HoloNova/Software-IR/actions/runs/40801387816) 各四门全 PASSED、48/0，原始证据已归档，`train-teacher.jsonl` 各导出 1 条。**合格教师答案累计 48 条（鉴权 26、课程 22）**；汇总见 [`v7-business-gate-summary.json`](research/2026-10-29/v7-business-gate-summary.json) 和[第十六阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-prompt-v7-qualified)。dev 两题均失败且不进入 train，未追加第二轮修复。
 
 本轮输入 156,701（缓存命中 139,392）、输出 41,707，合计 **198,408 tokens**。汇总见 [`research/2026-10-29/v7-repair-sampling.json`](research/2026-10-29/v7-repair-sampling.json)，逐次用量、父子关系验证及失败分析见[数据报告第十五阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-prompt-v7-repair)。两阶段已知合计 325,948 tokens，首轮连接错误的用量仍未知。
 
 ## 学生训练格式
 
-[`student/train-student-v2.jsonl`](student/) 是全部 44 条合格答案（v1 是当时的 14 条）用 `student` 命令重新包装的学生训练数据：固定短 system（`experiments/slm/prompts/student-v1.md`）+ 与教师相同的题目 + 最终合格 SIR，不带教师规则手册和修复经过。`.index.json` 记录来源批次、样本与业务门 run；`.tokens.json` 是实测 token 长度，两版最长训练序列都是 3,874（deepseek-coder-1.3b）/ 3,042（Qwen3-4B），远低于 16K。详见[数据报告第十一阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#第十一阶段学生训练格式2026-10-28)。
+[`student/train-student-v3.jsonl`](student/) 包含目前全部 **48 条**合格答案：固定短 system（`experiments/slm/prompts/student-v1.md`）+ 与教师相同的题目 + 最终合格 SIR，不带教师规则手册和修复经过。跨工具链时保留已封存 v2 的 44 条原字节，只用原 `student` 命令包装新合格的 4 条再合成 v3；48 条均核对导出索引、候选与运行绑定，`.index.json` 的 `assembly` 记录来源与哈希，不改历史 manifest。v1（14 条）和 v2（44 条）保留原样。
+
+`.tokens.json` 是固定 revision 分词器的 CPU 实测，v3 最长完整序列为 **9,311**（deepseek-coder-1.3b）／**7,102**（Qwen2.5-Coder-3B、Qwen3-4B），均未截断且低于 16K；不能沿用 v2 的 3,874／3,042 上限。只测长度，未执行模型权重或训练。详见[数据报告第十六阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-prompt-v7-qualified)。
 
 完整说明：[数据报告](../../docs/qualification/SLM_DATA_PILOT_REPORT.md)、[操作命令](../../experiments/slm/README.md)、[模型选择](../../docs/qualification/SLM_MODEL_SELECTION.md)。API密钥不属于数据或metadata。数据Git属性禁止换行转换，保持证据字节哈希。
 

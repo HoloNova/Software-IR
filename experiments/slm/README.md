@@ -99,6 +99,10 @@ python -m experiments.slm.data student \
 
 每条是固定的短 system（`prompts/student-v1.md`）+ 与教师逐字节相同的题目（需求、合同、表结构、已有软件）+ 最终合格 SIR，不带修复经过。哪些答案合格只由 `export` 决定：`student` 只读各批次的 `train-teacher.jsonl`，按其 `.index.json` 核对文件哈希、答案哈希和样本源码，不重新判卷；只收 train 批次，dev/test 批次直接拒绝。index 记录每条来自的批次、样本、业务门 run 和字数。
 
+`student` 仍会通过 `read_bundle` 校验当前源码与每批的工具链／oracle；不同工具链的历史合格批次不能直接混跑，也不能改 manifest 或跳过校验。跨版本追加时，保留已有学生封存文件的原始字节，用原命令只包装与当前源码一致的新合格批次，再合并记录和索引；合并必须核对新旧导出索引／候选源码／题目／运行绑定、同题源码去重、family/split 隔离和完整来源覆盖。v3 实例见[数据报告第十六阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-prompt-v7-qualified)，其 index 的 `assembly` 保存基座及增量来源哈希。不得借包装重算或改写历史资格。
+
+每版学生数据都须重新测完整序列长度，不能沿用旧版本上限；只用冻结 revision 的分词器，不下载或运行权重，不截断。v3 的选课改写使最长序列升至 9,311／7,102，详见 `datasets/sir/student/train-student-v3.tokens.json`。
+
 ## 跨环境导入
 
 原批次指纹绑定实际源码字节，不能靠换行转换或修改manifest搬到Linux。先在目标环境编译CLI/测试适配器，再执行：
