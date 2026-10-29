@@ -61,7 +61,7 @@
 
 ## 新工具链上的选课候选复查
 
-[`pilots/course-selection-change-p1-g6t/`](pilots/course-selection-change-p1-g6t/) 从 v6 的选课改写 p1 导入原始响应，API 调用 0 次。普通非 Optional 输入必填（`5cff5c3`，verify #198）及生成器 `$` 局部变量（`391eb87`，verify #199）已修复并通过 CI；新批次在与 Git blob 字节一致的 LF 源码快照中重新冻结工具链、编译检查器并静态检查。参考与教师修复候选 `e61b238d030f` 均完整生成 95 个文件，原始教师 `e7bb44f7a3e1` 仍在解析阶段失败。构建／启动／业务目前 NOT_RUN，待新批次提交后送 GitHub 业务门，不能沿用旧失败或参考答案的通过证据。原始请求、响应、源码不变，未修改 task 的 `reference_evidence`；已有 44 条合格答案及学生 v2 不变。字节核对见批次 `verification/checkout-verification.json`，说明见[数据报告第十三阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-toolchain-recheck-v1)。
+[`pilots/course-selection-change-p1-g6t/`](pilots/course-selection-change-p1-g6t/) 从 v6 的选课改写 p1 导入原始响应，API 调用 0 次。普通非 Optional 输入必填（`5cff5c3`，verify #198）及生成器 `$` 局部变量（`391eb87`，verify #199）已修复并通过 CI；新批次在与 Git blob 字节一致的 LF 源码快照中重新冻结工具链、编译检查器并静态检查。参考与教师修复候选 `e61b238d030f` 均完整生成 95 个文件，原始教师 `e7bb44f7a3e1` 仍在解析阶段失败。同一候选在受测提交 `bfd7d768` 的 [业务门 #61](https://github.com/HoloNova/Software-IR/actions/runs/40795909868) 四门全通过、152/0，已核对 ZIP/绑定/附件哈希并归档 `runtime/`，`train-teacher.jsonl` 导出 1 条。**新教师合格答案累计 45 条**（鉴权 23、课程 22），首次有合格的选课改写答案；原始请求、响应、源码及 task 的 `reference_evidence` 不变。学生 v2 仍为当时的 44 条，待下一批判卷结束统一更新。字节核对见批次 `verification/checkout-verification.json`，说明见[数据报告第十三阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-toolchain-recheck-v1)。
 
 ## 学生训练格式
 

@@ -1,0 +1,14 @@
+{
+  "all_four_gates_required": true,
+  "corpus_sha256": "c57d24f6fc7d00b91520d241d449d01bce552c6bffbd60ec334fa2cc896a92fa",
+  "count": 1,
+  "rows": [
+    {
+      "id": "course-course-selection-change-p1-v1-teacher-e61b238d030f",
+      "oracle_sha256": "9dea6bbcc7b9defc7807dfa1523ba976704a5b25e6dd6c3b2c95cf090d771d74",
+      "runtime_run_id": "course-selection-1a1851d88b4-8266",
+      "source_sha256": "b108ce02ef7596c89ade01b4210da51ea00b94b7db405f8f0d5b7bad7aef721a",
+      "task_sha256": "1a3db4850080d3511d9d4cb35687da592a167970b7c2961c78c067bbbe974ca6"
+    }
+  ]
+}

@@ -309,6 +309,6 @@ v4 这一轮：13 份中静态通过 7 份，四门通过 6 份。样本少、�
 | --- | --- | --- | --- | --- |
 | 既有参考 | reference | GENERATION PASSED，无诊断 | 95 | NOT_RUN |
 | 原始教师 | `e7bb44f7a3e1` | PARSE FAILED，5 条诊断 | 0 | NOT_RUN |
-| 一轮静态修复后的教师 | `e61b238d030f` | GENERATION PASSED，无诊断 | 95 | NOT_RUN |
+| 一轮静态修复后的教师 | `e61b238d030f` | GENERATION PASSED，无诊断 | 95 | PASSED／PASSED／PASSED（业务门 #61） |
 
-目标候选 `e61b238d030f` 的生成摘要为 `678a2311f9eb42508799d9d0b5d3624abd979b787ea89f9a0250a9f11e9459da`。静态通过不证明旧构建失败已在该候选上闭环；下一步提交新批次并派发 `CourseSelectionBusinessConformanceIT`，等待负责人通知结果后归档原始证据，再决定是否导出。当前合格教师答案仍为 **44 条**，学生格式 v2 不变；本轮没有训练、付费补采或修改冻结 task。
+目标候选 `e61b238d030f` 的生成摘要为 `678a2311f9eb42508799d9d0b5d3624abd979b787ea89f9a0250a9f11e9459da`。负责人通知通过后已核对并归档 [slm-business-gate #61](https://github.com/HoloNova/Software-IR/actions/runs/40795909868)（受测提交 `bfd7d7684fdb98a8257fd559b3263717300e2a93`）：四门全 PASSED，业务 **152/0**，确认旧生成器构建失败已在同一候选上闭环。两个 artifact 的 ZIP 摘要均与 GitHub 记录一致，候选/题目/oracle/工具链/生成摘要及全部附件绑定通过，原始证据、JUnit 与 `gate-run.json` 已保存于该批次 `runtime/`；复用原归档器和 `export` 导出 `train-teacher.jsonl` **1 条**。归档在只含目标批次的临时工作目录执行，避免同一候选在旧/新批次中的副本造成歧义，没有修改归档器或证据。合格教师答案累计 **45 条**（鉴权 23、课程 22），首次有合格的选课改写答案；选课从零写仍无合格答案。学生格式 v2 保留当时的 44 条，待下一轮判卷结束统一出新版本。本次重判新增 API 调用仍为 0，未修改冻结 task、未训练模型。
