@@ -1,0 +1,272 @@
+{
+  "base_source": null,
+  "contract": {
+    "book_create_update_request": [
+      "title"
+    ],
+    "book_default_stock": 5,
+    "book_response": [
+      "id",
+      "title",
+      "stock"
+    ],
+    "capabilities": [
+      "CreateBook",
+      "GetBook",
+      "ListBook",
+      "UpdateBook",
+      "DeleteBook",
+      "CreatePost",
+      "GetPost",
+      "ListPost",
+      "UpdatePost",
+      "DeletePost"
+    ],
+    "declared_errors": {},
+    "entities": [
+      "User",
+      "AccessToken",
+      "Book",
+      "Post"
+    ],
+    "enums": {
+      "Role": [
+        "READER",
+        "ADMIN"
+      ]
+    },
+    "interfaces": {
+      "CreateBook": {
+        "request_fields": [
+          "title"
+        ],
+        "response_fields": [
+          "id",
+          "title",
+          "stock"
+        ],
+        "route": "POST /api/library/books"
+      },
+      "CreatePost": {
+        "request_fields": [
+          "body"
+        ],
+        "response_fields": [
+          "id",
+          "author",
+          "body",
+          "state",
+          "version"
+        ],
+        "route": "POST /api/public/posts"
+      },
+      "DeleteBook": {
+        "request_fields": [
+          "id"
+        ],
+        "response_fields": [],
+        "route": "DELETE /api/library/books/{id}"
+      },
+      "DeletePost": {
+        "request_fields": [
+          "id"
+        ],
+        "response_fields": [],
+        "route": "DELETE /api/public/posts/{id}"
+      },
+      "GetBook": {
+        "request_fields": [
+          "id"
+        ],
+        "response_fields": [
+          "id",
+          "title",
+          "stock"
+        ],
+        "route": "GET /api/library/books/{id}"
+      },
+      "GetPost": {
+        "request_fields": [
+          "id"
+        ],
+        "response_fields": [
+          "id",
+          "author",
+          "body",
+          "state",
+          "version"
+        ],
+        "route": "GET /api/public/posts/{id}"
+      },
+      "ListBook": {
+        "record_fields": [
+          "id",
+          "title",
+          "stock"
+        ],
+        "request_fields": [
+          "page",
+          "size"
+        ],
+        "response_fields": [
+          "total",
+          "page",
+          "size",
+          "records"
+        ],
+        "route": "GET /api/library/books"
+      },
+      "ListPost": {
+        "record_fields": [
+          "id",
+          "author",
+          "body",
+          "state",
+          "version"
+        ],
+        "request_fields": [
+          "page",
+          "size"
+        ],
+        "response_fields": [
+          "total",
+          "page",
+          "size",
+          "records"
+        ],
+        "route": "GET /api/public/posts"
+      },
+      "UpdateBook": {
+        "request_fields": [
+          "id",
+          "title"
+        ],
+        "response_fields": [
+          "id",
+          "title",
+          "stock"
+        ],
+        "route": "PUT /api/library/books/{id}"
+      },
+      "UpdatePost": {
+        "change_fields": [
+          "body"
+        ],
+        "request_fields": [
+          "id",
+          "expectedVersion",
+          "changes"
+        ],
+        "response_fields": [
+          "id",
+          "author",
+          "body",
+          "state",
+          "version"
+        ],
+        "route": "PATCH /api/public/posts/{id}"
+      }
+    },
+    "namespace": "example.crudaccess",
+    "page_request": [
+      "page",
+      "size"
+    ],
+    "page_response": [
+      "total",
+      "page",
+      "size",
+      "records"
+    ],
+    "paging": {
+      "page_default": 1,
+      "page_range": [
+        1,
+        10000
+      ],
+      "request": [
+        "page",
+        "size"
+      ],
+      "response": [
+        "total",
+        "page",
+        "size",
+        "records"
+      ],
+      "size_default": 20,
+      "size_range": [
+        1,
+        100
+      ]
+    },
+    "post_create_request": [
+      "body"
+    ],
+    "post_default_state": "open",
+    "post_initial_version": 1,
+    "post_patch_request": {
+      "changes": [
+        "body"
+      ],
+      "expectedVersion": "integer"
+    },
+    "post_response": [
+      "id",
+      "author",
+      "body",
+      "state",
+      "version"
+    ],
+    "readiness": "GET /api/library/books/1"
+  },
+  "ddl_source": "sir-toolchain-application/src/test/resources/conformance/mysql/crud-access-ddl.sql",
+  "family": "auth.crud-access",
+  "id": "auth-crud-access-scratch-p1-v1",
+  "oracle": {
+    "files": [
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/AdvisoryLockKey.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BusinessEndpointReadiness.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BusinessSliceHarness.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/ChildEnvironmentBuilder.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/ConformanceFixtures.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/ConformanceJvmLimits.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/CrudAccessBusinessConformanceIT.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/DiskTree.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceDirectory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceOwnershipInventory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceRootProof.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceSecretScanner.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/HttpAssertionClient.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MavenProjectRunner.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MysqlObserver.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MysqlRuntimeJdbcUrl.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MysqlRuntimeTrace.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/OwnedPathEntry.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/OwnedPathInventory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/OwnedRunDirectory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SchemaName.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SchemaSqlRenderer.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SecretCatalog.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SlmCandidateSupport.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SpringApplicationProcess.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/StreamingSecretRedactor.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/StrongFileIdentity.java",
+      "sir-toolchain-application/src/test/resources/conformance/mysql/crud-access-ddl.sql",
+      "sir-toolchain-application/src/test/resources/conformance/mysql/crud-access-seed.sql",
+      "sir-toolchain-application/src/test/resources/valid/crud-access.sir"
+    ],
+    "id": "crud-access-http-mysql-v1"
+  },
+  "reference_evidence": {
+    "commit": "0c4fb4a4c30b14658f874d3cc21f3aabe0c27457",
+    "kind": "existing-reference-only-not-candidate-qualification",
+    "run_url": "https://github.com/HoloNova/Software-IR/actions/runs/40330013391"
+  },
+  "reference_source": "sir-toolchain-application/src/test/resources/valid/crud-access.sir",
+  "requirement": "加个图书目录，匿名也能看详情和分页列表。创建、更新、删除只给 ADMIN，匿名写入返回 401，READER 写入返回 403。先判角色，再看图书存不存在。\n\n创建图书只传 title，成功返回 201 和 id、title、stock。stock 固定由服务端设成 5。\n\n更新图书只传 title，成功返回 200，stock 别动。删除成功也返回 200，要真的删掉记录。\n\n请求里夹带 stock 就返回 400。所有被拒的请求都不能改数据库。\n\n文章详情和分页列表公开，匿名、READER、其他 ADMIN 都能读。但 state=hidden 的文章别放进列表，读详情返回 404 PostNotFound。\n\n文章创建、修改、删除都得是 ADMIN，作者还得是本人。匿名返回 401，角色不对返回 403。其他管理员不能越权走本人的写入路径，返回 404 PostNotFound。\n\n创建文章传 body，author 用当前用户。state 默认 open，version 一开始是 1。\n\n文章修改用 PATCH，传 expectedVersion 和 changes.body。成功只改传入内容，version 加一。版本旧了返回 409 StalePost，不能盖掉新值。\n\n夹带 state 返回 400。被拒或者版本冲突都不能改库，state 保持 open。\n\n删除文章成功返回 200，删掉本人的文章。\n\n返回完整的 sir 0.3 文档，不要 Java、SQL 或解释。",
+  "revision": "1",
+  "schema_version": "sir-task/1",
+  "sir_version": "0.3",
+  "split": "train"
+}

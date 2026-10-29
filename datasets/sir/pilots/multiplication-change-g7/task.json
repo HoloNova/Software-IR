@@ -1,0 +1,681 @@
+{
+  "base_source": "experiments/slm/drafts/multiplication/base.sir",
+  "contract": {
+    "access_minutes": 15,
+    "booking_request": [
+      "roomId",
+      "startsAt",
+      "endsAt"
+    ],
+    "booking_response": [
+      "id",
+      "startsAt",
+      "endsAt"
+    ],
+    "calculation_request": [
+      "price",
+      "quantity",
+      "left",
+      "right",
+      "wide"
+    ],
+    "calculation_response": [
+      "id",
+      "amount",
+      "count",
+      "wide"
+    ],
+    "cancel_line_limit": 100,
+    "cancel_line_source_reads": 2,
+    "cancel_source_read_limit": 101,
+    "capabilities": [
+      "AddProduct",
+      "SearchProducts",
+      "BuyNow",
+      "AddToCart",
+      "ChangeCartQuantity",
+      "RemoveFromCart",
+      "MyCart",
+      "ClearCart",
+      "Checkout",
+      "AddCoupon",
+      "ApplyCoupon",
+      "Pay",
+      "Ship",
+      "CancelOrder",
+      "MyOrders",
+      "OrderLines",
+      "Multiply",
+      "Wide",
+      "Reverse",
+      "PurchaseProduct",
+      "EnrollCourse",
+      "ShowCourse",
+      "ShowProduct",
+      "Book",
+      "BookWeekly",
+      "BookAfterRead",
+      "Login",
+      "Refresh",
+      "Logout",
+      "Register"
+    ],
+    "cart_limit": 50,
+    "cart_quantity_request": [
+      "id",
+      "quantity"
+    ],
+    "cart_request": [
+      "productId",
+      "quantity"
+    ],
+    "cart_response": [
+      "id",
+      "product",
+      "quantity"
+    ],
+    "coupon_race_limit": 3,
+    "coupon_request": [
+      "orderId",
+      "code"
+    ],
+    "course_seats": 3,
+    "declared_errors": {
+      "AlreadyInCart": 409,
+      "BadPage": 400,
+      "CartEmpty": 409,
+      "CartItemNotFound": 404,
+      "CartTooLarge": 409,
+      "CouponAlreadyUsed": 409,
+      "CouponCodeTaken": 409,
+      "CouponExhausted": 409,
+      "CouponExpired": 409,
+      "CouponNotFound": 404,
+      "Forbidden": 403,
+      "Full": 409,
+      "InconsistentOrder": 409,
+      "InvalidWindow": 400,
+      "MinSpendNotMet": 409,
+      "Missing": 404,
+      "NotCancellable": 409,
+      "NotPayable": 409,
+      "NotShippable": 409,
+      "NotYourOrder": 403,
+      "OrderNotFound": 404,
+      "OrderTooLarge": 409,
+      "OutOfStock": 409,
+      "ProductNotFound": 404,
+      "RoomMissing": 404,
+      "StockLimit": 409,
+      "TooManyWeeks": 409
+    },
+    "entities": [
+      "User",
+      "ShopProduct",
+      "PurchaseOrder",
+      "OrderLine",
+      "CartItem",
+      "Coupon",
+      "Redemption",
+      "Calculation",
+      "Product",
+      "Receipt",
+      "ReceiptLine",
+      "Course",
+      "Room",
+      "Booking",
+      "AccessToken",
+      "RefreshToken",
+      "TokenPair"
+    ],
+    "enums": {
+      "OrderState": [
+        "CREATED",
+        "PAID",
+        "SHIPPED",
+        "CANCELLED"
+      ],
+      "ProductState": [
+        "ON_SHELF",
+        "OFF_SHELF"
+      ],
+      "Role": [
+        "CUSTOMER",
+        "ADMIN"
+      ]
+    },
+    "interfaces": {
+      "AddCoupon": {
+        "request_fields": [
+          "code",
+          "amountOff",
+          "minSpend",
+          "startsAt",
+          "endsAt",
+          "totalLimit"
+        ],
+        "response_fields": [
+          "id",
+          "code",
+          "amountOff",
+          "minSpend",
+          "startsAt",
+          "endsAt",
+          "totalLimit",
+          "used"
+        ],
+        "route": "POST /api/coupons"
+      },
+      "AddProduct": {
+        "request_fields": [
+          "name",
+          "description",
+          "price",
+          "stock"
+        ],
+        "response_fields": [
+          "id",
+          "name",
+          "description",
+          "price",
+          "stock",
+          "state"
+        ],
+        "route": "POST /api/products"
+      },
+      "AddToCart": {
+        "request_fields": [
+          "productId",
+          "quantity"
+        ],
+        "response_fields": [
+          "id",
+          "product",
+          "quantity"
+        ],
+        "route": "POST /api/cart"
+      },
+      "ApplyCoupon": {
+        "request_fields": [
+          "orderId",
+          "code"
+        ],
+        "response_fields": [
+          "id",
+          "state",
+          "total",
+          "createdAt"
+        ],
+        "route": "POST /api/orders/{orderId}/coupon"
+      },
+      "Book": {
+        "request_fields": [
+          "roomId",
+          "startsAt",
+          "endsAt"
+        ],
+        "response_fields": [
+          "id",
+          "startsAt",
+          "endsAt"
+        ],
+        "route": "POST /api/bookings"
+      },
+      "BookAfterRead": {
+        "request_fields": [
+          "roomId",
+          "startsAt",
+          "endsAt"
+        ],
+        "response_fields": [
+          "id",
+          "startsAt",
+          "endsAt"
+        ],
+        "route": "POST /api/bookings/after-read"
+      },
+      "BookWeekly": {
+        "request_fields": [
+          "roomId",
+          "startsAt",
+          "endsAt",
+          "weeks"
+        ],
+        "response_fields": [],
+        "route": "POST /api/bookings/weekly"
+      },
+      "BuyNow": {
+        "request_fields": [
+          "productId",
+          "quantity"
+        ],
+        "response_fields": [
+          "id",
+          "state",
+          "total",
+          "createdAt"
+        ],
+        "route": "POST /api/orders"
+      },
+      "CancelOrder": {
+        "request_fields": [
+          "id"
+        ],
+        "response_fields": [
+          "id",
+          "state",
+          "total",
+          "createdAt"
+        ],
+        "route": "POST /api/orders/{id}/cancel"
+      },
+      "ChangeCartQuantity": {
+        "request_fields": [
+          "id",
+          "quantity"
+        ],
+        "response_fields": [
+          "id",
+          "product",
+          "quantity"
+        ],
+        "route": "POST /api/cart/{id}/quantity"
+      },
+      "Checkout": {
+        "request_fields": [],
+        "response_fields": [
+          "id",
+          "state",
+          "total",
+          "createdAt"
+        ],
+        "route": "POST /api/cart/checkout"
+      },
+      "ClearCart": {
+        "request_fields": [],
+        "response_fields": [],
+        "route": "POST /api/cart/clear"
+      },
+      "EnrollCourse": {
+        "request_fields": [
+          "id"
+        ],
+        "response_fields": [
+          "id",
+          "capacity",
+          "enrolled",
+          "remaining",
+          "full"
+        ],
+        "route": "POST /api/courses/enroll"
+      },
+      "Login": {
+        "request_fields": [
+          "name",
+          "password"
+        ],
+        "response_fields": [
+          "accessToken",
+          "accessExpiresAt",
+          "refreshToken",
+          "refreshExpiresAt"
+        ],
+        "route": "POST /api/login"
+      },
+      "Logout": {
+        "request_fields": [
+          "refreshToken"
+        ],
+        "response_fields": [],
+        "route": "POST /api/logout"
+      },
+      "Multiply": {
+        "request_fields": [
+          "price",
+          "quantity",
+          "left",
+          "right",
+          "wide"
+        ],
+        "response_fields": [
+          "id",
+          "amount",
+          "count",
+          "wide"
+        ],
+        "route": "POST /api/multiply"
+      },
+      "MyCart": {
+        "record_fields": [
+          "id",
+          "product",
+          "quantity"
+        ],
+        "request_fields": [
+          "page",
+          "size"
+        ],
+        "response_fields": [
+          "total",
+          "page",
+          "size",
+          "records"
+        ],
+        "route": "GET /api/cart"
+      },
+      "MyOrders": {
+        "record_fields": [
+          "id",
+          "state",
+          "total",
+          "createdAt"
+        ],
+        "request_fields": [
+          "page",
+          "size"
+        ],
+        "response_fields": [
+          "total",
+          "page",
+          "size",
+          "records"
+        ],
+        "route": "GET /api/orders"
+      },
+      "OrderLines": {
+        "record_fields": [
+          "id",
+          "product",
+          "quantity",
+          "unitPrice"
+        ],
+        "request_fields": [
+          "orderId",
+          "page",
+          "size"
+        ],
+        "response_fields": [
+          "total",
+          "page",
+          "size",
+          "records"
+        ],
+        "route": "GET /api/orders/{orderId}/lines"
+      },
+      "Pay": {
+        "request_fields": [
+          "id"
+        ],
+        "response_fields": [
+          "id",
+          "state",
+          "total",
+          "createdAt"
+        ],
+        "route": "POST /api/orders/{id}/pay"
+      },
+      "PurchaseProduct": {
+        "request_fields": [
+          "id",
+          "quantity"
+        ],
+        "response_fields": [
+          "id",
+          "total",
+          "quantity",
+          "doubledTotal"
+        ],
+        "route": "POST /api/purchase"
+      },
+      "Refresh": {
+        "request_fields": [
+          "refreshToken"
+        ],
+        "response_fields": [
+          "accessToken",
+          "accessExpiresAt",
+          "refreshToken",
+          "refreshExpiresAt"
+        ],
+        "route": "POST /api/refresh"
+      },
+      "Register": {
+        "request_fields": [
+          "name",
+          "password"
+        ],
+        "response_fields": [
+          "id",
+          "name",
+          "role"
+        ],
+        "route": "POST /api/register"
+      },
+      "RemoveFromCart": {
+        "request_fields": [
+          "id"
+        ],
+        "response_fields": [],
+        "route": "POST /api/cart/{id}/remove"
+      },
+      "Reverse": {
+        "request_fields": [
+          "price",
+          "quantity",
+          "left",
+          "right",
+          "wide"
+        ],
+        "response_fields": [
+          "id",
+          "amount",
+          "count",
+          "wide"
+        ],
+        "route": "POST /api/reverse"
+      },
+      "SearchProducts": {
+        "record_fields": [
+          "id",
+          "name",
+          "description",
+          "price",
+          "stock",
+          "state"
+        ],
+        "request_fields": [
+          "keyword",
+          "page",
+          "size"
+        ],
+        "response_fields": [
+          "total",
+          "page",
+          "size",
+          "records"
+        ],
+        "route": "GET /api/products"
+      },
+      "Ship": {
+        "request_fields": [
+          "id"
+        ],
+        "response_fields": [
+          "id",
+          "state",
+          "total",
+          "createdAt"
+        ],
+        "route": "POST /api/orders/{id}/ship"
+      },
+      "ShowCourse": {
+        "request_fields": [
+          "id"
+        ],
+        "response_fields": [
+          "id",
+          "capacity",
+          "enrolled",
+          "remaining",
+          "full"
+        ],
+        "route": "GET /api/courses/show"
+      },
+      "ShowProduct": {
+        "request_fields": [
+          "id"
+        ],
+        "response_fields": [
+          "id",
+          "price",
+          "stock",
+          "inventoryValue",
+          "soldOut"
+        ],
+        "route": "GET /api/products/show"
+      },
+      "Wide": {
+        "request_fields": [
+          "price",
+          "quantity",
+          "left",
+          "right",
+          "wide"
+        ],
+        "response_fields": [
+          "id",
+          "amount",
+          "count",
+          "wide"
+        ],
+        "route": "POST /api/wide"
+      }
+    },
+    "line_response": [
+      "id",
+      "product",
+      "quantity",
+      "unitPrice"
+    ],
+    "namespace": "example.multiplication",
+    "order_response": [
+      "id",
+      "state",
+      "total",
+      "createdAt"
+    ],
+    "paging": {
+      "page_default": 1,
+      "page_range": [
+        1,
+        10000
+      ],
+      "request": [
+        "page",
+        "size"
+      ],
+      "response": [
+        "total",
+        "page",
+        "size",
+        "records"
+      ],
+      "size_default": 20,
+      "size_range": [
+        1,
+        100
+      ]
+    },
+    "price_precision": [
+      21,
+      4
+    ],
+    "purchase_quantity": 3,
+    "purchase_request": [
+      "id",
+      "quantity"
+    ],
+    "purchase_stock": 20,
+    "purchase_winners": 6,
+    "quantity_range": [
+      1,
+      2147483647
+    ],
+    "readiness": "GET /api/products/show?id=1",
+    "receipt_response": [
+      "id",
+      "total",
+      "quantity",
+      "doubledTotal"
+    ],
+    "refresh_days": 7,
+    "stock_max": 2147483647,
+    "total_precision": [
+      19,
+      2
+    ],
+    "weekly_days_apart": 7,
+    "weekly_limit": 12,
+    "weekly_request": [
+      "roomId",
+      "startsAt",
+      "endsAt",
+      "weeks"
+    ]
+  },
+  "ddl_source": "sir-toolchain-application/src/test/resources/conformance/mysql/multiplication-ddl.sql",
+  "family": "shop.multiplication",
+  "id": "shop-multiplication-change-v1",
+  "oracle": {
+    "files": [
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/AdvisoryLockKey.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BusinessEndpointReadiness.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BusinessSliceHarness.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/ChildEnvironmentBuilder.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/ConformanceFixtures.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/ConformanceJvmLimits.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/DiskTree.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceDirectory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceOwnershipInventory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceRootProof.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceSecretScanner.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/GroupedSumReadBudget.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/HttpAssertionClient.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/IntervalBookingChecks.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MavenProjectRunner.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MultiplicationBusinessConformanceIT.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MysqlObserver.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MysqlRuntimeJdbcUrl.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MysqlRuntimeTrace.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/OwnedPathEntry.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/OwnedPathInventory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/OwnedRunDirectory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SchemaName.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SchemaSqlRenderer.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SecretCatalog.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/ShopCancellationChecks.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/ShopCheckoutChecks.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/ShopCouponChecks.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SlmCandidateSupport.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SpringApplicationProcess.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/StreamingSecretRedactor.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/StrongFileIdentity.java",
+      "sir-toolchain-application/src/test/resources/conformance/mysql/ShopSessionFixture.java.txt",
+      "sir-toolchain-application/src/test/resources/conformance/mysql/multiplication-ddl.sql",
+      "sir-toolchain-application/src/test/resources/conformance/mysql/multiplication-seed.sql",
+      "sir-toolchain-application/src/test/resources/valid/shop-conformance.sir"
+    ],
+    "id": "multiplication-http-mysql-v1"
+  },
+  "reference_evidence": {
+    "commit": "0c4fb4a4c30b14658f874d3cc21f3aabe0c27457",
+    "kind": "existing-reference-only-not-candidate-qualification",
+    "run_url": "https://github.com/HoloNova/Software-IR/actions/runs/40330013391"
+  },
+  "reference_source": "sir-toolchain-application/src/test/resources/valid/shop-conformance.sir",
+  "requirement": "在给定软件上增加购物车与多商品结账，保留账号登录、商品与立即购买、支付发货、取消返库、优惠券、精确购买计算、课程计数和房间预约的现有行为。增加本人购物车：按 productId、quantity 添加商品，成功 201，重复商品为 409 AlreadyInCart，下架商品为 404 ProductNotFound，售罄但在架商品仍可加入；只列本人条目，可按 id 改 quantity 或移除，别人的条目为 404 CartItemNotFound，清空成功 200 且只能删本人条目，不影响其他买家。结账把本人全部购物车条目一次转换成一张 CREATED 订单及每商品一条明细，按当前商品单价精确计算总额、逐商品扣对应数量并清空本人购物车，成功为 201，空车为 409 CartEmpty；最多 50 条，超过为 409 CartTooLarge 且整笔不写入；任一商品库存不足为 409 OutOfStock，先前扣掉的库存、订单、明细及已删购物车条目全部回滚，原购物车保持完整。例如 3 件 2.50 与 1 件 4.00 结账，响应和持久化总额都为 11.50，明细保存各自数量与单价；不能只保证响应正确而让库存、订单或明细不一致。交付程序基础包固定为 example.multiplication，供外部数据库会话观测接入。返回完整的 sir 0.3 文档，不要 Java、SQL 或解释。",
+  "revision": "1",
+  "schema_version": "sir-task/1",
+  "sir_version": "0.3",
+  "split": "development"
+}

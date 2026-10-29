@@ -312,3 +312,35 @@ v4 这一轮：13 份中静态通过 7 份，四门通过 6 份。样本少、�
 | 一轮静态修复后的教师 | `e61b238d030f` | GENERATION PASSED，无诊断 | 95 | PASSED／PASSED／PASSED（业务门 #61） |
 
 目标候选 `e61b238d030f` 的生成摘要为 `678a2311f9eb42508799d9d0b5d3624abd979b787ea89f9a0250a9f11e9459da`。负责人通知通过后已核对并归档 [slm-business-gate #61](https://github.com/HoloNova/Software-IR/actions/runs/40795909868)（受测提交 `bfd7d7684fdb98a8257fd559b3263717300e2a93`）：四门全 PASSED，业务 **152/0**，确认旧生成器构建失败已在同一候选上闭环。两个 artifact 的 ZIP 摘要均与 GitHub 记录一致，候选/题目/oracle/工具链/生成摘要及全部附件绑定通过，原始证据、JUnit 与 `gate-run.json` 已保存于该批次 `runtime/`；复用原归档器和 `export` 导出 `train-teacher.jsonl` **1 条**。归档在只含目标批次的临时工作目录执行，避免同一候选在旧/新批次中的副本造成歧义，没有修改归档器或证据。合格教师答案累计 **45 条**（鉴权 23、课程 22），首次有合格的选课改写答案；选课从零写仍无合格答案。学生格式 v2 保留当时的 44 条，待下一轮判卷结束统一出新版本。本次重判新增 API 调用仍为 0，未修改冻结 task、未训练模型。
+
+<a id="slm-prompt-v7-initial"></a>
+
+## 第十四阶段：v7 定向首轮采样（2026-10-29）
+
+负责人确认 v7 的三处差异与首轮 14 次调用预算后，已提交规则手册及说明（`6c54c42c`）。没有改动已使用的 v6、默认 prompt、冻结 task、编译器或 oracle。采样使用 `96f536261671d9a1f20a1f68cc3567c6bf2c90c3` 的 LF 字节一致环境，工具链摘要仍为 `7275f533d442297d7c43b62317168e09736be9c369d9811c480e8aefad070d54`；没有重跑构建、真库、全量测试或启动应用。
+
+**14 次尝试收到 13 份答案，静态 0/13 通过；另 1 次连接失败，不伪装成教师答错或用量 0。**8 份选课、4 份 CRUD 从零写属于 train；2 份乘法题属于 development，不混入训练集。每份只调用 `generate --count 1 --max-tokens 8192`，SDK 自动重试关闭；14 份参考均在当前检查器静态通过。所有新批次在 `datasets/sir/pilots/*-g7/`，完整结构化汇总见 `datasets/sir/research/2026-10-29/v7-initial-sampling.json`。
+
+| 批次（均为 g7） | 候选短 ID | 初始结果 | 输入 tokens（其中缓存命中） | 输出 tokens | 已知合计 |
+| --- | --- | --- | ---: | ---: | ---: |
+| course-selection-change | `e8e641739dc2` | PARSE FAILED | 8,111（768） | 2,745 | 10,856 |
+| course-selection-change-p1 | `713a0908b68a` | PARSE FAILED | 8,127（3,584） | 2,659 | 10,786 |
+| course-selection-change-p2 | `f63c8bf2e0ee` | PARSE FAILED | 8,169（3,584） | 2,722 | 10,891 |
+| course-selection-change-p3 | `55445a6ca094` | PARSE FAILED | 8,177（3,584） | 2,677 | 10,854 |
+| course-selection-scratch | `06c2dd85ffe4` | PARSE FAILED | 6,883（3,584） | 3,401 | 10,284 |
+| course-selection-scratch-p1 | `d3101cf2a472` | PARSE FAILED | 6,935（3,584） | 3,274 | 10,209 |
+| course-selection-scratch-p2 | `ffa8a15cd83f` | PARSE FAILED | 7,069（3,584） | 3,247 | 10,316 |
+| course-selection-scratch-p3 | `78d1e7234e75` | PARSE FAILED | 7,081（3,584） | 3,264 | 10,345 |
+| crud-access-scratch | `ff7db77818e2` | SEMANTIC FAILED | 5,297（3,584） | 1,468 | 6,765 |
+| crud-access-scratch-p1 | `20555d93f3e9` | PARSE FAILED | 5,306（3,584） | 1,360 | 6,666 |
+| crud-access-scratch-p2 | `003afdbc8edf` | SEMANTIC FAILED | 5,352（3,584） | 1,418 | 6,770 |
+| crud-access-scratch-p3 | `53c88a097865` | SEMANTIC FAILED | 5,383（3,584） | 1,406 | 6,789 |
+| multiplication-change | 仅保留未获响应请求 | APIConnectionError，HTTP=None | 未知 | 未知 | 未知 |
+| multiplication-scratch | `cb04c46a81ee` | PARSE FAILED | 9,468（3,584） | 6,541 | 16,009 |
+| **13 份已返回用量合计** | | **PARSE 10／SEMANTIC 3** | **91,358（43,776）** | **36,182** | **127,540** |
+
+**失败原因按诊断与原始源码交叉核对。**前三份选课改写把字段约束写成 `where min(1) and max(7)`，约束应以逗号分隔；选课改写 p3、三份选课从零写及乘法从零写中可见把保留字 `target`／`order` 当变量名。选课从零写 p1 把 `exists` 步骤错误嵌进 `validate`；CRUD 从零写 p1 的分页 `find` 缺少 `else 错误`，因此在 `as` 才触发语法诊断。三份 CRUD 语义失败涉及显式绑定框架管理的 version、版本实体行内加法，以及 `fails` 名称顺序。这些是当前诊断已定位的问题，不声称修掉第一处后就没有其他错误；没有手改源码、给教师喂参考答案、修改解析器或放宽判卷。首轮未到业务门，不能据此评价新必填规则的真实业务通过率，也不把 13 份小样本当作受控版本对照实验。
+
+第 13 次仅保存了 `request.json`，没有 `response.json` 或 SDK usage；CLI 返回 `teacher request failed: APIConnectionError HTTP=None; no automatic retry`。另以 `verification/collection-status.json` 记录这一事实，保留未获响应的请求指纹，不补造正常采样记录；该请求是否发生服务端计费未知，127,540 仅是已知合计。
+
+**本轮边界。**新增 API 尝试 14 次，已知响应 13 份；反馈修复 0 次，业务门派发 0 次，新增合格答案 0 条。累计合格教师答案仍为 **45 条**，学生 v2 保持当时的 44 条，未训练。待负责人批准后，13 份失败候选各修一轮，预计输入 **148,100**、输出 **35,800** tokens；这是依据前次 prompt/completion 与新增诊断、DDL 反馈估算，缓存命中未知。网络失败的乘法改写若单独补采一次，另估输入 **12,900**、输出 **5,500**；两项合计约输入 **161,000**、输出 **41,300**（**202,300**），不包含补采后继续修复。未批准前不追加付费调用。

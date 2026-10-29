@@ -63,6 +63,10 @@
 
 [`pilots/course-selection-change-p1-g6t/`](pilots/course-selection-change-p1-g6t/) 从 v6 的选课改写 p1 导入原始响应，API 调用 0 次。普通非 Optional 输入必填（`5cff5c3`，verify #198）及生成器 `$` 局部变量（`391eb87`，verify #199）已修复并通过 CI；新批次在与 Git blob 字节一致的 LF 源码快照中重新冻结工具链、编译检查器并静态检查。参考与教师修复候选 `e61b238d030f` 均完整生成 95 个文件，原始教师 `e7bb44f7a3e1` 仍在解析阶段失败。同一候选在受测提交 `bfd7d768` 的 [业务门 #61](https://github.com/HoloNova/Software-IR/actions/runs/40795909868) 四门全通过、152/0，已核对 ZIP/绑定/附件哈希并归档 `runtime/`，`train-teacher.jsonl` 导出 1 条。**新教师合格答案累计 45 条**（鉴权 23、课程 22），首次有合格的选课改写答案；原始请求、响应、源码及 task 的 `reference_evidence` 不变。学生 v2 仍为当时的 44 条，待下一批判卷结束统一更新。字节核对见批次 `verification/checkout-verification.json`，说明见[数据报告第十三阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-toolchain-recheck-v1)。
 
+## v7 定向首轮（尚无新增合格答案）
+
+负责人确认预算后，14 个 `pilots/*-g7/` 新批次完成 14 次初始请求：13 份答卷全部静态失败（10 PARSE、3 SEMANTIC），乘法改写 1 次 APIConnectionError 无响应、用量未知，未自动重试。14 份参考静态通过，原始请求／响应、候选、诊断及冻结来源均保留；汇总见 [`research/2026-10-29/v7-initial-sampling.json`](research/2026-10-29/v7-initial-sampling.json)，原因与逐次用量见[数据报告第十四阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-prompt-v7-initial)。已知输入 91,358（缓存命中 43,776）、输出 36,182，合计 127,540 tokens；失败网络请求的未知用量不算 0。未调用反馈修复或派发业务门，新增合格答案 0，累计仍为 45；dev 两题不进入学生训练。下一步待确认各修一轮的预算，不手改答案或放宽判卷。
+
 ## 学生训练格式
 
 [`student/train-student-v2.jsonl`](student/) 是全部 44 条合格答案（v1 是当时的 14 条）用 `student` 命令重新包装的学生训练数据：固定短 system（`experiments/slm/prompts/student-v1.md`）+ 与教师相同的题目 + 最终合格 SIR，不带教师规则手册和修复经过。`.index.json` 记录来源批次、样本与业务门 run；`.tokens.json` 是实测 token 长度，两版最长训练序列都是 3,874（deepseek-coder-1.3b）/ 3,042（Qwen3-4B），远低于 16K。详见[数据报告第十一阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#第十一阶段学生训练格式2026-10-28)。

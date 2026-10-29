@@ -1,0 +1,15 @@
+{
+  "command": [
+    "java",
+    "-XX:-UsePerfData",
+    "-XX:ActiveProcessorCount=2",
+    "-Xmx256m",
+    "-XX:MaxMetaspaceSize=128m",
+    "-cp",
+    "C:\\Users\\zdw00\\Desktop\\Software IR\\target\\slm-handoff\\source-69237244-lf\\kcg-cli\\target\\classes;C:\\Users\\zdw00\\Desktop\\Software IR\\target\\slm-handoff\\source-69237244-lf\\sir-toolchain-application\\target\\classes;C:\\Users\\zdw00\\Desktop\\Software IR\\target\\slm-handoff\\source-69237244-lf\\sir-change\\target\\classes;C:\\Users\\zdw00\\Desktop\\Software IR\\target\\slm-handoff\\source-69237244-lf\\sir-project-graph\\target\\classes;C:\\Users\\zdw00\\Desktop\\Software IR\\target\\slm-handoff\\source-69237244-lf\\sir-generator-spring-boot\\target\\classes;C:\\Users\\zdw00\\Desktop\\Software IR\\target\\slm-handoff\\source-69237244-lf\\sir-lowering-spring-boot\\target\\classes;C:\\Users\\zdw00\\Desktop\\Software IR\\target\\slm-handoff\\source-69237244-lf\\sir-lowering-api\\target\\classes;C:\\Users\\zdw00\\Desktop\\Software IR\\target\\slm-handoff\\source-69237244-lf\\sir-semantic\\target\\classes;C:\\Users\\zdw00\\Desktop\\Software IR\\target\\slm-handoff\\source-69237244-lf\\sir-parser\\target\\classes;D:\\maven-repo\\org\\antlr\\antlr4-runtime\\4.13.2\\antlr4-runtime-4.13.2.jar",
+    "io.kcg.cli.KcgCli",
+    "check"
+  ],
+  "input_sha256": "b23cfec7298815082beedef235cb2272f657c432cc6f3326dc3f6e3c61e7c0c0",
+  "returncode": 0
+}

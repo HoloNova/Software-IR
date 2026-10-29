@@ -1,0 +1,23 @@
+{
+  "record": {
+    "automatic_retry": false,
+    "bundle": "multiplication-change-g7",
+    "collection_status": "REQUEST_ERROR",
+    "error_type": "APIConnectionError",
+    "estimated_input_tokens": 12900,
+    "estimated_output_tokens": 5500,
+    "http_status": null,
+    "it": "MultiplicationBusinessConformanceIT",
+    "oracle_sha256": "c0616844842a2380c9b007affd0fd54f96ccce37a8471bcdecf3d22c471c25cc",
+    "request_sha256": "e0b14fd0278395dead0b2df525a91a8739d01f75ff933562026fd003692e3de5",
+    "sample_id": "shop-multiplication-change-v1-teacher-ef8217aa9162",
+    "split": "development",
+    "static": "NOT_RUN",
+    "task": "multiplication-change-v1.json",
+    "toolchain_core_sha256": "7275f533d442297d7c43b62317168e09736be9c369d9811c480e8aefad070d54",
+    "usage": null,
+    "usage_unknown": true
+  },
+  "schema_version": "sir-collection-observation/1",
+  "source": "CLI returned DataError: teacher request failed: APIConnectionError HTTP=None; no automatic retry"
+}

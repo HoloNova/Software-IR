@@ -1,0 +1,1241 @@
+{
+  "api_attempts": 14,
+  "business_runs_dispatched": 0,
+  "git_head": "96f536261671d9a1f20a1f68cc3567c6bf2c90c3",
+  "known_usage": {
+    "completion_tokens": 36182,
+    "prompt_cache_hit_tokens": 43776,
+    "prompt_tokens": 91358,
+    "total_tokens": 127540
+  },
+  "next_repair_estimates": {
+    "calls": 13,
+    "input_tokens": 148100,
+    "method": "prior API prompt+completion usage plus estimated diagnostic/DDL feedback; approximate only; cache hits unknown",
+    "output_limit_per_call": 8192,
+    "output_tokens": 35800
+  },
+  "prompt_sha256": "53d8d3a6478acc26ae84dfb64b2fbc392526dc8427841f08878bfdff4a0b33f4",
+  "references_statically_passed": 14,
+  "repairs_called": 0,
+  "request_errors": 1,
+  "responses_received": 13,
+  "results": [
+    {
+      "bundle": "course-selection-change-g7",
+      "collection_status": "RESPONSE_RECEIVED",
+      "diagnostics": [
+        {
+          "code": "SIR-PARSE-001",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "遇到不符合 SIR 语法的内容：and",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 8319,
+            "endColumn": 47,
+            "endLine": 260,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 8316,
+            "startColumn": 44,
+            "startLine": 260
+          },
+          "stage": "PARSE"
+        },
+        {
+          "code": "SIR-PARSE-001",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "遇到不符合 SIR 语法的内容：capability",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 8466,
+            "endColumn": 15,
+            "endLine": 264,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 8456,
+            "startColumn": 5,
+            "startLine": 264
+          },
+          "stage": "PARSE"
+        }
+      ],
+      "estimated_input_tokens": 8200,
+      "estimated_output_tokens": 2700,
+      "estimated_repair_input_tokens": 12400,
+      "estimated_repair_output_tokens": 2700,
+      "it": "CourseSelectionBusinessConformanceIT",
+      "oracle_sha256": "9dea6bbcc7b9defc7807dfa1523ba976704a5b25e6dd6c3b2c95cf090d771d74",
+      "sample_id": "course-course-selection-change-v1-teacher-e8e641739dc2",
+      "split": "train",
+      "stage": "PARSE",
+      "static": "FAILED",
+      "task": "course-selection-change-v1.json",
+      "toolchain_core_sha256": "7275f533d442297d7c43b62317168e09736be9c369d9811c480e8aefad070d54",
+      "usage": {
+        "completion_tokens": 2745,
+        "completion_tokens_details": null,
+        "prompt_cache_hit_tokens": 768,
+        "prompt_cache_miss_tokens": 7343,
+        "prompt_tokens": 8111,
+        "prompt_tokens_details": {
+          "audio_tokens": null,
+          "cached_tokens": 768
+        },
+        "total_tokens": 10856
+      }
+    },
+    {
+      "bundle": "course-selection-change-p1-g7",
+      "collection_status": "RESPONSE_RECEIVED",
+      "diagnostics": [
+        {
+          "code": "SIR-PARSE-001",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "遇到不符合 SIR 语法的内容：and",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 8319,
+            "endColumn": 47,
+            "endLine": 260,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 8316,
+            "startColumn": 44,
+            "startLine": 260
+          },
+          "stage": "PARSE"
+        },
+        {
+          "code": "SIR-PARSE-001",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "遇到不符合 SIR 语法的内容：capability",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 8466,
+            "endColumn": 15,
+            "endLine": 264,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 8456,
+            "startColumn": 5,
+            "startLine": 264
+          },
+          "stage": "PARSE"
+        }
+      ],
+      "estimated_input_tokens": 8200,
+      "estimated_output_tokens": 2700,
+      "estimated_repair_input_tokens": 12300,
+      "estimated_repair_output_tokens": 2700,
+      "it": "CourseSelectionBusinessConformanceIT",
+      "oracle_sha256": "9dea6bbcc7b9defc7807dfa1523ba976704a5b25e6dd6c3b2c95cf090d771d74",
+      "sample_id": "course-course-selection-change-p1-v1-teacher-713a0908b68a",
+      "split": "train",
+      "stage": "PARSE",
+      "static": "FAILED",
+      "task": "course-selection-change-p1-v1.json",
+      "toolchain_core_sha256": "7275f533d442297d7c43b62317168e09736be9c369d9811c480e8aefad070d54",
+      "usage": {
+        "completion_tokens": 2659,
+        "completion_tokens_details": null,
+        "prompt_cache_hit_tokens": 3584,
+        "prompt_cache_miss_tokens": 4543,
+        "prompt_tokens": 8127,
+        "prompt_tokens_details": {
+          "audio_tokens": null,
+          "cached_tokens": 3584
+        },
+        "total_tokens": 10786
+      }
+    },
+    {
+      "bundle": "course-selection-change-p2-g7",
+      "collection_status": "RESPONSE_RECEIVED",
+      "diagnostics": [
+        {
+          "code": "SIR-PARSE-001",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "遇到不符合 SIR 语法的内容：and",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 8320,
+            "endColumn": 47,
+            "endLine": 261,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 8317,
+            "startColumn": 44,
+            "startLine": 261
+          },
+          "stage": "PARSE"
+        },
+        {
+          "code": "SIR-PARSE-001",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "遇到不符合 SIR 语法的内容：capability",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 8467,
+            "endColumn": 15,
+            "endLine": 265,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 8457,
+            "startColumn": 5,
+            "startLine": 265
+          },
+          "stage": "PARSE"
+        }
+      ],
+      "estimated_input_tokens": 8200,
+      "estimated_output_tokens": 2700,
+      "estimated_repair_input_tokens": 12400,
+      "estimated_repair_output_tokens": 2700,
+      "it": "CourseSelectionBusinessConformanceIT",
+      "oracle_sha256": "9dea6bbcc7b9defc7807dfa1523ba976704a5b25e6dd6c3b2c95cf090d771d74",
+      "sample_id": "course-course-selection-change-p2-v1-teacher-f63c8bf2e0ee",
+      "split": "train",
+      "stage": "PARSE",
+      "static": "FAILED",
+      "task": "course-selection-change-p2-v1.json",
+      "toolchain_core_sha256": "7275f533d442297d7c43b62317168e09736be9c369d9811c480e8aefad070d54",
+      "usage": {
+        "completion_tokens": 2722,
+        "completion_tokens_details": null,
+        "prompt_cache_hit_tokens": 3584,
+        "prompt_cache_miss_tokens": 4585,
+        "prompt_tokens": 8169,
+        "prompt_tokens_details": {
+          "audio_tokens": null,
+          "cached_tokens": 3584
+        },
+        "total_tokens": 10891
+      }
+    },
+    {
+      "bundle": "course-selection-change-p3-g7",
+      "collection_status": "RESPONSE_RECEIVED",
+      "diagnostics": [
+        {
+          "code": "SIR-PARSE-003",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "存在多余的语法元素",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 9952,
+            "endColumn": 48,
+            "endLine": 314,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 9946,
+            "startColumn": 42,
+            "startLine": 314
+          },
+          "stage": "PARSE"
+        },
+        {
+          "code": "SIR-PARSE-003",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "存在多余的语法元素",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 9963,
+            "endColumn": 59,
+            "endLine": 314,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 9957,
+            "startColumn": 53,
+            "startLine": 314
+          },
+          "stage": "PARSE"
+        },
+        {
+          "code": "SIR-PARSE-001",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "“target”是 SIR 的关键字，不能用作名字；换一个名字，例如 targetValue",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 10008,
+            "endColumn": 24,
+            "endLine": 315,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 10002,
+            "startColumn": 18,
+            "startLine": 315
+          },
+          "stage": "PARSE"
+        },
+        {
+          "code": "SIR-PARSE-001",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "遇到不符合 SIR 语法的内容：==",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 10021,
+            "endColumn": 37,
+            "endLine": 315,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 10019,
+            "startColumn": 35,
+            "startLine": 315
+          },
+          "stage": "PARSE"
+        },
+        {
+          "code": "SIR-PARSE-001",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "遇到不符合 SIR 语法的内容：persist",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 10545,
+            "endColumn": 16,
+            "endLine": 325,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 10538,
+            "startColumn": 9,
+            "startLine": 325
+          },
+          "stage": "PARSE"
+        }
+      ],
+      "estimated_input_tokens": 8200,
+      "estimated_output_tokens": 2700,
+      "estimated_repair_input_tokens": 13000,
+      "estimated_repair_output_tokens": 2700,
+      "it": "CourseSelectionBusinessConformanceIT",
+      "oracle_sha256": "9dea6bbcc7b9defc7807dfa1523ba976704a5b25e6dd6c3b2c95cf090d771d74",
+      "sample_id": "course-course-selection-change-p3-v1-teacher-55445a6ca094",
+      "split": "train",
+      "stage": "PARSE",
+      "static": "FAILED",
+      "task": "course-selection-change-p3-v1.json",
+      "toolchain_core_sha256": "7275f533d442297d7c43b62317168e09736be9c369d9811c480e8aefad070d54",
+      "usage": {
+        "completion_tokens": 2677,
+        "completion_tokens_details": null,
+        "prompt_cache_hit_tokens": 3584,
+        "prompt_cache_miss_tokens": 4593,
+        "prompt_tokens": 8177,
+        "prompt_tokens_details": {
+          "audio_tokens": null,
+          "cached_tokens": 3584
+        },
+        "total_tokens": 10854
+      }
+    },
+    {
+      "bundle": "course-selection-scratch-g7",
+      "collection_status": "RESPONSE_RECEIVED",
+      "diagnostics": [
+        {
+          "code": "SIR-PARSE-001",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "“target”是 SIR 的关键字，不能用作名字；换一个名字，例如 targetValue",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 9755,
+            "endColumn": 48,
+            "endLine": 362,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 9749,
+            "startColumn": 42,
+            "startLine": 362
+          },
+          "stage": "PARSE"
+        },
+        {
+          "code": "SIR-PARSE-001",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "遇到不符合 SIR 语法的内容：persist",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 10330,
+            "endColumn": 16,
+            "endLine": 373,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 10323,
+            "startColumn": 9,
+            "startLine": 373
+          },
+          "stage": "PARSE"
+        }
+      ],
+      "estimated_input_tokens": 7100,
+      "estimated_output_tokens": 3300,
+      "estimated_repair_input_tokens": 11800,
+      "estimated_repair_output_tokens": 3300,
+      "it": "CourseSelectionBusinessConformanceIT",
+      "oracle_sha256": "9dea6bbcc7b9defc7807dfa1523ba976704a5b25e6dd6c3b2c95cf090d771d74",
+      "sample_id": "course-course-selection-scratch-v1-teacher-06c2dd85ffe4",
+      "split": "train",
+      "stage": "PARSE",
+      "static": "FAILED",
+      "task": "course-selection-scratch-v1.json",
+      "toolchain_core_sha256": "7275f533d442297d7c43b62317168e09736be9c369d9811c480e8aefad070d54",
+      "usage": {
+        "completion_tokens": 3401,
+        "completion_tokens_details": null,
+        "prompt_cache_hit_tokens": 3584,
+        "prompt_cache_miss_tokens": 3299,
+        "prompt_tokens": 6883,
+        "prompt_tokens_details": {
+          "audio_tokens": null,
+          "cached_tokens": 3584
+        },
+        "total_tokens": 10284
+      }
+    },
+    {
+      "bundle": "course-selection-scratch-p1-g7",
+      "collection_status": "RESPONSE_RECEIVED",
+      "diagnostics": [
+        {
+          "code": "SIR-PARSE-001",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "遇到不符合 SIR 语法的内容：User",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 5083,
+            "endColumn": 29,
+            "endLine": 202,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 5079,
+            "startColumn": 25,
+            "startLine": 202
+          },
+          "stage": "PARSE"
+        },
+        {
+          "code": "SIR-PARSE-001",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "遇到不符合 SIR 语法的内容：where",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 5089,
+            "endColumn": 35,
+            "endLine": 202,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 5084,
+            "startColumn": 30,
+            "startLine": 202
+          },
+          "stage": "PARSE"
+        },
+        {
+          "code": "SIR-PARSE-001",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "遇到不符合 SIR 语法的内容：persist",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 5318,
+            "endColumn": 16,
+            "endLine": 209,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 5311,
+            "startColumn": 9,
+            "startLine": 209
+          },
+          "stage": "PARSE"
+        }
+      ],
+      "estimated_input_tokens": 7100,
+      "estimated_output_tokens": 3300,
+      "estimated_repair_input_tokens": 11900,
+      "estimated_repair_output_tokens": 3300,
+      "it": "CourseSelectionBusinessConformanceIT",
+      "oracle_sha256": "9dea6bbcc7b9defc7807dfa1523ba976704a5b25e6dd6c3b2c95cf090d771d74",
+      "sample_id": "course-course-selection-scratch-p1-v1-teacher-d3101cf2a472",
+      "split": "train",
+      "stage": "PARSE",
+      "static": "FAILED",
+      "task": "course-selection-scratch-p1-v1.json",
+      "toolchain_core_sha256": "7275f533d442297d7c43b62317168e09736be9c369d9811c480e8aefad070d54",
+      "usage": {
+        "completion_tokens": 3274,
+        "completion_tokens_details": null,
+        "prompt_cache_hit_tokens": 3584,
+        "prompt_cache_miss_tokens": 3351,
+        "prompt_tokens": 6935,
+        "prompt_tokens_details": {
+          "audio_tokens": null,
+          "cached_tokens": 3584
+        },
+        "total_tokens": 10209
+      }
+    },
+    {
+      "bundle": "course-selection-scratch-p2-g7",
+      "collection_status": "RESPONSE_RECEIVED",
+      "diagnostics": [
+        {
+          "code": "SIR-PARSE-001",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "“target”是 SIR 的关键字，不能用作名字；换一个名字，例如 targetValue",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 1837,
+            "endColumn": 19,
+            "endLine": 62,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 1831,
+            "startColumn": 13,
+            "startLine": 62
+          },
+          "stage": "PARSE"
+        },
+        {
+          "code": "SIR-PARSE-001",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "遇到不符合 SIR 语法的内容：entity",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 1937,
+            "endColumn": 11,
+            "endLine": 67,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 1931,
+            "startColumn": 5,
+            "startLine": 67
+          },
+          "stage": "PARSE"
+        }
+      ],
+      "estimated_input_tokens": 7100,
+      "estimated_output_tokens": 3300,
+      "estimated_repair_input_tokens": 11900,
+      "estimated_repair_output_tokens": 3300,
+      "it": "CourseSelectionBusinessConformanceIT",
+      "oracle_sha256": "9dea6bbcc7b9defc7807dfa1523ba976704a5b25e6dd6c3b2c95cf090d771d74",
+      "sample_id": "course-course-selection-scratch-p2-v1-teacher-ffa8a15cd83f",
+      "split": "train",
+      "stage": "PARSE",
+      "static": "FAILED",
+      "task": "course-selection-scratch-p2-v1.json",
+      "toolchain_core_sha256": "7275f533d442297d7c43b62317168e09736be9c369d9811c480e8aefad070d54",
+      "usage": {
+        "completion_tokens": 3247,
+        "completion_tokens_details": null,
+        "prompt_cache_hit_tokens": 3584,
+        "prompt_cache_miss_tokens": 3485,
+        "prompt_tokens": 7069,
+        "prompt_tokens_details": {
+          "audio_tokens": null,
+          "cached_tokens": 3584
+        },
+        "total_tokens": 10316
+      }
+    },
+    {
+      "bundle": "course-selection-scratch-p3-g7",
+      "collection_status": "RESPONSE_RECEIVED",
+      "diagnostics": [
+        {
+          "code": "SIR-PARSE-001",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "“target”是 SIR 的关键字，不能用作名字；换一个名字，例如 targetValue",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 11805,
+            "endColumn": 48,
+            "endLine": 408,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 11799,
+            "startColumn": 42,
+            "startLine": 408
+          },
+          "stage": "PARSE"
+        },
+        {
+          "code": "SIR-PARSE-001",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "遇到不符合 SIR 语法的内容：persist",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 12378,
+            "endColumn": 16,
+            "endLine": 419,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 12371,
+            "startColumn": 9,
+            "startLine": 419
+          },
+          "stage": "PARSE"
+        }
+      ],
+      "estimated_input_tokens": 7100,
+      "estimated_output_tokens": 3300,
+      "estimated_repair_input_tokens": 11900,
+      "estimated_repair_output_tokens": 3300,
+      "it": "CourseSelectionBusinessConformanceIT",
+      "oracle_sha256": "9dea6bbcc7b9defc7807dfa1523ba976704a5b25e6dd6c3b2c95cf090d771d74",
+      "sample_id": "course-course-selection-scratch-p3-v1-teacher-78d1e7234e75",
+      "split": "train",
+      "stage": "PARSE",
+      "static": "FAILED",
+      "task": "course-selection-scratch-p3-v1.json",
+      "toolchain_core_sha256": "7275f533d442297d7c43b62317168e09736be9c369d9811c480e8aefad070d54",
+      "usage": {
+        "completion_tokens": 3264,
+        "completion_tokens_details": null,
+        "prompt_cache_hit_tokens": 3584,
+        "prompt_cache_miss_tokens": 3497,
+        "prompt_tokens": 7081,
+        "prompt_tokens_details": {
+          "audio_tokens": null,
+          "cached_tokens": 3584
+        },
+        "total_tokens": 10345
+      }
+    },
+    {
+      "bundle": "crud-access-scratch-g7",
+      "collection_status": "RESPONSE_RECEIVED",
+      "diagnostics": [
+        {
+          "code": "SIR-VALID-004",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "create 不能绑定 version 字段（由框架初始化）: version",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 4694,
+            "endColumn": 10,
+            "endLine": 197,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 4555,
+            "startColumn": 9,
+            "startLine": 192
+          },
+          "stage": "SEMANTIC"
+        },
+        {
+          "code": "SIR-TYPE-001",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "create 绑定类型不匹配: version",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 4684,
+            "endColumn": 22,
+            "endLine": 196,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 4673,
+            "startColumn": 11,
+            "startLine": 196
+          },
+          "stage": "SEMANTIC"
+        },
+        {
+          "code": "SIR-VALID-007",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "带 version 的实体不能使用“本字段 + 值”（版本已经保护了这一行）",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 6007,
+            "endColumn": 21,
+            "endLine": 244,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 6002,
+            "startColumn": 16,
+            "startLine": 244
+          },
+          "stage": "SEMANTIC"
+        },
+        {
+          "code": "SIR-VALID-004",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "update 不能绑定 version 字段（由框架递增）: version",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 6075,
+            "endColumn": 38,
+            "endLine": 246,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 6048,
+            "startColumn": 11,
+            "startLine": 246
+          },
+          "stage": "SEMANTIC"
+        }
+      ],
+      "estimated_input_tokens": 5400,
+      "estimated_output_tokens": 1400,
+      "estimated_repair_input_tokens": 8100,
+      "estimated_repair_output_tokens": 1400,
+      "it": "CrudAccessBusinessConformanceIT",
+      "oracle_sha256": "3ac94cb3bfea92c174bb7413daeb3cc6227abc45da03aa78c04a70a7ee1f4786",
+      "sample_id": "auth-crud-access-scratch-v1-teacher-ff7db77818e2",
+      "split": "train",
+      "stage": "SEMANTIC",
+      "static": "FAILED",
+      "task": "crud-access-scratch-v1.json",
+      "toolchain_core_sha256": "7275f533d442297d7c43b62317168e09736be9c369d9811c480e8aefad070d54",
+      "usage": {
+        "completion_tokens": 1468,
+        "completion_tokens_details": null,
+        "prompt_cache_hit_tokens": 3584,
+        "prompt_cache_miss_tokens": 1713,
+        "prompt_tokens": 5297,
+        "prompt_tokens_details": {
+          "audio_tokens": null,
+          "cached_tokens": 3584
+        },
+        "total_tokens": 6765
+      }
+    },
+    {
+      "bundle": "crud-access-scratch-p1-g7",
+      "collection_status": "RESPONSE_RECEIVED",
+      "diagnostics": [
+        {
+          "code": "SIR-PARSE-001",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "遇到不符合 SIR 语法的内容：as",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 3000,
+            "endColumn": 82,
+            "endLine": 127,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 2998,
+            "startColumn": 80,
+            "startLine": 127
+          },
+          "stage": "PARSE"
+        },
+        {
+          "code": "SIR-PARSE-001",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "遇到不符合 SIR 语法的内容：as",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 5045,
+            "endColumn": 100,
+            "endLine": 207,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 5043,
+            "startColumn": 98,
+            "startLine": 207
+          },
+          "stage": "PARSE"
+        }
+      ],
+      "estimated_input_tokens": 5400,
+      "estimated_output_tokens": 1400,
+      "estimated_repair_input_tokens": 7600,
+      "estimated_repair_output_tokens": 1400,
+      "it": "CrudAccessBusinessConformanceIT",
+      "oracle_sha256": "3ac94cb3bfea92c174bb7413daeb3cc6227abc45da03aa78c04a70a7ee1f4786",
+      "sample_id": "auth-crud-access-scratch-p1-v1-teacher-20555d93f3e9",
+      "split": "train",
+      "stage": "PARSE",
+      "static": "FAILED",
+      "task": "crud-access-scratch-p1-v1.json",
+      "toolchain_core_sha256": "7275f533d442297d7c43b62317168e09736be9c369d9811c480e8aefad070d54",
+      "usage": {
+        "completion_tokens": 1360,
+        "completion_tokens_details": null,
+        "prompt_cache_hit_tokens": 3584,
+        "prompt_cache_miss_tokens": 1722,
+        "prompt_tokens": 5306,
+        "prompt_tokens_details": {
+          "audio_tokens": null,
+          "cached_tokens": 3584
+        },
+        "total_tokens": 6666
+      }
+    },
+    {
+      "bundle": "crud-access-scratch-p2-g7",
+      "collection_status": "RESPONSE_RECEIVED",
+      "diagnostics": [
+        {
+          "code": "SIR-VALID-001",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "fails 必须按 Error 名称升序排列：BookNotFound 要排在 Forbidden 之前。应写成：fails BookNotFound; fails Forbidden;",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 3322,
+            "endColumn": 26,
+            "endLine": 149,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 3303,
+            "startColumn": 7,
+            "startLine": 149
+          },
+          "stage": "SEMANTIC"
+        },
+        {
+          "code": "SIR-VALID-001",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "fails 必须按 Error 名称升序排列：BookNotFound 要排在 Forbidden 之前。应写成：fails BookNotFound; fails Forbidden;",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 3830,
+            "endColumn": 26,
+            "endLine": 169,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 3811,
+            "startColumn": 7,
+            "startLine": 169
+          },
+          "stage": "SEMANTIC"
+        },
+        {
+          "code": "SIR-VALID-004",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "create 不能绑定 version 字段（由框架初始化）: version",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 4563,
+            "endColumn": 10,
+            "endLine": 196,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 4432,
+            "startColumn": 9,
+            "startLine": 191
+          },
+          "stage": "SEMANTIC"
+        },
+        {
+          "code": "SIR-TYPE-001",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "create 绑定类型不匹配: version",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 4553,
+            "endColumn": 22,
+            "endLine": 195,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 4542,
+            "startColumn": 11,
+            "startLine": 195
+          },
+          "stage": "SEMANTIC"
+        },
+        {
+          "code": "SIR-VALID-001",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "fails 必须按 Error 名称升序排列：EmptyChange 要排在 StalePost 之前。应写成：fails EmptyChange; fails Forbidden; fails PostNotFound; fails StalePost;",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 5497,
+            "endColumn": 25,
+            "endLine": 234,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 5479,
+            "startColumn": 7,
+            "startLine": 234
+          },
+          "stage": "SEMANTIC"
+        }
+      ],
+      "estimated_input_tokens": 5400,
+      "estimated_output_tokens": 1400,
+      "estimated_repair_input_tokens": 8400,
+      "estimated_repair_output_tokens": 1400,
+      "it": "CrudAccessBusinessConformanceIT",
+      "oracle_sha256": "3ac94cb3bfea92c174bb7413daeb3cc6227abc45da03aa78c04a70a7ee1f4786",
+      "sample_id": "auth-crud-access-scratch-p2-v1-teacher-003afdbc8edf",
+      "split": "train",
+      "stage": "SEMANTIC",
+      "static": "FAILED",
+      "task": "crud-access-scratch-p2-v1.json",
+      "toolchain_core_sha256": "7275f533d442297d7c43b62317168e09736be9c369d9811c480e8aefad070d54",
+      "usage": {
+        "completion_tokens": 1418,
+        "completion_tokens_details": null,
+        "prompt_cache_hit_tokens": 3584,
+        "prompt_cache_miss_tokens": 1768,
+        "prompt_tokens": 5352,
+        "prompt_tokens_details": {
+          "audio_tokens": null,
+          "cached_tokens": 3584
+        },
+        "total_tokens": 6770
+      }
+    },
+    {
+      "bundle": "crud-access-scratch-p3-g7",
+      "collection_status": "RESPONSE_RECEIVED",
+      "diagnostics": [
+        {
+          "code": "SIR-VALID-004",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "create 不能绑定 version 字段（由框架初始化）: version",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 4424,
+            "endColumn": 92,
+            "endLine": 178,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 4341,
+            "startColumn": 9,
+            "startLine": 178
+          },
+          "stage": "SEMANTIC"
+        },
+        {
+          "code": "SIR-TYPE-001",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "create 绑定类型不匹配: version",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 4422,
+            "endColumn": 90,
+            "endLine": 178,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 4411,
+            "startColumn": 79,
+            "startLine": 178
+          },
+          "stage": "SEMANTIC"
+        }
+      ],
+      "estimated_input_tokens": 5400,
+      "estimated_output_tokens": 1400,
+      "estimated_repair_input_tokens": 7700,
+      "estimated_repair_output_tokens": 1400,
+      "it": "CrudAccessBusinessConformanceIT",
+      "oracle_sha256": "3ac94cb3bfea92c174bb7413daeb3cc6227abc45da03aa78c04a70a7ee1f4786",
+      "sample_id": "auth-crud-access-scratch-p3-v1-teacher-53c88a097865",
+      "split": "train",
+      "stage": "SEMANTIC",
+      "static": "FAILED",
+      "task": "crud-access-scratch-p3-v1.json",
+      "toolchain_core_sha256": "7275f533d442297d7c43b62317168e09736be9c369d9811c480e8aefad070d54",
+      "usage": {
+        "completion_tokens": 1406,
+        "completion_tokens_details": null,
+        "prompt_cache_hit_tokens": 3584,
+        "prompt_cache_miss_tokens": 1799,
+        "prompt_tokens": 5383,
+        "prompt_tokens_details": {
+          "audio_tokens": null,
+          "cached_tokens": 3584
+        },
+        "total_tokens": 6789
+      }
+    },
+    {
+      "automatic_retry": false,
+      "bundle": "multiplication-change-g7",
+      "collection_status": "REQUEST_ERROR",
+      "error_type": "APIConnectionError",
+      "estimated_input_tokens": 12900,
+      "estimated_output_tokens": 5500,
+      "http_status": null,
+      "it": "MultiplicationBusinessConformanceIT",
+      "oracle_sha256": "c0616844842a2380c9b007affd0fd54f96ccce37a8471bcdecf3d22c471c25cc",
+      "request_sha256": "e0b14fd0278395dead0b2df525a91a8739d01f75ff933562026fd003692e3de5",
+      "sample_id": "shop-multiplication-change-v1-teacher-ef8217aa9162",
+      "split": "development",
+      "static": "NOT_RUN",
+      "task": "multiplication-change-v1.json",
+      "toolchain_core_sha256": "7275f533d442297d7c43b62317168e09736be9c369d9811c480e8aefad070d54",
+      "usage": null,
+      "usage_unknown": true
+    },
+    {
+      "bundle": "multiplication-scratch-g7",
+      "collection_status": "RESPONSE_RECEIVED",
+      "diagnostics": [
+        {
+          "code": "SIR-PARSE-003",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "存在多余的语法元素",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 19287,
+            "endColumn": 53,
+            "endLine": 690,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 19282,
+            "startColumn": 48,
+            "startLine": 690
+          },
+          "stage": "PARSE"
+        },
+        {
+          "code": "SIR-PARSE-003",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "存在多余的语法元素",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 19298,
+            "endColumn": 64,
+            "endLine": 690,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 19292,
+            "startColumn": 58,
+            "startLine": 690
+          },
+          "stage": "PARSE"
+        },
+        {
+          "code": "SIR-PARSE-001",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "“order”是 SIR 的关键字，不能用作名字；换一个名字，例如 orderValue",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 19341,
+            "endColumn": 23,
+            "endLine": 691,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 19336,
+            "startColumn": 18,
+            "startLine": 691
+          },
+          "stage": "PARSE"
+        },
+        {
+          "code": "SIR-PARSE-001",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "遇到不符合 SIR 语法的内容：==",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 19350,
+            "endColumn": 32,
+            "endLine": 691,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 19348,
+            "startColumn": 30,
+            "startLine": 691
+          },
+          "stage": "PARSE"
+        },
+        {
+          "code": "SIR-PARSE-001",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "遇到不符合 SIR 语法的内容：persist",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 20206,
+            "endColumn": 16,
+            "endLine": 704,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 20199,
+            "startColumn": 9,
+            "startLine": 704
+          },
+          "stage": "PARSE"
+        }
+      ],
+      "estimated_input_tokens": 9500,
+      "estimated_output_tokens": 6200,
+      "estimated_repair_input_tokens": 18700,
+      "estimated_repair_output_tokens": 6200,
+      "it": "MultiplicationBusinessConformanceIT",
+      "oracle_sha256": "c0616844842a2380c9b007affd0fd54f96ccce37a8471bcdecf3d22c471c25cc",
+      "sample_id": "shop-multiplication-scratch-v1-teacher-cb04c46a81ee",
+      "split": "development",
+      "stage": "PARSE",
+      "static": "FAILED",
+      "task": "multiplication-scratch-v1.json",
+      "toolchain_core_sha256": "7275f533d442297d7c43b62317168e09736be9c369d9811c480e8aefad070d54",
+      "usage": {
+        "completion_tokens": 6541,
+        "completion_tokens_details": null,
+        "prompt_cache_hit_tokens": 3584,
+        "prompt_cache_miss_tokens": 5884,
+        "prompt_tokens": 9468,
+        "prompt_tokens_details": {
+          "audio_tokens": null,
+          "cached_tokens": 3584
+        },
+        "total_tokens": 16009
+      }
+    }
+  ],
+  "schema_version": "sir-sampling-summary/1",
+  "system_prompt": "experiments/slm/prompts/sir-0.3-general-v7.md",
+  "teacher_failure_stages": {
+    "PARSE": 10,
+    "SEMANTIC": 3
+  },
+  "teacher_static_failed": 13,
+  "teacher_static_passed": 0,
+  "unreported_usage_requests": 1
+}
