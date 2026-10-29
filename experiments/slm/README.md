@@ -85,7 +85,9 @@ python -m experiments.slm.data repair --bundle datasets/sir/runs/dual-token-rech
 
 正式定义为 `tasks/blog-change-v1.json`、`blog-scratch-v1.json`；原需求／合同不变，共用 38 项 oracle 闭包及真实参考证据。用原 `prepare` 在与 Git blob 一致的 LF 快照冻结 `datasets/sir/pilots/blog-change-g7/`、`blog-scratch-g7/`，冻结时每批只有 1 份 `existing_reference`，由原静态绑定函数配合该 CI 的 standalone CLI 检查通过；批次运行门不继承参考资格。摘要协议差异与完整证据见[第十八阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-blog-reference-frozen)。
 
-已获批的 v7 首轮两题各采 1 次，2 份均静态失败，新结果为各批 `checked-initial.jsonl`；实际输入 13,927（缓存 7,168）、输出 2,983，共 16,910 tokens。未派发业务门，合格教师仍 48 条；两份各修一轮的预计 25,500 tokens 尚待批准，未发送修复请求。记录见 `datasets/sir/research/2026-10-29/blog-v7-initial/` 和[第十九阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-blog-v7-initial)。
+已获批的 v7 首轮两题各采 1 次，2 份均静态失败，新结果为各批 `checked-initial.jsonl`；实际输入 13,927（缓存 7,168）、输出 2,983，共 16,910 tokens。初始记录见 `datasets/sir/research/2026-10-29/blog-v7-initial/` 和[第十九阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-blog-v7-initial)。
+
+负责人随后批准两份各一轮静态反馈重答，实际共 22,846 tokens；新 `checked-r1.jsonl` 两份均 SEMANTIC FAILED（改写 2 条、从零 18 条 ERROR），没有派发业务门、追加追修或导出。博客累计 4 次 API／39,756 tokens，合格教师仍 48，学生 v3 未变。失败轨迹仅归档，不作为当前学生 SFT 的正确答案；本阶段已按一轮上限停止。记录见 `datasets/sir/research/2026-10-29/blog-v7-repair/` 和[第二十阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-blog-v7-repair)。
 
 ## 通用静态修复
 

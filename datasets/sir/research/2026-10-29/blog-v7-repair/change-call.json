@@ -1,0 +1,97 @@
+{
+  "actual_model": "deepseek-flash",
+  "automatic_retries": 0,
+  "bundle": "datasets/sir/pilots/blog-change-g7",
+  "check_execution": {
+    "directory": "C:\\Users\\zdw00\\Desktop\\Software IR\\datasets\\sir\\pilots\\blog-change-g7\\checks\\ebe75e51dea2477886e93d6c09431754",
+    "stdout_sha256": "f16b11a689fcdef7a850125c5b80dfd70e08dcc7fe5d6c1e9592f0ebeddef60f"
+  },
+  "checked": "datasets/sir/pilots/blog-change-g7/checked-r1.jsonl",
+  "checker_artifact_run_id": 40839225636,
+  "completed_at": "2026-10-29T10:37:39.431023+00:00",
+  "eligible_for_business_gate": false,
+  "estimated_input_tokens": 11500,
+  "estimated_output_tokens": 2000,
+  "finish_reason": "stop",
+  "frozen_git_blobs_verified": 486,
+  "frozen_inputs_unchanged": true,
+  "gates": {
+    "build": "NOT_RUN",
+    "business": "NOT_RUN",
+    "start": "NOT_RUN",
+    "static": "FAILED"
+  },
+  "max_output_tokens": 8192,
+  "new_candidates": 1,
+  "owner_budget_approved": true,
+  "parent_id": "content-blog-change-v1-teacher-e6e632222754",
+  "recorded_new_attempts": 1,
+  "repair_round_for_parent": 1,
+  "request_process_exit_code": 0,
+  "request_sha256": "df4342fc8ecec7a6acc6449c826711f81e4929f844ba2f262aacd61d242f8c4d",
+  "requested_model": "deepseek-flash",
+  "response_sha256": "226cc149ce309e2b0ea84d497a83d3fd8aa222b1aec566964c569e17a02b80fa",
+  "sample_id": "content-blog-change-v1-teacher-0a94bc34bfcb",
+  "source_sha256": "e8c2d9351df1b90a61143d6c1530acae7491a4fbc3cfc5bc5c1c84dc31a97032",
+  "started_at": "2026-10-29T10:37:30.517138+00:00",
+  "static_result": {
+    "diagnostics": [
+      {
+        "code": "SIR-TYPE-004",
+        "fixes": [],
+        "loweredNodeId": null,
+        "message": "any 的条件必须包含与根实体的连接比较: <Ref 字段> == item",
+        "related": [],
+        "relativePath": null,
+        "severity": "ERROR",
+        "sourceNodeId": null,
+        "sourceSymbol": null,
+        "span": {
+          "endCodePointOffset": 5747,
+          "endColumn": 101,
+          "endLine": 197,
+          "sourceId": "sample.sir",
+          "startCodePointOffset": 5701,
+          "startColumn": 55,
+          "startLine": 197
+        },
+        "stage": "SEMANTIC"
+      },
+      {
+        "code": "SIR-SYMBOL-002",
+        "fixes": [],
+        "loweredNodeId": null,
+        "message": "未定义字段: Post.post",
+        "related": [],
+        "relativePath": null,
+        "severity": "ERROR",
+        "sourceNodeId": null,
+        "sourceSymbol": null,
+        "span": {
+          "endCodePointOffset": 5723,
+          "endColumn": 77,
+          "endLine": 197,
+          "sourceId": "sample.sir",
+          "startCodePointOffset": 5719,
+          "startColumn": 73,
+          "startLine": 197
+        },
+        "stage": "SEMANTIC"
+      }
+    ],
+    "digest": null,
+    "fileCount": 0,
+    "id": "content-blog-change-v1-teacher-0a94bc34bfcb",
+    "ok": false,
+    "sourceSha256": "e8c2d9351df1b90a61143d6c1530acae7491a4fbc3cfc5bc5c1c84dc31a97032",
+    "stage": "SEMANTIC"
+  },
+  "task": "content-blog-change-v1",
+  "unchanged_source_from_parent": false,
+  "usage": {
+    "cache_hit": 8704,
+    "input": 10642,
+    "output": 1479,
+    "total": 12121
+  }
+}

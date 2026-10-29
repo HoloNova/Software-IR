@@ -1,0 +1,5 @@
+--- content-blog-scratch-v1-teacher-6ed907a7bdaa.sir
++++ content-blog-scratch-v1-teacher-e7c30fe85dd5.sir
+@@ -90 +90 @@
+-      field title: Name where length(1, 100) notBlank;
++      field title: Name where length(1, 100);

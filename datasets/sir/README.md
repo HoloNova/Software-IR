@@ -1,5 +1,7 @@
 # SIR 实验数据
 
+本目录同时保存研究轨迹与合格训练输出，**不是每条记录都可用于当前学生 SFT**。失败答案／报错会归档并可用于本轮教师反馈；只有四门通过的最终答案才导出为正确 completion，student 包装还会去掉修复历史。当前没有开始学生模型训练。
+
 ## 首批采样与后续运行
 
 [`pilots/dual-token-v1/`](pilots/dual-token-v1/)：2026-10-25的公开训练种子题试跑，包含1份既有参考、3个真实教师初始候选、同一分支2次反馈修复。初始候选0/3静态通过；最终修复候选通过完整静态生成。该原始批次BUILD/START/BUSINESS保持 **NOT_RUN**，不回写旧资格；`train-qualified.jsonl`是当时的空导出。后续Linux真实验收见下节，当前仍0条新业务合格教师答案。
@@ -82,6 +84,10 @@
 ## 博客 v7 首轮采样（0/2 静态通过）
 
 负责人确认首轮预算后，`pilots/blog-change-g7/`、`blog-scratch-g7/` 各追加 1 份真实教师初始答案，原参考与 frozen task／manifest 不变，新检查写 `checked-initial.jsonl`。改写 `e6e632222754` 语义失败（查询作用域，5 条 ERROR），从零 `6ed907a7bdaa` 解析失败（notBlank，1 条 ERROR）；未手改答案、未追加修复或派发业务门，运行门均 NOT_RUN。实际输入 **13,927**（缓存 **7,168**）、输出 **2,983**，合计 **16,910 tokens**；合格总数仍 **48**，学生 v3 不变。原始记录及下一轮待批预算在 [`research/2026-10-29/blog-v7-initial/`](research/2026-10-29/blog-v7-initial/)，见[第十九阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-blog-v7-initial)。
+
+## 博客候选一轮反馈重答（仍无合格答案）
+
+两份初始失败候选各反馈重答一次，新结果为各批 `checked-r1.jsonl`，父子记录和原始响应均保留。改写 `0a94bc34bfcb` 仍有 2 条语义 ERROR，从零 `e7c30fe85dd5` 越过解析后有 18 条语义 ERROR；两份源码均非原样交回，但都未过静态门，按一轮上限停止，不送业务门。实际输入 **19,861**（缓存 **16,768**）、输出 **2,985**，合计 **22,846 tokens**；博客两阶段累计 **39,756 tokens**，新增合格 0、总数仍 48、学生 v3 未变。失败轨迹不进入当前学生训练文件。父子差异及用量见 [`research/2026-10-29/blog-v7-repair/`](research/2026-10-29/blog-v7-repair/)，详见[第二十阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-blog-v7-repair)。
 
 ## 学生训练格式
 

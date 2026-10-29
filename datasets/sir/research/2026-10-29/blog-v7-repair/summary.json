@@ -1,0 +1,539 @@
+{
+  "approved_estimated_total_tokens": 25500,
+  "approved_repair_plan_sha256": "926cff2644fadecda0996965d0cc99e35c21fab06e08e53b33f1dd0c7dd7a45d",
+  "automatic_retries": 0,
+  "blog_cumulative_api_calls": 4,
+  "blog_cumulative_usage": {
+    "cache_hit": 23936,
+    "input": 33788,
+    "output": 5968,
+    "total": 39756
+  },
+  "business_gate_dispatches": [],
+  "failed_trajectories_are_not_student_sft_completions": true,
+  "model_api_calls": 2,
+  "next_action": "Stop after the approved one repair per parent; no further sampling, repair, training or oracle changes.",
+  "owner_budget_approved": true,
+  "qualified_new_teachers": 0,
+  "qualified_teachers_unchanged": 48,
+  "received_responses": 2,
+  "repair_rounds_per_parent": 1,
+  "results": [
+    {
+      "actual_model": "deepseek-flash",
+      "bundle": "datasets/sir/pilots/blog-change-g7",
+      "collector_sha256": "20953063c1d0ebdcbf55829df0cfb89e791c432628d57d95ce8166628202527f",
+      "diagnostic_code_counts": {
+        "SIR-SYMBOL-002": 1,
+        "SIR-TYPE-004": 1
+      },
+      "diagnostics": [
+        {
+          "code": "SIR-TYPE-004",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "any 的条件必须包含与根实体的连接比较: <Ref 字段> == item",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 5747,
+            "endColumn": 101,
+            "endLine": 197,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 5701,
+            "startColumn": 55,
+            "startLine": 197
+          },
+          "stage": "SEMANTIC"
+        },
+        {
+          "code": "SIR-SYMBOL-002",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "未定义字段: Post.post",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 5723,
+            "endColumn": 77,
+            "endLine": 197,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 5719,
+            "startColumn": 73,
+            "startLine": 197
+          },
+          "stage": "SEMANTIC"
+        }
+      ],
+      "eligible_for_business_gate": false,
+      "error_count": 2,
+      "gates": {
+        "build": "NOT_RUN",
+        "business": "NOT_RUN",
+        "start": "NOT_RUN",
+        "static": "FAILED"
+      },
+      "generation_mode": "feedback-repair",
+      "oracle_sha256": "b19875a18b071c0921ad34072f9de4c8c10b668db69fb5415eb3b401d6a7c843",
+      "parent_id": "content-blog-change-v1-teacher-e6e632222754",
+      "parent_source_sha256": "cdebc85c07e2de6320ece86162aa2c795fff82971d5fd9178dbb2bca49e27900",
+      "request_sha256": "df4342fc8ecec7a6acc6449c826711f81e4929f844ba2f262aacd61d242f8c4d",
+      "requested_model": "deepseek-flash",
+      "response_sha256": "226cc149ce309e2b0ea84d497a83d3fd8aa222b1aec566964c569e17a02b80fa",
+      "sample_id": "content-blog-change-v1-teacher-0a94bc34bfcb",
+      "sdk": "openai-python/2.24.0",
+      "source_diff": "change-teacher-changes.patch",
+      "source_diff_sha256": "e4e0ab312760bfb1e7ad30230d48fce0f54566ca9047130bfa37c4637196429c",
+      "source_sha256": "e8c2d9351df1b90a61143d6c1530acae7491a4fbc3cfc5bc5c1c84dc31a97032",
+      "stage": "SEMANTIC",
+      "task": "content-blog-change-v1",
+      "task_sha256": "9150eab844a0297731fb52bd86279888220ff9e9784de8c1404150417347ac43",
+      "toolchain_core_sha256": "7275f533d442297d7c43b62317168e09736be9c369d9811c480e8aefad070d54",
+      "usage": {
+        "cache_hit": 8704,
+        "input": 10642,
+        "output": 1479,
+        "total": 12121
+      },
+      "source_diff_context_lines": 0
+    },
+    {
+      "actual_model": "deepseek-flash",
+      "bundle": "datasets/sir/pilots/blog-scratch-g7",
+      "collector_sha256": "20953063c1d0ebdcbf55829df0cfb89e791c432628d57d95ce8166628202527f",
+      "diagnostic_code_counts": {
+        "SIR-FLOW-001": 3,
+        "SIR-SYMBOL-002": 3,
+        "SIR-TYPE-001": 5,
+        "SIR-VALID-001": 4,
+        "SIR-VALID-013": 3
+      },
+      "diagnostics": [
+        {
+          "code": "SIR-TYPE-001",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "投影字段类型与实体字段不一致: PostView.author 声明为 INT64 但实体字段为 RefType[entityName=User, entityId=sir://Blog/entity/User]",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 1922,
+            "endColumn": 23,
+            "endLine": 79,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 1920,
+            "startColumn": 21,
+            "startLine": 79
+          },
+          "stage": "SEMANTIC"
+        },
+        {
+          "code": "SIR-TYPE-001",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "投影字段类型与实体字段不一致: PostView.category 声明为 INT64 但实体字段为 RefType[entityName=Category, entityId=sir://Blog/entity/Category]",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 1948,
+            "endColumn": 25,
+            "endLine": 80,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 1946,
+            "startColumn": 23,
+            "startLine": 80
+          },
+          "stage": "SEMANTIC"
+        },
+        {
+          "code": "SIR-TYPE-001",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "create 绑定类型不匹配: category",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 3144,
+            "endColumn": 38,
+            "endLine": 131,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 3117,
+            "startColumn": 11,
+            "startLine": 131
+          },
+          "stage": "SEMANTIC"
+        },
+        {
+          "code": "SIR-SYMBOL-002",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "未定义类型: PublishInput",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 3431,
+            "endColumn": 25,
+            "endLine": 145,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 3419,
+            "startColumn": 13,
+            "startLine": 145
+          },
+          "stage": "SEMANTIC"
+        },
+        {
+          "code": "SIR-VALID-013",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "路径里的 {id} 不是这个能力输入的字段",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 3634,
+            "endColumn": 49,
+            "endLine": 152,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 3610,
+            "startColumn": 25,
+            "startLine": 152
+          },
+          "stage": "SEMANTIC"
+        },
+        {
+          "code": "SIR-TYPE-001",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "containsLiteral 的左侧必须是 String 字段，右侧必须是 String 值",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 4252,
+            "endColumn": 129,
+            "endLine": 171,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 4212,
+            "startColumn": 89,
+            "startLine": 171
+          },
+          "stage": "SEMANTIC"
+        },
+        {
+          "code": "SIR-TYPE-001",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "containsLiteral 的左侧必须是 String 字段，右侧必须是 String 值",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 4298,
+            "endColumn": 175,
+            "endLine": 171,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 4256,
+            "startColumn": 133,
+            "startLine": 171
+          },
+          "stage": "SEMANTIC"
+        },
+        {
+          "code": "SIR-SYMBOL-002",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "未定义类型: ViewPostInput",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 4482,
+            "endColumn": 26,
+            "endLine": 177,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 4469,
+            "startColumn": 13,
+            "startLine": 177
+          },
+          "stage": "SEMANTIC"
+        },
+        {
+          "code": "SIR-VALID-013",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "路径里的 {id} 不是这个能力输入的字段",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 4595,
+            "endColumn": 36,
+            "endLine": 181,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 4582,
+            "startColumn": 23,
+            "startLine": 181
+          },
+          "stage": "SEMANTIC"
+        },
+        {
+          "code": "SIR-FLOW-001",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "未定义符号: post",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 5312,
+            "endColumn": 34,
+            "endLine": 204,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 5308,
+            "startColumn": 30,
+            "startLine": 204
+          },
+          "stage": "SEMANTIC"
+        },
+        {
+          "code": "SIR-VALID-001",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "find 谓词里的比较，左侧必须是 item.<字段>，右侧必须是不读取 item 的值；例如把 0 < item.qty 写成 item.qty > 0",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 5321,
+            "endColumn": 43,
+            "endLine": 204,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 5308,
+            "startColumn": 30,
+            "startLine": 204
+          },
+          "stage": "SEMANTIC"
+        },
+        {
+          "code": "SIR-VALID-001",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "find 谓词里的比较，左侧必须是 item.<字段>，右侧必须是不读取 item 的值；例如把 0 < item.qty 写成 item.qty > 0",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 5336,
+            "endColumn": 58,
+            "endLine": 204,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 5326,
+            "startColumn": 48,
+            "startLine": 204
+          },
+          "stage": "SEMANTIC"
+        },
+        {
+          "code": "SIR-SYMBOL-002",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "未定义类型: LikePostInput",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 6123,
+            "endColumn": 26,
+            "endLine": 231,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 6110,
+            "startColumn": 13,
+            "startLine": 231
+          },
+          "stage": "SEMANTIC"
+        },
+        {
+          "code": "SIR-VALID-013",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "路径里的 {id} 不是这个能力输入的字段",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 6297,
+            "endColumn": 43,
+            "endLine": 237,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 6279,
+            "startColumn": 25,
+            "startLine": 237
+          },
+          "stage": "SEMANTIC"
+        },
+        {
+          "code": "SIR-FLOW-001",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "未定义符号: post",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 6486,
+            "endColumn": 31,
+            "endLine": 241,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 6482,
+            "startColumn": 27,
+            "startLine": 241
+          },
+          "stage": "SEMANTIC"
+        },
+        {
+          "code": "SIR-VALID-001",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "find 谓词里的比较，左侧必须是 item.<字段>，右侧必须是不读取 item 的值；例如把 0 < item.qty 写成 item.qty > 0",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 6495,
+            "endColumn": 40,
+            "endLine": 241,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 6482,
+            "startColumn": 27,
+            "startLine": 241
+          },
+          "stage": "SEMANTIC"
+        },
+        {
+          "code": "SIR-FLOW-001",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "未定义符号: user",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 6504,
+            "endColumn": 49,
+            "endLine": 241,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 6500,
+            "startColumn": 45,
+            "startLine": 241
+          },
+          "stage": "SEMANTIC"
+        },
+        {
+          "code": "SIR-VALID-001",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "find 谓词里的比较，左侧必须是 item.<字段>，右侧必须是不读取 item 的值；例如把 0 < item.qty 写成 item.qty > 0",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 6513,
+            "endColumn": 58,
+            "endLine": 241,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 6500,
+            "startColumn": 45,
+            "startLine": 241
+          },
+          "stage": "SEMANTIC"
+        }
+      ],
+      "eligible_for_business_gate": false,
+      "error_count": 18,
+      "gates": {
+        "build": "NOT_RUN",
+        "business": "NOT_RUN",
+        "start": "NOT_RUN",
+        "static": "FAILED"
+      },
+      "generation_mode": "feedback-repair",
+      "oracle_sha256": "b19875a18b071c0921ad34072f9de4c8c10b668db69fb5415eb3b401d6a7c843",
+      "parent_id": "content-blog-scratch-v1-teacher-6ed907a7bdaa",
+      "parent_source_sha256": "3ab25f8c6e06436e89df250a58b2cc1d08deea3697ee26ceb8e6b5c2a22f01d4",
+      "request_sha256": "9514d0775152d1ddecc593dc4b66eb298dafd99eb86ea58b487878b294ff4748",
+      "requested_model": "deepseek-flash",
+      "response_sha256": "2e5668a8e3d5a7f9bc611f288995b51ffc8824cf38edff9c76bd0f4ddc546af6",
+      "sample_id": "content-blog-scratch-v1-teacher-e7c30fe85dd5",
+      "sdk": "openai-python/2.24.0",
+      "source_diff": "scratch-teacher-changes.patch",
+      "source_diff_sha256": "1be4ce3c3526e9468073b324d732aed2163fa2f8607fb84aef6c85a6ad2e72ca",
+      "source_sha256": "0eed98254a12a4b7da09d0a41fae02ae10ca77e402c6a7eece2bc61646dccf67",
+      "stage": "SEMANTIC",
+      "task": "content-blog-scratch-v1",
+      "task_sha256": "3771eae2f437ba6d87c827d7cd216984865be8a7a8ce09ce33a331964d0c62c8",
+      "toolchain_core_sha256": "7275f533d442297d7c43b62317168e09736be9c369d9811c480e8aefad070d54",
+      "usage": {
+        "cache_hit": 8064,
+        "input": 9219,
+        "output": 1506,
+        "total": 10725
+      },
+      "source_diff_context_lines": 0
+    }
+  ],
+  "source_commit": "00679958544ba995aea50ba07a019b95d57416f8",
+  "static_passed": 0,
+  "student_version_unchanged": 3,
+  "total_usage": {
+    "cache_hit": 16768,
+    "input": 19861,
+    "output": 2985,
+    "total": 22846
+  }
+}

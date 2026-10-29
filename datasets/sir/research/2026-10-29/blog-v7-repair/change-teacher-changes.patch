@@ -1,0 +1,11 @@
+--- content-blog-change-v1-teacher-e6e632222754.sir
++++ content-blog-change-v1-teacher-0a94bc34bfcb.sir
+@@ -177 +177 @@
+-        exists PostTag where post == post and tag == tag as attached;
++        exists PostTag where item.post == post and item.tag == tag as attached;
+@@ -197 +197 @@
+-          where item.state == PostState.PUBLISHED and any(PostTag, post == item and tag == tag)
++          where item.state == PostState.PUBLISHED and any(PostTag, item.post == item and tag == tag)
+@@ -215 +215 @@
+-        exists Like where post == post and user == actor as liked;
++        exists Like where item.post == post and item.user == actor as liked;
