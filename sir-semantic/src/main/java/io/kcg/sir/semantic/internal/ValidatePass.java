@@ -789,7 +789,9 @@ int returnCount = 0;
    }
 
    private static final String COMPARISON_SHAPE =
-      "find 谓词里的比较，左侧必须是 item.<字段>，右侧必须是不读取 item 的值；例如把 0 < item.qty 写成 item.qty > 0";
+      "普通查询条件（不含 any 内部）的比较，左侧须为 item.<直接字段>，右侧不能读取 item；"
+          + "例如把 0 < item.qty 写成 item.qty > 0。any 内裸字段属于关联实体，item 仍是外层根行，"
+          + "不要按此规则给关联字段统一添加 item.。";
 
    private static boolean isComparison(AstBinaryOperator operator) {
       return switch (operator) {

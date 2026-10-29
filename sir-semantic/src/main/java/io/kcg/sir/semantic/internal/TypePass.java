@@ -257,7 +257,10 @@ final class TypePass {
             this.diagnostics.add(DiagnosticBuilder.error(
                "SIR-TYPE-001",
                "投影字段类型与实体字段不一致: " + view.name().text() + "." + field.name().text() + " 声明为 " + declaredType
-                  + " 但实体字段为 " + fieldSymbol.type(),
+                   + " 但实体字段为 " + fieldSymbol.type()
+                   + (fieldSymbol.type() instanceof RefType
+                      ? "；普通引用投影须保留来源的 Ref<实体> 类型；主键编号与实体引用不是同一种 SIR 类型。"
+                      : ""),
                field.type().span()));
          }
       }
@@ -301,7 +304,8 @@ final class TypePass {
          if (connectionField == null || !(this.referencesItemEntity(connectionField, expr)
                 || this.reverseConnection(expr.conditions(), sourceEntity))) {
             this.diagnostics.add(DiagnosticBuilder.error(
-               "SIR-TYPE-004", "any 的条件必须包含与根实体的连接比较: <Ref 字段> == item", expr.span()));
+               "SIR-TYPE-004", "any 的最外层 and 中须有有效关联：关联实体的 Ref 字段 == item，或关联实体的主键 == item.引用字段，等号可交换。"
+                   + "裸字段属于关联实体，item 始终是外层根行；不要把关联实体字段改写成 item.<字段>。", expr.span()));
          }
       }
 
@@ -1042,7 +1046,8 @@ final class TypePass {
                   SirType matchable = leftType instanceof OptionalType optional ? optional.element() : leftType;
                   if (matchable != PrimitiveType.STRING || rightType != PrimitiveType.STRING) {
                      this.diagnostics.add(DiagnosticBuilder.error(
-                  "SIR-TYPE-001", "containsLiteral 的左侧必须是 String 字段，右侧必须是 String 值", expr.span()));
+                  "SIR-TYPE-001", "containsLiteral 的左侧必须是文本字段，右侧必须是非 Optional 文本值；"
+                      + "is none/is present 不会把 Optional 文本转换成非 Optional 文本。", expr.span()));
                      return null;
                   }
 
