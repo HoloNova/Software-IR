@@ -1,0 +1,72 @@
+{
+  "api_calls": 0,
+  "base_negative": {
+    "controller_absence_assertions": "PASSED",
+    "missing_capabilities": [
+      "Publish",
+      "AttachTag",
+      "PostsByTag",
+      "LikePost"
+    ],
+    "runtime_http": "NOT_RUN",
+    "static_generation": "PASSED",
+    "test": "BlogReferenceContractTest.baseCompilesAndRemovesOnlyTheFourNewCapabilities"
+  },
+  "new_teacher_candidates": 0,
+  "oracle_files_at_reference_commit": {
+    "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/AdvisoryLockKey.java": "048e9aa20637256b9143a64fd21221c4eb6739ef0d79c6ff01d86b8f72337a67",
+    "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BlogAssertions.java": "956a710e1ad3fb185c3c0db08c8d1ccb60827120e83fc9bfcee4ab61c8a51519",
+    "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BlogBusinessConformanceIT.java": "a8af155528e1e943a5421cd6c5edfd916b668b1512e9a904f799d5d64499c54e",
+    "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BlogConcurrencyChecks.java": "d467229d54c421fe909202e982b6e570bc800fae72b57ffc8fba166bc4086437",
+    "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BlogConcurrentRequests.java": "9933bf70c7ea75eb2f344bbf9c4cddc70b5962156e534f014d4f0e80324ca610",
+    "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BlogFixture.java": "06bc80df1014cca4e379bb41a57670e4627cda419e5fc7e5aeda49ebb6cd93af",
+    "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BlogLikeChecks.java": "3ef5ead883492761170a185e03c11311727076ab2a8c1ee7bb15df46949a627d",
+    "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BlogLockWaits.java": "fe0814bebd89490fd231f755b756c937b283b14b235cbdff75fa21c30ae802b8",
+    "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BlogPublicationChecks.java": "130925ffe9d6dce8eeafaaf82b11c3c4f334c88fe2002beda0718c8a8a6b835f",
+    "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BlogTagChecks.java": "d5d81b79719c2034114d5d257414558e3b76f2f8461bbe59109268ed0e772832",
+    "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BusinessEndpointReadiness.java": "47b704967db95ebc69663ea4627063772502a3dd4478f2d716df712633ec1197",
+    "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BusinessSliceHarness.java": "d54083a8c1eb961c428ab36ea484e49a49f9638fe60150148740c0e8e2cc8add",
+    "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/ChildEnvironmentBuilder.java": "ab96eab823689fead05f6da699982b29a5a3be1c9c1bdba97bacc936078759d2",
+    "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/ConformanceFixtures.java": "dc25dc85b7205c7e1d4d7d731521a30b39e0ba1e6a3226535ade4f9ff2fb6bf8",
+    "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/ConformanceJvmLimits.java": "8b6a6a20901ecf3e6b0bd467b0b620fc8f7ac367797fb1c67c2b034b3b3116b9",
+    "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/DiskTree.java": "7448c7a76f763260a07a4929c9ffe9d116723b923a1e65a8fe6cbfb8451d7181",
+    "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceDirectory.java": "83b78b9b7b3a47d5b307b96bcdaee39ea7549f623334993a7fe5bffef0b0d51f",
+    "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceOwnershipInventory.java": "084965a40253168169b97a1a3ee41531c176c678cf3ece53aef217c5accde4eb",
+    "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceRootProof.java": "8f8f3e10b303fc86454aa8a1881784a7bf42eb5dccb2f7892c031adee2a23f72",
+    "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceSecretScanner.java": "e8133e05839dc40122ebc74547876fee59190de5c3a8acef6c9ac04f8e23bd52",
+    "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/HttpAssertionClient.java": "0e32ba41c813b706c6551846f31d5843d0746aa6caaaf46276afd16aa9d077be",
+    "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MavenProjectRunner.java": "00c782e36f2b6f0ab97a3a4e1fa6bd274456dbbc9334e2575b483d17a5e4341a",
+    "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MysqlObserver.java": "7479dee0b4e662f1c4872a79d215c4467895896130bdcbbceec70f5e5856502e",
+    "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MysqlRuntimeJdbcUrl.java": "f070b2ab301d066148b59b6ce5838cde8f6ea991268a8ccc59d9f47f3e929e2c",
+    "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MysqlRuntimeTrace.java": "02c581fad4e9b946f1098103edf0ddb6ae0c3a3b12461d59aa9fcd2626b48018",
+    "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/OwnedPathEntry.java": "5db1c5d19b41de9d7f75400c05abeeede8ae734600a1518ff4d12439681d6a7e",
+    "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/OwnedPathInventory.java": "0f0f49d0917359a7ba91d3d78bb03385d080bf7440977bd55d3bce1cf0979a00",
+    "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/OwnedRunDirectory.java": "cbb524b16b8e9391fdd1ce5432894084ffe5fc883eac51cea97e87fe01488e2f",
+    "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SchemaName.java": "d6c89340cdba5e4606de135d14bba67bcb172cc5e9d8b640dccce0333cda4526",
+    "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SchemaSqlRenderer.java": "309b98a73f79c27f3367520ab4261721987d65376278719c8ffe886d9684df14",
+    "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SecretCatalog.java": "021c1bbf642304fc4511fd4101ef359080c196da56c22c3bf212c998ef6952d3",
+    "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SlmCandidateSupport.java": "e35d64fdde5ab2d18ecc785eb0eb7dbd4c53f254749cec984ac0a8cc3f4665a3",
+    "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SpringApplicationProcess.java": "92f1a8038fe43f36be513cd4833793fcad7bacf1ba624e6ddf6aa9465da2b34f",
+    "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/StreamingSecretRedactor.java": "2d42ac324a08f73f4a69f7513c03545ace120a4dbbcf03f60a352ea392797f3f",
+    "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/StrongFileIdentity.java": "64c78d71cfc5d3ee5ab9dcf16974291b8af412faeefbd93e5c05c32b6f5593f4",
+    "sir-toolchain-application/src/test/resources/conformance/mysql/blog-ddl.sql": "0aa092dc8974110951ebd6f9f2ba39938538857ec54c3f7431a0182f2e9acac0",
+    "sir-toolchain-application/src/test/resources/conformance/mysql/blog-seed.sql": "d3a35bfb958c5be15aab30ca8a98f241da242022d1ca3778fe75b56c88c0fa4b",
+    "sir-toolchain-application/src/test/resources/valid/blog.sir": "a176cfe521913f6cdd5c6919da5e229e2f67a390940a360c22296c95c96e8f37"
+  },
+  "reference_commit": "66c276915d825f4d1914da721b1ddf4e0ceda2de",
+  "schema_validation": "PASSED",
+  "tasks": [
+    {
+      "id": "content-blog-change-v1",
+      "oracle_file_count": 38,
+      "path": "experiments/slm/tasks/blog-change-v1.json",
+      "sha256": "9150eab844a0297731fb52bd86279888220ff9e9784de8c1404150417347ac43"
+    },
+    {
+      "id": "content-blog-scratch-v1",
+      "oracle_file_count": 38,
+      "path": "experiments/slm/tasks/blog-scratch-v1.json",
+      "sha256": "3771eae2f437ba6d87c827d7cd216984865be8a7a8ce09ce33a331964d0c62c8"
+    }
+  ]
+}

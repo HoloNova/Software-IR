@@ -1,0 +1,738 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report.xsd" version="3.0.2" name="io.kcg.sir.application.conformance.BlogBusinessConformanceIT" time="11.771" tests="1" errors="0" skipped="0" failures="0" flakes="0">
+  <properties>
+    <property name="java.specification.version" value="21"/>
+    <property name="sun.jnu.encoding" value="UTF-8"/>
+    <property name="java.class.path" value="/home/runner/work/Software-IR/Software-IR/sir-toolchain-application/target/test-classes:/home/runner/work/Software-IR/Software-IR/sir-toolchain-application/target/classes:/home/runner/work/Software-IR/Software-IR/sir-parser/target/classes:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/antlr/antlr4-runtime/4.13.2/antlr4-runtime-4.13.2.jar:/home/runner/work/Software-IR/Software-IR/sir-semantic/target/classes:/home/runner/work/Software-IR/Software-IR/sir-lowering-api/target/classes:/home/runner/work/Software-IR/Software-IR/sir-lowering-spring-boot/target/classes:/home/runner/work/Software-IR/Software-IR/sir-generator-spring-boot/target/classes:/home/runner/work/Software-IR/Software-IR/sir-project-graph/target/classes:/home/runner/work/Software-IR/Software-IR/sir-change/target/classes:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/jupiter/junit-jupiter/5.12.2/junit-jupiter-5.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/jupiter/junit-jupiter-api/5.12.2/junit-jupiter-api-5.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/platform/junit-platform-commons/1.12.2/junit-platform-commons-1.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/jupiter/junit-jupiter-params/5.12.2/junit-jupiter-params-5.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/jupiter/junit-jupiter-engine/5.12.2/junit-jupiter-engine-5.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/platform/junit-platform-engine/1.12.2/junit-platform-engine-1.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/fasterxml/jackson/core/jackson-databind/2.19.4/jackson-databind-2.19.4.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/fasterxml/jackson/core/jackson-annotations/2.19.4/jackson-annotations-2.19.4.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/fasterxml/jackson/core/jackson-core/2.19.4/jackson-core-2.19.4.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/boot/spring-boot/3.5.3/spring-boot-3.5.3.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-core/6.2.8/spring-core-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-jcl/6.2.8/spring-jcl-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-context/6.2.8/spring-context-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-aop/6.2.8/spring-aop-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-beans/6.2.8/spring-beans-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-expression/6.2.8/spring-expression-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/io/micrometer/micrometer-observation/1.14.8/micrometer-observation-1.14.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/io/micrometer/micrometer-commons/1.14.8/micrometer-commons-1.14.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/mysql/mysql-connector-j/9.3.0/mysql-connector-j-9.3.0.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/google/protobuf/protobuf-java/4.29.0/protobuf-java-4.29.0.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/net/java/dev/jna/jna-platform/5.17.0/jna-platform-5.17.0.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/net/java/dev/jna/jna/5.17.0/jna-5.17.0.jar:"/>
+    <property name="java.vm.vendor" value="Eclipse Adoptium"/>
+    <property name="sun.arch.data.model" value="64"/>
+    <property name="kcg.crud-conformance.enabled" value="true"/>
+    <property name="java.vendor.url" value="https://adoptium.net/"/>
+    <property name="user.timezone" value="Etc/UTC"/>
+    <property name="kcg.conformance.evidence-parent" value="/home/runner/work/Software-IR/Software-IR/ci-evidence"/>
+    <property name="java.vm.specification.version" value="21"/>
+    <property name="os.name" value="Linux"/>
+    <property name="kcg.multiplication-conformance.enabled" value="true"/>
+    <property name="sun.java.launcher" value="SUN_STANDARD"/>
+    <property name="sun.boot.library.path" value="/usr/lib/jvm/temurin-21-jdk-amd64/lib"/>
+    <property name="kcg.course-conformance.enabled" value="true"/>
+    <property name="sun.java.command" value="/home/runner/work/Software-IR/Software-IR/sir-toolchain-application/target/surefire/surefirebooter-20261029080710024_3.jar /home/runner/work/Software-IR/Software-IR/sir-toolchain-application/target/surefire 2026-10-29T08-07-03_557-jvmRun1 surefire-20261029080710024_1tmp surefire_0-20261029080710024_2tmp"/>
+    <property name="kcg.relation-conformance.enabled" value="true"/>
+    <property name="jdk.debug" value="release"/>
+    <property name="kcg.library-conformance.enabled" value="true"/>
+    <property name="test" value="QuerySliceBusinessConformanceIT,WriteSliceBusinessConformanceIT,RelationSliceBusinessConformanceIT,GuardedTransitionBusinessConformanceIT,TokenDeskBusinessConformanceIT,BearerCredentialBusinessConformanceIT,DualTokenBusinessConformanceIT,CrudAccessBusinessConformanceIT,MoneyBusinessConformanceIT,MultiplicationBusinessConformanceIT,LibraryBorrowingBusinessConformanceIT,CourseSelectionBusinessConformanceIT,BlogBusinessConformanceIT"/>
+    <property name="surefire.test.class.path" value="/home/runner/work/Software-IR/Software-IR/sir-toolchain-application/target/test-classes:/home/runner/work/Software-IR/Software-IR/sir-toolchain-application/target/classes:/home/runner/work/Software-IR/Software-IR/sir-parser/target/classes:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/antlr/antlr4-runtime/4.13.2/antlr4-runtime-4.13.2.jar:/home/runner/work/Software-IR/Software-IR/sir-semantic/target/classes:/home/runner/work/Software-IR/Software-IR/sir-lowering-api/target/classes:/home/runner/work/Software-IR/Software-IR/sir-lowering-spring-boot/target/classes:/home/runner/work/Software-IR/Software-IR/sir-generator-spring-boot/target/classes:/home/runner/work/Software-IR/Software-IR/sir-project-graph/target/classes:/home/runner/work/Software-IR/Software-IR/sir-change/target/classes:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/jupiter/junit-jupiter/5.12.2/junit-jupiter-5.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/jupiter/junit-jupiter-api/5.12.2/junit-jupiter-api-5.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/platform/junit-platform-commons/1.12.2/junit-platform-commons-1.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/jupiter/junit-jupiter-params/5.12.2/junit-jupiter-params-5.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/jupiter/junit-jupiter-engine/5.12.2/junit-jupiter-engine-5.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/platform/junit-platform-engine/1.12.2/junit-platform-engine-1.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/fasterxml/jackson/core/jackson-databind/2.19.4/jackson-databind-2.19.4.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/fasterxml/jackson/core/jackson-annotations/2.19.4/jackson-annotations-2.19.4.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/fasterxml/jackson/core/jackson-core/2.19.4/jackson-core-2.19.4.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/boot/spring-boot/3.5.3/spring-boot-3.5.3.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-core/6.2.8/spring-core-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-jcl/6.2.8/spring-jcl-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-context/6.2.8/spring-context-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-aop/6.2.8/spring-aop-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-beans/6.2.8/spring-beans-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-expression/6.2.8/spring-expression-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/io/micrometer/micrometer-observation/1.14.8/micrometer-observation-1.14.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/io/micrometer/micrometer-commons/1.14.8/micrometer-commons-1.14.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/mysql/mysql-connector-j/9.3.0/mysql-connector-j-9.3.0.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/google/protobuf/protobuf-java/4.29.0/protobuf-java-4.29.0.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/net/java/dev/jna/jna-platform/5.17.0/jna-platform-5.17.0.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/net/java/dev/jna/jna/5.17.0/jna-5.17.0.jar:"/>
+    <property name="sun.cpu.endian" value="little"/>
+    <property name="user.home" value="/home/runner"/>
+    <property name="user.language" value="en"/>
+    <property name="kcg.conformance.maven-executable" value="/usr/bin/mvn"/>
+    <property name="kcg.guard-conformance.enabled" value="true"/>
+    <property name="java.specification.vendor" value="Oracle Corporation"/>
+    <property name="kcg.conformance.maven-repo" value="/home/runner/work/Software-IR/Software-IR/.m2-ci"/>
+    <property name="java.version.date" value="2026-10-20"/>
+    <property name="java.home" value="/usr/lib/jvm/temurin-21-jdk-amd64"/>
+    <property name="file.separator" value="/"/>
+    <property name="basedir" value="/home/runner/work/Software-IR/Software-IR/sir-toolchain-application"/>
+    <property name="java.vm.compressedOopsMode" value="Zero based"/>
+    <property name="line.separator" value="&#10;"/>
+    <property name="java.vm.specification.vendor" value="Oracle Corporation"/>
+    <property name="java.specification.name" value="Java Platform API Specification"/>
+    <property name="surefire.real.class.path" value="/home/runner/work/Software-IR/Software-IR/sir-toolchain-application/target/surefire/surefirebooter-20261029080710024_3.jar"/>
+    <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
+    <property name="java.runtime.version" value="21.0.13+9-LTS"/>
+    <property name="user.name" value="runner"/>
+    <property name="stdout.encoding" value="UTF-8"/>
+    <property name="path.separator" value=":"/>
+    <property name="os.version" value="7.0.0-1017-azure"/>
+    <property name="kcg.conformance.work-parent" value="/home/runner/work/Software-IR/Software-IR/ci-work"/>
+    <property name="java.runtime.name" value="OpenJDK Runtime Environment"/>
+    <property name="file.encoding" value="UTF-8"/>
+    <property name="kcg.bearer-conformance.enabled" value="true"/>
+    <property name="surefire.failIfNoSpecifiedTests" value="false"/>
+    <property name="java.vm.name" value="OpenJDK 64-Bit Server VM"/>
+    <property name="kcg.money-conformance.enabled" value="true"/>
+    <property name="java.vendor.version" value="Temurin-21.0.13+9"/>
+    <property name="localRepository" value="/home/runner/work/Software-IR/Software-IR/.m2-ci"/>
+    <property name="java.vendor.url.bug" value="https://github.com/adoptium/adoptium-support/issues"/>
+    <property name="java.io.tmpdir" value="/tmp"/>
+    <property name="kcg.write-conformance.enabled" value="true"/>
+    <property name="java.version" value="21.0.13"/>
+    <property name="kcg.token-conformance.enabled" value="true"/>
+    <property name="user.dir" value="/home/runner/work/Software-IR/Software-IR/sir-toolchain-application"/>
+    <property name="os.arch" value="amd64"/>
+    <property name="java.vm.specification.name" value="Java Virtual Machine Specification"/>
+    <property name="kcg.dual-token-conformance.enabled" value="true"/>
+    <property name="failIfNoTests" value="false"/>
+    <property name="native.encoding" value="UTF-8"/>
+    <property name="java.library.path" value="/usr/java/packages/lib:/usr/lib64:/lib64:/lib:/usr/lib"/>
+    <property name="java.vm.info" value="mixed mode, sharing"/>
+    <property name="stderr.encoding" value="UTF-8"/>
+    <property name="java.vendor" value="Eclipse Adoptium"/>
+    <property name="java.vm.version" value="21.0.13+9-LTS"/>
+    <property name="kcg.query-conformance.enabled" value="true"/>
+    <property name="sun.io.unicode.encoding" value="UnicodeLittle"/>
+    <property name="kcg.blog-conformance.enabled" value="true"/>
+    <property name="maven.repo.local" value="/home/runner/work/Software-IR/Software-IR/.m2-ci"/>
+    <property name="java.class.version" value="65.0"/>
+  </properties>
+  <testcase name="publicationTagsLikesAndContendedWritesMatchHttpAndIndependentDatabaseState" classname="io.kcg.sir.application.conformance.BlogBusinessConformanceIT" time="11.77">
+    <system-out><![CDATA[=== Blog publication, chosen tags and unique likes business conformance ===
+verdict=PASSED
+runId=blog-slice-1a186b349cc-24401
+schemaName=kcg_conf_run
+advisoryLock=held during the run
+schemaSource=TEST_FIXTURE_DDL
+productInitializeImplemented=false
+productUpdateImplemented=false
+sirResource=/valid/blog.sir sha256=a176cfe521913f6cdd5c6919da5e229e2f67a390940a360c22296c95c96e8f37
+fixtureDdl=/conformance/mysql/blog-ddl.sql sha256=0aa092dc8974110951ebd6f9f2ba39938538857ec54c3f7431a0182f2e9acac0
+fixtureSeed=/conformance/mysql/blog-seed.sql sha256=d3a35bfb958c5be15aab30ca8a98f241da242022d1ca3778fe75b56c88c0fa4b
+generatedFiles=55 combinedSha256=f2c63163afd0badafea272fb5e244f0ae82cc2683d1f5e7e3448f4269fc85e82
+generatedProjectBuild=PASSED (exit 0)
+httpReadiness=READY (200 from /api/posts?keyword=&page=1&size=10)
+mysqlRowsBefore=11 mysqlRowsAfter=11
+mavenOffline=true
+javaVersion=21.0.13
+osName=Linux osArch=amd64
+serverPort=18080
+blogInitialDatabase=State[tables={user=[Row[cells={id=1, name=alice}], Row[cells={id=2, name=bob}], Row[cells={id=3, name=carol}], Row[cells={id=4, name=dave}], Row[cells={id=5, name=erin}], Row[cells={id=6, name=frank}], Row[cells={id=7, name=grace}], Row[cells={id=8, name=heidi}], Row[cells={id=9, name=ivan}], Row[cells={id=10, name=judy}]], access_token=[Row[cells={id=10000000-0000-4000-8000-000000000001, owner_id=1, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=10000000-0000-4000-8000-000000000002, owner_id=2, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=10000000-0000-4000-8000-000000000003, owner_id=3, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=10000000-0000-4000-8000-000000000004, owner_id=4, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=10000000-0000-4000-8000-000000000005, owner_id=5, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=10000000-0000-4000-8000-000000000006, owner_id=6, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=10000000-0000-4000-8000-000000000007, owner_id=7, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=10000000-0000-4000-8000-000000000008, owner_id=8, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=10000000-0000-4000-8000-000000000009, owner_id=9, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=10000000-0000-4000-8000-000000000010, owner_id=10, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=10000000-0000-4000-8000-000000000099, owner_id=1, expires_at=2000-01-01T00:00:00Z}]], category=[Row[cells={id=10, name=tech}], Row[cells={id=11, name=life}]], post=[Row[cells={id=101, author_id=1, category_id=10, title=draft alpha, content=hidden, state=DRAFT, likes=0, created_at=2026-01-05T00:00:00Z}], Row[cells={id=102, author_id=1, category_id=10, title=alpha%beta, content=plain, state=PUBLISHED, likes=0, created_at=2026-01-02T00:00:00Z}], Row[cells={id=103, author_id=2, category_id=11, title=alpha_beta, content=plain, state=PUBLISHED, likes=0, created_at=2026-01-02T00:00:00Z}], Row[cells={id=104, author_id=1, category_id=11, title=plain, content=alpha body, state=PUBLISHED, likes=0, created_at=2026-01-01T00:00:00Z}], Row[cells={id=105, author_id=1, category_id=10, title=never public, content=alpha hidden, state=DRAFT, likes=0, created_at=2026-01-04T00:00:00Z}], Row[cells={id=106, author_id=1, category_id=10, title=other, content=unrelated, state=PUBLISHED, likes=0, created_at=2026-01-03T00:00:00Z}], Row[cells={id=107, author_id=2, category_id=11, title=alpha\beta, content=plain, state=PUBLISHED, likes=0, created_at=2026-01-03T00:00:00Z}], Row[cells={id=108, author_id=1, category_id=10, title=publish race, content=race, state=DRAFT, likes=0, created_at=2026-01-06T00:00:00Z}], Row[cells={id=109, author_id=1, category_id=10, title=same liker race, content=race, state=PUBLISHED, likes=0, created_at=2026-01-07T00:00:00Z}], Row[cells={id=110, author_id=1, category_id=10, title=different likers race, content=race, state=PUBLISHED, likes=0, created_at=2026-01-08T00:00:00Z}], Row[cells={id=111, author_id=1, category_id=10, title=tag race, content=race, state=DRAFT, likes=0, created_at=2026-01-09T00:00:00Z}]], tag=[Row[cells={id=20, name=sir}], Row[cells={id=21, name=java}], Row[cells={id=22, name=empty}]], post_tag=[Row[cells={id=1, post_id=101, tag_id=20}], Row[cells={id=2, post_id=102, tag_id=20}], Row[cells={id=3, post_id=103, tag_id=20}], Row[cells={id=4, post_id=106, tag_id=20}], Row[cells={id=5, post_id=102, tag_id=21}], Row[cells={id=6, post_id=104, tag_id=21}]], like=[]}]
+blogSection=identity and creation
+blogSection=publication and reading
+blogSection=search and pagination
+blogSection=selected tags
+blogSection=unique likes and rollback
+blogHeldPost[X01] post=108 blockerConnection=98
+blogLockWaits[X01] blocker=98 edges=[Edge[transaction=2842, requestingConnection=88, blockingConnection=90, user=kcg_conf_runtime], Edge[transaction=2842, requestingConnection=88, blockingConnection=98, user=kcg_conf_runtime], Edge[transaction=2843, requestingConnection=89, blockingConnection=88, user=kcg_conf_runtime], Edge[transaction=2843, requestingConnection=89, blockingConnection=90, user=kcg_conf_runtime], Edge[transaction=2843, requestingConnection=89, blockingConnection=98, user=kcg_conf_runtime], Edge[transaction=2841, requestingConnection=90, blockingConnection=98, user=kcg_conf_runtime], Edge[transaction=2844, requestingConnection=91, blockingConnection=88, user=kcg_conf_runtime], Edge[transaction=2844, requestingConnection=91, blockingConnection=89, user=kcg_conf_runtime], Edge[transaction=2844, requestingConnection=91, blockingConnection=90, user=kcg_conf_runtime], Edge[transaction=2844, requestingConnection=91, blockingConnection=98, user=kcg_conf_runtime], Edge[transaction=2845, requestingConnection=92, blockingConnection=88, user=kcg_conf_runtime], Edge[transaction=2845, requestingConnection=92, blockingConnection=89, user=kcg_conf_runtime], Edge[transaction=2845, requestingConnection=92, blockingConnection=90, user=kcg_conf_runtime], Edge[transaction=2845, requestingConnection=92, blockingConnection=91, user=kcg_conf_runtime], Edge[transaction=2845, requestingConnection=92, blockingConnection=98, user=kcg_conf_runtime], Edge[transaction=2846, requestingConnection=93, blockingConnection=88, user=kcg_conf_runtime], Edge[transaction=2846, requestingConnection=93, blockingConnection=89, user=kcg_conf_runtime], Edge[transaction=2846, requestingConnection=93, blockingConnection=90, user=kcg_conf_runtime], Edge[transaction=2846, requestingConnection=93, blockingConnection=91, user=kcg_conf_runtime], Edge[transaction=2846, requestingConnection=93, blockingConnection=92, user=kcg_conf_runtime], Edge[transaction=2846, requestingConnection=93, blockingConnection=98, user=kcg_conf_runtime]]
+blogContentionProof[X01] connections=[92, 91, 90, 89, 88, 93] transactions=[2846, 2845, 2844, 2843, 2842, 2841]
+blogHttpTimeline[X01] client=1 ready at=2026-10-29T08:07:50.268740975Z actor=1
+blogHttpTimeline[X01] client=0 ready at=2026-10-29T08:07:50.268818243Z actor=1
+blogHttpTimeline[X01] client=2 ready at=2026-10-29T08:07:50.269034019Z actor=1
+blogHttpTimeline[X01] client=3 ready at=2026-10-29T08:07:50.269140678Z actor=1
+blogHttpTimeline[X01] client=5 ready at=2026-10-29T08:07:50.272637815Z actor=1
+blogHttpTimeline[X01] client=4 ready at=2026-10-29T08:07:50.272754691Z actor=1
+blogHttpTimeline[X01] client=0 start at=2026-10-29T08:07:50.272977980Z /api/my/posts/108/publish
+blogHttpTimeline[X01] client=1 start at=2026-10-29T08:07:50.272991462Z /api/my/posts/108/publish
+blogHttpTimeline[X01] client=2 start at=2026-10-29T08:07:50.273700381Z /api/my/posts/108/publish
+blogHttpTimeline[X01] client=3 start at=2026-10-29T08:07:50.274133199Z /api/my/posts/108/publish
+blogHttpTimeline[X01] client=5 start at=2026-10-29T08:07:50.274973947Z /api/my/posts/108/publish
+blogHttpTimeline[X01] client=4 start at=2026-10-29T08:07:50.275069237Z /api/my/posts/108/publish
+blogHttpTimeline[X01] client=2 end at=2026-10-29T08:07:50.338365326Z status=409
+blogHttpTimeline[X01] client=1 end at=2026-10-29T08:07:50.339151971Z status=200
+blogHttpTimeline[X01] client=5 end at=2026-10-29T08:07:50.339283233Z status=409
+blogHttpTimeline[X01] client=0 end at=2026-10-29T08:07:50.339631468Z status=409
+blogHttpTimeline[X01] client=4 end at=2026-10-29T08:07:50.341450939Z status=409
+blogHttpTimeline[X01] client=3 end at=2026-10-29T08:07:50.342864336Z status=409
+blogHeldPost[X02] post=111 blockerConnection=99
+blogLockWaits[X02] blocker=99 edges=[Edge[transaction=2855, requestingConnection=88, blockingConnection=99, user=kcg_conf_runtime], Edge[transaction=2853, requestingConnection=89, blockingConnection=99, user=kcg_conf_runtime], Edge[transaction=2856, requestingConnection=90, blockingConnection=99, user=kcg_conf_runtime], Edge[transaction=2854, requestingConnection=91, blockingConnection=99, user=kcg_conf_runtime], Edge[transaction=2858, requestingConnection=92, blockingConnection=99, user=kcg_conf_runtime], Edge[transaction=2857, requestingConnection=93, blockingConnection=99, user=kcg_conf_runtime]]
+blogContentionProof[X02] connections=[92, 91, 90, 89, 88, 93] transactions=[2858, 2857, 2856, 2855, 2854, 2853]
+blogHttpTimeline[X02] client=0 ready at=2026-10-29T08:07:50.396552837Z actor=1
+blogHttpTimeline[X02] client=1 ready at=2026-10-29T08:07:50.396687132Z actor=1
+blogHttpTimeline[X02] client=2 ready at=2026-10-29T08:07:50.397568034Z actor=1
+blogHttpTimeline[X02] client=3 ready at=2026-10-29T08:07:50.398438731Z actor=1
+blogHttpTimeline[X02] client=4 ready at=2026-10-29T08:07:50.398550877Z actor=1
+blogHttpTimeline[X02] client=5 ready at=2026-10-29T08:07:50.398670120Z actor=1
+blogHttpTimeline[X02] client=0 start at=2026-10-29T08:07:50.398801184Z /api/posts/111/tags
+blogHttpTimeline[X02] client=5 start at=2026-10-29T08:07:50.399343225Z /api/posts/111/tags
+blogHttpTimeline[X02] client=1 start at=2026-10-29T08:07:50.399580009Z /api/posts/111/tags
+blogHttpTimeline[X02] client=2 start at=2026-10-29T08:07:50.400043862Z /api/posts/111/tags
+blogHttpTimeline[X02] client=3 start at=2026-10-29T08:07:50.400426244Z /api/posts/111/tags
+blogHttpTimeline[X02] client=4 start at=2026-10-29T08:07:50.401302469Z /api/posts/111/tags
+blogHttpTimeline[X02] client=3 end at=2026-10-29T08:07:50.459028151Z status=201
+blogHttpTimeline[X02] client=5 end at=2026-10-29T08:07:50.461508964Z status=409
+blogHttpTimeline[X02] client=2 end at=2026-10-29T08:07:50.463518501Z status=409
+blogHttpTimeline[X02] client=0 end at=2026-10-29T08:07:50.463522392Z status=409
+blogHttpTimeline[X02] client=4 end at=2026-10-29T08:07:50.463616768Z status=409
+blogHttpTimeline[X02] client=1 end at=2026-10-29T08:07:50.464534649Z status=409
+blogHeldPost[X03] post=109 blockerConnection=100
+blogLockWaits[X03] blocker=100 edges=[Edge[transaction=2865, requestingConnection=88, blockingConnection=90, user=kcg_conf_runtime], Edge[transaction=2865, requestingConnection=88, blockingConnection=91, user=kcg_conf_runtime], Edge[transaction=2865, requestingConnection=88, blockingConnection=93, user=kcg_conf_runtime], Edge[transaction=2865, requestingConnection=88, blockingConnection=100, user=kcg_conf_runtime], Edge[transaction=2867, requestingConnection=89, blockingConnection=88, user=kcg_conf_runtime], Edge[transaction=2867, requestingConnection=89, blockingConnection=90, user=kcg_conf_runtime], Edge[transaction=2867, requestingConnection=89, blockingConnection=91, user=kcg_conf_runtime], Edge[transaction=2867, requestingConnection=89, blockingConnection=92, user=kcg_conf_runtime], Edge[transaction=2867, requestingConnection=89, blockingConnection=93, user=kcg_conf_runtime], Edge[transaction=2867, requestingConnection=89, blockingConnection=100, user=kcg_conf_runtime], Edge[transaction=2863, requestingConnection=90, blockingConnection=93, user=kcg_conf_runtime], Edge[transaction=2863, requestingConnection=90, blockingConnection=100, user=kcg_conf_runtime], Edge[transaction=2864, requestingConnection=91, blockingConnection=90, user=kcg_conf_runtime], Edge[transaction=2864, requestingConnection=91, blockingConnection=93, user=kcg_conf_runtime], Edge[transaction=2864, requestingConnection=91, blockingConnection=100, user=kcg_conf_runtime], Edge[transaction=2866, requestingConnection=92, blockingConnection=88, user=kcg_conf_runtime], Edge[transaction=2866, requestingConnection=92, blockingConnection=90, user=kcg_conf_runtime], Edge[transaction=2866, requestingConnection=92, blockingConnection=91, user=kcg_conf_runtime], Edge[transaction=2866, requestingConnection=92, blockingConnection=93, user=kcg_conf_runtime], Edge[transaction=2866, requestingConnection=92, blockingConnection=100, user=kcg_conf_runtime], Edge[transaction=2862, requestingConnection=93, blockingConnection=100, user=kcg_conf_runtime]]
+blogContentionProof[X03] connections=[92, 91, 90, 89, 88, 93] transactions=[2864, 2863, 2862, 2867, 2866, 2865]
+blogHttpTimeline[X03] client=1 ready at=2026-10-29T08:07:50.508179851Z actor=2
+blogHttpTimeline[X03] client=0 ready at=2026-10-29T08:07:50.508317460Z actor=2
+blogHttpTimeline[X03] client=3 ready at=2026-10-29T08:07:50.508398876Z actor=2
+blogHttpTimeline[X03] client=2 ready at=2026-10-29T08:07:50.509414442Z actor=2
+blogHttpTimeline[X03] client=4 ready at=2026-10-29T08:07:50.510063212Z actor=2
+blogHttpTimeline[X03] client=5 ready at=2026-10-29T08:07:50.510146518Z actor=2
+blogHttpTimeline[X03] client=1 start at=2026-10-29T08:07:50.510204707Z /api/posts/109/like
+blogHttpTimeline[X03] client=0 start at=2026-10-29T08:07:50.510221610Z /api/posts/109/like
+blogHttpTimeline[X03] client=3 start at=2026-10-29T08:07:50.510284482Z /api/posts/109/like
+blogHttpTimeline[X03] client=2 start at=2026-10-29T08:07:50.510433370Z /api/posts/109/like
+blogHttpTimeline[X03] client=4 start at=2026-10-29T08:07:50.510586157Z /api/posts/109/like
+blogHttpTimeline[X03] client=5 start at=2026-10-29T08:07:50.510713826Z /api/posts/109/like
+blogHttpTimeline[X03] client=0 end at=2026-10-29T08:07:50.576275457Z status=201
+blogHttpTimeline[X03] client=3 end at=2026-10-29T08:07:50.581530214Z status=409
+blogHttpTimeline[X03] client=2 end at=2026-10-29T08:07:50.583452128Z status=409
+blogHttpTimeline[X03] client=1 end at=2026-10-29T08:07:50.587806592Z status=409
+blogHttpTimeline[X03] client=5 end at=2026-10-29T08:07:50.591772668Z status=409
+blogHttpTimeline[X03] client=4 end at=2026-10-29T08:07:50.595180572Z status=409
+blogHeldPost[X04] post=110 blockerConnection=101
+blogLockWaits[X04] blocker=101 edges=[Edge[transaction=2879, requestingConnection=88, blockingConnection=89, user=kcg_conf_runtime], Edge[transaction=2879, requestingConnection=88, blockingConnection=90, user=kcg_conf_runtime], Edge[transaction=2879, requestingConnection=88, blockingConnection=101, user=kcg_conf_runtime], Edge[transaction=2878, requestingConnection=89, blockingConnection=90, user=kcg_conf_runtime], Edge[transaction=2878, requestingConnection=89, blockingConnection=101, user=kcg_conf_runtime], Edge[transaction=2877, requestingConnection=90, blockingConnection=101, user=kcg_conf_runtime], Edge[transaction=2880, requestingConnection=91, blockingConnection=88, user=kcg_conf_runtime], Edge[transaction=2880, requestingConnection=91, blockingConnection=89, user=kcg_conf_runtime], Edge[transaction=2880, requestingConnection=91, blockingConnection=90, user=kcg_conf_runtime], Edge[transaction=2880, requestingConnection=91, blockingConnection=101, user=kcg_conf_runtime], Edge[transaction=2881, requestingConnection=92, blockingConnection=88, user=kcg_conf_runtime], Edge[transaction=2881, requestingConnection=92, blockingConnection=89, user=kcg_conf_runtime], Edge[transaction=2881, requestingConnection=92, blockingConnection=90, user=kcg_conf_runtime], Edge[transaction=2881, requestingConnection=92, blockingConnection=91, user=kcg_conf_runtime], Edge[transaction=2881, requestingConnection=92, blockingConnection=101, user=kcg_conf_runtime], Edge[transaction=2882, requestingConnection=93, blockingConnection=88, user=kcg_conf_runtime], Edge[transaction=2882, requestingConnection=93, blockingConnection=89, user=kcg_conf_runtime], Edge[transaction=2882, requestingConnection=93, blockingConnection=90, user=kcg_conf_runtime], Edge[transaction=2882, requestingConnection=93, blockingConnection=91, user=kcg_conf_runtime], Edge[transaction=2882, requestingConnection=93, blockingConnection=92, user=kcg_conf_runtime], Edge[transaction=2882, requestingConnection=93, blockingConnection=101, user=kcg_conf_runtime]]
+blogContentionProof[X04] connections=[92, 91, 90, 89, 88, 93] transactions=[2882, 2878, 2877, 2879, 2880, 2881]
+blogHttpTimeline[X04] client=0 ready at=2026-10-29T08:07:50.637931128Z actor=3
+blogHttpTimeline[X04] client=2 ready at=2026-10-29T08:07:50.638092235Z actor=5
+blogHttpTimeline[X04] client=1 ready at=2026-10-29T08:07:50.638163601Z actor=4
+blogHttpTimeline[X04] client=3 ready at=2026-10-29T08:07:50.638384303Z actor=6
+blogHttpTimeline[X04] client=4 ready at=2026-10-29T08:07:50.638615302Z actor=7
+blogHttpTimeline[X04] client=5 ready at=2026-10-29T08:07:50.638765804Z actor=8
+blogHttpTimeline[X04] client=0 start at=2026-10-29T08:07:50.638838670Z /api/posts/110/like
+blogHttpTimeline[X04] client=2 start at=2026-10-29T08:07:50.638860990Z /api/posts/110/like
+blogHttpTimeline[X04] client=1 start at=2026-10-29T08:07:50.638876595Z /api/posts/110/like
+blogHttpTimeline[X04] client=3 start at=2026-10-29T08:07:50.639073423Z /api/posts/110/like
+blogHttpTimeline[X04] client=4 start at=2026-10-29T08:07:50.639377683Z /api/posts/110/like
+blogHttpTimeline[X04] client=5 start at=2026-10-29T08:07:50.639392971Z /api/posts/110/like
+blogHttpTimeline[X04] client=0 end at=2026-10-29T08:07:50.699932558Z status=201
+blogHttpTimeline[X04] client=1 end at=2026-10-29T08:07:50.704510973Z status=201
+blogHttpTimeline[X04] client=4 end at=2026-10-29T08:07:50.717751768Z status=201
+blogHttpTimeline[X04] client=3 end at=2026-10-29T08:07:50.726524257Z status=201
+blogHttpTimeline[X04] client=5 end at=2026-10-29T08:07:50.732861495Z status=201
+blogHttpTimeline[X04] client=2 end at=2026-10-29T08:07:50.739502352Z status=201
+blogFinalDatabase=State[tables={user=[Row[cells={id=1, name=alice}], Row[cells={id=2, name=bob}], Row[cells={id=3, name=carol}], Row[cells={id=4, name=dave}], Row[cells={id=5, name=erin}], Row[cells={id=6, name=frank}], Row[cells={id=7, name=grace}], Row[cells={id=8, name=heidi}], Row[cells={id=9, name=ivan}], Row[cells={id=10, name=judy}]], access_token=[Row[cells={id=10000000-0000-4000-8000-000000000001, owner_id=1, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=10000000-0000-4000-8000-000000000002, owner_id=2, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=10000000-0000-4000-8000-000000000003, owner_id=3, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=10000000-0000-4000-8000-000000000004, owner_id=4, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=10000000-0000-4000-8000-000000000005, owner_id=5, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=10000000-0000-4000-8000-000000000006, owner_id=6, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=10000000-0000-4000-8000-000000000007, owner_id=7, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=10000000-0000-4000-8000-000000000008, owner_id=8, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=10000000-0000-4000-8000-000000000009, owner_id=9, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=10000000-0000-4000-8000-000000000010, owner_id=10, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=10000000-0000-4000-8000-000000000099, owner_id=1, expires_at=2000-01-01T00:00:00Z}]], category=[Row[cells={id=10, name=tech}], Row[cells={id=11, name=life}]], post=[Row[cells={id=101, author_id=1, category_id=10, title=draft alpha, content=hidden, state=DRAFT, likes=0, created_at=2026-01-05T00:00:00Z}], Row[cells={id=102, author_id=1, category_id=10, title=alpha%beta, content=plain, state=PUBLISHED, likes=0, created_at=2026-01-02T00:00:00Z}], Row[cells={id=103, author_id=2, category_id=11, title=alpha_beta, content=plain, state=PUBLISHED, likes=0, created_at=2026-01-02T00:00:00Z}], Row[cells={id=104, author_id=1, category_id=11, title=plain, content=alpha body, state=PUBLISHED, likes=0, created_at=2026-01-01T00:00:00Z}], Row[cells={id=105, author_id=1, category_id=10, title=never public, content=alpha hidden, state=DRAFT, likes=0, created_at=2026-01-04T00:00:00Z}], Row[cells={id=106, author_id=1, category_id=10, title=other, content=unrelated, state=PUBLISHED, likes=0, created_at=2026-01-03T00:00:00Z}], Row[cells={id=107, author_id=2, category_id=11, title=alpha\beta, content=plain, state=PUBLISHED, likes=0, created_at=2026-01-03T00:00:00Z}], Row[cells={id=108, author_id=1, category_id=10, title=publish race, content=race, state=DRAFT, likes=0, created_at=2026-01-06T00:00:00Z}], Row[cells={id=109, author_id=1, category_id=10, title=same liker race, content=race, state=PUBLISHED, likes=0, created_at=2026-01-07T00:00:00Z}], Row[cells={id=110, author_id=1, category_id=10, title=different likers race, content=race, state=PUBLISHED, likes=6, created_at=2026-01-08T00:00:00Z}], Row[cells={id=111, author_id=1, category_id=10, title=tag race, content=race, state=DRAFT, likes=0, created_at=2026-01-09T00:00:00Z}]], tag=[Row[cells={id=20, name=sir}], Row[cells={id=21, name=java}], Row[cells={id=22, name=empty}]], post_tag=[Row[cells={id=1, post_id=101, tag_id=20}], Row[cells={id=2, post_id=102, tag_id=20}], Row[cells={id=3, post_id=103, tag_id=20}], Row[cells={id=4, post_id=106, tag_id=20}], Row[cells={id=5, post_id=102, tag_id=21}], Row[cells={id=6, post_id=104, tag_id=21}]], like=[Row[cells={id=11, post_id=110, user_id=3}], Row[cells={id=12, post_id=110, user_id=4}], Row[cells={id=13, post_id=110, user_id=7}], Row[cells={id=14, post_id=110, user_id=6}], Row[cells={id=15, post_id=110, user_id=8}], Row[cells={id=16, post_id=110, user_id=5}]]}]
+
+checksPassed=425 checksFailed=0
+PASS the SIR slice compiles without errors (warnings remain visible) (diagnostics=[])
+PASS the compiler emitted a generated project (generatedFileCount=55)
+PASS the generated project builds (mvn clean verify) (exitCode=0)
+PASS the build produced an executable jar (projectRoot=/home/runner/work/Software-IR/Software-IR/ci-work/blog-slice-1a186b349cc-24401/generated-project)
+PASS the generated application serves the compiled business route (readinessUrl=http://127.0.0.1:18080/api/posts?keyword=&page=1&size=10)
+PASS B01 startup readiness GET changes no business row in any of seven tables (all seven tables unchanged)
+PASS blog fixture seed has complete rows, foreign keys and zero like counts ({tag=3, post_tag=6, user=10, post=11, like=0, category=2, access_token=11})
+PASS B01 anonymous readiness (expected=200 actual=200)
+PASS B01 anonymous readiness has exact page keys, totals, ordering and full nested records ({"total":7,"page":1,"size":10,"records":[{"id":110,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"different likers race","content":"race","likes":0,"createdAt":"2026-01-08T00:00:00Z"},{"id":109,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"same liker race","content":"race","likes":0,"createdAt":"2026-01-07T00:00:00Z"},{"id":107,"author":{"id":2,"name":"bob"},"category":{"id":11,"name":"life"},"title":"alpha\\beta","content":"plain","likes":0,"createdAt":"2026-01-03T00:00:00Z"},{"id":106,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"other","content":"unrelated","likes":0,"createdAt":"2026-01-03T00:00:00Z"},{"id":103,"author":{"id":2,"name":"bob"},"category":{"id":11,"name":"life"},"title":"alpha_beta","content":"plain","likes":0,"createdAt":"2026-01-02T00:00:00Z"},{"id":102,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"alpha%beta","content":"plain","likes":0,"createdAt":"2026-01-02T00:00:00Z"},{"id":104,"author":{"id":1,"name":"alice"},"category":{"id":11,"name":"life"},"title":"plain","content":"alpha body","likes":0,"createdAt":"2026-01-01T00:00:00Z"}]})
+PASS B01 anonymous readiness changes no business row in any of seven tables (all seven tables unchanged)
+PASS B02 CreatePost invalid identity 0 (expected=401 actual=401)
+PASS B02 CreatePost invalid identity 0 has an empty authentication response ()
+PASS B02 CreatePost invalid identity 0 changes no business row in any of seven tables (all seven tables unchanged)
+PASS B02 CreatePost invalid identity 1 (expected=401 actual=401)
+PASS B02 CreatePost invalid identity 1 has an empty authentication response ()
+PASS B02 CreatePost invalid identity 1 changes no business row in any of seven tables (all seven tables unchanged)
+PASS B02 CreatePost invalid identity 2 (expected=401 actual=401)
+PASS B02 CreatePost invalid identity 2 has an empty authentication response ()
+PASS B02 CreatePost invalid identity 2 changes no business row in any of seven tables (all seven tables unchanged)
+PASS B02 CreatePost invalid identity 3 (expected=401 actual=401)
+PASS B02 CreatePost invalid identity 3 has an empty authentication response ()
+PASS B02 CreatePost invalid identity 3 changes no business row in any of seven tables (all seven tables unchanged)
+PASS B02 Publish invalid identity 0 (expected=401 actual=401)
+PASS B02 Publish invalid identity 0 has an empty authentication response ()
+PASS B02 Publish invalid identity 0 changes no business row in any of seven tables (all seven tables unchanged)
+PASS B02 Publish invalid identity 1 (expected=401 actual=401)
+PASS B02 Publish invalid identity 1 has an empty authentication response ()
+PASS B02 Publish invalid identity 1 changes no business row in any of seven tables (all seven tables unchanged)
+PASS B02 Publish invalid identity 2 (expected=401 actual=401)
+PASS B02 Publish invalid identity 2 has an empty authentication response ()
+PASS B02 Publish invalid identity 2 changes no business row in any of seven tables (all seven tables unchanged)
+PASS B02 Publish invalid identity 3 (expected=401 actual=401)
+PASS B02 Publish invalid identity 3 has an empty authentication response ()
+PASS B02 Publish invalid identity 3 changes no business row in any of seven tables (all seven tables unchanged)
+PASS B02 AttachTag invalid identity 0 (expected=401 actual=401)
+PASS B02 AttachTag invalid identity 0 has an empty authentication response ()
+PASS B02 AttachTag invalid identity 0 changes no business row in any of seven tables (all seven tables unchanged)
+PASS B02 AttachTag invalid identity 1 (expected=401 actual=401)
+PASS B02 AttachTag invalid identity 1 has an empty authentication response ()
+PASS B02 AttachTag invalid identity 1 changes no business row in any of seven tables (all seven tables unchanged)
+PASS B02 AttachTag invalid identity 2 (expected=401 actual=401)
+PASS B02 AttachTag invalid identity 2 has an empty authentication response ()
+PASS B02 AttachTag invalid identity 2 changes no business row in any of seven tables (all seven tables unchanged)
+PASS B02 AttachTag invalid identity 3 (expected=401 actual=401)
+PASS B02 AttachTag invalid identity 3 has an empty authentication response ()
+PASS B02 AttachTag invalid identity 3 changes no business row in any of seven tables (all seven tables unchanged)
+PASS B02 LikePost invalid identity 0 (expected=401 actual=401)
+PASS B02 LikePost invalid identity 0 has an empty authentication response ()
+PASS B02 LikePost invalid identity 0 changes no business row in any of seven tables (all seven tables unchanged)
+PASS B02 LikePost invalid identity 1 (expected=401 actual=401)
+PASS B02 LikePost invalid identity 1 has an empty authentication response ()
+PASS B02 LikePost invalid identity 1 changes no business row in any of seven tables (all seven tables unchanged)
+PASS B02 LikePost invalid identity 2 (expected=401 actual=401)
+PASS B02 LikePost invalid identity 2 has an empty authentication response ()
+PASS B02 LikePost invalid identity 2 changes no business row in any of seven tables (all seven tables unchanged)
+PASS B02 LikePost invalid identity 3 (expected=401 actual=401)
+PASS B02 LikePost invalid identity 3 has an empty authentication response ()
+PASS B02 LikePost invalid identity 3 changes no business row in any of seven tables (all seven tables unchanged)
+PASS B03 alice creates draft (expected=201 actual=201)
+PASS B03 alice creates draft returns the one newly inserted numeric id (id=112; inserted=1)
+PASS B03 alice creates draft stores author, inputs and all creation defaults (Row[cells={id=112, author_id=1, category_id=10, title=flow article, content=flow payload, state=DRAFT, likes=0, created_at=2026-10-29T08:07:48.659640Z}])
+PASS B03 alice creates draft stores the actual request creation time (request=2026-10-29T08:07:48.577865832Z..2026-10-29T08:07:48.679744877Z; stored=2026-10-29T08:07:48.659640Z)
+PASS B03 alice creates draft has only the allowed full-database delta (exact allowed delta)
+PASS B03 alice creates draft matches all JSON fields, nested identities and JDBC values ({"id":112,"author":1,"category":10,"title":"flow article","content":"flow payload","state":"DRAFT","likes":0,"createdAt":"2026-10-29T08:07:48.659639501Z"})
+PASS B04 bob creates distinct draft (expected=201 actual=201)
+PASS B04 bob creates distinct draft returns the one newly inserted numeric id (id=113; inserted=1)
+PASS B04 bob creates distinct draft stores author, inputs and all creation defaults (Row[cells={id=113, author_id=2, category_id=11, title=bob article, content=bob payload, state=DRAFT, likes=0, created_at=2026-10-29T08:07:48.695147Z}])
+PASS B04 bob creates distinct draft stores the actual request creation time (request=2026-10-29T08:07:48.688949609Z..2026-10-29T08:07:48.700959406Z; stored=2026-10-29T08:07:48.695147Z)
+PASS B04 bob creates distinct draft has only the allowed full-database delta (exact allowed delta)
+PASS B04 bob creates distinct draft matches all JSON fields, nested identities and JDBC values ({"id":113,"author":2,"category":11,"title":"bob article","content":"bob payload","state":"DRAFT","likes":0,"createdAt":"2026-10-29T08:07:48.695147267Z"})
+PASS B05 title omitted (expected=400 actual=400)
+PASS B05 title omitted identifies the title constraint without fixing localized messages ({"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"title","code":"NotBlank","message":"must not be blank"}]})
+PASS B05 title omitted changes no business row in any of seven tables (all seven tables unchanged)
+PASS B05 title null (expected=400 actual=400)
+PASS B05 title null identifies the title constraint without fixing localized messages ({"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"title","code":"NotBlank","message":"must not be blank"}]})
+PASS B05 title null changes no business row in any of seven tables (all seven tables unchanged)
+PASS B05 title empty (expected=400 actual=400)
+PASS B05 title empty identifies the title constraint without fixing localized messages ({"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"title","code":"NotBlank","message":"must not be blank"},{"path":"title","code":"Size","message":"size must be between 1 and 100"}]})
+PASS B05 title empty changes no business row in any of seven tables (all seven tables unchanged)
+PASS B05 title blank (expected=400 actual=400)
+PASS B05 title blank identifies the title constraint without fixing localized messages ({"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"title","code":"NotBlank","message":"must not be blank"}]})
+PASS B05 title blank changes no business row in any of seven tables (all seven tables unchanged)
+PASS B05 title too long (expected=400 actual=400)
+PASS B05 title too long identifies the title constraint without fixing localized messages ({"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"title","code":"Size","message":"size must be between 1 and 100"}]})
+PASS B05 title too long changes no business row in any of seven tables (all seven tables unchanged)
+PASS B06 full Name length and unrestricted Text (expected=201 actual=201)
+PASS B06 full Name length and unrestricted Text returns the one newly inserted numeric id (id=114; inserted=1)
+PASS B06 full Name length and unrestricted Text stores author, inputs and all creation defaults (Row[cells={id=114, author_id=1, category_id=10, title=tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt, content=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb, state=DRAFT, likes=0, created_at=2026-10-29T08:07:48.823528Z}])
+PASS B06 full Name length and unrestricted Text stores the actual request creation time (request=2026-10-29T08:07:48.815946042Z..2026-10-29T08:07:48.831635551Z; stored=2026-10-29T08:07:48.823528Z)
+PASS B06 full Name length and unrestricted Text has only the allowed full-database delta (exact allowed delta)
+PASS B06 full Name length and unrestricted Text matches all JSON fields, nested identities and JDBC values ({"id":114,"author":1,"category":10,"title":"tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt","content":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","state":"DRAFT","likes":0,"createdAt":"2026-10-29T08:07:48.823528172Z"})
+PASS blog fixture seed has complete rows, foreign keys and zero like counts ({tag=3, post_tag=6, user=10, post=11, like=0, category=2, access_token=11})
+PASS P00 create article for publication flow (expected=201 actual=201)
+PASS P00 create article for publication flow returns the one newly inserted numeric id (id=115; inserted=1)
+PASS P00 create article for publication flow stores author, inputs and all creation defaults (Row[cells={id=115, author_id=1, category_id=10, title=flow article, content=flow payload, state=DRAFT, likes=0, created_at=2026-10-29T08:07:48.863831Z}])
+PASS P00 create article for publication flow stores the actual request creation time (request=2026-10-29T08:07:48.855036490Z..2026-10-29T08:07:48.870648384Z; stored=2026-10-29T08:07:48.863831Z)
+PASS P00 create article for publication flow has only the allowed full-database delta (exact allowed delta)
+PASS P00 create article for publication flow matches all JSON fields, nested identities and JDBC values ({"id":115,"author":1,"category":10,"title":"flow article","content":"flow payload","state":"DRAFT","likes":0,"createdAt":"2026-10-29T08:07:48.863831288Z"})
+PASS P01 draft detail stays hidden (expected=404 actual=404)
+PASS P01 draft detail stays hidden has the exact declared error envelope ({"code":"PostNotFound","message":"PostNotFound","fields":[]})
+PASS P01 draft detail stays hidden changes no business row in any of seven tables (all seven tables unchanged)
+PASS P01 draft does not enter search (expected=200 actual=200)
+PASS P01 draft does not enter search has exact page keys, totals, ordering and full nested records ({"total":0,"page":1,"size":10,"records":[]})
+PASS P01 draft does not enter search changes no business row in any of seven tables (all seven tables unchanged)
+PASS P02 non-author publish (expected=403 actual=403)
+PASS P02 non-author publish has the exact declared error envelope ({"code":"Forbidden","message":"Forbidden","fields":[]})
+PASS P02 non-author publish changes no business row in any of seven tables (all seven tables unchanged)
+PASS P03 unknown article publish (expected=404 actual=404)
+PASS P03 unknown article publish has the exact declared error envelope ({"code":"PostNotFound","message":"PostNotFound","fields":[]})
+PASS P03 unknown article publish changes no business row in any of seven tables (all seven tables unchanged)
+PASS P04 author publishes and URL overrides conflicting body id (expected=200 actual=200)
+PASS P04 author publishes and URL overrides conflicting body id has only the allowed full-database delta (exact allowed delta)
+PASS P04 author publishes and URL overrides conflicting body id matches all JSON fields, nested identities and JDBC values ({"id":115,"author":1,"category":10,"title":"flow article","content":"flow payload","state":"PUBLISHED","likes":0,"createdAt":"2026-10-29T08:07:48.863831Z"})
+PASS P05 published detail matches created article (expected=200 actual=200)
+PASS P05 published detail matches created article matches all JSON fields, nested identities and JDBC values ({"id":115,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"flow article","content":"flow payload","likes":0,"createdAt":"2026-10-29T08:07:48.863831Z"})
+PASS P05 published detail matches created article changes no business row in any of seven tables (all seven tables unchanged)
+PASS P05 published article appears in search (expected=200 actual=200)
+PASS P05 published article appears in search has exact page keys, totals, ordering and full nested records ({"total":1,"page":1,"size":10,"records":[{"id":115,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"flow article","content":"flow payload","likes":0,"createdAt":"2026-10-29T08:07:48.863831Z"}]})
+PASS P05 published article appears in search changes no business row in any of seven tables (all seven tables unchanged)
+PASS P06 publishing again (expected=409 actual=409)
+PASS P06 publishing again has the exact declared error envelope ({"code":"NotPublishable","message":"NotPublishable","fields":[]})
+PASS P06 publishing again changes no business row in any of seven tables (all seven tables unchanged)
+PASS P07 nonexistent detail (expected=404 actual=404)
+PASS P07 nonexistent detail has the exact declared error envelope ({"code":"PostNotFound","message":"PostNotFound","fields":[]})
+PASS P07 nonexistent detail changes no business row in any of seven tables (all seven tables unchanged)
+PASS P07 other draft detail (expected=404 actual=404)
+PASS P07 other draft detail has the exact declared error envelope ({"code":"PostNotFound","message":"PostNotFound","fields":[]})
+PASS P07 other draft detail changes no business row in any of seven tables (all seven tables unchanged)
+PASS blog fixture seed has complete rows, foreign keys and zero like counts ({tag=3, post_tag=6, user=10, post=11, like=0, category=2, access_token=11})
+PASS Q01 first alpha page (expected=200 actual=200)
+PASS Q01 first alpha page has exact page keys, totals, ordering and full nested records ({"total":4,"page":1,"size":2,"records":[{"id":107,"author":{"id":2,"name":"bob"},"category":{"id":11,"name":"life"},"title":"alpha\\beta","content":"plain","likes":0,"createdAt":"2026-01-03T00:00:00Z"},{"id":103,"author":{"id":2,"name":"bob"},"category":{"id":11,"name":"life"},"title":"alpha_beta","content":"plain","likes":0,"createdAt":"2026-01-02T00:00:00Z"}]})
+PASS Q01 first alpha page changes no business row in any of seven tables (all seven tables unchanged)
+PASS Q01 second alpha page includes body-only match (expected=200 actual=200)
+PASS Q01 second alpha page includes body-only match has exact page keys, totals, ordering and full nested records ({"total":4,"page":2,"size":2,"records":[{"id":102,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"alpha%beta","content":"plain","likes":0,"createdAt":"2026-01-02T00:00:00Z"},{"id":104,"author":{"id":1,"name":"alice"},"category":{"id":11,"name":"life"},"title":"plain","content":"alpha body","likes":0,"createdAt":"2026-01-01T00:00:00Z"}]})
+PASS Q01 second alpha page includes body-only match changes no business row in any of seven tables (all seven tables unchanged)
+PASS Q01 past last page retains total (expected=200 actual=200)
+PASS Q01 past last page retains total has exact page keys, totals, ordering and full nested records ({"total":4,"page":3,"size":2,"records":[]})
+PASS Q01 past last page retains total changes no business row in any of seven tables (all seven tables unchanged)
+PASS Q02 literal %25 (expected=200 actual=200)
+PASS Q02 literal %25 has exact page keys, totals, ordering and full nested records ({"total":1,"page":1,"size":10,"records":[{"id":102,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"alpha%beta","content":"plain","likes":0,"createdAt":"2026-01-02T00:00:00Z"}]})
+PASS Q02 literal %25 changes no business row in any of seven tables (all seven tables unchanged)
+PASS Q02 literal %5F (expected=200 actual=200)
+PASS Q02 literal %5F has exact page keys, totals, ordering and full nested records ({"total":1,"page":1,"size":10,"records":[{"id":103,"author":{"id":2,"name":"bob"},"category":{"id":11,"name":"life"},"title":"alpha_beta","content":"plain","likes":0,"createdAt":"2026-01-02T00:00:00Z"}]})
+PASS Q02 literal %5F changes no business row in any of seven tables (all seven tables unchanged)
+PASS Q02 literal %5C (expected=200 actual=200)
+PASS Q02 literal %5C has exact page keys, totals, ordering and full nested records ({"total":1,"page":1,"size":10,"records":[{"id":107,"author":{"id":2,"name":"bob"},"category":{"id":11,"name":"life"},"title":"alpha\\beta","content":"plain","likes":0,"createdAt":"2026-01-03T00:00:00Z"}]})
+PASS Q02 literal %5C changes no business row in any of seven tables (all seven tables unchanged)
+PASS Q03 empty keyword (expected=200 actual=200)
+PASS Q03 empty keyword has exact page keys, totals, ordering and full nested records ({"total":7,"page":1,"size":10,"records":[{"id":110,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"different likers race","content":"race","likes":0,"createdAt":"2026-01-08T00:00:00Z"},{"id":109,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"same liker race","content":"race","likes":0,"createdAt":"2026-01-07T00:00:00Z"},{"id":107,"author":{"id":2,"name":"bob"},"category":{"id":11,"name":"life"},"title":"alpha\\beta","content":"plain","likes":0,"createdAt":"2026-01-03T00:00:00Z"},{"id":106,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"other","content":"unrelated","likes":0,"createdAt":"2026-01-03T00:00:00Z"},{"id":103,"author":{"id":2,"name":"bob"},"category":{"id":11,"name":"life"},"title":"alpha_beta","content":"plain","likes":0,"createdAt":"2026-01-02T00:00:00Z"},{"id":102,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"alpha%beta","content":"plain","likes":0,"createdAt":"2026-01-02T00:00:00Z"},{"id":104,"author":{"id":1,"name":"alice"},"category":{"id":11,"name":"life"},"title":"plain","content":"alpha body","likes":0,"createdAt":"2026-01-01T00:00:00Z"}]})
+PASS Q03 empty keyword changes no business row in any of seven tables (all seven tables unchanged)
+PASS Q03 no match (expected=200 actual=200)
+PASS Q03 no match has exact page keys, totals, ordering and full nested records ({"total":0,"page":1,"size":10,"records":[]})
+PASS Q03 no match changes no business row in any of seven tables (all seven tables unchanged)
+PASS Q04 both defaults (expected=200 actual=200)
+PASS Q04 both defaults has exact page keys, totals, ordering and full nested records ({"total":4,"page":1,"size":20,"records":[{"id":107,"author":{"id":2,"name":"bob"},"category":{"id":11,"name":"life"},"title":"alpha\\beta","content":"plain","likes":0,"createdAt":"2026-01-03T00:00:00Z"},{"id":103,"author":{"id":2,"name":"bob"},"category":{"id":11,"name":"life"},"title":"alpha_beta","content":"plain","likes":0,"createdAt":"2026-01-02T00:00:00Z"},{"id":102,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"alpha%beta","content":"plain","likes":0,"createdAt":"2026-01-02T00:00:00Z"},{"id":104,"author":{"id":1,"name":"alice"},"category":{"id":11,"name":"life"},"title":"plain","content":"alpha body","likes":0,"createdAt":"2026-01-01T00:00:00Z"}]})
+PASS Q04 both defaults changes no business row in any of seven tables (all seven tables unchanged)
+PASS Q04 page default alone (expected=200 actual=200)
+PASS Q04 page default alone has exact page keys, totals, ordering and full nested records ({"total":4,"page":1,"size":2,"records":[{"id":107,"author":{"id":2,"name":"bob"},"category":{"id":11,"name":"life"},"title":"alpha\\beta","content":"plain","likes":0,"createdAt":"2026-01-03T00:00:00Z"},{"id":103,"author":{"id":2,"name":"bob"},"category":{"id":11,"name":"life"},"title":"alpha_beta","content":"plain","likes":0,"createdAt":"2026-01-02T00:00:00Z"}]})
+PASS Q04 page default alone changes no business row in any of seven tables (all seven tables unchanged)
+PASS Q04 size default alone (expected=200 actual=200)
+PASS Q04 size default alone has exact page keys, totals, ordering and full nested records ({"total":4,"page":2,"size":20,"records":[]})
+PASS Q04 size default alone changes no business row in any of seven tables (all seven tables unchanged)
+PASS Q05 rejected page 0 on /api/posts?keyword=alpha& (expected=400 actual=400)
+PASS Q05 rejected page 0 on /api/posts?keyword=alpha& has the exact declared error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS Q05 rejected page 0 on /api/posts?keyword=alpha& changes no business row in any of seven tables (all seven tables unchanged)
+PASS Q05 rejected page -1 on /api/posts?keyword=alpha& (expected=400 actual=400)
+PASS Q05 rejected page -1 on /api/posts?keyword=alpha& has the exact declared error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS Q05 rejected page -1 on /api/posts?keyword=alpha& changes no business row in any of seven tables (all seven tables unchanged)
+PASS Q05 rejected page 10001 on /api/posts?keyword=alpha& (expected=400 actual=400)
+PASS Q05 rejected page 10001 on /api/posts?keyword=alpha& has the exact declared error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS Q05 rejected page 10001 on /api/posts?keyword=alpha& changes no business row in any of seven tables (all seven tables unchanged)
+PASS Q05 rejected size 0 on /api/posts?keyword=alpha& (expected=400 actual=400)
+PASS Q05 rejected size 0 on /api/posts?keyword=alpha& has the exact declared error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS Q05 rejected size 0 on /api/posts?keyword=alpha& changes no business row in any of seven tables (all seven tables unchanged)
+PASS Q05 rejected size -1 on /api/posts?keyword=alpha& (expected=400 actual=400)
+PASS Q05 rejected size -1 on /api/posts?keyword=alpha& has the exact declared error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS Q05 rejected size -1 on /api/posts?keyword=alpha& changes no business row in any of seven tables (all seven tables unchanged)
+PASS Q05 rejected size 101 on /api/posts?keyword=alpha& (expected=400 actual=400)
+PASS Q05 rejected size 101 on /api/posts?keyword=alpha& has the exact declared error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS Q05 rejected size 101 on /api/posts?keyword=alpha& changes no business row in any of seven tables (all seven tables unchanged)
+PASS Q05 rejected page 0 on /api/tags/20/posts? (expected=400 actual=400)
+PASS Q05 rejected page 0 on /api/tags/20/posts? has the exact declared error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS Q05 rejected page 0 on /api/tags/20/posts? changes no business row in any of seven tables (all seven tables unchanged)
+PASS Q05 rejected page -1 on /api/tags/20/posts? (expected=400 actual=400)
+PASS Q05 rejected page -1 on /api/tags/20/posts? has the exact declared error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS Q05 rejected page -1 on /api/tags/20/posts? changes no business row in any of seven tables (all seven tables unchanged)
+PASS Q05 rejected page 10001 on /api/tags/20/posts? (expected=400 actual=400)
+PASS Q05 rejected page 10001 on /api/tags/20/posts? has the exact declared error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS Q05 rejected page 10001 on /api/tags/20/posts? changes no business row in any of seven tables (all seven tables unchanged)
+PASS Q05 rejected size 0 on /api/tags/20/posts? (expected=400 actual=400)
+PASS Q05 rejected size 0 on /api/tags/20/posts? has the exact declared error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS Q05 rejected size 0 on /api/tags/20/posts? changes no business row in any of seven tables (all seven tables unchanged)
+PASS Q05 rejected size -1 on /api/tags/20/posts? (expected=400 actual=400)
+PASS Q05 rejected size -1 on /api/tags/20/posts? has the exact declared error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS Q05 rejected size -1 on /api/tags/20/posts? changes no business row in any of seven tables (all seven tables unchanged)
+PASS Q05 rejected size 101 on /api/tags/20/posts? (expected=400 actual=400)
+PASS Q05 rejected size 101 on /api/tags/20/posts? has the exact declared error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS Q05 rejected size 101 on /api/tags/20/posts? changes no business row in any of seven tables (all seven tables unchanged)
+PASS Q06 inclusive upper page (expected=200 actual=200)
+PASS Q06 inclusive upper page has exact page keys, totals, ordering and full nested records ({"total":4,"page":10000,"size":100,"records":[]})
+PASS Q06 inclusive upper page changes no business row in any of seven tables (all seven tables unchanged)
+PASS Q06 inclusive upper size (expected=200 actual=200)
+PASS Q06 inclusive upper size has exact page keys, totals, ordering and full nested records ({"total":4,"page":1,"size":100,"records":[{"id":107,"author":{"id":2,"name":"bob"},"category":{"id":11,"name":"life"},"title":"alpha\\beta","content":"plain","likes":0,"createdAt":"2026-01-03T00:00:00Z"},{"id":103,"author":{"id":2,"name":"bob"},"category":{"id":11,"name":"life"},"title":"alpha_beta","content":"plain","likes":0,"createdAt":"2026-01-02T00:00:00Z"},{"id":102,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"alpha%beta","content":"plain","likes":0,"createdAt":"2026-01-02T00:00:00Z"},{"id":104,"author":{"id":1,"name":"alice"},"category":{"id":11,"name":"life"},"title":"plain","content":"alpha body","likes":0,"createdAt":"2026-01-01T00:00:00Z"}]})
+PASS Q06 inclusive upper size changes no business row in any of seven tables (all seven tables unchanged)
+PASS blog fixture seed has complete rows, foreign keys and zero like counts ({tag=3, post_tag=6, user=10, post=11, like=0, category=2, access_token=11})
+PASS T01 first selected-tag page (expected=200 actual=200)
+PASS T01 first selected-tag page has exact page keys, totals, ordering and full nested records ({"total":3,"page":1,"size":2,"records":[{"id":106,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"other","content":"unrelated","likes":0,"createdAt":"2026-01-03T00:00:00Z"},{"id":103,"author":{"id":2,"name":"bob"},"category":{"id":11,"name":"life"},"title":"alpha_beta","content":"plain","likes":0,"createdAt":"2026-01-02T00:00:00Z"}]})
+PASS T01 first selected-tag page changes no business row in any of seven tables (all seven tables unchanged)
+PASS T01 second selected-tag page (expected=200 actual=200)
+PASS T01 second selected-tag page has exact page keys, totals, ordering and full nested records ({"total":3,"page":2,"size":2,"records":[{"id":102,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"alpha%beta","content":"plain","likes":0,"createdAt":"2026-01-02T00:00:00Z"}]})
+PASS T01 second selected-tag page changes no business row in any of seven tables (all seven tables unchanged)
+PASS T02 other tag does not duplicate roots (expected=200 actual=200)
+PASS T02 other tag does not duplicate roots has exact page keys, totals, ordering and full nested records ({"total":2,"page":1,"size":10,"records":[{"id":102,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"alpha%beta","content":"plain","likes":0,"createdAt":"2026-01-02T00:00:00Z"},{"id":104,"author":{"id":1,"name":"alice"},"category":{"id":11,"name":"life"},"title":"plain","content":"alpha body","likes":0,"createdAt":"2026-01-01T00:00:00Z"}]})
+PASS T02 other tag does not duplicate roots changes no business row in any of seven tables (all seven tables unchanged)
+PASS T02 existing empty tag (expected=200 actual=200)
+PASS T02 existing empty tag has exact page keys, totals, ordering and full nested records ({"total":0,"page":1,"size":10,"records":[]})
+PASS T02 existing empty tag changes no business row in any of seven tables (all seven tables unchanged)
+PASS T03 missing tag differs from empty tag (expected=404 actual=404)
+PASS T03 missing tag differs from empty tag has the exact declared error envelope ({"code":"TagNotFound","message":"TagNotFound","fields":[]})
+PASS T03 missing tag differs from empty tag changes no business row in any of seven tables (all seven tables unchanged)
+PASS T04 attach tag to draft (expected=201 actual=201)
+PASS T04 attach tag to draft has an empty body ()
+PASS T04 attach tag to draft inserts exactly the requested relation ([Row[cells={id=7, post_id=101, tag_id=21}]])
+PASS T04 attach tag to draft has only the allowed full-database delta (exact allowed delta)
+PASS T05 tagged draft stays private (expected=200 actual=200)
+PASS T05 tagged draft stays private has exact page keys, totals, ordering and full nested records ({"total":2,"page":1,"size":10,"records":[{"id":102,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"alpha%beta","content":"plain","likes":0,"createdAt":"2026-01-02T00:00:00Z"},{"id":104,"author":{"id":1,"name":"alice"},"category":{"id":11,"name":"life"},"title":"plain","content":"alpha body","likes":0,"createdAt":"2026-01-01T00:00:00Z"}]})
+PASS T05 tagged draft stays private changes no business row in any of seven tables (all seven tables unchanged)
+PASS T06 missing post (expected=404 actual=404)
+PASS T06 missing post has the exact declared error envelope ({"code":"PostNotFound","message":"PostNotFound","fields":[]})
+PASS T06 missing post changes no business row in any of seven tables (all seven tables unchanged)
+PASS T06 missing tag (expected=404 actual=404)
+PASS T06 missing tag has the exact declared error envelope ({"code":"TagNotFound","message":"TagNotFound","fields":[]})
+PASS T06 missing tag changes no business row in any of seven tables (all seven tables unchanged)
+PASS T07 other author cannot attach (expected=403 actual=403)
+PASS T07 other author cannot attach has the exact declared error envelope ({"code":"Forbidden","message":"Forbidden","fields":[]})
+PASS T07 other author cannot attach changes no business row in any of seven tables (all seven tables unchanged)
+PASS T08 repeated attachment (expected=409 actual=409)
+PASS T08 repeated attachment has the exact declared error envelope ({"code":"TagAttached","message":"TagAttached","fields":[]})
+PASS T08 repeated attachment changes no business row in any of seven tables (all seven tables unchanged)
+PASS T09 publish tagged draft (expected=200 actual=200)
+PASS T09 publish tagged draft has only the allowed full-database delta (exact allowed delta)
+PASS T09 publish tagged draft matches all JSON fields, nested identities and JDBC values ({"id":101,"author":1,"category":10,"title":"draft alpha","content":"hidden","state":"PUBLISHED","likes":0,"createdAt":"2026-01-05T00:00:00Z"})
+PASS T09 published draft enters selected tag (expected=200 actual=200)
+PASS T09 published draft enters selected tag has exact page keys, totals, ordering and full nested records ({"total":3,"page":1,"size":10,"records":[{"id":101,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"draft alpha","content":"hidden","likes":0,"createdAt":"2026-01-05T00:00:00Z"},{"id":102,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"alpha%beta","content":"plain","likes":0,"createdAt":"2026-01-02T00:00:00Z"},{"id":104,"author":{"id":1,"name":"alice"},"category":{"id":11,"name":"life"},"title":"plain","content":"alpha body","likes":0,"createdAt":"2026-01-01T00:00:00Z"}]})
+PASS T09 published draft enters selected tag changes no business row in any of seven tables (all seven tables unchanged)
+PASS T10 tag page defaults (expected=200 actual=200)
+PASS T10 tag page defaults has exact page keys, totals, ordering and full nested records ({"total":4,"page":1,"size":20,"records":[{"id":101,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"draft alpha","content":"hidden","likes":0,"createdAt":"2026-01-05T00:00:00Z"},{"id":106,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"other","content":"unrelated","likes":0,"createdAt":"2026-01-03T00:00:00Z"},{"id":103,"author":{"id":2,"name":"bob"},"category":{"id":11,"name":"life"},"title":"alpha_beta","content":"plain","likes":0,"createdAt":"2026-01-02T00:00:00Z"},{"id":102,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"alpha%beta","content":"plain","likes":0,"createdAt":"2026-01-02T00:00:00Z"}]})
+PASS T10 tag page defaults changes no business row in any of seven tables (all seven tables unchanged)
+PASS T10 tag page default alone (expected=200 actual=200)
+PASS T10 tag page default alone has exact page keys, totals, ordering and full nested records ({"total":4,"page":1,"size":2,"records":[{"id":101,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"draft alpha","content":"hidden","likes":0,"createdAt":"2026-01-05T00:00:00Z"},{"id":106,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"other","content":"unrelated","likes":0,"createdAt":"2026-01-03T00:00:00Z"}]})
+PASS T10 tag page default alone changes no business row in any of seven tables (all seven tables unchanged)
+PASS T10 tag size default alone (expected=200 actual=200)
+PASS T10 tag size default alone has exact page keys, totals, ordering and full nested records ({"total":4,"page":2,"size":20,"records":[]})
+PASS T10 tag size default alone changes no business row in any of seven tables (all seven tables unchanged)
+PASS T10 tag page past end retains total (expected=200 actual=200)
+PASS T10 tag page past end retains total has exact page keys, totals, ordering and full nested records ({"total":4,"page":3,"size":2,"records":[]})
+PASS T10 tag page past end retains total changes no business row in any of seven tables (all seven tables unchanged)
+PASS T10 tag page inclusive maxima (expected=200 actual=200)
+PASS T10 tag page inclusive maxima has exact page keys, totals, ordering and full nested records ({"total":4,"page":10000,"size":100,"records":[]})
+PASS T10 tag page inclusive maxima changes no business row in any of seven tables (all seven tables unchanged)
+PASS T11 published post may receive a tag (expected=201 actual=201)
+PASS T11 published post may receive a tag has an empty body ()
+PASS T11 published post may receive a tag inserts exactly the requested relation ([Row[cells={id=9, post_id=106, tag_id=21}]])
+PASS T11 published post may receive a tag has only the allowed full-database delta (exact allowed delta)
+PASS T11 published attachment is visible (expected=200 actual=200)
+PASS T11 published attachment is visible has exact page keys, totals, ordering and full nested records ({"total":4,"page":1,"size":10,"records":[{"id":101,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"draft alpha","content":"hidden","likes":0,"createdAt":"2026-01-05T00:00:00Z"},{"id":106,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"other","content":"unrelated","likes":0,"createdAt":"2026-01-03T00:00:00Z"},{"id":102,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"alpha%beta","content":"plain","likes":0,"createdAt":"2026-01-02T00:00:00Z"},{"id":104,"author":{"id":1,"name":"alice"},"category":{"id":11,"name":"life"},"title":"plain","content":"alpha body","likes":0,"createdAt":"2026-01-01T00:00:00Z"}]})
+PASS T11 published attachment is visible changes no business row in any of seven tables (all seven tables unchanged)
+PASS blog fixture seed has complete rows, foreign keys and zero like counts ({tag=3, post_tag=6, user=10, post=11, like=0, category=2, access_token=11})
+PASS L01 bob likes published post (expected=201 actual=201)
+PASS L01 bob likes published post inserts exactly the authenticated user's relation ([Row[cells={id=1, post_id=102, user_id=2}]])
+PASS L01 bob likes published post has only the allowed full-database delta (exact allowed delta)
+PASS L01 bob likes published post matches all JSON fields, nested identities and JDBC values ({"id":102,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"alpha%beta","content":"plain","likes":1,"createdAt":"2026-01-02T00:00:00Z"})
+PASS L01 bob likes published post count equals stored like rows (likes=1; relations=1)
+PASS L02 duplicate like rolls back everything (expected=409 actual=409)
+PASS L02 duplicate like rolls back everything has the exact declared error envelope ({"code":"AlreadyLiked","message":"AlreadyLiked","fields":[]})
+PASS L02 duplicate like rolls back everything changes no business row in any of seven tables (all seven tables unchanged)
+PASS L03 carol independently likes post (expected=201 actual=201)
+PASS L03 carol independently likes post inserts exactly the authenticated user's relation ([Row[cells={id=3, post_id=102, user_id=3}]])
+PASS L03 carol independently likes post has only the allowed full-database delta (exact allowed delta)
+PASS L03 carol independently likes post matches all JSON fields, nested identities and JDBC values ({"id":102,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"alpha%beta","content":"plain","likes":2,"createdAt":"2026-01-02T00:00:00Z"})
+PASS L03 carol independently likes post count equals stored like rows (likes=2; relations=2)
+PASS L03 author may like own post (expected=201 actual=201)
+PASS L03 author may like own post inserts exactly the authenticated user's relation ([Row[cells={id=4, post_id=102, user_id=1}]])
+PASS L03 author may like own post has only the allowed full-database delta (exact allowed delta)
+PASS L03 author may like own post matches all JSON fields, nested identities and JDBC values ({"id":102,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"alpha%beta","content":"plain","likes":3,"createdAt":"2026-01-02T00:00:00Z"})
+PASS L03 author may like own post count equals stored like rows (likes=3; relations=3)
+PASS L04 draft cannot receive likes (expected=404 actual=404)
+PASS L04 draft cannot receive likes has the exact declared error envelope ({"code":"PostNotFound","message":"PostNotFound","fields":[]})
+PASS L04 draft cannot receive likes changes no business row in any of seven tables (all seven tables unchanged)
+PASS L04 missing post cannot receive likes (expected=404 actual=404)
+PASS L04 missing post cannot receive likes has the exact declared error envelope ({"code":"PostNotFound","message":"PostNotFound","fields":[]})
+PASS L04 missing post cannot receive likes changes no business row in any of seven tables (all seven tables unchanged)
+PASS L05 detail reads committed count (expected=200 actual=200)
+PASS L05 detail reads committed count matches all JSON fields, nested identities and JDBC values ({"id":102,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"alpha%beta","content":"plain","likes":3,"createdAt":"2026-01-02T00:00:00Z"})
+PASS L05 detail reads committed count changes no business row in any of seven tables (all seven tables unchanged)
+PASS L05 literal search reads committed count (expected=200 actual=200)
+PASS L05 literal search reads committed count has exact page keys, totals, ordering and full nested records ({"total":1,"page":1,"size":10,"records":[{"id":102,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"alpha%beta","content":"plain","likes":3,"createdAt":"2026-01-02T00:00:00Z"}]})
+PASS L05 literal search reads committed count changes no business row in any of seven tables (all seven tables unchanged)
+PASS L05 tag page reads committed count (expected=200 actual=200)
+PASS L05 tag page reads committed count has exact page keys, totals, ordering and full nested records ({"total":3,"page":1,"size":10,"records":[{"id":106,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"other","content":"unrelated","likes":0,"createdAt":"2026-01-03T00:00:00Z"},{"id":103,"author":{"id":2,"name":"bob"},"category":{"id":11,"name":"life"},"title":"alpha_beta","content":"plain","likes":0,"createdAt":"2026-01-02T00:00:00Z"},{"id":102,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"alpha%beta","content":"plain","likes":3,"createdAt":"2026-01-02T00:00:00Z"}]})
+PASS L05 tag page reads committed count changes no business row in any of seven tables (all seven tables unchanged)
+PASS blog fixture seed has complete rows, foreign keys and zero like counts ({tag=3, post_tag=6, user=10, post=11, like=0, category=2, access_token=11})
+PASS X01 six independent clients reach the ready latch (remaining=0)
+PASS X01 six distinct runtime connections and transactions demonstrably wait on the held post (blockerConnection=98; target transactions=6)
+PASS X01 client 0 completed its real HTTP request (HTTP 409)
+PASS X01 client 1 completed its real HTTP request (HTTP 200)
+PASS X01 client 2 completed its real HTTP request (HTTP 409)
+PASS X01 client 3 completed its real HTTP request (HTTP 409)
+PASS X01 client 4 completed its real HTTP request (HTTP 409)
+PASS X01 client 5 completed its real HTTP request (HTTP 409)
+PASS X01 records all six actual ready events (events=6)
+PASS X01 records all six actual start events (events=6)
+PASS X01 records all six actual end events (events=6)
+PASS X01 publish has exactly the required success/conflict counts ([409, 200, 409, 409, 409, 409])
+PASS X01 publish competition has only the allowed full-database delta (exact allowed delta)
+PASS X01 losing publish (expected=409 actual=409)
+PASS X01 losing publish has the exact declared error envelope ({"code":"NotPublishable","message":"NotPublishable","fields":[]})
+PASS X01 winning publish matches all JSON fields, nested identities and JDBC values ({"id":108,"author":1,"category":10,"title":"publish race","content":"race","state":"PUBLISHED","likes":0,"createdAt":"2026-01-06T00:00:00Z"})
+PASS X01 losing publish (expected=409 actual=409)
+PASS X01 losing publish has the exact declared error envelope ({"code":"NotPublishable","message":"NotPublishable","fields":[]})
+PASS X01 losing publish (expected=409 actual=409)
+PASS X01 losing publish has the exact declared error envelope ({"code":"NotPublishable","message":"NotPublishable","fields":[]})
+PASS X01 losing publish (expected=409 actual=409)
+PASS X01 losing publish has the exact declared error envelope ({"code":"NotPublishable","message":"NotPublishable","fields":[]})
+PASS X01 losing publish (expected=409 actual=409)
+PASS X01 losing publish has the exact declared error envelope ({"code":"NotPublishable","message":"NotPublishable","fields":[]})
+PASS X01 every post count equals independently stored like rows (checked all post and like rows)
+PASS X01 anonymous read after competition (expected=200 actual=200)
+PASS X01 anonymous read after competition matches all JSON fields, nested identities and JDBC values ({"id":108,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"publish race","content":"race","likes":0,"createdAt":"2026-01-06T00:00:00Z"})
+PASS X01 anonymous read after competition changes no business row in any of seven tables (all seven tables unchanged)
+PASS blog fixture seed has complete rows, foreign keys and zero like counts ({tag=3, post_tag=6, user=10, post=11, like=0, category=2, access_token=11})
+PASS X02 six independent clients reach the ready latch (remaining=0)
+PASS X02 six distinct runtime connections and transactions demonstrably wait on the held post (blockerConnection=99; target transactions=6)
+PASS X02 client 0 completed its real HTTP request (HTTP 409)
+PASS X02 client 1 completed its real HTTP request (HTTP 409)
+PASS X02 client 2 completed its real HTTP request (HTTP 409)
+PASS X02 client 3 completed its real HTTP request (HTTP 201)
+PASS X02 client 4 completed its real HTTP request (HTTP 409)
+PASS X02 client 5 completed its real HTTP request (HTTP 409)
+PASS X02 records all six actual ready events (events=6)
+PASS X02 records all six actual start events (events=6)
+PASS X02 records all six actual end events (events=6)
+PASS X02 attach has exactly the required success/conflict counts ([409, 409, 409, 201, 409, 409])
+PASS X02 only one selected-tag relation is inserted ([Row[cells={id=10, post_id=111, tag_id=22}]])
+PASS X02 attachment competition has only the allowed full-database delta (exact allowed delta)
+PASS X02 losing attachment (expected=409 actual=409)
+PASS X02 losing attachment has the exact declared error envelope ({"code":"TagAttached","message":"TagAttached","fields":[]})
+PASS X02 losing attachment (expected=409 actual=409)
+PASS X02 losing attachment has the exact declared error envelope ({"code":"TagAttached","message":"TagAttached","fields":[]})
+PASS X02 losing attachment (expected=409 actual=409)
+PASS X02 losing attachment has the exact declared error envelope ({"code":"TagAttached","message":"TagAttached","fields":[]})
+PASS X02 winning attachment (expected=201 actual=201)
+PASS X02 winning attachment has an empty body ()
+PASS X02 losing attachment (expected=409 actual=409)
+PASS X02 losing attachment has the exact declared error envelope ({"code":"TagAttached","message":"TagAttached","fields":[]})
+PASS X02 losing attachment (expected=409 actual=409)
+PASS X02 losing attachment has the exact declared error envelope ({"code":"TagAttached","message":"TagAttached","fields":[]})
+PASS X02 every post count equals independently stored like rows (checked all post and like rows)
+PASS X02 tagged draft remains hidden after competition (expected=200 actual=200)
+PASS X02 tagged draft remains hidden after competition has exact page keys, totals, ordering and full nested records ({"total":0,"page":1,"size":10,"records":[]})
+PASS X02 tagged draft remains hidden after competition changes no business row in any of seven tables (all seven tables unchanged)
+PASS blog fixture seed has complete rows, foreign keys and zero like counts ({tag=3, post_tag=6, user=10, post=11, like=0, category=2, access_token=11})
+PASS X03 six independent clients reach the ready latch (remaining=0)
+PASS X03 six distinct runtime connections and transactions demonstrably wait on the held post (blockerConnection=100; target transactions=6)
+PASS X03 client 0 completed its real HTTP request (HTTP 201)
+PASS X03 client 1 completed its real HTTP request (HTTP 409)
+PASS X03 client 2 completed its real HTTP request (HTTP 409)
+PASS X03 client 3 completed its real HTTP request (HTTP 409)
+PASS X03 client 4 completed its real HTTP request (HTTP 409)
+PASS X03 client 5 completed its real HTTP request (HTTP 409)
+PASS X03 records all six actual ready events (events=6)
+PASS X03 records all six actual start events (events=6)
+PASS X03 records all six actual end events (events=6)
+PASS X03 same user has exactly the required success/conflict counts ([201, 409, 409, 409, 409, 409])
+PASS X03 exactly one current-user like survives ([Row[cells={id=5, post_id=109, user_id=2}]])
+PASS X03 repeated-like competition has only the allowed full-database delta (exact allowed delta)
+PASS X03 winning like matches all JSON fields, nested identities and JDBC values ({"id":109,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"same liker race","content":"race","likes":1,"createdAt":"2026-01-07T00:00:00Z"})
+PASS X03 losing like (expected=409 actual=409)
+PASS X03 losing like has the exact declared error envelope ({"code":"AlreadyLiked","message":"AlreadyLiked","fields":[]})
+PASS X03 losing like (expected=409 actual=409)
+PASS X03 losing like has the exact declared error envelope ({"code":"AlreadyLiked","message":"AlreadyLiked","fields":[]})
+PASS X03 losing like (expected=409 actual=409)
+PASS X03 losing like has the exact declared error envelope ({"code":"AlreadyLiked","message":"AlreadyLiked","fields":[]})
+PASS X03 losing like (expected=409 actual=409)
+PASS X03 losing like has the exact declared error envelope ({"code":"AlreadyLiked","message":"AlreadyLiked","fields":[]})
+PASS X03 losing like (expected=409 actual=409)
+PASS X03 losing like has the exact declared error envelope ({"code":"AlreadyLiked","message":"AlreadyLiked","fields":[]})
+PASS X03 every post count equals independently stored like rows (checked all post and like rows)
+PASS X03 committed count is visible anonymously (expected=200 actual=200)
+PASS X03 committed count is visible anonymously matches all JSON fields, nested identities and JDBC values ({"id":109,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"same liker race","content":"race","likes":1,"createdAt":"2026-01-07T00:00:00Z"})
+PASS X03 committed count is visible anonymously changes no business row in any of seven tables (all seven tables unchanged)
+PASS blog fixture seed has complete rows, foreign keys and zero like counts ({tag=3, post_tag=6, user=10, post=11, like=0, category=2, access_token=11})
+PASS X04 six independent clients reach the ready latch (remaining=0)
+PASS X04 six distinct runtime connections and transactions demonstrably wait on the held post (blockerConnection=101; target transactions=6)
+PASS X04 client 0 completed its real HTTP request (HTTP 201)
+PASS X04 client 1 completed its real HTTP request (HTTP 201)
+PASS X04 client 2 completed its real HTTP request (HTTP 201)
+PASS X04 client 3 completed its real HTTP request (HTTP 201)
+PASS X04 client 4 completed its real HTTP request (HTTP 201)
+PASS X04 client 5 completed its real HTTP request (HTTP 201)
+PASS X04 records all six actual ready events (events=6)
+PASS X04 records all six actual start events (events=6)
+PASS X04 records all six actual end events (events=6)
+PASS X04 different users has exactly the required success/conflict counts ([201, 201, 201, 201, 201, 201])
+PASS X04 six distinct requested-user relations survive ([Row[cells={id=11, post_id=110, user_id=3}], Row[cells={id=12, post_id=110, user_id=4}], Row[cells={id=13, post_id=110, user_id=7}], Row[cells={id=14, post_id=110, user_id=6}], Row[cells={id=15, post_id=110, user_id=8}], Row[cells={id=16, post_id=110, user_id=5}]])
+PASS X04 different-user competition has only the allowed full-database delta (exact allowed delta)
+PASS X04 each successful response has an in-range numeric count (likes=1)
+PASS X04 successful like matches all JSON fields, nested identities and JDBC values ({"id":110,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"different likers race","content":"race","likes":1,"createdAt":"2026-01-08T00:00:00Z"})
+PASS X04 each successful response has an in-range numeric count (likes=2)
+PASS X04 successful like matches all JSON fields, nested identities and JDBC values ({"id":110,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"different likers race","content":"race","likes":2,"createdAt":"2026-01-08T00:00:00Z"})
+PASS X04 each successful response has an in-range numeric count (likes=6)
+PASS X04 successful like matches all JSON fields, nested identities and JDBC values ({"id":110,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"different likers race","content":"race","likes":6,"createdAt":"2026-01-08T00:00:00Z"})
+PASS X04 each successful response has an in-range numeric count (likes=4)
+PASS X04 successful like matches all JSON fields, nested identities and JDBC values ({"id":110,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"different likers race","content":"race","likes":4,"createdAt":"2026-01-08T00:00:00Z"})
+PASS X04 each successful response has an in-range numeric count (likes=3)
+PASS X04 successful like matches all JSON fields, nested identities and JDBC values ({"id":110,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"different likers race","content":"race","likes":3,"createdAt":"2026-01-08T00:00:00Z"})
+PASS X04 each successful response has an in-range numeric count (likes=5)
+PASS X04 successful like matches all JSON fields, nested identities and JDBC values ({"id":110,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"different likers race","content":"race","likes":5,"createdAt":"2026-01-08T00:00:00Z"})
+PASS X04 every post count equals independently stored like rows (checked all post and like rows)
+PASS X04 final count is six on the public read path (expected=200 actual=200)
+PASS X04 final count is six on the public read path matches all JSON fields, nested identities and JDBC values ({"id":110,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"different likers race","content":"race","likes":6,"createdAt":"2026-01-08T00:00:00Z"})
+PASS X04 final count is six on the public read path changes no business row in any of seven tables (all seven tables unchanged)
+PASS the generated application process exited (stopped=true)
+PASS the owned schema was dropped and its absence proved (schema=kcg_conf_run)
+PASS the advisory lock for the owned schema was released (released=true)
+
+B01 anonymous readiness: status=200 body={"total":7,"page":1,"size":10,"records":[{"id":110,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"different likers race","content":"race","likes":0,"createdAt":"2026-01-08T00:00:00Z"},{"id":109,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"same liker race","content":"race","likes":0,"createdAt":"2026-01-07T00:00:00Z"},{"id":107,"author":{"id":2,"name":"bob"},"category":{"id":11,"name":"life"},"title":"alpha\\beta","content":"plain","likes":0,"createdAt":"2026-01-03T00:00:00Z"},{"id":106,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"other","content":"unrelated","likes":0,"createdAt":"2026-01-03T00:00:00Z"},{"id":103,"author":{"id":2,"name":"bob"},"category":{"id":11,"name":"life"},"title":"alpha_beta","content":"plain","likes":0,"createdAt":"2026-01-02T00:00:00Z"},{"id":102,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"alpha%beta","content":"plain","likes":0,"createdAt":"2026-01-02T00:00:00Z"},{"id":104,"author":{"id":1,"name":"alice"},"category":{"id":11,"name":"life"},"title":"plain","content":"alpha body","likes":0,"createdAt":"2026-01-01T00:00:00Z"}]}
+B02 CreatePost invalid identity 0: status=401 body=
+B02 CreatePost invalid identity 1: status=401 body=
+B02 CreatePost invalid identity 2: status=401 body=
+B02 CreatePost invalid identity 3: status=401 body=
+B02 Publish invalid identity 0: status=401 body=
+B02 Publish invalid identity 1: status=401 body=
+B02 Publish invalid identity 2: status=401 body=
+B02 Publish invalid identity 3: status=401 body=
+B02 AttachTag invalid identity 0: status=401 body=
+B02 AttachTag invalid identity 1: status=401 body=
+B02 AttachTag invalid identity 2: status=401 body=
+B02 AttachTag invalid identity 3: status=401 body=
+B02 LikePost invalid identity 0: status=401 body=
+B02 LikePost invalid identity 1: status=401 body=
+B02 LikePost invalid identity 2: status=401 body=
+B02 LikePost invalid identity 3: status=401 body=
+B03 alice creates draft: status=201 body={"id":112,"author":1,"category":10,"title":"flow article","content":"flow payload","state":"DRAFT","likes":0,"createdAt":"2026-10-29T08:07:48.659639501Z"}
+B04 bob creates distinct draft: status=201 body={"id":113,"author":2,"category":11,"title":"bob article","content":"bob payload","state":"DRAFT","likes":0,"createdAt":"2026-10-29T08:07:48.695147267Z"}
+B05 title omitted: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"title","code":"NotBlank","message":"must not be blank"}]}
+B05 title null: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"title","code":"NotBlank","message":"must not be blank"}]}
+B05 title empty: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"title","code":"NotBlank","message":"must not be blank"},{"path":"title","code":"Size","message":"size must be between 1 and 100"}]}
+B05 title blank: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"title","code":"NotBlank","message":"must not be blank"}]}
+B05 title too long: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"title","code":"Size","message":"size must be between 1 and 100"}]}
+B06 full Name length and unrestricted Text: status=201 body={"id":114,"author":1,"category":10,"title":"tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt","content":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","state":"DRAFT","likes":0,"createdAt":"2026-10-29T08:07:48.823528172Z"}
+P00 create article for publication flow: status=201 body={"id":115,"author":1,"category":10,"title":"flow article","content":"flow payload","state":"DRAFT","likes":0,"createdAt":"2026-10-29T08:07:48.863831288Z"}
+P01 draft detail stays hidden: status=404 body={"code":"PostNotFound","message":"PostNotFound","fields":[]}
+P01 draft does not enter search: status=200 body={"total":0,"page":1,"size":10,"records":[]}
+P02 non-author publish: status=403 body={"code":"Forbidden","message":"Forbidden","fields":[]}
+P03 unknown article publish: status=404 body={"code":"PostNotFound","message":"PostNotFound","fields":[]}
+P04 author publishes and URL overrides conflicting body id: status=200 body={"id":115,"author":1,"category":10,"title":"flow article","content":"flow payload","state":"PUBLISHED","likes":0,"createdAt":"2026-10-29T08:07:48.863831Z"}
+P05 published detail matches created article: status=200 body={"id":115,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"flow article","content":"flow payload","likes":0,"createdAt":"2026-10-29T08:07:48.863831Z"}
+P05 published article appears in search: status=200 body={"total":1,"page":1,"size":10,"records":[{"id":115,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"flow article","content":"flow payload","likes":0,"createdAt":"2026-10-29T08:07:48.863831Z"}]}
+P06 publishing again: status=409 body={"code":"NotPublishable","message":"NotPublishable","fields":[]}
+P07 nonexistent detail: status=404 body={"code":"PostNotFound","message":"PostNotFound","fields":[]}
+P07 other draft detail: status=404 body={"code":"PostNotFound","message":"PostNotFound","fields":[]}
+Q01 first alpha page: status=200 body={"total":4,"page":1,"size":2,"records":[{"id":107,"author":{"id":2,"name":"bob"},"category":{"id":11,"name":"life"},"title":"alpha\\beta","content":"plain","likes":0,"createdAt":"2026-01-03T00:00:00Z"},{"id":103,"author":{"id":2,"name":"bob"},"category":{"id":11,"name":"life"},"title":"alpha_beta","content":"plain","likes":0,"createdAt":"2026-01-02T00:00:00Z"}]}
+Q01 second alpha page includes body-only match: status=200 body={"total":4,"page":2,"size":2,"records":[{"id":102,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"alpha%beta","content":"plain","likes":0,"createdAt":"2026-01-02T00:00:00Z"},{"id":104,"author":{"id":1,"name":"alice"},"category":{"id":11,"name":"life"},"title":"plain","content":"alpha body","likes":0,"createdAt":"2026-01-01T00:00:00Z"}]}
+Q01 past last page retains total: status=200 body={"total":4,"page":3,"size":2,"records":[]}
+Q02 literal %25: status=200 body={"total":1,"page":1,"size":10,"records":[{"id":102,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"alpha%beta","content":"plain","likes":0,"createdAt":"2026-01-02T00:00:00Z"}]}
+Q02 literal %5F: status=200 body={"total":1,"page":1,"size":10,"records":[{"id":103,"author":{"id":2,"name":"bob"},"category":{"id":11,"name":"life"},"title":"alpha_beta","content":"plain","likes":0,"createdAt":"2026-01-02T00:00:00Z"}]}
+Q02 literal %5C: status=200 body={"total":1,"page":1,"size":10,"records":[{"id":107,"author":{"id":2,"name":"bob"},"category":{"id":11,"name":"life"},"title":"alpha\\beta","content":"plain","likes":0,"createdAt":"2026-01-03T00:00:00Z"}]}
+Q03 empty keyword: status=200 body={"total":7,"page":1,"size":10,"records":[{"id":110,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"different likers race","content":"race","likes":0,"createdAt":"2026-01-08T00:00:00Z"},{"id":109,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"same liker race","content":"race","likes":0,"createdAt":"2026-01-07T00:00:00Z"},{"id":107,"author":{"id":2,"name":"bob"},"category":{"id":11,"name":"life"},"title":"alpha\\beta","content":"plain","likes":0,"createdAt":"2026-01-03T00:00:00Z"},{"id":106,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"other","content":"unrelated","likes":0,"createdAt":"2026-01-03T00:00:00Z"},{"id":103,"author":{"id":2,"name":"bob"},"category":{"id":11,"name":"life"},"title":"alpha_beta","content":"plain","likes":0,"createdAt":"2026-01-02T00:00:00Z"},{"id":102,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"alpha%beta","content":"plain","likes":0,"createdAt":"2026-01-02T00:00:00Z"},{"id":104,"author":{"id":1,"name":"alice"},"category":{"id":11,"name":"life"},"title":"plain","content":"alpha body","likes":0,"createdAt":"2026-01-01T00:00:00Z"}]}
+Q03 no match: status=200 body={"total":0,"page":1,"size":10,"records":[]}
+Q04 both defaults: status=200 body={"total":4,"page":1,"size":20,"records":[{"id":107,"author":{"id":2,"name":"bob"},"category":{"id":11,"name":"life"},"title":"alpha\\beta","content":"plain","likes":0,"createdAt":"2026-01-03T00:00:00Z"},{"id":103,"author":{"id":2,"name":"bob"},"category":{"id":11,"name":"life"},"title":"alpha_beta","content":"plain","likes":0,"createdAt":"2026-01-02T00:00:00Z"},{"id":102,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"alpha%beta","content":"plain","likes":0,"createdAt":"2026-01-02T00:00:00Z"},{"id":104,"author":{"id":1,"name":"alice"},"category":{"id":11,"name":"life"},"title":"plain","content":"alpha body","likes":0,"createdAt":"2026-01-01T00:00:00Z"}]}
+Q04 page default alone: status=200 body={"total":4,"page":1,"size":2,"records":[{"id":107,"author":{"id":2,"name":"bob"},"category":{"id":11,"name":"life"},"title":"alpha\\beta","content":"plain","likes":0,"createdAt":"2026-01-03T00:00:00Z"},{"id":103,"author":{"id":2,"name":"bob"},"category":{"id":11,"name":"life"},"title":"alpha_beta","content":"plain","likes":0,"createdAt":"2026-01-02T00:00:00Z"}]}
+Q04 size default alone: status=200 body={"total":4,"page":2,"size":20,"records":[]}
+Q05 rejected page 0 on /api/posts?keyword=alpha&: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+Q05 rejected page -1 on /api/posts?keyword=alpha&: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+Q05 rejected page 10001 on /api/posts?keyword=alpha&: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+Q05 rejected size 0 on /api/posts?keyword=alpha&: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+Q05 rejected size -1 on /api/posts?keyword=alpha&: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+Q05 rejected size 101 on /api/posts?keyword=alpha&: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+Q05 rejected page 0 on /api/tags/20/posts?: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+Q05 rejected page -1 on /api/tags/20/posts?: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+Q05 rejected page 10001 on /api/tags/20/posts?: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+Q05 rejected size 0 on /api/tags/20/posts?: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+Q05 rejected size -1 on /api/tags/20/posts?: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+Q05 rejected size 101 on /api/tags/20/posts?: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+Q06 inclusive upper page: status=200 body={"total":4,"page":10000,"size":100,"records":[]}
+Q06 inclusive upper size: status=200 body={"total":4,"page":1,"size":100,"records":[{"id":107,"author":{"id":2,"name":"bob"},"category":{"id":11,"name":"life"},"title":"alpha\\beta","content":"plain","likes":0,"createdAt":"2026-01-03T00:00:00Z"},{"id":103,"author":{"id":2,"name":"bob"},"category":{"id":11,"name":"life"},"title":"alpha_beta","content":"plain","likes":0,"createdAt":"2026-01-02T00:00:00Z"},{"id":102,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"alpha%beta","content":"plain","likes":0,"createdAt":"2026-01-02T00:00:00Z"},{"id":104,"author":{"id":1,"name":"alice"},"category":{"id":11,"name":"life"},"title":"plain","content":"alpha body","likes":0,"createdAt":"2026-01-01T00:00:00Z"}]}
+T01 first selected-tag page: status=200 body={"total":3,"page":1,"size":2,"records":[{"id":106,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"other","content":"unrelated","likes":0,"createdAt":"2026-01-03T00:00:00Z"},{"id":103,"author":{"id":2,"name":"bob"},"category":{"id":11,"name":"life"},"title":"alpha_beta","content":"plain","likes":0,"createdAt":"2026-01-02T00:00:00Z"}]}
+T01 second selected-tag page: status=200 body={"total":3,"page":2,"size":2,"records":[{"id":102,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"alpha%beta","content":"plain","likes":0,"createdAt":"2026-01-02T00:00:00Z"}]}
+T02 other tag does not duplicate roots: status=200 body={"total":2,"page":1,"size":10,"records":[{"id":102,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"alpha%beta","content":"plain","likes":0,"createdAt":"2026-01-02T00:00:00Z"},{"id":104,"author":{"id":1,"name":"alice"},"category":{"id":11,"name":"life"},"title":"plain","content":"alpha body","likes":0,"createdAt":"2026-01-01T00:00:00Z"}]}
+T02 existing empty tag: status=200 body={"total":0,"page":1,"size":10,"records":[]}
+T03 missing tag differs from empty tag: status=404 body={"code":"TagNotFound","message":"TagNotFound","fields":[]}
+T04 attach tag to draft: status=201 body=
+T05 tagged draft stays private: status=200 body={"total":2,"page":1,"size":10,"records":[{"id":102,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"alpha%beta","content":"plain","likes":0,"createdAt":"2026-01-02T00:00:00Z"},{"id":104,"author":{"id":1,"name":"alice"},"category":{"id":11,"name":"life"},"title":"plain","content":"alpha body","likes":0,"createdAt":"2026-01-01T00:00:00Z"}]}
+T06 missing post: status=404 body={"code":"PostNotFound","message":"PostNotFound","fields":[]}
+T06 missing tag: status=404 body={"code":"TagNotFound","message":"TagNotFound","fields":[]}
+T07 other author cannot attach: status=403 body={"code":"Forbidden","message":"Forbidden","fields":[]}
+T08 repeated attachment: status=409 body={"code":"TagAttached","message":"TagAttached","fields":[]}
+T09 publish tagged draft: status=200 body={"id":101,"author":1,"category":10,"title":"draft alpha","content":"hidden","state":"PUBLISHED","likes":0,"createdAt":"2026-01-05T00:00:00Z"}
+T09 published draft enters selected tag: status=200 body={"total":3,"page":1,"size":10,"records":[{"id":101,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"draft alpha","content":"hidden","likes":0,"createdAt":"2026-01-05T00:00:00Z"},{"id":102,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"alpha%beta","content":"plain","likes":0,"createdAt":"2026-01-02T00:00:00Z"},{"id":104,"author":{"id":1,"name":"alice"},"category":{"id":11,"name":"life"},"title":"plain","content":"alpha body","likes":0,"createdAt":"2026-01-01T00:00:00Z"}]}
+T10 tag page defaults: status=200 body={"total":4,"page":1,"size":20,"records":[{"id":101,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"draft alpha","content":"hidden","likes":0,"createdAt":"2026-01-05T00:00:00Z"},{"id":106,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"other","content":"unrelated","likes":0,"createdAt":"2026-01-03T00:00:00Z"},{"id":103,"author":{"id":2,"name":"bob"},"category":{"id":11,"name":"life"},"title":"alpha_beta","content":"plain","likes":0,"createdAt":"2026-01-02T00:00:00Z"},{"id":102,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"alpha%beta","content":"plain","likes":0,"createdAt":"2026-01-02T00:00:00Z"}]}
+T10 tag page default alone: status=200 body={"total":4,"page":1,"size":2,"records":[{"id":101,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"draft alpha","content":"hidden","likes":0,"createdAt":"2026-01-05T00:00:00Z"},{"id":106,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"other","content":"unrelated","likes":0,"createdAt":"2026-01-03T00:00:00Z"}]}
+T10 tag size default alone: status=200 body={"total":4,"page":2,"size":20,"records":[]}
+T10 tag page past end retains total: status=200 body={"total":4,"page":3,"size":2,"records":[]}
+T10 tag page inclusive maxima: status=200 body={"total":4,"page":10000,"size":100,"records":[]}
+T11 published post may receive a tag: status=201 body=
+T11 published attachment is visible: status=200 body={"total":4,"page":1,"size":10,"records":[{"id":101,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"draft alpha","content":"hidden","likes":0,"createdAt":"2026-01-05T00:00:00Z"},{"id":106,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"other","content":"unrelated","likes":0,"createdAt":"2026-01-03T00:00:00Z"},{"id":102,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"alpha%beta","content":"plain","likes":0,"createdAt":"2026-01-02T00:00:00Z"},{"id":104,"author":{"id":1,"name":"alice"},"category":{"id":11,"name":"life"},"title":"plain","content":"alpha body","likes":0,"createdAt":"2026-01-01T00:00:00Z"}]}
+L01 bob likes published post: status=201 body={"id":102,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"alpha%beta","content":"plain","likes":1,"createdAt":"2026-01-02T00:00:00Z"}
+L02 duplicate like rolls back everything: status=409 body={"code":"AlreadyLiked","message":"AlreadyLiked","fields":[]}
+L03 carol independently likes post: status=201 body={"id":102,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"alpha%beta","content":"plain","likes":2,"createdAt":"2026-01-02T00:00:00Z"}
+L03 author may like own post: status=201 body={"id":102,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"alpha%beta","content":"plain","likes":3,"createdAt":"2026-01-02T00:00:00Z"}
+L04 draft cannot receive likes: status=404 body={"code":"PostNotFound","message":"PostNotFound","fields":[]}
+L04 missing post cannot receive likes: status=404 body={"code":"PostNotFound","message":"PostNotFound","fields":[]}
+L05 detail reads committed count: status=200 body={"id":102,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"alpha%beta","content":"plain","likes":3,"createdAt":"2026-01-02T00:00:00Z"}
+L05 literal search reads committed count: status=200 body={"total":1,"page":1,"size":10,"records":[{"id":102,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"alpha%beta","content":"plain","likes":3,"createdAt":"2026-01-02T00:00:00Z"}]}
+L05 tag page reads committed count: status=200 body={"total":3,"page":1,"size":10,"records":[{"id":106,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"other","content":"unrelated","likes":0,"createdAt":"2026-01-03T00:00:00Z"},{"id":103,"author":{"id":2,"name":"bob"},"category":{"id":11,"name":"life"},"title":"alpha_beta","content":"plain","likes":0,"createdAt":"2026-01-02T00:00:00Z"},{"id":102,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"alpha%beta","content":"plain","likes":3,"createdAt":"2026-01-02T00:00:00Z"}]}
+X01 client 0: status=409 body={"code":"NotPublishable","message":"NotPublishable","fields":[]}
+X01 client 1: status=200 body={"id":108,"author":1,"category":10,"title":"publish race","content":"race","state":"PUBLISHED","likes":0,"createdAt":"2026-01-06T00:00:00Z"}
+X01 client 2: status=409 body={"code":"NotPublishable","message":"NotPublishable","fields":[]}
+X01 client 3: status=409 body={"code":"NotPublishable","message":"NotPublishable","fields":[]}
+X01 client 4: status=409 body={"code":"NotPublishable","message":"NotPublishable","fields":[]}
+X01 client 5: status=409 body={"code":"NotPublishable","message":"NotPublishable","fields":[]}
+X01 anonymous read after competition: status=200 body={"id":108,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"publish race","content":"race","likes":0,"createdAt":"2026-01-06T00:00:00Z"}
+X02 client 0: status=409 body={"code":"TagAttached","message":"TagAttached","fields":[]}
+X02 client 1: status=409 body={"code":"TagAttached","message":"TagAttached","fields":[]}
+X02 client 2: status=409 body={"code":"TagAttached","message":"TagAttached","fields":[]}
+X02 client 3: status=201 body=
+X02 client 4: status=409 body={"code":"TagAttached","message":"TagAttached","fields":[]}
+X02 client 5: status=409 body={"code":"TagAttached","message":"TagAttached","fields":[]}
+X02 tagged draft remains hidden after competition: status=200 body={"total":0,"page":1,"size":10,"records":[]}
+X03 client 0: status=201 body={"id":109,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"same liker race","content":"race","likes":1,"createdAt":"2026-01-07T00:00:00Z"}
+X03 client 1: status=409 body={"code":"AlreadyLiked","message":"AlreadyLiked","fields":[]}
+X03 client 2: status=409 body={"code":"AlreadyLiked","message":"AlreadyLiked","fields":[]}
+X03 client 3: status=409 body={"code":"AlreadyLiked","message":"AlreadyLiked","fields":[]}
+X03 client 4: status=409 body={"code":"AlreadyLiked","message":"AlreadyLiked","fields":[]}
+X03 client 5: status=409 body={"code":"AlreadyLiked","message":"AlreadyLiked","fields":[]}
+X03 committed count is visible anonymously: status=200 body={"id":109,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"same liker race","content":"race","likes":1,"createdAt":"2026-01-07T00:00:00Z"}
+X04 client 0: status=201 body={"id":110,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"different likers race","content":"race","likes":1,"createdAt":"2026-01-08T00:00:00Z"}
+X04 client 1: status=201 body={"id":110,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"different likers race","content":"race","likes":2,"createdAt":"2026-01-08T00:00:00Z"}
+X04 client 2: status=201 body={"id":110,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"different likers race","content":"race","likes":6,"createdAt":"2026-01-08T00:00:00Z"}
+X04 client 3: status=201 body={"id":110,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"different likers race","content":"race","likes":4,"createdAt":"2026-01-08T00:00:00Z"}
+X04 client 4: status=201 body={"id":110,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"different likers race","content":"race","likes":3,"createdAt":"2026-01-08T00:00:00Z"}
+X04 client 5: status=201 body={"id":110,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"different likers race","content":"race","likes":5,"createdAt":"2026-01-08T00:00:00Z"}
+X04 final count is six on the public read path: status=200 body={"id":110,"author":{"id":1,"name":"alice"},"category":{"id":10,"name":"tech"},"title":"different likers race","content":"race","likes":6,"createdAt":"2026-01-08T00:00:00Z"}
+
+]]></system-out>
+  </testcase>
+</testsuite>

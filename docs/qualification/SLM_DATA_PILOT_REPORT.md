@@ -420,3 +420,24 @@ v4 这一轮：13 份中静态通过 7 份，四门通过 6 份。样本少、�
 **保留环境阻断。**另一次附带的 SlmCandidateSupportTest 回归共有 9 项：7 通过、1 失败、1 错误；两项根因均为 Windows 返回 `SIR-APP-SOURCES-READ-001: filesystem does not support secure directory-relative source reads`，在候选安全读源阶段即被拒绝。本轮不改生产读源规则、不加跳过或把那次 24 项总运行记成通过，完整 XML/文本与 Maven 输出保留在 `target/blog-verification/pre-deadline-review/`，对应 Linux 验证仍待 CI。最初缺资源的 RED、oracle 编译期 RED、截止边界 RED 分别留在 `red/`、`oracle-red-compile.txt`、`deadline-red/`。
 
 **CI 与正式题目的界线。**verify.yml 已接入 BlogBusinessConformanceIT／kcg.blog-conformance.enabled，并单独要求唯一博客报告的正式第二行 `verdict=PASSED`；NOT_RUN、缺失或重复报告以及响应中伪造的后续 verdict 都不能补位。slm-business-gate.yml 已增加对应选项与属性映射。工作流 YAML／内嵌 Python、两份题面／SQL／合同和上述证据守卫的正反例已校验；检查脚本在 `target/blog-verification/check_materials.py`。当前参考的构建／启动／真实业务均 **NOT_RUN**，没有提交或推送本批代码、没有派发新 CI，也未创建正式 blog task 或冻结批次。待负责人明确授权提交推送、参考在同 SHA 的 verify 取得四门证据后，再核对 base 负例、填写真实 reference_evidence 并冻结 task；不能引用旧完整博客的结果。API 调用 **0 次**，合格答案与学生 v3 仍为 **48 条**，没有训练或 UI 改动。
+
+
+<a id="slm-blog-reference-frozen"></a>
+
+## 第十八阶段：博客参考 CI 验收与两题冻结（2026-10-29）
+
+负责人通知 CI 完成后，一次性核对 **`66c276915d825f4d1914da721b1ddf4e0ceda2de`** 的 [verify #200 / 40839225636](https://github.com/HoloNova/Software-IR/actions/runs/40839225636)：两个 job 均 success，参考业务报告固定第二行为 `verdict=PASSED`，完整生成 55 文件、离线构建成功、匿名真实路由 readiness=200，**业务 425/0**。四轮都记录了各六个不同运行时连接／事务连到持锁控制连接的等待图、ready/start/end 和实际 HTTP；应用退出、自有 schema 删除、advisory lock 释放均有 PASS。不是仅据工作流绿色推导业务通过。
+
+**原始证据。**`datasets/sir/research/2026-10-29/blog-reference-ci200/` 保存 GitHub run/jobs/artifacts 元数据、三个原始 ZIP、博客原始报告和四个 Maven/Spring 日志、四类完整 JUnit XML及摘要；下载时逐 ZIP 核对 GitHub SHA256，确认无 CI 口令标记。报告中的参考／DDL／seed 三个 SHA256 与受测 Git blob 一致。三个 ZIP 的 artifact ID 分别为 conformance-evidence=`12881819635`、surefire-reports=`12881989005`、standalone-cli=`12881744793`，完整摘要见归档 metadata。上传 Surefire 实际为 **292 XML／2009 项，0 失败／0 错误／0 跳过**；选择归档的 BlogReferenceContractTest=5、BlogOracleTest=11、BlogBusinessConformanceIT=1、SlmCandidateSupportTest=9，全部通过。此前 Windows 阻断的两项在同 SHA Linux 正常完成，不需要降低安全读源要求。原始字节不清洗；日志行尾空白保留为证据格式例外。
+
+**base 正反边界。**CI 的 `baseCompilesAndRemovesOnlyTheFourNewCapabilities` 已验证两边完整静态生成、仅删四能力及 Controller 缺失；又用该 CI 原 standalone CLI 的核心 API 在内存实际生成参考 55／base **47** 文件，确认 Publish、AttachTag、PostsByTag、LikePost 四个 Controller 只在参考出现。base 并非空壳，创建／搜索／详情仍保留；缺四条新增路由说明无法满足相应成功检查，但 **base 的真实 HTTP 负例为 NOT_RUN**，不虚构应用已运行或业务失败报告。辅助脚本最初误填 base=43，现以真实生成文件集和缺失 Controller 判断；43 不是题目要求或验收标准。
+
+**两种生成摘要不能直接比较。**冻结检查曾因把两个既有协议直接相等而阻断。`BusinessSliceHarness.digestOfGeneratedFiles` 按生成顺序拼接 path/NUL/content/NUL，报告的旧 combinedSha256 为 `f2c63163afd0badafea272fb5e244f0ae82cc2683d1f5e7e3448f4269fc85e82`；CLI `check.digest` 使用生产 `ValidationHashes.generated` 的版本前缀、排序和长度帧，为 `95ebf3692504bd9552da79e02c7db3dc2c68dd3ac52b8abfebecec397a2c73cf`。已复用同 CI 核心的 ProjectCompilation 对同一文件集同时计算两者，各自精确匹配 CI 报告与 CLI 输出，证明不是生成产物变化。验证 helper、来源摘要和双协议证明已归档；不修改生产算法、旧报告、候选或 manifest，也不另写编译语义。后续候选仍绑定版本化摘要，不能把旧 combinedSha256 填进去。
+
+**正式题目与闭包。**新增 `experiments/slm/tasks/blog-change-v1.json`、`blog-scratch-v1.json`，ID 分别为 `content-blog-change-v1`／`content-blog-scratch-v1`，family=`content.blog`、split=`train`，原需求、合同、base／参考不变。reference_evidence 只指上述本题受测 commit／run，kind 仍为 existing-reference-only-not-candidate-qualification。共用 **38 项 oracle**（35 个 Java + DDL/seed/参考），以 token-desk 的公共依赖闭包为底、替换为博客入口与全部 helper；逐文件核对存在性和受测 Git blob，还将这 35 个源单独对 CI 核心 JAR／外部依赖编译，排除所有既有 test-classes、禁用隐式补编和注解处理，验证没有遗漏测试辅助源。不是一次生成工程构建或新增业务验收。全题库现 73 份定义，既有 task 不改。
+
+**跨平台冻结与静态检查。**从受测 commit 使用命令级 `core.autocrlf=false`／`core.eol=lf` 导出独立快照，**448 个核心输入 + 38 个 oracle 输入**均逐字节匹配 Git blob；未修改用户工作区源码换行或 Git 配置。用原 `prepare` 和已批准 v7，冻结 `datasets/sir/pilots/blog-change-g7/`、`blog-scratch-g7/`；再用原 `_check_rows`／`bind_static` 与该 CI 的 standalone CLI 做完整静态生成，避免依赖本机增量 class。工具链仍为 `7275f533d442297d7c43b62317168e09736be9c369d9811c480e8aefad070d54`，博客 oracle 为 `b19875a18b071c0921ad34072f9de4c8c10b668db69fb5415eb3b401d6a7c843`；两批参考均无诊断、55 文件、版本化摘要与上述相同。每批仅 1 份 existing_reference，BUILD/START/BUSINESS 按 prepare 规则保持 NOT_RUN，不将参考的既有成功直接写成候选资格。该规则同样适用于以后生成的教师答案。
+
+本机没有 Maven／全量测试／真库／应用／训练或新模型调用，只运行了有界内存静态检查和 oracle 子集编译；Java 子进程均限制 heap 256 MiB、metaspace 128 MiB、ActiveProcessorCount=2 并已结束。合格教师答案仍为 **48 条**，学生 v3 不变。下一步建议两题各初采 1 次，deepseek-flash／v7，按既有 v7 实际用量拟合并留余量：改写预计输入 **8,000**、输出 **2,000**，从零预计输入 **7,500**、输出 **2,000**，合计 **19,500 tokens**；每次输出上限 8192，缓存未知、不自动重试，修复不在这笔预算内。完整方法和逐项估算在 sampling-plan.json，状态为待负责人批准，尚不发送请求。
+
+收尾的两份新 task 定向 AFT 请求也在 150 秒后因 bridge busy/under load 超时，未将其记为诊断通过；本阶段的结构依据为实际 JSON Schema／家族隔离／冻结字节核对和独立 oracle 子集编译。原始日志的空白例外只限已验证哈希的 Maven/Spring stdout，其他新增文本须通过正常差异检查。

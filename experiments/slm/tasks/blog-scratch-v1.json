@@ -1,0 +1,319 @@
+{
+  "base_source": null,
+  "contract": {
+    "capabilities": [
+      "CreatePost",
+      "Publish",
+      "Feed",
+      "ViewPost",
+      "AttachTag",
+      "PostsByTag",
+      "LikePost"
+    ],
+    "declared_errors": {
+      "AlreadyLiked": 409,
+      "BadPage": 400,
+      "Forbidden": 403,
+      "NotPublishable": 409,
+      "PostNotFound": 404,
+      "TagAttached": 409,
+      "TagNotFound": 404
+    },
+    "entities": [
+      "User",
+      "AccessToken",
+      "Category",
+      "Post",
+      "Tag",
+      "PostTag",
+      "Like"
+    ],
+    "enums": {
+      "PostState": [
+        "DRAFT",
+        "PUBLISHED"
+      ]
+    },
+    "family": "content.blog",
+    "fixtures": {
+      "provided_by_oracle": true
+    },
+    "interfaces": {
+      "AttachTag": {
+        "authentication": "Bearer",
+        "body_kind": "empty",
+        "errors": {
+          "Forbidden": 403,
+          "PostNotFound": 404,
+          "TagAttached": 409,
+          "TagNotFound": 404,
+          "unauthenticated": 401
+        },
+        "path_fields": [
+          "postId"
+        ],
+        "request_fields": [
+          "tagId"
+        ],
+        "response_fields": [],
+        "route": "POST /api/posts/{postId}/tags",
+        "success_status": 201
+      },
+      "CreatePost": {
+        "authentication": "Bearer",
+        "body_kind": "PostView",
+        "errors": {
+          "INVALID_REQUEST": 400,
+          "unauthenticated": 401
+        },
+        "request_fields": [
+          "categoryId",
+          "title",
+          "content"
+        ],
+        "response_fields": [
+          "id",
+          "author",
+          "category",
+          "title",
+          "content",
+          "state",
+          "likes",
+          "createdAt"
+        ],
+        "route": "POST /api/myposts",
+        "success_status": 201
+      },
+      "Feed": {
+        "authentication": "none",
+        "body_kind": "Page<PublicPost>",
+        "errors": {
+          "BadPage": 400
+        },
+        "request_fields": [
+          "keyword",
+          "page",
+          "size"
+        ],
+        "response_fields": [
+          "total",
+          "page",
+          "size",
+          "records"
+        ],
+        "route": "GET /api/posts",
+        "success_status": 200
+      },
+      "LikePost": {
+        "authentication": "Bearer",
+        "body_kind": "PublicPost",
+        "errors": {
+          "AlreadyLiked": 409,
+          "PostNotFound": 404,
+          "unauthenticated": 401
+        },
+        "path_fields": [
+          "id"
+        ],
+        "request_fields": [],
+        "response_fields": [
+          "id",
+          "author",
+          "category",
+          "title",
+          "content",
+          "likes",
+          "createdAt"
+        ],
+        "route": "POST /api/posts/{id}/like",
+        "success_status": 201
+      },
+      "PostsByTag": {
+        "authentication": "none",
+        "body_kind": "Page<PublicPost>",
+        "errors": {
+          "BadPage": 400,
+          "TagNotFound": 404
+        },
+        "path_fields": [
+          "tagId"
+        ],
+        "request_fields": [
+          "page",
+          "size"
+        ],
+        "response_fields": [
+          "total",
+          "page",
+          "size",
+          "records"
+        ],
+        "route": "GET /api/tags/{tagId}/posts",
+        "success_status": 200
+      },
+      "Publish": {
+        "authentication": "Bearer",
+        "body_kind": "PostView",
+        "errors": {
+          "Forbidden": 403,
+          "NotPublishable": 409,
+          "PostNotFound": 404,
+          "unauthenticated": 401
+        },
+        "path_fields": [
+          "id"
+        ],
+        "request_fields": [],
+        "response_fields": [
+          "id",
+          "author",
+          "category",
+          "title",
+          "content",
+          "state",
+          "likes",
+          "createdAt"
+        ],
+        "route": "POST /api/my/posts/{id}/publish",
+        "success_status": 200
+      },
+      "ViewPost": {
+        "authentication": "none",
+        "body_kind": "PublicPost",
+        "errors": {
+          "PostNotFound": 404
+        },
+        "path_fields": [
+          "id"
+        ],
+        "request_fields": [],
+        "response_fields": [
+          "id",
+          "author",
+          "category",
+          "title",
+          "content",
+          "likes",
+          "createdAt"
+        ],
+        "route": "GET /api/posts/{id}",
+        "success_status": 200
+      }
+    },
+    "namespace": "example.blog",
+    "pagination": {
+      "default_page": 1,
+      "default_size": 20,
+      "max_page": 10000,
+      "max_size": 100
+    },
+    "public_post_nested_fields": {
+      "author": [
+        "id",
+        "name"
+      ],
+      "category": [
+        "id",
+        "name"
+      ]
+    },
+    "readiness": "GET /api/posts?keyword=&page=1&size=10",
+    "split": "train",
+    "storage": {
+      "access_token": [
+        "id",
+        "owner_id",
+        "expires_at"
+      ],
+      "category": [
+        "id",
+        "name"
+      ],
+      "like": [
+        "id",
+        "post_id",
+        "user_id"
+      ],
+      "post": [
+        "id",
+        "author_id",
+        "category_id",
+        "title",
+        "content",
+        "state",
+        "likes",
+        "created_at"
+      ],
+      "post_tag": [
+        "id",
+        "post_id",
+        "tag_id"
+      ],
+      "tag": [
+        "id",
+        "name"
+      ],
+      "user": [
+        "id",
+        "name"
+      ]
+    }
+  },
+  "ddl_source": "sir-toolchain-application/src/test/resources/conformance/mysql/blog-ddl.sql",
+  "family": "content.blog",
+  "id": "content-blog-scratch-v1",
+  "oracle": {
+    "files": [
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/AdvisoryLockKey.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BlogAssertions.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BlogBusinessConformanceIT.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BlogConcurrencyChecks.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BlogConcurrentRequests.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BlogFixture.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BlogLikeChecks.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BlogLockWaits.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BlogPublicationChecks.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BlogTagChecks.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BusinessEndpointReadiness.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BusinessSliceHarness.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/ChildEnvironmentBuilder.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/ConformanceFixtures.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/ConformanceJvmLimits.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/DiskTree.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceDirectory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceOwnershipInventory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceRootProof.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceSecretScanner.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/HttpAssertionClient.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MavenProjectRunner.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MysqlObserver.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MysqlRuntimeJdbcUrl.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MysqlRuntimeTrace.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/OwnedPathEntry.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/OwnedPathInventory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/OwnedRunDirectory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SchemaName.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SchemaSqlRenderer.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SecretCatalog.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SlmCandidateSupport.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SpringApplicationProcess.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/StreamingSecretRedactor.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/StrongFileIdentity.java",
+      "sir-toolchain-application/src/test/resources/conformance/mysql/blog-ddl.sql",
+      "sir-toolchain-application/src/test/resources/conformance/mysql/blog-seed.sql",
+      "sir-toolchain-application/src/test/resources/valid/blog.sir"
+    ],
+    "id": "blog-http-mysql-v1"
+  },
+  "reference_evidence": {
+    "commit": "66c276915d825f4d1914da721b1ddf4e0ceda2de",
+    "kind": "existing-reference-only-not-candidate-qualification",
+    "run_url": "https://github.com/HoloNova/Software-IR/actions/runs/40839225636"
+  },
+  "reference_source": "sir-toolchain-application/src/test/resources/valid/blog.sir",
+  "requirement": "写操作使用 Authorization: Bearer 访问令牌识别当前用户，缺少、格式错误、未知或过期的令牌均返回空体 401，读接口允许匿名访问。\nCreatePost 接收 categoryId、title、content 并创建当前用户的文章，成功返回 201 和接口合同中的 PostView，初始 state 为 DRAFT、likes 为 0、createdAt 为创建时刻，title 必须是 1 到 100 个字符的非空白文本，缺少、null、空白或过长均返回 400 INVALID_REQUEST 和 title 字段错误。\nPublish 按 id 发布当前作者自己的草稿，成功返回 200 和接口合同中的 PostView，文章不存在返回 404 PostNotFound，非作者返回 403 Forbidden，已经发布返回 409 NotPublishable。\nFeed 按 keyword 在已发布文章的 title 或 content 中做字面包含搜索，百分号、下划线和反斜线不是通配符，空 keyword 匹配全部已发布文章，不得混入草稿，按 createdAt、id 都降序分页返回。\nViewPost 按 id 返回已发布文章的 PublicPost，成功为 200，草稿或不存在的文章均返回 404 PostNotFound。\nAttachTag 接收路径 postId 和请求中的 tagId，只允许文章作者绑定已存在的标签，成功返回空体 201，文章不存在返回 404 PostNotFound，非作者返回 403 Forbidden，标签不存在返回 404 TagNotFound，同一文章与标签重复绑定返回 409 TagAttached。\nPostsByTag 按 tagId 分页返回带该标签的已发布文章，不得混入草稿、其他标签的文章或重复文章，按 createdAt、id 都降序排列，标签不存在返回 404 TagNotFound，存在但无匹配文章返回空页。\n分页参数 page、size 可分别省略，默认分别为 1、20，有效范围分别为 1 到 10000、1 到 100，超出范围返回 400 BadPage，响应为 total、page、size、records，total 是全部匹配文章数，越界页仍返回正确 total。\nPublicPost 及其分页元素仅包含 id、author、category、title、content、likes、createdAt，author 为 id、name，category 为 id、name，PostView 仅包含 id、author、category、title、content、state、likes、createdAt，其中 author、category 是数值主键。\nLikePost 按 id 为已发布文章点赞，成功返回 201 和接口合同中的 PublicPost，保存当前用户的唯一点赞记录并把该文章 likes 加一，同一用户再次点赞返回 409 AlreadyLiked，草稿或不存在文章返回 404 PostNotFound，作者也可以点赞自己的已发布文章。\n同一草稿被作者并发发布时恰好一次成功，其余为 409 NotPublishable，同一文章与标签被作者并发绑定时恰好一次成功，其余为 409 TagAttached，同一用户并发点赞同一文章时恰好一次成功，其余为 409 AlreadyLiked，不同用户并发点赞都成功且总计数与点赞记录数相等。\n所有拒绝都不能改变已有行或新增业务记录，成功只改变该操作应改变的行，声明错误返回接口合同中的 code、message、fields。\n所有路由、请求字段和响应字段采用接口合同，路径中的字段值以 URL 为准，不能被同名请求体字段替换。\n返回完整的 sir 0.3 文档，不要 Java、SQL 或解释。",
+  "revision": "1",
+  "schema_version": "sir-task/1",
+  "sir_version": "0.3",
+  "split": "train"
+}

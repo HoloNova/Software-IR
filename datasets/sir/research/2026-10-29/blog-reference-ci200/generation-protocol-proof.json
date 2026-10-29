@@ -1,0 +1,31 @@
+{
+  "purpose": "digest protocol and static controller verification only; no build/start/database",
+  "cli_artifact_id": 12881744793,
+  "cli_zip_sha256": "18db12b9a87427190105dbf52986e293dd646bb51414024c7c311b1d40b74685",
+  "legacy_algorithm": "BusinessSliceHarness.digestOfGeneratedFiles: rendering order, path NUL content NUL",
+  "canonical_algorithm": "production ValidationHashes.generated: version prefix, sorted paths, length frames",
+  "results": {
+    "reference": {
+      "source_sha256": "a176cfe521913f6cdd5c6919da5e229e2f67a390940a360c22296c95c96e8f37",
+      "files": 55,
+      "legacy_combined_sha256": "f2c63163afd0badafea272fb5e244f0ae82cc2683d1f5e7e3448f4269fc85e82",
+      "validation_generated_v1_sha256": "95ebf3692504bd9552da79e02c7db3dc2c68dd3ac52b8abfebecec397a2c73cf",
+      "missing_controllers": []
+    },
+    "base": {
+      "source_sha256": "63b7b503967090751b1d566b10f0aa3ada41590f1a408b2ae89d75e9516e4fe5",
+      "files": 47,
+      "legacy_combined_sha256": "80f0629af7cc80210cb760270523fbb6d9882e3841576a1826708a95191a219c",
+      "validation_generated_v1_sha256": "3328e297c041a72df7c42f9370cd048373f4f3a00f8d205271b381cbdf62267c",
+      "missing_controllers": [
+        "Publish",
+        "AttachTag",
+        "PostsByTag",
+        "LikePost"
+      ]
+    }
+  },
+  "matches_ci_report_and_check": true,
+  "verification_helper_sha256": "320557f80ffbb8124a13e90ef7a032600920a16649e41edc48ec3040f68decd0",
+  "runtime_http_base": "NOT_RUN"
+}

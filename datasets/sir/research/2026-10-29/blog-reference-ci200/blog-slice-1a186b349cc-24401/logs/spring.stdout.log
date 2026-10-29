@@ -1,0 +1,30 @@
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.5.3)
+
+2026-10-29T08:07:44.927Z  INFO 9169 --- [campus-blog] [           main] example.blog.Application                 : Starting Application v0.1.0-SNAPSHOT using Java 21.0.13 with PID 9169 (/home/runner/work/Software-IR/Software-IR/ci-work/blog-slice-1a186b349cc-24401/generated-project/target/campus-blog-0.1.0-SNAPSHOT.jar started by runner in /home/runner/work/Software-IR/Software-IR/sir-toolchain-application)
+2026-10-29T08:07:44.932Z  INFO 9169 --- [campus-blog] [           main] example.blog.Application                 : No active profile set, falling back to 1 default profile: "default"
+2026-10-29T08:07:46.361Z  INFO 9169 --- [campus-blog] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 18080 (http)
+2026-10-29T08:07:46.379Z  INFO 9169 --- [campus-blog] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-10-29T08:07:46.379Z  INFO 9169 --- [campus-blog] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.42]
+2026-10-29T08:07:46.414Z  INFO 9169 --- [campus-blog] [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-10-29T08:07:46.415Z  INFO 9169 --- [campus-blog] [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1407 ms
+ _ _   |_  _ _|_. ___ _ |    _ 
+| | |\/|_)(_| | |_\  |_)||_|_\ 
+     /               |         
+                        3.5.12 
+2026-10-29T08:07:47.300Z  INFO 9169 --- [campus-blog] [           main] m.e.s.MybatisPlusApplicationContextAware : Register ApplicationContext instances org.springframework.boot.web.servlet.context.AnnotationConfigServletWebServerApplicationContext@2dcd168a
+2026-10-29T08:07:47.395Z  INFO 9169 --- [campus-blog] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 18080 (http) with context path '/'
+2026-10-29T08:07:47.408Z  INFO 9169 --- [campus-blog] [           main] example.blog.Application                 : Started Application in 2.976 seconds (process running for 3.461)
+2026-10-29T08:07:47.521Z  INFO 9169 --- [campus-blog] [.1-18080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-10-29T08:07:47.522Z  INFO 9169 --- [campus-blog] [.1-18080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-10-29T08:07:47.523Z  INFO 9169 --- [campus-blog] [.1-18080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2026-10-29T08:07:47.577Z  INFO 9169 --- [campus-blog] [.1-18080-exec-1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-10-29T08:07:47.998Z  INFO 9169 --- [campus-blog] [.1-18080-exec-1] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@3a734d7c
+2026-10-29T08:07:48.001Z  INFO 9169 --- [campus-blog] [.1-18080-exec-1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.

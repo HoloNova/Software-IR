@@ -1,14 +1,14 @@
-# 博客题出题规格（草案）
+# 博客题出题规格（v1 已冻结）
 
 ## 0. 定位、基线与交付边界
 
-基线为 `main` 的 `c1ea338`。本题建议 family 为 `content.blog`，split 为 `train`，两种题型的建议 ID 为 `content-blog-change-v1`、`content-blog-scratch-v1`；同源题面、改说法和后续变体留在同一集合。
+基线为 `main` 的 `c1ea338`。本题 family 为 `content.blog`，split 为 `train`，两种题型的正式 ID 为 `content-blog-change-v1`、`content-blog-scratch-v1`；同源题面、改说法和后续变体留在同一集合。
 
 **选择“作者建草稿 → 挂标签 → 发布 → 匿名阅读 → 读者点赞”的 7 能力闭环，不把整个博客的 22 个展开能力搬进题目。**注册登录、分类/标签管理、评论、作者完整 CRUD 不考；用户、分类、标签和有效访问令牌由判卷夹具预置。认证仍走数据库中的真实 Bearer 凭据，不以任意用户 ID 请求头或固定身份替代。
 
-这份文件保留已批准的出题设计，不是已通过 CI 的参考答案。后续已按负责人确认的结构补齐裁剪参考、base、合同、题面、SQL、Java 检查与 CI 接线；本机定向已验证完整静态生成，**构建／启动／业务仍为 NOT_RUN**，不能继承原主题的证据。原 `sir-toolchain-application/src/test/resources/topics/blog/project.sir` 不改，正式 task 尚不冻结、模型 API 尚不调用。实现与逐项追溯见 [traceability.md](traceability.md)。
+这份文件保留已批准的出题设计。对应的裁剪参考已在 `66c276915d825f4d1914da721b1ddf4e0ceda2de` 的 [verify #200](https://github.com/HoloNova/Software-IR/actions/runs/40839225636) **静态／构建／启动／业务四门通过，业务 425/0**；并非继承原完整主题的证据。原 `sir-toolchain-application/src/test/resources/topics/blog/project.sir` 不改。现已确认 base 的静态负例并冻结两份正式 task／仅参考批次，模型 API 尚未调用；后续教师须独立过四门。实现与逐项追溯见 [traceability.md](traceability.md)。
 
-本题独立落地路径为 `sir-toolchain-application/src/test/resources/valid/blog.sir`、`conformance/mysql/blog-ddl.sql`、`blog-seed.sql` 和 `BlogBusinessConformanceIT.java`，再关联两份 task；这些路径现已落实为实现，仍待参考 CI 验收。**不能仍把完整原主题设为新题 reference_source**：它多出接口、表和评论响应，与本规格不同。
+本题独立落地路径为 `sir-toolchain-application/src/test/resources/valid/blog.sir`、`conformance/mysql/blog-ddl.sql`、`blog-seed.sql` 和 `BlogBusinessConformanceIT.java`，再关联两份 task；这些路径已落实为实现并通过本题参考 CI 验收。**不能仍把完整原主题设为新题 reference_source**：它多出接口、表和评论响应，与本规格不同。
 
 ### 0.1 参考了什么
 
@@ -75,7 +75,7 @@ Comment、CommentView、PostDetail 及其专用输入/错误一并删除；Categ
 
 以**本规格裁剪参考**为起点，仅删除四个完整 capability：Publish、AttachTag、PostsByTag、LikePost。保留 CreatePost、Feed、ViewPost 及其现有行为；所有实体、enum、view、input、error 和外壳均不删改，即使有暂时未引用的声明。
 
-因此 base 仍能创建草稿、匿名查询和读取夹具中的已发布文章；它不是空壳。仅有 base 时四个路由不存在，无法满足下述成功/并发检查。这是依据声明缺失的静态判断，不是已经运行过 base 的失败报告。
+因此 base 仍能创建草稿、匿名查询和读取夹具中的已发布文章；它不是空壳。仅有 base 时四个路由不存在，无法满足下述成功/并发检查。同 SHA CI 的契约检查及该 CI 原编译器的内存生成已确认 base 完整生成 47 文件且缺上述四个 Controller；这是静态负例，不是已经运行过 base 的 HTTP 失败报告。
 
 ## 2. 完整 MySQL DDL（夹具）
 
@@ -197,7 +197,7 @@ INSERT INTO post_tag (id, post_id, tag_id) VALUES
 
 种子自检：7 张表行数依次为 user=10、access_token=11、category=2、post=11、tag=3、post_tag=6、like=0；所有外键存在、每个 post.likes 等于点赞行数。自检失败记夹具错误，不判教师业务失败。
 
-## 4. 接口合同（拟作为 contract.json 的内容）
+## 4. 接口合同（与 contract.json 一致）
 
 使用现有 contract 的 namespace/capabilities/entities/interfaces/enums/declared_errors/storage 结构；success_status、body_kind 和分页数值是本规格补充的显式约定。后续导出 JSON 时不得丢弃这些约定。
 
@@ -456,4 +456,4 @@ C01 的“保留”承接 S02、S04、S05、S08、S09、S13 在 base 中的既�
 | LikePost 原子加一、返回值与并发最终状态；FK 锁顺序可能造成死锁 | R:1441–1445、1496；R:1007 说明死锁不自动重试 | 不在需求原文提示实现顺序；参考沿用既有 LikePost 的计数后关系持久化语义。X04 只要求每响应值在有效范围，最终 JDBC 必须 6，不能要求 HTTP 完成顺序等于提交顺序 |
 | 去评论后 ViewPost 不能残留 comments，不把原完整主题当裁剪参考的证据 | R:538 对嵌套集合读全量的说明 | 本题明确改用已有 PublicPost，删 Comment/PostDetail；先跑新裁剪参考再冻结任务和判卷。此处是有意的业务范围裁剪，不是原主题 bug 修复 |
 
-**收口条件：**后续实现必须先让新裁剪参考通过相同静态/构建/启动/业务四门，再确认删四能力的 base 静态可用且无法通过新增接口检查，最后才冻结 task/DDL/seed/oracle 摘要并采样。验收次序不变；负责人已确认实现结构并授权定向静态检查，真库仍只交 CI。当前未启动应用／数据库或调用模型，正式 task 的 reference_evidence 必须等本题参考在同 SHA 的 verify 四门通过后再填，不能用本机定向或旧主题结果补位。
+**收口条件与实际进展：**验收次序保持“裁剪参考同 SHA 四门 → base 静态可用且缺新增接口 → 冻结 task/DDL/seed/oracle → 采样”。前三步现已由 verify #200、base 契约／原编译器检查、两份正式 task 和两批 prepare 完成。真库只在 CI 执行；本轮本机没有启动应用／数据库或调用模型。reference_evidence 固定指向本题裁剪参考的 `66c27691`／verify #200，不引用旧完整主题；教师资格不继承参考。模型采样预算仍待确认。

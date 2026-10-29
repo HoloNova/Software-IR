@@ -1,0 +1,23 @@
+{
+  "ci_jar_path": "C:\\Users\\zdw00\\Desktop\\Software IR\\target\\ci-investigation\\200\\standalone-cli\\kcg.jar",
+  "ci_test_commit": "66c276915d825f4d1914da721b1ddf4e0ceda2de",
+  "controller_absence_test": "BlogReferenceContractTest.baseCompilesAndRemovesOnlyTheFourNewCapabilities",
+  "kind": "static-probe-not-a-teacher-or-runtime-qualification",
+  "missing_controllers_verified_by_ci": [
+    "Publish",
+    "AttachTag",
+    "PostsByTag",
+    "LikePost"
+  ],
+  "runtime_http": "NOT_RUN",
+  "source_sha256": "63b7b503967090751b1d566b10f0aa3ada41590f1a408b2ae89d75e9516e4fe5",
+  "static_result": {
+    "diagnostics": [],
+    "digest": "3328e297c041a72df7c42f9370cd048373f4f3a00f8d205271b381cbdf62267c",
+    "fileCount": 47,
+    "id": "blog-base-negative",
+    "ok": true,
+    "sourceSha256": "63b7b503967090751b1d566b10f0aa3ada41590f1a408b2ae89d75e9516e4fe5",
+    "stage": "GENERATION"
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "api_calls": 0,
+  "base_file_count": 47,
+  "batches": [
+    {
+      "bundle": "datasets/sir/pilots/blog-change-g7",
+      "file_count": 55,
+      "gates": {
+        "build": "NOT_RUN",
+        "business": "NOT_RUN",
+        "start": "NOT_RUN",
+        "static": "PASSED"
+      },
+      "generation_digest": "95ebf3692504bd9552da79e02c7db3dc2c68dd3ac52b8abfebecec397a2c73cf",
+      "task": "content-blog-change-v1",
+      "task_sha256": "9150eab844a0297731fb52bd86279888220ff9e9784de8c1404150417347ac43"
+    },
+    {
+      "bundle": "datasets/sir/pilots/blog-scratch-g7",
+      "file_count": 55,
+      "gates": {
+        "build": "NOT_RUN",
+        "business": "NOT_RUN",
+        "start": "NOT_RUN",
+        "static": "PASSED"
+      },
+      "generation_digest": "95ebf3692504bd9552da79e02c7db3dc2c68dd3ac52b8abfebecec397a2c73cf",
+      "task": "content-blog-scratch-v1",
+      "task_sha256": "3771eae2f437ba6d87c827d7cd216984865be8a7a8ce09ce33a331964d0c62c8"
+    }
+  ],
+  "cli_artifact_id": 12881744793,
+  "cli_artifact_zip_sha256": "18db12b9a87427190105dbf52986e293dd646bb51414024c7c311b1d40b74685",
+  "source_commit": "66c276915d825f4d1914da721b1ddf4e0ceda2de",
+  "static_checker": "existing data._check_rows and corpus.bind_static with the exact CI standalone jar",
+  "teacher_candidates": 0
+}

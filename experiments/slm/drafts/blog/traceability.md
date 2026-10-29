@@ -2,7 +2,7 @@
 
 本目录落实已批准的 [spec.md](spec.md)，保留 `content.blog` / `train` 及七能力范围。`requirement-change.md`、`requirement-scratch.md` 和 `contract.json` 分别逐字／逐对象取自规格 §5、§4；DDL/seed 的 SQL 与规格 §2、§3 相同，不提供实现提示或额外评分项。
 
-**当前是实现与定向静态检查阶段，不是已验收题目。**参考答案的构建、启动、HTTP/MySQL 业务门仍为 NOT_RUN。尚未创建正式 `experiments/slm/tasks/blog-change-v1.json` / `blog-scratch-v1.json`，也未冻结批次或调用模型；不能填入其他主题或旧完整博客的 `reference_evidence`。
+**裁剪参考已由同 SHA 的 CI 验收，正式两题已冻结。**`66c276915d825f4d1914da721b1ddf4e0ceda2de` 的 [verify #200](https://github.com/HoloNova/Software-IR/actions/runs/40839225636) 四门通过、业务 425/0；该次 CI 的 base 契约检查及原编译器再次生成均确认四个新增 Controller 缺失。两份正式 task 为 `experiments/slm/tasks/blog-change-v1.json` / `blog-scratch-v1.json`，各有一个仅参考的 g7 批次，运行门不继承参考资格。模型调用仍为 0，采样预算待确认；原始证据见 `datasets/sir/research/2026-10-29/blog-reference-ci200/`。
 
 下文 `C/` 为 `sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/`；S01–S14、C01–C09 是两份题面按非空行顺序编号。每个表项包含方法内循环的全部实参；公共 PP/PV/PAGE 比较展开为精确 key、数值类型、逐字段与独立 JDBC 值相等，不把只有字段存在算通过。完整逐请求参数也保留在规格 §6。
 
@@ -98,6 +98,6 @@
 
 ## 9. 正式冻结的边界
 
-参考先在同 SHA 的 verify 中取得四门证据；之后确认 base 的静态可用和新增接口负例，再填写两份 task 的真实 `reference_evidence`，冻结输入并采样。不得现在使用 NOT_RUN、其他参考或旧完整博客的证据补位。
+已按顺序取得参考同 SHA 的 verify #200 四门证据，确认 base 完整生成 47 个文件但缺四个新增 Controller，再填写两份 task 的真实 `reference_evidence` 并以原 prepare 冻结两批。base 的运行 HTTP 仍 NOT_RUN，未把静态负例冒称业务失败；模型采样尚待预算确认。不得给任何教师候选继承参考的通过证据。
 
-`oracle.files` 须覆盖执行闭包：以既有 token-desk 题的公共 BusinessSliceHarness/SlmCandidateSupport、安全目录／进程／JDBC／脱敏依赖闭包为基础，移除 TokenDeskBusinessConformanceIT，加入本题的 BlogBusinessConformanceIT、BlogAssertions、BlogFixture、BlogPublicationChecks、BlogTagChecks、BlogLikeChecks、BlogConcurrentRequests、BlogConcurrencyChecks、BlogLockWaits，以及本题 DDL、seed、裁剪参考；不把仅做回归的两个 `*Test` 当业务运行入口，也不漏掉新的辅助类。任务文件真正生成时逐路径检查存在性与传递依赖，再冻结哈希；本文件不伪造一个可采样的 task。
+`oracle.files` 须覆盖执行闭包：以既有 token-desk 题的公共 BusinessSliceHarness/SlmCandidateSupport、安全目录／进程／JDBC／脱敏依赖闭包为基础，移除 TokenDeskBusinessConformanceIT，加入本题的 BlogBusinessConformanceIT、BlogAssertions、BlogFixture、BlogPublicationChecks、BlogTagChecks、BlogLikeChecks、BlogConcurrentRequests、BlogConcurrencyChecks、BlogLockWaits，以及本题 DDL、seed、裁剪参考；不把仅做回归的两个 `*Test` 当业务运行入口，也不漏掉新的辅助类。两题实际冻结 38 项路径（35 个 Java、DDL、seed、参考），逐项与受测 Git blob 核对；另用 CI 核心 JAR 和外部依赖单独编译这 35 个 Java，不把既有 test-classes 放进 classpath，也不隐式补编其他源，验证未漏依赖。记录见归档中的 task-freeze.json、checkout-verification.json 与 oracle-closure.json。

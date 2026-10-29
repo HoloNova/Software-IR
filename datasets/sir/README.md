@@ -73,6 +73,12 @@
 
 本轮输入 156,701（缓存命中 139,392）、输出 41,707，合计 **198,408 tokens**。汇总见 [`research/2026-10-29/v7-repair-sampling.json`](research/2026-10-29/v7-repair-sampling.json)，逐次用量、父子关系验证及失败分析见[数据报告第十五阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-prompt-v7-repair)。两阶段已知合计 325,948 tokens，首轮连接错误的用量仍未知。
 
+## 博客新题：参考验收与正式冻结
+
+[`research/2026-10-29/blog-reference-ci200/`](research/2026-10-29/blog-reference-ci200/) 保存 `66c276915d825f4d1914da721b1ddf4e0ceda2de` 的 [verify #200](https://github.com/HoloNova/Software-IR/actions/runs/40839225636) 原始 ZIP／博客报告／日志／JUnit及哈希。裁剪参考四门通过、55 文件、业务 **425/0**，四轮均形成六连接／六事务真实竞争；同次 Linux 的旧候选适配器 9 项全部通过。base 静态生成 47 文件并缺四个新增 Controller，运行 HTTP 未执行，不虚构 base 的业务失败结果。
+
+`experiments/slm/tasks/blog-change-v1.json`、`blog-scratch-v1.json` 为 `content.blog` / `train`，共用真实参考证据与 38 项 oracle 闭包。[`pilots/blog-change-g7/`](pilots/blog-change-g7/)、[`blog-scratch-g7/`](pilots/blog-scratch-g7/) 已在逐文件匹配 Git blob 的 LF 快照中通过原 prepare 冻结，每批只有 1 份既有参考、静态通过，BUILD/START/BUSINESS 保持 NOT_RUN。**没有新教师或训练资格**，累计合格仍为 48 条，学生 v3 不变。采样预算待确认，本轮模型 API 调用 0 次；不能将业务报告旧 combinedSha256 当作候选的版本化生成摘要。说明见[第十八阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-blog-reference-frozen)。
+
 ## 学生训练格式
 
 [`student/train-student-v3.jsonl`](student/) 包含目前全部 **48 条**合格答案：固定短 system（`experiments/slm/prompts/student-v1.md`）+ 与教师相同的题目 + 最终合格 SIR，不带教师规则手册和修复经过。跨工具链时保留已封存 v2 的 44 条原字节，只用原 `student` 命令包装新合格的 4 条再合成 v3；48 条均核对导出索引、候选与运行绑定，`.index.json` 的 `assembly` 记录来源与哈希，不改历史 manifest。v1（14 条）和 v2（44 条）保留原样。

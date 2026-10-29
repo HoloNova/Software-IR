@@ -1,0 +1,139 @@
+{
+  "status": "PROPOSED_AWAITING_OWNER_BUDGET_APPROVAL",
+  "model": "deepseek-flash",
+  "prompt_version": "sir-0.3-general-v7",
+  "method": "approximate linear fit of observed v7 initial DeepSeek input usage vs user characters, +10% margin; reference source character length times observed median output ratio, +20%; round up to 500; not an exact tokenizer or cache promise",
+  "historical_samples": [
+    {
+      "id": "course-course-selection-change-v1-teacher-e8e641739dc2",
+      "user_chars": 17428,
+      "prompt_tokens": 8111,
+      "source_chars": 13237,
+      "completion_tokens": 2745
+    },
+    {
+      "id": "course-course-selection-change-p1-v1-teacher-713a0908b68a",
+      "user_chars": 17459,
+      "prompt_tokens": 8127,
+      "source_chars": 12812,
+      "completion_tokens": 2659
+    },
+    {
+      "id": "course-course-selection-change-p2-v1-teacher-f63c8bf2e0ee",
+      "user_chars": 17554,
+      "prompt_tokens": 8169,
+      "source_chars": 13118,
+      "completion_tokens": 2722
+    },
+    {
+      "id": "course-course-selection-change-p3-v1-teacher-55445a6ca094",
+      "user_chars": 17568,
+      "prompt_tokens": 8177,
+      "source_chars": 12929,
+      "completion_tokens": 2677
+    },
+    {
+      "id": "course-course-selection-scratch-v1-teacher-06c2dd85ffe4",
+      "user_chars": 10399,
+      "prompt_tokens": 6883,
+      "source_chars": 16186,
+      "completion_tokens": 3401
+    },
+    {
+      "id": "course-course-selection-scratch-p1-v1-teacher-d3101cf2a472",
+      "user_chars": 10509,
+      "prompt_tokens": 6935,
+      "source_chars": 15784,
+      "completion_tokens": 3274
+    },
+    {
+      "id": "course-course-selection-scratch-p2-v1-teacher-ffa8a15cd83f",
+      "user_chars": 10756,
+      "prompt_tokens": 7069,
+      "source_chars": 15115,
+      "completion_tokens": 3247
+    },
+    {
+      "id": "course-course-selection-scratch-p3-v1-teacher-78d1e7234e75",
+      "user_chars": 10806,
+      "prompt_tokens": 7081,
+      "source_chars": 15592,
+      "completion_tokens": 3264
+    },
+    {
+      "id": "auth-crud-access-scratch-v1-teacher-ff7db77818e2",
+      "user_chars": 5042,
+      "prompt_tokens": 5297,
+      "source_chars": 6667,
+      "completion_tokens": 1468
+    },
+    {
+      "id": "auth-crud-access-scratch-p1-v1-teacher-20555d93f3e9",
+      "user_chars": 5062,
+      "prompt_tokens": 5306,
+      "source_chars": 6193,
+      "completion_tokens": 1360
+    },
+    {
+      "id": "auth-crud-access-scratch-p2-v1-teacher-003afdbc8edf",
+      "user_chars": 5154,
+      "prompt_tokens": 5352,
+      "source_chars": 6486,
+      "completion_tokens": 1418
+    },
+    {
+      "id": "auth-crud-access-scratch-p3-v1-teacher-53c88a097865",
+      "user_chars": 5221,
+      "prompt_tokens": 5383,
+      "source_chars": 6315,
+      "completion_tokens": 1406
+    },
+    {
+      "id": "shop-multiplication-change-v1-teacher-06dece4fca65",
+      "user_chars": 36456,
+      "prompt_tokens": 12828,
+      "source_chars": 25119,
+      "completion_tokens": 5481
+    },
+    {
+      "id": "shop-multiplication-scratch-v1-teacher-cb04c46a81ee",
+      "user_chars": 18371,
+      "prompt_tokens": 9468,
+      "source_chars": 29367,
+      "completion_tokens": 6541
+    }
+  ],
+  "fit": {
+    "intercept": 4255.387330777492,
+    "slope": 0.23756198508461868,
+    "output_tokens_per_char_median": 0.21246978609032224
+  },
+  "plans": [
+    {
+      "task": "content-blog-change-v1",
+      "bundle": "datasets/sir/pilots/blog-change-g7",
+      "calls": 1,
+      "user_chars": 12458,
+      "estimated_input_tokens": 8000,
+      "estimated_output_tokens": 2000,
+      "max_output_tokens": 8192,
+      "cache_hits": "UNKNOWN",
+      "automatic_retries": 0
+    },
+    {
+      "task": "content-blog-scratch-v1",
+      "bundle": "datasets/sir/pilots/blog-scratch-g7",
+      "calls": 1,
+      "user_chars": 8932,
+      "estimated_input_tokens": 7500,
+      "estimated_output_tokens": 2000,
+      "max_output_tokens": 8192,
+      "cache_hits": "UNKNOWN",
+      "automatic_retries": 0
+    }
+  ],
+  "total_estimated_input_tokens": 15500,
+  "total_estimated_output_tokens": 4000,
+  "repair_calls_in_this_budget": 0,
+  "api_calls_already_made": 0
+}

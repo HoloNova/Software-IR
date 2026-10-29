@@ -79,9 +79,11 @@ python -m experiments.slm.data repair --bundle datasets/sir/runs/dual-token-rech
 
 测试：`PYTHONPATH=$PWD:$PWD/experiments/slm/tests python -m unittest experiments.slm.tests.test_pipeline experiments.slm.tests.test_corpus experiments.slm.tests.test_dataset_io`（在仓库根目录运行；`test_dataset_io` 从 tests 目录导入 `test_corpus`）。
 
-## 博客新题（实现待 CI，尚未冻结）
+## 博客新题（参考已验收，两题已冻结）
 
-`drafts/blog/` 已按批准规格补齐七能力裁剪参考的配套 base、题面、contract 与 traceability；实际参考及 DDL/seed 位于 application 测试资源，`BlogBusinessConformanceIT` 已接入 verify 与候选业务门。参考/base 的完整静态生成和 oracle 反例已做定向检查，但真实构建、启动、业务仍 NOT_RUN，不能用旧完整博客的证据填写 `reference_evidence`。当前不创建正式 blog task、不 prepare 或采样；同 SHA 的参考四门证据到位后再按规定顺序冻结。实现、Windows 安全读源阻断与检查范围见[数据报告第十七阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-blog-oracle-local)。
+`content.blog` / `train` 的七能力裁剪参考已在 `66c276915d825f4d1914da721b1ddf4e0ceda2de` 的 [verify #200](https://github.com/HoloNova/Software-IR/actions/runs/40839225636) 四门通过：55 个生成文件，业务 425/0，四轮各六个真实连接／事务竞争。base 完整生成 47 个文件且缺四个新增 Controller；这是静态负例，不冒称已运行 base 的 HTTP 验收。原始 ZIP、报告、日志、JUnit 与源码摘要在 `datasets/sir/research/2026-10-29/blog-reference-ci200/`。
+
+正式定义为 `tasks/blog-change-v1.json`、`blog-scratch-v1.json`；原需求／合同不变，共用 38 项 oracle 闭包及真实参考证据。用原 `prepare` 在与 Git blob 一致的 LF 快照冻结 `datasets/sir/pilots/blog-change-g7/`、`blog-scratch-g7/`，每批目前只有 1 份 `existing_reference`，由原静态绑定函数配合该 CI 的 standalone CLI 检查通过；批次运行门仍 NOT_RUN，不继承参考资格。模型调用 0 次，正式采样预算另报待确认。摘要协议差异与完整证据见[第十八阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-blog-reference-frozen)。
 
 ## 通用静态修复
 
