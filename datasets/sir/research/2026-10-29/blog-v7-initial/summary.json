@@ -1,0 +1,210 @@
+{
+  "approved_estimated_total_tokens": 19500,
+  "automatic_retries": 0,
+  "business_gate_dispatches": [],
+  "ci_standalone_checker_run_id": 40839225636,
+  "frozen_inputs_unchanged": true,
+  "model_api_calls": 2,
+  "owner_budget_approved": true,
+  "qualified_new_teachers": 0,
+  "qualified_teachers_unchanged": 48,
+  "received_responses": 2,
+  "repair_calls": 0,
+  "results": [
+    {
+      "actual_model": "deepseek-flash",
+      "bundle": "datasets/sir/pilots/blog-change-g7",
+      "collector_sha256": "20953063c1d0ebdcbf55829df0cfb89e791c432628d57d95ce8166628202527f",
+      "diagnostics": [
+        {
+          "code": "SIR-VALID-001",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "find 谓词里的比较，左侧必须是 item.<字段>，右侧必须是不读取 item 的值；例如把 0 < item.qty 写成 item.qty > 0",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 5129,
+            "endColumn": 42,
+            "endLine": 177,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 5117,
+            "startColumn": 30,
+            "startLine": 177
+          },
+          "stage": "SEMANTIC"
+        },
+        {
+          "code": "SIR-VALID-001",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "find 谓词里的比较，左侧必须是 item.<字段>，右侧必须是不读取 item 的值；例如把 0 < item.qty 写成 item.qty > 0",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 5144,
+            "endColumn": 57,
+            "endLine": 177,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 5134,
+            "startColumn": 47,
+            "startLine": 177
+          },
+          "stage": "SEMANTIC"
+        },
+        {
+          "code": "SIR-VALID-001",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "find 谓词里的比较，左侧必须是 item.<字段>，右侧必须是不读取 item 的值；例如把 0 < item.qty 写成 item.qty > 0",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 6320,
+            "endColumn": 39,
+            "endLine": 215,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 6308,
+            "startColumn": 27,
+            "startLine": 215
+          },
+          "stage": "SEMANTIC"
+        },
+        {
+          "code": "SIR-FLOW-001",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "未定义符号: user",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 6329,
+            "endColumn": 48,
+            "endLine": 215,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 6325,
+            "startColumn": 44,
+            "startLine": 215
+          },
+          "stage": "SEMANTIC"
+        },
+        {
+          "code": "SIR-VALID-001",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "find 谓词里的比较，左侧必须是 item.<字段>，右侧必须是不读取 item 的值；例如把 0 < item.qty 写成 item.qty > 0",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 6338,
+            "endColumn": 57,
+            "endLine": 215,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 6325,
+            "startColumn": 44,
+            "startLine": 215
+          },
+          "stage": "SEMANTIC"
+        }
+      ],
+      "gates": {
+        "build": "NOT_RUN",
+        "business": "NOT_RUN",
+        "start": "NOT_RUN",
+        "static": "FAILED"
+      },
+      "oracle_sha256": "b19875a18b071c0921ad34072f9de4c8c10b668db69fb5415eb3b401d6a7c843",
+      "request_sha256": "4968cd744d8ca1b83249393477ff7378aa3089ab4de2147e201b0b058c14ed18",
+      "requested_model": "deepseek-flash",
+      "response_sha256": "87a94c98543b4be62cacddcd28eb0a4d0b3996129777708c02d4894dd2a559b1",
+      "sample_id": "content-blog-change-v1-teacher-e6e632222754",
+      "sdk": "openai-python/2.24.0",
+      "source_sha256": "cdebc85c07e2de6320ece86162aa2c795fff82971d5fd9178dbb2bca49e27900",
+      "stage": "SEMANTIC",
+      "task": "content-blog-change-v1",
+      "task_sha256": "9150eab844a0297731fb52bd86279888220ff9e9784de8c1404150417347ac43",
+      "toolchain_core_sha256": "7275f533d442297d7c43b62317168e09736be9c369d9811c480e8aefad070d54",
+      "usage": {
+        "cache_hit": 3584,
+        "input": 7319,
+        "output": 1474,
+        "total": 8793
+      }
+    },
+    {
+      "actual_model": "deepseek-flash",
+      "bundle": "datasets/sir/pilots/blog-scratch-g7",
+      "collector_sha256": "20953063c1d0ebdcbf55829df0cfb89e791c432628d57d95ce8166628202527f",
+      "diagnostics": [
+        {
+          "code": "SIR-PARSE-001",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "遇到不符合 SIR 语法的内容：notBlank",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 2205,
+            "endColumn": 54,
+            "endLine": 90,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 2197,
+            "startColumn": 46,
+            "startLine": 90
+          },
+          "stage": "PARSE"
+        }
+      ],
+      "gates": {
+        "build": "NOT_RUN",
+        "business": "NOT_RUN",
+        "start": "NOT_RUN",
+        "static": "FAILED"
+      },
+      "oracle_sha256": "b19875a18b071c0921ad34072f9de4c8c10b668db69fb5415eb3b401d6a7c843",
+      "request_sha256": "dbf815442455d3302fff2d57a1e7a6c60316e67f3f0506d5604ebe3f5883600d",
+      "requested_model": "deepseek-flash",
+      "response_sha256": "64b64a3c3e80f7ba4407448611b4d19ffde047e7b5a99eca6a5f2c56f91cd0be",
+      "sample_id": "content-blog-scratch-v1-teacher-6ed907a7bdaa",
+      "sdk": "openai-python/2.24.0",
+      "source_sha256": "3ab25f8c6e06436e89df250a58b2cc1d08deea3697ee26ceb8e6b5c2a22f01d4",
+      "stage": "PARSE",
+      "task": "content-blog-scratch-v1",
+      "task_sha256": "3771eae2f437ba6d87c827d7cd216984865be8a7a8ce09ce33a331964d0c62c8",
+      "toolchain_core_sha256": "7275f533d442297d7c43b62317168e09736be9c369d9811c480e8aefad070d54",
+      "usage": {
+        "cache_hit": 3584,
+        "input": 6608,
+        "output": 1509,
+        "total": 8117
+      }
+    }
+  ],
+  "source_commit": "26ffe06dfddbf26a6f58ae5a942c5a53883d95b6",
+  "static_passed": 0,
+  "student_version_unchanged": 3,
+  "total_usage": {
+    "cache_hit": 7168,
+    "input": 13927,
+    "output": 2983,
+    "total": 16910
+  }
+}

@@ -1,0 +1,158 @@
+{
+  "actual_model": "deepseek-flash",
+  "automatic_retries": 0,
+  "bundle": "datasets/sir/pilots/blog-change-g7",
+  "check_execution": {
+    "directory": "C:\\Users\\zdw00\\Desktop\\Software IR\\datasets\\sir\\pilots\\blog-change-g7\\checks\\4f860c32536d43d9a31820b7d82b92d1",
+    "stdout_sha256": "a371249c8641d6b9d408c956391b0af51ff9df9b0b7b0e56bf8fcd1c607c2515"
+  },
+  "checked": "datasets/sir/pilots/blog-change-g7/checked-initial.jsonl",
+  "checker_artifact_run_id": 40839225636,
+  "completed_at": "2026-10-29T10:07:40.104443+00:00",
+  "estimated_input_tokens": 8000,
+  "estimated_output_tokens": 2000,
+  "finish_reason": "stop",
+  "frozen_git_blobs_verified": 486,
+  "frozen_inputs_unchanged": true,
+  "gates": {
+    "build": "NOT_RUN",
+    "business": "NOT_RUN",
+    "start": "NOT_RUN",
+    "static": "FAILED"
+  },
+  "max_output_tokens": 8192,
+  "new_candidates": 1,
+  "owner_budget_approved": true,
+  "recorded_attempts": 1,
+  "repair_calls": 0,
+  "request_process_exit_code": 0,
+  "request_sha256": "4968cd744d8ca1b83249393477ff7378aa3089ab4de2147e201b0b058c14ed18",
+  "requested_model": "deepseek-flash",
+  "response_sha256": "87a94c98543b4be62cacddcd28eb0a4d0b3996129777708c02d4894dd2a559b1",
+  "sample_id": "content-blog-change-v1-teacher-e6e632222754",
+  "source_sha256": "cdebc85c07e2de6320ece86162aa2c795fff82971d5fd9178dbb2bca49e27900",
+  "source_snapshot": "target/slm-blog-freeze/source-66c27691-lf",
+  "started_at": "2026-10-29T10:07:26.596799+00:00",
+  "static_result": {
+    "diagnostics": [
+      {
+        "code": "SIR-VALID-001",
+        "fixes": [],
+        "loweredNodeId": null,
+        "message": "find 谓词里的比较，左侧必须是 item.<字段>，右侧必须是不读取 item 的值；例如把 0 < item.qty 写成 item.qty > 0",
+        "related": [],
+        "relativePath": null,
+        "severity": "ERROR",
+        "sourceNodeId": null,
+        "sourceSymbol": null,
+        "span": {
+          "endCodePointOffset": 5129,
+          "endColumn": 42,
+          "endLine": 177,
+          "sourceId": "sample.sir",
+          "startCodePointOffset": 5117,
+          "startColumn": 30,
+          "startLine": 177
+        },
+        "stage": "SEMANTIC"
+      },
+      {
+        "code": "SIR-VALID-001",
+        "fixes": [],
+        "loweredNodeId": null,
+        "message": "find 谓词里的比较，左侧必须是 item.<字段>，右侧必须是不读取 item 的值；例如把 0 < item.qty 写成 item.qty > 0",
+        "related": [],
+        "relativePath": null,
+        "severity": "ERROR",
+        "sourceNodeId": null,
+        "sourceSymbol": null,
+        "span": {
+          "endCodePointOffset": 5144,
+          "endColumn": 57,
+          "endLine": 177,
+          "sourceId": "sample.sir",
+          "startCodePointOffset": 5134,
+          "startColumn": 47,
+          "startLine": 177
+        },
+        "stage": "SEMANTIC"
+      },
+      {
+        "code": "SIR-VALID-001",
+        "fixes": [],
+        "loweredNodeId": null,
+        "message": "find 谓词里的比较，左侧必须是 item.<字段>，右侧必须是不读取 item 的值；例如把 0 < item.qty 写成 item.qty > 0",
+        "related": [],
+        "relativePath": null,
+        "severity": "ERROR",
+        "sourceNodeId": null,
+        "sourceSymbol": null,
+        "span": {
+          "endCodePointOffset": 6320,
+          "endColumn": 39,
+          "endLine": 215,
+          "sourceId": "sample.sir",
+          "startCodePointOffset": 6308,
+          "startColumn": 27,
+          "startLine": 215
+        },
+        "stage": "SEMANTIC"
+      },
+      {
+        "code": "SIR-FLOW-001",
+        "fixes": [],
+        "loweredNodeId": null,
+        "message": "未定义符号: user",
+        "related": [],
+        "relativePath": null,
+        "severity": "ERROR",
+        "sourceNodeId": null,
+        "sourceSymbol": null,
+        "span": {
+          "endCodePointOffset": 6329,
+          "endColumn": 48,
+          "endLine": 215,
+          "sourceId": "sample.sir",
+          "startCodePointOffset": 6325,
+          "startColumn": 44,
+          "startLine": 215
+        },
+        "stage": "SEMANTIC"
+      },
+      {
+        "code": "SIR-VALID-001",
+        "fixes": [],
+        "loweredNodeId": null,
+        "message": "find 谓词里的比较，左侧必须是 item.<字段>，右侧必须是不读取 item 的值；例如把 0 < item.qty 写成 item.qty > 0",
+        "related": [],
+        "relativePath": null,
+        "severity": "ERROR",
+        "sourceNodeId": null,
+        "sourceSymbol": null,
+        "span": {
+          "endCodePointOffset": 6338,
+          "endColumn": 57,
+          "endLine": 215,
+          "sourceId": "sample.sir",
+          "startCodePointOffset": 6325,
+          "startColumn": 44,
+          "startLine": 215
+        },
+        "stage": "SEMANTIC"
+      }
+    ],
+    "digest": null,
+    "fileCount": 0,
+    "id": "content-blog-change-v1-teacher-e6e632222754",
+    "ok": false,
+    "sourceSha256": "cdebc85c07e2de6320ece86162aa2c795fff82971d5fd9178dbb2bca49e27900",
+    "stage": "SEMANTIC"
+  },
+  "task": "content-blog-change-v1",
+  "usage": {
+    "cache_hit": 3584,
+    "input": 7319,
+    "output": 1474,
+    "total": 8793
+  }
+}

@@ -83,7 +83,9 @@ python -m experiments.slm.data repair --bundle datasets/sir/runs/dual-token-rech
 
 `content.blog` / `train` 的七能力裁剪参考已在 `66c276915d825f4d1914da721b1ddf4e0ceda2de` 的 [verify #200](https://github.com/HoloNova/Software-IR/actions/runs/40839225636) 四门通过：55 个生成文件，业务 425/0，四轮各六个真实连接／事务竞争。base 完整生成 47 个文件且缺四个新增 Controller；这是静态负例，不冒称已运行 base 的 HTTP 验收。原始 ZIP、报告、日志、JUnit 与源码摘要在 `datasets/sir/research/2026-10-29/blog-reference-ci200/`。
 
-正式定义为 `tasks/blog-change-v1.json`、`blog-scratch-v1.json`；原需求／合同不变，共用 38 项 oracle 闭包及真实参考证据。用原 `prepare` 在与 Git blob 一致的 LF 快照冻结 `datasets/sir/pilots/blog-change-g7/`、`blog-scratch-g7/`，每批目前只有 1 份 `existing_reference`，由原静态绑定函数配合该 CI 的 standalone CLI 检查通过；批次运行门仍 NOT_RUN，不继承参考资格。模型调用 0 次，正式采样预算另报待确认。摘要协议差异与完整证据见[第十八阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-blog-reference-frozen)。
+正式定义为 `tasks/blog-change-v1.json`、`blog-scratch-v1.json`；原需求／合同不变，共用 38 项 oracle 闭包及真实参考证据。用原 `prepare` 在与 Git blob 一致的 LF 快照冻结 `datasets/sir/pilots/blog-change-g7/`、`blog-scratch-g7/`，冻结时每批只有 1 份 `existing_reference`，由原静态绑定函数配合该 CI 的 standalone CLI 检查通过；批次运行门不继承参考资格。摘要协议差异与完整证据见[第十八阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-blog-reference-frozen)。
+
+已获批的 v7 首轮两题各采 1 次，2 份均静态失败，新结果为各批 `checked-initial.jsonl`；实际输入 13,927（缓存 7,168）、输出 2,983，共 16,910 tokens。未派发业务门，合格教师仍 48 条；两份各修一轮的预计 25,500 tokens 尚待批准，未发送修复请求。记录见 `datasets/sir/research/2026-10-29/blog-v7-initial/` 和[第十九阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-blog-v7-initial)。
 
 ## 通用静态修复
 

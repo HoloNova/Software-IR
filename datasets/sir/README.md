@@ -79,6 +79,10 @@
 
 `experiments/slm/tasks/blog-change-v1.json`、`blog-scratch-v1.json` 为 `content.blog` / `train`，共用真实参考证据与 38 项 oracle 闭包。[`pilots/blog-change-g7/`](pilots/blog-change-g7/)、[`blog-scratch-g7/`](pilots/blog-scratch-g7/) 已在逐文件匹配 Git blob 的 LF 快照中通过原 prepare 冻结，每批只有 1 份既有参考、静态通过，BUILD/START/BUSINESS 保持 NOT_RUN。**没有新教师或训练资格**，累计合格仍为 48 条，学生 v3 不变。采样预算待确认，本轮模型 API 调用 0 次；不能将业务报告旧 combinedSha256 当作候选的版本化生成摘要。说明见[第十八阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-blog-reference-frozen)。
 
+## 博客 v7 首轮采样（0/2 静态通过）
+
+负责人确认首轮预算后，`pilots/blog-change-g7/`、`blog-scratch-g7/` 各追加 1 份真实教师初始答案，原参考与 frozen task／manifest 不变，新检查写 `checked-initial.jsonl`。改写 `e6e632222754` 语义失败（查询作用域，5 条 ERROR），从零 `6ed907a7bdaa` 解析失败（notBlank，1 条 ERROR）；未手改答案、未追加修复或派发业务门，运行门均 NOT_RUN。实际输入 **13,927**（缓存 **7,168**）、输出 **2,983**，合计 **16,910 tokens**；合格总数仍 **48**，学生 v3 不变。原始记录及下一轮待批预算在 [`research/2026-10-29/blog-v7-initial/`](research/2026-10-29/blog-v7-initial/)，见[第十九阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-blog-v7-initial)。
+
 ## 学生训练格式
 
 [`student/train-student-v3.jsonl`](student/) 包含目前全部 **48 条**合格答案：固定短 system（`experiments/slm/prompts/student-v1.md`）+ 与教师相同的题目 + 最终合格 SIR，不带教师规则手册和修复经过。跨工具链时保留已封存 v2 的 44 条原字节，只用原 `student` 命令包装新合格的 4 条再合成 v3；48 条均核对导出索引、候选与运行绑定，`.index.json` 的 `assembly` 记录来源与哈希，不改历史 manifest。v1（14 条）和 v2（44 条）保留原样。

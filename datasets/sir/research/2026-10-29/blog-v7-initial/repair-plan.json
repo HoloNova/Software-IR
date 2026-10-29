@@ -1,0 +1,147 @@
+{
+  "calibration": [
+    {
+      "added_message_characters": 17277,
+      "additional_input_tokens": 3933,
+      "archived_child_metadata_sha256": "5e7ef93bf9c49c08cc0e9999eae7571351c967f2528035d27c3d8651f2e6f4a5",
+      "child_id": "course-course-selection-change-v1-teacher-aaa219a02ae2",
+      "parent_id": "course-course-selection-change-v1-teacher-e8e641739dc2",
+      "tokens_per_added_character": 0.22764368814030214
+    },
+    {
+      "added_message_characters": 16855,
+      "additional_input_tokens": 3850,
+      "archived_child_metadata_sha256": "05803a276ed64c4b8a60866e539b71d287914ddbbada10e285e9189b196b0cd3",
+      "child_id": "course-course-selection-change-p1-v1-teacher-0cfdb95ee0db",
+      "parent_id": "course-course-selection-change-p1-v1-teacher-713a0908b68a",
+      "tokens_per_added_character": 0.22841886680510234
+    },
+    {
+      "added_message_characters": 17161,
+      "additional_input_tokens": 3914,
+      "archived_child_metadata_sha256": "95c9cc33fcf7532bbafddf24d3fa72d832569edd1b0f77818a39e6dc2e53e562",
+      "child_id": "course-course-selection-change-p2-v1-teacher-9ebe1732f239",
+      "parent_id": "course-course-selection-change-p2-v1-teacher-f63c8bf2e0ee",
+      "tokens_per_added_character": 0.22807528698793778
+    },
+    {
+      "added_message_characters": 18544,
+      "additional_input_tokens": 4355,
+      "archived_child_metadata_sha256": "fb901fe5149f3e574ab556dc285e145dd2121959f57a5897a7d63a1f572fd546",
+      "child_id": "course-course-selection-change-p3-v1-teacher-05dd265870d4",
+      "parent_id": "course-course-selection-change-p3-v1-teacher-55445a6ca094",
+      "tokens_per_added_character": 0.23484685073339084
+    },
+    {
+      "added_message_characters": 20253,
+      "additional_input_tokens": 4606,
+      "archived_child_metadata_sha256": "ef5387afd9800c4cdb191f8981b2aa0cef9100ab57962af5b2142b773c1d09ae",
+      "child_id": "course-course-selection-scratch-v1-teacher-4e00239550e2",
+      "parent_id": "course-course-selection-scratch-v1-teacher-06c2dd85ffe4",
+      "tokens_per_added_character": 0.22742309781266973
+    },
+    {
+      "added_message_characters": 20349,
+      "additional_input_tokens": 4626,
+      "archived_child_metadata_sha256": "d5123cdc58fff7ab01fde06147bbc9bbeefc860f99f6a7fa3e3c672bb2247a28",
+      "child_id": "course-course-selection-scratch-p1-v1-teacher-5a999074e6f7",
+      "parent_id": "course-course-selection-scratch-p1-v1-teacher-d3101cf2a472",
+      "tokens_per_added_character": 0.22733303847854933
+    },
+    {
+      "added_message_characters": 19178,
+      "additional_input_tokens": 4452,
+      "archived_child_metadata_sha256": "2e547999fc8fb0e871b19d0418ae853dbe046e5e18a79bd70e7ab044710820c5",
+      "child_id": "course-course-selection-scratch-p2-v1-teacher-793f0aae8863",
+      "parent_id": "course-course-selection-scratch-p2-v1-teacher-ffa8a15cd83f",
+      "tokens_per_added_character": 0.2321409948899781
+    },
+    {
+      "added_message_characters": 19664,
+      "additional_input_tokens": 4468,
+      "archived_child_metadata_sha256": "efe12e7344f487fce6db3d78495d700ef52e05bdd8bd1b4160b386e817f4b5a2",
+      "child_id": "course-course-selection-scratch-p3-v1-teacher-36183be29931",
+      "parent_id": "course-course-selection-scratch-p3-v1-teacher-78d1e7234e75",
+      "tokens_per_added_character": 0.2272172497965826
+    },
+    {
+      "added_message_characters": 10004,
+      "additional_input_tokens": 2577,
+      "archived_child_metadata_sha256": "5317d38771c62748a9029ba2275543507bc5feb3024a77ace6a6c6f95347a380",
+      "child_id": "auth-crud-access-scratch-v1-teacher-4a6b10922574",
+      "parent_id": "auth-crud-access-scratch-v1-teacher-ff7db77818e2",
+      "tokens_per_added_character": 0.2575969612155138
+    },
+    {
+      "added_message_characters": 8415,
+      "additional_input_tokens": 2129,
+      "archived_child_metadata_sha256": "66c001d274d85e09f6393b2e220d4505b7e0df1b68f649d6de6ef35d75b870ab",
+      "child_id": "auth-crud-access-scratch-p1-v1-teacher-221962c44f5e",
+      "parent_id": "auth-crud-access-scratch-p1-v1-teacher-20555d93f3e9",
+      "tokens_per_added_character": 0.2530005941770648
+    },
+    {
+      "added_message_characters": 10566,
+      "additional_input_tokens": 2757,
+      "archived_child_metadata_sha256": "f21cfb7a4696dc79e32a51baf78c0ddb09d57e73070cfc8522a0bccc9ae71b11",
+      "child_id": "auth-crud-access-scratch-p2-v1-teacher-976fd70bd19f",
+      "parent_id": "auth-crud-access-scratch-p2-v1-teacher-003afdbc8edf",
+      "tokens_per_added_character": 0.260931289040318
+    },
+    {
+      "added_message_characters": 8569,
+      "additional_input_tokens": 2172,
+      "archived_child_metadata_sha256": "ac22daef605b4bf5ad61d2c17f46fe397fcb0e79baad7c770e5842985fa43ed6",
+      "child_id": "auth-crud-access-scratch-p3-v1-teacher-3a97ea60acea",
+      "parent_id": "auth-crud-access-scratch-p3-v1-teacher-53c88a097865",
+      "tokens_per_added_character": 0.25347181701482085
+    },
+    {
+      "added_message_characters": 36765,
+      "additional_input_tokens": 8676,
+      "archived_child_metadata_sha256": "a9fce07ee221bb314771ad0ed331a709ce144520a655596afe88204ac58eb6d0",
+      "child_id": "shop-multiplication-scratch-v1-teacher-fa008e7f0e4a",
+      "parent_id": "shop-multiplication-scratch-v1-teacher-cb04c46a81ee",
+      "tokens_per_added_character": 0.23598531211750307
+    }
+  ],
+  "calls_already_made_by_this_estimator": 0,
+  "median_tokens_per_added_character": 0.2321409948899781,
+  "method": "median actual extra input tokens per added message character from thirteen archived v7 static repairs, added to each observed initial input, +10%, rounded up to 500; output initial *1.20 rounded to 500, minimum 2000; estimate not tokenizer or cache promise",
+  "plans": [
+    {
+      "additional_message_characters": 12368,
+      "automatic_retries": 0,
+      "bundle": "datasets/sir/pilots/blog-change-g7",
+      "cache_hits": "UNKNOWN",
+      "checked": "datasets/sir/pilots/blog-change-g7/checked-initial.jsonl",
+      "estimated_input_tokens": 11500,
+      "estimated_output_tokens": 2000,
+      "feedback": "experiments/slm/prompts/repair-general-v1.md",
+      "feedback_prefix_sha256": "9b3b0094ac9c4999f1eaa660501edbba0125474d6a47bd17a01620b8b89cdd1d",
+      "max_output_tokens": 8192,
+      "parent_id": "content-blog-change-v1-teacher-e6e632222754",
+      "repair_calls": 1,
+      "task": "content-blog-change-v1"
+    },
+    {
+      "additional_message_characters": 10236,
+      "automatic_retries": 0,
+      "bundle": "datasets/sir/pilots/blog-scratch-g7",
+      "cache_hits": "UNKNOWN",
+      "checked": "datasets/sir/pilots/blog-scratch-g7/checked-initial.jsonl",
+      "estimated_input_tokens": 10000,
+      "estimated_output_tokens": 2000,
+      "feedback": "experiments/slm/prompts/repair-general-v1.md",
+      "feedback_prefix_sha256": "9b3b0094ac9c4999f1eaa660501edbba0125474d6a47bd17a01620b8b89cdd1d",
+      "max_output_tokens": 8192,
+      "parent_id": "content-blog-scratch-v1-teacher-6ed907a7bdaa",
+      "repair_calls": 1,
+      "task": "content-blog-scratch-v1"
+    }
+  ],
+  "requested_model": "deepseek-flash",
+  "status": "PROPOSED_AWAITING_OWNER_BUDGET_APPROVAL",
+  "total_estimated_input_tokens": 21500,
+  "total_estimated_output_tokens": 4000
+}

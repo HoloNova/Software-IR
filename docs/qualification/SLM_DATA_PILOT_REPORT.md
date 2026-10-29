@@ -441,3 +441,28 @@ v4 这一轮：13 份中静态通过 7 份，四门通过 6 份。样本少、�
 本机没有 Maven／全量测试／真库／应用／训练或新模型调用，只运行了有界内存静态检查和 oracle 子集编译；Java 子进程均限制 heap 256 MiB、metaspace 128 MiB、ActiveProcessorCount=2 并已结束。合格教师答案仍为 **48 条**，学生 v3 不变。下一步建议两题各初采 1 次，deepseek-flash／v7，按既有 v7 实际用量拟合并留余量：改写预计输入 **8,000**、输出 **2,000**，从零预计输入 **7,500**、输出 **2,000**，合计 **19,500 tokens**；每次输出上限 8192，缓存未知、不自动重试，修复不在这笔预算内。完整方法和逐项估算在 sampling-plan.json，状态为待负责人批准，尚不发送请求。
 
 收尾的两份新 task 定向 AFT 请求也在 150 秒后因 bridge busy/under load 超时，未将其记为诊断通过；本阶段的结构依据为实际 JSON Schema／家族隔离／冻结字节核对和独立 oracle 子集编译。原始日志的空白例外只限已验证哈希的 Maven/Spring stdout，其他新增文本须通过正常差异检查。
+
+
+<a id="slm-blog-v7-initial"></a>
+
+## 第十九阶段：博客 v7 首轮两题采样（2026-10-29）
+
+负责人确认第十八阶段 **19,500 tokens** 的预计预算后，两题各初采 1 次，实际请求均为 deepseek-flash／v7、temperature=0.6、thinking=disabled、max_tokens=8192、max_retries=0。只执行获批的 **2 次**，没有自动重试、反馈修复或额外采样；两份响应均 finish_reason=stop。沿用原 generate_one／采集器，不手改教师答案。
+
+在既有 LF 源码快照中调用原 `read_bundle`／`validate_candidates`，每次发送前核对 **486 项**核心／oracle 输入与本轮基线 `26ffe06dfddbf26a6f58ae5a942c5a53883d95b6` 的 Git blob；只向主工作区原批次追加记录，不 import 新题、不改 task.json／manifest.json／system／base／reference。静态检查复用原 `_check_rows`／`bind_static` 和 verify #200 的原 standalone CLI，先逐字节比对 JAR 与已归档 ZIP 成员；没有使用本机增量 class，也没有 Maven 构建或本机业务 IT。原 checked.jsonl 参考结果保留，新教师结果另写 **checked-initial.jsonl**。
+
+| 题型 | 候选短 ID | 输入 | 其中缓存命中 | 输出 | 合计 | 静态结果 |
+| --- | --- | ---: | ---: | ---: | ---: | --- |
+| 改写 | `e6e632222754` | 7,319 | 3,584 | 1,474 | 8,793 | SEMANTIC FAILED，5 条 ERROR |
+| 从零写 | `6ed907a7bdaa` | 6,608 | 3,584 | 1,509 | 8,117 | PARSE FAILED，1 条 ERROR |
+| **合计** | **2 份** | **13,927** | **7,168** | **2,983** | **16,910** | **0/2 静态通过** |
+
+改写候选在 exists 的 PostTag／Like 比较里写成 `post == post`、`tag == tag`、`user == actor`，未按查询作用域引用 item；实际诊断为 4 条 SIR-VALID-001 和 1 条 SIR-FLOW-001（未定义 user）。从零候选的 `where length(1, 100) notBlank` 约束直接相邻，在 notBlank 处得到 SIR-PARSE-001。只记录本轮实际诊断，不把未执行的后续语义或业务阶段推测成失败，也不为这些答案改判卷器或手册。
+
+原请求、SDK 序列化完整响应、usage／fingerprint、源码、candidate／attempt 和采集器快照均在原两个 g7 批次；新建的 `research/2026-10-29/blog-v7-initial/` 保存逐次记录、汇总及下一轮预算依据。响应／请求／源码／冻结输入及采集器摘要已逐项核对；所有候选仍是 initial、parent_id=null，原参考和旧检查字节不变。CLI 命令的重复元数据输出保留在本机 target，权威原始响应与 attempt 不省略。openai-python 2.24.0 SDK 序列化响应不是 HTTP 原始字节，也不把模型别名当权重 revision。
+
+**没有派发业务门。**两份均未过静态门，BUILD／START／BUSINESS 全为 NOT_RUN，新增合格教师 **0 条**，累计仍 **48 条**，学生 v3 不变，未训练。实际总用量比预计少 2,590 tokens，不将差额视为可自行追加调用的授权。
+
+下一步拟各做 **1 次**原 `repair-general-v1.md` 静态反馈修复，使用 checked-initial.jsonl 的实际诊断及题目已有 DDL，不附参考答案、不改题。仅复用已归档 13 次 v7 静态修复的新增消息字符／实际输入增量估算，留 10% 输入余量、按 500 向上取整，输出留 20% 且至少 2,000：改写预计输入 **11,500**／输出 **2,000**，从零预计输入 **10,000**／输出 **2,000**，共 **25,500 tokens**。每份输出上限仍为 8192，缓存未知、不自动重试；repair-plan.json 为 **待负责人批准**，本轮未发送修复请求。
+
+本阶段收尾对新汇总 JSON 的一次定向 AFT 请求仍因 bridge busy/under load 在 150 秒后超时，未记为诊断通过；实际完成的检查为原采集器绑定／响应与源码哈希、旧冻结字节保持、四份清单及暂存差异检查，没有以工具超时或 CLI 退出码 0 冒称候选通过。

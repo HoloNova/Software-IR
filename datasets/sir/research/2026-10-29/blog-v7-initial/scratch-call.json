@@ -1,0 +1,74 @@
+{
+  "actual_model": "deepseek-flash",
+  "automatic_retries": 0,
+  "bundle": "datasets/sir/pilots/blog-scratch-g7",
+  "check_execution": {
+    "directory": "C:\\Users\\zdw00\\Desktop\\Software IR\\datasets\\sir\\pilots\\blog-scratch-g7\\checks\\41c25e7f3f1f4277bfdcf7894bce1109",
+    "stdout_sha256": "6783ffd4c1474a80daa3204789f8ff3aaf27dbee556af24f2a9ade7cbda44f17"
+  },
+  "checked": "datasets/sir/pilots/blog-scratch-g7/checked-initial.jsonl",
+  "checker_artifact_run_id": 40839225636,
+  "completed_at": "2026-10-29T10:08:52.042566+00:00",
+  "estimated_input_tokens": 7500,
+  "estimated_output_tokens": 2000,
+  "finish_reason": "stop",
+  "frozen_git_blobs_verified": 486,
+  "frozen_inputs_unchanged": true,
+  "gates": {
+    "build": "NOT_RUN",
+    "business": "NOT_RUN",
+    "start": "NOT_RUN",
+    "static": "FAILED"
+  },
+  "max_output_tokens": 8192,
+  "new_candidates": 1,
+  "owner_budget_approved": true,
+  "recorded_attempts": 1,
+  "repair_calls": 0,
+  "request_process_exit_code": 0,
+  "request_sha256": "dbf815442455d3302fff2d57a1e7a6c60316e67f3f0506d5604ebe3f5883600d",
+  "requested_model": "deepseek-flash",
+  "response_sha256": "64b64a3c3e80f7ba4407448611b4d19ffde047e7b5a99eca6a5f2c56f91cd0be",
+  "sample_id": "content-blog-scratch-v1-teacher-6ed907a7bdaa",
+  "source_sha256": "3ab25f8c6e06436e89df250a58b2cc1d08deea3697ee26ceb8e6b5c2a22f01d4",
+  "source_snapshot": "target/slm-blog-freeze/source-66c27691-lf",
+  "started_at": "2026-10-29T10:08:41.041176+00:00",
+  "static_result": {
+    "diagnostics": [
+      {
+        "code": "SIR-PARSE-001",
+        "fixes": [],
+        "loweredNodeId": null,
+        "message": "遇到不符合 SIR 语法的内容：notBlank",
+        "related": [],
+        "relativePath": null,
+        "severity": "ERROR",
+        "sourceNodeId": null,
+        "sourceSymbol": null,
+        "span": {
+          "endCodePointOffset": 2205,
+          "endColumn": 54,
+          "endLine": 90,
+          "sourceId": "sample.sir",
+          "startCodePointOffset": 2197,
+          "startColumn": 46,
+          "startLine": 90
+        },
+        "stage": "PARSE"
+      }
+    ],
+    "digest": null,
+    "fileCount": 0,
+    "id": "content-blog-scratch-v1-teacher-6ed907a7bdaa",
+    "ok": false,
+    "sourceSha256": "3ab25f8c6e06436e89df250a58b2cc1d08deea3697ee26ceb8e6b5c2a22f01d4",
+    "stage": "PARSE"
+  },
+  "task": "content-blog-scratch-v1",
+  "usage": {
+    "cache_hit": 3584,
+    "input": 6608,
+    "output": 1509,
+    "total": 8117
+  }
+}
