@@ -26,6 +26,7 @@ on:
           - DualTokenBusinessConformanceIT
           - BearerCredentialBusinessConformanceIT
           - CourseSelectionBusinessConformanceIT
+          - BlogBusinessConformanceIT
           - CrudAccessBusinessConformanceIT
           - GuardedTransitionBusinessConformanceIT
           - LibraryBorrowingBusinessConformanceIT
@@ -94,6 +95,7 @@ jobs:
             DualTokenBusinessConformanceIT) p=dual-token ;;
             BearerCredentialBusinessConformanceIT) p=bearer ;;
             CourseSelectionBusinessConformanceIT) p=course ;;
+            BlogBusinessConformanceIT) p=blog ;;
             CrudAccessBusinessConformanceIT) p=crud ;;
             GuardedTransitionBusinessConformanceIT) p=guard ;;
             LibraryBorrowingBusinessConformanceIT) p=library ;;

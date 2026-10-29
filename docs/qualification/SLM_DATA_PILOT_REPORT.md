@@ -404,3 +404,19 @@ v4 这一轮：13 份中静态通过 7 份，四门通过 6 份。样本少、�
 | Qwen3-4B-Instruct-2507 | `cdbee75f17c01a7cc42f958dc650907174af0554` | 2,141 | **7,102** |
 
 最长项均为选课改写 p1 `e61b238d030f`，不能沿用 v2 的 3,874／3,042 上限；当前实测仍小于 16K，完整逐条结果在 `train-student-v3.tokens.json`。本次归档／包装／计数 API 调用 **0 次**，没有 Maven 构建、全量测试、本机业务 IT、应用／数据库进程或训练。第十五阶段费用统计不变：已知累计 325,948 tokens，首轮连接错误用量仍未知。
+
+<a id="slm-blog-oracle-local"></a>
+
+## 第十七阶段：博客七能力参考与业务判卷实现（2026-10-29，待 CI）
+
+负责人确认七能力 IT 的结构后，按 `experiments/slm/drafts/blog/spec.md` 新增裁剪参考 `valid/blog.sir`、完整七表 DDL/seed、仅删 Publish/AttachTag/PostsByTag/LikePost 的 base、两份原始题面、合同及逐项[追溯表](../../experiments/slm/drafts/blog/traceability.md)。题面与批准规格逐字一致，合同逐对象一致，SQL 语句一致；不修改完整 `topics/blog/project.sir`，不保留隐藏的 Crud 展开、登录或评论，也不扩语言或追加隐性评分。
+
+**判卷实现。**`BlogBusinessConformanceIT` 复用原 BusinessSliceHarness／SlmCandidateSupport，对参考或教师运行同一编译、构建、启动、业务流程，只启用真实 external Bearer 身份。BlogPublicationChecks、BlogTagChecks、BlogLikeChecks 覆盖规格 B/P/Q/T/L；BlogAssertions 做精确 JSON key／数值类型／嵌套与 JDBC 对照，BlogFixture 从独立只读连接比较七表所有列和行，成功写也限制完整数据库差异。所有辅助类仅属本题测试，不改变共享 Harness、生产编译器或公共 HttpAssertionClient。
+
+**真实竞争与失败边界。**四轮各重置同一 seed、使用六个独立 HTTP 客户端及 ready/start latch。控制端持有目标 post 行锁，BlogLockWaits 追踪本 schema 的真实等待链，必须同时观测六个不同运行时连接和事务，不能用一个等待或重复边冒充。分别检查发布唯一赢家、重复标签、同用户重复赞、不同用户全成功与最终 likes=COUNT(like)。请求 30 秒、结果收集 35 秒、锁观测 5 秒；超时或异常不转成 409，也不继续重置可能还有在途请求的数据。时间线、目标／连接／事务和锁图写入原业务报告，候选模式沿用原 `slm-runtime.json` 附件哈希。自审额外用单项真实 RED 复现了“future 已完成但结果收集超过截止仍被接受”，现已拒绝该情况并保留晚到响应用于排查。
+
+**本机定向。**Windows，Java 21，Maven 3.9.14，`D:/maven-repo`；资源采样为 18 个逻辑处理器、总内存 24093 MiB、可用 4674 MiB。Maven 与测试 fork 均显式设置 `-Xmx384m -XX:MaxMetaspaceSize=192m -XX:ActiveProcessorCount=2`，移除 JAVA_TOOL_OPTIONS，没有 Maven -T。最终 `-pl sir-toolchain-application -am -Dtest=BlogReferenceContractTest,BlogOracleTest` 重新编译全部 **177 个测试源**，当次 Surefire XML 为 **5 + 11 = 16 项，0 失败／0 错误／0 跳过**，封存在 `target/blog-verification/final/`。覆盖裁剪参考和 base 完整静态生成、仅删四能力、路由／创建状态、实际 Spring external 环境绑定、DDL 声明、精确 JSON、完整快照、真假六事务／间接锁等待及超时反例。源码级覆盖率未测量，不据此声称业务 HTTP/MySQL 已通过。两次 AFT 静态诊断请求超时，未把它记作诊断绿灯。
+
+**保留环境阻断。**另一次附带的 SlmCandidateSupportTest 回归共有 9 项：7 通过、1 失败、1 错误；两项根因均为 Windows 返回 `SIR-APP-SOURCES-READ-001: filesystem does not support secure directory-relative source reads`，在候选安全读源阶段即被拒绝。本轮不改生产读源规则、不加跳过或把那次 24 项总运行记成通过，完整 XML/文本与 Maven 输出保留在 `target/blog-verification/pre-deadline-review/`，对应 Linux 验证仍待 CI。最初缺资源的 RED、oracle 编译期 RED、截止边界 RED 分别留在 `red/`、`oracle-red-compile.txt`、`deadline-red/`。
+
+**CI 与正式题目的界线。**verify.yml 已接入 BlogBusinessConformanceIT／kcg.blog-conformance.enabled，并单独要求唯一博客报告的正式第二行 `verdict=PASSED`；NOT_RUN、缺失或重复报告以及响应中伪造的后续 verdict 都不能补位。slm-business-gate.yml 已增加对应选项与属性映射。工作流 YAML／内嵌 Python、两份题面／SQL／合同和上述证据守卫的正反例已校验；检查脚本在 `target/blog-verification/check_materials.py`。当前参考的构建／启动／真实业务均 **NOT_RUN**，没有提交或推送本批代码、没有派发新 CI，也未创建正式 blog task 或冻结批次。待负责人明确授权提交推送、参考在同 SHA 的 verify 取得四门证据后，再核对 base 负例、填写真实 reference_evidence 并冻结 task；不能引用旧完整博客的结果。API 调用 **0 次**，合格答案与学生 v3 仍为 **48 条**，没有训练或 UI 改动。

@@ -79,6 +79,10 @@ python -m experiments.slm.data repair --bundle datasets/sir/runs/dual-token-rech
 
 测试：`PYTHONPATH=$PWD:$PWD/experiments/slm/tests python -m unittest experiments.slm.tests.test_pipeline experiments.slm.tests.test_corpus experiments.slm.tests.test_dataset_io`（在仓库根目录运行；`test_dataset_io` 从 tests 目录导入 `test_corpus`）。
 
+## 博客新题（实现待 CI，尚未冻结）
+
+`drafts/blog/` 已按批准规格补齐七能力裁剪参考的配套 base、题面、contract 与 traceability；实际参考及 DDL/seed 位于 application 测试资源，`BlogBusinessConformanceIT` 已接入 verify 与候选业务门。参考/base 的完整静态生成和 oracle 反例已做定向检查，但真实构建、启动、业务仍 NOT_RUN，不能用旧完整博客的证据填写 `reference_evidence`。当前不创建正式 blog task、不 prepare 或采样；同 SHA 的参考四门证据到位后再按规定顺序冻结。实现、Windows 安全读源阻断与检查范围见[数据报告第十七阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-blog-oracle-local)。
+
 ## 通用静态修复
 
 `prompts/repair-general-v1.md` 是不限题型的静态反馈前缀：说明这是同一道题的修复、按编译器诊断逐条改、需求与接口不变，不提示具体改法；诊断原文与 DDL 由 `repair` 自动附上。用法：`repair --bundle … --sample-id … --feedback experiments/slm/prompts/repair-general-v1.md`。每个失败候选只修一轮。

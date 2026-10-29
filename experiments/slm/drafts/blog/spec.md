@@ -6,9 +6,9 @@
 
 **选择“作者建草稿 → 挂标签 → 发布 → 匿名阅读 → 读者点赞”的 7 能力闭环，不把整个博客的 22 个展开能力搬进题目。**注册登录、分类/标签管理、评论、作者完整 CRUD 不考；用户、分类、标签和有效访问令牌由判卷夹具预置。认证仍走数据库中的真实 Bearer 凭据，不以任意用户 ID 请求头或固定身份替代。
 
-这份文件是出题设计，不是已通过的参考答案。当前只新增本 Markdown；未修改原 `sir-toolchain-application/src/test/resources/topics/blog/project.sir`，未生成裁剪 `.sir`、base、JSON、SQL 或 Java，未运行 Maven、数据库、应用或模型 API。裁剪答案的静态、构建、启动和业务门均为 **NOT_RUN**，不能继承原主题的编译证据。
+这份文件保留已批准的出题设计，不是已通过 CI 的参考答案。后续已按负责人确认的结构补齐裁剪参考、base、合同、题面、SQL、Java 检查与 CI 接线；本机定向已验证完整静态生成，**构建／启动／业务仍为 NOT_RUN**，不能继承原主题的证据。原 `sir-toolchain-application/src/test/resources/topics/blog/project.sir` 不改，正式 task 尚不冻结、模型 API 尚不调用。实现与逐项追溯见 [traceability.md](traceability.md)。
 
-后续经授权落地时，建议另建 `sir-toolchain-application/src/test/resources/valid/blog.sir`、`conformance/mysql/blog-ddl.sql`、`blog-seed.sql` 和 `BlogBusinessConformanceIT.java`，再关联两份 task；这些都是拟建路径。**不能仍把完整原主题设为新题 reference_source**：它多出接口、表和评论响应，与本规格不同。
+本题独立落地路径为 `sir-toolchain-application/src/test/resources/valid/blog.sir`、`conformance/mysql/blog-ddl.sql`、`blog-seed.sql` 和 `BlogBusinessConformanceIT.java`，再关联两份 task；这些路径现已落实为实现，仍待参考 CI 验收。**不能仍把完整原主题设为新题 reference_source**：它多出接口、表和评论响应，与本规格不同。
 
 ### 0.1 参考了什么
 
@@ -280,7 +280,7 @@ INSERT INTO post_tag (id, post_id, tag_id) VALUES
 
 - 路径字段只从 URL 取；无其余输入的 POST 发送 `{}`。request_fields 不重复列 path_fields，合起来才是完整输入；发布路径 `/my/posts/…` 与创建路径 `/myposts` 刻意沿用原主题，不能擅自统一改名。
 - PostView 的 author/category 是数值 ID；PublicPost 的 author/category 是嵌套对象。不能把公开响应误写成 authorId/categoryId，也不能把 CreatePost 的 HTTP categoryId 写成嵌套对象。完整字段类型见 §1.2。
-- 正常创建测试只用存在的 categoryId 和非 null content。原 Crud 创建没有加载 Category 并映射 CategoryNotFound，**本版不凭空要求“创建时分类不存在 → 404”**，也不把所有非 Optional 字段的缺失一概写成 400；相关现状见 R:1954。
+- 正常创建测试只用存在的 categoryId 和非 null content。原 Crud 创建没有加载 Category 并映射 CategoryNotFound，**本版不凭空要求“创建时分类不存在 → 404”**，也不因工具链现已统一非 Optional 必填而临时追加 category/content 缺失评分；本题只对标题测试已写明的校验。
 - 所有公开响应和每个分页元素的 key 集合必须精确匹配；不能漏字段、加 state/comments/口令/凭据。声明错误为 `{"code":"错误名","message":"错误名","fields":[]}`；401 是认证拦截器空体响应，不强行解析 JSON。title 校验错误为 400 INVALID_REQUEST，fields 中检查对应 title 的 NotBlank/Size，不固定本地化 message 文本。
 
 ## 5. 两种需求原文
@@ -326,7 +326,7 @@ LikePost 按 id 为已发布文章点赞，成功返回 201 和接口合同中�
 
 ### 6.1 执行与断言约定
 
-一个 `BlogBusinessConformanceIT` 复用 BusinessSliceHarness，用同一套 HTTP/JDBC 检查运行裁剪参考或候选，不能用金标准源替换候选。实现时可拆 BlogPublicationChecks、BlogTagChecks、BlogLikeChecks 辅助类，但这些类目前不存在。
+一个 `BlogBusinessConformanceIT` 复用 BusinessSliceHarness，用同一套 HTTP/JDBC 检查运行裁剪参考或候选，不能用金标准源替换候选。实现已拆为 BlogPublicationChecks、BlogTagChecks、BlogLikeChecks，并由 BlogConcurrencyChecks、BlogConcurrentRequests、BlogLockWaits 承接真实竞争；公共比较与七表观察分别在 BlogAssertions、BlogFixture，复用同一个应用进程和原报告协议。
 
 §6.2–§6.6 每小节开始前重放同一套 seed；同小节按表中顺序运行。重置只由夹具控制连接在无在途请求时执行，先删 like/post_tag，再 post/access_token/category/tag/user，随后按 §3 插入；保留一个生成应用进程，不为每行重建工程。§6.7 每一轮单独重置。自增后续 ID 只从 HTTP 响应取得，不假定无间隙或下一值等于 112。
 
@@ -446,7 +446,7 @@ C01 的“保留”承接 S02、S04、S05、S08、S09、S13 在 base 中的既�
 | 自定路径统一前缀 /api；路径字段覆盖 body | R:902–915 | `G/ControllerRenderer.java`:158–179；P04 直接验证，避免只看接口名猜路由 |
 | page/size 可各自默认，合法越界页不是 404 | R:1954 说明分页仍有默认值，R:1685 说明外层结构与越界 total | **参考未列具体默认值/上限数字**，不能伪造语言文档依据；1/20/10000/100 来自 `L/profile/SpringBootQueryPolicy.java`:14–22 和 `G/WorkflowRenderer.java`:477–493，本题显式冻结为接口合同。它是当前目标行为，不宣称跨 Target 的语言保证 |
 | Bearer 真正认证为 User，401 发生在工作流前；401 可能没有 JSON 信封 | R:374–389、805，声明错误信封见 R:589–593 | `G/CredentialIdentityAdapterRenderer.java`:77–125；`G/ApplicationRenderer.java`:334–346 空体 401；需启动 `external` 模式，禁止 local-fixed。`BusinessSliceHarness.useActorMode` 与已有 Bearer IT 的调用提供接法，但此题不调用登录 |
-| Name/Code 的约束与 SQL 长度不等于 token-desk 的 Text 列宽；不把非 Optional 一律必填当现状 | R:86–113、253、1954 | `L/api/SpringBootDeploymentPlanner.java`:48–76；只测 title 明确的 NotBlank/Size，不增加 content/category 缺失一定 400 的隐性评分项；字段错误对象实际为 path/code/message，见 `G/ApiErrorRenderer.java`:25–32，不能把 path 写成 field |
+| Name/Code 的约束与 SQL 长度不等于 token-desk 的 Text 列宽；仅测试本题显式要求的标题校验，不随工具链新增隐性评分 | R:86–113、253、1954 | `L/api/SpringBootDeploymentPlanner.java`:48–76；只测 title 明确的 NotBlank/Size，不增加 content/category 缺失一定 400 的隐性评分项；字段错误对象实际为 path/code/message，见 `G/ApiErrorRenderer.java`:25–32，不能把 path 写成 field |
 | Ref 输入 category 的 HTTP 名是 categoryId；PostView 的同名 Ref 输出却是数值 author/category | R:109 规定引用存主键，R:538 规定嵌套视图；**未完整写明输入自动 Id 后缀** | `L/internal/SpringBootModelLowerer.java`:580–582、455–478、1940–1942；`G/TypeRenderer.java`:17–25。按实际 HTTP 合同检查，不能把持久化 author_id 当响应字段 |
 | 表/列 snake_case、Ref 加 _id、Token 用 CHAR(36)；like 是保留字，不能生成/查询裸 like | R:2720；R:259–261 的唯一约束 | `L/internal/SpringBootModelLowerer.java`:559–561、657；`L/profile/MySqlIdentifiers.java`:6–11、36、57–65，`G/EntityRenderer.java`:51：已统一转义 like，无需在题目中改名；本题 DDL/JDBC 同样加反引号 |
 | 默认 state/likes 来自 create，now 是本次创建时刻而非 seed/服务器启动时刻 | R:311 | `L/api/SpringBootDeploymentPlanner.java`:68–69 不给 DATETIME 加数据库默认；B03/B04 对 HTTP/JDBC 与调用时间区间交叉核对，不能只查非空 |
@@ -456,4 +456,4 @@ C01 的“保留”承接 S02、S04、S05、S08、S09、S13 在 base 中的既�
 | LikePost 原子加一、返回值与并发最终状态；FK 锁顺序可能造成死锁 | R:1441–1445、1496；R:1007 说明死锁不自动重试 | 不在需求原文提示实现顺序；参考沿用既有 LikePost 的计数后关系持久化语义。X04 只要求每响应值在有效范围，最终 JDBC 必须 6，不能要求 HTTP 完成顺序等于提交顺序 |
 | 去评论后 ViewPost 不能残留 comments，不把原完整主题当裁剪参考的证据 | R:538 对嵌套集合读全量的说明 | 本题明确改用已有 PublicPost，删 Comment/PostDetail；先跑新裁剪参考再冻结任务和判卷。此处是有意的业务范围裁剪，不是原主题 bug 修复 |
 
-**收口条件：**后续实现必须先让新裁剪参考通过相同静态/构建/启动/业务四门，再确认删四能力的 base 静态可用且无法通过新增接口检查，最后才冻结 task/DDL/seed/oracle 摘要并采样。这里只提出该验收次序，不授权本轮运行；本轮状态仍为 NOT_RUN，纯文档检查不替代真库证据。
+**收口条件：**后续实现必须先让新裁剪参考通过相同静态/构建/启动/业务四门，再确认删四能力的 base 静态可用且无法通过新增接口检查，最后才冻结 task/DDL/seed/oracle 摘要并采样。验收次序不变；负责人已确认实现结构并授权定向静态检查，真库仍只交 CI。当前未启动应用／数据库或调用模型，正式 task 的 reference_evidence 必须等本题参考在同 SHA 的 verify 四门通过后再填，不能用本机定向或旧主题结果补位。

@@ -1,0 +1,92 @@
+{
+  "namespace": "example.blog",
+  "family": "content.blog",
+  "split": "train",
+  "capabilities": ["CreatePost", "Publish", "Feed", "ViewPost", "AttachTag", "PostsByTag", "LikePost"],
+  "entities": ["User", "AccessToken", "Category", "Post", "Tag", "PostTag", "Like"],
+  "interfaces": {
+    "CreatePost": {
+      "route": "POST /api/myposts",
+      "authentication": "Bearer",
+      "request_fields": ["categoryId", "title", "content"],
+      "response_fields": ["id", "author", "category", "title", "content", "state", "likes", "createdAt"],
+      "body_kind": "PostView",
+      "success_status": 201,
+      "errors": {"unauthenticated": 401, "INVALID_REQUEST": 400}
+    },
+    "Publish": {
+      "route": "POST /api/my/posts/{id}/publish",
+      "authentication": "Bearer",
+      "path_fields": ["id"],
+      "request_fields": [],
+      "response_fields": ["id", "author", "category", "title", "content", "state", "likes", "createdAt"],
+      "body_kind": "PostView",
+      "success_status": 200,
+      "errors": {"unauthenticated": 401, "Forbidden": 403, "PostNotFound": 404, "NotPublishable": 409}
+    },
+    "Feed": {
+      "route": "GET /api/posts",
+      "authentication": "none",
+      "request_fields": ["keyword", "page", "size"],
+      "response_fields": ["total", "page", "size", "records"],
+      "body_kind": "Page<PublicPost>",
+      "success_status": 200,
+      "errors": {"BadPage": 400}
+    },
+    "ViewPost": {
+      "route": "GET /api/posts/{id}",
+      "authentication": "none",
+      "path_fields": ["id"],
+      "request_fields": [],
+      "response_fields": ["id", "author", "category", "title", "content", "likes", "createdAt"],
+      "body_kind": "PublicPost",
+      "success_status": 200,
+      "errors": {"PostNotFound": 404}
+    },
+    "AttachTag": {
+      "route": "POST /api/posts/{postId}/tags",
+      "authentication": "Bearer",
+      "path_fields": ["postId"],
+      "request_fields": ["tagId"],
+      "response_fields": [],
+      "body_kind": "empty",
+      "success_status": 201,
+      "errors": {"unauthenticated": 401, "Forbidden": 403, "PostNotFound": 404, "TagNotFound": 404, "TagAttached": 409}
+    },
+    "PostsByTag": {
+      "route": "GET /api/tags/{tagId}/posts",
+      "authentication": "none",
+      "path_fields": ["tagId"],
+      "request_fields": ["page", "size"],
+      "response_fields": ["total", "page", "size", "records"],
+      "body_kind": "Page<PublicPost>",
+      "success_status": 200,
+      "errors": {"TagNotFound": 404, "BadPage": 400}
+    },
+    "LikePost": {
+      "route": "POST /api/posts/{id}/like",
+      "authentication": "Bearer",
+      "path_fields": ["id"],
+      "request_fields": [],
+      "response_fields": ["id", "author", "category", "title", "content", "likes", "createdAt"],
+      "body_kind": "PublicPost",
+      "success_status": 201,
+      "errors": {"unauthenticated": 401, "PostNotFound": 404, "AlreadyLiked": 409}
+    }
+  },
+  "public_post_nested_fields": {"author": ["id", "name"], "category": ["id", "name"]},
+  "pagination": {"default_page": 1, "default_size": 20, "max_page": 10000, "max_size": 100},
+  "enums": {"PostState": ["DRAFT", "PUBLISHED"]},
+  "declared_errors": {"BadPage": 400, "Forbidden": 403, "PostNotFound": 404, "TagNotFound": 404, "NotPublishable": 409, "TagAttached": 409, "AlreadyLiked": 409},
+  "storage": {
+    "user": ["id", "name"],
+    "access_token": ["id", "owner_id", "expires_at"],
+    "category": ["id", "name"],
+    "post": ["id", "author_id", "category_id", "title", "content", "state", "likes", "created_at"],
+    "tag": ["id", "name"],
+    "post_tag": ["id", "post_id", "tag_id"],
+    "like": ["id", "post_id", "user_id"]
+  },
+  "readiness": "GET /api/posts?keyword=&page=1&size=10",
+  "fixtures": {"provided_by_oracle": true}
+}

@@ -149,7 +149,7 @@ jobs:
           set -euo pipefail
           mvn -B -o -pl sir-toolchain-application -am \
             -Dmaven.repo.local="$MAVEN_REPO" \
-            -Dtest=QuerySliceBusinessConformanceIT,WriteSliceBusinessConformanceIT,RelationSliceBusinessConformanceIT,GuardedTransitionBusinessConformanceIT,TokenDeskBusinessConformanceIT,BearerCredentialBusinessConformanceIT,DualTokenBusinessConformanceIT,CrudAccessBusinessConformanceIT,MoneyBusinessConformanceIT,MultiplicationBusinessConformanceIT,LibraryBorrowingBusinessConformanceIT,CourseSelectionBusinessConformanceIT \
+            -Dtest=QuerySliceBusinessConformanceIT,WriteSliceBusinessConformanceIT,RelationSliceBusinessConformanceIT,GuardedTransitionBusinessConformanceIT,TokenDeskBusinessConformanceIT,BearerCredentialBusinessConformanceIT,DualTokenBusinessConformanceIT,CrudAccessBusinessConformanceIT,MoneyBusinessConformanceIT,MultiplicationBusinessConformanceIT,LibraryBorrowingBusinessConformanceIT,CourseSelectionBusinessConformanceIT,BlogBusinessConformanceIT \
             -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false \
             -Dkcg.query-conformance.enabled=true \
             -Dkcg.write-conformance.enabled=true \
@@ -163,11 +163,27 @@ jobs:
             -Dkcg.multiplication-conformance.enabled=true \
             -Dkcg.library-conformance.enabled=true \
             -Dkcg.course-conformance.enabled=true \
+            -Dkcg.blog-conformance.enabled=true \
             -Dkcg.conformance.work-parent="$KCG_CONF_WORK_PARENT" \
             -Dkcg.conformance.evidence-parent="$KCG_CONF_EVIDENCE_PARENT" \
             -Dkcg.conformance.maven-executable="$(command -v mvn)" \
             -Dkcg.conformance.maven-repo="$MAVEN_REPO" \
             test
+
+      - name: Require complete blog reference evidence
+        run: |
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          reports = list(Path(os.environ["KCG_CONF_EVIDENCE_PARENT"]).rglob("blog-slice-report.txt"))
+          if len(reports) != 1:
+              raise SystemExit(f"expected one blog reference report, found {len(reports)}")
+          lines = reports[0].read_text(encoding="utf-8").splitlines()
+          # The verdict is the fixed second header line, never a value echoed in a response or row.
+          if len(lines) < 2 or lines[1] != "verdict=PASSED":
+              raise SystemExit("blog reference was not fully verified; FAILED/NOT_RUN cannot qualify")
+          print(f"blog reference PASSED: {reports[0]}")
+          PY
 
       - name: Independent verification IT
         run: |
