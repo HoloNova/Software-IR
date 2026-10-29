@@ -292,3 +292,23 @@ v4 这一轮：13 份中静态通过 7 份，四门通过 6 份。样本少、�
 36 份证据放入各批次 `runtime/`，72 个 zip 的哈希与 GitHub 记录一致，绑定、生成摘要与附件哈希逐项核对，不含 CI 密码。30 份各导出 1 条：**新教师合格训练答案累计 44 条**（鉴权 23、课程 21），train 16 份原题中仍只有 course-selection 两份没有任何合格答案。学生格式第二版 `datasets/sir/student/train-student-v2.jsonl` 共 44 条，最长训练序列 deepseek-coder-1.3b 3,874、Qwen3-4B 3,042 tokens。
 
 **下一步。**生成器变量撞名需要修；course-selection 的必填问题由“非可选输入必填”改动处理（设计见 `experiments/slm/drafts/design/required-input-design.md`，已确认）。两项都会改变工具链摘要，此后的候选须在新工具链上重新检查。业务账本 83/1/0 不变。
+
+<a id="slm-toolchain-recheck-v1"></a>
+
+## 第十三阶段：必填规则、生成器变量与选课候选重查（2026-10-29）
+
+**工具链修复已由 CI 验收。**`5cff5c313515fbd5a3593fc1f3ac2bba0b388920` 把普通非 Optional 输入统一纳入能力级必填检查，保留只作分页参数的默认值及 patch 三态，设计见 `experiments/slm/drafts/design/required-input-design.md`；[verify #198](https://github.com/HoloNova/Software-IR/actions/runs/40679190786) 为 success。`391eb87b1a4615c13b651672cd63dc629d1f386d` 将生成器在工作流方法中新增的局部变量统一为 `$` 前缀，避免与 SIR 作者变量撞名，新增 `GeneratedLocalNamesTest`（原生成器暴露六处重复定义）；[verify #199](https://github.com/HoloNova/Software-IR/actions/runs/40680535123) 为 success。本轮只核对 GitHub API 的受测 SHA、结论和运行 URL，不重跑这些验收或另报测试数量。
+
+**重新冻结，不搬运旧资格。**从 `pilots/course-selection-change-p1-g6/` 导入新批次 `datasets/sir/pilots/course-selection-change-p1-g6t/`，保留两份教师的原始请求、响应、源码和父子关系；新增 API 调用 **0 次**，所有运行门重置为 NOT_RUN。两次修复改变了工具链摘要，后续候选须绑定新工具链；已有 44 条合格答案仍保留当时的独立证据，不追改其批次或资格。各 task 的 `reference_evidence` 保持原样，避免改变已经冻结的题目哈希；参考答案在新工具链上的 CI 证据另见 #199，而不是修改 task 冒充旧证据。
+
+**跨平台字节检查。**实际宿主为 Windows 11，Java 21.0.11、Maven 3.9.14；18 个逻辑处理器、总内存 24093 MiB，编译前可用约 1268 MiB。工作区的 CRLF 会改变源码摘要，默认 `git archive` 也会应用本机换行设置；初次工作区检查和默认导出均未作为 CI 批次。最终用 `git -c core.autocrlf=false -c core.eol=lf archive HEAD` 从 `69237244` 导出独立快照，先逐项核对 479 个工具链/oracle 文件与 Git blob 完全一致，再在该快照中编译检查器并调用原 `import/check`。没有改写用户工作区的源码或 Git 配置，也没有手改冻结 manifest、候选或判卷规则。编译只到 `kcg-cli -am compile`，单进程限制 heap 384 MiB、metaspace 192 MiB、ActiveProcessorCount=2；没有本机真库、业务 IT 或全量测试。规范批次及字节核对记录在 `verification/checkout-verification.json`，临时 CRLF 探针保留于 `target/slm-handoff/`，不当长期证据。
+
+新批次 `toolchain_core_sha256=7275f533d442297d7c43b62317168e09736be9c369d9811c480e8aefad070d54`；oracle 仍为 `9dea6bbcc7b9defc7807dfa1523ba976704a5b25e6dd6c3b2c95cf090d771d74`。`checked.jsonl` 的实际结果：
+
+| 来源 | 候选短 ID | 静态结果 | 生成文件 | 构建／启动／业务 |
+| --- | --- | --- | --- | --- |
+| 既有参考 | reference | GENERATION PASSED，无诊断 | 95 | NOT_RUN |
+| 原始教师 | `e7bb44f7a3e1` | PARSE FAILED，5 条诊断 | 0 | NOT_RUN |
+| 一轮静态修复后的教师 | `e61b238d030f` | GENERATION PASSED，无诊断 | 95 | NOT_RUN |
+
+目标候选 `e61b238d030f` 的生成摘要为 `678a2311f9eb42508799d9d0b5d3624abd979b787ea89f9a0250a9f11e9459da`。静态通过不证明旧构建失败已在该候选上闭环；下一步提交新批次并派发 `CourseSelectionBusinessConformanceIT`，等待负责人通知结果后归档原始证据，再决定是否导出。当前合格教师答案仍为 **44 条**，学生格式 v2 不变；本轮没有训练、付费补采或修改冻结 task。

@@ -59,6 +59,10 @@
 
 `pilots/*-g6` 是用 `sir-0.3-general-v6` 对 48 份需求变体题（train 16 份题目各 3 种说法）与 dev 集 2 题的采样；静态失败的又各修一轮（`checked-r1.jsonl`）。36 份送业务门，30 份四门通过，证据在各批次 `runtime/`，`train-teacher.jsonl` 各 1 条。**新教师合格训练答案累计 44 条。**详见[数据报告第十二阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#第十二阶段规则手册-v6-与需求变体2026-10-28)。
 
+## 新工具链上的选课候选复查
+
+[`pilots/course-selection-change-p1-g6t/`](pilots/course-selection-change-p1-g6t/) 从 v6 的选课改写 p1 导入原始响应，API 调用 0 次。普通非 Optional 输入必填（`5cff5c3`，verify #198）及生成器 `$` 局部变量（`391eb87`，verify #199）已修复并通过 CI；新批次在与 Git blob 字节一致的 LF 源码快照中重新冻结工具链、编译检查器并静态检查。参考与教师修复候选 `e61b238d030f` 均完整生成 95 个文件，原始教师 `e7bb44f7a3e1` 仍在解析阶段失败。构建／启动／业务目前 NOT_RUN，待新批次提交后送 GitHub 业务门，不能沿用旧失败或参考答案的通过证据。原始请求、响应、源码不变，未修改 task 的 `reference_evidence`；已有 44 条合格答案及学生 v2 不变。字节核对见批次 `verification/checkout-verification.json`，说明见[数据报告第十三阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-toolchain-recheck-v1)。
+
 ## 学生训练格式
 
 [`student/train-student-v2.jsonl`](student/) 是全部 44 条合格答案（v1 是当时的 14 条）用 `student` 命令重新包装的学生训练数据：固定短 system（`experiments/slm/prompts/student-v1.md`）+ 与教师相同的题目 + 最终合格 SIR，不带教师规则手册和修复经过。`.index.json` 记录来源批次、样本与业务门 run；`.tokens.json` 是实测 token 长度，两版最长训练序列都是 3,874（deepseek-coder-1.3b）/ 3,042（Qwen3-4B），远低于 16K。详见[数据报告第十一阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#第十一阶段学生训练格式2026-10-28)。
