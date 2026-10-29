@@ -1,0 +1,529 @@
+sir 0.3
+software CourseSelection {
+  metadata { displayName "CourseSelection"; namespace "example.course"; }
+  target { language java 21; framework spring_boot; persistence mybatis_plus; database mysql; build maven; interface rest; }
+  sources { }
+  imports { }
+  declarations {
+    enum Role { STUDENT, TEACHER, ADMIN }
+
+    error AlreadyEnrolled http 409;
+    error BadPage http 400;
+    error CompletionExists http 409;
+    error CourseFull http 409;
+    error CourseNotFound http 404;
+    error CourseNotOpen http 409;
+    error CoursePublished http 409;
+    error EnrollmentCounterMismatch http 409;
+    error EnrollmentNotFound http 404;
+    error Forbidden http 403;
+    error InvalidPrerequisite http 400;
+    error InvalidSchedule http 400;
+    error MissingPrerequisites http 409;
+    error PrerequisiteExists http 409;
+    error PrerequisiteNotFound http 404;
+    error StudentNotFound http 404;
+    error TeacherNotFound http 404;
+    error TimeConflict http 409;
+    error BadLogin http 401;
+    error InvalidToken http 401;
+
+    entity User persistent {
+      identity id: Id generated auto;
+      field role: Role default Role.STUDENT;
+      field name: Name unique;
+      field passwordHash: Secret;
+    }
+
+    entity AccessToken persistent {
+      identity id: Token generated uuid;
+      field owner: Ref<User>;
+      field expiresAt: Moment;
+      credential subject owner expires expiresAt;
+    }
+
+    entity RefreshToken persistent {
+      identity id: Token generated uuid;
+      field owner: Ref<User>;
+      field used: Flag default false;
+      field expiresAt: Moment;
+    }
+
+    entity TokenPair persistent {
+      identity id: Id generated auto;
+      field accessToken: Token;
+      field accessExpiresAt: Moment;
+      field refreshToken: Token;
+      field refreshExpiresAt: Moment;
+    }
+
+    entity Course persistent {
+      identity id: Id generated auto;
+      field code: Code unique;
+      field name: Name;
+      field teacher: Ref<User>;
+      field capacity: Quantity;
+      field enrolled: Count default 0;
+      field weekday: Count;
+      field startPeriod: Count;
+      field endPeriod: Count;
+      field published: Flag default false;
+    }
+
+    entity Enrollment persistent {
+      identity id: Id generated auto;
+      field student: Ref<User>;
+      field course: Ref<Course>;
+      field createdAt: Moment;
+      unique (student, course);
+    }
+
+    entity Prerequisite persistent {
+      identity id: Id generated auto;
+      field targetCourse: Ref<Course>;
+      field required: Ref<Course>;
+      unique (targetCourse, required);
+    }
+
+    entity CompletedCourse persistent {
+      identity id: Id generated auto;
+      field student: Ref<User>;
+      field course: Ref<Course>;
+      field completedAt: Moment;
+      unique (student, course);
+    }
+
+    view UserSummary from User {
+      field id: Id;
+      field name: Name;
+      field role: Role;
+    }
+
+    view CourseView from Course {
+      field id: Id;
+      field code: Code;
+      field name: Name;
+      field teacher: UserSummary;
+      field capacity: Quantity;
+      field enrolled: Count;
+      field remaining: Count = item.capacity - item.enrolled;
+      field full: Flag = item.enrolled >= item.capacity;
+      field weekday: Count;
+      field startPeriod: Count;
+      field endPeriod: Count;
+      field published: Flag;
+    }
+
+    view EnrollmentView from Enrollment {
+      field id: Id;
+      field course: CourseView;
+      field createdAt: Moment;
+    }
+
+    view TokenPairView from TokenPair {
+      field accessToken: Token;
+      field accessExpiresAt: Moment;
+      field refreshToken: Token;
+      field refreshExpiresAt: Moment;
+    }
+
+    input RegisterInput {
+      field name: Name where length(1, 64);
+      field password: Text where notBlank;
+    }
+
+    input LoginInput {
+      field name: Name where length(1, 64);
+      field password: Text where notBlank;
+    }
+
+    input RefreshInput {
+      field refreshToken: Token;
+    }
+
+    input LogoutInput {
+      field refreshToken: Token;
+    }
+
+    input SearchCoursesInput {
+      field keyword: Text where notBlank;
+      field page: PageNo;
+      field size: PageSize;
+    }
+
+    input CreateCourseInput {
+      field code: Code;
+      field name: Name where length(1, 64);
+      field teacherId: Id;
+      field capacity: Quantity;
+      field weekday: Count;
+      field startPeriod: Count;
+      field endPeriod: Count;
+    }
+
+    input AddPrerequisiteInput {
+      field courseId: Id;
+      field requiredId: Id;
+    }
+
+    input RemovePrerequisiteInput {
+      field id: Id;
+    }
+
+    input PublishCourseInput {
+      field id: Id;
+    }
+
+    input RecordCompletionInput {
+      field studentId: Id;
+      field courseId: Id;
+    }
+
+    input EnrollInput {
+      field id: Id;
+    }
+
+    input DropInput {
+      field id: Id;
+    }
+
+    input MyEnrollmentsInput {
+      field page: PageNo;
+      field size: PageSize;
+    }
+
+    input RosterInput {
+      field courseId: Id;
+      field page: PageNo;
+      field size: PageSize;
+    }
+
+    capability Register {
+      input RegisterInput;
+      output UserSummary;
+      fails Forbidden;
+      requires atomic;
+      expose command;
+      workflow {
+        validate not exists User where item.name == input.name as made;
+        validate not made else Forbidden;
+        create User as user {
+          name: input.name;
+          passwordHash: input.password;
+          role: Role.STUDENT;
+        }
+        persist user;
+        return user;
+      }
+    }
+
+    capability Login {
+      input LoginInput;
+      output TokenPairView;
+      fails BadLogin;
+      requires atomic;
+      expose command;
+      workflow {
+        load User by name: input.name as account else BadLogin;
+        validate account.passwordHash matches input.password else BadLogin;
+        create AccessToken as access {
+          owner: account;
+          expiresAt: now() + 15 minutes;
+        }
+        persist access;
+        create RefreshToken as refresh {
+          owner: account;
+          expiresAt: now() + 7 days;
+        }
+        persist refresh;
+        create TokenPair as made {
+          accessToken: access.id;
+          accessExpiresAt: access.expiresAt;
+          refreshToken: refresh.id;
+          refreshExpiresAt: refresh.expiresAt;
+        }
+        persist made;
+        return made;
+      }
+    }
+
+    capability Refresh {
+      input RefreshInput;
+      output TokenPairView;
+      fails InvalidToken;
+      requires atomic;
+      expose command;
+      workflow {
+        load RefreshToken by input.refreshToken as found for update else InvalidToken;
+        validate not found.used else InvalidToken;
+        validate found.expiresAt > now() else InvalidToken;
+        update found { used: true; }
+        persist found;
+        create AccessToken as access {
+          owner: found.owner;
+          expiresAt: now() + 15 minutes;
+        }
+        persist access;
+        create RefreshToken as refresh {
+          owner: found.owner;
+          expiresAt: now() + 7 days;
+        }
+        persist refresh;
+        create TokenPair as made {
+          accessToken: access.id;
+          accessExpiresAt: access.expiresAt;
+          refreshToken: refresh.id;
+          refreshExpiresAt: refresh.expiresAt;
+        }
+        persist made;
+        return made;
+      }
+    }
+
+    capability Logout {
+      input LogoutInput;
+      output Unit;
+      fails InvalidToken;
+      requires atomic;
+      expose command;
+      workflow {
+        load RefreshToken by input.refreshToken as found for update else InvalidToken;
+        update found { used: true; }
+        persist found;
+        return unit;
+      }
+    }
+
+    capability SearchCourses {
+      input SearchCoursesInput;
+      output Page<CourseView>;
+      fails BadPage;
+      requires readonly;
+      expose query;
+      workflow {
+        find Course where item.published == true and (item.name containsLiteral input.keyword or item.code containsLiteral input.keyword) order by code ascending, id ascending Page input.page, input.size else BadPage as rows;
+        return rows;
+      }
+    }
+
+    capability CreateCourse {
+      actor Ref<User>;
+      input CreateCourseInput;
+      output CourseView;
+      fails Forbidden;
+      fails InvalidSchedule;
+      fails TeacherNotFound;
+      requires authenticated;
+      requires atomic;
+      expose command;
+      workflow {
+        validate actor.role == Role.ADMIN else Forbidden;
+        validate input.weekday >= 1 and input.weekday <= 7 else InvalidSchedule;
+        validate input.startPeriod >= 1 and input.startPeriod <= 12 else InvalidSchedule;
+        validate input.endPeriod <= 13 else InvalidSchedule;
+        validate input.endPeriod > input.startPeriod else InvalidSchedule;
+        validate input.capacity >= 1 else InvalidSchedule;
+        load User by input.teacherId as teacher else TeacherNotFound;
+        create Course as course {
+          code: input.code;
+          name: input.name;
+          teacher: teacher;
+          capacity: input.capacity;
+          weekday: input.weekday;
+          startPeriod: input.startPeriod;
+          endPeriod: input.endPeriod;
+        }
+        persist course;
+        return course;
+      }
+    }
+
+    capability AddPrerequisite {
+      actor Ref<User>;
+      input AddPrerequisiteInput;
+      output Unit;
+      fails CourseNotFound;
+      fails CoursePublished;
+      fails Forbidden;
+      fails InvalidPrerequisite;
+      fails PrerequisiteExists;
+      requires authenticated;
+      requires atomic;
+      expose command;
+      workflow {
+        validate actor.role == Role.ADMIN else Forbidden;
+        load Course by input.courseId as target else CourseNotFound;
+        load Course by input.requiredId as required else CourseNotFound;
+        validate target.published == false else CoursePublished;
+        validate required.published == true else InvalidPrerequisite;
+        validate target.id != required.id else InvalidPrerequisite;
+        validate not exists Prerequisite where item.targetCourse == target and item.required == required as dup;
+        validate not dup else PrerequisiteExists;
+        create Prerequisite as made {
+          targetCourse: target;
+          required: required;
+        }
+        persist made;
+        return unit;
+      }
+    }
+
+    capability RemovePrerequisite {
+      actor Ref<User>;
+      input RemovePrerequisiteInput;
+      output Unit;
+      fails CoursePublished;
+      fails Forbidden;
+      fails PrerequisiteNotFound;
+      requires authenticated;
+      requires atomic;
+      expose command;
+      workflow {
+        validate actor.role == Role.ADMIN else Forbidden;
+        load Prerequisite by input.id as found else PrerequisiteNotFound;
+        load Course by found.targetCourse as target else PrerequisiteNotFound;
+        validate target.published == false else CoursePublished;
+        delete found;
+        return unit;
+      }
+    }
+
+    capability PublishCourse {
+      actor Ref<User>;
+      input PublishCourseInput;
+      output CourseView;
+      fails CourseNotFound;
+      fails CoursePublished;
+      fails Forbidden;
+      requires authenticated;
+      requires atomic;
+      expose command;
+      workflow {
+        validate actor.role == Role.ADMIN else Forbidden;
+        load Course by input.id as course else CourseNotFound;
+        validate course.published == false else CoursePublished;
+        update course { published: true; }
+        persist course;
+        return course;
+      }
+    }
+
+    capability RecordCompletion {
+      actor Ref<User>;
+      input RecordCompletionInput;
+      output Unit;
+      fails CompletionExists;
+      fails CourseNotFound;
+      fails Forbidden;
+      fails StudentNotFound;
+      requires authenticated;
+      requires atomic;
+      expose command;
+      workflow {
+        validate actor.role == Role.ADMIN else Forbidden;
+        load User by input.studentId as student else StudentNotFound;
+        load Course by input.courseId as course else CourseNotFound;
+        validate not exists CompletedCourse where item.student == student and item.course == course as dup;
+        validate not dup else CompletionExists;
+        create CompletedCourse as made {
+          student: student;
+          course: course;
+          completedAt: now();
+        }
+        persist made;
+        return unit;
+      }
+    }
+
+    capability Enroll {
+      actor Ref<User>;
+      input EnrollInput;
+      output EnrollmentView;
+      fails AlreadyEnrolled;
+      fails CourseFull;
+      fails CourseNotFound;
+      fails CourseNotOpen;
+      fails EnrollmentCounterMismatch;
+      fails MissingPrerequisites;
+      fails TimeConflict;
+      requires authenticated;
+      requires atomic;
+      expose command;
+      workflow {
+        load User by actor.id as student for update else Forbidden;
+        load Course by input.id as course else CourseNotFound;
+        validate course.published == true else CourseNotOpen;
+        validate not exists Enrollment where item.student == student and item.course == course as dup;
+        validate not dup else AlreadyEnrolled;
+        validate not exists Prerequisite where item.targetCourse == course and not exists CompletedCourse where item.student == student and item.course == item.required as missing;
+        validate not missing else MissingPrerequisites;
+        validate not exists Enrollment where item.student == student and item.course != course and item.course.weekday == course.weekday and item.course.startPeriod < course.endPeriod and course.startPeriod < item.course.endPeriod as clash;
+        validate not clash else TimeConflict;
+        validate course.enrolled == count(Enrollment, course == course) else EnrollmentCounterMismatch;
+        update course when course.enrolled < course.capacity else CourseFull { enrolled: course.enrolled + 1; }
+        persist course;
+        create Enrollment as made {
+          student: student;
+          course: course;
+          createdAt: now();
+        }
+        persist made;
+        return made;
+      }
+    }
+
+    capability Drop {
+      actor Ref<User>;
+      input DropInput;
+      output Unit;
+      fails EnrollmentCounterMismatch;
+      fails EnrollmentNotFound;
+      fails Forbidden;
+      requires authenticated;
+      requires atomic;
+      expose command;
+      workflow {
+        load Enrollment by input.id as found else EnrollmentNotFound;
+        validate found.student == actor else Forbidden;
+        load Course by found.course as course for update else EnrollmentNotFound;
+        validate course.enrolled > 0 else EnrollmentCounterMismatch;
+        delete found;
+        update course { enrolled: course.enrolled - 1; }
+        persist course;
+        return unit;
+      }
+    }
+
+    capability MyEnrollments {
+      actor Ref<User>;
+      input MyEnrollmentsInput;
+      output Page<EnrollmentView>;
+      fails BadPage;
+      requires authenticated;
+      requires readonly;
+      expose query;
+      workflow {
+        find Enrollment where item.student == actor order by createdAt descending, id descending Page input.page, input.size else BadPage as rows;
+        return rows;
+      }
+    }
+
+    capability Roster {
+      actor Ref<User>;
+      input RosterInput;
+      output Page<EnrollmentView>;
+      fails BadPage;
+      fails CourseNotFound;
+      fails Forbidden;
+      requires authenticated;
+      requires readonly;
+      expose query;
+      workflow {
+        load Course by input.courseId as course else CourseNotFound;
+        validate course.teacher == actor else Forbidden;
+        find Enrollment where item.course == course order by createdAt ascending, id ascending Page input.page, input.size else BadPage as rows;
+        return rows;
+      }
+    }
+  }
+}

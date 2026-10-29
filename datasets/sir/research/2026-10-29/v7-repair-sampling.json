@@ -1,0 +1,1827 @@
+{
+  "api_attempts": 14,
+  "append_only_files": 27,
+  "feedback": "experiments/slm/prompts/repair-general-v1.md",
+  "feedback_sha256": "9b3b0094ac9c4999f1eaa660501edbba0125474d6a47bd17a01620b8b89cdd1d",
+  "git_blob_inputs_verified": 493,
+  "initial_resample_calls": 1,
+  "initial_summary": "datasets/sir/research/2026-10-29/v7-initial-sampling.json",
+  "known_usage": {
+    "completion_tokens": 41707,
+    "prompt_cache_hit_tokens": 139392,
+    "prompt_cache_miss_tokens": 17309,
+    "prompt_tokens": 156701,
+    "total_tokens": 198408
+  },
+  "new_files": 145,
+  "new_qualified_answers": 0,
+  "qualified_answer_count": 45,
+  "repair_calls": 13,
+  "request_errors": 0,
+  "responses_received": 14,
+  "results": [
+    {
+      "bundle": "course-selection-change-g7",
+      "checked_file": "checked-r1.jsonl",
+      "gates": {
+        "build": "NOT_RUN",
+        "business": "NOT_RUN",
+        "start": "NOT_RUN",
+        "static": "FAILED"
+      },
+      "generation_mode": "feedback-repair",
+      "it": "CourseSelectionBusinessConformanceIT",
+      "oracle_sha256": "9dea6bbcc7b9defc7807dfa1523ba976704a5b25e6dd6c3b2c95cf090d771d74",
+      "parent_id": "course-course-selection-change-v1-teacher-e8e641739dc2",
+      "raw_response_sha256": "9b3bd59e1673ccf1096af6806c5d48f2f25fd12d76ef0d59a8babba2e9f9f788",
+      "request_sha256": "ee83b9b4bd89f4a1df06983555fc911b6913bd78154546be9e2e51860a44555d",
+      "sample_id": "course-course-selection-change-v1-teacher-aaa219a02ae2",
+      "source_unchanged_from_parent": true,
+      "split": "train",
+      "static_result": {
+        "diagnostics": [
+          {
+            "code": "SIR-PARSE-001",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "遇到不符合 SIR 语法的内容：and",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 8319,
+              "endColumn": 47,
+              "endLine": 260,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 8316,
+              "startColumn": 44,
+              "startLine": 260
+            },
+            "stage": "PARSE"
+          },
+          {
+            "code": "SIR-PARSE-001",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "遇到不符合 SIR 语法的内容：capability",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 8466,
+              "endColumn": 15,
+              "endLine": 264,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 8456,
+              "startColumn": 5,
+              "startLine": 264
+            },
+            "stage": "PARSE"
+          }
+        ],
+        "digest": null,
+        "fileCount": 0,
+        "id": "course-course-selection-change-v1-teacher-aaa219a02ae2",
+        "ok": false,
+        "sourceSha256": "b45ecc1f749ef5824d74ba4a4f17868b26c3e212c14596005c82b83ab52bc4cc",
+        "stage": "PARSE"
+      },
+      "task": "course-selection-change-v1.json",
+      "toolchain_core_sha256": "7275f533d442297d7c43b62317168e09736be9c369d9811c480e8aefad070d54",
+      "usage": {
+        "completion_tokens": 2745,
+        "completion_tokens_details": null,
+        "prompt_cache_hit_tokens": 10752,
+        "prompt_cache_miss_tokens": 1292,
+        "prompt_tokens": 12044,
+        "prompt_tokens_details": {
+          "audio_tokens": null,
+          "cached_tokens": 10752
+        },
+        "total_tokens": 14789
+      }
+    },
+    {
+      "bundle": "course-selection-change-p1-g7",
+      "checked_file": "checked-r1.jsonl",
+      "gates": {
+        "build": "NOT_RUN",
+        "business": "NOT_RUN",
+        "start": "NOT_RUN",
+        "static": "FAILED"
+      },
+      "generation_mode": "feedback-repair",
+      "it": "CourseSelectionBusinessConformanceIT",
+      "oracle_sha256": "9dea6bbcc7b9defc7807dfa1523ba976704a5b25e6dd6c3b2c95cf090d771d74",
+      "parent_id": "course-course-selection-change-p1-v1-teacher-713a0908b68a",
+      "raw_response_sha256": "4371f11b9f355cc12fa2b5ae316e686ddc06d6e9638199acbb88dd3c2602dba6",
+      "request_sha256": "50a3c4fd2043853a587662849978495085216a12823c2f60109f70fc465a83f2",
+      "sample_id": "course-course-selection-change-p1-v1-teacher-0cfdb95ee0db",
+      "source_unchanged_from_parent": true,
+      "split": "train",
+      "static_result": {
+        "diagnostics": [
+          {
+            "code": "SIR-PARSE-001",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "遇到不符合 SIR 语法的内容：and",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 8319,
+              "endColumn": 47,
+              "endLine": 260,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 8316,
+              "startColumn": 44,
+              "startLine": 260
+            },
+            "stage": "PARSE"
+          },
+          {
+            "code": "SIR-PARSE-001",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "遇到不符合 SIR 语法的内容：capability",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 8466,
+              "endColumn": 15,
+              "endLine": 264,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 8456,
+              "startColumn": 5,
+              "startLine": 264
+            },
+            "stage": "PARSE"
+          }
+        ],
+        "digest": null,
+        "fileCount": 0,
+        "id": "course-course-selection-change-p1-v1-teacher-0cfdb95ee0db",
+        "ok": false,
+        "sourceSha256": "a8df007c72a3dcfe4d0dbd5a8842445952a96c605b658d58ded1a3add46dabaf",
+        "stage": "PARSE"
+      },
+      "task": "course-selection-change-p1-v1.json",
+      "toolchain_core_sha256": "7275f533d442297d7c43b62317168e09736be9c369d9811c480e8aefad070d54",
+      "usage": {
+        "completion_tokens": 2659,
+        "completion_tokens_details": null,
+        "prompt_cache_hit_tokens": 10752,
+        "prompt_cache_miss_tokens": 1225,
+        "prompt_tokens": 11977,
+        "prompt_tokens_details": {
+          "audio_tokens": null,
+          "cached_tokens": 10752
+        },
+        "total_tokens": 14636
+      }
+    },
+    {
+      "bundle": "course-selection-change-p2-g7",
+      "checked_file": "checked-r1.jsonl",
+      "gates": {
+        "build": "NOT_RUN",
+        "business": "NOT_RUN",
+        "start": "NOT_RUN",
+        "static": "FAILED"
+      },
+      "generation_mode": "feedback-repair",
+      "it": "CourseSelectionBusinessConformanceIT",
+      "oracle_sha256": "9dea6bbcc7b9defc7807dfa1523ba976704a5b25e6dd6c3b2c95cf090d771d74",
+      "parent_id": "course-course-selection-change-p2-v1-teacher-f63c8bf2e0ee",
+      "raw_response_sha256": "92fcdb5a03c2e6218b8bc543e586b7bf1e57dad12bddbfc648065f422b97fe03",
+      "request_sha256": "7cbccd390ffbf392e010a68cc771d2cc8ed426b5f39e2ea3f3d3c98218e921e7",
+      "sample_id": "course-course-selection-change-p2-v1-teacher-9ebe1732f239",
+      "source_unchanged_from_parent": true,
+      "split": "train",
+      "static_result": {
+        "diagnostics": [
+          {
+            "code": "SIR-PARSE-001",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "遇到不符合 SIR 语法的内容：and",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 8320,
+              "endColumn": 47,
+              "endLine": 261,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 8317,
+              "startColumn": 44,
+              "startLine": 261
+            },
+            "stage": "PARSE"
+          },
+          {
+            "code": "SIR-PARSE-001",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "遇到不符合 SIR 语法的内容：capability",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 8467,
+              "endColumn": 15,
+              "endLine": 265,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 8457,
+              "startColumn": 5,
+              "startLine": 265
+            },
+            "stage": "PARSE"
+          }
+        ],
+        "digest": null,
+        "fileCount": 0,
+        "id": "course-course-selection-change-p2-v1-teacher-9ebe1732f239",
+        "ok": false,
+        "sourceSha256": "9886fb7569660029f964c1ab0baada3e5b9da8e7d40c8797fe47e75230174f6f",
+        "stage": "PARSE"
+      },
+      "task": "course-selection-change-p2-v1.json",
+      "toolchain_core_sha256": "7275f533d442297d7c43b62317168e09736be9c369d9811c480e8aefad070d54",
+      "usage": {
+        "completion_tokens": 2722,
+        "completion_tokens_details": null,
+        "prompt_cache_hit_tokens": 10880,
+        "prompt_cache_miss_tokens": 1203,
+        "prompt_tokens": 12083,
+        "prompt_tokens_details": {
+          "audio_tokens": null,
+          "cached_tokens": 10880
+        },
+        "total_tokens": 14805
+      }
+    },
+    {
+      "bundle": "course-selection-change-p3-g7",
+      "checked_file": "checked-r1.jsonl",
+      "gates": {
+        "build": "NOT_RUN",
+        "business": "NOT_RUN",
+        "start": "NOT_RUN",
+        "static": "FAILED"
+      },
+      "generation_mode": "feedback-repair",
+      "it": "CourseSelectionBusinessConformanceIT",
+      "oracle_sha256": "9dea6bbcc7b9defc7807dfa1523ba976704a5b25e6dd6c3b2c95cf090d771d74",
+      "parent_id": "course-course-selection-change-p3-v1-teacher-55445a6ca094",
+      "raw_response_sha256": "3595c41587c52f3ba49022e572253bc706be2889f7046ee9cecea32c65492251",
+      "request_sha256": "1fde5643704d6d7249f2c9363dd33a9b2e37c860f96f57e865f753b88edfc0aa",
+      "sample_id": "course-course-selection-change-p3-v1-teacher-05dd265870d4",
+      "source_unchanged_from_parent": false,
+      "split": "train",
+      "static_result": {
+        "diagnostics": [
+          {
+            "code": "SIR-SYMBOL-001",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "重复定义: UserView",
+            "related": [
+              {
+                "message": "首次声明在此处",
+                "span": {
+                  "endCodePointOffset": 701,
+                  "endColumn": 6,
+                  "endLine": 34,
+                  "sourceId": "sample.sir",
+                  "startCodePointOffset": 581,
+                  "startColumn": 5,
+                  "startLine": 29
+                }
+              }
+            ],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 1995,
+              "endColumn": 6,
+              "endLine": 78,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 1896,
+              "startColumn": 5,
+              "startLine": 74
+            },
+            "stage": "SEMANTIC"
+          }
+        ],
+        "digest": null,
+        "fileCount": 0,
+        "id": "course-course-selection-change-p3-v1-teacher-05dd265870d4",
+        "ok": false,
+        "sourceSha256": "9b5c38d2cdaa96f0ed112186c05a2695c9f79654c15698767e9d0fb770b02901",
+        "stage": "SEMANTIC"
+      },
+      "task": "course-selection-change-p3-v1.json",
+      "toolchain_core_sha256": "7275f533d442297d7c43b62317168e09736be9c369d9811c480e8aefad070d54",
+      "usage": {
+        "completion_tokens": 2694,
+        "completion_tokens_details": null,
+        "prompt_cache_hit_tokens": 10752,
+        "prompt_cache_miss_tokens": 1780,
+        "prompt_tokens": 12532,
+        "prompt_tokens_details": {
+          "audio_tokens": null,
+          "cached_tokens": 10752
+        },
+        "total_tokens": 15226
+      }
+    },
+    {
+      "bundle": "course-selection-scratch-g7",
+      "checked_file": "checked-r1.jsonl",
+      "gates": {
+        "build": "NOT_RUN",
+        "business": "NOT_RUN",
+        "start": "NOT_RUN",
+        "static": "FAILED"
+      },
+      "generation_mode": "feedback-repair",
+      "it": "CourseSelectionBusinessConformanceIT",
+      "oracle_sha256": "9dea6bbcc7b9defc7807dfa1523ba976704a5b25e6dd6c3b2c95cf090d771d74",
+      "parent_id": "course-course-selection-scratch-v1-teacher-06c2dd85ffe4",
+      "raw_response_sha256": "10b56a6c650dc740749550982923e4ca2c38289233cc5933778496c7b66f0259",
+      "request_sha256": "dd76ee6ae3f64320744dd9a0650e893b1ff2750a44ed7b85af5ff78652bf915f",
+      "sample_id": "course-course-selection-scratch-v1-teacher-4e00239550e2",
+      "source_unchanged_from_parent": false,
+      "split": "train",
+      "static_result": {
+        "diagnostics": [
+          {
+            "code": "SIR-FLOW-001",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "present 只适用于 patch 载荷字段: found",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 5879,
+              "endColumn": 31,
+              "endLine": 232,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 5866,
+              "startColumn": 18,
+              "startLine": 232
+            },
+            "stage": "SEMANTIC"
+          },
+          {
+            "code": "SIR-TYPE-001",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "load 的 id 表达式类型与 Entity identity 不兼容",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 5927,
+              "endColumn": 32,
+              "endLine": 233,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 5917,
+              "startColumn": 22,
+              "startLine": 233
+            },
+            "stage": "SEMANTIC"
+          },
+          {
+            "code": "SIR-TYPE-004",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "any 的条件必须包含与根实体的连接比较: <Ref 字段> == item",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 13613,
+              "endColumn": 139,
+              "endLine": 467,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 13539,
+              "startColumn": 65,
+              "startLine": 467
+            },
+            "stage": "SEMANTIC"
+          },
+          {
+            "code": "SIR-FLOW-003",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "update 的守卫引用未声明的 Error: EnrollmentCounterMismatch",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 14952,
+              "endColumn": 78,
+              "endLine": 499,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 14927,
+              "startColumn": 53,
+              "startLine": 499
+            },
+            "stage": "SEMANTIC"
+          }
+        ],
+        "digest": null,
+        "fileCount": 0,
+        "id": "course-course-selection-scratch-v1-teacher-4e00239550e2",
+        "ok": false,
+        "sourceSha256": "dd73fe95039cf0b92b6d37209e3a155d90646ee152c8871404ae7c131e1b99c5",
+        "stage": "SEMANTIC"
+      },
+      "task": "course-selection-scratch-v1.json",
+      "toolchain_core_sha256": "7275f533d442297d7c43b62317168e09736be9c369d9811c480e8aefad070d54",
+      "usage": {
+        "completion_tokens": 3397,
+        "completion_tokens_details": null,
+        "prompt_cache_hit_tokens": 10240,
+        "prompt_cache_miss_tokens": 1249,
+        "prompt_tokens": 11489,
+        "prompt_tokens_details": {
+          "audio_tokens": null,
+          "cached_tokens": 10240
+        },
+        "total_tokens": 14886
+      }
+    },
+    {
+      "bundle": "course-selection-scratch-p1-g7",
+      "checked_file": "checked-r1.jsonl",
+      "gates": {
+        "build": "NOT_RUN",
+        "business": "NOT_RUN",
+        "start": "NOT_RUN",
+        "static": "FAILED"
+      },
+      "generation_mode": "feedback-repair",
+      "it": "CourseSelectionBusinessConformanceIT",
+      "oracle_sha256": "9dea6bbcc7b9defc7807dfa1523ba976704a5b25e6dd6c3b2c95cf090d771d74",
+      "parent_id": "course-course-selection-scratch-p1-v1-teacher-d3101cf2a472",
+      "raw_response_sha256": "b38eda38e3cac8a0cbf34ec2a603929c962cdeb9aa3638829c2c84c3b2c5f9b7",
+      "request_sha256": "1991e06332d900abe10e5f34b42d7d97d3bdc8023c196059f3c878fb90a41dc9",
+      "sample_id": "course-course-selection-scratch-p1-v1-teacher-5a999074e6f7",
+      "source_unchanged_from_parent": false,
+      "split": "train",
+      "static_result": {
+        "diagnostics": [
+          {
+            "code": "SIR-PARSE-001",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "遇到不符合 SIR 语法的内容：User",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 5237,
+              "endColumn": 33,
+              "endLine": 208,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 5233,
+              "startColumn": 29,
+              "startLine": 208
+            },
+            "stage": "PARSE"
+          },
+          {
+            "code": "SIR-PARSE-001",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "遇到不符合 SIR 语法的内容：where",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 5243,
+              "endColumn": 39,
+              "endLine": 208,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 5238,
+              "startColumn": 34,
+              "startLine": 208
+            },
+            "stage": "PARSE"
+          },
+          {
+            "code": "SIR-PARSE-001",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "遇到不符合 SIR 语法的内容：persist",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 5472,
+              "endColumn": 16,
+              "endLine": 215,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 5465,
+              "startColumn": 9,
+              "startLine": 215
+            },
+            "stage": "PARSE"
+          }
+        ],
+        "digest": null,
+        "fileCount": 0,
+        "id": "course-course-selection-scratch-p1-v1-teacher-5a999074e6f7",
+        "ok": false,
+        "sourceSha256": "45bf6a32a3330414dbb45e933c6332a7e9a48def3c925e95ff519e09ea04c9bb",
+        "stage": "PARSE"
+      },
+      "task": "course-selection-scratch-p1-v1.json",
+      "toolchain_core_sha256": "7275f533d442297d7c43b62317168e09736be9c369d9811c480e8aefad070d54",
+      "usage": {
+        "completion_tokens": 3266,
+        "completion_tokens_details": null,
+        "prompt_cache_hit_tokens": 10112,
+        "prompt_cache_miss_tokens": 1449,
+        "prompt_tokens": 11561,
+        "prompt_tokens_details": {
+          "audio_tokens": null,
+          "cached_tokens": 10112
+        },
+        "total_tokens": 14827
+      }
+    },
+    {
+      "bundle": "course-selection-scratch-p2-g7",
+      "checked_file": "checked-r1.jsonl",
+      "gates": {
+        "build": "NOT_RUN",
+        "business": "NOT_RUN",
+        "start": "NOT_RUN",
+        "static": "FAILED"
+      },
+      "generation_mode": "feedback-repair",
+      "it": "CourseSelectionBusinessConformanceIT",
+      "oracle_sha256": "9dea6bbcc7b9defc7807dfa1523ba976704a5b25e6dd6c3b2c95cf090d771d74",
+      "parent_id": "course-course-selection-scratch-p2-v1-teacher-ffa8a15cd83f",
+      "raw_response_sha256": "8f13e272a1b43d0ad8eb62fc30187f82708c814f39e45fee78d09d392535eeeb",
+      "request_sha256": "c0b2dd4c6e591d5169d46fc384c3092108f8134678b2dbd9e2c271d515b8abd6",
+      "sample_id": "course-course-selection-scratch-p2-v1-teacher-793f0aae8863",
+      "source_unchanged_from_parent": false,
+      "split": "train",
+      "static_result": {
+        "diagnostics": [
+          {
+            "code": "SIR-PARSE-001",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "遇到不符合 SIR 语法的内容：User",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 5307,
+              "endColumn": 34,
+              "endLine": 209,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 5303,
+              "startColumn": 30,
+              "startLine": 209
+            },
+            "stage": "PARSE"
+          },
+          {
+            "code": "SIR-PARSE-003",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "存在多余的语法元素",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 5338,
+              "endColumn": 65,
+              "endLine": 209,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 5337,
+              "startColumn": 64,
+              "startLine": 209
+            },
+            "stage": "PARSE"
+          },
+          {
+            "code": "SIR-PARSE-001",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "遇到不符合 SIR 语法的内容：Prerequisite",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 9353,
+              "endColumn": 42,
+              "endLine": 314,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 9341,
+              "startColumn": 30,
+              "startLine": 314
+            },
+            "stage": "PARSE"
+          },
+          {
+            "code": "SIR-PARSE-003",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "存在多余的语法元素",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 9418,
+              "endColumn": 107,
+              "endLine": 314,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 9417,
+              "startColumn": 106,
+              "startLine": 314
+            },
+            "stage": "PARSE"
+          },
+          {
+            "code": "SIR-PARSE-001",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "遇到不符合 SIR 语法的内容：CompletedCourse",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 11326,
+              "endColumn": 45,
+              "endLine": 373,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 11311,
+              "startColumn": 30,
+              "startLine": 373
+            },
+            "stage": "PARSE"
+          },
+          {
+            "code": "SIR-PARSE-003",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "存在多余的语法元素",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 11383,
+              "endColumn": 102,
+              "endLine": 373,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 11382,
+              "startColumn": 101,
+              "startLine": 373
+            },
+            "stage": "PARSE"
+          },
+          {
+            "code": "SIR-PARSE-001",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "遇到不符合 SIR 语法的内容：Enrollment",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 12295,
+              "endColumn": 40,
+              "endLine": 400,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 12285,
+              "startColumn": 30,
+              "startLine": 400
+            },
+            "stage": "PARSE"
+          },
+          {
+            "code": "SIR-PARSE-003",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "存在多余的语法元素",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 12352,
+              "endColumn": 97,
+              "endLine": 400,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 12351,
+              "startColumn": 96,
+              "startLine": 400
+            },
+            "stage": "PARSE"
+          },
+          {
+            "code": "SIR-PARSE-001",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "遇到不符合 SIR 语法的内容：Enrollment",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 12552,
+              "endColumn": 40,
+              "endLine": 403,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 12542,
+              "startColumn": 30,
+              "startLine": 403
+            },
+            "stage": "PARSE"
+          },
+          {
+            "code": "SIR-PARSE-003",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "存在多余的语法元素",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 12609,
+              "endColumn": 97,
+              "endLine": 403,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 12608,
+              "startColumn": 96,
+              "startLine": 403
+            },
+            "stage": "PARSE"
+          },
+          {
+            "code": "SIR-PARSE-001",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "遇到不符合 SIR 语法的内容：Prerequisite",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 12668,
+              "endColumn": 37,
+              "endLine": 404,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 12656,
+              "startColumn": 25,
+              "startLine": 404
+            },
+            "stage": "PARSE"
+          },
+          {
+            "code": "SIR-PARSE-001",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "遇到不符合 SIR 语法的内容：)",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 12703,
+              "endColumn": 72,
+              "endLine": 404,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 12702,
+              "startColumn": 71,
+              "startLine": 404
+            },
+            "stage": "PARSE"
+          },
+          {
+            "code": "SIR-PARSE-001",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "遇到不符合 SIR 语法的内容：persist",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 13214,
+              "endColumn": 16,
+              "endLine": 407,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 13207,
+              "startColumn": 9,
+              "startLine": 407
+            },
+            "stage": "PARSE"
+          }
+        ],
+        "digest": null,
+        "fileCount": 0,
+        "id": "course-course-selection-scratch-p2-v1-teacher-793f0aae8863",
+        "ok": false,
+        "sourceSha256": "436854a612d51ce822a7b1c909e75a3a54e7f8aaf67cc846186ad961ad889924",
+        "stage": "PARSE"
+      },
+      "task": "course-selection-scratch-p2-v1.json",
+      "toolchain_core_sha256": "7275f533d442297d7c43b62317168e09736be9c369d9811c480e8aefad070d54",
+      "usage": {
+        "completion_tokens": 3254,
+        "completion_tokens_details": null,
+        "prompt_cache_hit_tokens": 10240,
+        "prompt_cache_miss_tokens": 1281,
+        "prompt_tokens": 11521,
+        "prompt_tokens_details": {
+          "audio_tokens": null,
+          "cached_tokens": 10240
+        },
+        "total_tokens": 14775
+      }
+    },
+    {
+      "bundle": "course-selection-scratch-p3-g7",
+      "checked_file": "checked-r1.jsonl",
+      "gates": {
+        "build": "NOT_RUN",
+        "business": "NOT_RUN",
+        "start": "NOT_RUN",
+        "static": "FAILED"
+      },
+      "generation_mode": "feedback-repair",
+      "it": "CourseSelectionBusinessConformanceIT",
+      "oracle_sha256": "9dea6bbcc7b9defc7807dfa1523ba976704a5b25e6dd6c3b2c95cf090d771d74",
+      "parent_id": "course-course-selection-scratch-p3-v1-teacher-78d1e7234e75",
+      "raw_response_sha256": "95f562be77400b6f63332d706cefeb2f782e69aea60f85061f9608dfdbac61a4",
+      "request_sha256": "84350c71d1b95d6eff2c44049d463ffc6f1e56fdd4fcf98614dd72db886e0b3f",
+      "sample_id": "course-course-selection-scratch-p3-v1-teacher-36183be29931",
+      "source_unchanged_from_parent": false,
+      "split": "train",
+      "static_result": {
+        "diagnostics": [
+          {
+            "code": "SIR-TYPE-001",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "is none/is present 只用于可选值",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 5527,
+              "endColumn": 34,
+              "endLine": 221,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 5511,
+              "startColumn": 18,
+              "startLine": 221
+            },
+            "stage": "SEMANTIC"
+          },
+          {
+            "code": "SIR-TYPE-001",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "load 的 id 表达式类型与 Entity identity 不兼容",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 5575,
+              "endColumn": 32,
+              "endLine": 222,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 5565,
+              "startColumn": 22,
+              "startLine": 222
+            },
+            "stage": "SEMANTIC"
+          },
+          {
+            "code": "SIR-VALID-001",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "fails 必须按 Error 名称升序排列：AlreadyEnrolled 要排在 CourseNotOpen 之前。应写成：fails AlreadyEnrolled; fails CourseFull; fails CourseNotFound; fails CourseNotOpen; fails EnrollmentCounterMismatch; fails MissingPrerequisites; fails TimeConflict;",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 9024,
+              "endColumn": 29,
+              "endLine": 339,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 9002,
+              "startColumn": 7,
+              "startLine": 339
+            },
+            "stage": "SEMANTIC"
+          },
+          {
+            "code": "SIR-FLOW-003",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "load 引用未声明的 Error: Forbidden",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 9332,
+              "endColumn": 67,
+              "endLine": 348,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 9323,
+              "startColumn": 58,
+              "startLine": 348
+            },
+            "stage": "SEMANTIC"
+          },
+          {
+            "code": "SIR-TYPE-004",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "any 的条件必须包含与根实体的连接比较: <Ref 字段> == item",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 9827,
+              "endColumn": 162,
+              "endLine": 354,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 9731,
+              "startColumn": 66,
+              "startLine": 354
+            },
+            "stage": "SEMANTIC"
+          },
+          {
+            "code": "SIR-SYMBOL-002",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "未定义字段: Prerequisite.student",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 9775,
+              "endColumn": 110,
+              "endLine": 354,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 9768,
+              "startColumn": 103,
+              "startLine": 354
+            },
+            "stage": "SEMANTIC"
+          },
+          {
+            "code": "SIR-VALID-001",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "fails 必须按 Error 名称升序排列：EnrollmentNotFound 要排在 Forbidden 之前。应写成：fails EnrollmentCounterMismatch; fails EnrollmentNotFound; fails Forbidden;",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 10672,
+              "endColumn": 32,
+              "endLine": 376,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 10647,
+              "startColumn": 7,
+              "startLine": 376
+            },
+            "stage": "SEMANTIC"
+          },
+          {
+            "code": "SIR-VALID-001",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "fails 必须按 Error 名称升序排列：CourseNotFound 要排在 Forbidden 之前。应写成：fails CourseNotFound; fails CoursePublished; fails Forbidden; fails InvalidPrerequisite; fails PrerequisiteExists;",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 11474,
+              "endColumn": 28,
+              "endLine": 399,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 11453,
+              "startColumn": 7,
+              "startLine": 399
+            },
+            "stage": "SEMANTIC"
+          },
+          {
+            "code": "SIR-VALID-001",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "fails 必须按 Error 名称升序排列：CoursePublished 要排在 PrerequisiteNotFound 之前。应写成：fails CoursePublished; fails Forbidden; fails PrerequisiteNotFound;",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 12681,
+              "endColumn": 29,
+              "endLine": 430,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 12659,
+              "startColumn": 7,
+              "startLine": 430
+            },
+            "stage": "SEMANTIC"
+          },
+          {
+            "code": "SIR-VALID-001",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "fails 必须按 Error 名称升序排列：CourseNotFound 要排在 Forbidden 之前。应写成：fails CourseNotFound; fails CoursePublished; fails Forbidden;",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 13310,
+              "endColumn": 28,
+              "endLine": 449,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 13289,
+              "startColumn": 7,
+              "startLine": 449
+            },
+            "stage": "SEMANTIC"
+          },
+          {
+            "code": "SIR-VALID-001",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "fails 必须按 Error 名称升序排列：CourseNotFound 要排在 StudentNotFound 之前。应写成：fails CompletionExists; fails CourseNotFound; fails Forbidden; fails StudentNotFound;",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 13940,
+              "endColumn": 28,
+              "endLine": 470,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 13919,
+              "startColumn": 7,
+              "startLine": 470
+            },
+            "stage": "SEMANTIC"
+          },
+          {
+            "code": "SIR-VALID-001",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "fails 必须按 Error 名称升序排列：CourseNotFound 要排在 Forbidden 之前。应写成：fails BadPage; fails CourseNotFound; fails Forbidden;",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 15227,
+              "endColumn": 28,
+              "endLine": 511,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 15206,
+              "startColumn": 7,
+              "startLine": 511
+            },
+            "stage": "SEMANTIC"
+          }
+        ],
+        "digest": null,
+        "fileCount": 0,
+        "id": "course-course-selection-scratch-p3-v1-teacher-36183be29931",
+        "ok": false,
+        "sourceSha256": "ef416134ee11076dcd6344617ef698f1d4817fd5bb29d98678acd8ba024b0106",
+        "stage": "SEMANTIC"
+      },
+      "task": "course-selection-scratch-p3-v1.json",
+      "toolchain_core_sha256": "7275f533d442297d7c43b62317168e09736be9c369d9811c480e8aefad070d54",
+      "usage": {
+        "completion_tokens": 3276,
+        "completion_tokens_details": null,
+        "prompt_cache_hit_tokens": 10240,
+        "prompt_cache_miss_tokens": 1309,
+        "prompt_tokens": 11549,
+        "prompt_tokens_details": {
+          "audio_tokens": null,
+          "cached_tokens": 10240
+        },
+        "total_tokens": 14825
+      }
+    },
+    {
+      "bundle": "crud-access-scratch-g7",
+      "checked_file": "checked-r1.jsonl",
+      "gates": {
+        "build": "NOT_RUN",
+        "business": "NOT_RUN",
+        "start": "NOT_RUN",
+        "static": "PASSED"
+      },
+      "generation_mode": "feedback-repair",
+      "it": "CrudAccessBusinessConformanceIT",
+      "oracle_sha256": "3ac94cb3bfea92c174bb7413daeb3cc6227abc45da03aa78c04a70a7ee1f4786",
+      "parent_id": "auth-crud-access-scratch-v1-teacher-ff7db77818e2",
+      "raw_response_sha256": "d0bc71063f90b6370999ac12237dacdd0430b8ffb3a9d6f60d990e15201af10e",
+      "request_sha256": "1460330bb139e8976ec5c6c8b88c2703e4e605741695988edba070d5e56139ac",
+      "sample_id": "auth-crud-access-scratch-v1-teacher-4a6b10922574",
+      "source_unchanged_from_parent": false,
+      "split": "train",
+      "static_result": {
+        "diagnostics": [],
+        "digest": "5be11981438bd4183869b4ebfae4aefd83e8af66dd19ff5ae2f9cd3331c03ca3",
+        "fileCount": 58,
+        "id": "auth-crud-access-scratch-v1-teacher-4a6b10922574",
+        "ok": true,
+        "sourceSha256": "0bdea67aea968773418fcc587f9fe6dc69de4f152e5570e6e9fa416b4d1a8880",
+        "stage": "GENERATION"
+      },
+      "task": "crud-access-scratch-v1.json",
+      "toolchain_core_sha256": "7275f533d442297d7c43b62317168e09736be9c369d9811c480e8aefad070d54",
+      "usage": {
+        "completion_tokens": 1453,
+        "completion_tokens_details": null,
+        "prompt_cache_hit_tokens": 6656,
+        "prompt_cache_miss_tokens": 1218,
+        "prompt_tokens": 7874,
+        "prompt_tokens_details": {
+          "audio_tokens": null,
+          "cached_tokens": 6656
+        },
+        "total_tokens": 9327
+      }
+    },
+    {
+      "bundle": "crud-access-scratch-p1-g7",
+      "checked_file": "checked-r1.jsonl",
+      "gates": {
+        "build": "NOT_RUN",
+        "business": "NOT_RUN",
+        "start": "NOT_RUN",
+        "static": "FAILED"
+      },
+      "generation_mode": "feedback-repair",
+      "it": "CrudAccessBusinessConformanceIT",
+      "oracle_sha256": "3ac94cb3bfea92c174bb7413daeb3cc6227abc45da03aa78c04a70a7ee1f4786",
+      "parent_id": "auth-crud-access-scratch-p1-v1-teacher-20555d93f3e9",
+      "raw_response_sha256": "33e462737d1b90255dcea56e7ff42ff82047ff8195734d45f9ffce994a81f343",
+      "request_sha256": "d257b46fc4898af9987b7e14d673e8d73127ef66e479b64321c373e6298e8f79",
+      "sample_id": "auth-crud-access-scratch-p1-v1-teacher-221962c44f5e",
+      "source_unchanged_from_parent": true,
+      "split": "train",
+      "static_result": {
+        "diagnostics": [
+          {
+            "code": "SIR-PARSE-001",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "遇到不符合 SIR 语法的内容：as",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 3000,
+              "endColumn": 82,
+              "endLine": 127,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 2998,
+              "startColumn": 80,
+              "startLine": 127
+            },
+            "stage": "PARSE"
+          },
+          {
+            "code": "SIR-PARSE-001",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "遇到不符合 SIR 语法的内容：as",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 5045,
+              "endColumn": 100,
+              "endLine": 207,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 5043,
+              "startColumn": 98,
+              "startLine": 207
+            },
+            "stage": "PARSE"
+          }
+        ],
+        "digest": null,
+        "fileCount": 0,
+        "id": "auth-crud-access-scratch-p1-v1-teacher-221962c44f5e",
+        "ok": false,
+        "sourceSha256": "d28c5152a0fc700ed0680585906dd3edb6ae4614cf644f8d5683318b2f10c2ab",
+        "stage": "PARSE"
+      },
+      "task": "crud-access-scratch-p1-v1.json",
+      "toolchain_core_sha256": "7275f533d442297d7c43b62317168e09736be9c369d9811c480e8aefad070d54",
+      "usage": {
+        "completion_tokens": 1360,
+        "completion_tokens_details": null,
+        "prompt_cache_hit_tokens": 6656,
+        "prompt_cache_miss_tokens": 779,
+        "prompt_tokens": 7435,
+        "prompt_tokens_details": {
+          "audio_tokens": null,
+          "cached_tokens": 6656
+        },
+        "total_tokens": 8795
+      }
+    },
+    {
+      "bundle": "crud-access-scratch-p2-g7",
+      "checked_file": "checked-r1.jsonl",
+      "gates": {
+        "build": "NOT_RUN",
+        "business": "NOT_RUN",
+        "start": "NOT_RUN",
+        "static": "PASSED"
+      },
+      "generation_mode": "feedback-repair",
+      "it": "CrudAccessBusinessConformanceIT",
+      "oracle_sha256": "3ac94cb3bfea92c174bb7413daeb3cc6227abc45da03aa78c04a70a7ee1f4786",
+      "parent_id": "auth-crud-access-scratch-p2-v1-teacher-003afdbc8edf",
+      "raw_response_sha256": "060ae4fc182f7a044c4c975b32d9c90dd90e282fe62e7e2ba3b39830a52057d4",
+      "request_sha256": "b3e5c876ee334e5678bf7adc350e5ab794c33ebe7bfdf0eff7e06f935e21d983",
+      "sample_id": "auth-crud-access-scratch-p2-v1-teacher-976fd70bd19f",
+      "source_unchanged_from_parent": false,
+      "split": "train",
+      "static_result": {
+        "diagnostics": [],
+        "digest": "4aa5c116988422bf40f32509501e6efd02e6a88927be53c7c286ad8c9806e9bd",
+        "fileCount": 58,
+        "id": "auth-crud-access-scratch-p2-v1-teacher-976fd70bd19f",
+        "ok": true,
+        "sourceSha256": "b319c1d2339a92b090b8eb178a77071cf1a7da1c75c83163b27a28f6aa21af2e",
+        "stage": "GENERATION"
+      },
+      "task": "crud-access-scratch-p2-v1.json",
+      "toolchain_core_sha256": "7275f533d442297d7c43b62317168e09736be9c369d9811c480e8aefad070d54",
+      "usage": {
+        "completion_tokens": 1412,
+        "completion_tokens_details": null,
+        "prompt_cache_hit_tokens": 6656,
+        "prompt_cache_miss_tokens": 1453,
+        "prompt_tokens": 8109,
+        "prompt_tokens_details": {
+          "audio_tokens": null,
+          "cached_tokens": 6656
+        },
+        "total_tokens": 9521
+      }
+    },
+    {
+      "bundle": "crud-access-scratch-p3-g7",
+      "checked_file": "checked-r1.jsonl",
+      "gates": {
+        "build": "NOT_RUN",
+        "business": "NOT_RUN",
+        "start": "NOT_RUN",
+        "static": "PASSED"
+      },
+      "generation_mode": "feedback-repair",
+      "it": "CrudAccessBusinessConformanceIT",
+      "oracle_sha256": "3ac94cb3bfea92c174bb7413daeb3cc6227abc45da03aa78c04a70a7ee1f4786",
+      "parent_id": "auth-crud-access-scratch-p3-v1-teacher-53c88a097865",
+      "raw_response_sha256": "2cd403a720a1bc4df57234ab09788cee1422e2962de85791cfc7890c127cb053",
+      "request_sha256": "aabb5a532b9102bc0735f57b9451c7d131ad490920b1939a4e2b51b6df1409d8",
+      "sample_id": "auth-crud-access-scratch-p3-v1-teacher-3a97ea60acea",
+      "source_unchanged_from_parent": false,
+      "split": "train",
+      "static_result": {
+        "diagnostics": [],
+        "digest": "a9bfd3ec2eb43da566846b0125e8cefea2892f5cc2cf37d59dbb004bcdc0f76e",
+        "fileCount": 55,
+        "id": "auth-crud-access-scratch-p3-v1-teacher-3a97ea60acea",
+        "ok": true,
+        "sourceSha256": "b2b698133cd4ca3e7c855a6543e53ec8cbf8a815e7dd35871f2face3bd7864e2",
+        "stage": "GENERATION"
+      },
+      "task": "crud-access-scratch-p3-v1.json",
+      "toolchain_core_sha256": "7275f533d442297d7c43b62317168e09736be9c369d9811c480e8aefad070d54",
+      "usage": {
+        "completion_tokens": 1401,
+        "completion_tokens_details": null,
+        "prompt_cache_hit_tokens": 6784,
+        "prompt_cache_miss_tokens": 771,
+        "prompt_tokens": 7555,
+        "prompt_tokens_details": {
+          "audio_tokens": null,
+          "cached_tokens": 6784
+        },
+        "total_tokens": 8956
+      }
+    },
+    {
+      "bundle": "multiplication-change-g7",
+      "checked_file": "checked-resample.jsonl",
+      "gates": {
+        "build": "NOT_RUN",
+        "business": "NOT_RUN",
+        "start": "NOT_RUN",
+        "static": "FAILED"
+      },
+      "generation_mode": "initial",
+      "it": "MultiplicationBusinessConformanceIT",
+      "oracle_sha256": "c0616844842a2380c9b007affd0fd54f96ccce37a8471bcdecf3d22c471c25cc",
+      "parent_id": null,
+      "raw_response_sha256": "46c6ba3bb870c0f28b6e958a95fbe415688e23738bff89286d5fae1c9bcb8c26",
+      "request_sha256": "e0b14fd0278395dead0b2df525a91a8739d01f75ff933562026fd003692e3de5",
+      "sample_id": "shop-multiplication-change-v1-teacher-06dece4fca65",
+      "source_unchanged_from_parent": null,
+      "split": "development",
+      "static_result": {
+        "diagnostics": [
+          {
+            "code": "SIR-FLOW-003",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "each references an undeclared failure",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 7531,
+              "endColumn": 60,
+              "endLine": 261,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 7519,
+              "startColumn": 48,
+              "startLine": 261
+            },
+            "stage": "SEMANTIC"
+          },
+          {
+            "code": "SIR-TYPE-001",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "create 绑定类型不匹配: total",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 8210,
+              "endColumn": 20,
+              "endLine": 285,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 8201,
+              "startColumn": 11,
+              "startLine": 285
+            },
+            "stage": "SEMANTIC"
+          },
+          {
+            "code": "SIR-WARN-001",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "先检查再插入，并发的两个请求可能同时通过检查：给这一步用到的行加 load … for update，或者给被插入的实体声明 unique",
+            "related": [],
+            "relativePath": null,
+            "severity": "WARNING",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 24723,
+              "endColumn": 131,
+              "endLine": 737,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 24601,
+              "startColumn": 9,
+              "startLine": 737
+            },
+            "stage": "SEMANTIC"
+          }
+        ],
+        "digest": null,
+        "fileCount": 0,
+        "id": "shop-multiplication-change-v1-teacher-06dece4fca65",
+        "ok": false,
+        "sourceSha256": "266cb0eace1c1c8894eb001bb581974db7d763ec04bfede4a17679097c277b54",
+        "stage": "SEMANTIC"
+      },
+      "task": "multiplication-change-v1.json",
+      "toolchain_core_sha256": "7275f533d442297d7c43b62317168e09736be9c369d9811c480e8aefad070d54",
+      "usage": {
+        "completion_tokens": 5481,
+        "completion_tokens_details": null,
+        "prompt_cache_hit_tokens": 12672,
+        "prompt_cache_miss_tokens": 156,
+        "prompt_tokens": 12828,
+        "prompt_tokens_details": {
+          "audio_tokens": null,
+          "cached_tokens": 12672
+        },
+        "total_tokens": 18309
+      }
+    },
+    {
+      "bundle": "multiplication-scratch-g7",
+      "checked_file": "checked-r1.jsonl",
+      "gates": {
+        "build": "NOT_RUN",
+        "business": "NOT_RUN",
+        "start": "NOT_RUN",
+        "static": "FAILED"
+      },
+      "generation_mode": "feedback-repair",
+      "it": "MultiplicationBusinessConformanceIT",
+      "oracle_sha256": "c0616844842a2380c9b007affd0fd54f96ccce37a8471bcdecf3d22c471c25cc",
+      "parent_id": "shop-multiplication-scratch-v1-teacher-cb04c46a81ee",
+      "raw_response_sha256": "97211da6fcdf7ea6a82bf8224a84c0bed9f795d7785c495d9eec81515e3c9694",
+      "request_sha256": "5d29677d5a00fe6df359acc7caa0f5fa36305066376fc285ad8246f58c219775",
+      "sample_id": "shop-multiplication-scratch-v1-teacher-fa008e7f0e4a",
+      "source_unchanged_from_parent": false,
+      "split": "development",
+      "static_result": {
+        "diagnostics": [
+          {
+            "code": "SIR-TYPE-001",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "is none/is present 只用于可选值",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 10042,
+              "endColumn": 39,
+              "endLine": 417,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 10021,
+              "startColumn": 18,
+              "startLine": 417
+            },
+            "stage": "SEMANTIC"
+          },
+          {
+            "code": "SIR-TYPE-001",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "output 必须使用 Ref<Entity>",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 10386,
+              "endColumn": 23,
+              "endLine": 428,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 10377,
+              "startColumn": 14,
+              "startLine": 428
+            },
+            "stage": "SEMANTIC"
+          },
+          {
+            "code": "SIR-TYPE-001",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "返回类型不匹配",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 11057,
+              "endColumn": 20,
+              "endLine": 441,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 11053,
+              "startColumn": 16,
+              "startLine": 441
+            },
+            "stage": "SEMANTIC"
+          },
+          {
+            "code": "SIR-TYPE-001",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "output 必须使用 Ref<Entity>",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 11147,
+              "endColumn": 23,
+              "endLine": 447,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 11138,
+              "startColumn": 14,
+              "startLine": 447
+            },
+            "stage": "SEMANTIC"
+          },
+          {
+            "code": "SIR-TYPE-001",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "返回类型不匹配",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 11934,
+              "endColumn": 20,
+              "endLine": 463,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 11930,
+              "startColumn": 16,
+              "startLine": 463
+            },
+            "stage": "SEMANTIC"
+          },
+          {
+            "code": "SIR-FLOW-003",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "each references an undeclared failure",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 16707,
+              "endColumn": 98,
+              "endLine": 617,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 16695,
+              "startColumn": 86,
+              "startLine": 617
+            },
+            "stage": "SEMANTIC"
+          },
+          {
+            "code": "SIR-FLOW-003",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "load 引用未声明的 Error: ProductNotFound",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 17543,
+              "endColumn": 83,
+              "endLine": 641,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 17528,
+              "startColumn": 68,
+              "startLine": 641
+            },
+            "stage": "SEMANTIC"
+          },
+          {
+            "code": "SIR-FLOW-003",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "validate 引用未声明的 Error: ProductNotFound",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 17621,
+              "endColumn": 77,
+              "endLine": 642,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 17606,
+              "startColumn": 62,
+              "startLine": 642
+            },
+            "stage": "SEMANTIC"
+          },
+          {
+            "code": "SIR-FLOW-004",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "for update requires an atomic command and an identity lookup",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 19568,
+              "endColumn": 82,
+              "endLine": 694,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 19495,
+              "startColumn": 9,
+              "startLine": 694
+            },
+            "stage": "SEMANTIC"
+          },
+          {
+            "code": "SIR-VALID-007",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "update 的守卫必须是“目标.字段 与值的比较”（==、!=、<、<=、>、>=），可以用 and、or、not 组合；值不能读取目标自身的字段，除非它恰好是目标的另一个字段（如 course.enrolled < course.capacity）",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 22942,
+              "endColumn": 70,
+              "endLine": 776,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 22901,
+              "startColumn": 29,
+              "startLine": 776
+            },
+            "stage": "SEMANTIC"
+          },
+          {
+            "code": "SIR-FLOW-003",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "load 引用未声明的 Error: CouponNotFound",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 23230,
+              "endColumn": 79,
+              "endLine": 780,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 23216,
+              "startColumn": 65,
+              "startLine": 780
+            },
+            "stage": "SEMANTIC"
+          },
+          {
+            "code": "SIR-WARN-001",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "先检查再插入，并发的两个请求可能同时通过检查：给这一步用到的行加 load … for update，或者给被插入的实体声明 unique",
+            "related": [],
+            "relativePath": null,
+            "severity": "WARNING",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 28076,
+              "endColumn": 123,
+              "endLine": 933,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 27962,
+              "startColumn": 9,
+              "startLine": 933
+            },
+            "stage": "SEMANTIC"
+          }
+        ],
+        "digest": null,
+        "fileCount": 0,
+        "id": "shop-multiplication-scratch-v1-teacher-fa008e7f0e4a",
+        "ok": false,
+        "sourceSha256": "2564893df9a6099715900b1009fe1fc9241dd72a531726593d5be62a82deb5de",
+        "stage": "SEMANTIC"
+      },
+      "task": "multiplication-scratch-v1.json",
+      "toolchain_core_sha256": "7275f533d442297d7c43b62317168e09736be9c369d9811c480e8aefad070d54",
+      "usage": {
+        "completion_tokens": 6587,
+        "completion_tokens_details": null,
+        "prompt_cache_hit_tokens": 16000,
+        "prompt_cache_miss_tokens": 2144,
+        "prompt_tokens": 18144,
+        "prompt_tokens_details": {
+          "audio_tokens": null,
+          "cached_tokens": 16000
+        },
+        "total_tokens": 24731
+      }
+    }
+  ],
+  "schema_version": "sir-repair-summary/1",
+  "source_git_head": "d439f60f3f2dce5e33aeccd14bdaff6b13b80248",
+  "static_failed": 11,
+  "static_passed": 3,
+  "static_stages": {
+    "GENERATION": 3,
+    "PARSE": 6,
+    "SEMANTIC": 5
+  },
+  "unchanged_repair_sources": [
+    "course-course-selection-change-v1-teacher-aaa219a02ae2",
+    "course-course-selection-change-p1-v1-teacher-0cfdb95ee0db",
+    "course-course-selection-change-p2-v1-teacher-9ebe1732f239",
+    "auth-crud-access-scratch-p1-v1-teacher-221962c44f5e"
+  ]
+}

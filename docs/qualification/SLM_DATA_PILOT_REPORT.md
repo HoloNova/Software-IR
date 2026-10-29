@@ -344,3 +344,35 @@ v4 这一轮：13 份中静态通过 7 份，四门通过 6 份。样本少、�
 第 13 次仅保存了 `request.json`，没有 `response.json` 或 SDK usage；CLI 返回 `teacher request failed: APIConnectionError HTTP=None; no automatic retry`。另以 `verification/collection-status.json` 记录这一事实，保留未获响应的请求指纹，不补造正常采样记录；该请求是否发生服务端计费未知，127,540 仅是已知合计。
 
 **本轮边界。**新增 API 尝试 14 次，已知响应 13 份；反馈修复 0 次，业务门派发 0 次，新增合格答案 0 条。累计合格教师答案仍为 **45 条**，学生 v2 保持当时的 44 条，未训练。待负责人批准后，13 份失败候选各修一轮，预计输入 **148,100**、输出 **35,800** tokens；这是依据前次 prompt/completion 与新增诊断、DDL 反馈估算，缓存命中未知。网络失败的乘法改写若单独补采一次，另估输入 **12,900**、输出 **5,500**；两项合计约输入 **161,000**、输出 **41,300**（**202,300**），不包含补采后继续修复。未批准前不追加付费调用。
+
+<a id="slm-prompt-v7-repair"></a>
+
+## 第十五阶段：v7 一轮反馈修复与网络失败题补采（2026-10-29）
+
+负责人确认第二笔预算后，沿用第十四阶段的 LF 字节一致环境与冻结输入，对 13 份失败候选各执行一次 `repair --feedback experiments/slm/prompts/repair-general-v1.md --max-tokens 8192`，并对先前连接失败的乘法改写题补采一次。**14 次请求均收到响应；13 份修复中 3 份静态通过，补采的 1 份语义失败。**没有第二轮修复、自动重试、手改候选或修改规则手册／解析器／oracle。完整汇总见 `datasets/sir/research/2026-10-29/v7-repair-sampling.json`。
+
+13 份修复结果写入各批次 `checked-r1.jsonl`，补采结果写入 `multiplication-change-g7/checked-resample.jsonl`。旧 `checked.jsonl`、冻结输入、父候选、请求／响应及前次连接失败记录均原字节保留；`attempts.jsonl`／`candidates.jsonl` 仅追加。逐份使用原 `validate_candidates` 验证候选与原始响应、请求、题目和工具链的绑定，并核对修复消息严格由原对话、父答案、原反馈、原始诊断和题目 DDL 组成，没有追加人工修法或参考答案。14 批工具链与 oracle 的并集共 **493 个输入文件**逐项匹配提交 `d439f60f3f2dce5e33aeccd14bdaff6b13b80248` 的 Git blob；未重新编译、运行全量测试或启动应用／数据库。
+
+| 批次（均为 g7） | 新候选短 ID | 本次静态结果 | 输入 tokens（其中缓存命中） | 输出 tokens | 合计 |
+| --- | --- | --- | ---: | ---: | ---: |
+| course-selection-change | `aaa219a02ae2` | PARSE FAILED，原样交回 | 12,044（10,752） | 2,745 | 14,789 |
+| course-selection-change-p1 | `0cfdb95ee0db` | PARSE FAILED，原样交回 | 11,977（10,752） | 2,659 | 14,636 |
+| course-selection-change-p2 | `9ebe1732f239` | PARSE FAILED，原样交回 | 12,083（10,880） | 2,722 | 14,805 |
+| course-selection-change-p3 | `05dd265870d4` | SEMANTIC FAILED | 12,532（10,752） | 2,694 | 15,226 |
+| course-selection-scratch | `4e00239550e2` | SEMANTIC FAILED | 11,489（10,240） | 3,397 | 14,886 |
+| course-selection-scratch-p1 | `5a999074e6f7` | PARSE FAILED | 11,561（10,112） | 3,266 | 14,827 |
+| course-selection-scratch-p2 | `793f0aae8863` | PARSE FAILED | 11,521（10,240） | 3,254 | 14,775 |
+| course-selection-scratch-p3 | `36183be29931` | SEMANTIC FAILED | 11,549（10,240） | 3,276 | 14,825 |
+| crud-access-scratch | `4a6b10922574` | GENERATION PASSED，58 文件 | 7,874（6,656） | 1,453 | 9,327 |
+| crud-access-scratch-p1 | `221962c44f5e` | PARSE FAILED，原样交回 | 7,435（6,656） | 1,360 | 8,795 |
+| crud-access-scratch-p2 | `976fd70bd19f` | GENERATION PASSED，58 文件 | 8,109（6,656） | 1,412 | 9,521 |
+| crud-access-scratch-p3 | `3a97ea60acea` | GENERATION PASSED，55 文件 | 7,555（6,784） | 1,401 | 8,956 |
+| multiplication-scratch（dev） | `fa008e7f0e4a` | SEMANTIC FAILED | 18,144（16,000） | 6,587 | 24,731 |
+| multiplication-change（dev，补采） | `06dece4fca65` | SEMANTIC FAILED | 12,828（12,672） | 5,481 | 18,309 |
+| **本轮合计** | | **通过 3／解析失败 6／语义失败 5** | **156,701（139,392）** | **41,707** | **198,408** |
+
+预计总量 202,300，实际已知总量 198,408；输入与输出分别报告，不把高缓存命中等同于零成本。两阶段累计尝试 28 次、收到 27 份响应，已知输入 248,059、输出 77,889、合计 325,948；首轮连接错误的那次用量仍未知，不计为 0。
+
+**错误推进而非循环修到通过。**前三份选课改写仍使用 `where min(1) and max(7)`，CRUD p1 的分页仍漏 `else`，四份新答案的源码哈希与父候选完全相同；保留新请求和响应，但不送业务门。选课改写 p3 修复保留字后暴露 `UserView` 重复定义；选课从零写仍有错误的查询表达式、可选值／身份类型、`any` 缺关联条件、未声明字段／错误及 `fails` 顺序问题。乘法从零写暴露输出类型、错误声明、锁条件和更新守卫问题；补采的乘法改写有 `each` 未声明失败与 `total` 绑定类型错误。两份乘法答案各自保留一条 SIR-WARN-001，判失败依据是 ERROR，不是告警。源码原样交回的事实不推断为服务端缓存故障，报错改善也不在本轮擅自实施。
+
+**业务门边界。**本次仅有上述 3 份 CRUD 候选具备送 `CrudAccessBusinessConformanceIT` 的静态前提，均无诊断。提交批次后按样本分别派发，运行证据由负责人通知结果后再归档；本报告当前 BUILD／START／BUSINESS 均为 **NOT_RUN**，不能把静态通过记成合格。合格教师答案仍为 **45 条**，学生 v2 保持 44 条；本轮不新增训练输出、不启动训练，dev 答案不进入 train。业务门完成并核对原始附件后，再导出合格答案并统一生成下一版学生数据。

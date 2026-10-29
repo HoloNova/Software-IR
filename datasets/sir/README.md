@@ -65,7 +65,13 @@
 
 ## v7 定向首轮（尚无新增合格答案）
 
-负责人确认预算后，14 个 `pilots/*-g7/` 新批次完成 14 次初始请求：13 份答卷全部静态失败（10 PARSE、3 SEMANTIC），乘法改写 1 次 APIConnectionError 无响应、用量未知，未自动重试。14 份参考静态通过，原始请求／响应、候选、诊断及冻结来源均保留；汇总见 [`research/2026-10-29/v7-initial-sampling.json`](research/2026-10-29/v7-initial-sampling.json)，原因与逐次用量见[数据报告第十四阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-prompt-v7-initial)。已知输入 91,358（缓存命中 43,776）、输出 36,182，合计 127,540 tokens；失败网络请求的未知用量不算 0。未调用反馈修复或派发业务门，新增合格答案 0，累计仍为 45；dev 两题不进入学生训练。下一步待确认各修一轮的预算，不手改答案或放宽判卷。
+负责人确认预算后，14 个 `pilots/*-g7/` 新批次完成 14 次初始请求：13 份答卷全部静态失败（10 PARSE、3 SEMANTIC），乘法改写 1 次 APIConnectionError 无响应、用量未知，未自动重试。14 份参考静态通过，原始请求／响应、候选、诊断及冻结来源均保留；汇总见 [`research/2026-10-29/v7-initial-sampling.json`](research/2026-10-29/v7-initial-sampling.json)，原因与逐次用量见[数据报告第十四阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-prompt-v7-initial)。已知输入 91,358（缓存命中 43,776）、输出 36,182，合计 127,540 tokens；失败网络请求的未知用量不算 0。未调用反馈修复或派发业务门，新增合格答案 0，累计仍为 45；dev 两题不进入学生训练。本阶段尚未执行修复；后续获批的一轮修复见下节，不手改答案或放宽判卷。
+
+## v7 一轮修复与补采（业务资格待验收）
+
+13 份失败答案各修一轮，并补采网络失败的乘法改写题一次，14 次均收到响应。结果保存在 `checked-r1.jsonl`／`checked-resample.jsonl`，首轮结果与所有原始附件不覆盖。3 份 CRUD 静态通过：原题 `4a6b10922574`（58 文件）、p2 `976fd70bd19f`（58）、p3 `3a97ea60acea`（55）；其余 11 份失败，其中 4 份修复源码与父候选完全相同。只将 3 份通过者提交后派发业务门，BUILD／START／BUSINESS 当前 NOT_RUN；合格总数仍 45，学生 v2 仍 44。dev 两题均失败且不进入 train，未追加第二轮修复。
+
+本轮输入 156,701（缓存命中 139,392）、输出 41,707，合计 **198,408 tokens**。汇总见 [`research/2026-10-29/v7-repair-sampling.json`](research/2026-10-29/v7-repair-sampling.json)，逐次用量、父子关系验证及失败分析见[数据报告第十五阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-prompt-v7-repair)。两阶段已知合计 325,948 tokens，首轮连接错误的用量仍未知。
 
 ## 学生训练格式
 
