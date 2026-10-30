@@ -34,8 +34,10 @@ class CheckThenInsertWarningTest {
     }
 
     @Test
-    void aUniqueKeyOnTheInsertedEntityIsEnoughProtection() {
-        String source = replace(LOCKED, UNLOCKED).replace("field endsAt: Moment;\n    }", "field endsAt: Moment;\n      unique (room, startsAt);\n    }");
+    void aUniqueKeyWithExplicitConflictFailureNeedsNoRaceWarning() {
+        String source = replace(LOCKED, UNLOCKED)
+                .replace("field endsAt: Moment;\n    }", "field endsAt: Moment;\n      unique (room, startsAt);\n    }")
+                .replace("persist made;", "persist made else SlotTaken;");
         SemanticAnalysis result = TestSources.analyze(source);
 
         assertTrue(result.isSuccess(), () -> result.diagnostics().toString());

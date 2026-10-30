@@ -44,6 +44,7 @@ import io.kcg.sir.ast.AstUpdateStep;
 import io.kcg.sir.ast.AstValidateStep;
 import io.kcg.sir.ast.AstViewDecl;
 import io.kcg.sir.ast.AstViewField;
+import io.kcg.sir.semantic.api.ReferenceRole;
 import io.kcg.sir.semantic.context.TypedContext;
 import io.kcg.sir.semantic.context.ValidatedContext;
 import io.kcg.sir.semantic.symbol.Symbol;
@@ -68,6 +69,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 final class ValidatePass {
    /** Levels of nested projection allowed below the root view; see {@link #validateProjectionDepth}. */
@@ -1567,9 +1570,33 @@ int returnCount = 0;
       return -1;
    }
 
-   private void validateWriteWorkflow(AstCapabilityDecl capDecl, Set<SymbolId> failsSet) {
-       this.validateWriteWorkflow(capDecl,failsSet,capDecl.workflow().steps());
-   }
+    private void validateWriteWorkflow(AstCapabilityDecl capDecl, Set<SymbolId> failsSet) {
+        this.validateWriteWorkflow(capDecl,failsSet,capDecl.workflow().steps());
+        this.validatePrecheckedUniqueInserts(capDecl, capDecl.workflow().steps(), Set.of());
+    }
+
+    /** Earlier EXISTS reads require explicit unique-conflict handling; a loop's reads do not escape its body. */
+    private void validatePrecheckedUniqueInserts(AstCapabilityDecl capability, List<AstStep> steps, Set<SymbolId> inherited) {
+       Set<SymbolId> checked = inherited;
+       for (AstStep step : steps) {
+          if (step instanceof io.kcg.sir.ast.AstScalarQueryStep query
+                && query.kind() == io.kcg.sir.ast.AstScalarQueryStep.Kind.EXISTS) {
+             SymbolId entity = this.typed.referenceSiteBindings().targetFor(query.entity().id()).orElse(null);
+             if (entity != null) checked = Stream.concat(checked.stream(), Stream.of(entity)).collect(Collectors.toUnmodifiableSet());
+          } else if (step instanceof AstPersistStep persist && persist.failure().isEmpty()
+                && this.insertsIntoUniqueEntity(capability, persist)
+                && checked.contains(this.persistTargetEntitySymId(persist))) {
+             String entity = this.typed.symbols().byId(this.persistTargetEntitySymId(persist)).orElseThrow().name();
+             this.diagnostics.add(DiagnosticBuilder.error("SIR-VALID-004",
+                "此前已 exists 检查实体 " + entity + "，但查重不能替代唯一冲突处理；新行 persist " + persist.target().text()
+                   + " 必须声明 else 已声明错误。若前面用 validate ... else 拒绝重复，可沿用同一个错误。", persist.span()));
+          } else if (step instanceof io.kcg.sir.ast.AstEachStep each) {
+             this.validatePrecheckedUniqueInserts(capability, each.body(), checked);
+          } else if (step instanceof io.kcg.sir.ast.AstRepeatStep repeat) {
+             this.validatePrecheckedUniqueInserts(capability, repeat.body(), checked);
+          }
+       }
+    }
 
    private void validateWriteWorkflow(AstCapabilityDecl capDecl, Set<SymbolId> failsSet, List<AstStep> steps) {
       SymbolId candidateInputSymId = this.capabilityInputSymbolId(capDecl);
@@ -2055,7 +2082,12 @@ int returnCount = 0;
                   "SIR-FLOW-006", "any 的条件内不能再出现 any: " + any.entity().text(), any.span()));
             }
 
-            this.validateExistenceUsage(any.conditions(), ExistenceUsage.NESTED);
+             if (usage == ExistenceUsage.ALLOWED) {
+                this.typed.referenceSiteBindings().targetFor(any.entity().id()).flatMap(this.typed.symbols()::byId)
+                   .filter(Symbol.TypeSymbol.class::isInstance).map(Symbol.TypeSymbol.class::cast)
+                   .ifPresent(entity -> this.rejectRelatedSelfComparisons(any.conditions(), entity));
+             }
+             this.validateExistenceUsage(any.conditions(), ExistenceUsage.NESTED);
          }
          case AstGroupedExpression grouped -> this.validateExistenceUsage(grouped.inner(), usage);
          case AstUnaryExpression unary -> this.validateExistenceUsage(unary.operand(), usage);
@@ -2070,7 +2102,37 @@ int returnCount = 0;
       }
    }
 
-   /** Where an existence predicate was found while walking one workflow's expressions. */
+    /** Only two bare references to the same related column are a self-comparison, not two receivers' same field. */
+    private void rejectRelatedSelfComparisons(AstExpression expression, Symbol.TypeSymbol entity) {
+       AstExpression plain = this.ungroup(expression);
+       if (plain instanceof AstBinaryExpression comparison) {
+          if (comparison.operator() == AstBinaryOperator.EQ || comparison.operator() == AstBinaryOperator.NE) {
+             Symbol.FieldSymbol left = this.relatedBareField(comparison.left(), entity.id());
+             Symbol.FieldSymbol right = this.relatedBareField(comparison.right(), entity.id());
+             if (left != null && right != null && left.id().equals(right.id())) {
+                this.diagnostics.add(DiagnosticBuilder.error("SIR-VALID-001",
+                   "any(" + entity.name() + ", ...) 中比较的两侧都绑定到关联实体字段 " + entity.name() + "." + left.name()
+                      + "，而不是外层变量。若要与外层变量比较，请给外层变量使用不与字段同名的名称，并在这里引用它。",
+                   comparison.span()));
+             }
+          }
+          this.rejectRelatedSelfComparisons(comparison.left(), entity);
+          this.rejectRelatedSelfComparisons(comparison.right(), entity);
+       } else if (plain instanceof AstUnaryExpression unary) {
+          this.rejectRelatedSelfComparisons(unary.operand(), entity);
+       }
+       // A nested any owns another scope and is rejected by validateExistenceUsage, not checked twice here.
+    }
+
+    private Symbol.FieldSymbol relatedBareField(AstExpression expression, SymbolId entity) {
+       if (!(this.ungroup(expression) instanceof AstNameExpression name)) return null;
+       var binding = this.typed.referenceSiteBindings().bindingFor(name.name().id()).orElse(null);
+       if (binding == null || binding.site().role() != ReferenceRole.EXISTS_CONDITION_FIELD) return null;
+       Symbol target = this.typed.symbols().byId(binding.targetSymbol()).orElse(null);
+       return target instanceof Symbol.FieldSymbol field && field.ownerId().equals(entity) ? field : null;
+    }
+
+    /** Where an existence predicate was found while walking one workflow's expressions. */
    private enum ExistenceUsage {
       /** Inside a {@code find} predicate: the predicate's normal home. */
       ALLOWED,

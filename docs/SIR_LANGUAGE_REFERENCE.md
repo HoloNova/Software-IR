@@ -1290,6 +1290,30 @@ capability ActiveCourses {
 
 `any` 只能出现在查询步骤的条件里，不能嵌套。条件最外层的 `and` 里必须有一个把两张表连起来的比较，两个方向都可以：`被查实体的引用字段 == item`（另一张表的行指向当前行），或 `被查实体的主键 == item.引用字段`（当前行指向另一张表的行），等号两边可以互换。例如查 `Entry` 时，`any(Category, id == item.category and owner == actor)` 表示“这条账目的分类属于当前用户”。没有这个连接条件，或者随意比较两张表的列，都会被拒绝。
 
+**裸名字先指关联实体的字段或主键，而不是外层同名变量。**因此 `tag == tag` 的两侧都是关联行的 tag；即使外层加载了变量 tag，也没有按它筛选。同一个关联字段与自己做 `==` 或 `!=` 比较会报 `SIR-VALID-001`，括号、`not` 和逻辑组合不能绕开；应把外层变量改名为 wanted，写 `tag == wanted`。只存在同名变量并不报错，`reader == actor` 仍合法；关联行与外层行读取同一字段声明，也不等于同一行的字段自比较。判空用 `is none/is present`，不要用字段自比较代替。
+
+```sir-error SIR-VALID-001
+entity Course persistent { identity id: Id generated auto; }
+entity Enrollment persistent {
+  identity id: Id generated auto;
+  field course: Ref<Course>;
+  field active: Flag;
+}
+view CourseView from Course { field id: Id; }
+error InvalidPage;
+capability ActiveCourses {
+  output Page<CourseView>;
+  fails InvalidPage;
+  requires readonly;
+  expose query;
+  workflow {
+    find Course where any(Enrollment, course == item and active == active)
+      Page 1, 10 else InvalidPage as courses;
+    return courses;
+  }
+}
+```
+
 ### 5.4 `create`
 
 ```
@@ -1318,7 +1342,9 @@ persist 变量;
 
 对**带 `versioned` 的实体**：更新它的能力必须用这个实体的局部更新输入（`patch of`，见 3.3），更新后的 `persist` 必须写 `else 错误名`，在别人先改过时报这个错误；对没有 `versioned` 的实体，`else` 只有下面说的一种用法。违反这几条都是 `SIR-VALID-004`。
 
-**新建的行撞上已有的行。**实体里有 `unique` 字段时，新建的行可能和已经存在的行重复（比如重复注册同一个名字）。`persist 变量 else 错误名;` 说明这时报哪个已声明的错误；不写 `else`，数据库的异常会原样变成 500。这个 `else` 只对 `create` 出来的行、且实体有唯一约束时才能写（`SIR-VALID-004`）：
+**新建的行撞上已有的行。**实体里有 `unique` 字段或联合唯一约束时，新建的行可能和已经存在的行重复（比如重复注册同一个名字）。`persist 变量 else 错误名;` 说明这时报哪个已声明的错误；不写 `else`，数据库的异常会原样变成 500。这个 `else` 只对 `create` 出来的行、且实体有唯一约束时才能写（`SIR-VALID-004`）。
+
+**如果在写入前已对同一实体执行过 `exists`，新行的 `persist` 必须写 `else`**（`SIR-VALID-004`），可沿用前面 `validate ... else` 拒绝重复的错误；它仍须列入 `fails`。先查重不能代替并发撞重处理，`atomic` 或父行锁不豁免这条显式错误处理要求。检查按步骤顺序进行，覆盖每个新行写入和循环体；循环内的查重不视为循环后必定执行过。仅有 `count`、写入之后才 `exists`、或没有此前 `exists` 的唯一新建，不在这条强制规则内；普通已加载行的更新也不受它影响。
 
 ```sir-declarations
 entity Account persistent {
@@ -1340,10 +1366,38 @@ capability Register {
   requires atomic;
   expose command;
   workflow {
+    exists Account where item.name == input.name as used;
+    validate not used else NameTaken;
     create Account as made {
       name: input.name;
     }
     persist made else NameTaken;
+    return made;
+  }
+}
+```
+
+只保留前面的查重、不处理唯一撞重会被拒绝：
+
+```sir-error SIR-VALID-004
+entity Account persistent {
+  identity id: Id generated auto;
+  field name: Name unique;
+}
+view AccountView from Account { field id: Id; }
+input NewAccount { field name: Name; }
+error NameTaken http 409;
+capability Register {
+  input NewAccount;
+  output AccountView;
+  fails NameTaken;
+  requires atomic;
+  expose command;
+  workflow {
+    exists Account where item.name == input.name as used;
+    validate not used else NameTaken;
+    create Account as made { name: input.name; }
+    persist made;
     return made;
   }
 }
@@ -2225,11 +2279,11 @@ use Crud {
 | `SIR-TYPE-002` | `Ref<...>` 的目标不是实体 |
 | `SIR-TYPE-003` | `Optional<Optional<T>>` |
 | `SIR-TYPE-004` | `any` 的条件没有受支持的根行外键／身份关联，或根行／关联目标不匹配 |
-| `SIR-VALID-001` | 通用规则：`fails` 没排序、`requires` 顺序不对、`query` 没有 `readonly`、多个写步骤没有 `atomic`、`find` 谓词的比较方向不对、视图字段带了约束等 |
+| `SIR-VALID-001` | 通用规则：`fails` 没排序、`requires` 顺序不对、`query` 没有 `readonly`、多个写步骤没有 `atomic`、`find` 谓词的比较方向不对、`any` 内同一关联字段自比较、视图字段带了约束等 |
 | `SIR-VALID-002` | `versioned` 的规则：每个实体最多一个、版本字段不能带约束或 `unique`、只能用在实体字段上 |
 | `SIR-VALID-003` | 局部更新输入（`patch of`）的规则 |
 | `SIR-VALID-014` | 联合唯一 `unique (...)` 的规则：字段不能可选、`secret`、版本号、主键或不限长的文本，不能重复，长度加起来不能超过索引上限 |
-| `SIR-VALID-004` | 带 `versioned` 实体的更新规则、`persist ... else` 的用法、局部更新的字段必须全部绑定 |
+| `SIR-VALID-004` | 带 `versioned` 实体的更新规则、`persist ... else` 的用法（含 exists 后唯一新行写入必须声明冲突错误）、局部更新的字段必须全部绑定 |
 | `SIR-VALID-005` | 视图嵌套太深（最多 2 层） |
 | `SIR-VALID-006` | `load` 按字段加载的规则 |
 | `SIR-VALID-007` | 守卫更新的规则 |
