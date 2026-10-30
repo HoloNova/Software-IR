@@ -1,6 +1,6 @@
 # SIR 实验数据
 
-本目录同时保存研究轨迹与合格训练输出，**不是每条记录都可用于当前学生 SFT**。失败答案／报错会归档并可用于本轮教师反馈；只有四门通过的最终答案才导出为正确 completion，student 包装还会去掉修复历史。当前没有开始学生模型训练。
+本目录同时保存研究轨迹与合格训练输出，**不是每条记录都可用于当前学生 SFT**。失败答案／报错会归档并可用于本轮教师反馈；只有四门通过的最终答案才导出为正确 completion，student 包装还会去掉修复历史。当前合格 **49 条（鉴权26、课程22、博客1）**，学生格式为 **v4**，没有开始模型训练；最新验收见[第二十七阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-blog-g9-qualified)。
 
 ## 首批采样与后续运行
 
@@ -91,9 +91,9 @@
 
 ## 学生训练格式
 
-[`student/train-student-v3.jsonl`](student/) 包含目前全部 **48 条**合格答案：固定短 system（`experiments/slm/prompts/student-v1.md`）+ 与教师相同的题目 + 最终合格 SIR，不带教师规则手册和修复经过。跨工具链时保留已封存 v2 的 44 条原字节，只用原 `student` 命令包装新合格的 4 条再合成 v3；48 条均核对导出索引、候选与运行绑定，`.index.json` 的 `assembly` 记录来源与哈希，不改历史 manifest。v1（14 条）和 v2（44 条）保留原样。
+[`student/train-student-v4.jsonl`](student/train-student-v4.jsonl) 包含目前全部 **49 条**合格答案：固定短 system（`experiments/slm/prompts/student-v1.md`）+ 与教师相同的题目 + 最终合格 SIR，不带教师规则手册和修复经过。跨工具链时保留已封存 v3 的48条原字节，只用原 `student` 命令包装博客新增1条再合成v4；49条均核对导出索引、候选、冻结输入、运行绑定及附件，`.index.json` 的 `assembly` 记录来源与哈希，不改历史 manifest。v1（14条）、v2（44条）、v3（48条）及其报告保留原样。
 
-`.tokens.json` 是固定 revision 分词器的 CPU 实测，v3 最长完整序列为 **9,311**（deepseek-coder-1.3b）／**7,102**（Qwen2.5-Coder-3B、Qwen3-4B），均未截断且低于 16K；不能沿用 v2 的 3,874／3,042 上限。只测长度，未执行模型权重或训练。详见[数据报告第十六阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-prompt-v7-qualified)。
+`.tokens.json` 是固定 revision 分词器的 CPU 实测，v4最长完整序列仍为 **9,311**（deepseek-coder-1.3b）／**7,102**（Qwen2.5-Coder-3B、Qwen3-4B），新增博客为6,581／5,144；49条均未截断且低于16K，旧48条逐条长度与v3相同。只测长度，未执行模型权重或训练。详见[数据报告第二十七阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-blog-g9-qualified)。
 
 完整说明：[数据报告](../../docs/qualification/SLM_DATA_PILOT_REPORT.md)、[操作命令](../../experiments/slm/README.md)、[模型选择](../../docs/qualification/SLM_MODEL_SELECTION.md)。API密钥不属于数据或metadata。数据Git属性禁止换行转换，保持证据字节哈希。
 

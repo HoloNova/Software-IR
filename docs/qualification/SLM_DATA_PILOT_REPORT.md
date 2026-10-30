@@ -630,3 +630,32 @@ v8 累计 **4 次 API**，输入 **47722**（缓存 **21888**）、输出 **6055
 审批、逐次调用记录、三份零上下文差异和用量汇总见 `datasets/sir/research/2026-10-30/blog-g9-repair/`。仅 `bba0b5b48fc4` 进入 `business-gate-plan.json`，按既有授权提交／推送并核对远端字节后派发一次 BlogBusinessConformanceIT；不派两份静态失败者，结果等负责人通知，不轮询。当前三份新候选 BUILD／START／BUSINESS 均 **NOT_RUN**，尚无新训练资格，不能借 #204 的参考结果填候选门。
 
 本阶段没有本机 Maven、数据库、应用、全量测试或训练，只运行有界静态 JVM，未手改教师答案。实际总量低于估算，三次额度已结束，不追加费用。博客 v8 手册跨 g8/g9 累计 **7 次 API／93425 tokens**；这次有一份通过不构成总体通过率提升证明。合格总数仍 **48**、博客合格 **0**，待该新候选自己的四门结果。
+
+
+<a id="slm-blog-g9-qualified"></a>
+
+## 第二十七阶段：博客首条合格答案、历史附件补全与学生 v4（2026-10-30）
+
+**候选自己的四门已通过。**负责人通知结果后核对 `c6a993aaafa64e7cde11f16c8196c6773de25542` 的 [slm-business-gate #66 / 41031591392](https://github.com/HoloNova/Software-IR/actions/runs/41031591392)：候选为 `content-blog-change-v1-teacher-bba0b5b48fc4`，四门全 PASSED，业务 **426/0**，不是复用 #204 参考的 425/0。原报告固定第二行 verdict=PASSED，四轮各六个运行时连接／事务的真实锁等待均有记录，应用退出、schema 删除和锁释放均通过。真实环境为 Java 21.0.13、MySQL 8.4.13；生成 57 文件，版本化摘要 `56aef98b45e9b72623351da01454271e8ef0bfd7f21f125c2851ff6ec0d540d0` 与原静态结果一致。
+
+**复用既有归档器。**从精确 LF 快照执行原 `docs/tmp/archive_gate_runs.py`，仅为该进程补上 Windows Git 自带 unzip/grep 的 PATH；归档／绑定／附件校验和 export 全部走原实现，不新建业务门归档脚本。对 ZIP 另做路径逃逸、大小写重复、链接及 CI 口令标记预检。两个原始 ZIP 均匹配 GitHub digest：证据 artifact=`12965663274`，SHA256=`35b8c3d8a162b99f7a64cd71480012d9df4b37f86c9d5b1c58fa5fe5ab78ed17`；Surefire artifact=`12966497381`，SHA256=`93c372d7ac593e23abf310caf5e24f55f46899fe7baceed402024b819dd6d920`。runtime 绑定、原始报告／四日志哈希和上传 JUnit 均已核对；原始 ZIP／API 元数据及操作来源在 `datasets/sir/research/2026-10-30/blog-g9-gate66/`。原始日志不清洗，本机生成 gate-run.json 单独保存为 LF。
+
+原 `export` 已向 `blog-change-g9/train-teacher.jsonl` 导出 **1 条**，索引明确 all_four_gates_required=true。**累计合格教师答案 49 条（鉴权26、课程22、博客1）**。从零两条静态失败分支仍封存；本阶段模型调用 **0 次**，上一阶段 39648 tokens 不变，也未再派发 CI 或重跑已通过门。
+
+**来源审计发现并恢复历史漏件。**初次 v4 审计因旧 bearer g1 的 maven.stdout.log 不存在而停止，没有跳过错误或宣称成功。逐项核查确认 **44 个旧合格批次各缺4份日志，共176份**，明确路径命中 `.gitignore:14:*.log`，Git 无对应 Blob。不是旧业务结果变成失败，也不否定当时已验收的资格，而是旧归档漏纳附件；此前仅用工作区／导出索引不能证明所有日志已入 Git。
+
+按原 gate-run.json 的 artifact ID 下载44份原证据 ZIP，每份先匹配当时登记的 ZIP SHA256，并确认 ZIP 内 slm-runtime.json 与现有文件逐字节相同，再仅恢复缺失的四份日志。176份内容均匹配原 evidence 的逐项 SHA256，无 CI 口令标记；**没有覆盖旧文件、改写旧摘要或重新判卷**。恢复文件本轮显式纳入 Git，原字节／行尾空白保留；完整 ID／ZIP 摘要／路径／文件摘要在 `historical-log-recovery.json`。44份临时下载ZIP留 target，不另复制为44套归档；恢复的原始日志及原证据已足以逐项验证。
+
+**学生 v4。**仍按跨工具链规则保留 `train-student-v3.jsonl` 的 **48条原始字节**；只在新工具链 LF 快照用原 student 命令包装新增1条，再合成 `train-student-v4.jsonl`。index 的 assembly 保存基座／增量／导出索引摘要，历史资格不重算。49条逐一核对教师导出索引、原候选源码、冻结 task/base/system、完整题目、运行绑定及全部附件，ID集合与所有非空教师导出完全一致，split均为train、同题/源码无重复；短system + 原题 + 最终合格SIR，不含教师长手册或修复过程。恢复漏件之后整套来源审计通过，旧v1/v2/v3及其索引、分词报告均未改变。
+
+固定既有 revision、tokenizer.json 和 chat template，在CPU重新实测49条，旧48条的逐条长度与v3报告完全一致：
+
+| 分词器 | 新博客完整序列 | v4最长完整序列 |
+| --- | ---: | ---: |
+| deepseek-coder-1.3b | 6581 | 9311 |
+| Qwen2.5-Coder-3B | 5144 | 7102 |
+| Qwen3-4B | 5144 | 7102 |
+
+分词未截断、未下载／执行权重，也不是模型训练或能力评测。汇总、49条来源证明与 v4 文件摘要见 `student-v4-verification.json` 及 `student/train-student-v4.{index,tokens}.json`。本次仅数据／证据与说明收口，无 Maven、本机业务 IT、应用／数据库或新模型调用；下一项 4.3 Parser 统计与设计、4.4 归档工具整合仍各自等待确认，不在本轮修改生产代码。
+
+题库覆盖按 task ID 另计：73份定义中已有 **48题**至少一份合格答案，仍有 **25题**没有（train19、development2、test4）；49条答案不等于49道独立题。该统计不改变分组、不启动test采样或学生评测。

@@ -1,0 +1,103 @@
+{
+  "run_id": 41031591392,
+  "commit": "c6a993aaafa64e7cde11f16c8196c6773de25542",
+  "junit": {
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "checks_passed": 426,
+  "checks_failed": 0,
+  "four_rounds_with_six_distinct_connections_and_transactions": [
+    {
+      "label": "X01",
+      "connections": [
+        16,
+        17,
+        18,
+        19,
+        20,
+        21
+      ],
+      "transactions": [
+        1930,
+        1931,
+        1932,
+        1933,
+        1934,
+        1935
+      ]
+    },
+    {
+      "label": "X02",
+      "connections": [
+        16,
+        17,
+        18,
+        19,
+        20,
+        21
+      ],
+      "transactions": [
+        1942,
+        1943,
+        1944,
+        1945,
+        1940,
+        1941
+      ]
+    },
+    {
+      "label": "X03",
+      "connections": [
+        16,
+        17,
+        18,
+        19,
+        20,
+        21
+      ],
+      "transactions": [
+        1950,
+        1951,
+        1952,
+        1953,
+        1954,
+        1949
+      ]
+    },
+    {
+      "label": "X04",
+      "connections": [
+        16,
+        17,
+        18,
+        19,
+        20,
+        21
+      ],
+      "transactions": [
+        1960,
+        1961,
+        1962,
+        1963,
+        1964,
+        1959
+      ]
+    }
+  ],
+  "schema_and_lock_cleanup_proved": true,
+  "task_coverage": {
+    "defined_tasks": 73,
+    "answered_unique_tasks": 48,
+    "tasks_without_qualified_answer": 25,
+    "unanswered_by_split": {
+      "train": 19,
+      "test": 4,
+      "development": 2
+    }
+  },
+  "new_model_calls": 0,
+  "training": "NOT_RUN"
+}

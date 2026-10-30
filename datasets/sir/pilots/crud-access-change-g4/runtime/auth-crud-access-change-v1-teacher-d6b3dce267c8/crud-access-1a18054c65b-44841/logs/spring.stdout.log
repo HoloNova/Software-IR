@@ -1,0 +1,30 @@
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.5.3)
+
+2026-10-28T02:26:47.660Z  INFO 2970 --- [crud-access] [           main] example.crudaccess.Application           : Starting Application v0.1.0-SNAPSHOT using Java 21.0.13 with PID 2970 (/home/runner/work/Software-IR/Software-IR/ci-work/crud-access-1a18054c65b-44841/generated-project/target/crud-access-0.1.0-SNAPSHOT.jar started by runner in /home/runner/work/Software-IR/Software-IR/sir-toolchain-application)
+2026-10-28T02:26:47.662Z  INFO 2970 --- [crud-access] [           main] example.crudaccess.Application           : No active profile set, falling back to 1 default profile: "default"
+2026-10-28T02:26:48.997Z  INFO 2970 --- [crud-access] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 18080 (http)
+2026-10-28T02:26:49.010Z  INFO 2970 --- [crud-access] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-10-28T02:26:49.010Z  INFO 2970 --- [crud-access] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.42]
+2026-10-28T02:26:49.037Z  INFO 2970 --- [crud-access] [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-10-28T02:26:49.038Z  INFO 2970 --- [crud-access] [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1320 ms
+ _ _   |_  _ _|_. ___ _ |    _ 
+| | |\/|_)(_| | |_\  |_)||_|_\ 
+     /               |         
+                        3.5.12 
+2026-10-28T02:26:49.847Z  INFO 2970 --- [crud-access] [           main] m.e.s.MybatisPlusApplicationContextAware : Register ApplicationContext instances org.springframework.boot.web.servlet.context.AnnotationConfigServletWebServerApplicationContext@2ea6e30c
+2026-10-28T02:26:49.922Z  INFO 2970 --- [crud-access] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 18080 (http) with context path '/'
+2026-10-28T02:26:49.930Z  INFO 2970 --- [crud-access] [           main] example.crudaccess.Application           : Started Application in 2.79 seconds (process running for 3.28)
+2026-10-28T02:26:50.043Z  INFO 2970 --- [crud-access] [.1-18080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-10-28T02:26:50.044Z  INFO 2970 --- [crud-access] [.1-18080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-10-28T02:26:50.045Z  INFO 2970 --- [crud-access] [.1-18080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2026-10-28T02:26:50.093Z  INFO 2970 --- [crud-access] [.1-18080-exec-1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-10-28T02:26:50.487Z  INFO 2970 --- [crud-access] [.1-18080-exec-1] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@57b64594
+2026-10-28T02:26:50.489Z  INFO 2970 --- [crud-access] [.1-18080-exec-1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.

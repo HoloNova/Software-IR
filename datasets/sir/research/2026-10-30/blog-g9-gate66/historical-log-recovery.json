@@ -1,0 +1,1329 @@
+{
+  "reason": "Legacy *.log ignore omission, not a new business failure; only missing original attachments restored.",
+  "changed_existing_files": 0,
+  "new_restored_files": 176,
+  "bundles": 44,
+  "original_source_qualifications_changed": false,
+  "recovered": [
+    {
+      "id": "auth-bearer-credential-change-v1-teacher-07b9ea18ef67",
+      "run_id": 40619277037,
+      "bundle": "datasets/sir/pilots/bearer-credential-change-g1",
+      "artifact_id": 12786064293,
+      "artifact_zip_sha256": "811539d1a8458e9cb93be69744cb3a6f8ba8668e4ef90481e27a6a9b83f68c2d",
+      "runtime_metadata_original_zip_bytes_match": true,
+      "restored": [
+        {
+          "path": "datasets/sir/pilots/bearer-credential-change-g1/runtime/auth-bearer-credential-change-v1-teacher-07b9ea18ef67/bearer-slice-1a180461027-12008/logs/maven.stdout.log",
+          "sha256": "f967034503a8c2ce5cd9318e66afd9bec7d6beb5dd27ae94a1252d873d459bd4",
+          "bytes": 2287
+        },
+        {
+          "path": "datasets/sir/pilots/bearer-credential-change-g1/runtime/auth-bearer-credential-change-v1-teacher-07b9ea18ef67/bearer-slice-1a180461027-12008/logs/maven.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "datasets/sir/pilots/bearer-credential-change-g1/runtime/auth-bearer-credential-change-v1-teacher-07b9ea18ef67/bearer-slice-1a180461027-12008/logs/spring.stdout.log",
+          "sha256": "0c172b19c72f1cf45cc4fdac81575957b6a42eebb33c115135cb56cee34ac419",
+          "bytes": 3359
+        },
+        {
+          "path": "datasets/sir/pilots/bearer-credential-change-g1/runtime/auth-bearer-credential-change-v1-teacher-07b9ea18ef67/bearer-slice-1a180461027-12008/logs/spring.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        }
+      ]
+    },
+    {
+      "id": "auth-bearer-credential-change-p1-v1-teacher-5077aa8e0d9c",
+      "run_id": 40659718923,
+      "bundle": "datasets/sir/pilots/bearer-credential-change-p1-g6",
+      "artifact_id": 12802998395,
+      "artifact_zip_sha256": "bdf4e3dd838095cc4222200b8353df24852aebedb5f6dc7b05673638746bdf0a",
+      "runtime_metadata_original_zip_bytes_match": true,
+      "restored": [
+        {
+          "path": "datasets/sir/pilots/bearer-credential-change-p1-g6/runtime/auth-bearer-credential-change-p1-v1-teacher-5077aa8e0d9c/bearer-slice-1a181b546e3-18861/logs/maven.stdout.log",
+          "sha256": "a82b778120378f467d89a18f0024970991ac8eb37f9655c3080bd023ace7ef4e",
+          "bytes": 2287
+        },
+        {
+          "path": "datasets/sir/pilots/bearer-credential-change-p1-g6/runtime/auth-bearer-credential-change-p1-v1-teacher-5077aa8e0d9c/bearer-slice-1a181b546e3-18861/logs/maven.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "datasets/sir/pilots/bearer-credential-change-p1-g6/runtime/auth-bearer-credential-change-p1-v1-teacher-5077aa8e0d9c/bearer-slice-1a181b546e3-18861/logs/spring.stdout.log",
+          "sha256": "948f562acbcd159f844e759bca45cf5e925688f4fc3ebb63eb9ed92b0a549608",
+          "bytes": 3360
+        },
+        {
+          "path": "datasets/sir/pilots/bearer-credential-change-p1-g6/runtime/auth-bearer-credential-change-p1-v1-teacher-5077aa8e0d9c/bearer-slice-1a181b546e3-18861/logs/spring.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        }
+      ]
+    },
+    {
+      "id": "auth-bearer-credential-change-p2-v1-teacher-f2c07904dfbc",
+      "run_id": 40659722798,
+      "bundle": "datasets/sir/pilots/bearer-credential-change-p2-g6",
+      "artifact_id": 12802983621,
+      "artifact_zip_sha256": "854bd3cf9c097eed31153332c2accdf94f9ef6d2582e0dcaa3b22fb64804107f",
+      "runtime_metadata_original_zip_bytes_match": true,
+      "restored": [
+        {
+          "path": "datasets/sir/pilots/bearer-credential-change-p2-g6/runtime/auth-bearer-credential-change-p2-v1-teacher-f2c07904dfbc/bearer-slice-1a181b54ae7-49752/logs/maven.stdout.log",
+          "sha256": "9ca69e2319e14d025e8cf30234ad137b72e3cdbc259f719c328ef549ec18cbb7",
+          "bytes": 2287
+        },
+        {
+          "path": "datasets/sir/pilots/bearer-credential-change-p2-g6/runtime/auth-bearer-credential-change-p2-v1-teacher-f2c07904dfbc/bearer-slice-1a181b54ae7-49752/logs/maven.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "datasets/sir/pilots/bearer-credential-change-p2-g6/runtime/auth-bearer-credential-change-p2-v1-teacher-f2c07904dfbc/bearer-slice-1a181b54ae7-49752/logs/spring.stdout.log",
+          "sha256": "a795ec2b0af159bd00c19292cdd313b4461ccd77ae123f897f589d8811bb944c",
+          "bytes": 3358
+        },
+        {
+          "path": "datasets/sir/pilots/bearer-credential-change-p2-g6/runtime/auth-bearer-credential-change-p2-v1-teacher-f2c07904dfbc/bearer-slice-1a181b54ae7-49752/logs/spring.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        }
+      ]
+    },
+    {
+      "id": "auth-bearer-credential-change-p3-v1-teacher-d5472e497f7d",
+      "run_id": 40659726344,
+      "bundle": "datasets/sir/pilots/bearer-credential-change-p3-g6",
+      "artifact_id": 12803143212,
+      "artifact_zip_sha256": "e33aa0c533806e9281ff6b2d1ef1958241561227aae86ff9bcc6b1dee176de15",
+      "runtime_metadata_original_zip_bytes_match": true,
+      "restored": [
+        {
+          "path": "datasets/sir/pilots/bearer-credential-change-p3-g6/runtime/auth-bearer-credential-change-p3-v1-teacher-d5472e497f7d/bearer-slice-1a181b54d70-13112/logs/maven.stdout.log",
+          "sha256": "77d816f5f4e7e879500afb2d808aa59763f36051ff42bfdac47e55bdf8b0c6b0",
+          "bytes": 2287
+        },
+        {
+          "path": "datasets/sir/pilots/bearer-credential-change-p3-g6/runtime/auth-bearer-credential-change-p3-v1-teacher-d5472e497f7d/bearer-slice-1a181b54d70-13112/logs/maven.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "datasets/sir/pilots/bearer-credential-change-p3-g6/runtime/auth-bearer-credential-change-p3-v1-teacher-d5472e497f7d/bearer-slice-1a181b54d70-13112/logs/spring.stdout.log",
+          "sha256": "cf39b87e14b79efc22283e310dd633da11056ac9f9054ec1440da9176d418bf7",
+          "bytes": 3360
+        },
+        {
+          "path": "datasets/sir/pilots/bearer-credential-change-p3-g6/runtime/auth-bearer-credential-change-p3-v1-teacher-d5472e497f7d/bearer-slice-1a181b54d70-13112/logs/spring.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        }
+      ]
+    },
+    {
+      "id": "auth-bearer-credential-scratch-v1-teacher-efbdfe58ef70",
+      "run_id": 40623376143,
+      "bundle": "datasets/sir/pilots/bearer-credential-scratch-g5",
+      "artifact_id": 12788067544,
+      "artifact_zip_sha256": "0a78742138a8b18ace58565e49fcc2d0d08d73e97eec7be4a55d9047a304856a",
+      "runtime_metadata_original_zip_bytes_match": true,
+      "restored": [
+        {
+          "path": "datasets/sir/pilots/bearer-credential-scratch-g5/runtime/auth-bearer-credential-scratch-v1-teacher-efbdfe58ef70/bearer-slice-1a1806c6c10-22353/logs/maven.stdout.log",
+          "sha256": "ec555284d6c62ef55f16296187a9a8d493206003e2c662ca1af71147bb8ca46d",
+          "bytes": 2239
+        },
+        {
+          "path": "datasets/sir/pilots/bearer-credential-scratch-g5/runtime/auth-bearer-credential-scratch-v1-teacher-efbdfe58ef70/bearer-slice-1a1806c6c10-22353/logs/maven.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "datasets/sir/pilots/bearer-credential-scratch-g5/runtime/auth-bearer-credential-scratch-v1-teacher-efbdfe58ef70/bearer-slice-1a1806c6c10-22353/logs/spring.stdout.log",
+          "sha256": "f908314b69c0984ee593e752694f47c55edeb5804a9d2bfaf98969adf291cb3c",
+          "bytes": 3290
+        },
+        {
+          "path": "datasets/sir/pilots/bearer-credential-scratch-g5/runtime/auth-bearer-credential-scratch-v1-teacher-efbdfe58ef70/bearer-slice-1a1806c6c10-22353/logs/spring.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        }
+      ]
+    },
+    {
+      "id": "auth-bearer-credential-scratch-p2-v1-teacher-b0ee056ea852",
+      "run_id": 40659733676,
+      "bundle": "datasets/sir/pilots/bearer-credential-scratch-p2-g6",
+      "artifact_id": 12803033350,
+      "artifact_zip_sha256": "50aa3a5b4d4da1ab29a97ad87d922fa34841c059469034d95e3737f054d0df32",
+      "runtime_metadata_original_zip_bytes_match": true,
+      "restored": [
+        {
+          "path": "datasets/sir/pilots/bearer-credential-scratch-p2-g6/runtime/auth-bearer-credential-scratch-p2-v1-teacher-b0ee056ea852/bearer-slice-1a181b552e6-22800/logs/maven.stdout.log",
+          "sha256": "e4a121ea05bfaa0ac5b465aaee057854fe1676aaf8b26c3570e995bf271dbe5f",
+          "bytes": 2239
+        },
+        {
+          "path": "datasets/sir/pilots/bearer-credential-scratch-p2-g6/runtime/auth-bearer-credential-scratch-p2-v1-teacher-b0ee056ea852/bearer-slice-1a181b552e6-22800/logs/maven.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "datasets/sir/pilots/bearer-credential-scratch-p2-g6/runtime/auth-bearer-credential-scratch-p2-v1-teacher-b0ee056ea852/bearer-slice-1a181b552e6-22800/logs/spring.stdout.log",
+          "sha256": "313533056e4f9f604532b67b583ff6ad8d9260bb0c092b44bc71ab06e80c3951",
+          "bytes": 3289
+        },
+        {
+          "path": "datasets/sir/pilots/bearer-credential-scratch-p2-g6/runtime/auth-bearer-credential-scratch-p2-v1-teacher-b0ee056ea852/bearer-slice-1a181b552e6-22800/logs/spring.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        }
+      ]
+    },
+    {
+      "id": "auth-crud-access-change-v1-teacher-d6b3dce267c8",
+      "run_id": 40620875519,
+      "bundle": "datasets/sir/pilots/crud-access-change-g4",
+      "artifact_id": 12786898739,
+      "artifact_zip_sha256": "e57baef13117415bb2ca98dac7372525505054cc9bc46e9f2f3d5b01c31296ba",
+      "runtime_metadata_original_zip_bytes_match": true,
+      "restored": [
+        {
+          "path": "datasets/sir/pilots/crud-access-change-g4/runtime/auth-crud-access-change-v1-teacher-d6b3dce267c8/crud-access-1a18054c65b-44841/logs/maven.stdout.log",
+          "sha256": "62f704cfcfae32d1c5eed240308bf80f1b05737240f29bf4f8e27091a8145561",
+          "bytes": 2307
+        },
+        {
+          "path": "datasets/sir/pilots/crud-access-change-g4/runtime/auth-crud-access-change-v1-teacher-d6b3dce267c8/crud-access-1a18054c65b-44841/logs/maven.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "datasets/sir/pilots/crud-access-change-g4/runtime/auth-crud-access-change-v1-teacher-d6b3dce267c8/crud-access-1a18054c65b-44841/logs/spring.stdout.log",
+          "sha256": "f3a6e49cb248e466a45ac3f2be60325d55236b4beeddbe7de0d2f2923d22f495",
+          "bytes": 3389
+        },
+        {
+          "path": "datasets/sir/pilots/crud-access-change-g4/runtime/auth-crud-access-change-v1-teacher-d6b3dce267c8/crud-access-1a18054c65b-44841/logs/spring.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        }
+      ]
+    },
+    {
+      "id": "auth-crud-access-change-p1-v1-teacher-560b72a650de",
+      "run_id": 40659740033,
+      "bundle": "datasets/sir/pilots/crud-access-change-p1-g6",
+      "artifact_id": 12802768706,
+      "artifact_zip_sha256": "1b667a310329fafc2b0c8481a2bc7fe69bcb669abf8f007b2cc3300f82582b35",
+      "runtime_metadata_original_zip_bytes_match": true,
+      "restored": [
+        {
+          "path": "datasets/sir/pilots/crud-access-change-p1-g6/runtime/auth-crud-access-change-p1-v1-teacher-560b72a650de/crud-access-1a181b55642-9036/logs/maven.stdout.log",
+          "sha256": "b95a26c24b9c49150189da9330e04e3816f3de350ce95327ea2fd8ff2af9c562",
+          "bytes": 2303
+        },
+        {
+          "path": "datasets/sir/pilots/crud-access-change-p1-g6/runtime/auth-crud-access-change-p1-v1-teacher-560b72a650de/crud-access-1a181b55642-9036/logs/maven.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "datasets/sir/pilots/crud-access-change-p1-g6/runtime/auth-crud-access-change-p1-v1-teacher-560b72a650de/crud-access-1a181b55642-9036/logs/spring.stdout.log",
+          "sha256": "5ea627629136323e24a96258ad4ffc929952a253ef6a22a4022a864f0e813d32",
+          "bytes": 3392
+        },
+        {
+          "path": "datasets/sir/pilots/crud-access-change-p1-g6/runtime/auth-crud-access-change-p1-v1-teacher-560b72a650de/crud-access-1a181b55642-9036/logs/spring.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        }
+      ]
+    },
+    {
+      "id": "auth-crud-access-scratch-v1-teacher-3062e8f8e07b",
+      "run_id": 40623378433,
+      "bundle": "datasets/sir/pilots/crud-access-scratch-g5",
+      "artifact_id": 12787927796,
+      "artifact_zip_sha256": "1e211dfe7465931e2942886ed091791918c5835d94c29885159a9ccb48ece8c9",
+      "runtime_metadata_original_zip_bytes_match": true,
+      "restored": [
+        {
+          "path": "datasets/sir/pilots/crud-access-scratch-g5/runtime/auth-crud-access-scratch-v1-teacher-3062e8f8e07b/crud-access-1a1806c98ca-27832/logs/maven.stdout.log",
+          "sha256": "80ad930a51a572021b68392e36b9d92212243f7c99d5cd31134117a2e59ef231",
+          "bytes": 2307
+        },
+        {
+          "path": "datasets/sir/pilots/crud-access-scratch-g5/runtime/auth-crud-access-scratch-v1-teacher-3062e8f8e07b/crud-access-1a1806c98ca-27832/logs/maven.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "datasets/sir/pilots/crud-access-scratch-g5/runtime/auth-crud-access-scratch-v1-teacher-3062e8f8e07b/crud-access-1a1806c98ca-27832/logs/spring.stdout.log",
+          "sha256": "ce48cef7e1fe492f3de9d7dad9feca2b7542344a6cd140857942ce7cda6f5919",
+          "bytes": 3393
+        },
+        {
+          "path": "datasets/sir/pilots/crud-access-scratch-g5/runtime/auth-crud-access-scratch-v1-teacher-3062e8f8e07b/crud-access-1a1806c98ca-27832/logs/spring.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        }
+      ]
+    },
+    {
+      "id": "auth-guarded-transition-change-v1-teacher-857fcfe57b22",
+      "run_id": 40622425058,
+      "bundle": "datasets/sir/pilots/guarded-transition-change-g5",
+      "artifact_id": 12787638922,
+      "artifact_zip_sha256": "95deb451f854073e21659adf9dd2e164659eb21ee0d1432c8b9bb40c22bb0f2d",
+      "runtime_metadata_original_zip_bytes_match": true,
+      "restored": [
+        {
+          "path": "datasets/sir/pilots/guarded-transition-change-g5/runtime/auth-guarded-transition-change-v1-teacher-857fcfe57b22/guard-slice-1a180638e19-42593/logs/maven.stdout.log",
+          "sha256": "03611bf375e47d4bbb56e9f0627a1b610e75d1f97f09002e9661ab63f2460edb",
+          "bytes": 2403
+        },
+        {
+          "path": "datasets/sir/pilots/guarded-transition-change-g5/runtime/auth-guarded-transition-change-v1-teacher-857fcfe57b22/guard-slice-1a180638e19-42593/logs/maven.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "datasets/sir/pilots/guarded-transition-change-g5/runtime/auth-guarded-transition-change-v1-teacher-857fcfe57b22/guard-slice-1a180638e19-42593/logs/spring.stdout.log",
+          "sha256": "05e6442057090b39102392aec3551918918d8ce6a7d0d73c838b656fbefb71b4",
+          "bytes": 3526
+        },
+        {
+          "path": "datasets/sir/pilots/guarded-transition-change-g5/runtime/auth-guarded-transition-change-v1-teacher-857fcfe57b22/guard-slice-1a180638e19-42593/logs/spring.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        }
+      ]
+    },
+    {
+      "id": "auth-guarded-transition-change-p1-v1-teacher-e8231edaefdf",
+      "run_id": 40659743510,
+      "bundle": "datasets/sir/pilots/guarded-transition-change-p1-g6",
+      "artifact_id": 12802743961,
+      "artifact_zip_sha256": "dde185eb5096ed467f4b0382503f905d9b461809c15d9b9cad3897dcf87eac4e",
+      "runtime_metadata_original_zip_bytes_match": true,
+      "restored": [
+        {
+          "path": "datasets/sir/pilots/guarded-transition-change-p1-g6/runtime/auth-guarded-transition-change-p1-v1-teacher-e8231edaefdf/guard-slice-1a181b56f11-60432/logs/maven.stdout.log",
+          "sha256": "7f474af4899460005825ba474f1747cfad9f13f807ea29fe14355f66a430e6f9",
+          "bytes": 2403
+        },
+        {
+          "path": "datasets/sir/pilots/guarded-transition-change-p1-g6/runtime/auth-guarded-transition-change-p1-v1-teacher-e8231edaefdf/guard-slice-1a181b56f11-60432/logs/maven.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "datasets/sir/pilots/guarded-transition-change-p1-g6/runtime/auth-guarded-transition-change-p1-v1-teacher-e8231edaefdf/guard-slice-1a181b56f11-60432/logs/spring.stdout.log",
+          "sha256": "74c81529d54c900e7ffab72bfc33b0e05b21d1678ae2b7a24acf827c2ac43dda",
+          "bytes": 3529
+        },
+        {
+          "path": "datasets/sir/pilots/guarded-transition-change-p1-g6/runtime/auth-guarded-transition-change-p1-v1-teacher-e8231edaefdf/guard-slice-1a181b56f11-60432/logs/spring.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        }
+      ]
+    },
+    {
+      "id": "auth-guarded-transition-change-p2-v1-teacher-92d7f4c118ac",
+      "run_id": 40659746534,
+      "bundle": "datasets/sir/pilots/guarded-transition-change-p2-g6",
+      "artifact_id": 12803338731,
+      "artifact_zip_sha256": "0dbd0361d253c45a4640a519af74c518934621642442e3b906e179be410e3115",
+      "runtime_metadata_original_zip_bytes_match": true,
+      "restored": [
+        {
+          "path": "datasets/sir/pilots/guarded-transition-change-p2-g6/runtime/auth-guarded-transition-change-p2-v1-teacher-92d7f4c118ac/guard-slice-1a181b58373-56942/logs/maven.stdout.log",
+          "sha256": "a24c20e02d000118df1479fca6beb675b675dd4a7f9205e220f4e27822b76bb6",
+          "bytes": 2403
+        },
+        {
+          "path": "datasets/sir/pilots/guarded-transition-change-p2-g6/runtime/auth-guarded-transition-change-p2-v1-teacher-92d7f4c118ac/guard-slice-1a181b58373-56942/logs/maven.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "datasets/sir/pilots/guarded-transition-change-p2-g6/runtime/auth-guarded-transition-change-p2-v1-teacher-92d7f4c118ac/guard-slice-1a181b58373-56942/logs/spring.stdout.log",
+          "sha256": "d66673e662aca51ff876262f323b231d68c4acf021eb6e9aba687fc18ac73f4e",
+          "bytes": 3529
+        },
+        {
+          "path": "datasets/sir/pilots/guarded-transition-change-p2-g6/runtime/auth-guarded-transition-change-p2-v1-teacher-92d7f4c118ac/guard-slice-1a181b58373-56942/logs/spring.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        }
+      ]
+    },
+    {
+      "id": "auth-guarded-transition-change-p3-v1-teacher-b000648105c3",
+      "run_id": 40659749977,
+      "bundle": "datasets/sir/pilots/guarded-transition-change-p3-g6",
+      "artifact_id": 12803138205,
+      "artifact_zip_sha256": "8356397ee570da573056151970e07f104b5a8fc1384c51686ea34b8b7be77142",
+      "runtime_metadata_original_zip_bytes_match": true,
+      "restored": [
+        {
+          "path": "datasets/sir/pilots/guarded-transition-change-p3-g6/runtime/auth-guarded-transition-change-p3-v1-teacher-b000648105c3/guard-slice-1a181b57adb-3663/logs/maven.stdout.log",
+          "sha256": "4001c8f8650acbd476d8cfd7743a0dc19cf768ce967160e7d0c83f3bcb1d6219",
+          "bytes": 2399
+        },
+        {
+          "path": "datasets/sir/pilots/guarded-transition-change-p3-g6/runtime/auth-guarded-transition-change-p3-v1-teacher-b000648105c3/guard-slice-1a181b57adb-3663/logs/maven.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "datasets/sir/pilots/guarded-transition-change-p3-g6/runtime/auth-guarded-transition-change-p3-v1-teacher-b000648105c3/guard-slice-1a181b57adb-3663/logs/spring.stdout.log",
+          "sha256": "6a3658e8bf96b69e8296cf71b465876decf0bc5a43243e61caf0386c4dc17a35",
+          "bytes": 3528
+        },
+        {
+          "path": "datasets/sir/pilots/guarded-transition-change-p3-g6/runtime/auth-guarded-transition-change-p3-v1-teacher-b000648105c3/guard-slice-1a181b57adb-3663/logs/spring.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        }
+      ]
+    },
+    {
+      "id": "auth-guarded-transition-scratch-v1-teacher-1dff8d4a8a1c",
+      "run_id": 40621086545,
+      "bundle": "datasets/sir/pilots/guarded-transition-scratch-g4",
+      "artifact_id": 12787795173,
+      "artifact_zip_sha256": "d538a1d0bccca93b757609d1c8a487d881160c3bcee0851bd13821a92366aca6",
+      "runtime_metadata_original_zip_bytes_match": true,
+      "restored": [
+        {
+          "path": "datasets/sir/pilots/guarded-transition-scratch-g4/runtime/auth-guarded-transition-scratch-v1-teacher-1dff8d4a8a1c/guard-slice-1a18056d9c8-932/logs/maven.stdout.log",
+          "sha256": "8db94157a898837812723afecb517ead570b769832515121598cfa2621d28e51",
+          "bytes": 2395
+        },
+        {
+          "path": "datasets/sir/pilots/guarded-transition-scratch-g4/runtime/auth-guarded-transition-scratch-v1-teacher-1dff8d4a8a1c/guard-slice-1a18056d9c8-932/logs/maven.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "datasets/sir/pilots/guarded-transition-scratch-g4/runtime/auth-guarded-transition-scratch-v1-teacher-1dff8d4a8a1c/guard-slice-1a18056d9c8-932/logs/spring.stdout.log",
+          "sha256": "716696eb8f2204cf06b5aa82d18b8cc2f37d0228c06af07b15c36bfbc15a1df8",
+          "bytes": 3526
+        },
+        {
+          "path": "datasets/sir/pilots/guarded-transition-scratch-g4/runtime/auth-guarded-transition-scratch-v1-teacher-1dff8d4a8a1c/guard-slice-1a18056d9c8-932/logs/spring.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        }
+      ]
+    },
+    {
+      "id": "auth-guarded-transition-scratch-p1-v1-teacher-cf4580ad32c3",
+      "run_id": 40659757695,
+      "bundle": "datasets/sir/pilots/guarded-transition-scratch-p1-g6",
+      "artifact_id": 12802973729,
+      "artifact_zip_sha256": "30ea9ad694e4535ce03f483f840fa5f2647f8f0d9acd616308894942d90de91b",
+      "runtime_metadata_original_zip_bytes_match": true,
+      "restored": [
+        {
+          "path": "datasets/sir/pilots/guarded-transition-scratch-p1-g6/runtime/auth-guarded-transition-scratch-p1-v1-teacher-cf4580ad32c3/guard-slice-1a181b591f7-59203/logs/maven.stdout.log",
+          "sha256": "db95806db9bc8daab8316a58fccc28df8df387c3b57fedd3bd737608099e508d",
+          "bytes": 2403
+        },
+        {
+          "path": "datasets/sir/pilots/guarded-transition-scratch-p1-g6/runtime/auth-guarded-transition-scratch-p1-v1-teacher-cf4580ad32c3/guard-slice-1a181b591f7-59203/logs/maven.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "datasets/sir/pilots/guarded-transition-scratch-p1-g6/runtime/auth-guarded-transition-scratch-p1-v1-teacher-cf4580ad32c3/guard-slice-1a181b591f7-59203/logs/spring.stdout.log",
+          "sha256": "e143ef1654d0a1aff8f77dbd5cea228033c0e659342a2564b7b254ae0bd9c318",
+          "bytes": 3529
+        },
+        {
+          "path": "datasets/sir/pilots/guarded-transition-scratch-p1-g6/runtime/auth-guarded-transition-scratch-p1-v1-teacher-cf4580ad32c3/guard-slice-1a181b591f7-59203/logs/spring.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        }
+      ]
+    },
+    {
+      "id": "auth-guarded-transition-scratch-p2-v1-teacher-3140000df67a",
+      "run_id": 40659761270,
+      "bundle": "datasets/sir/pilots/guarded-transition-scratch-p2-g6",
+      "artifact_id": 12802294244,
+      "artifact_zip_sha256": "dee0005b4c5a180b364bb66bdc388d388244b32eae7fb572b112e7da8a9ebce7",
+      "runtime_metadata_original_zip_bytes_match": true,
+      "restored": [
+        {
+          "path": "datasets/sir/pilots/guarded-transition-scratch-p2-g6/runtime/auth-guarded-transition-scratch-p2-v1-teacher-3140000df67a/guard-slice-1a181b57cd8-32226/logs/maven.stdout.log",
+          "sha256": "893b9bd351604b9240bb32b807931042e7e429e1fae4153e8cb3fa6408d5d05d",
+          "bytes": 2403
+        },
+        {
+          "path": "datasets/sir/pilots/guarded-transition-scratch-p2-g6/runtime/auth-guarded-transition-scratch-p2-v1-teacher-3140000df67a/guard-slice-1a181b57cd8-32226/logs/maven.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "datasets/sir/pilots/guarded-transition-scratch-p2-g6/runtime/auth-guarded-transition-scratch-p2-v1-teacher-3140000df67a/guard-slice-1a181b57cd8-32226/logs/spring.stdout.log",
+          "sha256": "bfb47284679a507bffda38fd4d0ab697f892b9e44112e53fad805799167e420e",
+          "bytes": 3528
+        },
+        {
+          "path": "datasets/sir/pilots/guarded-transition-scratch-p2-g6/runtime/auth-guarded-transition-scratch-p2-v1-teacher-3140000df67a/guard-slice-1a181b57cd8-32226/logs/spring.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        }
+      ]
+    },
+    {
+      "id": "auth-guarded-transition-scratch-p3-v1-teacher-c4bf135d4fc6",
+      "run_id": 40659765829,
+      "bundle": "datasets/sir/pilots/guarded-transition-scratch-p3-g6",
+      "artifact_id": 12803183232,
+      "artifact_zip_sha256": "fc15f2ba92cbe46a8199c79d95472338fa0008ea9ea05536989ca9a8b66e866d",
+      "runtime_metadata_original_zip_bytes_match": true,
+      "restored": [
+        {
+          "path": "datasets/sir/pilots/guarded-transition-scratch-p3-g6/runtime/auth-guarded-transition-scratch-p3-v1-teacher-c4bf135d4fc6/guard-slice-1a181b5964b-61746/logs/maven.stdout.log",
+          "sha256": "0f68f3378622c19bdd47e07d621736bea4943606d7a49a8f5439d2100a63a507",
+          "bytes": 2403
+        },
+        {
+          "path": "datasets/sir/pilots/guarded-transition-scratch-p3-g6/runtime/auth-guarded-transition-scratch-p3-v1-teacher-c4bf135d4fc6/guard-slice-1a181b5964b-61746/logs/maven.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "datasets/sir/pilots/guarded-transition-scratch-p3-g6/runtime/auth-guarded-transition-scratch-p3-v1-teacher-c4bf135d4fc6/guard-slice-1a181b5964b-61746/logs/spring.stdout.log",
+          "sha256": "c3f2de5203e7a42cebfb21e56e4b42a96702fe5853a2ae99b60c3d0e99e90b17",
+          "bytes": 3529
+        },
+        {
+          "path": "datasets/sir/pilots/guarded-transition-scratch-p3-g6/runtime/auth-guarded-transition-scratch-p3-v1-teacher-c4bf135d4fc6/guard-slice-1a181b5964b-61746/logs/spring.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        }
+      ]
+    },
+    {
+      "id": "course-query-slice-change-v1-teacher-905d204a57e4",
+      "run_id": 40621094499,
+      "bundle": "datasets/sir/pilots/query-slice-change-g4",
+      "artifact_id": 12786854596,
+      "artifact_zip_sha256": "0b27549372cc62a6fb9628093f53a98bd22a167678bb07f85cb74c68fd834b34",
+      "runtime_metadata_original_zip_bytes_match": true,
+      "restored": [
+        {
+          "path": "datasets/sir/pilots/query-slice-change-g4/runtime/course-query-slice-change-v1-teacher-905d204a57e4/query-slice-1a18056c86f-61216/logs/maven.stdout.log",
+          "sha256": "b5a41f9216650f0e1482563e9fd3a2afa3bd5478f8b5bf2d4b5d7e9e343f5a0b",
+          "bytes": 2343
+        },
+        {
+          "path": "datasets/sir/pilots/query-slice-change-g4/runtime/course-query-slice-change-v1-teacher-905d204a57e4/query-slice-1a18056c86f-61216/logs/maven.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "datasets/sir/pilots/query-slice-change-g4/runtime/course-query-slice-change-v1-teacher-905d204a57e4/query-slice-1a18056c86f-61216/logs/spring.stdout.log",
+          "sha256": "e4416261056a3bb8e14ca1a0cd0f2b47009ee525ca4e39dd4db773c43c353cbc",
+          "bytes": 3443
+        },
+        {
+          "path": "datasets/sir/pilots/query-slice-change-g4/runtime/course-query-slice-change-v1-teacher-905d204a57e4/query-slice-1a18056c86f-61216/logs/spring.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        }
+      ]
+    },
+    {
+      "id": "course-query-slice-change-p1-v1-teacher-5bb1732e6b38",
+      "run_id": 40659768633,
+      "bundle": "datasets/sir/pilots/query-slice-change-p1-g6",
+      "artifact_id": 12803577116,
+      "artifact_zip_sha256": "70889ab16e06b3f614e595db49341d99018ac96a09fb0d0e0585f1f16dbef505",
+      "runtime_metadata_original_zip_bytes_match": true,
+      "restored": [
+        {
+          "path": "datasets/sir/pilots/query-slice-change-p1-g6/runtime/course-query-slice-change-p1-v1-teacher-5bb1732e6b38/query-slice-1a181b58fc6-24168/logs/maven.stdout.log",
+          "sha256": "a9a6ffda9d335dd8976d80d3ff67657628320535a69a9209b4bdad04a6920a36",
+          "bytes": 2343
+        },
+        {
+          "path": "datasets/sir/pilots/query-slice-change-p1-g6/runtime/course-query-slice-change-p1-v1-teacher-5bb1732e6b38/query-slice-1a181b58fc6-24168/logs/maven.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "datasets/sir/pilots/query-slice-change-p1-g6/runtime/course-query-slice-change-p1-v1-teacher-5bb1732e6b38/query-slice-1a181b58fc6-24168/logs/spring.stdout.log",
+          "sha256": "ecabb09ab3771671caf16994858e3c7dc8333a8d23488f7016f26bef8a3d13ff",
+          "bytes": 3444
+        },
+        {
+          "path": "datasets/sir/pilots/query-slice-change-p1-g6/runtime/course-query-slice-change-p1-v1-teacher-5bb1732e6b38/query-slice-1a181b58fc6-24168/logs/spring.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        }
+      ]
+    },
+    {
+      "id": "course-query-slice-change-p2-v1-teacher-e11df419c6e3",
+      "run_id": 40677209422,
+      "bundle": "datasets/sir/pilots/query-slice-change-p2-g6",
+      "artifact_id": 12811520797,
+      "artifact_zip_sha256": "91c3a2992eaf5dcac3754bece83e4fa02274bdbb13e139b7460ef6c46e807ed9",
+      "runtime_metadata_original_zip_bytes_match": true,
+      "restored": [
+        {
+          "path": "datasets/sir/pilots/query-slice-change-p2-g6/runtime/course-query-slice-change-p2-v1-teacher-e11df419c6e3/query-slice-1a1823067fa-60781/logs/maven.stdout.log",
+          "sha256": "987ecf1c3631b6ecbfad5513c5c5b5c7cf3d3c1e12988c731d39bf0ca76d055e",
+          "bytes": 2343
+        },
+        {
+          "path": "datasets/sir/pilots/query-slice-change-p2-g6/runtime/course-query-slice-change-p2-v1-teacher-e11df419c6e3/query-slice-1a1823067fa-60781/logs/maven.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "datasets/sir/pilots/query-slice-change-p2-g6/runtime/course-query-slice-change-p2-v1-teacher-e11df419c6e3/query-slice-1a1823067fa-60781/logs/spring.stdout.log",
+          "sha256": "4b9dc1692839aae46cdc37b4870809980353561de55cf40830c79cd8251cfb0c",
+          "bytes": 3444
+        },
+        {
+          "path": "datasets/sir/pilots/query-slice-change-p2-g6/runtime/course-query-slice-change-p2-v1-teacher-e11df419c6e3/query-slice-1a1823067fa-60781/logs/spring.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        }
+      ]
+    },
+    {
+      "id": "course-query-slice-change-p3-v1-teacher-e9abc4b17d92",
+      "run_id": 40659771940,
+      "bundle": "datasets/sir/pilots/query-slice-change-p3-g6",
+      "artifact_id": 12803472505,
+      "artifact_zip_sha256": "852fea652eb03f1ccf7e8d0bc4fcae499a67199e8b0acae58c61190c8d86de92",
+      "runtime_metadata_original_zip_bytes_match": true,
+      "restored": [
+        {
+          "path": "datasets/sir/pilots/query-slice-change-p3-g6/runtime/course-query-slice-change-p3-v1-teacher-e9abc4b17d92/query-slice-1a181b583e7-64639/logs/maven.stdout.log",
+          "sha256": "f631967cd3b8d39718525c2a5fdf9998f1a730f89099628b064a4b8f9df676b8",
+          "bytes": 2343
+        },
+        {
+          "path": "datasets/sir/pilots/query-slice-change-p3-g6/runtime/course-query-slice-change-p3-v1-teacher-e9abc4b17d92/query-slice-1a181b583e7-64639/logs/maven.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "datasets/sir/pilots/query-slice-change-p3-g6/runtime/course-query-slice-change-p3-v1-teacher-e9abc4b17d92/query-slice-1a181b583e7-64639/logs/spring.stdout.log",
+          "sha256": "056b103ae641d4e2b7b2cfeec03d5fa1aa79debc3946df16100034de4cd11afa",
+          "bytes": 3443
+        },
+        {
+          "path": "datasets/sir/pilots/query-slice-change-p3-g6/runtime/course-query-slice-change-p3-v1-teacher-e9abc4b17d92/query-slice-1a181b583e7-64639/logs/spring.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        }
+      ]
+    },
+    {
+      "id": "course-query-slice-scratch-v1-teacher-cadd5a148bb8",
+      "run_id": 40619824442,
+      "bundle": "datasets/sir/pilots/query-slice-scratch-g3",
+      "artifact_id": 12787255212,
+      "artifact_zip_sha256": "bee414e56dbbd2a615661a5637f2b3d8922ebd4844ec70c119a626b71183d50d",
+      "runtime_metadata_original_zip_bytes_match": true,
+      "restored": [
+        {
+          "path": "datasets/sir/pilots/query-slice-scratch-g3/runtime/course-query-slice-scratch-v1-teacher-cadd5a148bb8/query-slice-1a1804b0d09-57715/logs/maven.stdout.log",
+          "sha256": "0e493ae8c6c30d95db5be2da7ed1466660e197c893c05c38de1bd121276ce6cd",
+          "bytes": 2343
+        },
+        {
+          "path": "datasets/sir/pilots/query-slice-scratch-g3/runtime/course-query-slice-scratch-v1-teacher-cadd5a148bb8/query-slice-1a1804b0d09-57715/logs/maven.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "datasets/sir/pilots/query-slice-scratch-g3/runtime/course-query-slice-scratch-v1-teacher-cadd5a148bb8/query-slice-1a1804b0d09-57715/logs/spring.stdout.log",
+          "sha256": "e48d846081f6e56e76c1ac9b29a9477a508d8ee4fc23609cc09f971e7babd3e2",
+          "bytes": 3443
+        },
+        {
+          "path": "datasets/sir/pilots/query-slice-scratch-g3/runtime/course-query-slice-scratch-v1-teacher-cadd5a148bb8/query-slice-1a1804b0d09-57715/logs/spring.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        }
+      ]
+    },
+    {
+      "id": "course-query-slice-scratch-p1-v1-teacher-0858ac822e7d",
+      "run_id": 40677214050,
+      "bundle": "datasets/sir/pilots/query-slice-scratch-p1-g6",
+      "artifact_id": 12810319064,
+      "artifact_zip_sha256": "f5313b64c2e83fa924abe1c63c0ccbeea99b5f56fa4cb1652407e2a7cfdb3837",
+      "runtime_metadata_original_zip_bytes_match": true,
+      "restored": [
+        {
+          "path": "datasets/sir/pilots/query-slice-scratch-p1-g6/runtime/course-query-slice-scratch-p1-v1-teacher-0858ac822e7d/query-slice-1a1823071c1-2192/logs/maven.stdout.log",
+          "sha256": "25d92e0472e9d9aa04823a9d14f45dec98edbc48e29e33024b1f892deee81dbb",
+          "bytes": 2339
+        },
+        {
+          "path": "datasets/sir/pilots/query-slice-scratch-p1-g6/runtime/course-query-slice-scratch-p1-v1-teacher-0858ac822e7d/query-slice-1a1823071c1-2192/logs/maven.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "datasets/sir/pilots/query-slice-scratch-p1-g6/runtime/course-query-slice-scratch-p1-v1-teacher-0858ac822e7d/query-slice-1a1823071c1-2192/logs/spring.stdout.log",
+          "sha256": "7bce4fcbf409327fcb07305147b5cba5301e4c2e343cb7f06ea0341d2e00dc72",
+          "bytes": 3441
+        },
+        {
+          "path": "datasets/sir/pilots/query-slice-scratch-p1-g6/runtime/course-query-slice-scratch-p1-v1-teacher-0858ac822e7d/query-slice-1a1823071c1-2192/logs/spring.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        }
+      ]
+    },
+    {
+      "id": "course-query-slice-scratch-p2-v1-teacher-85ff866e415a",
+      "run_id": 40659775670,
+      "bundle": "datasets/sir/pilots/query-slice-scratch-p2-g6",
+      "artifact_id": 12802898478,
+      "artifact_zip_sha256": "1dd53e8528195d48488cdf4c5f5cc950e5750841d9d60b51866c4eab4a5bf536",
+      "runtime_metadata_original_zip_bytes_match": true,
+      "restored": [
+        {
+          "path": "datasets/sir/pilots/query-slice-scratch-p2-g6/runtime/course-query-slice-scratch-p2-v1-teacher-85ff866e415a/query-slice-1a181b5bb02-6917/logs/maven.stdout.log",
+          "sha256": "96000307511bcb87901dae88f5c31dfcb8f25de8ab1ad28328edb998d46fba31",
+          "bytes": 2339
+        },
+        {
+          "path": "datasets/sir/pilots/query-slice-scratch-p2-g6/runtime/course-query-slice-scratch-p2-v1-teacher-85ff866e415a/query-slice-1a181b5bb02-6917/logs/maven.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "datasets/sir/pilots/query-slice-scratch-p2-g6/runtime/course-query-slice-scratch-p2-v1-teacher-85ff866e415a/query-slice-1a181b5bb02-6917/logs/spring.stdout.log",
+          "sha256": "8de79455b3a1b94d224f88909440eb62c0f23ecc8ea69cd0532887e915702b92",
+          "bytes": 3443
+        },
+        {
+          "path": "datasets/sir/pilots/query-slice-scratch-p2-g6/runtime/course-query-slice-scratch-p2-v1-teacher-85ff866e415a/query-slice-1a181b5bb02-6917/logs/spring.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        }
+      ]
+    },
+    {
+      "id": "course-relation-slice-change-v1-teacher-d3c1df26ed80",
+      "run_id": 40621097340,
+      "bundle": "datasets/sir/pilots/relation-slice-change-g4",
+      "artifact_id": 12786678791,
+      "artifact_zip_sha256": "0439e65c301a4d8c4ca75e4aeb756a618c411d99c6f1302ff9faa0fac081cb06",
+      "runtime_metadata_original_zip_bytes_match": true,
+      "restored": [
+        {
+          "path": "datasets/sir/pilots/relation-slice-change-g4/runtime/course-relation-slice-change-v1-teacher-d3c1df26ed80/relation-slice-1a18056ba97-39897/logs/maven.stdout.log",
+          "sha256": "24c410a6a4edf9f4334fbf659ccadf80589fecd0b98aa4953f0dc964bc4b45a4",
+          "bytes": 2391
+        },
+        {
+          "path": "datasets/sir/pilots/relation-slice-change-g4/runtime/course-relation-slice-change-v1-teacher-d3c1df26ed80/relation-slice-1a18056ba97-39897/logs/maven.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "datasets/sir/pilots/relation-slice-change-g4/runtime/course-relation-slice-change-v1-teacher-d3c1df26ed80/relation-slice-1a18056ba97-39897/logs/spring.stdout.log",
+          "sha256": "0dcaba915b2e1e342872d11d774047def81ee203483792341ecc211e0ae59371",
+          "bytes": 3497
+        },
+        {
+          "path": "datasets/sir/pilots/relation-slice-change-g4/runtime/course-relation-slice-change-v1-teacher-d3c1df26ed80/relation-slice-1a18056ba97-39897/logs/spring.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        }
+      ]
+    },
+    {
+      "id": "course-relation-slice-change-p1-v1-teacher-49f7d2232521",
+      "run_id": 40659779197,
+      "bundle": "datasets/sir/pilots/relation-slice-change-p1-g6",
+      "artifact_id": 12802489380,
+      "artifact_zip_sha256": "325682b1b3181b62f46a318b6f572eec6ae6b47b10c34fa1b85a38382236f980",
+      "runtime_metadata_original_zip_bytes_match": true,
+      "restored": [
+        {
+          "path": "datasets/sir/pilots/relation-slice-change-p1-g6/runtime/course-relation-slice-change-p1-v1-teacher-49f7d2232521/relation-slice-1a181b5c8c0-48845/logs/maven.stdout.log",
+          "sha256": "d0dbc4be4acd95bac8f8ce7e592c613c2c015630fd8dc6c64fc979954864bc36",
+          "bytes": 2391
+        },
+        {
+          "path": "datasets/sir/pilots/relation-slice-change-p1-g6/runtime/course-relation-slice-change-p1-v1-teacher-49f7d2232521/relation-slice-1a181b5c8c0-48845/logs/maven.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "datasets/sir/pilots/relation-slice-change-p1-g6/runtime/course-relation-slice-change-p1-v1-teacher-49f7d2232521/relation-slice-1a181b5c8c0-48845/logs/spring.stdout.log",
+          "sha256": "7769ce86063d0f1bb6a4c78b552dc68da4cd1422b6bf6792d2f1860b2e8905c1",
+          "bytes": 3496
+        },
+        {
+          "path": "datasets/sir/pilots/relation-slice-change-p1-g6/runtime/course-relation-slice-change-p1-v1-teacher-49f7d2232521/relation-slice-1a181b5c8c0-48845/logs/spring.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        }
+      ]
+    },
+    {
+      "id": "course-relation-slice-change-p2-v1-teacher-04fdd8df7da7",
+      "run_id": 40677218118,
+      "bundle": "datasets/sir/pilots/relation-slice-change-p2-g6",
+      "artifact_id": 12811411252,
+      "artifact_zip_sha256": "1723c1803f91f557e797e014b54eb0fd19fab06b446f4acd04098364437fec5c",
+      "runtime_metadata_original_zip_bytes_match": true,
+      "restored": [
+        {
+          "path": "datasets/sir/pilots/relation-slice-change-p2-g6/runtime/course-relation-slice-change-p2-v1-teacher-04fdd8df7da7/relation-slice-1a1823082b9-32630/logs/maven.stdout.log",
+          "sha256": "659c5997dfa1c85e1589ba3a87dd6bc92ef205a6931f524e1385c10736db7e79",
+          "bytes": 2391
+        },
+        {
+          "path": "datasets/sir/pilots/relation-slice-change-p2-g6/runtime/course-relation-slice-change-p2-v1-teacher-04fdd8df7da7/relation-slice-1a1823082b9-32630/logs/maven.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "datasets/sir/pilots/relation-slice-change-p2-g6/runtime/course-relation-slice-change-p2-v1-teacher-04fdd8df7da7/relation-slice-1a1823082b9-32630/logs/spring.stdout.log",
+          "sha256": "ad432868a53a7859cd64951d4bab22598f0d3f402736ef1c2bfd9b400e2d320e",
+          "bytes": 3498
+        },
+        {
+          "path": "datasets/sir/pilots/relation-slice-change-p2-g6/runtime/course-relation-slice-change-p2-v1-teacher-04fdd8df7da7/relation-slice-1a1823082b9-32630/logs/spring.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        }
+      ]
+    },
+    {
+      "id": "course-relation-slice-change-p3-v1-teacher-c86f231f82b0",
+      "run_id": 40659782834,
+      "bundle": "datasets/sir/pilots/relation-slice-change-p3-g6",
+      "artifact_id": 12803407939,
+      "artifact_zip_sha256": "bec8a534cd6ac819ffeffff8770f10409493946d55274e08f340b9334321851c",
+      "runtime_metadata_original_zip_bytes_match": true,
+      "restored": [
+        {
+          "path": "datasets/sir/pilots/relation-slice-change-p3-g6/runtime/course-relation-slice-change-p3-v1-teacher-c86f231f82b0/relation-slice-1a181b59b52-59106/logs/maven.stdout.log",
+          "sha256": "6adbe9672ef139d2d7be7458d8ea0ac82b795fab9f65c97ef49779a05482a48c",
+          "bytes": 2391
+        },
+        {
+          "path": "datasets/sir/pilots/relation-slice-change-p3-g6/runtime/course-relation-slice-change-p3-v1-teacher-c86f231f82b0/relation-slice-1a181b59b52-59106/logs/maven.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "datasets/sir/pilots/relation-slice-change-p3-g6/runtime/course-relation-slice-change-p3-v1-teacher-c86f231f82b0/relation-slice-1a181b59b52-59106/logs/spring.stdout.log",
+          "sha256": "b3e43a8eb63a842fda9ff807b62c33286e55dc3ce5f840e37d6a6d0d122677ab",
+          "bytes": 3495
+        },
+        {
+          "path": "datasets/sir/pilots/relation-slice-change-p3-g6/runtime/course-relation-slice-change-p3-v1-teacher-c86f231f82b0/relation-slice-1a181b59b52-59106/logs/spring.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        }
+      ]
+    },
+    {
+      "id": "course-relation-slice-scratch-v1-teacher-561bdfe9ead2",
+      "run_id": 40622055593,
+      "bundle": "datasets/sir/pilots/relation-slice-scratch-g5",
+      "artifact_id": 12787498721,
+      "artifact_zip_sha256": "b66bfbefe7b846a63d86c896efbd345145898aa3c10f1d4bafc995eaddcd8c83",
+      "runtime_metadata_original_zip_bytes_match": true,
+      "restored": [
+        {
+          "path": "datasets/sir/pilots/relation-slice-scratch-g5/runtime/course-relation-slice-scratch-v1-teacher-561bdfe9ead2/relation-slice-1a1805fe862-3761/logs/maven.stdout.log",
+          "sha256": "4b1f9186ec56309ec8313e37d4ae828a0b65d047bccb1a9f5d523db745e6b3e2",
+          "bytes": 2471
+        },
+        {
+          "path": "datasets/sir/pilots/relation-slice-scratch-g5/runtime/course-relation-slice-scratch-v1-teacher-561bdfe9ead2/relation-slice-1a1805fe862-3761/logs/maven.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "datasets/sir/pilots/relation-slice-scratch-g5/runtime/course-relation-slice-scratch-v1-teacher-561bdfe9ead2/relation-slice-1a1805fe862-3761/logs/spring.stdout.log",
+          "sha256": "731090ad7daaa2e7956236c5334c89d33bf7808f98db57796f8b1f4c9bc6ec9f",
+          "bytes": 3616
+        },
+        {
+          "path": "datasets/sir/pilots/relation-slice-scratch-g5/runtime/course-relation-slice-scratch-v1-teacher-561bdfe9ead2/relation-slice-1a1805fe862-3761/logs/spring.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        }
+      ]
+    },
+    {
+      "id": "course-relation-slice-scratch-p1-v1-teacher-1ca2b9285e89",
+      "run_id": 40659786541,
+      "bundle": "datasets/sir/pilots/relation-slice-scratch-p1-g6",
+      "artifact_id": 12803173127,
+      "artifact_zip_sha256": "3f2edb3ccc2e7837dec5ea6c28d4b82c7749d47a70a683ca1ada50ea343b2525",
+      "runtime_metadata_original_zip_bytes_match": true,
+      "restored": [
+        {
+          "path": "datasets/sir/pilots/relation-slice-scratch-p1-g6/runtime/course-relation-slice-scratch-p1-v1-teacher-1ca2b9285e89/relation-slice-1a181b5b7c0-29815/logs/maven.stdout.log",
+          "sha256": "73230d366f60973670f71a49b67130961db7ff146c20ded6e944e3babd77225b",
+          "bytes": 2391
+        },
+        {
+          "path": "datasets/sir/pilots/relation-slice-scratch-p1-g6/runtime/course-relation-slice-scratch-p1-v1-teacher-1ca2b9285e89/relation-slice-1a181b5b7c0-29815/logs/maven.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "datasets/sir/pilots/relation-slice-scratch-p1-g6/runtime/course-relation-slice-scratch-p1-v1-teacher-1ca2b9285e89/relation-slice-1a181b5b7c0-29815/logs/spring.stdout.log",
+          "sha256": "d3f98f92de16d2a9e94d130f8a68feef015e9c48ccbe2eb6804ffc4c8f4625dd",
+          "bytes": 3498
+        },
+        {
+          "path": "datasets/sir/pilots/relation-slice-scratch-p1-g6/runtime/course-relation-slice-scratch-p1-v1-teacher-1ca2b9285e89/relation-slice-1a181b5b7c0-29815/logs/spring.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        }
+      ]
+    },
+    {
+      "id": "course-relation-slice-scratch-p3-v1-teacher-b88e0c7b9a85",
+      "run_id": 40659790445,
+      "bundle": "datasets/sir/pilots/relation-slice-scratch-p3-g6",
+      "artifact_id": 12802888605,
+      "artifact_zip_sha256": "987ea8b9682babc271467fb6431e7fdaeb56aed8146d45390e7e169912f4ea19",
+      "runtime_metadata_original_zip_bytes_match": true,
+      "restored": [
+        {
+          "path": "datasets/sir/pilots/relation-slice-scratch-p3-g6/runtime/course-relation-slice-scratch-p3-v1-teacher-b88e0c7b9a85/relation-slice-1a181b65944-45799/logs/maven.stdout.log",
+          "sha256": "5056dfcc276f6714d28997b1b359c0b1b55aa4d2cc0a1e1f3fcaf1713270bbd9",
+          "bytes": 2391
+        },
+        {
+          "path": "datasets/sir/pilots/relation-slice-scratch-p3-g6/runtime/course-relation-slice-scratch-p3-v1-teacher-b88e0c7b9a85/relation-slice-1a181b65944-45799/logs/maven.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "datasets/sir/pilots/relation-slice-scratch-p3-g6/runtime/course-relation-slice-scratch-p3-v1-teacher-b88e0c7b9a85/relation-slice-1a181b65944-45799/logs/spring.stdout.log",
+          "sha256": "bf38e16009452dba87d556df906bc4f53f7617a828c473d41f19ce00779f734f",
+          "bytes": 3497
+        },
+        {
+          "path": "datasets/sir/pilots/relation-slice-scratch-p3-g6/runtime/course-relation-slice-scratch-p3-v1-teacher-b88e0c7b9a85/relation-slice-1a181b65944-45799/logs/spring.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        }
+      ]
+    },
+    {
+      "id": "auth-token-desk-change-v1-teacher-b38e01722cc0",
+      "run_id": 40621089007,
+      "bundle": "datasets/sir/pilots/token-desk-change-g4",
+      "artifact_id": 12786434554,
+      "artifact_zip_sha256": "7d253dd782664dceb286ef637cc5a5bc498dbd767bb4e314f8b3efda25cda68f",
+      "runtime_metadata_original_zip_bytes_match": true,
+      "restored": [
+        {
+          "path": "datasets/sir/pilots/token-desk-change-g4/runtime/auth-token-desk-change-v1-teacher-b38e01722cc0/token-slice-1a18056c206-42176/logs/maven.stdout.log",
+          "sha256": "90f1879a1f322c18bf610414283de5de01ae6a71dbfa37404b4a5d096d67702e",
+          "bytes": 2295
+        },
+        {
+          "path": "datasets/sir/pilots/token-desk-change-g4/runtime/auth-token-desk-change-v1-teacher-b38e01722cc0/token-slice-1a18056c206-42176/logs/maven.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "datasets/sir/pilots/token-desk-change-g4/runtime/auth-token-desk-change-v1-teacher-b38e01722cc0/token-slice-1a18056c206-42176/logs/spring.stdout.log",
+          "sha256": "999b694053fecfabeab9692e5dc1788ad431eae2b376b8c15ad6380204c2e68c",
+          "bytes": 11537
+        },
+        {
+          "path": "datasets/sir/pilots/token-desk-change-g4/runtime/auth-token-desk-change-v1-teacher-b38e01722cc0/token-slice-1a18056c206-42176/logs/spring.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        }
+      ]
+    },
+    {
+      "id": "auth-token-desk-change-p1-v1-teacher-92b4381319c7",
+      "run_id": 40659798683,
+      "bundle": "datasets/sir/pilots/token-desk-change-p1-g6",
+      "artifact_id": 12803497004,
+      "artifact_zip_sha256": "1656034e61e472684c332160c0d755fdc85b30f5d9123da2c8e5275bc9d3896a",
+      "runtime_metadata_original_zip_bytes_match": true,
+      "restored": [
+        {
+          "path": "datasets/sir/pilots/token-desk-change-p1-g6/runtime/auth-token-desk-change-p1-v1-teacher-92b4381319c7/token-slice-1a181b65c72-30236/logs/maven.stdout.log",
+          "sha256": "70bca0d2010f8a59fd5c158b352068acf1b118bc882dcc85bcd28c3f04ee36a3",
+          "bytes": 2295
+        },
+        {
+          "path": "datasets/sir/pilots/token-desk-change-p1-g6/runtime/auth-token-desk-change-p1-v1-teacher-92b4381319c7/token-slice-1a181b65c72-30236/logs/maven.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "datasets/sir/pilots/token-desk-change-p1-g6/runtime/auth-token-desk-change-p1-v1-teacher-92b4381319c7/token-slice-1a181b65c72-30236/logs/spring.stdout.log",
+          "sha256": "4253465b474ea1c2316bac128ecafb2654169bfb58648b9c0ff96f0af72cc510",
+          "bytes": 11536
+        },
+        {
+          "path": "datasets/sir/pilots/token-desk-change-p1-g6/runtime/auth-token-desk-change-p1-v1-teacher-92b4381319c7/token-slice-1a181b65c72-30236/logs/spring.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        }
+      ]
+    },
+    {
+      "id": "auth-token-desk-change-p2-v1-teacher-a8f4a728ead5",
+      "run_id": 40659801767,
+      "bundle": "datasets/sir/pilots/token-desk-change-p2-g6",
+      "artifact_id": 12802699069,
+      "artifact_zip_sha256": "82fced3ab319d5194158fbb63cc7ece299dcafe8e857d465bc13c12b7887a4f6",
+      "runtime_metadata_original_zip_bytes_match": true,
+      "restored": [
+        {
+          "path": "datasets/sir/pilots/token-desk-change-p2-g6/runtime/auth-token-desk-change-p2-v1-teacher-a8f4a728ead5/token-slice-1a181b65e0d-40567/logs/maven.stdout.log",
+          "sha256": "20dfda2121d55c4c548a20eb6c379c3d5bcd3d272b79ef529e7a675b8ca852a0",
+          "bytes": 2295
+        },
+        {
+          "path": "datasets/sir/pilots/token-desk-change-p2-g6/runtime/auth-token-desk-change-p2-v1-teacher-a8f4a728ead5/token-slice-1a181b65e0d-40567/logs/maven.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "datasets/sir/pilots/token-desk-change-p2-g6/runtime/auth-token-desk-change-p2-v1-teacher-a8f4a728ead5/token-slice-1a181b65e0d-40567/logs/spring.stdout.log",
+          "sha256": "56ce90c40b86ac29ff9f6f4837d17b6fd8395df59318181bdef467551aa25a7d",
+          "bytes": 11537
+        },
+        {
+          "path": "datasets/sir/pilots/token-desk-change-p2-g6/runtime/auth-token-desk-change-p2-v1-teacher-a8f4a728ead5/token-slice-1a181b65e0d-40567/logs/spring.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        }
+      ]
+    },
+    {
+      "id": "auth-token-desk-change-p3-v1-teacher-3560e49d8021",
+      "run_id": 40659806042,
+      "bundle": "datasets/sir/pilots/token-desk-change-p3-g6",
+      "artifact_id": 12803438060,
+      "artifact_zip_sha256": "6a1a90a2cbad396eb2abe5a90ce0ae1cbee2779d767b9d0de9f5944180a23da9",
+      "runtime_metadata_original_zip_bytes_match": true,
+      "restored": [
+        {
+          "path": "datasets/sir/pilots/token-desk-change-p3-g6/runtime/auth-token-desk-change-p3-v1-teacher-3560e49d8021/token-slice-1a181b66caf-46528/logs/maven.stdout.log",
+          "sha256": "41ed0c7e3e60e47028218f7a32bb24305ead2644646a444e2ac9bb604cf8d462",
+          "bytes": 2295
+        },
+        {
+          "path": "datasets/sir/pilots/token-desk-change-p3-g6/runtime/auth-token-desk-change-p3-v1-teacher-3560e49d8021/token-slice-1a181b66caf-46528/logs/maven.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "datasets/sir/pilots/token-desk-change-p3-g6/runtime/auth-token-desk-change-p3-v1-teacher-3560e49d8021/token-slice-1a181b66caf-46528/logs/spring.stdout.log",
+          "sha256": "d92f16d44f991a18cd80790277ae8fa37f7fe174a024d1ded57d2b9529cfa2f5",
+          "bytes": 11537
+        },
+        {
+          "path": "datasets/sir/pilots/token-desk-change-p3-g6/runtime/auth-token-desk-change-p3-v1-teacher-3560e49d8021/token-slice-1a181b66caf-46528/logs/spring.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        }
+      ]
+    },
+    {
+      "id": "auth-token-desk-scratch-v1-teacher-bd4698114bcb",
+      "run_id": 40621091701,
+      "bundle": "datasets/sir/pilots/token-desk-scratch-g4",
+      "artifact_id": 12787357330,
+      "artifact_zip_sha256": "cc40c738dd06002753961a998b1b351ea430e094d445b8df2c4eb1d55ec94d19",
+      "runtime_metadata_original_zip_bytes_match": true,
+      "restored": [
+        {
+          "path": "datasets/sir/pilots/token-desk-scratch-g4/runtime/auth-token-desk-scratch-v1-teacher-bd4698114bcb/token-slice-1a18056d43b-18715/logs/maven.stdout.log",
+          "sha256": "13d88e11c8207b1c9bf36aa8d023d0e044b233d729656a72a64d98210c410948",
+          "bytes": 2295
+        },
+        {
+          "path": "datasets/sir/pilots/token-desk-scratch-g4/runtime/auth-token-desk-scratch-v1-teacher-bd4698114bcb/token-slice-1a18056d43b-18715/logs/maven.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "datasets/sir/pilots/token-desk-scratch-g4/runtime/auth-token-desk-scratch-v1-teacher-bd4698114bcb/token-slice-1a18056d43b-18715/logs/spring.stdout.log",
+          "sha256": "098334e15eae748276b3cf6d51096af7b98f9ee1f2a2cb96e19de9e4a21204ba",
+          "bytes": 11537
+        },
+        {
+          "path": "datasets/sir/pilots/token-desk-scratch-g4/runtime/auth-token-desk-scratch-v1-teacher-bd4698114bcb/token-slice-1a18056d43b-18715/logs/spring.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        }
+      ]
+    },
+    {
+      "id": "auth-token-desk-scratch-p3-v1-teacher-54bccb4ce21d",
+      "run_id": 40659809823,
+      "bundle": "datasets/sir/pilots/token-desk-scratch-p3-g6",
+      "artifact_id": 12802209903,
+      "artifact_zip_sha256": "25d9accbd994b517535e0eae48e863ccdccff50e67e2b336b7c3d7c1699c5b5a",
+      "runtime_metadata_original_zip_bytes_match": true,
+      "restored": [
+        {
+          "path": "datasets/sir/pilots/token-desk-scratch-p3-g6/runtime/auth-token-desk-scratch-p3-v1-teacher-54bccb4ce21d/token-slice-1a181b6688d-62274/logs/maven.stdout.log",
+          "sha256": "a503ad326d129713e52b1403f07ad28b021d2441e2d384c2626276d1294d2648",
+          "bytes": 2295
+        },
+        {
+          "path": "datasets/sir/pilots/token-desk-scratch-p3-g6/runtime/auth-token-desk-scratch-p3-v1-teacher-54bccb4ce21d/token-slice-1a181b6688d-62274/logs/maven.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "datasets/sir/pilots/token-desk-scratch-p3-g6/runtime/auth-token-desk-scratch-p3-v1-teacher-54bccb4ce21d/token-slice-1a181b6688d-62274/logs/spring.stdout.log",
+          "sha256": "2c554f9c8c9bbf1ac2c5111fe03d47978099a8e5cdebbf39e0b20c92b213e62f",
+          "bytes": 11534
+        },
+        {
+          "path": "datasets/sir/pilots/token-desk-scratch-p3-g6/runtime/auth-token-desk-scratch-p3-v1-teacher-54bccb4ce21d/token-slice-1a181b6688d-62274/logs/spring.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        }
+      ]
+    },
+    {
+      "id": "course-write-slice-change-v1-teacher-51ab2996a20e",
+      "run_id": 40619980837,
+      "bundle": "datasets/sir/pilots/write-slice-change-g4",
+      "artifact_id": 12786732885,
+      "artifact_zip_sha256": "9218a647138dbefc982625b18c1de2298eead47ad735b645d3e5ec730d6b2dda",
+      "runtime_metadata_original_zip_bytes_match": true,
+      "restored": [
+        {
+          "path": "datasets/sir/pilots/write-slice-change-g4/runtime/course-write-slice-change-v1-teacher-51ab2996a20e/write-slice-1a1804ca431-57162/logs/maven.stdout.log",
+          "sha256": "2e730dc26a57669491076d9572d217948b5787cef17d6daf9e699296edf9230b",
+          "bytes": 2319
+        },
+        {
+          "path": "datasets/sir/pilots/write-slice-change-g4/runtime/course-write-slice-change-v1-teacher-51ab2996a20e/write-slice-1a1804ca431-57162/logs/maven.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "datasets/sir/pilots/write-slice-change-g4/runtime/course-write-slice-change-v1-teacher-51ab2996a20e/write-slice-1a1804ca431-57162/logs/spring.stdout.log",
+          "sha256": "47c3b12683d82a34540579b4be4977f9f33a17b877e98de0677c407e09954475",
+          "bytes": 3409
+        },
+        {
+          "path": "datasets/sir/pilots/write-slice-change-g4/runtime/course-write-slice-change-v1-teacher-51ab2996a20e/write-slice-1a1804ca431-57162/logs/spring.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        }
+      ]
+    },
+    {
+      "id": "course-write-slice-change-p1-v1-teacher-89312c48ead8",
+      "run_id": 40659813116,
+      "bundle": "datasets/sir/pilots/write-slice-change-p1-g6",
+      "artifact_id": 12802784025,
+      "artifact_zip_sha256": "6d8a755df78173135d97638ae4cd97cb1e00b94492aa806b24943ebb3e6832e6",
+      "runtime_metadata_original_zip_bytes_match": true,
+      "restored": [
+        {
+          "path": "datasets/sir/pilots/write-slice-change-p1-g6/runtime/course-write-slice-change-p1-v1-teacher-89312c48ead8/write-slice-1a181b67ee7-24506/logs/maven.stdout.log",
+          "sha256": "2ed864fd9053864939a83c6e7f1b843a80417a838b47890503a116201d7158de",
+          "bytes": 2319
+        },
+        {
+          "path": "datasets/sir/pilots/write-slice-change-p1-g6/runtime/course-write-slice-change-p1-v1-teacher-89312c48ead8/write-slice-1a181b67ee7-24506/logs/maven.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "datasets/sir/pilots/write-slice-change-p1-g6/runtime/course-write-slice-change-p1-v1-teacher-89312c48ead8/write-slice-1a181b67ee7-24506/logs/spring.stdout.log",
+          "sha256": "bce79498d166cd41e0dd24ccc315f5d0742d8546b77a87c6c67768cc8c59d8b2",
+          "bytes": 3408
+        },
+        {
+          "path": "datasets/sir/pilots/write-slice-change-p1-g6/runtime/course-write-slice-change-p1-v1-teacher-89312c48ead8/write-slice-1a181b67ee7-24506/logs/spring.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        }
+      ]
+    },
+    {
+      "id": "course-write-slice-change-p2-v1-teacher-382f97717bf9",
+      "run_id": 40659816228,
+      "bundle": "datasets/sir/pilots/write-slice-change-p2-g6",
+      "artifact_id": 12803153395,
+      "artifact_zip_sha256": "5483e3e3313d5c566ec2ce2cd73f50a25eb16a9de39f0d682a9ccad525a13ec0",
+      "runtime_metadata_original_zip_bytes_match": true,
+      "restored": [
+        {
+          "path": "datasets/sir/pilots/write-slice-change-p2-g6/runtime/course-write-slice-change-p2-v1-teacher-382f97717bf9/write-slice-1a181b680e1-28821/logs/maven.stdout.log",
+          "sha256": "da430ad769212e899f31ae24044c36918b595ef85b2b7e19c868eb7716f82539",
+          "bytes": 2319
+        },
+        {
+          "path": "datasets/sir/pilots/write-slice-change-p2-g6/runtime/course-write-slice-change-p2-v1-teacher-382f97717bf9/write-slice-1a181b680e1-28821/logs/maven.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "datasets/sir/pilots/write-slice-change-p2-g6/runtime/course-write-slice-change-p2-v1-teacher-382f97717bf9/write-slice-1a181b680e1-28821/logs/spring.stdout.log",
+          "sha256": "7ca29b0ba08a4f5e37aaaef4fac35bb81995b19347c459997cd6c9c08733dc84",
+          "bytes": 3409
+        },
+        {
+          "path": "datasets/sir/pilots/write-slice-change-p2-g6/runtime/course-write-slice-change-p2-v1-teacher-382f97717bf9/write-slice-1a181b680e1-28821/logs/spring.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        }
+      ]
+    },
+    {
+      "id": "course-write-slice-change-p3-v1-teacher-82a766e7e9e3",
+      "run_id": 40659819964,
+      "bundle": "datasets/sir/pilots/write-slice-change-p3-g6",
+      "artifact_id": 12803453026,
+      "artifact_zip_sha256": "edef8ee07a45eabcf18dbba74dd4592d40722923c7a84b4ddf74ee25c8899a94",
+      "runtime_metadata_original_zip_bytes_match": true,
+      "restored": [
+        {
+          "path": "datasets/sir/pilots/write-slice-change-p3-g6/runtime/course-write-slice-change-p3-v1-teacher-82a766e7e9e3/write-slice-1a181b68b39-24541/logs/maven.stdout.log",
+          "sha256": "9cd25e9dd15c6c8587b3c9697d66fd5babbbf374b59be218e3b0587c6d08a3c9",
+          "bytes": 2319
+        },
+        {
+          "path": "datasets/sir/pilots/write-slice-change-p3-g6/runtime/course-write-slice-change-p3-v1-teacher-82a766e7e9e3/write-slice-1a181b68b39-24541/logs/maven.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "datasets/sir/pilots/write-slice-change-p3-g6/runtime/course-write-slice-change-p3-v1-teacher-82a766e7e9e3/write-slice-1a181b68b39-24541/logs/spring.stdout.log",
+          "sha256": "1e33f2b36aade62a2b1f12ba941bb474f4631cbea4461186fc9f00c7a40f41e0",
+          "bytes": 3410
+        },
+        {
+          "path": "datasets/sir/pilots/write-slice-change-p3-g6/runtime/course-write-slice-change-p3-v1-teacher-82a766e7e9e3/write-slice-1a181b68b39-24541/logs/spring.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        }
+      ]
+    },
+    {
+      "id": "course-write-slice-scratch-v1-teacher-be9817697402",
+      "run_id": 40622430172,
+      "bundle": "datasets/sir/pilots/write-slice-scratch-g5",
+      "artifact_id": 12788246257,
+      "artifact_zip_sha256": "25eaef766843106095a7befd0594e0a9e34443d82ec1104f87f08e1e30be4ec7",
+      "runtime_metadata_original_zip_bytes_match": true,
+      "restored": [
+        {
+          "path": "datasets/sir/pilots/write-slice-scratch-g5/runtime/course-write-slice-scratch-v1-teacher-be9817697402/write-slice-1a180634a4c-49910/logs/maven.stdout.log",
+          "sha256": "eb1af9adb3a2f346d75e21111c71751568b7ca15074e0a27321cd80131a6c03f",
+          "bytes": 2319
+        },
+        {
+          "path": "datasets/sir/pilots/write-slice-scratch-g5/runtime/course-write-slice-scratch-v1-teacher-be9817697402/write-slice-1a180634a4c-49910/logs/maven.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "datasets/sir/pilots/write-slice-scratch-g5/runtime/course-write-slice-scratch-v1-teacher-be9817697402/write-slice-1a180634a4c-49910/logs/spring.stdout.log",
+          "sha256": "111f1b272c24155a0498185dbefc7462c076b93445ae600c41ce0e4d48a72f54",
+          "bytes": 3408
+        },
+        {
+          "path": "datasets/sir/pilots/write-slice-scratch-g5/runtime/course-write-slice-scratch-v1-teacher-be9817697402/write-slice-1a180634a4c-49910/logs/spring.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        }
+      ]
+    },
+    {
+      "id": "course-write-slice-scratch-p2-v1-teacher-c2fcf2d091cf",
+      "run_id": 40659823200,
+      "bundle": "datasets/sir/pilots/write-slice-scratch-p2-g6",
+      "artifact_id": 12803133347,
+      "artifact_zip_sha256": "221bac3235455c422953eafdb149981175206a38e2a4fcc08d144d5fd6b32d70",
+      "runtime_metadata_original_zip_bytes_match": true,
+      "restored": [
+        {
+          "path": "datasets/sir/pilots/write-slice-scratch-p2-g6/runtime/course-write-slice-scratch-p2-v1-teacher-c2fcf2d091cf/write-slice-1a181b67b5d-22230/logs/maven.stdout.log",
+          "sha256": "3e1c06ce93872f58c75e8e05aae8e587cda9b912b60ae29126f7fb2c921fb1f9",
+          "bytes": 2319
+        },
+        {
+          "path": "datasets/sir/pilots/write-slice-scratch-p2-g6/runtime/course-write-slice-scratch-p2-v1-teacher-c2fcf2d091cf/write-slice-1a181b67b5d-22230/logs/maven.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "datasets/sir/pilots/write-slice-scratch-p2-g6/runtime/course-write-slice-scratch-p2-v1-teacher-c2fcf2d091cf/write-slice-1a181b67b5d-22230/logs/spring.stdout.log",
+          "sha256": "5bc068b49f6aeefb15aa32a5db39a8ca7c63bdd0254c50f7b46eb6b9c8770ef2",
+          "bytes": 3409
+        },
+        {
+          "path": "datasets/sir/pilots/write-slice-scratch-p2-g6/runtime/course-write-slice-scratch-p2-v1-teacher-c2fcf2d091cf/write-slice-1a181b67b5d-22230/logs/spring.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        }
+      ]
+    },
+    {
+      "id": "course-write-slice-scratch-p3-v1-teacher-e52924e6d4a2",
+      "run_id": 40659826283,
+      "bundle": "datasets/sir/pilots/write-slice-scratch-p3-g6",
+      "artifact_id": 12803577361,
+      "artifact_zip_sha256": "d85194042b7c8145bfa05248116d073b13553ea8c5eccfdf52265c3bd62497e7",
+      "runtime_metadata_original_zip_bytes_match": true,
+      "restored": [
+        {
+          "path": "datasets/sir/pilots/write-slice-scratch-p3-g6/runtime/course-write-slice-scratch-p3-v1-teacher-e52924e6d4a2/write-slice-1a181b695cc-1910/logs/maven.stdout.log",
+          "sha256": "f76931409882c12593cc798216e06490ba15c7b05c02288cc7bcacfd72b97172",
+          "bytes": 2315
+        },
+        {
+          "path": "datasets/sir/pilots/write-slice-scratch-p3-g6/runtime/course-write-slice-scratch-p3-v1-teacher-e52924e6d4a2/write-slice-1a181b695cc-1910/logs/maven.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "datasets/sir/pilots/write-slice-scratch-p3-g6/runtime/course-write-slice-scratch-p3-v1-teacher-e52924e6d4a2/write-slice-1a181b695cc-1910/logs/spring.stdout.log",
+          "sha256": "30fec84b133ca12a63cacaaa8920c15fd547eaccfb315cb4e12eaa875aaefdef",
+          "bytes": 3407
+        },
+        {
+          "path": "datasets/sir/pilots/write-slice-scratch-p3-g6/runtime/course-write-slice-scratch-p3-v1-teacher-e52924e6d4a2/write-slice-1a181b695cc-1910/logs/spring.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        }
+      ]
+    }
+  ]
+}

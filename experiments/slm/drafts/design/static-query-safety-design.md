@@ -229,3 +229,8 @@ mvn -B -o -Dmaven.repo.local=D:/maven-repo -pl sir-toolchain-application -am tes
 已用原 import、该 CI standalone CLI 和精确 LF 输入完成 4.2：两个新 g9 批次都先重置四门，当前参考无诊断。`906a864f71bf` 的 PostTag 和 Like 新行缺 else（B）及 tag 自比较（A）共 3 条；从零父子 `718c0d88dafa`／`215ebacdb9b3` 各新增同样三条，仍保留原 3／2 条错误，合计 6／5 条。`af2c42118880` 仍在 Parser 因原内联 exists 失败，没有为命中 A/B 绕过解析边界。Like 的 B 是获批的显式冲突处理要求，不宣称它在历史 #65 业务里失败。
 
 完整前后对照与输入闭包见[数据报告第二十五阶段](../../../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-blog-g9-recheck)。该免费重查阶段没有模型调用、新候选业务门或训练；随后新预算获批，三份各静态反馈一次共 39648 tokens，改写一份静态通过、从零两份仍失败且源码相同，见[第二十六阶段](../../../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-blog-g9-feedback)。只将通过者提交后送其业务门，四门资格仍待验；合格仍 48 条，未训练。后续 Parser 改进及归档命令整合各自设计，不混入本轮。
+
+
+### 4.2 业务闭环（2026-10-30）
+
+改写新子候选 `bba0b5b48fc4` 在 `c6a993aa` 的[业务门 #66](https://github.com/HoloNova/Software-IR/actions/runs/41031591392)四门全过、426/0；原归档器完成绑定／附件校验并导出1条。合格增至49、博客1，学生v4保留v3原48条并追加新合格答案，完整来源与固定分词器长度已核对。旧44批次缺失的176份日志从登记的原ZIP按原哈希恢复，没有改写旧资格；本轮无模型调用或训练。从零两份仍按额度停止；后续Parser与归档命令设计未开始。证据和审计见[第二十七阶段](../../../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-blog-g9-qualified)。

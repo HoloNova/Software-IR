@@ -108,6 +108,10 @@ v8 已按批准预算在新 `blog-change-g8/`、`blog-scratch-g8/` 各初采一�
 
 三份指定候选的费用随后获批，原 repair 各调用一次，共 **39648 tokens**（输入35020，其中缓存29568；输出4628）。改写 `bba0b5b48fc4` 消除 A/B、静态完整生成57文件；从零 `275138cf0c55`／`216042934560` 仍有3条语义错误，且新源码相同。三份结果保存在各批 `checked-r1-<父短ID>.jsonl`，不覆盖原 checked，不继续追修失败者。只把改写新子候选提交后送 BlogBusinessConformanceIT，当前运行门NOT_RUN、合格仍48、学生v3不变，未训练。审批、真实请求／响应、用量与父子差异见[第二十六阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-blog-g9-feedback)；参考的CI成功仍不借给教师。
 
+### g9 首条博客资格与学生 v4
+
+受测 `c6a993aa` 的[业务门 #66](https://github.com/HoloNova/Software-IR/actions/runs/41031591392)已四门全过、业务426/0，改写 `bba0b5b48fc4` 由原归档器核对ZIP／绑定／附件并 export 1条。累计合格 **49条（26鉴权、22课程、1博客）**；原student只包装新增1条，与封存v3的48条原字节合成v4，49条完整来源审计通过。审计发现旧44批次因 `*.log` 漏纳176份原日志，本轮从原ZIP按原哈希恢复并显式提交，不改旧源码或资格；不是重跑历史门。本轮模型调用0次、未训练，详见[第二十七阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-blog-g9-qualified)。
+
 ## 通用静态修复
 
 `prompts/repair-general-v1.md` 是不限题型的静态反馈前缀：说明这是同一道题的修复、按编译器诊断逐条改、需求与接口不变，不提示具体改法；诊断原文与 DDL 由 `repair` 自动附上。用法：`repair --bundle … --sample-id … --feedback experiments/slm/prompts/repair-general-v1.md`。每个失败候选只修一轮。
@@ -130,7 +134,7 @@ python -m experiments.slm.data student \
 
 `student` 仍会通过 `read_bundle` 校验当前源码与每批的工具链／oracle；不同工具链的历史合格批次不能直接混跑，也不能改 manifest 或跳过校验。跨版本追加时，保留已有学生封存文件的原始字节，用原命令只包装与当前源码一致的新合格批次，再合并记录和索引；合并必须核对新旧导出索引／候选源码／题目／运行绑定、同题源码去重、family/split 隔离和完整来源覆盖。v3 实例见[数据报告第十六阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-prompt-v7-qualified)，其 index 的 `assembly` 保存基座及增量来源哈希。不得借包装重算或改写历史资格。
 
-每版学生数据都须重新测完整序列长度，不能沿用旧版本上限；只用冻结 revision 的分词器，不下载或运行权重，不截断。v3 的选课改写使最长序列升至 9,311／7,102，详见 `datasets/sir/student/train-student-v3.tokens.json`。
+每版学生数据都须重新测完整序列长度，不能沿用旧版本上限；只用冻结 revision 的分词器，不下载或运行权重，不截断。当前v4共49条，旧v3的48条原字节保留，新增博客完整序列为6,581／5,144；三分词器实测最长仍9,311／7,102，详见 `datasets/sir/student/train-student-v4.tokens.json`。
 
 ## 跨环境导入
 

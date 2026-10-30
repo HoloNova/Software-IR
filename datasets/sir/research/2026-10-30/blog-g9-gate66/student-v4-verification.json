@@ -1,0 +1,500 @@
+{
+  "all_49_runtime_artifact_hashes_verified": true,
+  "all_exported_id_sets_match": true,
+  "all_source_and_runtime_bindings_verified": true,
+  "assembly": {
+    "base_corpus_sha256": "a123b56fdb1bbe92a65a30a5c37e12ee7d1cf132cb5bd9cf8b29486c67245578",
+    "base_path": "datasets/sir/student/train-student-v3.jsonl",
+    "base_rows_preserved_byte_for_byte": 48,
+    "historical_answers_reevaluated": false,
+    "method": "sealed-student-v3-plus-current-student-command",
+    "new_bundles": [
+      "datasets/sir/pilots/blog-change-g9"
+    ],
+    "new_corpus_sha256": "0df479ea60c60c4e3102339fc8d9bade83f3127d93feeb7053193e1fc11235f7",
+    "new_export_index_sha256": "a1a20b14fccdac5b36f11522dca9abc632d1ec574ed68ae90baf0a683f7be7cb",
+    "new_rows": 1
+  },
+  "base_token_lengths_unchanged": true,
+  "corpus_sha256": "e6506feedf4f221028c394ff0f32849a3df0fe233c00aaf25311d5ac5ea896a3",
+  "count": 49,
+  "family_groups": {
+    "auth": 26,
+    "content": 1,
+    "course": 22
+  },
+  "index_sha256": "5543505a58e156eb79017a1adef219985e7f6b3f50aab9d05faeb15a5bf711fd",
+  "model_calls": 0,
+  "new_sample_id": "content-blog-change-v1-teacher-bba0b5b48fc4",
+  "profiles": [
+    {
+      "maximum": 7102,
+      "model": "Qwen/Qwen2.5-Coder-3B-Instruct",
+      "new_sample": {
+        "prompt_tokens": 3665,
+        "training_sequence_tokens": 5144
+      }
+    },
+    {
+      "maximum": 7102,
+      "model": "Qwen/Qwen3-4B-Instruct-2507",
+      "new_sample": {
+        "prompt_tokens": 3665,
+        "training_sequence_tokens": 5144
+      }
+    },
+    {
+      "maximum": 9311,
+      "model": "deepseek-ai/deepseek-coder-1.3b-instruct",
+      "new_sample": {
+        "prompt_tokens": 4721,
+        "training_sequence_tokens": 6581
+      }
+    }
+  ],
+  "tokens_sha256": "eca7fae99f1ce987976fa477fb8704d6b749f17a059c8cd6148dab2143403bc2",
+  "training": "NOT_RUN",
+  "verified_rows": [
+    {
+      "artifact_count": 5,
+      "bundle": "datasets/sir/pilots/bearer-credential-change-g1",
+      "export_index_sha256": "2aa0d0a7a4ce2011d61dcb450166e2b951a56f4176a411cefb0e2a0b3b9d3f93",
+      "id": "auth-bearer-credential-change-v1-teacher-07b9ea18ef67",
+      "runtime_evidence_sha256": "b3bcda84f65615b924331187f08884425f94635b219d7524deecdf5b406e4bd0",
+      "runtime_run_id": "bearer-slice-1a180461027-12008",
+      "source_sha256": "96fa6ef4fc48b76dd934ef49753f3ea7e4a0563b1284ec4d6891152f367708d6"
+    },
+    {
+      "artifact_count": 5,
+      "bundle": "datasets/sir/pilots/bearer-credential-change-p1-g6",
+      "export_index_sha256": "3767d1523894f5c6835e4dfd9cc1c7a81eadaef1111ab9fc5fca5ab03215347e",
+      "id": "auth-bearer-credential-change-p1-v1-teacher-5077aa8e0d9c",
+      "runtime_evidence_sha256": "32e891b2463082dcb509870e155027fbf412c193f0ffacfa0f905586a882164b",
+      "runtime_run_id": "bearer-slice-1a181b546e3-18861",
+      "source_sha256": "b873e772d898f93826ba52b0c825a79ebcbe42561740d9f01f34ac7e6676fc3f"
+    },
+    {
+      "artifact_count": 5,
+      "bundle": "datasets/sir/pilots/bearer-credential-change-p2-g6",
+      "export_index_sha256": "7db07d5e7770d779cc97f6feed17413093092e31015098f62c9caae79dcec2cc",
+      "id": "auth-bearer-credential-change-p2-v1-teacher-f2c07904dfbc",
+      "runtime_evidence_sha256": "2f26078a799fbc32a2f7c10870965db1ba996feb343567bdfa9c46d5f8f7c527",
+      "runtime_run_id": "bearer-slice-1a181b54ae7-49752",
+      "source_sha256": "1863a93c383666d39c13de519921cc750ea019ff227a1f2aad5d8c122c5bb619"
+    },
+    {
+      "artifact_count": 5,
+      "bundle": "datasets/sir/pilots/bearer-credential-change-p3-g6",
+      "export_index_sha256": "0bf7e5fc089adbbf637c7da2c5cf03c1ec044eafc1db1e6145ba1316836bb7e0",
+      "id": "auth-bearer-credential-change-p3-v1-teacher-d5472e497f7d",
+      "runtime_evidence_sha256": "9587580dd6ce274fd580e46665688a040286af64ac01ae48033fa643ef07fe2d",
+      "runtime_run_id": "bearer-slice-1a181b54d70-13112",
+      "source_sha256": "a32db19e34a725f5a5d67fb2c26f0a57ff46b3935feacb0d11c611ea53e8f194"
+    },
+    {
+      "artifact_count": 5,
+      "bundle": "datasets/sir/pilots/bearer-credential-scratch-g5",
+      "export_index_sha256": "4e8b1cf7c510296272cc45e7e59d8b27e1af6ff03b36387c8d91386ab1732fd0",
+      "id": "auth-bearer-credential-scratch-v1-teacher-efbdfe58ef70",
+      "runtime_evidence_sha256": "38f2be80002bb15d7fbcee641eb2470ecd1fce717822c4a368fcd8d487ba0904",
+      "runtime_run_id": "bearer-slice-1a1806c6c10-22353",
+      "source_sha256": "bea181ad9ddb3e739820ea5b349e3c8be5c273294ea74b5ae3fdf5ec159d2325"
+    },
+    {
+      "artifact_count": 5,
+      "bundle": "datasets/sir/pilots/bearer-credential-scratch-p2-g6",
+      "export_index_sha256": "51df6afb607a403999f730fefce2e396546e35668cebf50413269221a12ff46d",
+      "id": "auth-bearer-credential-scratch-p2-v1-teacher-b0ee056ea852",
+      "runtime_evidence_sha256": "f6aa773c81629946356be044deb93a213d0044fad08366b381ea4df28f0ae6b4",
+      "runtime_run_id": "bearer-slice-1a181b552e6-22800",
+      "source_sha256": "169d792041e59931791ea34ce43fc534dd1d805d2f80e563dbe26ac5e9a40075"
+    },
+    {
+      "artifact_count": 5,
+      "bundle": "datasets/sir/pilots/crud-access-change-g4",
+      "export_index_sha256": "e0a38b454041ed5d79f52fbcbffb4d188c9ff63ce0b5fa04202f69930993a6c6",
+      "id": "auth-crud-access-change-v1-teacher-d6b3dce267c8",
+      "runtime_evidence_sha256": "06d575de59d3203249d9d790ec4eb9e963969bf1ffadc658075b7ca1539f61c2",
+      "runtime_run_id": "crud-access-1a18054c65b-44841",
+      "source_sha256": "b351532a58f5da01292734000e0e01e4da1a6851b5a8ae1e87d61d16b26bc1aa"
+    },
+    {
+      "artifact_count": 5,
+      "bundle": "datasets/sir/pilots/crud-access-change-p1-g6",
+      "export_index_sha256": "0d1f3c60953381c80eb70f7ea3e9083c8935c6cd9efab87a510eed6b92014636",
+      "id": "auth-crud-access-change-p1-v1-teacher-560b72a650de",
+      "runtime_evidence_sha256": "09398f1d4b51de383968e160f9b83288d8427404e0fc80a7be95b65fbcfe18ec",
+      "runtime_run_id": "crud-access-1a181b55642-9036",
+      "source_sha256": "b4c8621792d4f858dbe3dea0191841ddb8107c30a158175fbee6b089ac1ce478"
+    },
+    {
+      "artifact_count": 5,
+      "bundle": "datasets/sir/pilots/crud-access-scratch-g5",
+      "export_index_sha256": "b2dafb40d3b58a7e2038b41a4dee1585f678b2b1ed6eec9fece5153902e30a79",
+      "id": "auth-crud-access-scratch-v1-teacher-3062e8f8e07b",
+      "runtime_evidence_sha256": "7a4cde5d12badd99a741c55245d60f6ffad99863c3639c8139c926bdd7428726",
+      "runtime_run_id": "crud-access-1a1806c98ca-27832",
+      "source_sha256": "a7622607d73792b5f14a4a0e0e36ab027a40ef3ac64855cd15973dc7e5b2f7f1"
+    },
+    {
+      "artifact_count": 5,
+      "bundle": "datasets/sir/pilots/guarded-transition-change-g5",
+      "export_index_sha256": "425b3cab5befb9b58057cb4338008159e42c386f4b9c5fff883a5ad18e6f5827",
+      "id": "auth-guarded-transition-change-v1-teacher-857fcfe57b22",
+      "runtime_evidence_sha256": "a1b10f073717b66f3b13a9ddca7cbfeb7c5718d0e2974f6d330e05825910017e",
+      "runtime_run_id": "guard-slice-1a180638e19-42593",
+      "source_sha256": "cc8f47168b208c0465efc287b44ff4683694561750d90b26f8fd5659be43efe1"
+    },
+    {
+      "artifact_count": 5,
+      "bundle": "datasets/sir/pilots/guarded-transition-change-p1-g6",
+      "export_index_sha256": "5137e0ad60bcf9ed475582c8aa209bb74369fa87c6acbefbcceb87777fba455e",
+      "id": "auth-guarded-transition-change-p1-v1-teacher-e8231edaefdf",
+      "runtime_evidence_sha256": "41b6ba65248ea32df849cac847d12281d35d7c780d314fa4349008d8c9fea670",
+      "runtime_run_id": "guard-slice-1a181b56f11-60432",
+      "source_sha256": "2e3df4edb830485ab0c11f5ba690a3a16e52ba33de65f72ae1c1c52721b1754d"
+    },
+    {
+      "artifact_count": 5,
+      "bundle": "datasets/sir/pilots/guarded-transition-change-p2-g6",
+      "export_index_sha256": "b6f2fca2271f5ebe82bcac3d6635ba688473c1fd776e04456b2994d02124fd45",
+      "id": "auth-guarded-transition-change-p2-v1-teacher-92d7f4c118ac",
+      "runtime_evidence_sha256": "912260b4476d4790052055e052b12e0e7dfccceaf150aeb3412d08de0db6aa5f",
+      "runtime_run_id": "guard-slice-1a181b58373-56942",
+      "source_sha256": "11de450e33518947a1a5c97c5043852b873f2c7dedeb9ac99abae8190c80d427"
+    },
+    {
+      "artifact_count": 5,
+      "bundle": "datasets/sir/pilots/guarded-transition-change-p3-g6",
+      "export_index_sha256": "904b66c3e5c259020dc6c7452562ede28ba2be5f173de2abb8f784c4a1f0776a",
+      "id": "auth-guarded-transition-change-p3-v1-teacher-b000648105c3",
+      "runtime_evidence_sha256": "3f93a06bd64f51ac1496ae3658f36023d486729ec9826071375084cbf9814caa",
+      "runtime_run_id": "guard-slice-1a181b57adb-3663",
+      "source_sha256": "11de450e33518947a1a5c97c5043852b873f2c7dedeb9ac99abae8190c80d427"
+    },
+    {
+      "artifact_count": 5,
+      "bundle": "datasets/sir/pilots/guarded-transition-scratch-g4",
+      "export_index_sha256": "9a124de94f1861595ecaed3ce18ebb87a28618eb09bdfb7df3b2b044a3c3439b",
+      "id": "auth-guarded-transition-scratch-v1-teacher-1dff8d4a8a1c",
+      "runtime_evidence_sha256": "b20f60dcae801b5712f714a88acaa11c93ee5525e0422afc20d9ff6481a44eed",
+      "runtime_run_id": "guard-slice-1a18056d9c8-932",
+      "source_sha256": "3f577ab64bb46cf5ba3d41248f77e553048805b086fed64d20bb2c98aee05233"
+    },
+    {
+      "artifact_count": 5,
+      "bundle": "datasets/sir/pilots/guarded-transition-scratch-p1-g6",
+      "export_index_sha256": "432a7414b56967f64ab002e14b22500efe4a480c0352dc6105d3f5aca5d83a75",
+      "id": "auth-guarded-transition-scratch-p1-v1-teacher-cf4580ad32c3",
+      "runtime_evidence_sha256": "f5a033ee44fab815b9616687bfaa5ea84fa8d92c12eb62c00ca7bd810e95b6bd",
+      "runtime_run_id": "guard-slice-1a181b591f7-59203",
+      "source_sha256": "98235652f0614b71e8fa9a6574a382fe4765f34868f25bad6e16fa7a72f37b3a"
+    },
+    {
+      "artifact_count": 5,
+      "bundle": "datasets/sir/pilots/guarded-transition-scratch-p2-g6",
+      "export_index_sha256": "7975cf5d8ba960ffac1440882233df306cf940645574d3ceeb4f8f957a722780",
+      "id": "auth-guarded-transition-scratch-p2-v1-teacher-3140000df67a",
+      "runtime_evidence_sha256": "0c52a66cb711e8530c2c57de810fafb1a0c1520cf651e1f9e6508c30eb8b2e2f",
+      "runtime_run_id": "guard-slice-1a181b57cd8-32226",
+      "source_sha256": "31d9cf89da957e370a13107c8b18c821d26aac3ac4c129a10b136f759b9b04e3"
+    },
+    {
+      "artifact_count": 5,
+      "bundle": "datasets/sir/pilots/guarded-transition-scratch-p3-g6",
+      "export_index_sha256": "c1a25a5cb5b42d31cfc8a550530c2ecc51df847945bbd1b00be8daedaf57d7df",
+      "id": "auth-guarded-transition-scratch-p3-v1-teacher-c4bf135d4fc6",
+      "runtime_evidence_sha256": "e74f9cc49c2300322210975d9a3ceba33b40140fb7bb303f6cbc486aeec63728",
+      "runtime_run_id": "guard-slice-1a181b5964b-61746",
+      "source_sha256": "39612299af0ea6ea32dd2754aa0ed6aab99d7cbafbebb50115c52ba9d1ec5cdf"
+    },
+    {
+      "artifact_count": 5,
+      "bundle": "datasets/sir/pilots/query-slice-change-g4",
+      "export_index_sha256": "fd81874058b61c60747dea79d60d2d7ca4a02f60b7fb7339b33b4bcfe5eb70f2",
+      "id": "course-query-slice-change-v1-teacher-905d204a57e4",
+      "runtime_evidence_sha256": "a20535a60b09a50aa316b71e9ea2b0e9f954fa273ad5b6b37bb7e605b5550b82",
+      "runtime_run_id": "query-slice-1a18056c86f-61216",
+      "source_sha256": "c739207378be3a7c7d29d95375752b4b93f45fd97d1a231ccb797de145e1a09c"
+    },
+    {
+      "artifact_count": 5,
+      "bundle": "datasets/sir/pilots/query-slice-change-p1-g6",
+      "export_index_sha256": "8bb5859afb09b6885364df5bbcc012fcb3ef71f4a5f9ec3598fd85ea64125179",
+      "id": "course-query-slice-change-p1-v1-teacher-5bb1732e6b38",
+      "runtime_evidence_sha256": "43d52ef852a91d2014509820fb825ddd408da5fa0e402bb9586695d72b7e5cb7",
+      "runtime_run_id": "query-slice-1a181b58fc6-24168",
+      "source_sha256": "34ff449ba70ca656845dfcb6105b74b7ba59a8f44e391f8fdbfc9b679fd2251d"
+    },
+    {
+      "artifact_count": 5,
+      "bundle": "datasets/sir/pilots/query-slice-change-p2-g6",
+      "export_index_sha256": "a875d12fe283e43c38692a442f0831751e8f0954ada5e5afad2ddb25c4b6e671",
+      "id": "course-query-slice-change-p2-v1-teacher-e11df419c6e3",
+      "runtime_evidence_sha256": "12ea4c873d40bcc26837a3abf807db63d41cb0d231be91e545690cbf06f5616a",
+      "runtime_run_id": "query-slice-1a1823067fa-60781",
+      "source_sha256": "34ff449ba70ca656845dfcb6105b74b7ba59a8f44e391f8fdbfc9b679fd2251d"
+    },
+    {
+      "artifact_count": 5,
+      "bundle": "datasets/sir/pilots/query-slice-change-p3-g6",
+      "export_index_sha256": "160a853f8e05865574c839fba5333d238d842fd4d58376bebaad688a1a0787c7",
+      "id": "course-query-slice-change-p3-v1-teacher-e9abc4b17d92",
+      "runtime_evidence_sha256": "60a57adbb8e9be263a3f37ae3ea4b328892e3d27137013b9121f634d0c952b41",
+      "runtime_run_id": "query-slice-1a181b583e7-64639",
+      "source_sha256": "fade15debaa4b9e3e7a0a8a29a847e32cdf397abe3b6b27b265d4f3c728e36ac"
+    },
+    {
+      "artifact_count": 5,
+      "bundle": "datasets/sir/pilots/query-slice-scratch-g3",
+      "export_index_sha256": "2d602438ef92b1ef0ec3884f1325e266557a957b040831282e115a471efcfc14",
+      "id": "course-query-slice-scratch-v1-teacher-cadd5a148bb8",
+      "runtime_evidence_sha256": "341d524d378794901561ed5f46905c4f7e17d9e554c23a0289b350ab704185c2",
+      "runtime_run_id": "query-slice-1a1804b0d09-57715",
+      "source_sha256": "975e41b319a6c2c5d9542894a09414c4918659c2b12dec24601eec2a563c6e5e"
+    },
+    {
+      "artifact_count": 5,
+      "bundle": "datasets/sir/pilots/query-slice-scratch-p1-g6",
+      "export_index_sha256": "7369ed9d8efa8ce6716861b9acc87c854aaae843f7817857db2d6de3ac219e11",
+      "id": "course-query-slice-scratch-p1-v1-teacher-0858ac822e7d",
+      "runtime_evidence_sha256": "80327e38b6a68215b3e9af311677137711581673ee7d938a0697fc8657d654f6",
+      "runtime_run_id": "query-slice-1a1823071c1-2192",
+      "source_sha256": "dce20d86e757a860157734159b88b9ac6fd84b004c82e47bd21447ec5eaad114"
+    },
+    {
+      "artifact_count": 5,
+      "bundle": "datasets/sir/pilots/query-slice-scratch-p2-g6",
+      "export_index_sha256": "87b54f262a9c7e78c86afb471799c1bdc066941d6af04ec40b0324bb0efb325e",
+      "id": "course-query-slice-scratch-p2-v1-teacher-85ff866e415a",
+      "runtime_evidence_sha256": "cbb1364bf69c239f0416bb54426cc15b1c7e5b5775fb040663dba24596515507",
+      "runtime_run_id": "query-slice-1a181b5bb02-6917",
+      "source_sha256": "0589236c6faba7fc204b7f101e6fd4724b035eb18938f06018401e6a83de84e1"
+    },
+    {
+      "artifact_count": 5,
+      "bundle": "datasets/sir/pilots/relation-slice-change-g4",
+      "export_index_sha256": "1b524d1c77e1431a6d5b05cdfcf82446356361ec896e3fd98707a0affaa7cfd4",
+      "id": "course-relation-slice-change-v1-teacher-d3c1df26ed80",
+      "runtime_evidence_sha256": "a17d4e731d77dce40ba339693ffc76c8b616404442c4d0c6d16f3c2dd5b3bca3",
+      "runtime_run_id": "relation-slice-1a18056ba97-39897",
+      "source_sha256": "e4602703518dd54d9e3f71721b9c19515c611929c6600d00955071054a4a3802"
+    },
+    {
+      "artifact_count": 5,
+      "bundle": "datasets/sir/pilots/relation-slice-change-p1-g6",
+      "export_index_sha256": "3053e30865a7017cc9c9da57cfce267eb0bd9aed51d0a7ede59441d885387a3d",
+      "id": "course-relation-slice-change-p1-v1-teacher-49f7d2232521",
+      "runtime_evidence_sha256": "8fbe07cd08a14c78a6936d0aa438f2238faa93964d214d1206d05936b66209b7",
+      "runtime_run_id": "relation-slice-1a181b5c8c0-48845",
+      "source_sha256": "2da7cafcf4cbcd96f68538ba8e3c1bae52dd33da151324dbe31442c52cf3179b"
+    },
+    {
+      "artifact_count": 5,
+      "bundle": "datasets/sir/pilots/relation-slice-change-p2-g6",
+      "export_index_sha256": "c95558fbac4a22878b5bef094d70bfb04d3fbe2aae5fad0b52e5cbdf087771fe",
+      "id": "course-relation-slice-change-p2-v1-teacher-04fdd8df7da7",
+      "runtime_evidence_sha256": "a80130cce7be71c8e0812125db8eab0b3ead73b212b9b7f2ddbd2e4c7eea7392",
+      "runtime_run_id": "relation-slice-1a1823082b9-32630",
+      "source_sha256": "82d3d6c00dc987a046b99d8787e76e530d4229eb38245d4cb0748b62c737348d"
+    },
+    {
+      "artifact_count": 5,
+      "bundle": "datasets/sir/pilots/relation-slice-change-p3-g6",
+      "export_index_sha256": "ec07bf40a837cf565abbba3ab83a8992dde81aad4cbf726361390c2d92b0e49e",
+      "id": "course-relation-slice-change-p3-v1-teacher-c86f231f82b0",
+      "runtime_evidence_sha256": "f8882ee2340ff946817f38ee02fce46feeac360916945ed230d2847ddbb93e04",
+      "runtime_run_id": "relation-slice-1a181b59b52-59106",
+      "source_sha256": "bd7a399004821598882519ff568692abcb33fdc04384ca4089cd9ae90f0c2d71"
+    },
+    {
+      "artifact_count": 5,
+      "bundle": "datasets/sir/pilots/relation-slice-scratch-g5",
+      "export_index_sha256": "7c7b90fe3905179e1f9f109badd19dba8dd62fbff786dd704abfa27ce4331e47",
+      "id": "course-relation-slice-scratch-v1-teacher-561bdfe9ead2",
+      "runtime_evidence_sha256": "e7c632a348ddbb39e80a7eb3da558981dbb8ad3c21727a3bad2d02948fbd3ba8",
+      "runtime_run_id": "relation-slice-1a1805fe862-3761",
+      "source_sha256": "216e3841d50c0879c464d018e13c8114f92cd1a0bc323e6cd2afba8bea8c43ab"
+    },
+    {
+      "artifact_count": 5,
+      "bundle": "datasets/sir/pilots/relation-slice-scratch-p1-g6",
+      "export_index_sha256": "53ef358b8cd46ef93827ffb810fa3620ab36e19b9c882c966f5fbed987b2bdd9",
+      "id": "course-relation-slice-scratch-p1-v1-teacher-1ca2b9285e89",
+      "runtime_evidence_sha256": "811de40008cbd8d7c829dfd8b103152e52f14c6880d7e2f015ed0a87e855f5fe",
+      "runtime_run_id": "relation-slice-1a181b5b7c0-29815",
+      "source_sha256": "413cdc0c9c8b0e953cc88700ddcffaaa7ec00e9387dc22a2b5cec53e7fb22a0d"
+    },
+    {
+      "artifact_count": 5,
+      "bundle": "datasets/sir/pilots/relation-slice-scratch-p3-g6",
+      "export_index_sha256": "f4d6cf328563c4402ecb9dcfb7889a22927f10c3ddd04d69394336dfdecf3b38",
+      "id": "course-relation-slice-scratch-p3-v1-teacher-b88e0c7b9a85",
+      "runtime_evidence_sha256": "de692cf213c0a6002eb72bbb1926089461f1b601351c882abc4359935ebe1815",
+      "runtime_run_id": "relation-slice-1a181b65944-45799",
+      "source_sha256": "f79138157d401771faa95d9e85047a7021f49dfae5db3df71b698c7c8357ac38"
+    },
+    {
+      "artifact_count": 5,
+      "bundle": "datasets/sir/pilots/token-desk-change-g4",
+      "export_index_sha256": "0a5e7817dbb2167e9d0c527ff11df7a264fbf72d0d77eab13c57969996ca45b7",
+      "id": "auth-token-desk-change-v1-teacher-b38e01722cc0",
+      "runtime_evidence_sha256": "2ef0ed57befc4bdb1f236dbcfd51b614dc3714cb51ce288222954dc1cb9d2013",
+      "runtime_run_id": "token-slice-1a18056c206-42176",
+      "source_sha256": "d34b5047839fbd80459ca9a2542f8fea83ecb4b9d5950eb7903a6fc52dfe7e06"
+    },
+    {
+      "artifact_count": 5,
+      "bundle": "datasets/sir/pilots/token-desk-change-p1-g6",
+      "export_index_sha256": "a5cb9ddfe44076c67751c6e84a3e8698eed69e6cb6dcf7bc4031f91a2ead1c57",
+      "id": "auth-token-desk-change-p1-v1-teacher-92b4381319c7",
+      "runtime_evidence_sha256": "177d39f8faf4765100b12bf9438180a1ecfa87f1c352e6b82637360e8bbf3abb",
+      "runtime_run_id": "token-slice-1a181b65c72-30236",
+      "source_sha256": "36165e96a311e02489fa6475e2fd11e9c243807e856b29c6229775f01cb58dae"
+    },
+    {
+      "artifact_count": 5,
+      "bundle": "datasets/sir/pilots/token-desk-change-p2-g6",
+      "export_index_sha256": "a276d4b6ab3e5816a18d84d2c38e9771f417a5d1629469ff7e510d314b785da9",
+      "id": "auth-token-desk-change-p2-v1-teacher-a8f4a728ead5",
+      "runtime_evidence_sha256": "0c6e46b120241b459cf21375ae24459cba807d76b3b8f1844ef8012732bae7ee",
+      "runtime_run_id": "token-slice-1a181b65e0d-40567",
+      "source_sha256": "ef55b886075c2b14d338f9ef52c2d0e71750ae68bdf0fefa6fc2cde90f211d14"
+    },
+    {
+      "artifact_count": 5,
+      "bundle": "datasets/sir/pilots/token-desk-change-p3-g6",
+      "export_index_sha256": "2fd15b68ef277c37e08ba965f2af553c30385a584e2688891f47c82e68d11aff",
+      "id": "auth-token-desk-change-p3-v1-teacher-3560e49d8021",
+      "runtime_evidence_sha256": "24150f673bf5af161d05bc6775b8b3c6d758effa3afb4063dc6ce869ebd3efee",
+      "runtime_run_id": "token-slice-1a181b66caf-46528",
+      "source_sha256": "c9178f88ed49882eef1fd271880f60a28ebf668f57ace08d77406ed1dbb125e0"
+    },
+    {
+      "artifact_count": 5,
+      "bundle": "datasets/sir/pilots/token-desk-scratch-g4",
+      "export_index_sha256": "47c2fc05f488e12a7e88df75ff3decd634eb6c0295950745d2631edd0fc8ac5f",
+      "id": "auth-token-desk-scratch-v1-teacher-bd4698114bcb",
+      "runtime_evidence_sha256": "cbc654eac943cf9f79bd5d19c3ddb6073860454c321092ce0604d9992a94441d",
+      "runtime_run_id": "token-slice-1a18056d43b-18715",
+      "source_sha256": "db0ef78f519b887ec32069e955c80c78a7f29823fd97898ae7ce538e79c214f8"
+    },
+    {
+      "artifact_count": 5,
+      "bundle": "datasets/sir/pilots/token-desk-scratch-p3-g6",
+      "export_index_sha256": "d6521051d4fe2f7f41c6992fedc728b79c462dbd2630f07fdb7f3b6b84ba9f1d",
+      "id": "auth-token-desk-scratch-p3-v1-teacher-54bccb4ce21d",
+      "runtime_evidence_sha256": "f061a72394f60fa916bbf223541b37ffaf98b82a77c970b162113226eba76451",
+      "runtime_run_id": "token-slice-1a181b6688d-62274",
+      "source_sha256": "68859bdd44cec52a7858ebdba5fc1aec758013b3f80cd9682dc5370563d7720a"
+    },
+    {
+      "artifact_count": 5,
+      "bundle": "datasets/sir/pilots/write-slice-change-g4",
+      "export_index_sha256": "255650d93d3efd8af30b469df0c7c71090604e0f50ca7cc278c32e9cb27597bf",
+      "id": "course-write-slice-change-v1-teacher-51ab2996a20e",
+      "runtime_evidence_sha256": "3935c8c3b6a0f6e5afb2448fac99a89b785a2fa15e7d81c0cbf198cf9fa25a37",
+      "runtime_run_id": "write-slice-1a1804ca431-57162",
+      "source_sha256": "bbc68210d9add2d0eee212f64e42d6d888acaab287297f7642433a6a38417b2b"
+    },
+    {
+      "artifact_count": 5,
+      "bundle": "datasets/sir/pilots/write-slice-change-p1-g6",
+      "export_index_sha256": "7b4572c18dacec78b423e5b67594b75381bde16857105351f50b69ce0d2b4265",
+      "id": "course-write-slice-change-p1-v1-teacher-89312c48ead8",
+      "runtime_evidence_sha256": "d734e47e62761d605a2fca28fc6798c6fe660eef918d09af1a72fea39148ec92",
+      "runtime_run_id": "write-slice-1a181b67ee7-24506",
+      "source_sha256": "23b62bdf3fdc34427ace03a56e0a38a097fec5a34fc6e1cd4f92977fad1dcc4a"
+    },
+    {
+      "artifact_count": 5,
+      "bundle": "datasets/sir/pilots/write-slice-change-p2-g6",
+      "export_index_sha256": "c809cc0992e0144203ad54aff01d3bd94e73222202890aed2948f456feda2548",
+      "id": "course-write-slice-change-p2-v1-teacher-382f97717bf9",
+      "runtime_evidence_sha256": "f163aa766d32b99c006e5031f7ea5317162eaa8c8f7d5aa0ec1c50351fedee3f",
+      "runtime_run_id": "write-slice-1a181b680e1-28821",
+      "source_sha256": "81d2f27cce1e7629a8be9cb6a2d888f0a769330e2865603e5c35fefd008d7663"
+    },
+    {
+      "artifact_count": 5,
+      "bundle": "datasets/sir/pilots/write-slice-change-p3-g6",
+      "export_index_sha256": "883e4c154c3b8d8d63eac85b551d8d2958412532af7b580a68470d45285dcb5a",
+      "id": "course-write-slice-change-p3-v1-teacher-82a766e7e9e3",
+      "runtime_evidence_sha256": "b779a486fe5e9924233c9bd84883ed5d7395f3b25162a5a0ba51886105345c00",
+      "runtime_run_id": "write-slice-1a181b68b39-24541",
+      "source_sha256": "81d2f27cce1e7629a8be9cb6a2d888f0a769330e2865603e5c35fefd008d7663"
+    },
+    {
+      "artifact_count": 5,
+      "bundle": "datasets/sir/pilots/write-slice-scratch-g5",
+      "export_index_sha256": "a61a1b982298eda1c7ede3b7e9b9a4e5b62e821a35370bad3f137a57550db2c1",
+      "id": "course-write-slice-scratch-v1-teacher-be9817697402",
+      "runtime_evidence_sha256": "da1bf16aa073764bd94c23fcf7ea501bc951b31a956223981fb5ac882c89b505",
+      "runtime_run_id": "write-slice-1a180634a4c-49910",
+      "source_sha256": "9e3dbf84d541483f1fd63cccf2ef85b80be10561026302fc8af20d2ca955378a"
+    },
+    {
+      "artifact_count": 5,
+      "bundle": "datasets/sir/pilots/write-slice-scratch-p2-g6",
+      "export_index_sha256": "c30e50e1dd6a8748e9dc3a47fefa71bca36b6b479a97fec2c8224a029991e637",
+      "id": "course-write-slice-scratch-p2-v1-teacher-c2fcf2d091cf",
+      "runtime_evidence_sha256": "3574d33f827e0bb5b86603cda62720d2654932b2eb3fca533cd39c8df7c4c10b",
+      "runtime_run_id": "write-slice-1a181b67b5d-22230",
+      "source_sha256": "8d756491ef0c312b916c4883fde8534f8b61402328959712f87765cafb43f7a0"
+    },
+    {
+      "artifact_count": 5,
+      "bundle": "datasets/sir/pilots/write-slice-scratch-p3-g6",
+      "export_index_sha256": "a99480738b50b674245da6ebe6e9a5e27c7b8dcf554fad830d021a1a412dc4ea",
+      "id": "course-write-slice-scratch-p3-v1-teacher-e52924e6d4a2",
+      "runtime_evidence_sha256": "30eefc979343ec0234257f0295a91504f185e536dda5358a2f56f70f5b6a56d6",
+      "runtime_run_id": "write-slice-1a181b695cc-1910",
+      "source_sha256": "040df7df7986bba47e78931da9c42b0eb5a8499361456648aa4fcbfade0a8c25"
+    },
+    {
+      "artifact_count": 5,
+      "bundle": "datasets/sir/pilots/course-selection-change-p1-g6t",
+      "export_index_sha256": "1fb9125c9423b92feccab88794bc5c696a10aa8f12f05b341e825a9a83796dcd",
+      "id": "course-course-selection-change-p1-v1-teacher-e61b238d030f",
+      "runtime_evidence_sha256": "c47e062e09d59a0eb496b83b223fdb656d0f628cff8d7fc15096f71a4027fd4b",
+      "runtime_run_id": "course-selection-1a1851d88b4-8266",
+      "source_sha256": "b108ce02ef7596c89ade01b4210da51ea00b94b7db405f8f0d5b7bad7aef721a"
+    },
+    {
+      "artifact_count": 5,
+      "bundle": "datasets/sir/pilots/crud-access-scratch-g7",
+      "export_index_sha256": "0d4888d1243e32480b738a06b0a583392525fc231a23f065d976079fb2418439",
+      "id": "auth-crud-access-scratch-v1-teacher-4a6b10922574",
+      "runtime_evidence_sha256": "0fa5cd3e706d72707ecbb327a1aca44cb98b202b2de07a4f814e3c5ccb1c546e",
+      "runtime_run_id": "crud-access-1a1854d95d8-551",
+      "source_sha256": "0bdea67aea968773418fcc587f9fe6dc69de4f152e5570e6e9fa416b4d1a8880"
+    },
+    {
+      "artifact_count": 5,
+      "bundle": "datasets/sir/pilots/crud-access-scratch-p2-g7",
+      "export_index_sha256": "5b78f5b15031fa3348f4e86772e7df33aa26994029c7f39e1e6ca65192911653",
+      "id": "auth-crud-access-scratch-p2-v1-teacher-976fd70bd19f",
+      "runtime_evidence_sha256": "c7edc1187fb5cbf6c11c799471cbeab0db40ecc97ecd8c6a6181a9d0fcc4543f",
+      "runtime_run_id": "crud-access-1a1854da30a-23228",
+      "source_sha256": "b319c1d2339a92b090b8eb178a77071cf1a7da1c75c83163b27a28f6aa21af2e"
+    },
+    {
+      "artifact_count": 5,
+      "bundle": "datasets/sir/pilots/crud-access-scratch-p3-g7",
+      "export_index_sha256": "6acd2a04345620141e7c60056298e5eac5442e1b38ff456eeac32f4d8331826c",
+      "id": "auth-crud-access-scratch-p3-v1-teacher-3a97ea60acea",
+      "runtime_evidence_sha256": "5ea77176331ff9881efd627f6d1686a47734c09d917f4e54886da1ba1f8cdb1c",
+      "runtime_run_id": "crud-access-1a1854d9eed-35146",
+      "source_sha256": "b2b698133cd4ca3e7c855a6543e53ec8cbf8a815e7dd35871f2face3bd7864e2"
+    },
+    {
+      "artifact_count": 5,
+      "bundle": "datasets/sir/pilots/blog-change-g9",
+      "export_index_sha256": "a1a20b14fccdac5b36f11522dca9abc632d1ec574ed68ae90baf0a683f7be7cb",
+      "id": "content-blog-change-v1-teacher-bba0b5b48fc4",
+      "runtime_evidence_sha256": "9ed38212ee053fee72dbc289c5f74e307ea5ca6896692c37c69cf606526f5e38",
+      "runtime_run_id": "blog-slice-1a18c14be4a-2921",
+      "source_sha256": "39df9d5a2e4542eb9b6fd8375fe24b93ed9009055e4275d197dcd1b3ffb927e4"
+    }
+  ]
+}

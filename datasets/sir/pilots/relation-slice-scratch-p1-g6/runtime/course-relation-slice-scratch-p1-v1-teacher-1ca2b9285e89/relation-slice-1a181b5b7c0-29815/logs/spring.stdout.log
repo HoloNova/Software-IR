@@ -1,0 +1,30 @@
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.5.3)
+
+2026-10-28T08:52:17.544Z  INFO 2982 --- [course-enrollment] [           main] c.example.courseenrollment.Application   : Starting Application v0.1.0-SNAPSHOT using Java 21.0.12.1 with PID 2982 (/home/runner/work/Software-IR/Software-IR/ci-work/relation-slice-1a181b5b7c0-29815/generated-project/target/course-enrollment-0.1.0-SNAPSHOT.jar started by runner in /home/runner/work/Software-IR/Software-IR/sir-toolchain-application)
+2026-10-28T08:52:17.547Z  INFO 2982 --- [course-enrollment] [           main] c.example.courseenrollment.Application   : No active profile set, falling back to 1 default profile: "default"
+2026-10-28T08:52:18.681Z  INFO 2982 --- [course-enrollment] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 18080 (http)
+2026-10-28T08:52:18.695Z  INFO 2982 --- [course-enrollment] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-10-28T08:52:18.696Z  INFO 2982 --- [course-enrollment] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.42]
+2026-10-28T08:52:18.720Z  INFO 2982 --- [course-enrollment] [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-10-28T08:52:18.721Z  INFO 2982 --- [course-enrollment] [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1113 ms
+ _ _   |_  _ _|_. ___ _ |    _ 
+| | |\/|_)(_| | |_\  |_)||_|_\ 
+     /               |         
+                        3.5.12 
+2026-10-28T08:52:19.780Z  INFO 2982 --- [course-enrollment] [           main] m.e.s.MybatisPlusApplicationContextAware : Register ApplicationContext instances org.springframework.boot.web.servlet.context.AnnotationConfigServletWebServerApplicationContext@53de625d
+2026-10-28T08:52:19.877Z  INFO 2982 --- [course-enrollment] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 18080 (http) with context path '/'
+2026-10-28T08:52:19.888Z  INFO 2982 --- [course-enrollment] [           main] c.example.courseenrollment.Application   : Started Application in 2.785 seconds (process running for 3.234)
+2026-10-28T08:52:20.096Z  INFO 2982 --- [course-enrollment] [.1-18080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-10-28T08:52:20.096Z  INFO 2982 --- [course-enrollment] [.1-18080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-10-28T08:52:20.097Z  INFO 2982 --- [course-enrollment] [.1-18080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2026-10-28T08:52:20.137Z  INFO 2982 --- [course-enrollment] [.1-18080-exec-1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-10-28T08:52:20.444Z  INFO 2982 --- [course-enrollment] [.1-18080-exec-1] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@62c2a0f9
+2026-10-28T08:52:20.446Z  INFO 2982 --- [course-enrollment] [.1-18080-exec-1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.

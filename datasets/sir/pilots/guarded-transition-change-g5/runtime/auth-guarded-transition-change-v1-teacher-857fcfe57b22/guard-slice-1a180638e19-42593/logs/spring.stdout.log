@@ -1,0 +1,30 @@
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.5.3)
+
+2026-10-28T02:42:55.441Z  INFO 3019 --- [credential-rotation] [           main] com.example.rotation.Application         : Starting Application v0.1.0-SNAPSHOT using Java 21.0.13 with PID 3019 (/home/runner/work/Software-IR/Software-IR/ci-work/guard-slice-1a180638e19-42593/generated-project/target/credential-rotation-0.1.0-SNAPSHOT.jar started by runner in /home/runner/work/Software-IR/Software-IR/sir-toolchain-application)
+2026-10-28T02:42:55.443Z  INFO 3019 --- [credential-rotation] [           main] com.example.rotation.Application         : No active profile set, falling back to 1 default profile: "default"
+2026-10-28T02:42:56.482Z  INFO 3019 --- [credential-rotation] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 18080 (http)
+2026-10-28T02:42:56.493Z  INFO 3019 --- [credential-rotation] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-10-28T02:42:56.493Z  INFO 3019 --- [credential-rotation] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.42]
+2026-10-28T02:42:56.518Z  INFO 3019 --- [credential-rotation] [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-10-28T02:42:56.519Z  INFO 3019 --- [credential-rotation] [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1031 ms
+ _ _   |_  _ _|_. ___ _ |    _ 
+| | |\/|_)(_| | |_\  |_)||_|_\ 
+     /               |         
+                        3.5.12 
+2026-10-28T02:42:57.401Z  INFO 3019 --- [credential-rotation] [           main] m.e.s.MybatisPlusApplicationContextAware : Register ApplicationContext instances org.springframework.boot.web.servlet.context.AnnotationConfigServletWebServerApplicationContext@53de625d
+2026-10-28T02:42:57.477Z  INFO 3019 --- [credential-rotation] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 18080 (http) with context path '/'
+2026-10-28T02:42:57.487Z  INFO 3019 --- [credential-rotation] [           main] com.example.rotation.Application         : Started Application in 2.48 seconds (process running for 2.902)
+2026-10-28T02:42:57.849Z  INFO 3019 --- [credential-rotation] [.1-18080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-10-28T02:42:57.850Z  INFO 3019 --- [credential-rotation] [.1-18080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-10-28T02:42:57.851Z  INFO 3019 --- [credential-rotation] [.1-18080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2026-10-28T02:42:57.881Z  INFO 3019 --- [credential-rotation] [.1-18080-exec-1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-10-28T02:42:58.314Z  INFO 3019 --- [credential-rotation] [.1-18080-exec-1] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@7d6583a0
+2026-10-28T02:42:58.315Z  INFO 3019 --- [credential-rotation] [.1-18080-exec-1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.

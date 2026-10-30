@@ -1,0 +1,30 @@
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.5.3)
+
+2026-10-28T08:51:49.982Z  INFO 2981 --- [note-desk] [           main] example.notes.Application                : Starting Application v0.1.0-SNAPSHOT using Java 21.0.12.1 with PID 2981 (/home/runner/work/Software-IR/Software-IR/ci-work/bearer-slice-1a181b54d70-13112/generated-project/target/note-desk-0.1.0-SNAPSHOT.jar started by runner in /home/runner/work/Software-IR/Software-IR/sir-toolchain-application)
+2026-10-28T08:51:49.985Z  INFO 2981 --- [note-desk] [           main] example.notes.Application                : No active profile set, falling back to 1 default profile: "default"
+2026-10-28T08:51:51.117Z  INFO 2981 --- [note-desk] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 18080 (http)
+2026-10-28T08:51:51.130Z  INFO 2981 --- [note-desk] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-10-28T08:51:51.131Z  INFO 2981 --- [note-desk] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.42]
+2026-10-28T08:51:51.153Z  INFO 2981 --- [note-desk] [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-10-28T08:51:51.154Z  INFO 2981 --- [note-desk] [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1118 ms
+ _ _   |_  _ _|_. ___ _ |    _ 
+| | |\/|_)(_| | |_\  |_)||_|_\ 
+     /               |         
+                        3.5.12 
+2026-10-28T08:51:51.967Z  INFO 2981 --- [note-desk] [           main] m.e.s.MybatisPlusApplicationContextAware : Register ApplicationContext instances org.springframework.boot.web.servlet.context.AnnotationConfigServletWebServerApplicationContext@2dcd168a
+2026-10-28T08:51:52.055Z  INFO 2981 --- [note-desk] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 18080 (http) with context path '/'
+2026-10-28T08:51:52.067Z  INFO 2981 --- [note-desk] [           main] example.notes.Application                : Started Application in 2.539 seconds (process running for 2.976)
+2026-10-28T08:51:52.194Z  INFO 2981 --- [note-desk] [.1-18080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-10-28T08:51:52.195Z  INFO 2981 --- [note-desk] [.1-18080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-10-28T08:51:52.196Z  INFO 2981 --- [note-desk] [.1-18080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2026-10-28T08:51:52.236Z  INFO 2981 --- [note-desk] [.1-18080-exec-1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-10-28T08:51:52.572Z  INFO 2981 --- [note-desk] [.1-18080-exec-1] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@6385ab17
+2026-10-28T08:51:52.574Z  INFO 2981 --- [note-desk] [.1-18080-exec-1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.

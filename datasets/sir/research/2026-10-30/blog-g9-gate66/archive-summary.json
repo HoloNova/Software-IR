@@ -1,0 +1,23 @@
+{
+  "run": 66,
+  "sample": "content-blog-change-v1-teacher-bba0b5b48fc4",
+  "bundle": "datasets/sir/pilots/blog-change-g9",
+  "checked": "checked-r1-906a864f71bf.jsonl",
+  "gates": {
+    "build": "PASSED",
+    "business": "PASSED",
+    "start": "PASSED",
+    "static": "PASSED"
+  },
+  "checks": "426/0",
+  "failed_checks": [],
+  "commit": "c6a993aaafa64e7cde11f16c8196c6773de25542",
+  "new_export_count": 1,
+  "source_recipe": "docs/tmp/archive_gate_runs.py",
+  "source_recipe_sha256": "09fd849df5e76f4d4135bcf5068c090a08a65dd20d550878e440bd2e5d898b7b",
+  "frozen_inputs_verified": 486,
+  "all_artifact_zips_matched_github_digests": true,
+  "zip_entries_preflight_checked": true,
+  "original_bytes_preserved": true,
+  "host_adapter": "Exact LF snapshot; temporary Git usr/bin PATH; original archive/export implementation"
+}

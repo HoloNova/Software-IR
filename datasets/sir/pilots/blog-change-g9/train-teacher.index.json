@@ -1,0 +1,14 @@
+{
+  "all_four_gates_required": true,
+  "corpus_sha256": "9fea8c578a8ea9cf00c3ab585e21179e782a9e3d974bb8509f52b247cddf9a3a",
+  "count": 1,
+  "rows": [
+    {
+      "id": "content-blog-change-v1-teacher-bba0b5b48fc4",
+      "oracle_sha256": "b19875a18b071c0921ad34072f9de4c8c10b668db69fb5415eb3b401d6a7c843",
+      "runtime_run_id": "blog-slice-1a18c14be4a-2921",
+      "source_sha256": "39df9d5a2e4542eb9b6fd8375fe24b93ed9009055e4275d197dcd1b3ffb927e4",
+      "task_sha256": "9150eab844a0297731fb52bd86279888220ff9e9784de8c1404150417347ac43"
+    }
+  ]
+}
