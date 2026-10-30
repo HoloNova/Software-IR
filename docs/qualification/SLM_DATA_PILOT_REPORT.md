@@ -530,3 +530,47 @@ v4 这一轮：13 份中静态通过 7 份，四门通过 6 份。样本少、�
 **资格和后续。**合格教师仍 **48 条**、博客合格仍 **0 条**，学生 v3 不变。静态通过的 `906a864f71bf` 已准备 BlogBusinessConformanceIT 派发参数，但批次尚未提交，故业务门 dispatch_count=0；须负责人明确确认提交／推送后再按远端精确字节派发，不能拿参考 425/0 代替它。唯一失败候选拟用原 `repair-general-v1.md` 反馈重答一轮，预算根据历史 13 次反馈的实际新增 token／字符中位数估算，预计输入 **11000**、输出 **2000**，合计 **13000 tokens**，输出硬上限 8192，不自动重试，**预算待确认、尚未调用**。
 
 原始请求／响应／collector、用量、静态输出、原始证据及下一步参数见 `datasets/sir/research/2026-10-29/blog-v8-initial/`；父批次／task／manifest／system 不改，准备阶段的封存记录也不追改。收尾验证原始响应解码等于候选源码，checked 等于原 bind_static 对原 CLI 输出的绑定、请求等于原 request_payload，180 个受保护旧文件字节未变。当前未提交、推送、派发 CI 或追加模型调用。
+
+
+<a id="slm-blog-v8-repair"></a>
+
+## 第二十三阶段：博客 v8 从零候选的一轮反馈重答（2026-10-30）
+
+**前批归档与运行门边界。**负责人允许 `.gitignore` 一起提交后，105 项归档以 **`1aa6f5fe01d6f23315b3817b7ec43383419b6f57`** 提交并普通推送，其中 `.gitignore` 只新增 `.pi/`。逐 Blob 核对远端 105 个归档与 486 个核心／oracle 输入，再仅派发改写候选 `906a864f71bf` 的 [slm-business-gate #65](https://github.com/HoloNova/Software-IR/actions/runs/40981352192)；同 SHA 的 [verify #203](https://github.com/HoloNova/Software-IR/actions/runs/40981119034) 因 push 自动触发。派发后仅一次确认两者已启动，尚无验收结论；本阶段按约定等负责人通知，**CI 状态查询 0 次**，不能将 #202 参考成功借给教师。
+
+**仅一次获批请求。**负责人明确批准上一轮提出的 **13000 tokens** 预算后，对 `blog-scratch-g8` 的父候选 `718c0d88dafa` 调用原 `repair` 一次；沿用 v8、原 `repair-general-v1.md`、完整父答案、三条真实静态诊断及冻结 DDL，不改变题目、接口或判定。输出上限 8192，temperature=0.6、thinking disabled、自动重试 0；没有以“确认”扩为其他候选或第二轮修复。继续在与 Git blob 一致的 `2e4fa74b` LF 快照中读取原实现，并在调用前核对当前 `1aa6f5fe` 的 486 个核心／oracle 源码仍与批次冻结一致。
+
+| 父候选 | 新子候选 | 实际输入 | 缓存命中 | 实际输出 | 合计 | 静态结果 |
+| --- | --- | ---: | ---: | ---: | ---: | --- |
+| `718c0d88dafa` | `215ebacdb9b3` | 10080 | 8448 | 1551 | **11631** | SEMANTIC FAILED，2 条 SIR-TYPE-001 |
+
+API 返回 finish_reason=stop，原始响应和候选源码均留存。使用 **CI #202 原 standalone CLI** 在本机仅做完整静态检查，结果写新 `checked-r1.jsonl`，首轮 `checked-initial.jsonl` 不覆盖。消息、SourceSpan、诊断顺序均来自原 CLI；UTF-8 原文及实际发出的反馈无乱码。运行门 BUILD／START／BUSINESS 全部 **NOT_RUN**，没有派发这个失败子候选。Java 检查进程限制 heap 256 MiB、metaspace 128 MiB、ActiveProcessorCount=2，运行后退出；未启动 Maven、生成应用或数据库。
+
+**实际改动只是一行。**逐字节父子差异显示，教师仅在 CreatePost 增加 `fails Forbidden;`，解决 SIR-FLOW-003；FeedInput.keyword 和两个 containsLiteral 表达式原样保留，所以 Optional 右值的两条 SIR-TYPE-001 仍然存在。原请求确实包含全部三条诊断与新版中文解释，不是漏传了后两条，也不是终端渲染乱码导致反馈损坏。已知规则仍未被遵守；不为这份答案手改类型、放宽语义或追加付费追修。
+
+**归档及资格。**原始请求／响应在批次 `samples/`，调用记录、stdout／stderr、父子零上下文补丁、来源／用量及核对脚本在 `datasets/sir/research/2026-10-30/blog-v8-repair/`。核对新请求精确等于原 request_payload、消息前缀保留父对话、后两条消息为完整父答案与原反馈，响应解码精确等于子源码；两个账本只追加一条，重新封存汇总清单前核对 27 个既有批次文件及 180 个受保护旧文件原字节不变；随后仅更新数据汇总 `MANIFEST.sha256` 的文件索引，冻结 `manifest.json` 不改，改写批次与学生数据不改。候选和原始输出不清洗；本机原始 stdout 的 CRLF 按证据格式例外保留。
+
+v8 两次初采加这次反馈共 **3 次 API**，输入 **24923**（缓存 **12800**）、输出 **4597**，合计 **29520 tokens**。新增合格 **0**，总数仍 **48**，博客合格 **0**，学生 v3 不变；失败轨迹仅作研究记录，不作为当前 SFT 的正确答案，也没有训练。此父候选已用完一轮反馈预算，后续先等改写候选的真实 CI 结果；本批修复归档尚未提交／推送，不自动开启新采样或继续追修。
+
+
+<a id="slm-blog-v8-runtime-repair"></a>
+
+## 第二十四阶段：博客改写候选的业务失败归档与单轮运行反馈（2026-10-30）
+
+**正式区分两个 CI。**负责人通知后，一次性核对 `1aa6f5fe01d6f23315b3817b7ec43383419b6f57` 的 [slm-business-gate #65 / 40981352192](https://github.com/HoloNova/Software-IR/actions/runs/40981352192) 为 failure、[verify #203 / 40981119034](https://github.com/HoloNova/Software-IR/actions/runs/40981119034) 为 success。#203 是工具链／固定参考验收，不赋予新教师资格；本阶段只核对其 run 元数据，不另报它的测试数量。#65 的 `slm-runtime.json` 正式结果是 **STATIC／BUILD／START PASSED，BUSINESS FAILED**，生成 57 文件，候选生成摘要与初采静态检查精确一致，真实 HTTP readiness=200。业务 **401 通过／25 失败**，不是构建、环境或字节绑定失败。
+
+**两个根因，不是 25 个独立缺陷。**父候选 `906a864f71bf` 的 PostsByTag 使用 `any(PostTag, post == item and tag == tag)`；ResolvePass 的既有规则先绑定 any 实体字段，两边 tag 均为 PostTag.tag，外层加载的同名变量没有参与筛选。按标签分页、空标签、发布后筛选等共 **14 条断言失败**。AttachTag 则先 exists 再插入且 `persist link` 没有 else；六个并发请求实际为 `[500,500,500,201,500,500]`，五次日志均为 `Duplicate entry '111-22' for key 'post_tag.blog_post_tag'`，没有转成合同要求的 409／TagAttached，产生 **11 条断言失败**。v8 已说明 any 字段作用域、atomic 不自动锁范围及 persist else 的唯一冲突用途；同名遮蔽可另提通用易用性设计，但本轮不改 Prompt、语法、诊断或判卷。
+
+**失败证据照样归档。**复用调查时已下载的两份原始 ZIP，不重复网络请求；逐 ZIP 校验 GitHub SHA256，逐成员核对解包字节，逐附件核对 runtime 哈希与同候选的 task/oracle/toolchain/source/generated_digest。正式保存于 `datasets/sir/pilots/blog-change-g8/runtime/content-blog-change-v1-teacher-906a864f71bf/`，包括原报告、四日志、完整 JUnit、原始 ZIP、GitHub 元数据和 gate-run.json；业务入口 XML 为 1 test／1 failure／0 error／0 skip，与 FAILED 一致。ZIP artifact `12944723337`（evidence）摘要 `204e191bf41cf4fffd57031b93b210e13bc073cf52733e03d495c553d5f496dd`，`12945101637`（surefire）摘要 `e710bacfd1d3697127c9134d4c55da44e4604e9b02d0263d5fdad71742057fe6`。原始日志不清洗；含 CI 环境口令行的 Actions 原始聚合 failed.log 仅留本机调查目录，不放进数据归档。没有导出这个失败父候选为合格答案。
+
+**一次获批运行反馈。**负责人确认 **26000 tokens** 预算及统一归档提交方案后，对父候选仅调用原 `repair --runtime-evidence` 一次；system 仍 v8、反馈前缀仍 `repair-runtime-v1.md`，只附原报告的失败断言和 HTTP 记录、完整父答案及冻结 DDL，没有加入人工改法或参考答案。原选择器验证血缘，`runtime_feedback` 绑定原 run_id 与原 evidence_sha256；在精确 LF 快照中复核 486 项核心／oracle 与当前受测 Git blob 一致。自动重试 0、输出上限 8192、temperature=0.6、thinking disabled；没有调用其他候选或扩采。
+
+| 父候选 | 新子候选 | 输入 tokens | 缓存命中 | 输出 tokens | 合计 | 静态结果 |
+| --- | --- | ---: | ---: | ---: | ---: | --- |
+| `906a864f71bf` | `af2c42118880` | 22799 | 9088 | 1458 | **24257** | PARSE FAILED，3 条 SIR-PARSE-001 |
+
+原始响应 finish_reason=stop，源码确实变化，非截断或原样返回。教师在 AttachTag 添加 `persist link else TagAttached`，但在 PostsByTag 将 any 改成了 `... and exists PostTag where item.post == item and item.tag == tag`。exists 是独立工作流步骤，不是可嵌入 find 条件的这一种表达式，原 CI #202 检查器因此在 PARSE 阶段拒绝。这里只能说源码增加了冲突处理，**不能宣称并发问题已验收修复**；新候选 BUILD／START／BUSINESS 全 **NOT_RUN**，不送业务门、不再追修。
+
+**收口。**本次原请求精确匹配原 runtime repair 的四条消息，保留父对话、父答案与真实失败反馈；响应解码等于候选源码，原 CLI 输出经 bind_static 得到同一 checked 记录，UTF-8 中文完整。旧候选／请求／原始检查不改，两批账本各自仅追加已获批的一条修复记录；冻结 manifest.json／task／system 不变，汇总 MANIFEST.sha256 按新增证据重封，180 个受保护旧文件及学生数据保持原字节。完整审批、预算依据、原始 stdout／stderr、父子零上下文补丁、收集器／检查器绑定与核对脚本在 `datasets/sir/research/2026-10-30/blog-v8-runtime-repair/`。
+
+v8 累计 **4 次 API**，输入 **47722**（缓存 **21888**）、输出 **6055**，合计 **53777 tokens**。新增合格 **0**，仍 **48 条**、博客合格 **0**、学生 v3 不变，未训练。从零分支已经一轮静态反馈失败，改写分支本轮运行反馈也失败，均按批准额度停止；本轮按授权与既有待提交修复记录一起归档提交，不新派业务门、不手改答案或继续消耗模型费用。除原静态检查器的有界 JVM 外，没有本机 Maven／应用／数据库或全量测试。

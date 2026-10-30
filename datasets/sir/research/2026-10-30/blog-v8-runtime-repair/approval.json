@@ -1,0 +1,13 @@
+{
+  "automatic_retries": 0,
+  "calls": 1,
+  "estimated_input_tokens": 24000,
+  "estimated_output_tokens": 2000,
+  "estimated_total_tokens": 26000,
+  "max_output_tokens": 8192,
+  "owner_budget_approved": true,
+  "parent_id": "content-blog-change-v1-teacher-906a864f71bf",
+  "runtime_evidence_sha256": "a5f63f79dd1be511aa3433a89205b543024060fe2c51efe77c09a597a5a9747d",
+  "source_commit": "1aa6f5fe01d6f23315b3817b7ec43383419b6f57",
+  "started_at": "2026-10-30T01:21:05.530342+00:00"
+}

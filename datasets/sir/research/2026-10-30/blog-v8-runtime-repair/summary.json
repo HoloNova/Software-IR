@@ -1,0 +1,124 @@
+{
+  "approved_estimated_total_tokens": 26000,
+  "automatic_retries": 0,
+  "business_gate_dispatches": [],
+  "ci_status_queries": 0,
+  "collector_sha256": "20953063c1d0ebdcbf55829df0cfb89e791c432628d57d95ce8166628202527f",
+  "frozen_source_commit": "2e4fa74be63e694b580d991c6a54f60d7d2ce2eb",
+  "gates": {
+    "build": "NOT_RUN",
+    "business": "NOT_RUN",
+    "start": "NOT_RUN",
+    "static": "FAILED"
+  },
+  "model_api_calls": 1,
+  "next_action": "Stop both v8 branches; archive all current records in one authorized commit. No candidate is eligible for a new gate.",
+  "owner_budget_approved": true,
+  "parent_id": "content-blog-change-v1-teacher-906a864f71bf",
+  "protected_old_files_unchanged": 180,
+  "qualified_new_teachers": 0,
+  "qualified_teachers_unchanged": 48,
+  "received_responses": 1,
+  "request_is_original_runtime_repair_payload": true,
+  "request_sha256": "89ccbd7da5db23f18cd6aa54121b41c479f0198f5fa25cc3a1ad162f8495dd4d",
+  "response_sha256": "af5993d21d24536354eee662758936cc3b42895b5297bb30892cf202f0661cc4",
+  "runtime_feedback": {
+    "evidence_sha256": "a5f63f79dd1be511aa3433a89205b543024060fe2c51efe77c09a597a5a9747d",
+    "run_id": "blog-slice-1a18a42c2a7-37106"
+  },
+  "runtime_repair_round_for_parent": 1,
+  "sample_id": "content-blog-change-v1-teacher-af2c42118880",
+  "source_commit": "1aa6f5fe01d6f23315b3817b7ec43383419b6f57",
+  "source_diff": "change-teacher-changes.patch",
+  "source_diff_sha256": "b12f990f28fe6340eefa8600d7f5fbdad472217025417dace978cdb50ec4fed6",
+  "source_sha256": "9337533ad1caabd1b65adc5a7bfe3889ee7324dd0eb76acc1e32d7aa47b66555",
+  "static_passed": 0,
+  "static_result": {
+    "diagnostics": [
+      {
+        "code": "SIR-PARSE-001",
+        "fixes": [],
+        "loweredNodeId": null,
+        "message": "遇到不符合 SIR 语法的内容：PostTag",
+        "related": [],
+        "relativePath": null,
+        "severity": "ERROR",
+        "sourceNodeId": null,
+        "sourceSymbol": null,
+        "span": {
+          "endCodePointOffset": 5676,
+          "endColumn": 69,
+          "endLine": 196,
+          "sourceId": "sample.sir",
+          "startCodePointOffset": 5669,
+          "startColumn": 62,
+          "startLine": 196
+        },
+        "stage": "PARSE"
+      },
+      {
+        "code": "SIR-PARSE-001",
+        "fixes": [],
+        "loweredNodeId": null,
+        "message": "遇到不符合 SIR 语法的内容：where",
+        "related": [],
+        "relativePath": null,
+        "severity": "ERROR",
+        "sourceNodeId": null,
+        "sourceSymbol": null,
+        "span": {
+          "endCodePointOffset": 5682,
+          "endColumn": 75,
+          "endLine": 196,
+          "sourceId": "sample.sir",
+          "startCodePointOffset": 5677,
+          "startColumn": 70,
+          "startLine": 196
+        },
+        "stage": "PARSE"
+      },
+      {
+        "code": "SIR-PARSE-001",
+        "fixes": [],
+        "loweredNodeId": null,
+        "message": "遇到不符合 SIR 语法的内容：}",
+        "related": [],
+        "relativePath": null,
+        "severity": "ERROR",
+        "sourceNodeId": null,
+        "sourceSymbol": null,
+        "span": {
+          "endCodePointOffset": 5870,
+          "endColumn": 6,
+          "endLine": 201,
+          "sourceId": "sample.sir",
+          "startCodePointOffset": 5869,
+          "startColumn": 5,
+          "startLine": 201
+        },
+        "stage": "PARSE"
+      }
+    ],
+    "digest": null,
+    "fileCount": 0,
+    "id": "content-blog-change-v1-teacher-af2c42118880",
+    "ok": false,
+    "sourceSha256": "9337533ad1caabd1b65adc5a7bfe3889ee7324dd0eb76acc1e32d7aa47b66555",
+    "stage": "PARSE"
+  },
+  "student_version_unchanged": 3,
+  "total_usage": {
+    "cache_hit": 9088,
+    "input": 22799,
+    "output": 1458,
+    "total": 24257
+  },
+  "unicode_feedback_verified": true,
+  "v8_cumulative_api_calls": 4,
+  "v8_cumulative_usage": {
+    "cache_hit": 21888,
+    "input": 47722,
+    "output": 6055,
+    "total": 53777
+  }
+}

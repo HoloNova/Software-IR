@@ -1,0 +1,45 @@
+{
+  "total_count": 2,
+  "artifacts": [
+    {
+      "id": 12945101637,
+      "node_id": "MDg6QXJ0aWZhY3QxMjk0NTEwMTYzNw==",
+      "name": "slm-gate-surefire-content-blog-change-v1-teacher-906a864f71bf",
+      "size_in_bytes": 42889,
+      "url": "https://api.github.com/repos/HoloNova/Software-IR/actions/artifacts/12945101637",
+      "archive_download_url": "https://api.github.com/repos/HoloNova/Software-IR/actions/artifacts/12945101637/zip",
+      "expired": false,
+      "digest": "sha256:e710bacfd1d3697127c9134d4c55da44e4604e9b02d0263d5fdad71742057fe6",
+      "created_at": "2026-10-30T00:43:31Z",
+      "updated_at": "2026-10-30T00:43:31Z",
+      "expires_at": "2027-01-28T00:42:20Z",
+      "workflow_run": {
+        "id": 40981352192,
+        "repository_id": 1299024893,
+        "head_repository_id": 1299024893,
+        "head_branch": "main",
+        "head_sha": "1aa6f5fe01d6f23315b3817b7ec43383419b6f57"
+      }
+    },
+    {
+      "id": 12944723337,
+      "node_id": "MDg6QXJ0aWZhY3QxMjk0NDcyMzMzNw==",
+      "name": "slm-gate-content-blog-change-v1-teacher-906a864f71bf",
+      "size_in_bytes": 15738,
+      "url": "https://api.github.com/repos/HoloNova/Software-IR/actions/artifacts/12944723337",
+      "archive_download_url": "https://api.github.com/repos/HoloNova/Software-IR/actions/artifacts/12944723337/zip",
+      "expired": false,
+      "digest": "sha256:204e191bf41cf4fffd57031b93b210e13bc073cf52733e03d495c553d5f496dd",
+      "created_at": "2026-10-30T00:43:29Z",
+      "updated_at": "2026-10-30T00:43:29Z",
+      "expires_at": "2027-01-28T00:42:20Z",
+      "workflow_run": {
+        "id": 40981352192,
+        "repository_id": 1299024893,
+        "head_repository_id": 1299024893,
+        "head_branch": "main",
+        "head_sha": "1aa6f5fe01d6f23315b3817b7ec43383419b6f57"
+      }
+    }
+  ]
+}

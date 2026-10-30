@@ -1,0 +1,23 @@
+{
+  "commit": "1aa6f5fe01d6f23315b3817b7ec43383419b6f57",
+  "model_api_calls": 1,
+  "automatic_retries": 0,
+  "ci_status_queries": 0,
+  "business_gate_dispatches": 0,
+  "commit_or_push": false,
+  "qualified_teachers": 48,
+  "student_version": 3,
+  "protected_old_files_unchanged": 180,
+  "prior_research_manifests_verified": {
+    "blog-v8-preparation": 6,
+    "blog-v8-ci202": 18,
+    "blog-v8-initial": 14
+  },
+  "existing_parent_ledgers_append_only": true,
+  "frozen_manifest_and_task_unchanged": true,
+  "summary_immutable_count_precedes_dataset_manifest_reseal": true,
+  "json_and_python_syntax": "PASSED",
+  "credential_scan": "PASSED",
+  "scanned_artifact_files_before_this_record": 48,
+  "raw_stdout_crlf_preserved_as_format_exception": "datasets/sir/research/2026-10-30/blog-v8-repair/raw-output/scratch-repair.stdout.txt"
+}

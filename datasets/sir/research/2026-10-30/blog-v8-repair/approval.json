@@ -1,0 +1,13 @@
+{
+  "approved_estimated_input_tokens": 11000,
+  "approved_estimated_output_tokens": 2000,
+  "approved_estimated_total_tokens": 13000,
+  "automatic_retries": 0,
+  "calls": 1,
+  "max_output_tokens": 8192,
+  "owner_budget_approved": true,
+  "parent_id": "content-blog-scratch-v1-teacher-718c0d88dafa",
+  "repair_round": 1,
+  "source_commit": "1aa6f5fe01d6f23315b3817b7ec43383419b6f57",
+  "started_at": "2026-10-30T01:00:42.670286+00:00"
+}

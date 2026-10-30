@@ -1,0 +1,97 @@
+{
+  "actual_model": "deepseek-flash",
+  "automatic_retries": 0,
+  "bundle": "datasets/sir/pilots/blog-scratch-g8",
+  "check_execution": {
+    "directory": "C:\\Users\\zdw00\\Desktop\\Software IR\\datasets\\sir\\pilots\\blog-scratch-g8\\checks\\d55de2140c8b4308a99c19eb348c7d76",
+    "stdout_sha256": "90128c3761fce04ffe1725704a83ec1b310f88a650016d0d78f8e3bbf634bf41"
+  },
+  "checked": "datasets/sir/pilots/blog-scratch-g8/checked-r1.jsonl",
+  "checker_artifact_run_id": 40877385610,
+  "completed_at": "2026-10-30T01:00:53.414638+00:00",
+  "eligible_for_business_gate": false,
+  "estimated_input_tokens": 11000,
+  "estimated_output_tokens": 2000,
+  "finish_reason": "stop",
+  "frozen_git_blobs_verified": 486,
+  "frozen_inputs_unchanged": true,
+  "gates": {
+    "build": "NOT_RUN",
+    "business": "NOT_RUN",
+    "start": "NOT_RUN",
+    "static": "FAILED"
+  },
+  "max_output_tokens": 8192,
+  "new_candidates": 1,
+  "owner_budget_approved": true,
+  "parent_id": "content-blog-scratch-v1-teacher-718c0d88dafa",
+  "recorded_new_attempts": 1,
+  "repair_round_for_parent": 1,
+  "request_process_exit_code": 0,
+  "request_sha256": "52fce4231e925b26d7f45c7e936c7fd6cef0a0a124ef169f71d2f980f709bbcc",
+  "requested_model": "deepseek-flash",
+  "response_sha256": "9215cded3902bc0ed0bdf00ac0d614d78fbab475ad2f2ef964db8df125e4cbd4",
+  "sample_id": "content-blog-scratch-v1-teacher-215ebacdb9b3",
+  "source_sha256": "3bc74a37c957b0d70e305bb6e4dc03e1bd134468c2532e5348d0b864ab8fa185",
+  "started_at": "2026-10-30T01:00:42.670286+00:00",
+  "static_result": {
+    "diagnostics": [
+      {
+        "code": "SIR-TYPE-001",
+        "fixes": [],
+        "loweredNodeId": null,
+        "message": "containsLiteral 的左侧必须是文本字段，右侧必须是非 Optional 文本值；is none/is present 不会把 Optional 文本转换成非 Optional 文本。",
+        "related": [],
+        "relativePath": null,
+        "severity": "ERROR",
+        "sourceNodeId": null,
+        "sourceSymbol": null,
+        "span": {
+          "endCodePointOffset": 4448,
+          "endColumn": 129,
+          "endLine": 181,
+          "sourceId": "sample.sir",
+          "startCodePointOffset": 4408,
+          "startColumn": 89,
+          "startLine": 181
+        },
+        "stage": "SEMANTIC"
+      },
+      {
+        "code": "SIR-TYPE-001",
+        "fixes": [],
+        "loweredNodeId": null,
+        "message": "containsLiteral 的左侧必须是文本字段，右侧必须是非 Optional 文本值；is none/is present 不会把 Optional 文本转换成非 Optional 文本。",
+        "related": [],
+        "relativePath": null,
+        "severity": "ERROR",
+        "sourceNodeId": null,
+        "sourceSymbol": null,
+        "span": {
+          "endCodePointOffset": 4494,
+          "endColumn": 175,
+          "endLine": 181,
+          "sourceId": "sample.sir",
+          "startCodePointOffset": 4452,
+          "startColumn": 133,
+          "startLine": 181
+        },
+        "stage": "SEMANTIC"
+      }
+    ],
+    "digest": null,
+    "fileCount": 0,
+    "id": "content-blog-scratch-v1-teacher-215ebacdb9b3",
+    "ok": false,
+    "sourceSha256": "3bc74a37c957b0d70e305bb6e4dc03e1bd134468c2532e5348d0b864ab8fa185",
+    "stage": "SEMANTIC"
+  },
+  "task": "content-blog-scratch-v1",
+  "unchanged_source_from_parent": false,
+  "usage": {
+    "cache_hit": 8448,
+    "input": 10080,
+    "output": 1551,
+    "total": 11631
+  }
+}

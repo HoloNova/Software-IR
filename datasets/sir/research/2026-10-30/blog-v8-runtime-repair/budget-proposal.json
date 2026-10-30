@@ -1,0 +1,36 @@
+{
+  "status": "PROPOSED_NOT_APPROVED_NO_REQUEST_SENT",
+  "parent_id": "content-blog-change-v1-teacher-906a864f71bf",
+  "runtime_run_id": "blog-slice-1a18a42c2a7-37106",
+  "feedback_characters": 39915,
+  "additional_message_characters": 46639,
+  "calibration": [
+    {
+      "id": "auth-crud-access-scratch-v1-teacher-3062e8f8e07b",
+      "added_characters": 10379,
+      "added_input_tokens": 2547,
+      "tokens_per_added_character": 0.2453993641005877
+    },
+    {
+      "id": "course-course-selection-change-v1-teacher-1cc5c4027a2d",
+      "added_characters": 29492,
+      "added_input_tokens": 6920,
+      "tokens_per_added_character": 0.23463990234639903
+    },
+    {
+      "id": "auth-bearer-credential-scratch-v1-teacher-efbdfe58ef70",
+      "added_characters": 6213,
+      "added_input_tokens": 1718,
+      "tokens_per_added_character": 0.27651698052470625
+    }
+  ],
+  "chosen_max_tokens_per_character": 0.27651698052470625,
+  "method": "maximum observed extra-input-token/added-character ratio from three archived runtime-feedback repairs, plus 15%, rounded to 500; output initial *1.25 rounded to 500 minimum 2000",
+  "estimated_input_tokens": 24000,
+  "estimated_output_tokens": 2000,
+  "estimated_total_tokens": 26000,
+  "max_output_tokens": 8192,
+  "calls": 1,
+  "automatic_retries": 0,
+  "api_calls_made_by_estimator": 0
+}

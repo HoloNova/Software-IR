@@ -92,7 +92,11 @@ python -m experiments.slm.data repair --bundle datasets/sir/runs/dual-token-rech
 
 负责人随后批准两份各一轮静态反馈重答，实际共 22,846 tokens；新 `checked-r1.jsonl` 两份均 SEMANTIC FAILED（改写 2 条、从零 18 条 ERROR），没有派发业务门、追加追修或导出。博客累计 4 次 API／39,756 tokens，合格教师仍 48，学生 v3 未变。失败轨迹仅归档，不作为当前学生 SFT 的正确答案；本阶段已按一轮上限停止。记录见 `datasets/sir/research/2026-10-29/blog-v7-repair/` 和[第二十阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-blog-v7-repair)。
 
-v8 已按批准预算在新 `blog-change-g8/`、`blog-scratch-g8/` 各初采一次，共 17,889 tokens；改写候选 `906a864f71bf` 完整生成 57 文件，无诊断，尚待候选业务门；从零候选 `718c0d88dafa` 为 SEMANTIC FAILED，3 条诊断（能力缺少 `fails Forbidden`、两处 Optional 文本匹配）。原始响应、静态输出与下一步预算见 `datasets/sir/research/2026-10-29/blog-v8-initial/`，完整记录见[第二十二阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-blog-v8-initial)。两份小样本不构成整体通过率提升的证明；尚无新增博客合格答案，学生 v3 未改。
+v8 已按批准预算在新 `blog-change-g8/`、`blog-scratch-g8/` 各初采一次，共 17,889 tokens；改写候选 `906a864f71bf` 完整生成 57 文件，无诊断；从零候选 `718c0d88dafa` 为 SEMANTIC FAILED，3 条诊断（能力缺少 `fails Forbidden`、两处 Optional 文本匹配）。原始响应、静态输出与下一步预算见 `datasets/sir/research/2026-10-29/blog-v8-initial/`，完整记录见[第二十二阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-blog-v8-initial)。两份小样本不构成整体通过率提升的证明；尚无新增博客合格答案，学生 v3 未改。
+
+`1aa6f5fe` 归档后，改写候选已送[业务门 #65](https://github.com/HoloNova/Software-IR/actions/runs/40981352192)，配套 [verify #203](https://github.com/HoloNova/Software-IR/actions/runs/40981119034) 由 push 自动触发；后续负责人通知 #65 失败、#203 成功；已核对精确 SHA 与候选全部绑定，#65 的 STATIC／BUILD／START PASSED、BUSINESS FAILED（401/25），失败证据归档到改写批次 `runtime/`。从零候选另获批一轮反馈重答，实际 11,631 tokens；新子候选 `215ebacdb9b3` 仅增加 `fails Forbidden`，仍有两条 Optional 的 containsLiteral 错误，按一轮上限停止。v8 合计 3 次 API／29,520 tokens，合格仍 48，学生 v3 未改。记录在 `datasets/sir/research/2026-10-30/blog-v8-repair/` 和[第二十三阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-blog-v8-repair)。
+
+改写父候选另获批一次原 `repair --runtime-evidence`，实际 24,257 tokens；新子候选 `af2c42118880` 退回解析失败（不支持的内联 exists，3 条诊断），按一轮运行反馈额度停止，未送新业务门。原父候选的 25 条业务失败由两个根因构成：any 内 `tag == tag` 是字段自比较，以及先查后插未将唯一冲突映射为 TagAttached。没有手改题目／候选／判卷，v8 合计 4 次 API／53,777 tokens，合格仍 48、学生 v3 不变。原始记录见 `datasets/sir/research/2026-10-30/blog-v8-runtime-repair/` 和[第二十四阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-blog-v8-runtime-repair)。
 
 ## 通用静态修复
 

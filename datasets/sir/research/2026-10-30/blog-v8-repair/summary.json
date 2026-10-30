@@ -1,0 +1,117 @@
+{
+  "approved_estimated_total_tokens": 13000,
+  "automatic_retries": 0,
+  "business_gate_dispatches": [],
+  "ci_status_queries": 0,
+  "failed_trajectory_is_not_a_correct_sft_completion": true,
+  "frozen_source_commit": "2e4fa74be63e694b580d991c6a54f60d7d2ce2eb",
+  "model_api_calls": 1,
+  "next_action": "Stop after this one approved repair. Await owner CI notification for the other candidate; no further repair or training.",
+  "original_committed_batch_files_unchanged": 27,
+  "owner_budget_approved": true,
+  "parent_ledgers_append_only": true,
+  "protected_old_files_unchanged": 180,
+  "qualified_new_teachers": 0,
+  "qualified_teachers_unchanged": 48,
+  "received_responses": 1,
+  "repair_rounds_for_parent": 1,
+  "result": {
+    "bundle": "datasets/sir/pilots/blog-scratch-g8",
+    "collector_sha256": "20953063c1d0ebdcbf55829df0cfb89e791c432628d57d95ce8166628202527f",
+    "diagnostic_code_counts": {
+      "SIR-TYPE-001": 2
+    },
+    "gates": {
+      "build": "NOT_RUN",
+      "business": "NOT_RUN",
+      "start": "NOT_RUN",
+      "static": "FAILED"
+    },
+    "oracle_sha256": "b19875a18b071c0921ad34072f9de4c8c10b668db69fb5415eb3b401d6a7c843",
+    "parent_id": "content-blog-scratch-v1-teacher-718c0d88dafa",
+    "request_sha256": "52fce4231e925b26d7f45c7e936c7fd6cef0a0a124ef169f71d2f980f709bbcc",
+    "response_sha256": "9215cded3902bc0ed0bdf00ac0d614d78fbab475ad2f2ef964db8df125e4cbd4",
+    "sample_id": "content-blog-scratch-v1-teacher-215ebacdb9b3",
+    "source_diff": "scratch-teacher-changes.patch",
+    "source_diff_sha256": "69a806a969680a01182f3e02086abd0c65b2216b3ff3d05ebe4c3eb2bb5cf8ba",
+    "source_sha256": "3bc74a37c957b0d70e305bb6e4dc03e1bd134468c2532e5348d0b864ab8fa185",
+    "static_result": {
+      "diagnostics": [
+        {
+          "code": "SIR-TYPE-001",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "containsLiteral 的左侧必须是文本字段，右侧必须是非 Optional 文本值；is none/is present 不会把 Optional 文本转换成非 Optional 文本。",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 4448,
+            "endColumn": 129,
+            "endLine": 181,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 4408,
+            "startColumn": 89,
+            "startLine": 181
+          },
+          "stage": "SEMANTIC"
+        },
+        {
+          "code": "SIR-TYPE-001",
+          "fixes": [],
+          "loweredNodeId": null,
+          "message": "containsLiteral 的左侧必须是文本字段，右侧必须是非 Optional 文本值；is none/is present 不会把 Optional 文本转换成非 Optional 文本。",
+          "related": [],
+          "relativePath": null,
+          "severity": "ERROR",
+          "sourceNodeId": null,
+          "sourceSymbol": null,
+          "span": {
+            "endCodePointOffset": 4494,
+            "endColumn": 175,
+            "endLine": 181,
+            "sourceId": "sample.sir",
+            "startCodePointOffset": 4452,
+            "startColumn": 133,
+            "startLine": 181
+          },
+          "stage": "SEMANTIC"
+        }
+      ],
+      "digest": null,
+      "fileCount": 0,
+      "id": "content-blog-scratch-v1-teacher-215ebacdb9b3",
+      "ok": false,
+      "sourceSha256": "3bc74a37c957b0d70e305bb6e4dc03e1bd134468c2532e5348d0b864ab8fa185",
+      "stage": "SEMANTIC"
+    },
+    "task": "content-blog-scratch-v1",
+    "task_sha256": "3771eae2f437ba6d87c827d7cd216984865be8a7a8ce09ce33a331964d0c62c8",
+    "toolchain_core_sha256": "7009975336558548cedcdaf0b722240946dc927ac678c7b6895f97d42db1b1e1",
+    "usage": {
+      "cache_hit": 8448,
+      "input": 10080,
+      "output": 1551,
+      "total": 11631
+    }
+  },
+  "source_commit": "1aa6f5fe01d6f23315b3817b7ec43383419b6f57",
+  "static_passed": 0,
+  "student_version_unchanged": 3,
+  "total_usage": {
+    "cache_hit": 8448,
+    "input": 10080,
+    "output": 1551,
+    "total": 11631
+  },
+  "unicode_diagnostics_verified": true,
+  "v8_cumulative_api_calls": 3,
+  "v8_cumulative_usage": {
+    "cache_hit": 12800,
+    "input": 24923,
+    "output": 4597,
+    "total": 29520
+  }
+}

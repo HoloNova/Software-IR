@@ -1,0 +1,21 @@
+{
+  "source_commit": "1aa6f5fe01d6f23315b3817b7ec43383419b6f57",
+  "approved_estimated_total_tokens": 26000,
+  "runtime_repair_api_calls": 1,
+  "actual_runtime_repair_tokens": 24257,
+  "automatic_retries": 0,
+  "new_business_gate_dispatches": 0,
+  "gate65_archived": "401/25 BUSINESS FAILED",
+  "verify203": "SUCCESS_METADATA_VERIFIED",
+  "scratch_single_repair_stopped": true,
+  "change_single_runtime_repair_stopped": true,
+  "protected_old_files_unchanged": 180,
+  "student_version": 3,
+  "qualified_teachers": 48,
+  "credential_scan": "PASSED",
+  "json_and_python_syntax": "PASSED",
+  "old_task_manifest_and_candidate_bytes_preserved": true,
+  "ledgers_append_only": true,
+  "raw_ci_logs_and_native_stdout_preserved": true,
+  "candidate_or_production_edits": 0
+}

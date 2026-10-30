@@ -1,0 +1,17 @@
+--- content-blog-change-v1-teacher-906a864f71bf.sir
++++ content-blog-change-v1-teacher-af2c42118880.sir
+@@ -178,2 +177,0 @@
+-        exists PostTag where item.post == post and item.tag == tag as attached;
+-        validate not attached else TagAttached;
+@@ -184 +182 @@
+-        persist link;
++        persist link else TagAttached;
+@@ -198 +196 @@
+-          where item.state == PostState.PUBLISHED and any(PostTag, post == item and tag == tag)
++          where item.state == PostState.PUBLISHED and exists PostTag where item.post == item and item.tag == tag
+@@ -216,2 +213,0 @@
+-        exists Like where item.post == post and item.user == actor as liked;
+-        validate not liked else AlreadyLiked;
+@@ -222 +218 @@
+-        persist made;
++        persist made else AlreadyLiked;

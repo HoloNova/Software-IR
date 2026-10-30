@@ -1,0 +1,18 @@
+{
+  "checks_failed": 25,
+  "checks_passed": 401,
+  "gates": {
+    "build": "PASSED",
+    "business": "FAILED",
+    "start": "PASSED",
+    "static": "PASSED"
+  },
+  "head_sha": "1aa6f5fe01d6f23315b3817b7ec43383419b6f57",
+  "model_calls": 0,
+  "network_calls": 0,
+  "run_id": 40981352192,
+  "runtime_evidence": "datasets/sir/pilots/blog-change-g8/runtime/content-blog-change-v1-teacher-906a864f71bf/blog-slice-1a18a42c2a7-37106/slm-runtime.json",
+  "runtime_evidence_sha256": "a5f63f79dd1be511aa3433a89205b543024060fe2c51efe77c09a597a5a9747d",
+  "unredacted_actions_log_not_archived": true,
+  "verify203_conclusion": "success"
+}

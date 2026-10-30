@@ -1,0 +1,121 @@
+{
+  "actual_model": "deepseek-flash",
+  "automatic_retries": 0,
+  "bundle": "datasets/sir/pilots/blog-change-g8",
+  "check_execution": {
+    "directory": "C:\\Users\\zdw00\\Desktop\\Software IR\\datasets\\sir\\pilots\\blog-change-g8\\checks\\39b1127d936e4cbea766536097dfa50c",
+    "stdout_sha256": "6ff57b427260ad010a8582a61ae74795fa20d37aac803b6ced2edd38ff1ecc79"
+  },
+  "checked": "datasets/sir/pilots/blog-change-g8/checked-r1.jsonl",
+  "checker_artifact_run_id": 40877385610,
+  "completed_at": "2026-10-30T01:21:15.693616+00:00",
+  "core_and_oracle_blobs_verified": 486,
+  "eligible_for_business_gate": false,
+  "estimated_input_tokens": 24000,
+  "estimated_output_tokens": 2000,
+  "finish_reason": "stop",
+  "frozen_inputs_unchanged": true,
+  "gates": {
+    "build": "NOT_RUN",
+    "business": "NOT_RUN",
+    "start": "NOT_RUN",
+    "static": "FAILED"
+  },
+  "max_output_tokens": 8192,
+  "new_candidates": 1,
+  "old_batch_files_unchanged_except_append_ledgers": 42,
+  "owner_budget_approved": true,
+  "parent_id": "content-blog-change-v1-teacher-906a864f71bf",
+  "recorded_new_attempts": 1,
+  "request_process_exit_code": 0,
+  "request_sha256": "89ccbd7da5db23f18cd6aa54121b41c479f0198f5fa25cc3a1ad162f8495dd4d",
+  "response_sha256": "af5993d21d24536354eee662758936cc3b42895b5297bb30892cf202f0661cc4",
+  "runtime_evidence": "datasets/sir/pilots/blog-change-g8/runtime/content-blog-change-v1-teacher-906a864f71bf/blog-slice-1a18a42c2a7-37106/slm-runtime.json",
+  "runtime_evidence_sha256": "a5f63f79dd1be511aa3433a89205b543024060fe2c51efe77c09a597a5a9747d",
+  "runtime_repair_round_for_parent": 1,
+  "sample_id": "content-blog-change-v1-teacher-af2c42118880",
+  "source_commit": "1aa6f5fe01d6f23315b3817b7ec43383419b6f57",
+  "source_sha256": "9337533ad1caabd1b65adc5a7bfe3889ee7324dd0eb76acc1e32d7aa47b66555",
+  "started_at": "2026-10-30T01:21:05.530342+00:00",
+  "static_result": {
+    "diagnostics": [
+      {
+        "code": "SIR-PARSE-001",
+        "fixes": [],
+        "loweredNodeId": null,
+        "message": "遇到不符合 SIR 语法的内容：PostTag",
+        "related": [],
+        "relativePath": null,
+        "severity": "ERROR",
+        "sourceNodeId": null,
+        "sourceSymbol": null,
+        "span": {
+          "endCodePointOffset": 5676,
+          "endColumn": 69,
+          "endLine": 196,
+          "sourceId": "sample.sir",
+          "startCodePointOffset": 5669,
+          "startColumn": 62,
+          "startLine": 196
+        },
+        "stage": "PARSE"
+      },
+      {
+        "code": "SIR-PARSE-001",
+        "fixes": [],
+        "loweredNodeId": null,
+        "message": "遇到不符合 SIR 语法的内容：where",
+        "related": [],
+        "relativePath": null,
+        "severity": "ERROR",
+        "sourceNodeId": null,
+        "sourceSymbol": null,
+        "span": {
+          "endCodePointOffset": 5682,
+          "endColumn": 75,
+          "endLine": 196,
+          "sourceId": "sample.sir",
+          "startCodePointOffset": 5677,
+          "startColumn": 70,
+          "startLine": 196
+        },
+        "stage": "PARSE"
+      },
+      {
+        "code": "SIR-PARSE-001",
+        "fixes": [],
+        "loweredNodeId": null,
+        "message": "遇到不符合 SIR 语法的内容：}",
+        "related": [],
+        "relativePath": null,
+        "severity": "ERROR",
+        "sourceNodeId": null,
+        "sourceSymbol": null,
+        "span": {
+          "endCodePointOffset": 5870,
+          "endColumn": 6,
+          "endLine": 201,
+          "sourceId": "sample.sir",
+          "startCodePointOffset": 5869,
+          "startColumn": 5,
+          "startLine": 201
+        },
+        "stage": "PARSE"
+      }
+    ],
+    "digest": null,
+    "fileCount": 0,
+    "id": "content-blog-change-v1-teacher-af2c42118880",
+    "ok": false,
+    "sourceSha256": "9337533ad1caabd1b65adc5a7bfe3889ee7324dd0eb76acc1e32d7aa47b66555",
+    "stage": "PARSE"
+  },
+  "task": "content-blog-change-v1",
+  "unchanged_source_from_parent": false,
+  "usage": {
+    "cache_hit": 9088,
+    "input": 22799,
+    "output": 1458,
+    "total": 24257
+  }
+}

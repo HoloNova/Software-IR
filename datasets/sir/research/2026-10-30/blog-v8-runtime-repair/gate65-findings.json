@@ -1,0 +1,41 @@
+{
+  "sample_id": "content-blog-change-v1-teacher-906a864f71bf",
+  "gates": {
+    "static": "PASSED",
+    "build": "PASSED",
+    "business": "FAILED",
+    "start": "PASSED"
+  },
+  "binding_and_all_attachment_hashes": "PASSED",
+  "checks_passed": 401,
+  "checks_failed": 25,
+  "root_causes": {
+    "tag_filter_self_comparison": {
+      "failed_assertions": 14,
+      "candidate_line": 198,
+      "expression": "any(PostTag, post == item and tag == tag)",
+      "resolution": "Both bare tag names bind to the PostTag.tag field, not the outer workflow variable."
+    },
+    "duplicate_insert_not_mapped": {
+      "failed_assertions": 11,
+      "candidate_lines": [
+        175,
+        178,
+        179,
+        184
+      ],
+      "statuses": [
+        500,
+        500,
+        500,
+        201,
+        500,
+        500
+      ],
+      "uncaught_duplicate_key_exceptions": 5,
+      "constraint": "post_tag.blog_post_tag"
+    }
+  },
+  "toolchain_or_candidate_changes": 0,
+  "model_api_calls": 0
+}
