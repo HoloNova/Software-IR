@@ -1,0 +1,58 @@
+{
+  "baseline_commit": "33c2f4bc09e88b91631066ae14f8edd70bb19fae",
+  "ci_commit": "47bf67c8f3d95fbb81d50b1b927c73bba1d0db21",
+  "ci_run_url": "https://github.com/HoloNova/Software-IR/actions/runs/41019419975",
+  "artifact_id": 12960753406,
+  "ci_zip_sha256": "6b1dbcfd5ba33160cd75f2f1b7b62caa5367824047f3fcfc023fe5c17f351074",
+  "jar_sha256": "d23339bf47b6f4ff574e1dcd82bc33f7c7127fae5882b0a1daa89b5fea648a9a",
+  "parser_subtree_git_tree": "0b64cc5e69c46de9807c5eba4f5136643ba93b83",
+  "commands": [
+    [
+      "javac",
+      "-encoding",
+      "UTF-8",
+      "-J-Xmx256m",
+      "-J-XX:MaxMetaspaceSize=128m",
+      "-J-XX:ActiveProcessorCount=2",
+      "-cp",
+      "C:\\Users\\zdw00\\Desktop\\Software IR\\target\\ci-investigation\\204\\standalone-cli\\kcg.jar",
+      "-d",
+      "C:\\Users\\zdw00\\Desktop\\Software IR\\target\\parser-diagnostics-design\\observation-reviewed\\classes",
+      "C:\\Users\\zdw00\\Desktop\\Software IR\\experiments\\slm\\drafts\\parser-diagnostics\\ProbeJson.java",
+      "C:\\Users\\zdw00\\Desktop\\Software IR\\experiments\\slm\\drafts\\parser-diagnostics\\ParserContextProbe.java"
+    ],
+    [
+      "java",
+      "-Xmx256m",
+      "-XX:MaxMetaspaceSize=128m",
+      "-XX:ActiveProcessorCount=2",
+      "-cp",
+      "C:\\Users\\zdw00\\Desktop\\Software IR\\target\\parser-diagnostics-design\\observation-reviewed\\classes;C:\\Users\\zdw00\\Desktop\\Software IR\\target\\ci-investigation\\204\\standalone-cli\\kcg.jar",
+      "io.kcg.sir.internal.ParserContextProbe",
+      "C:\\Users\\zdw00\\Desktop\\Software IR\\target\\parser-diagnostics-design\\observation-reviewed\\input.json",
+      "C:\\Users\\zdw00\\Desktop\\Software IR\\target\\parser-diagnostics-design\\observation-reviewed\\observations.json"
+    ]
+  ],
+  "inputs_sha256": "6f20f6620e74b4d0a911d8cc820244dc6e4ee5106524d89f54b81cc8fddbb3c2",
+  "source_sha256": {
+    "ProbeJson.java": "482727b07f9019e7191d516373070b9f04bab23441e9755b1cd1e5163f3c4f99",
+    "ParserContextProbe.java": "baf8fd36c7ed39769b7023d20efbe31772eab19fec7117757f895defc05d9df1"
+  },
+  "controls_sha256": "c7a2b8f74bfadd70355384db8a86029c3c8efa817f43637f2bb273620b1b4c3c",
+  "historical_sources": 39,
+  "mechanism_controls": 27,
+  "public_diagnostic_comparisons": 66,
+  "model_calls": 0,
+  "maven_runs": 0,
+  "new_diagnostic_implementation": "NOT_IMPLEMENTED",
+  "original_observations_sha256": "d7f78fc716ab8aa67e7a14e547383c6d72a0fc74b606832991aa78a9e6badd23",
+  "archived_observations_sha256": "32b294a2d540ac4f63069015363aba0dd9c0203a4421cfbb77da16d3f76a1898",
+  "serialization_note": "Same parsed values as the observer output; indented UTF-8 JSON copy, not raw CI evidence.",
+  "boundary_observations": {
+    "keyword_existing_specific_first_message": 6,
+    "keyword_generic_first_message": 6,
+    "missing_size_has_recovery_node": true,
+    "true_missing_else_has_clean_completed_child_expressions": true,
+    "current_page_exception_cannot_be_used_as_a_blanket_exclusion": true
+  }
+}

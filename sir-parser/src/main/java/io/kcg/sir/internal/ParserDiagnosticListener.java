@@ -50,6 +50,7 @@ final class ParserDiagnosticListener extends BaseErrorListener {
                     ? "输入不符合 SIR 语法"
                     : "遇到不符合 SIR 语法的内容：" + printable(token.getText());
         }
+        localized = ParserDiagnosticHints.refine(recognizer, token, code, localized);
         Token previous = missingToken && recognizer instanceof Parser parser
                 ? parser.getTokenStream().LT(-1)
                 : null;

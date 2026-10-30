@@ -1,0 +1,137 @@
+[
+  {
+    "id": "constraint_adjacent",
+    "kind": "mechanism_control",
+    "source": "sir 0.3\nsoftware Probe {\nmetadata { displayName \"😀\"; namespace \"tests.parser.probe\"; }\ntarget { language java 21; framework spring_boot; persistence mybatis_plus; database mysql; build maven; interface rest; }\nsources { } imports { } declarations {\nentity Thing persistent { identity id: Id generated auto; field label: Text where length(1, 100) notBlank; }\n}\n}\n"
+  },
+  {
+    "id": "constraint_and",
+    "kind": "mechanism_control",
+    "source": "sir 0.3\nsoftware Probe {\nmetadata { displayName \"😀\"; namespace \"tests.parser.probe\"; }\ntarget { language java 21; framework spring_boot; persistence mybatis_plus; database mysql; build maven; interface rest; }\nsources { } imports { } declarations {\nentity Thing persistent { identity id: Id generated auto; field n: Serial where min(1) and max(7); }\n}\n}\n"
+  },
+  {
+    "id": "constraint_or",
+    "kind": "mechanism_control",
+    "source": "sir 0.3\nsoftware Probe {\nmetadata { displayName \"😀\"; namespace \"tests.parser.probe\"; }\ntarget { language java 21; framework spring_boot; persistence mybatis_plus; database mysql; build maven; interface rest; }\nsources { } imports { } declarations {\nentity Thing persistent { identity id: Id generated auto; field n: Serial where min(1) or max(7); }\n}\n}\n"
+  },
+  {
+    "id": "constraint_custom_adjacent",
+    "kind": "mechanism_control",
+    "source": "sir 0.3\nsoftware Probe {\nmetadata { displayName \"😀\"; namespace \"tests.parser.probe\"; }\ntarget { language java 21; framework spring_boot; persistence mybatis_plus; database mysql; build maven; interface rest; }\nsources { } imports { } declarations {\nentity Thing persistent { identity id: Id generated auto; field n: Serial where custom(1) other; }\n}\n}\n"
+  },
+  {
+    "id": "constraint_comma_valid",
+    "kind": "mechanism_control",
+    "source": "sir 0.3\nsoftware Probe {\nmetadata { displayName \"😀\"; namespace \"tests.parser.probe\"; }\ntarget { language java 21; framework spring_boot; persistence mybatis_plus; database mysql; build maven; interface rest; }\nsources { } imports { } declarations {\nentity Thing persistent { identity id: Id generated auto; field n: Serial where min(1), max(7); }\n}\n}\n"
+  },
+  {
+    "id": "constraint_unique_valid",
+    "kind": "mechanism_control",
+    "source": "sir 0.3\nsoftware Probe {\nmetadata { displayName \"😀\"; namespace \"tests.parser.probe\"; }\ntarget { language java 21; framework spring_boot; persistence mybatis_plus; database mysql; build maven; interface rest; }\nsources { } imports { } declarations {\nentity Thing persistent { identity id: Id generated auto; field n: Serial where min(1) unique; }\n}\n}\n"
+  },
+  {
+    "id": "constraint_default_valid",
+    "kind": "mechanism_control",
+    "source": "sir 0.3\nsoftware Probe {\nmetadata { displayName \"😀\"; namespace \"tests.parser.probe\"; }\ntarget { language java 21; framework spring_boot; persistence mybatis_plus; database mysql; build maven; interface rest; }\nsources { } imports { } declarations {\nentity Thing persistent { identity id: Id generated auto; field n: Serial where min(1) default 1; }\n}\n}\n"
+  },
+  {
+    "id": "constraint_unique_key_missing_semi",
+    "kind": "mechanism_control",
+    "source": "sir 0.3\nsoftware Probe {\nmetadata { displayName \"😀\"; namespace \"tests.parser.probe\"; }\ntarget { language java 21; framework spring_boot; persistence mybatis_plus; database mysql; build maven; interface rest; }\nsources { } imports { } declarations {\nentity Thing persistent { identity id: Id generated auto; field n: Serial where min(1) unique (id, n); }\n}\n}\n"
+  },
+  {
+    "id": "constraint_next_field_missing_semi",
+    "kind": "mechanism_control",
+    "source": "sir 0.3\nsoftware Probe {\nmetadata { displayName \"😀\"; namespace \"tests.parser.probe\"; }\ntarget { language java 21; framework spring_boot; persistence mybatis_plus; database mysql; build maven; interface rest; }\nsources { } imports { } declarations {\nentity Thing persistent { identity id: Id generated auto; field n: Serial where min(1) field other: Serial; }\n}\n}\n"
+  },
+  {
+    "id": "constraint_alias_adjacent",
+    "kind": "mechanism_control",
+    "source": "sir 0.3\nsoftware Probe {\nmetadata { displayName \"😀\"; namespace \"tests.parser.probe\"; }\ntarget { language java 21; framework spring_boot; persistence mybatis_plus; database mysql; build maven; interface rest; }\nsources { } imports { } declarations {\ntype Small = Count where min(1) max(7);\n}\n}\n"
+  },
+  {
+    "id": "constraint_input_default_invalid",
+    "kind": "mechanism_control",
+    "source": "sir 0.3\nsoftware Probe {\nmetadata { displayName \"😀\"; namespace \"tests.parser.probe\"; }\ntarget { language java 21; framework spring_boot; persistence mybatis_plus; database mysql; build maven; interface rest; }\nsources { } imports { } declarations {\ninput Request { field n: Serial where min(1) default 1; }\n}\n}\n"
+  },
+  {
+    "id": "enum_and_unrelated",
+    "kind": "mechanism_control",
+    "source": "sir 0.3\nsoftware Probe {\nmetadata { displayName \"😀\"; namespace \"tests.parser.probe\"; }\ntarget { language java 21; framework spring_boot; persistence mybatis_plus; database mysql; build maven; interface rest; }\nsources { } imports { } declarations {\nenum State { ON and OFF }\n}\n}\n"
+  },
+  {
+    "id": "keyword_field_target",
+    "kind": "mechanism_control",
+    "source": "sir 0.3\nsoftware Probe {\nmetadata { displayName \"😀\"; namespace \"tests.parser.probe\"; }\ntarget { language java 21; framework spring_boot; persistence mybatis_plus; database mysql; build maven; interface rest; }\nsources { } imports { } declarations {\nentity Thing persistent { identity id: Id generated auto; field target: Text; }\n}\n}\n"
+  },
+  {
+    "id": "keyword_as_target_locked",
+    "kind": "mechanism_control",
+    "source": "sir 0.3\nsoftware Probe {\nmetadata { displayName \"😀\"; namespace \"tests.parser.probe\"; }\ntarget { language java 21; framework spring_boot; persistence mybatis_plus; database mysql; build maven; interface rest; }\nsources { } imports { } declarations {\nentity Thing persistent { identity id: Id generated auto; field label: Text; } error Missing; capability Work { output Unit; fails Missing; requires atomic; expose command; workflow { load Thing by 1 as target for update else Missing; return unit; } }\n}\n}\n"
+  },
+  {
+    "id": "keyword_as_target",
+    "kind": "mechanism_control",
+    "source": "sir 0.3\nsoftware Probe {\nmetadata { displayName \"😀\"; namespace \"tests.parser.probe\"; }\ntarget { language java 21; framework spring_boot; persistence mybatis_plus; database mysql; build maven; interface rest; }\nsources { } imports { } declarations {\nentity Thing persistent { identity id: Id generated auto; field label: Text; } error Missing; capability Work { output Unit; fails Missing; requires atomic; expose command; workflow { load Thing by 1 as target else Missing; return unit; } }\n}\n}\n"
+  },
+  {
+    "id": "keyword_contextual_for_valid",
+    "kind": "mechanism_control",
+    "source": "sir 0.3\nsoftware Probe {\nmetadata { displayName \"😀\"; namespace \"tests.parser.probe\"; }\ntarget { language java 21; framework spring_boot; persistence mybatis_plus; database mysql; build maven; interface rest; }\nsources { } imports { } declarations {\nentity Thing persistent { identity id: Id generated auto; field label: Text; } error Missing; capability Work { output Unit; fails Missing; requires atomic; expose command; workflow { load Thing by 1 as for else Missing; return unit; } }\n}\n}\n"
+  },
+  {
+    "id": "keyword_missing_expression_unrelated",
+    "kind": "mechanism_control",
+    "source": "sir 0.3\nsoftware Probe {\nmetadata { displayName \"😀\"; namespace \"tests.parser.probe\"; }\ntarget { language java 21; framework spring_boot; persistence mybatis_plus; database mysql; build maven; interface rest; }\nsources { } imports { } declarations {\nentity Thing persistent { identity id: Id generated auto; field label: Text; } error Missing; capability Work { output Unit; fails Missing; requires atomic; expose command; workflow { validate true and else Missing; return unit; } }\n}\n}\n"
+  },
+  {
+    "id": "page_missing_else",
+    "kind": "mechanism_control",
+    "source": "sir 0.3\nsoftware Probe {\nmetadata { displayName \"😀\"; namespace \"tests.parser.probe\"; }\ntarget { language java 21; framework spring_boot; persistence mybatis_plus; database mysql; build maven; interface rest; }\nsources { } imports { } declarations {\nentity Thing persistent { identity id: Id generated auto; field n: Serial; field label: Text; field owner: Ref<Thing>; }\nview ThingView from Thing { field n: Serial; }\ninput Request { field page: PageNo; field size: PageSize; }\nerror BadPage;\ncapability Read { input Request; output Page<ThingView>; fails BadPage; requires readonly; expose query; workflow { find Thing where true Page input.page, input.size as rows; return rows; } }\n}\n}\n"
+  },
+  {
+    "id": "page_else_valid",
+    "kind": "mechanism_control",
+    "source": "sir 0.3\nsoftware Probe {\nmetadata { displayName \"😀\"; namespace \"tests.parser.probe\"; }\ntarget { language java 21; framework spring_boot; persistence mybatis_plus; database mysql; build maven; interface rest; }\nsources { } imports { } declarations {\nentity Thing persistent { identity id: Id generated auto; field n: Serial; field label: Text; field owner: Ref<Thing>; }\nview ThingView from Thing { field n: Serial; }\ninput Request { field page: PageNo; field size: PageSize; }\nerror BadPage;\ncapability Read { input Request; output Page<ThingView>; fails BadPage; requires readonly; expose query; workflow { find Thing where true order by id ascending Page input.page, input.size else BadPage as rows; return rows; } }\n}\n}\n"
+  },
+  {
+    "id": "page_missing_only_else",
+    "kind": "mechanism_control",
+    "source": "sir 0.3\nsoftware Probe {\nmetadata { displayName \"😀\"; namespace \"tests.parser.probe\"; }\ntarget { language java 21; framework spring_boot; persistence mybatis_plus; database mysql; build maven; interface rest; }\nsources { } imports { } declarations {\nentity Thing persistent { identity id: Id generated auto; field n: Serial; field label: Text; field owner: Ref<Thing>; }\nview ThingView from Thing { field n: Serial; }\ninput Request { field page: PageNo; field size: PageSize; }\nerror BadPage;\ncapability Read { input Request; output Page<ThingView>; fails BadPage; requires readonly; expose query; workflow { find Thing where true Page 1, 10 BadPage as rows; return rows; } }\n}\n}\n"
+  },
+  {
+    "id": "page_missing_comma",
+    "kind": "mechanism_control",
+    "source": "sir 0.3\nsoftware Probe {\nmetadata { displayName \"😀\"; namespace \"tests.parser.probe\"; }\ntarget { language java 21; framework spring_boot; persistence mybatis_plus; database mysql; build maven; interface rest; }\nsources { } imports { } declarations {\nentity Thing persistent { identity id: Id generated auto; field n: Serial; field label: Text; field owner: Ref<Thing>; }\nview ThingView from Thing { field n: Serial; }\ninput Request { field page: PageNo; field size: PageSize; }\nerror BadPage;\ncapability Read { input Request; output Page<ThingView>; fails BadPage; requires readonly; expose query; workflow { find Thing where true Page input.page input.size else BadPage as rows; return rows; } }\n}\n}\n"
+  },
+  {
+    "id": "page_missing_size",
+    "kind": "mechanism_control",
+    "source": "sir 0.3\nsoftware Probe {\nmetadata { displayName \"😀\"; namespace \"tests.parser.probe\"; }\ntarget { language java 21; framework spring_boot; persistence mybatis_plus; database mysql; build maven; interface rest; }\nsources { } imports { } declarations {\nentity Thing persistent { identity id: Id generated auto; field n: Serial; field label: Text; field owner: Ref<Thing>; }\nview ThingView from Thing { field n: Serial; }\ninput Request { field page: PageNo; field size: PageSize; }\nerror BadPage;\ncapability Read { input Request; output Page<ThingView>; fails BadPage; requires readonly; expose query; workflow { find Thing where true Page input.page, else BadPage as rows; return rows; } }\n}\n}\n"
+  },
+  {
+    "id": "page_missing_error_name",
+    "kind": "mechanism_control",
+    "source": "sir 0.3\nsoftware Probe {\nmetadata { displayName \"😀\"; namespace \"tests.parser.probe\"; }\ntarget { language java 21; framework spring_boot; persistence mybatis_plus; database mysql; build maven; interface rest; }\nsources { } imports { } declarations {\nentity Thing persistent { identity id: Id generated auto; field n: Serial; field label: Text; field owner: Ref<Thing>; }\nview ThingView from Thing { field n: Serial; }\ninput Request { field page: PageNo; field size: PageSize; }\nerror BadPage;\ncapability Read { input Request; output Page<ThingView>; fails BadPage; requires readonly; expose query; workflow { find Thing where true Page 1, 10 else as rows; return rows; } }\n}\n}\n"
+  },
+  {
+    "id": "page_grouped_sum_missing_else",
+    "kind": "mechanism_control",
+    "source": "sir 0.3\nsoftware Probe {\nmetadata { displayName \"😀\"; namespace \"tests.parser.probe\"; }\ntarget { language java 21; framework spring_boot; persistence mybatis_plus; database mysql; build maven; interface rest; }\nsources { } imports { } declarations {\nentity Thing persistent { identity id: Id generated auto; field n: Serial; field label: Text; field owner: Ref<Thing>; }\nview ThingView from Thing { field n: Serial; }\ninput Request { field page: PageNo; field size: PageSize; }\nerror BadPage;\ncapability Read { input Request; output Page<ThingView>; fails BadPage; requires readonly; expose query; workflow { sum Thing.n by owner where true Page input.page, input.size as rows; return rows; } }\n}\n}\n"
+  },
+  {
+    "id": "page_container_missing_type",
+    "kind": "mechanism_control",
+    "source": "sir 0.3\nsoftware Probe {\nmetadata { displayName \"😀\"; namespace \"tests.parser.probe\"; }\ntarget { language java 21; framework spring_boot; persistence mybatis_plus; database mysql; build maven; interface rest; }\nsources { } imports { } declarations {\ncapability Read { output Page; expose query; workflow { return unit; } }\n}\n}\n"
+  },
+  {
+    "id": "ordinary_and_valid",
+    "kind": "mechanism_control",
+    "source": "sir 0.3\nsoftware Probe {\nmetadata { displayName \"😀\"; namespace \"tests.parser.probe\"; }\ntarget { language java 21; framework spring_boot; persistence mybatis_plus; database mysql; build maven; interface rest; }\nsources { } imports { } declarations {\nentity Thing persistent { identity id: Id generated auto; field n: Serial; field label: Text; field owner: Ref<Thing>; }\nview ThingView from Thing { field n: Serial; }\ninput Request { field page: PageNo; field size: PageSize; }\nerror BadPage;\ncapability Read { input Request; output Page<ThingView>; fails BadPage; requires readonly; expose query; workflow { find Thing where item.n > 0 and true as rows; return rows; } }\n}\n}\n"
+  },
+  {
+    "id": "inline_exists_unrelated",
+    "kind": "mechanism_control",
+    "source": "sir 0.3\nsoftware Probe {\nmetadata { displayName \"😀\"; namespace \"tests.parser.probe\"; }\ntarget { language java 21; framework spring_boot; persistence mybatis_plus; database mysql; build maven; interface rest; }\nsources { } imports { } declarations {\nentity Thing persistent { identity id: Id generated auto; field n: Serial; field label: Text; field owner: Ref<Thing>; }\nview ThingView from Thing { field n: Serial; }\ninput Request { field page: PageNo; field size: PageSize; }\nerror BadPage;\ncapability Read { input Request; output Page<ThingView>; fails BadPage; requires readonly; expose query; workflow { find Thing where exists(Thing, owner == item) as rows; return rows; } }\n}\n}\n"
+  }
+]

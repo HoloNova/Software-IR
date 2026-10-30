@@ -659,3 +659,37 @@ v8 累计 **4 次 API**，输入 **47722**（缓存 **21888**）、输出 **6055
 分词未截断、未下载／执行权重，也不是模型训练或能力评测。汇总、49条来源证明与 v4 文件摘要见 `student-v4-verification.json` 及 `student/train-student-v4.{index,tokens}.json`。本次仅数据／证据与说明收口，无 Maven、本机业务 IT、应用／数据库或新模型调用；下一项 4.3 Parser 统计与设计、4.4 归档工具整合仍各自等待确认，不在本轮修改生产代码。
 
 题库覆盖按 task ID 另计：73份定义中已有 **48题**至少一份合格答案，仍有 **25题**没有（train19、development2、test4）；49条答案不等于49道独立题。该统计不改变分组、不启动test采样或学生评测。
+
+
+<a id="slm-parser-diagnostics-design"></a>
+
+## 第二十八阶段：历史 Parser 错误统计与三类提示设计（2026-10-30，待确认）
+
+负责人确认开始交接 4.3 后，本阶段只统计、核对原解析器机制并形成[设计](../../experiments/slm/drafts/design/parser-diagnostics-design.md)，**尚未实施新 Parser 消息**。统计固定到 `33c2f4bc09e88b91631066ae14f8edd70bb19fae`，从 Git Blob 读取而非本机换行；不触碰旧批次、冻结 manifest 或资格。
+
+**去重结果。**163 份 checked JSONL 共 394 行（参考 152、教师 242），其中 95 行教师检查含 SIR-PARSE-001，累计 214 条该诊断。去掉重复检查和跨工具链导入后，为 **48 个保留响应身份、39 种源码、53 个候选/core 组合**。逐一按首个可定位根因分类，后续恢复报错不当独立根因；214 条 stdout 副本和 56 条研究摘要副本另列载体，不重复计数。按响应身份，前三类是 **关键字名字 12、约束分隔 11、分页漏 else 8**，内联查询 5 排第四。若按源码字节，前三则为 12、6、5，分页为 4；两种口径公开，不以重复返回源码宣称独立样本或整体改进。响应 ID 数不是计费调用总数。
+
+**基线机制。**复用已核对哈希的 verify #204 原 CLI（受测 47bf67c8，ANTLR 4.13.2），确认其 sir-parser 子树与本次统计基线一致。只增加观察 listener，保留原 DefaultSirParser、原 ParserDiagnosticListener 和默认恢复，对 39 种历史源码加 27 个机制对照的 **66 项公共 Diagnostic 完整记录逐项相等**。这是只读观察，不是新消息的测试 GREEN。关键字类中 6 份首条已有专用提示，另 6 份因 extraneous 分支较早而仍为通用消息；不能声称全部 12 份都是新增缺口。也确认“缺尺寸”恢复后可能在 AS 期待 ELSE，必须检查已完成子表达式，不能仅凭 token 猜缺词；当前规则的本次 exception 又不能当成旧损坏一律排除。
+
+**建议实施范围。**只在现有错误回调改善三类消息：名字槽位的关键字（保留 001/003 各自错误码）、约束尾部的逗号分隔说明、已完整页码/尺寸之后的分页 else 说明。保留语法、默认恢复、数量/顺序/SourceSpan/related/fixes、missing 的零宽位置、EOF 和错误数量上限；不自动改名/补词，不改变合法输入，不混入排名第四的内联 exists 提示。明确列了上下文词、合法修饰词、缺分号、约束参数错误、缺尺寸/错误名等反例，等待负责人确认后才写新行为测试与产品代码。
+
+**可复核材料。**`experiments/slm/drafts/parser-diagnostics/` 保存逐源码人工分类、可重算统计脚本及输入哈希、两份只读辅助类、27 项控制输入、66 项观察和来源摘要。观察器首次因误用原 CLI 不含的 Jackson 而未编译、未进入 Parser；改为复用原 CLI 的 StrictJson/JsonStringEncoder，不增加依赖；原失败 stderr 在 target 保留，不计成功。只编译观察辅助类、串行运行受限 Java 进程（heap 256 MiB、metaspace 128 MiB、ActiveProcessorCount=2），无 Maven/真库/应用运行。
+
+本阶段模型调用 **0 次**，合格答案仍 **49 条**、学生 v4 不变、未训练。新 Parser 实施/定向 RED-GREEN/新 SHA CI 均 **NOT_RUN**；未提交或推送，也未开始交接 4.4。历史 checked 记录继续保留原消息，之后工具链若改动仍按原 import/check 流程绑定。
+
+
+<a id="slm-parser-diagnostics-local"></a>
+
+## 第二十九阶段：三类 Parser 提示的本机实施与兼容验证（2026-10-30）
+
+负责人确认第二十八阶段设计后，保留 `ParserDiagnosticListener` 原错误码/位置分支，只增加一次包内 `ParserDiagnosticHints.refine` 调用。助手在明确的名字槽位、约束尾部和分页 AS/ELSE 边界替换文字，不消费 token、不修改解析树、语法或恢复；未命中保留原消息。project/fragment/expansion 共用入口，EOF、missing 零宽位置和 50 条上限均不改。不修改 Prompt、题目、判卷或历史候选。
+
+**TDD。**新增 `TargetedSyntaxDiagnosticTest` 的 **67 项 RED：37 项仅因旧文案失败，另外 30 项边界通过**，0 错误/跳过；生产代码改后，新类与十类受影响旧测试合计 **11 类/135 项全通过，0 失败/错误/跳过**，测试字节未为 GREEN 改动。覆盖关键字额外 token、四类声明的约束分隔、分页 find/sum/avg、合法修饰/上下文词、恢复链、Unicode/LF/CRLF、三入口及诊断上限。135 已包含新增 67，不能再相加；未运行覆盖率，不声称 80%。
+
+**精确新旧对照。**沿用已核对哈希的 CI #204 原 CLI，只覆盖本次 GREEN 实际编译的两个 class；公共 API/AST 共享类型，旧/新 parser internals 隔离，在同一进程直接 equals AST/Diagnostic 记录。**39 历史 +27 机制对照 +49 合格源码 +5 参考 =120 项**接受结果/AST 值/诊断数量与顺序保持一致，除消息外的所有 Diagnostic 字段逐条相等。24 项输入中的 28 条消息按事先许可名单变化，未许可变化 0；没有改写旧 checked 来形成此结论。
+
+**合法完整生成。**另用生产 CLI check 的 GENERATION 对照 49 条合格源码及五份参考，**54/54 完整成功且完整 JSON 结果相等，1633 个生成文件的数量与版本化摘要一致**。这只是静态回归，不重写原资格、不替代四门。
+
+实际仍为 Windows/Java 21.0.11/Maven 3.9.14，18 CPU、24093 MiB、开跑前可用 3860 MiB；1444 个基线文件在独立 LF 快照逐项核对 Git Blob。Maven heap 384 MiB/metaspace 192 MiB、测试 fork及辅助 JVM heap 256 MiB/metaspace 128 MiB，全部 ActiveProcessorCount=2，串行无 `-T`；未跑全量、数据库或应用。两次 AFT 检查超时，fresh 诊断缺失，不冒称通过。命令、原始本机日志/XML、受测哈希、对照来源和已知缺口详见[实施记录](../../experiments/slm/drafts/design/parser-diagnostics-design.md#local-verification)及 `target/parser-diagnostics-implementation/`；它们不是同 SHA CI 证据。
+
+本轮模型调用 **0 次**，合格仍 **49 条**、学生 v4、未训练。语言参考未改，不额外运行其专用测试；新 SHA CI/真实业务 **NOT_RUN**。尚未提交或推送，交接 4.4 尚未开始。

@@ -1,0 +1,136 @@
+{
+  "policy": "Per-response first parse-root category; manually reviewed against source, grammar and full diagnostics; not a regex classifier.",
+  "categories": {
+    "reserved_keyword_name": "字段或as结果名字使用target/order；后续==、persist等是恢复链，不能另当根因。",
+    "constraint_separator": "完整where约束之后用and衔接或直接相邻另一个约束，未写逗号。",
+    "page_missing_else": "Page页码、大小之后直接as结果，缺少else错误名；同源码重答仍单独保留响应身份。",
+    "inline_scalar_query": "将exists/count工作流语句或虚构exists(...)放进表达式；含后续恢复报错。",
+    "entity_member_order": "credential先于field；后续owner、entity错误由实体成员顺序破坏引起。",
+    "find_else_after_result": "无Page的find在as结果之后追加else错误，不符合既有find语法。",
+    "explicit_post_verb": "expose command显式追加不支持的post单词；后续persist是恢复错误。",
+    "return_bindings_block": "给return追加绑定花括号块，不是return表达式分号。",
+    "constraint_used_as_operator": "将notBlank约束名当作validate表达式的中缀操作符。",
+    "field_modifier_order": "实体字段unique在where之前，违反字段修饰顺序。",
+    "input_default_modifier": "input字段使用只允许实体字段声明的default修饰。",
+    "inline_input_block": "能力input子句写匿名字段块，没有引用已声明输入类型。"
+  },
+  "sources": {
+    "0236c0dde4810d59cdf2f1edc5ce35528f95cb818e2f6d88cfb1906780edb8d1": {
+      "category": "reserved_keyword_name"
+    },
+    "0808e5f3d7dbdf0187a9c591ec4d004210c999ccae86c1b8fc71160aff98917f": {
+      "category": "reserved_keyword_name"
+    },
+    "0a5c057644229c9a0495810925d68ab38a1237ced0a2d19a095374d69e08049e": {
+      "category": "inline_scalar_query"
+    },
+    "101896c9b67b818865e7b51328ffc885807eb9929ed6e276ebb594b122a3ef45": {
+      "category": "reserved_keyword_name"
+    },
+    "26d92e62202f40cd835ca830c79da9d691549286f9e76c1a2f80730dded98557": {
+      "category": "reserved_keyword_name"
+    },
+    "2d922c6521850e692e76e66426095884b5a71f329ef02471696ac3ad43a4e937": {
+      "category": "reserved_keyword_name"
+    },
+    "31a1fa8ba2659767c708d0ff5bb45f354c849c75193a118fcbc071f9dee9f3c9": {
+      "category": "page_missing_else"
+    },
+    "3ab25f8c6e06436e89df250a58b2cc1d08deea3697ee26ceb8e6b5c2a22f01d4": {
+      "category": "constraint_separator"
+    },
+    "4044f3ff145b5303ccf4018ae4f4126afd94b66c0f9762cf462fb848fd251194": {
+      "category": "find_else_after_result"
+    },
+    "40f0fdf47808f3ab356e114df4f234204b56ebffd93558805466806d3760bca9": {
+      "category": "reserved_keyword_name"
+    },
+    "436854a612d51ce822a7b1c909e75a3a54e7f8aaf67cc846186ad961ad889924": {
+      "category": "inline_scalar_query"
+    },
+    "45bf6a32a3330414dbb45e933c6332a7e9a48def3c925e95ff519e09ea04c9bb": {
+      "category": "inline_scalar_query"
+    },
+    "47d6f7f7f4d13c2ce89cc0ba7a1352797044f469d714929127aefb42e53a163b": {
+      "category": "constraint_separator"
+    },
+    "4b206350980418c7afe9ad691eda16d09721cbd6489bdb525629b4a83cb7d419": {
+      "category": "constraint_separator"
+    },
+    "4d89344a884b4f55428a900ca10453eee6fddc6017356a995f26f265fb2a2d64": {
+      "category": "explicit_post_verb"
+    },
+    "4f0327b6ac25e4616cfa3b435434d747bde0ba140887853d5bc70b7ec4840784": {
+      "category": "reserved_keyword_name"
+    },
+    "50557c30433f3d9f6e493b5282779307d0653f8ced1844ae3cc1e87ab8292add": {
+      "category": "input_default_modifier"
+    },
+    "52d31c5dd3b0c31df2153b2d508a411f4732b69eb7d0a7d4165f5eb6b5eb86a5": {
+      "category": "page_missing_else"
+    },
+    "5aacdbfe18ccf83c95ace6ce36278a9f9932eec1597b6d52ed82aacd11f16f32": {
+      "category": "return_bindings_block"
+    },
+    "70fa592b8c38796b2fa2d1f0ea83c8a2901e0645757a49450121af46e56bdbbb": {
+      "category": "find_else_after_result"
+    },
+    "778713f5a5e01f769717b03878e934b605dd69ab31043d235c3d5428a7bc7495": {
+      "category": "entity_member_order"
+    },
+    "8b017e45ed265497938e0fb086cf965d8a38f089424e6fc7bd250681bd741555": {
+      "category": "reserved_keyword_name"
+    },
+    "9337533ad1caabd1b65adc5a7bfe3889ee7324dd0eb76acc1e32d7aa47b66555": {
+      "category": "inline_scalar_query"
+    },
+    "9886fb7569660029f964c1ab0baada3e5b9da8e7d40c8797fe47e75230174f6f": {
+      "category": "constraint_separator"
+    },
+    "9d812184dac95098e115d03372381877a5afbbc6b8dfc76acc5c8975b8f2cf6b": {
+      "category": "inline_scalar_query"
+    },
+    "9febdf6a5f20bfa319becd1860eec5e72013f38fb11a3dc34897a34cb5d6ac03": {
+      "category": "reserved_keyword_name"
+    },
+    "a759925c5db4793a822e29a92ec431668fc7ef6ae8d854a8fa4a20a45871a98a": {
+      "category": "reserved_keyword_name"
+    },
+    "a8df007c72a3dcfe4d0dbd5a8842445952a96c605b658d58ded1a3add46dabaf": {
+      "category": "constraint_separator"
+    },
+    "abf893e6564541a9d44292c71dc929fef38b105261daf6e56d144ba0bba503db": {
+      "category": "reserved_keyword_name"
+    },
+    "b156648b9b1fa5fc89cc9ff6928a246a69a18116e06b1c44d677cbcb9def7539": {
+      "category": "page_missing_else"
+    },
+    "b45ecc1f749ef5824d74ba4a4f17868b26c3e212c14596005c82b83ab52bc4cc": {
+      "category": "constraint_separator"
+    },
+    "b9633b0220a44aefb8be2b8418b2c47f16e9dae1dfc0fd0320bd5958be4365fc": {
+      "category": "reserved_keyword_name"
+    },
+    "c4aa16bbb089ff8f942b5f968c3b4b3af0fd5171f55bf4d80529fbc76fb02142": {
+      "category": "entity_member_order"
+    },
+    "c5a5efa27cf87dc48e5e2d25508b2a2e94b3cc55f85839cd386848e614936dd2": {
+      "category": "entity_member_order"
+    },
+    "d28c5152a0fc700ed0680585906dd3edb6ae4614cf644f8d5683318b2f10c2ab": {
+      "category": "page_missing_else"
+    },
+    "e2d0dfbabf97a8e472b8523ef2b1c98b79939a0cf00dd0abc3606d83ace8997d": {
+      "category": "field_modifier_order"
+    },
+    "e51fff603362734367495f2d53fa2f1482b0bf9ea094d4245943aa481ab61662": {
+      "category": "inline_input_block"
+    },
+    "e7c64be0ec86465d0b33436704a8800126e3ba397d97968a25c4b58192c752b9": {
+      "category": "entity_member_order"
+    },
+    "f47dfcbdbfa9a5f04fdc83991eb1dfbc8a85fa6c07a5f270360b2475ce276410": {
+      "category": "constraint_used_as_operator"
+    }
+  }
+}
