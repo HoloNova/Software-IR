@@ -70,7 +70,7 @@ v2（2026-10-25）补的是首批暴露的两处提示不足：实体成员的�
 
 `sir-0.3-general-v7.md`（2026-10-29，负责人已确认）仅同步已由 verify #198/#199 验收的新行为：普通非 Optional 输入一律必填，带 notBlank 的文本仍报 NotBlank；只有本能力中的分页参数保留默认值，同一输入在不分页的能力中仍必填；同步函数参数的前置检查说明，不再为触发必填教减法绕弯写法。依据语言参考 §3.3 与 §6，旧版本不改；使用时显式传 `--system-prompt experiments/slm/prompts/sir-0.3-general-v7.md`，默认 prompt 不变。
 
-`sir-0.3-general-v8.md`（2026-10-29，候选版本）在 v7 上澄清多约束逗号、Ref 与 HTTP 主键/字段名映射、普通查询与 any 的不同作用域、containsLiteral 的非 Optional 右值，并强化声明闭合自查；不改变语言规则。已用原 CI 检查器核对 3 个正例完整生成、8 个反例按预期拒绝；未调用模型，不能据此声称通过率提升。逐项依据与边界见 [v8 改动说明](drafts/prompt-v8/changes.md)，编译器四处文案随后已获确认并本机实施，7 类 125 项定向通过、14 条 CLI 边界对照及 189 个生成文件逐字节一致，详见[实施记录](drafts/design/query-diagnostics-design.md#local-verification)；同 SHA CI 仍 NOT_RUN。旧版本和冻结批次不改；后续使用须以 `prepare --system-prompt experiments/slm/prompts/sir-0.3-general-v8.md` 新建批次，采样预算另批。
+`sir-0.3-general-v8.md`（2026-10-29，已批准并完成博客首轮试采）在 v7 上澄清多约束逗号、Ref 与 HTTP 主键/字段名映射、普通查询与 any 的不同作用域、containsLiteral 的非 Optional 右值，并强化声明闭合自查；不改变语言规则。已用原 CI 检查器核对 3 个正例完整生成、8 个反例按预期拒绝；该例证核对未调用模型，不能据此声称通过率提升。逐项依据与边界见 [v8 改动说明](drafts/prompt-v8/changes.md)，编译器四处文案随后已获确认并本机实施，7 类 125 项定向通过、14 条 CLI 边界对照及 189 个生成文件逐字节一致，详见[实施记录](drafts/design/query-diagnostics-design.md#local-verification)；随后 `2e4fa74b` 的 [verify #202](https://github.com/HoloNova/Software-IR/actions/runs/40877385610) 已通过，上传 Surefire 为 293 XML／2031 项、零失败／错误／跳过，其中新增诊断回归 22 项，博客参考业务 425/0；原始证据见 `datasets/sir/research/2026-10-29/blog-v8-ci202/`。旧版本和冻结批次不改；使用时仍须显式 `prepare --system-prompt experiments/slm/prompts/sir-0.3-general-v8.md` 新建批次，采样预算另批。
 
 ```bash
 python -m experiments.slm.data prepare --bundle datasets/sir/pilots/dual-token-v2 \
@@ -91,6 +91,8 @@ python -m experiments.slm.data repair --bundle datasets/sir/runs/dual-token-rech
 已获批的 v7 首轮两题各采 1 次，2 份均静态失败，新结果为各批 `checked-initial.jsonl`；实际输入 13,927（缓存 7,168）、输出 2,983，共 16,910 tokens。初始记录见 `datasets/sir/research/2026-10-29/blog-v7-initial/` 和[第十九阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-blog-v7-initial)。
 
 负责人随后批准两份各一轮静态反馈重答，实际共 22,846 tokens；新 `checked-r1.jsonl` 两份均 SEMANTIC FAILED（改写 2 条、从零 18 条 ERROR），没有派发业务门、追加追修或导出。博客累计 4 次 API／39,756 tokens，合格教师仍 48，学生 v3 未变。失败轨迹仅归档，不作为当前学生 SFT 的正确答案；本阶段已按一轮上限停止。记录见 `datasets/sir/research/2026-10-29/blog-v7-repair/` 和[第二十阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-blog-v7-repair)。
+
+v8 已按批准预算在新 `blog-change-g8/`、`blog-scratch-g8/` 各初采一次，共 17,889 tokens；改写候选 `906a864f71bf` 完整生成 57 文件，无诊断，尚待候选业务门；从零候选 `718c0d88dafa` 为 SEMANTIC FAILED，3 条诊断（能力缺少 `fails Forbidden`、两处 Optional 文本匹配）。原始响应、静态输出与下一步预算见 `datasets/sir/research/2026-10-29/blog-v8-initial/`，完整记录见[第二十二阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-blog-v8-initial)。两份小样本不构成整体通过率提升的证明；尚无新增博客合格答案，学生 v3 未改。
 
 ## 通用静态修复
 

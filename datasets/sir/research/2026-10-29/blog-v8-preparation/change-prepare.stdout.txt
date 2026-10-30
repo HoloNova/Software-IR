@@ -1,0 +1,6 @@
+{
+  "bundle": "C:\\Users\\zdw00\\Desktop\\Software IR\\datasets\\sir\\pilots\\blog-change-g8",
+  "business_qualified_answers": 0,
+  "new_teacher_candidates": 0,
+  "reference_seeds": 1
+}

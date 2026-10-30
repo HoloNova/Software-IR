@@ -1,0 +1,58 @@
+{
+  "api_calls": 0,
+  "archive_sha256": "9931c3cb0ba94e30b488e704944720d3b2a0955ffa41a2bf398c61be3e02ab41",
+  "bundles": [
+    {
+      "bundle": "datasets/sir/pilots/blog-change-g8",
+      "gates": {
+        "build": "NOT_RUN",
+        "business": "NOT_RUN",
+        "start": "NOT_RUN",
+        "static": "NOT_RUN"
+      },
+      "manifest_sha256": "2a3225500712090b72c014d9cc12ba38c58c4007ffc6e74be280fd75ae208f86",
+      "oracle_sha256": "b19875a18b071c0921ad34072f9de4c8c10b668db69fb5415eb3b401d6a7c843",
+      "reference_only": true,
+      "same_question_as_g7": true,
+      "system_sha256": "f18c4abdcf187f4d36d8d78cc7a78fb5d2265014864062bfd79dbb5169f7890f",
+      "task_sha256": "9150eab844a0297731fb52bd86279888220ff9e9784de8c1404150417347ac43",
+      "toolchain_core_sha256": "7009975336558548cedcdaf0b722240946dc927ac678c7b6895f97d42db1b1e1",
+      "verified_inputs": {
+        "experiment_inputs": 238,
+        "oracle_inputs": 38,
+        "toolchain_inputs": 448
+      }
+    },
+    {
+      "bundle": "datasets/sir/pilots/blog-scratch-g8",
+      "gates": {
+        "build": "NOT_RUN",
+        "business": "NOT_RUN",
+        "start": "NOT_RUN",
+        "static": "NOT_RUN"
+      },
+      "manifest_sha256": "a3ef186d40779c628b7a69704fe532be7c07e02a31c36e8cd973fdfb489a1314",
+      "oracle_sha256": "b19875a18b071c0921ad34072f9de4c8c10b668db69fb5415eb3b401d6a7c843",
+      "reference_only": true,
+      "same_question_as_g7": true,
+      "system_sha256": "f18c4abdcf187f4d36d8d78cc7a78fb5d2265014864062bfd79dbb5169f7890f",
+      "task_sha256": "3771eae2f437ba6d87c827d7cd216984865be8a7a8ce09ce33a331964d0c62c8",
+      "toolchain_core_sha256": "7009975336558548cedcdaf0b722240946dc927ac678c7b6895f97d42db1b1e1",
+      "verified_inputs": {
+        "experiment_inputs": 238,
+        "oracle_inputs": 38,
+        "toolchain_inputs": 448
+      }
+    }
+  ],
+  "checked_at": "2026-10-29T13:17:14.294546+00:00",
+  "ci_status": "AWAITING_OWNER_NOTIFICATION_NOT_QUERIED",
+  "protected_files_unchanged": 180,
+  "qualified_teachers": 48,
+  "snapshot_files_matching_git_blobs": 1440,
+  "source_commit": "2e4fa74be63e694b580d991c6a54f60d7d2ce2eb",
+  "source_snapshot": "target/slm-blog-v8/source-2e4fa74b-lf",
+  "static_checker": "NOT_RUN",
+  "student_version": 3,
+  "teacher_candidates": 0
+}

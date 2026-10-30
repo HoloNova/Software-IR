@@ -1,0 +1,19 @@
+{
+  "candidates": [
+    {
+      "bundle": "datasets/sir/pilots/blog-change-g8",
+      "checked": "datasets/sir/pilots/blog-change-g8/checked-initial.jsonl",
+      "generated_sha256": "c7d69811695cb8229f7efe854e549b6c4bdef177566a25997f3407b1c6dabb30",
+      "it": "BlogBusinessConformanceIT",
+      "oracle_sha256": "b19875a18b071c0921ad34072f9de4c8c10b668db69fb5415eb3b401d6a7c843",
+      "sample_id": "content-blog-change-v1-teacher-906a864f71bf",
+      "source_sha256": "2fa0f8f8ad1b85ed4a303336b3940f8d01b3cce5a6272a55b51f852cc376415d",
+      "toolchain_core_sha256": "7009975336558548cedcdaf0b722240946dc927ac678c7b6895f97d42db1b1e1"
+    }
+  ],
+  "dispatch_count": 0,
+  "note": "The new bundle and candidate are not committed; dispatch only after owner approves commit/push and exact remote blob verification.",
+  "source_commit": "2e4fa74be63e694b580d991c6a54f60d7d2ce2eb",
+  "status": "AWAITING_OWNER_COMMIT_PUSH_AND_DISPATCH_APPROVAL",
+  "workflow": "slm-business-gate.yml"
+}

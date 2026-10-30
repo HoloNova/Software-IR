@@ -1,0 +1,105 @@
+{
+  "total_count": 5,
+  "artifacts": [
+    {
+      "id": 12898943095,
+      "node_id": "MDg6QXJ0aWZhY3QxMjg5ODk0MzA5NQ==",
+      "name": "standalone-cli",
+      "size_in_bytes": 2219986,
+      "url": "https://api.github.com/repos/HoloNova/Software-IR/actions/artifacts/12898943095",
+      "archive_download_url": "https://api.github.com/repos/HoloNova/Software-IR/actions/artifacts/12898943095/zip",
+      "expired": false,
+      "digest": "sha256:74a30062a8b7105af399e1b5af6c11509876f65f5a3a09c49905a21c4297f332",
+      "created_at": "2026-10-29T13:05:12Z",
+      "updated_at": "2026-10-29T13:05:12Z",
+      "expires_at": "2027-01-27T12:55:52Z",
+      "workflow_run": {
+        "id": 40877385610,
+        "repository_id": 1299024893,
+        "head_repository_id": 1299024893,
+        "head_branch": "main",
+        "head_sha": "2e4fa74be63e694b580d991c6a54f60d7d2ce2eb"
+      }
+    },
+    {
+      "id": 12898849507,
+      "node_id": "MDg6QXJ0aWZhY3QxMjg5ODg0OTUwNw==",
+      "name": "deployment-evidence",
+      "size_in_bytes": 67115,
+      "url": "https://api.github.com/repos/HoloNova/Software-IR/actions/artifacts/12898849507",
+      "archive_download_url": "https://api.github.com/repos/HoloNova/Software-IR/actions/artifacts/12898849507/zip",
+      "expired": false,
+      "digest": "sha256:46c7d85951e41a1040b27721e0cc85a044c6dd5dc40a17f9a82dcca741c95117",
+      "created_at": "2026-10-29T13:14:25Z",
+      "updated_at": "2026-10-29T13:14:25Z",
+      "expires_at": "2027-01-27T12:55:52Z",
+      "workflow_run": {
+        "id": 40877385610,
+        "repository_id": 1299024893,
+        "head_repository_id": 1299024893,
+        "head_branch": "main",
+        "head_sha": "2e4fa74be63e694b580d991c6a54f60d7d2ce2eb"
+      }
+    },
+    {
+      "id": 12898799370,
+      "node_id": "MDg6QXJ0aWZhY3QxMjg5ODc5OTM3MA==",
+      "name": "backend-source-delivery",
+      "size_in_bytes": 43241,
+      "url": "https://api.github.com/repos/HoloNova/Software-IR/actions/artifacts/12898799370",
+      "archive_download_url": "https://api.github.com/repos/HoloNova/Software-IR/actions/artifacts/12898799370/zip",
+      "expired": false,
+      "digest": "sha256:cc1f716692bd7fdccb29f259b3a14573f9a1be577658b725ae84ee9b6cab7b93",
+      "created_at": "2026-10-29T13:14:27Z",
+      "updated_at": "2026-10-29T13:14:27Z",
+      "expires_at": "2027-01-27T12:55:52Z",
+      "workflow_run": {
+        "id": 40877385610,
+        "repository_id": 1299024893,
+        "head_repository_id": 1299024893,
+        "head_branch": "main",
+        "head_sha": "2e4fa74be63e694b580d991c6a54f60d7d2ce2eb"
+      }
+    },
+    {
+      "id": 12898763565,
+      "node_id": "MDg6QXJ0aWZhY3QxMjg5ODc2MzU2NQ==",
+      "name": "conformance-evidence",
+      "size_in_bytes": 142155,
+      "url": "https://api.github.com/repos/HoloNova/Software-IR/actions/artifacts/12898763565",
+      "archive_download_url": "https://api.github.com/repos/HoloNova/Software-IR/actions/artifacts/12898763565/zip",
+      "expired": false,
+      "digest": "sha256:aa4e05c7feb8948d7dbbb0c51a43c48954316f891fec477bd02ae4aca5d85e86",
+      "created_at": "2026-10-29T13:05:13Z",
+      "updated_at": "2026-10-29T13:05:13Z",
+      "expires_at": "2027-01-27T12:55:52Z",
+      "workflow_run": {
+        "id": 40877385610,
+        "repository_id": 1299024893,
+        "head_repository_id": 1299024893,
+        "head_branch": "main",
+        "head_sha": "2e4fa74be63e694b580d991c6a54f60d7d2ce2eb"
+      }
+    },
+    {
+      "id": 12898628741,
+      "node_id": "MDg6QXJ0aWZhY3QxMjg5ODYyODc0MQ==",
+      "name": "surefire-reports",
+      "size_in_bytes": 847656,
+      "url": "https://api.github.com/repos/HoloNova/Software-IR/actions/artifacts/12898628741",
+      "archive_download_url": "https://api.github.com/repos/HoloNova/Software-IR/actions/artifacts/12898628741/zip",
+      "expired": false,
+      "digest": "sha256:e273ef83a56c6dce5ea3117c8a8219eb63a50b701ab36150adcf54831cab3b95",
+      "created_at": "2026-10-29T13:05:15Z",
+      "updated_at": "2026-10-29T13:05:15Z",
+      "expires_at": "2027-01-27T12:55:52Z",
+      "workflow_run": {
+        "id": 40877385610,
+        "repository_id": 1299024893,
+        "head_repository_id": 1299024893,
+        "head_branch": "main",
+        "head_sha": "2e4fa74be63e694b580d991c6a54f60d7d2ce2eb"
+      }
+    }
+  ]
+}

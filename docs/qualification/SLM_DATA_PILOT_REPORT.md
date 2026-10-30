@@ -491,3 +491,42 @@ v4 这一轮：13 份中静态通过 7 份，四门通过 6 份。样本少、�
 交接 4.5 的参考验收、base 静态负例、正式 task 冻结、初采及每份一轮反馈均已有实际记录，但博客 family 仍无合格教师答案，不把“流程已执行”冒称业务数据已覆盖。4.6 的任务板 spec 在本次核对的工作区和远端 main 中仍未到位，待另一端提交后再审核；其他待负责人决定的语言／prompt 设计及学生训练不自行开始。
 
 收尾对本轮逐次 JSON 的一次定向 AFT 请求仍在 150 秒后因 bridge busy/under load 超时，未计诊断通过；正式结论来自原编译器的实际诊断和原始记录绑定／字节检查。此轮只有数据与配套说明变更，不以分析工具不可用为由改候选、改判卷或补跑本机全量测试。
+
+
+<a id="slm-blog-v8-prepared"></a>
+
+## 第二十一阶段：博客 v8 新批次准备（2026-10-29，待 CI 通知与采样预算）
+
+负责人授权先准备批次、待其通知 CI 结果；本阶段**没有查询 CI，也没有把“默认通过”写成验收证据**。从 `2e4fa74be63e694b580d991c6a54f60d7d2ce2eb` 使用命令级 `core.autocrlf=false`／`core.eol=lf` 导出独立源码快照（排除历史 datasets），核对全部 **1440 个文件**与 Git blob 一致；不修改用户的 Git 配置或现有文件换行。
+
+复用该快照的原 `prepare` 创建 `datasets/sir/pilots/blog-change-g8/`、`blog-scratch-g8/`，显式选择已批准 v8。每批只有 1 条 existing_reference，**STATIC／BUILD／START／BUSINESS 全部 NOT_RUN**，没有教师答案、请求或响应。本次仅准备输入，未运行检查器，不沿用 #200 的静态或业务资格。task.json、base、参考、user 消息与 g7 一致，oracle 的 38 项原始输入不变；任务中的历史 reference_evidence 仍保留 #200，不修改题目哈希。新工具链绑定 `7009975336558548cedcdaf0b722240946dc927ac678c7b6895f97d42db1b1e1`，oracle 仍为 `b19875a18b071c0921ad34072f9de4c8c10b668db69fb5415eb3b401d6a7c843`；每批 448 项核心输入、38 项 oracle、238 项实验输入全部核对 Git blob。v8 原文摘要为 `f18c4abdcf187f4d36d8d78cc7a78fb5d2265014864062bfd79dbb5169f7890f`。
+
+准备脚本、字节核对和预算见 `datasets/sir/research/2026-10-29/blog-v8-preparation/`。预算以同题 v7 的真实输入 7319／6608 tokens 为基线，加 v8 新增／替换行的 2548 字符（估算每字符一个 token，不扣被删文字），再留 10% 余量并向上取整到 500；这是偏保守的估算，不是服务端精确分词，也不承诺缓存。两题各初采 1 次，deepseek-flash：改写预计输入 **11000**／输出 **2000**，从零预计输入 **10500**／输出 **2000**，总计 **25500 tokens**。每次输出硬上限 8192，2000 只是预计用量；不自动重试，修复不在本次预算内。
+
+本阶段未启动 Maven、应用、数据库或训练，模型调用 **0 次**，未提交或推送。旧 g7、全部 prompt／task、学生数据和用户 `.gitignore` 的本机字节保持不变，清单记录前后校验。合格教师仍 **48 条**、学生数据仍 v3。下一步必须先收到负责人 CI 通知并核对同 SHA 证据，以及取得本轮初采费用确认；之后才使用新批次调用教师，失败候选最多一轮反馈重答且费用另批。
+
+收尾独立核验：三份完整清单覆盖 25 个新增文件，无遗漏或被 Git 忽略项；180 个受保护文件的原始哈希未变，JSON／JSONL 解码、准备脚本语法、候选绑定与 LF／空白检查通过，`git diff --check` 通过。针对归档准备脚本的 AFT 检查因 bridge busy/under load 在 150 秒后超时，未将其记为诊断通过；上述核验不代表编译或四门验收。
+
+
+<a id="slm-blog-v8-initial"></a>
+
+## 第二十二阶段：诊断 CI 验收与博客 v8 首轮初采（2026-10-29）
+
+负责人通知上轮 CI 通过并授权继续后，按前报 **25500 tokens** 预算执行两题各一次新初采；不是继续追修 g7，也没有开始学生训练。
+
+**先核对同 SHA CI。**[verify #202 / 40877385610](https://github.com/HoloNova/Software-IR/actions/runs/40877385610) 的 head_sha=`2e4fa74be63e694b580d991c6a54f60d7d2ce2eb`，两个 job 均 success。下载并核对 GitHub SHA256 的三份原始 ZIP：standalone-cli（artifact `12898943095`）、conformance-evidence（`12898763565`）、surefire-reports（`12898628741`）。上传 Surefire 为 **293 XML／2031 项、0 失败／错误／跳过**；新增 QueryDiagnosticMessageTest 22 项，博客契约 5 项、oracle 11 项、业务入口 1 项、候选适配器 9 项均通过。博客参考报告正式 verdict=PASSED，55 个生成文件、构建成功、readiness=200、业务 **425/0**；四轮六连接／六事务竞争以及应用退出、schema 删除、锁释放证据完整。报告的参考／DDL／seed 摘要逐项与受测 Git blob 匹配；原始 ZIP、元数据、相关完整 XML 和博客日志归档于 `datasets/sir/research/2026-10-29/blog-v8-ci202/`。原始日志行尾空白作为证据格式例外保留，不清洗。
+
+**原收集器与原检查器。**继续使用第二十一阶段冻结的 g8 两批及 LF 快照；采样前逐项核对 486 个核心／oracle 源码与 Git blob、冻结文件和候选绑定。使用 #202 原 standalone CLI JAR（与下载 ZIP 成员逐字节一致），先分别静态检查两批既有参考，均无诊断、完整生成 55 文件，写入各自 `checked-reference.jsonl`；未把 CI 参考的 BUILD/START/BUSINESS 写入批次候选。之后调用原 `generate --model deepseek-flash --count 1 --max-tokens 8192`，temperature=0.6、thinking disabled、max_retries=0，再由原 `_check_rows`／`bind_static` 检查新教师，原始结果写 `checked-initial.jsonl`。无手改候选或反馈、无本机 Maven／真库／应用；静态 Java 限制 heap 256 MiB、metaspace 128 MiB、ActiveProcessorCount=2，进程已退出。
+
+| 题型 | 教师短 ID | 输入 tokens | 缓存命中 | 输出 tokens | 静态结果 | 构建／启动／业务 |
+| --- | --- | ---: | ---: | ---: | --- | --- |
+| 改写 | `906a864f71bf` | 7777 | 256 | 1500 | GENERATION PASSED；无诊断、57 文件 | NOT_RUN |
+| 从零 | `718c0d88dafa` | 7066 | 4096 | 1546 | SEMANTIC FAILED；3 条 ERROR | NOT_RUN |
+
+共 **2 次 API、2 份响应**，输入 **14843**（缓存 **4352**）、输出 **3046**、合计 **17889 tokens**，均以 finish_reason=stop 结束。总量低于预计，但预计值不是硬计费上限。本次无网络失败、重试或修复。
+
+**实际错误与比较边界。**从零答案在全局声明了 Forbidden，却未在 CreatePost 中写 `fails Forbidden`，其 load 因而报 SIR-FLOW-003；FeedInput.keyword 仍为 Optional<Text>，即使使用 `is none or ...`，两个 containsLiteral 的右值也不会变成非可选，产生两条 SIR-TYPE-001。这些规则已在 v8 写明。相较 g7 首轮，此份新答案已经使用约束逗号、Ref 投影并补齐输入声明，改写候选也通过全部静态阶段；但每题只有一个新样本，不能据此证明整体通过率或归因于单一 Prompt 修改。PowerShell 展示的中文乱码仅发生在终端渲染；原始 CLI UTF-8、checked 与拟反馈内容的中文已核对完整，未改写诊断。
+
+**资格和后续。**合格教师仍 **48 条**、博客合格仍 **0 条**，学生 v3 不变。静态通过的 `906a864f71bf` 已准备 BlogBusinessConformanceIT 派发参数，但批次尚未提交，故业务门 dispatch_count=0；须负责人明确确认提交／推送后再按远端精确字节派发，不能拿参考 425/0 代替它。唯一失败候选拟用原 `repair-general-v1.md` 反馈重答一轮，预算根据历史 13 次反馈的实际新增 token／字符中位数估算，预计输入 **11000**、输出 **2000**，合计 **13000 tokens**，输出硬上限 8192，不自动重试，**预算待确认、尚未调用**。
+
+原始请求／响应／collector、用量、静态输出、原始证据及下一步参数见 `datasets/sir/research/2026-10-29/blog-v8-initial/`；父批次／task／manifest／system 不改，准备阶段的封存记录也不追改。收尾验证原始响应解码等于候选源码，checked 等于原 bind_static 对原 CLI 输出的绑定、请求等于原 request_payload，180 个受保护旧文件字节未变。当前未提交、推送、派发 CI 或追加模型调用。

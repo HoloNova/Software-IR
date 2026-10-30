@@ -1,0 +1,10 @@
+{
+  "automatic_retries": 0,
+  "estimated_total_tokens": 25500,
+  "max_calls_for_this_task": 1,
+  "max_output_tokens": 8192,
+  "owner_budget_approved": true,
+  "repair_calls": 0,
+  "source_commit": "2e4fa74be63e694b580d991c6a54f60d7d2ce2eb",
+  "started_at": "2026-10-29T13:27:58.049316+00:00"
+}

@@ -1,0 +1,57 @@
+{
+  "api_calls_already_made": 0,
+  "inserted_or_replacement_line_chars": 2548,
+  "max_output_tokens_across_two_calls": 16384,
+  "method": "Same-question v7 actual input tokens + one token per character in inserted/replacement v8 lines (no credit for removed lines), plus 10%, rounded up to 500. Heuristic, not actual provider tokenization. Output 2000 per call is an estimate, not the 8192 hard cap.",
+  "model": "deepseek-flash",
+  "plans": [
+    {
+      "automatic_retries": 0,
+      "bundle": "datasets/sir/pilots/blog-change-g8",
+      "cache_hits": "UNKNOWN",
+      "calls": 1,
+      "estimated_input_tokens": 11000,
+      "estimated_output_tokens": 2000,
+      "historical_sample_id": "content-blog-change-v1-teacher-e6e632222754",
+      "historical_usage": {
+        "cache_hit": 3584,
+        "input": 7319,
+        "output": 1474,
+        "total": 8793
+      },
+      "max_output_tokens": 8192,
+      "task": "content-blog-change-v1",
+      "user_chars": 12458
+    },
+    {
+      "automatic_retries": 0,
+      "bundle": "datasets/sir/pilots/blog-scratch-g8",
+      "cache_hits": "UNKNOWN",
+      "calls": 1,
+      "estimated_input_tokens": 10500,
+      "estimated_output_tokens": 2000,
+      "historical_sample_id": "content-blog-scratch-v1-teacher-6ed907a7bdaa",
+      "historical_usage": {
+        "cache_hit": 3584,
+        "input": 6608,
+        "output": 1509,
+        "total": 8117
+      },
+      "max_output_tokens": 8192,
+      "task": "content-blog-scratch-v1",
+      "user_chars": 8932
+    }
+  ],
+  "prerequisites": [
+    "Owner notification and verification of CI for source commit",
+    "Owner approval of sampling budget"
+  ],
+  "prompt_version": "sir-0.3-general-v8",
+  "repair_calls_in_this_budget": 0,
+  "source_commit": "2e4fa74be63e694b580d991c6a54f60d7d2ce2eb",
+  "status": "PROPOSED_AWAITING_OWNER_BUDGET_APPROVAL",
+  "total_estimated_input_tokens": 21500,
+  "total_estimated_output_tokens": 4000,
+  "v7_system_chars": 9104,
+  "v8_system_chars": 10182
+}

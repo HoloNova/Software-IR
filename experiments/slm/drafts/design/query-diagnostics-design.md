@@ -1,6 +1,6 @@
 # 查询作用域与类型诊断：最小文本改进设计
 
-基线：`8bc534cc230dac7fd6229687b995211d674de877`。状态：**负责人已确认，§3 的四处文案已实施并通过本机定向核对；同 SHA CI 尚未运行**。本文件保留已确认的设计，实际证据见 §7。不改语言、参考答案、冻结题目、候选或判卷规则，不调用模型。
+基线：`8bc534cc230dac7fd6229687b995211d674de877`。状态：**负责人已确认，§3 的四处文案已实施，本机定向及 `2e4fa74b` 的 verify #202 均已通过**；CI 证据见 §8。本文件保留已确认的设计，实际证据见 §7。不改语言、参考答案、冻结题目、候选或判卷规则，不调用模型。
 
 ## 1. 为什么需要改
 
@@ -148,8 +148,15 @@ mvn -B -o '-Dmaven.repo.local=D:/maven-repo' -pl sir-semantic -am test `
 
 RED 使用同一资源和 reactor 参数，只将 `-Dtest` 设为 `QueryDiagnosticMessageTest`。范围只到 Parser/Semantic 的依赖 reactor；不是全量构建或业务 IT。一次定向 AFT 请求仍因 bridge busy/under load 在 150 秒后超时，未计为诊断通过；实际编译与测试以当次 Maven/JUnit 及原 CLI 对照为据。
 
-### 7.5 尚未执行的验收
+### 7.5 本机实施结束时尚未执行的验收
 
-同 SHA Linux CI、全量门、生成工程构建/启动/真库业务均 **NOT_RUN**。现有 verify 的冻结门运行 `clean verify`，新 `*Test` 会进入其范围，无需另改工作流或手工派发；本次没有为触发 CI 而自动提交/推送。
+本机实施结束时，同 SHA Linux CI、全量门、生成工程构建/启动/真库业务均 **NOT_RUN**；后续 CI 验收见 §8。现有 verify 的冻结门运行 `clean verify`，新 `*Test` 会进入其范围，无需另改工作流或手工派发；本次没有为触发 CI 而自动提交/推送。
 
 工具链 Java 源已变，旧 g7 的工具链冻结不再代表新实现。所有旧 task/manifest/system/候选/运行证据与学生 v3 均保持，未 import、采样、重判资格或训练。已有 48 条历史合格答案不重算，新候选也不能继承本次静态对照或旧参考四门。后续采样/导入仍按 §5 的工具链与字节规则执行。
+
+
+## 8. 同 SHA CI 验收（2026-10-29）
+
+负责人通知完成后一次性核对 [verify #202](https://github.com/HoloNova/Software-IR/actions/runs/40877385610)，head_sha 为 `2e4fa74be63e694b580d991c6a54f60d7d2ce2eb`，两个 job 均 success。三个原始 ZIP 与 GitHub artifact digest 匹配；上传 Surefire 为 **293 XML／2031 项、0 failure/error/skip**，其中 `QueryDiagnosticMessageTest` **22 项全通过**。博客参考报告正式 verdict=PASSED，生成工程构建成功、真实路由 readiness=200、业务 **425/0**；四轮各六连接／事务竞争及清理证据完整。不是只凭 workflow 绿色推导业务通过。
+
+原始 ZIP、元数据、博客报告／日志和相关完整 XML 归档于 `datasets/sir/research/2026-10-29/blog-v8-ci202/`，不清洗原日志字节。该验收属于编译器与既有参考，不赋予教师候选资格；后续 v8 新候选初采与静态结果另见[数据报告第二十二阶段](../../../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-blog-v8-initial)。

@@ -100,3 +100,10 @@
 跨Windows/Linux或工具链字节变化时，先用实验CLI的`import --from-bundle ... --bundle ...`在目标环境重新冻结输入、导入原响应并重置所有资格，再重做检查；不要修改本批manifest或借用原通过结果。
 
 这不是可直接开训的数据集，也不证明小模型生成能力。完成真实业务门后才由工具生成训练输出；失败轨迹继续保留用于研究，不把失败SIR当正确答案。扩题时先冻结需求/oracle并按业务家族划分训练/开发/盲测，不能随机打散这六条记录当三套集合。
+
+
+## 博客 v8 新批次与首轮采样
+
+[`pilots/blog-change-g8/`](pilots/blog-change-g8/) 与 [`pilots/blog-scratch-g8/`](pilots/blog-scratch-g8/) 使用 `2e4fa74b` 的精确 LF 快照及 v8，由原 `prepare` 创建。题目／合同／user 消息／oracle 与 g7 不变；准备时每批仅一份既有参考、四门 NOT_RUN，随后各新增一次教师初采并独立静态检查，没有沿用旧参考通过资格。旧 g7 与学生 v3 不动，合格教师仍 48 条，没有训练。
+
+准备和字节核对见 [`research/2026-10-29/blog-v8-preparation/`](research/2026-10-29/blog-v8-preparation/)。随后获准两次初采，实际输入 14843（缓存 4352）、输出 3046，共 **17889 tokens**；改写 `906a864f71bf` 静态完整生成 57 文件，从零 `718c0d88dafa` 语义失败 3 条诊断。两份教师的构建／启动／业务均 NOT_RUN，没有派发业务门或反馈重答。CI #202 参考证据在 [`blog-v8-ci202/`](research/2026-10-29/blog-v8-ci202/)，初采记录与预算在 [`blog-v8-initial/`](research/2026-10-29/blog-v8-initial/)，详见[第二十二阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-blog-v8-initial)。下一步待确认提交推送后送改写候选业务门；从零候选一轮重答预计 13000 tokens，费用另批，不自动重试。

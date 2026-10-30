@@ -1,0 +1,116 @@
+{
+  "actual_model": "deepseek-flash",
+  "automatic_retries": 0,
+  "bundle": "datasets/sir/pilots/blog-scratch-g8",
+  "check_execution": {
+    "directory": "C:\\Users\\zdw00\\Desktop\\Software IR\\datasets\\sir\\pilots\\blog-scratch-g8\\checks\\3beb075a6d2b4c48966eefaacfc56867",
+    "stdout_sha256": "b9ecc02b822067375ebfa6a1a0174c695555384aaf6c678d5a83a3c3a4124b16"
+  },
+  "checked": "datasets/sir/pilots/blog-scratch-g8/checked-initial.jsonl",
+  "checker_artifact_run_id": 40877385610,
+  "completed_at": "2026-10-29T13:29:22.555828+00:00",
+  "estimated_input_tokens": 10500,
+  "estimated_output_tokens": 2000,
+  "finish_reason": "stop",
+  "frozen_git_blobs_verified": 486,
+  "frozen_inputs_unchanged": true,
+  "gates": {
+    "build": "NOT_RUN",
+    "business": "NOT_RUN",
+    "start": "NOT_RUN",
+    "static": "FAILED"
+  },
+  "max_output_tokens": 8192,
+  "new_candidates": 1,
+  "owner_budget_approved": true,
+  "recorded_attempts": 1,
+  "repair_calls": 0,
+  "request_process_exit_code": 0,
+  "request_sha256": "5dacdece43912c44e9773cc2e618d293b9399332bff504e00f6d7f5ccc43d264",
+  "requested_model": "deepseek-flash",
+  "response_sha256": "545e6d2578d0772f77b60ee0cb426272a5a2ac424520c685a9426e70e388fd21",
+  "sample_id": "content-blog-scratch-v1-teacher-718c0d88dafa",
+  "source_sha256": "99f11f8757bdef41018cf5ffd45b4aee1cd2e01e9689e8178227a6aff0310c1e",
+  "source_snapshot": "target/slm-blog-v8/source-2e4fa74b-lf",
+  "started_at": "2026-10-29T13:29:11.669131+00:00",
+  "static_result": {
+    "diagnostics": [
+      {
+        "code": "SIR-FLOW-003",
+        "fixes": [],
+        "loweredNodeId": null,
+        "message": "load 引用未声明的 Error: Forbidden",
+        "related": [],
+        "relativePath": null,
+        "severity": "ERROR",
+        "sourceNodeId": null,
+        "sourceSymbol": null,
+        "span": {
+          "endCodePointOffset": 3244,
+          "endColumn": 69,
+          "endLine": 139,
+          "sourceId": "sample.sir",
+          "startCodePointOffset": 3235,
+          "startColumn": 60,
+          "startLine": 139
+        },
+        "stage": "SEMANTIC"
+      },
+      {
+        "code": "SIR-TYPE-001",
+        "fixes": [],
+        "loweredNodeId": null,
+        "message": "containsLiteral 的左侧必须是文本字段，右侧必须是非 Optional 文本值；is none/is present 不会把 Optional 文本转换成非 Optional 文本。",
+        "related": [],
+        "relativePath": null,
+        "severity": "ERROR",
+        "sourceNodeId": null,
+        "sourceSymbol": null,
+        "span": {
+          "endCodePointOffset": 4425,
+          "endColumn": 129,
+          "endLine": 180,
+          "sourceId": "sample.sir",
+          "startCodePointOffset": 4385,
+          "startColumn": 89,
+          "startLine": 180
+        },
+        "stage": "SEMANTIC"
+      },
+      {
+        "code": "SIR-TYPE-001",
+        "fixes": [],
+        "loweredNodeId": null,
+        "message": "containsLiteral 的左侧必须是文本字段，右侧必须是非 Optional 文本值；is none/is present 不会把 Optional 文本转换成非 Optional 文本。",
+        "related": [],
+        "relativePath": null,
+        "severity": "ERROR",
+        "sourceNodeId": null,
+        "sourceSymbol": null,
+        "span": {
+          "endCodePointOffset": 4471,
+          "endColumn": 175,
+          "endLine": 180,
+          "sourceId": "sample.sir",
+          "startCodePointOffset": 4429,
+          "startColumn": 133,
+          "startLine": 180
+        },
+        "stage": "SEMANTIC"
+      }
+    ],
+    "digest": null,
+    "fileCount": 0,
+    "id": "content-blog-scratch-v1-teacher-718c0d88dafa",
+    "ok": false,
+    "sourceSha256": "99f11f8757bdef41018cf5ffd45b4aee1cd2e01e9689e8178227a6aff0310c1e",
+    "stage": "SEMANTIC"
+  },
+  "task": "content-blog-scratch-v1",
+  "usage": {
+    "cache_hit": 4096,
+    "input": 7066,
+    "output": 1546,
+    "total": 8612
+  }
+}

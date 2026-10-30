@@ -1,0 +1,174 @@
+{
+  "approved_estimated_total_tokens": 25500,
+  "automatic_retries": 0,
+  "business_gate_dispatches": [],
+  "ci_standalone_checker_run_id": 40877385610,
+  "frozen_inputs_unchanged": true,
+  "model_api_calls": 2,
+  "owner_budget_approved": true,
+  "protected_files_unchanged": 180,
+  "qualified_new_teachers": 0,
+  "qualified_teachers_unchanged": 48,
+  "received_responses": 2,
+  "repair_calls": 0,
+  "results": [
+    {
+      "actual_model": "deepseek-flash",
+      "bundle": "datasets/sir/pilots/blog-change-g8",
+      "collector_sha256": "20953063c1d0ebdcbf55829df0cfb89e791c432628d57d95ce8166628202527f",
+      "gates": {
+        "build": "NOT_RUN",
+        "business": "NOT_RUN",
+        "start": "NOT_RUN",
+        "static": "PASSED"
+      },
+      "oracle_sha256": "b19875a18b071c0921ad34072f9de4c8c10b668db69fb5415eb3b401d6a7c843",
+      "reference_gates": {
+        "build": "NOT_RUN",
+        "business": "NOT_RUN",
+        "start": "NOT_RUN",
+        "static": "PASSED"
+      },
+      "request_sha256": "812b52ff44b68ef9048998ca6dc7291732ce70a511323420ca69398004e81a15",
+      "requested_model": "deepseek-flash",
+      "response_sha256": "129afc81c62b9e036cc2c28d66c3254d99bf6c07367421b30ba7a57c63eb04e5",
+      "sample_id": "content-blog-change-v1-teacher-906a864f71bf",
+      "sdk": "openai-python/2.24.0",
+      "source_sha256": "2fa0f8f8ad1b85ed4a303336b3940f8d01b3cce5a6272a55b51f852cc376415d",
+      "static_result": {
+        "diagnostics": [],
+        "digest": "c7d69811695cb8229f7efe854e549b6c4bdef177566a25997f3407b1c6dabb30",
+        "fileCount": 57,
+        "id": "content-blog-change-v1-teacher-906a864f71bf",
+        "ok": true,
+        "sourceSha256": "2fa0f8f8ad1b85ed4a303336b3940f8d01b3cce5a6272a55b51f852cc376415d",
+        "stage": "GENERATION"
+      },
+      "task": "content-blog-change-v1",
+      "task_sha256": "9150eab844a0297731fb52bd86279888220ff9e9784de8c1404150417347ac43",
+      "toolchain_core_sha256": "7009975336558548cedcdaf0b722240946dc927ac678c7b6895f97d42db1b1e1",
+      "usage": {
+        "cache_hit": 256,
+        "input": 7777,
+        "output": 1500,
+        "total": 9277
+      }
+    },
+    {
+      "actual_model": "deepseek-flash",
+      "bundle": "datasets/sir/pilots/blog-scratch-g8",
+      "collector_sha256": "20953063c1d0ebdcbf55829df0cfb89e791c432628d57d95ce8166628202527f",
+      "gates": {
+        "build": "NOT_RUN",
+        "business": "NOT_RUN",
+        "start": "NOT_RUN",
+        "static": "FAILED"
+      },
+      "oracle_sha256": "b19875a18b071c0921ad34072f9de4c8c10b668db69fb5415eb3b401d6a7c843",
+      "reference_gates": {
+        "build": "NOT_RUN",
+        "business": "NOT_RUN",
+        "start": "NOT_RUN",
+        "static": "PASSED"
+      },
+      "request_sha256": "5dacdece43912c44e9773cc2e618d293b9399332bff504e00f6d7f5ccc43d264",
+      "requested_model": "deepseek-flash",
+      "response_sha256": "545e6d2578d0772f77b60ee0cb426272a5a2ac424520c685a9426e70e388fd21",
+      "sample_id": "content-blog-scratch-v1-teacher-718c0d88dafa",
+      "sdk": "openai-python/2.24.0",
+      "source_sha256": "99f11f8757bdef41018cf5ffd45b4aee1cd2e01e9689e8178227a6aff0310c1e",
+      "static_result": {
+        "diagnostics": [
+          {
+            "code": "SIR-FLOW-003",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "load 引用未声明的 Error: Forbidden",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 3244,
+              "endColumn": 69,
+              "endLine": 139,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 3235,
+              "startColumn": 60,
+              "startLine": 139
+            },
+            "stage": "SEMANTIC"
+          },
+          {
+            "code": "SIR-TYPE-001",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "containsLiteral 的左侧必须是文本字段，右侧必须是非 Optional 文本值；is none/is present 不会把 Optional 文本转换成非 Optional 文本。",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 4425,
+              "endColumn": 129,
+              "endLine": 180,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 4385,
+              "startColumn": 89,
+              "startLine": 180
+            },
+            "stage": "SEMANTIC"
+          },
+          {
+            "code": "SIR-TYPE-001",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "containsLiteral 的左侧必须是文本字段，右侧必须是非 Optional 文本值；is none/is present 不会把 Optional 文本转换成非 Optional 文本。",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 4471,
+              "endColumn": 175,
+              "endLine": 180,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 4429,
+              "startColumn": 133,
+              "startLine": 180
+            },
+            "stage": "SEMANTIC"
+          }
+        ],
+        "digest": null,
+        "fileCount": 0,
+        "id": "content-blog-scratch-v1-teacher-718c0d88dafa",
+        "ok": false,
+        "sourceSha256": "99f11f8757bdef41018cf5ffd45b4aee1cd2e01e9689e8178227a6aff0310c1e",
+        "stage": "SEMANTIC"
+      },
+      "task": "content-blog-scratch-v1",
+      "task_sha256": "3771eae2f437ba6d87c827d7cd216984865be8a7a8ce09ce33a331964d0c62c8",
+      "toolchain_core_sha256": "7009975336558548cedcdaf0b722240946dc927ac678c7b6895f97d42db1b1e1",
+      "usage": {
+        "cache_hit": 4096,
+        "input": 7066,
+        "output": 1546,
+        "total": 8612
+      }
+    }
+  ],
+  "source_commit": "2e4fa74be63e694b580d991c6a54f60d7d2ce2eb",
+  "static_passed": 1,
+  "student_version_unchanged": 3,
+  "total_usage": {
+    "cache_hit": 4352,
+    "input": 14843,
+    "output": 3046,
+    "total": 17889
+  },
+  "unicode_diagnostics_verified": true
+}

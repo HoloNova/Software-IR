@@ -1,0 +1,28 @@
+{
+  "calibration_source": "datasets/sir/research/2026-10-29/blog-v7-initial/repair-plan.json",
+  "calibration_source_sha256": "926cff2644fadecda0996965d0cc99e35c21fab06e08e53b33f1dd0c7dd7a45d",
+  "calls_already_made_by_this_estimator": 0,
+  "median_tokens_per_added_character": 0.2321409948899781,
+  "method": "median actual extra input tokens per added message character from thirteen archived v7 static repairs, added to each observed initial input, +10%, rounded up to 500; output initial *1.20 rounded to 500, minimum 2000; estimate not tokenizer or cache promise",
+  "plans": [
+    {
+      "additional_message_characters": 11553,
+      "automatic_retries": 0,
+      "bundle": "datasets/sir/pilots/blog-scratch-g8",
+      "cache_hits": "UNKNOWN",
+      "checked": "datasets/sir/pilots/blog-scratch-g8/checked-initial.jsonl",
+      "estimated_input_tokens": 11000,
+      "estimated_output_tokens": 2000,
+      "feedback": "experiments/slm/prompts/repair-general-v1.md",
+      "feedback_prefix_sha256": "9b3b0094ac9c4999f1eaa660501edbba0125474d6a47bd17a01620b8b89cdd1d",
+      "max_output_tokens": 8192,
+      "parent_id": "content-blog-scratch-v1-teacher-718c0d88dafa",
+      "repair_calls": 1,
+      "task": "content-blog-scratch-v1"
+    }
+  ],
+  "requested_model": "deepseek-flash",
+  "status": "PROPOSED_AWAITING_OWNER_BUDGET_APPROVAL",
+  "total_estimated_input_tokens": 11000,
+  "total_estimated_output_tokens": 2000
+}

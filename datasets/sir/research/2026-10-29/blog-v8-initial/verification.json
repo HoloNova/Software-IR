@@ -1,0 +1,24 @@
+{
+  "frozen_and_candidate_bindings": "PASSED",
+  "original_ci_artifact_hashes": "PASSED",
+  "prepared_archive_unchanged": true,
+  "protected_old_files_unchanged": 180,
+  "checked_artifact_files_before_this_record": 87,
+  "json_and_python_syntax": "PASSED",
+  "credential_scan": "PASSED",
+  "ignored_raw_evidence_requires_explicit_add_on_authorized_commit": [
+    "datasets/sir/research/2026-10-29/blog-v8-ci202/blog-reference/logs/maven.stderr.log",
+    "datasets/sir/research/2026-10-29/blog-v8-ci202/blog-reference/logs/maven.stdout.log",
+    "datasets/sir/research/2026-10-29/blog-v8-ci202/blog-reference/logs/spring.stderr.log",
+    "datasets/sir/research/2026-10-29/blog-v8-ci202/blog-reference/logs/spring.stdout.log",
+    "datasets/sir/research/2026-10-29/blog-v8-ci202/original-zips/conformance-evidence.zip",
+    "datasets/sir/research/2026-10-29/blog-v8-ci202/original-zips/standalone-cli.zip",
+    "datasets/sir/research/2026-10-29/blog-v8-ci202/original-zips/surefire-reports.zip"
+  ],
+  "raw_ci_logs_preserved_without_whitespace_normalization": true,
+  "model_calls": 2,
+  "repairs": 0,
+  "business_gate_dispatches": 0,
+  "commits": 0,
+  "pushes": 0
+}
