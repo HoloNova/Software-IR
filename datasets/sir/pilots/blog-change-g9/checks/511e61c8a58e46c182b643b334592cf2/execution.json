@@ -1,0 +1,14 @@
+{
+  "command": [
+    "java",
+    "-XX:-UsePerfData",
+    "-XX:ActiveProcessorCount=2",
+    "-Xmx256m",
+    "-XX:MaxMetaspaceSize=128m",
+    "-jar",
+    "C:\\Users\\zdw00\\Desktop\\Software IR\\target\\ci-investigation\\204\\standalone-cli\\kcg.jar",
+    "check"
+  ],
+  "input_sha256": "83e285c3cfb9d835ba9d329f40ee0f5495b4cabd0ac15f729abf589ba72bf3ae",
+  "returncode": 0
+}

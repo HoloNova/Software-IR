@@ -1,0 +1,53 @@
+{
+  "actual_model": "deepseek-flash",
+  "automatic_retries": 0,
+  "bundle": "datasets/sir/pilots/blog-change-g9",
+  "call_index": 1,
+  "check_execution": {
+    "directory": "C:\\Users\\zdw00\\Desktop\\Software IR\\datasets\\sir\\pilots\\blog-change-g9\\checks\\511e61c8a58e46c182b643b334592cf2",
+    "stdout_sha256": "2677d672736b00e59cf47335e76517c9e4fbfa3f4aa83d8ed9070e70e11c1328"
+  },
+  "checked": "datasets/sir/pilots/blog-change-g9/checked-r1-906a864f71bf.jsonl",
+  "checker_artifact_run_id": 41019419975,
+  "checker_jar_sha256": "d23339bf47b6f4ff574e1dcd82bc33f7c7127fae5882b0a1daa89b5fea648a9a",
+  "completed_at": "2026-10-30T08:57:20.172080+00:00",
+  "eligible_for_business_gate": true,
+  "estimated_input_tokens": 11500,
+  "estimated_output_tokens": 2000,
+  "finish_reason": "stop",
+  "frozen_git_blobs_verified": 486,
+  "frozen_inputs_unchanged": true,
+  "gates": {
+    "build": "NOT_RUN",
+    "business": "NOT_RUN",
+    "start": "NOT_RUN",
+    "static": "PASSED"
+  },
+  "max_output_tokens": 8192,
+  "new_candidates": 1,
+  "parent_id": "content-blog-change-v1-teacher-906a864f71bf",
+  "recorded_new_attempts": 1,
+  "request_process_exit_code": 0,
+  "request_sha256": "f10649ac049422fbe81c81136a37f85c9f96131a0e255bd40af9694cda6bc388",
+  "request_timed_out": false,
+  "response_sha256": "cb65b6103af5b8fe9b0dfed7b482523b02d82131d40f7658e05948589133e6f6",
+  "sample_id": "content-blog-change-v1-teacher-bba0b5b48fc4",
+  "source_sha256": "39df9d5a2e4542eb9b6fd8375fe24b93ed9009055e4275d197dcd1b3ffb927e4",
+  "started_at": "2026-10-30T08:57:02.266220+00:00",
+  "static_result": {
+    "diagnostics": [],
+    "digest": "56aef98b45e9b72623351da01454271e8ef0bfd7f21f125c2851ff6ec0d540d0",
+    "fileCount": 57,
+    "id": "content-blog-change-v1-teacher-bba0b5b48fc4",
+    "ok": true,
+    "sourceSha256": "39df9d5a2e4542eb9b6fd8375fe24b93ed9009055e4275d197dcd1b3ffb927e4",
+    "stage": "GENERATION"
+  },
+  "unchanged_source_from_parent": false,
+  "usage": {
+    "cache_hit": 9088,
+    "input": 10809,
+    "output": 1510,
+    "total": 12319
+  }
+}

@@ -1,0 +1,10 @@
+--- content-blog-scratch-v1-teacher-718c0d88dafa.sir
++++ content-blog-scratch-v1-teacher-275138cf0c55.sir
+@@ -134,0 +135 @@
++      fails Forbidden;
+@@ -216 +217 @@
+-        persist link;
++        persist link else TagAttached;
+@@ -250 +251 @@
+-        persist made;
++        persist made else AlreadyLiked;

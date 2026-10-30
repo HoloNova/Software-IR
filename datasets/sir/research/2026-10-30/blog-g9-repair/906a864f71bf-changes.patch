@@ -1,0 +1,14 @@
+--- content-blog-change-v1-teacher-906a864f71bf.sir
++++ content-blog-change-v1-teacher-bba0b5b48fc4.sir
+@@ -184 +184 @@
+-        persist link;
++        persist link else TagAttached;
+@@ -196 +196 @@
+-        load Tag by input.tagId as tag else TagNotFound;
++        load Tag by input.tagId as chosenTag else TagNotFound;
+@@ -198 +198 @@
+-          where item.state == PostState.PUBLISHED and any(PostTag, post == item and tag == tag)
++          where item.state == PostState.PUBLISHED and any(PostTag, post == item and tag == chosenTag)
+@@ -222 +222 @@
+-        persist made;
++        persist made else AlreadyLiked;

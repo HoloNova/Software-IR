@@ -228,4 +228,4 @@ mvn -B -o -Dmaven.repo.local=D:/maven-repo -pl sir-toolchain-application -am tes
 
 已用原 import、该 CI standalone CLI 和精确 LF 输入完成 4.2：两个新 g9 批次都先重置四门，当前参考无诊断。`906a864f71bf` 的 PostTag 和 Like 新行缺 else（B）及 tag 自比较（A）共 3 条；从零父子 `718c0d88dafa`／`215ebacdb9b3` 各新增同样三条，仍保留原 3／2 条错误，合计 6／5 条。`af2c42118880` 仍在 Parser 因原内联 exists 失败，没有为命中 A/B 绕过解析边界。Like 的 B 是获批的显式冲突处理要求，不宣称它在历史 #65 业务里失败。
 
-完整前后对照与输入闭包见[数据报告第二十五阶段](../../../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-blog-g9-recheck)。没有新模型调用、新候选业务门或训练，合格仍 48 条；静态反馈新预算另待批准。后续 Parser 改进及归档命令整合各自设计，不混入这次验收归档。
+完整前后对照与输入闭包见[数据报告第二十五阶段](../../../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-blog-g9-recheck)。该免费重查阶段没有模型调用、新候选业务门或训练；随后新预算获批，三份各静态反馈一次共 39648 tokens，改写一份静态通过、从零两份仍失败且源码相同，见[第二十六阶段](../../../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-blog-g9-feedback)。只将通过者提交后送其业务门，四门资格仍待验；合格仍 48 条，未训练。后续 Parser 改进及归档命令整合各自设计，不混入本轮。

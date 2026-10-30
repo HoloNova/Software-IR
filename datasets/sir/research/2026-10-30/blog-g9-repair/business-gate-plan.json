@@ -1,0 +1,20 @@
+{
+  "candidates": [
+    {
+      "bundle": "datasets/sir/pilots/blog-change-g9",
+      "checked": "datasets/sir/pilots/blog-change-g9/checked-r1-906a864f71bf.jsonl",
+      "generated_sha256": "56aef98b45e9b72623351da01454271e8ef0bfd7f21f125c2851ff6ec0d540d0",
+      "it": "BlogBusinessConformanceIT",
+      "oracle_sha256": "b19875a18b071c0921ad34072f9de4c8c10b668db69fb5415eb3b401d6a7c843",
+      "sample_id": "content-blog-change-v1-teacher-bba0b5b48fc4",
+      "source_sha256": "39df9d5a2e4542eb9b6fd8375fe24b93ed9009055e4275d197dcd1b3ffb927e4",
+      "task_sha256": "9150eab844a0297731fb52bd86279888220ff9e9784de8c1404150417347ac43",
+      "toolchain_core_sha256": "bb77b8b40efd6ceb38e8688dbb58243754aa30d3e9db815fe62ff7ac6b2f0eab"
+    }
+  ],
+  "dispatches_made_at_preparation": 0,
+  "instruction_scope": "One static-passed candidate only; commit and verify remote blobs before dispatch; wait for owner notification, no polling.",
+  "source_commit": "47bf67c8f3d95fbb81d50b1b927c73bba1d0db21",
+  "status": "READY_AFTER_COMMIT_PUSH",
+  "workflow": "slm-business-gate.yml"
+}

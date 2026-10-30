@@ -1,0 +1,21 @@
+{
+  "actual_model": "deepseek-flash",
+  "created_at": "2026-10-30T08:58:24.711181+00:00",
+  "id": "content-blog-scratch-v1-teacher-216042934560",
+  "raw_response_sha256": "10d8af6c007396b6e3258ec81b7e010b53acb4ee8a5ea06be64ceaca99368eb4",
+  "requested_model": "deepseek-flash",
+  "status": "CANDIDATE_NOT_YET_QUALIFIED",
+  "system_fingerprint": "bc19ba97cbe016479903222bb1578db6",
+  "usage": {
+    "completion_tokens": 1559,
+    "completion_tokens_details": null,
+    "prompt_cache_hit_tokens": 11392,
+    "prompt_cache_miss_tokens": 2141,
+    "prompt_tokens": 13533,
+    "prompt_tokens_details": {
+      "audio_tokens": null,
+      "cached_tokens": 11392
+    },
+    "total_tokens": 15092
+  }
+}

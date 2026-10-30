@@ -1,0 +1,16 @@
+{
+  "automatic_retries": 0,
+  "baseline_commit": "441724a0e1472081187718a024e5ef54929d122e",
+  "calls": 3,
+  "estimated_input_tokens": 37500,
+  "estimated_output_tokens": 6000,
+  "estimated_total_tokens": 43500,
+  "historical_repairs_retained": true,
+  "owner_budget_approved": true,
+  "parent_ids": [
+    "content-blog-change-v1-teacher-906a864f71bf",
+    "content-blog-scratch-v1-teacher-718c0d88dafa",
+    "content-blog-scratch-v1-teacher-215ebacdb9b3"
+  ],
+  "plan_sha256": "86fd2624853fb04a2ffb039be26d7ee243d19864c8846269eabad2fc83107ccc"
+}

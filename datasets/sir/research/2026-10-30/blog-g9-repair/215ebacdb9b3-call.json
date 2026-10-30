@@ -1,0 +1,117 @@
+{
+  "actual_model": "deepseek-flash",
+  "automatic_retries": 0,
+  "bundle": "datasets/sir/pilots/blog-scratch-g9",
+  "call_index": 3,
+  "check_execution": {
+    "directory": "C:\\Users\\zdw00\\Desktop\\Software IR\\datasets\\sir\\pilots\\blog-scratch-g9\\checks\\289addae76e44024963bf1c59ee85b4c",
+    "stdout_sha256": "a54879622b62eb2fd728c2f64f8e7780d755465e6ccfdb68738b41eed82ea12a"
+  },
+  "checked": "datasets/sir/pilots/blog-scratch-g9/checked-r1-215ebacdb9b3.jsonl",
+  "checker_artifact_run_id": 41019419975,
+  "checker_jar_sha256": "d23339bf47b6f4ff574e1dcd82bc33f7c7127fae5882b0a1daa89b5fea648a9a",
+  "completed_at": "2026-10-30T08:58:25.123855+00:00",
+  "eligible_for_business_gate": false,
+  "estimated_input_tokens": 14500,
+  "estimated_output_tokens": 2000,
+  "finish_reason": "stop",
+  "frozen_git_blobs_verified": 486,
+  "frozen_inputs_unchanged": true,
+  "gates": {
+    "build": "NOT_RUN",
+    "business": "NOT_RUN",
+    "start": "NOT_RUN",
+    "static": "FAILED"
+  },
+  "max_output_tokens": 8192,
+  "new_candidates": 1,
+  "parent_id": "content-blog-scratch-v1-teacher-215ebacdb9b3",
+  "recorded_new_attempts": 1,
+  "request_process_exit_code": 0,
+  "request_sha256": "f5c45e1a2700aff383f5e9942dce6d006c92b1103d0929d2061539896a03483e",
+  "request_timed_out": false,
+  "response_sha256": "10d8af6c007396b6e3258ec81b7e010b53acb4ee8a5ea06be64ceaca99368eb4",
+  "sample_id": "content-blog-scratch-v1-teacher-216042934560",
+  "source_sha256": "1a0bee361a35cfd7e9a6669ef06d22bb8428e46df859640a7721031712fadb2f",
+  "started_at": "2026-10-30T08:58:16.678284+00:00",
+  "static_result": {
+    "diagnostics": [
+      {
+        "code": "SIR-TYPE-001",
+        "fixes": [],
+        "loweredNodeId": null,
+        "message": "containsLiteral 的左侧必须是文本字段，右侧必须是非 Optional 文本值；is none/is present 不会把 Optional 文本转换成非 Optional 文本。",
+        "related": [],
+        "relativePath": null,
+        "severity": "ERROR",
+        "sourceNodeId": null,
+        "sourceSymbol": null,
+        "span": {
+          "endCodePointOffset": 4448,
+          "endColumn": 129,
+          "endLine": 181,
+          "sourceId": "sample.sir",
+          "startCodePointOffset": 4408,
+          "startColumn": 89,
+          "startLine": 181
+        },
+        "stage": "SEMANTIC"
+      },
+      {
+        "code": "SIR-TYPE-001",
+        "fixes": [],
+        "loweredNodeId": null,
+        "message": "containsLiteral 的左侧必须是文本字段，右侧必须是非 Optional 文本值；is none/is present 不会把 Optional 文本转换成非 Optional 文本。",
+        "related": [],
+        "relativePath": null,
+        "severity": "ERROR",
+        "sourceNodeId": null,
+        "sourceSymbol": null,
+        "span": {
+          "endCodePointOffset": 4494,
+          "endColumn": 175,
+          "endLine": 181,
+          "sourceId": "sample.sir",
+          "startCodePointOffset": 4452,
+          "startColumn": 133,
+          "startLine": 181
+        },
+        "stage": "SEMANTIC"
+      },
+      {
+        "code": "SIR-VALID-001",
+        "fixes": [],
+        "loweredNodeId": null,
+        "message": "any(PostTag, ...) 中比较的两侧都绑定到关联实体字段 PostTag.tag，而不是外层变量。若要与外层变量比较，请给外层变量使用不与字段同名的名称，并在这里引用它。",
+        "related": [],
+        "relativePath": null,
+        "severity": "ERROR",
+        "sourceNodeId": null,
+        "sourceSymbol": null,
+        "span": {
+          "endCodePointOffset": 6106,
+          "endColumn": 103,
+          "endLine": 231,
+          "sourceId": "sample.sir",
+          "startCodePointOffset": 6096,
+          "startColumn": 93,
+          "startLine": 231
+        },
+        "stage": "SEMANTIC"
+      }
+    ],
+    "digest": null,
+    "fileCount": 0,
+    "id": "content-blog-scratch-v1-teacher-216042934560",
+    "ok": false,
+    "sourceSha256": "1a0bee361a35cfd7e9a6669ef06d22bb8428e46df859640a7721031712fadb2f",
+    "stage": "SEMANTIC"
+  },
+  "unchanged_source_from_parent": false,
+  "usage": {
+    "cache_hit": 11392,
+    "input": 13533,
+    "output": 1559,
+    "total": 15092
+  }
+}

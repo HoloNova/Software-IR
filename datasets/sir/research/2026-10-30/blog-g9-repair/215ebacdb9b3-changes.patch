@@ -1,0 +1,8 @@
+--- content-blog-scratch-v1-teacher-215ebacdb9b3.sir
++++ content-blog-scratch-v1-teacher-216042934560.sir
+@@ -217 +217 @@
+-        persist link;
++        persist link else TagAttached;
+@@ -251 +251 @@
+-        persist made;
++        persist made else AlreadyLiked;

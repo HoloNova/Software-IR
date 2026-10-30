@@ -1,0 +1,33 @@
+{
+  "automatic_retries": 0,
+  "baseline_commit": "441724a0e1472081187718a024e5ef54929d122e",
+  "call_index": 2,
+  "command": [
+    "C:\\Users\\zdw00\\AppData\\Local\\hermes\\hermes-agent\\venv\\Scripts\\python.exe",
+    "-m",
+    "experiments.slm.data",
+    "repair",
+    "--bundle",
+    "C:\\Users\\zdw00\\Desktop\\Software IR\\datasets\\sir\\pilots\\blog-scratch-g9",
+    "--sample-id",
+    "content-blog-scratch-v1-teacher-718c0d88dafa",
+    "--checked",
+    "C:\\Users\\zdw00\\Desktop\\Software IR\\datasets\\sir\\pilots\\blog-scratch-g9\\checked.jsonl",
+    "--feedback",
+    "C:\\Users\\zdw00\\Desktop\\Software IR\\target\\slm-blog-g9\\source-47bf67c8-lf\\experiments\\slm\\prompts\\repair-general-v1.md",
+    "--model",
+    "deepseek-flash",
+    "--max-tokens",
+    "8192"
+  ],
+  "estimated_input_tokens": 11500,
+  "estimated_output_tokens": 2000,
+  "historical_child_ids": [
+    "content-blog-scratch-v1-teacher-215ebacdb9b3"
+  ],
+  "max_output_tokens": 8192,
+  "owner_budget_approved": true,
+  "parent_id": "content-blog-scratch-v1-teacher-718c0d88dafa",
+  "plan_sha256": "86fd2624853fb04a2ffb039be26d7ee243d19864c8846269eabad2fc83107ccc",
+  "started_at": "2026-10-30T08:57:47.358182+00:00"
+}

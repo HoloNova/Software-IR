@@ -118,3 +118,10 @@
 `47bf67c8` 的 [verify #204](https://github.com/HoloNova/Software-IR/actions/runs/41019419975) 已验收两条新规则：上传 2086 项零失败／错误／跳过，博客参考业务 425/0。原 ZIP／报告／日志／JUnit 见 [`research/2026-10-30/blog-g9-ci204/`](research/2026-10-30/blog-g9-ci204/)。用精确 LF 快照及该 CI 原检查器，将 g8 原始记录导入 [`pilots/blog-change-g9/`](pilots/blog-change-g9/)、[`blog-scratch-g9/`](pilots/blog-scratch-g9/)，重新冻结并重置四门，不移植旧资格；题目、v8 和原始响应／源码不变。
 
 两份参考均静态生成 55 文件；教师 `906a864f71bf` 被 A/B 拦为 3 条语义 ERROR，`718c0d88dafa`／`215ebacdb9b3` 分别为 6／5 条（保留原 Optional／fails 错误），`af2c42118880` 仍为原 3 条解析错误。BUILD／START／BUSINESS 全为 NOT_RUN，未派门或导出；**模型调用 0 次，合格仍 48、博客 0、学生 v3 不变**。完整结果与新一轮待批费用计划在 [`blog-g9-recheck/`](research/2026-10-30/blog-g9-recheck/)，说明见[第二十五阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-blog-g9-recheck)。历史分支额度不清零，只有负责人另批新预算后才反馈重答。
+
+
+## 博客 g9 一轮静态反馈（1/3 静态通过）
+
+负责人另批 43500 tokens 后，三份指定候选各按原 repair 新反馈一次，共输入 **35020**（缓存 **29568**）、输出 **4628**、合计 **39648 tokens**，不自动重试。改写 `bba0b5b48fc4` 修正字段自比较和两处唯一冲突处理，静态无诊断、生成 57 文件；从零新子候选 `275138cf0c55`／`216042934560` 仍有 Optional 两条和自比较一条，且两份新源码逐字节相同，按本轮额度停止。
+
+原响应／父子关系／历史资格不改，新结果分别写入两批的 `checked-r1-<父短ID>.jsonl`；新运行门仍 NOT_RUN。只计划将静态通过的改写候选提交后送业务门，四门通过且归档导出后才增加资格；**当前仍48条、博客0条、学生v3不变，未训练**。原始审批、用量、诊断和差异见 [`research/2026-10-30/blog-g9-repair/`](research/2026-10-30/blog-g9-repair/)，完整记录见[第二十六阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-blog-g9-feedback)。

@@ -104,6 +104,10 @@ v8 已按批准预算在新 `blog-change-g8/`、`blog-scratch-g8/` 各初采一�
 
 按原 import 将 g8 两批导入 `blog-change-g9`、`blog-scratch-g9`，保留题目、v8、原始请求／响应／源码和父子关系，重新冻结新工具链并重置四门。#204 原 standalone CLI 实际检查：参考两份完整生成；`906a864f71bf` 现在被 A/B 静态拦下（3 条语义错误），从零父子为 6／5 条（原 Optional／fails 诊断仍保留），运行修复子候选仍为 3 条解析错误。新批次运行门全 NOT_RUN，API 调用 0 次，无新合格答案或训练。结果和另待批准的三份静态反馈预算见[第二十五阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-blog-g9-recheck)；历史额度不因 import 清零，不自动续修。
 
+### g9 新静态反馈一轮
+
+三份指定候选的费用随后获批，原 repair 各调用一次，共 **39648 tokens**（输入35020，其中缓存29568；输出4628）。改写 `bba0b5b48fc4` 消除 A/B、静态完整生成57文件；从零 `275138cf0c55`／`216042934560` 仍有3条语义错误，且新源码相同。三份结果保存在各批 `checked-r1-<父短ID>.jsonl`，不覆盖原 checked，不继续追修失败者。只把改写新子候选提交后送 BlogBusinessConformanceIT，当前运行门NOT_RUN、合格仍48、学生v3不变，未训练。审批、真实请求／响应、用量与父子差异见[第二十六阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-blog-g9-feedback)；参考的CI成功仍不借给教师。
+
 ## 通用静态修复
 
 `prompts/repair-general-v1.md` 是不限题型的静态反馈前缀：说明这是同一道题的修复、按编译器诊断逐条改、需求与接口不变，不提示具体改法；诊断原文与 DDL 由 `repair` 自动附上。用法：`repair --bundle … --sample-id … --feedback experiments/slm/prompts/repair-general-v1.md`。每个失败候选只修一轮。
