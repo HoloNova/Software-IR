@@ -1,0 +1,65 @@
+{
+  "source_commit": "47bf67c8f3d95fbb81d50b1b927c73bba1d0db21",
+  "ci_run_id": 41019419975,
+  "source_snapshot": "target/slm-blog-g9/source-47bf67c8-lf",
+  "snapshot_files_matching_git_blobs": 1444,
+  "snapshot_archive_sha256": "2a164de8ad54a7e239c2a5c415840d7f73a248d8292fc5b16256287629609459",
+  "checker_jar_sha256": "d23339bf47b6f4ff574e1dcd82bc33f7c7127fae5882b0a1daa89b5fea648a9a",
+  "bundles": [
+    {
+      "bundle": "datasets/sir/pilots/blog-change-g9",
+      "from_bundle": "datasets/sir/pilots/blog-change-g8",
+      "toolchain_core_sha256": "bb77b8b40efd6ceb38e8688dbb58243754aa30d3e9db815fe62ff7ac6b2f0eab",
+      "oracle_sha256": "b19875a18b071c0921ad34072f9de4c8c10b668db69fb5415eb3b401d6a7c843",
+      "task_sha256": "9150eab844a0297731fb52bd86279888220ff9e9784de8c1404150417347ac43",
+      "manifest_sha256": "1e343b87a09f1c441471c32fc984a12953c5c9b893752234b2f3b1509f89f2e3",
+      "verified_input_counts": {
+        "toolchain_inputs": 448,
+        "oracle_inputs": 38,
+        "experiment_inputs": 239
+      },
+      "import": {
+        "candidates_sha256": "66b1c9f78ead0abb3adf0668acc3617c441538dd3e4bb1eb5b910c0653a6bff6",
+        "gates_transferred": false,
+        "manifest_sha256": "2a3225500712090b72c014d9cc12ba38c58c4007ffc6e74be280fd75ae208f86",
+        "new_api_calls": 0,
+        "oracle_sha256": "b19875a18b071c0921ad34072f9de4c8c10b668db69fb5415eb3b401d6a7c843",
+        "teacher_responses": 2,
+        "toolchain_core_sha256": "7009975336558548cedcdaf0b722240946dc927ac678c7b6895f97d42db1b1e1"
+      },
+      "check_execution": {
+        "directory": "C:\\Users\\zdw00\\Desktop\\Software IR\\datasets\\sir\\pilots\\blog-change-g9\\checks\\a33f2598d7ca4c1e8882d6502a8cc11d",
+        "stdout_sha256": "3daec9d233eed3771b9402f0bb33cf4899cf8cd13db683794edf71a179092621"
+      }
+    },
+    {
+      "bundle": "datasets/sir/pilots/blog-scratch-g9",
+      "from_bundle": "datasets/sir/pilots/blog-scratch-g8",
+      "toolchain_core_sha256": "bb77b8b40efd6ceb38e8688dbb58243754aa30d3e9db815fe62ff7ac6b2f0eab",
+      "oracle_sha256": "b19875a18b071c0921ad34072f9de4c8c10b668db69fb5415eb3b401d6a7c843",
+      "task_sha256": "3771eae2f437ba6d87c827d7cd216984865be8a7a8ce09ce33a331964d0c62c8",
+      "manifest_sha256": "6dd005a79e5ec6853a56d7a2c392feb76774a867e3e5b286f50caf99b6e2820a",
+      "verified_input_counts": {
+        "toolchain_inputs": 448,
+        "oracle_inputs": 38,
+        "experiment_inputs": 239
+      },
+      "import": {
+        "candidates_sha256": "0d3560b09180b3f4df68f7f602c51e3bdb54087ed4648ad97936f14f4c8cb318",
+        "gates_transferred": false,
+        "manifest_sha256": "a3ef186d40779c628b7a69704fe532be7c07e02a31c36e8cd973fdfb489a1314",
+        "new_api_calls": 0,
+        "oracle_sha256": "b19875a18b071c0921ad34072f9de4c8c10b668db69fb5415eb3b401d6a7c843",
+        "teacher_responses": 2,
+        "toolchain_core_sha256": "7009975336558548cedcdaf0b722240946dc927ac678c7b6895f97d42db1b1e1"
+      },
+      "check_execution": {
+        "directory": "C:\\Users\\zdw00\\Desktop\\Software IR\\datasets\\sir\\pilots\\blog-scratch-g9\\checks\\ace09cebd191458ca4a63f7398d15157",
+        "stdout_sha256": "ef3ab565b0fec42cffb26434d967c54e26cb79b16d3ca0c2c53fb8d17577b96f"
+      }
+    }
+  ],
+  "protected_existing_files_unchanged": 3717,
+  "api_calls": 0,
+  "build_start_business": "NOT_RUN"
+}

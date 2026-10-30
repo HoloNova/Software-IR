@@ -111,3 +111,10 @@
 从零候选获准后仅反馈重答一次，新子候选 `215ebacdb9b3` 只增加 `fails Forbidden`，仍有 2 条 Optional 文本匹配诊断，见 `checked-r1.jsonl`。实际输入 **10080**（缓存 **8448**）、输出 **1551**、合计 **11631 tokens**；v8 累计 3 次调用／**29520 tokens**。按一轮上限停止，不追加追修、不送失败子候选去业务门，合格仍 48、学生 v3 不变。原始记录与父子差异在 [`research/2026-10-30/blog-v8-repair/`](research/2026-10-30/blog-v8-repair/)，详见[第二十三阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-blog-v8-repair)。
 
 改写父候选 `906a864f71bf` 的业务失败来自标签字段自比较（14 项断言）及并发贴标签未映射唯一冲突（11 项断言）。按批准的 26000 tokens 预算，用原运行反馈通道仅重答一次：新子候选 `af2c42118880` 添加了 `persist link else TagAttached`，却将关联筛选写成不支持的内联 exists，**PARSE FAILED／3 条诊断**，未构建／启动／运行。实际输入 **22799**（缓存 **9088**）、输出 **1458**、合计 **24257 tokens**；v8 累计 4 次 API／**53777 tokens**。两分支均按额度停止，不追加追修、不送失败子候选去业务门；合格仍 48，学生 v3 不变。记录见 [`research/2026-10-30/blog-v8-runtime-repair/`](research/2026-10-30/blog-v8-runtime-repair/) 与[第二十四阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-blog-v8-runtime-repair)。
+
+
+## 新静态规则后的博客 g9 重查
+
+`47bf67c8` 的 [verify #204](https://github.com/HoloNova/Software-IR/actions/runs/41019419975) 已验收两条新规则：上传 2086 项零失败／错误／跳过，博客参考业务 425/0。原 ZIP／报告／日志／JUnit 见 [`research/2026-10-30/blog-g9-ci204/`](research/2026-10-30/blog-g9-ci204/)。用精确 LF 快照及该 CI 原检查器，将 g8 原始记录导入 [`pilots/blog-change-g9/`](pilots/blog-change-g9/)、[`blog-scratch-g9/`](pilots/blog-scratch-g9/)，重新冻结并重置四门，不移植旧资格；题目、v8 和原始响应／源码不变。
+
+两份参考均静态生成 55 文件；教师 `906a864f71bf` 被 A/B 拦为 3 条语义 ERROR，`718c0d88dafa`／`215ebacdb9b3` 分别为 6／5 条（保留原 Optional／fails 错误），`af2c42118880` 仍为原 3 条解析错误。BUILD／START／BUSINESS 全为 NOT_RUN，未派门或导出；**模型调用 0 次，合格仍 48、博客 0、学生 v3 不变**。完整结果与新一轮待批费用计划在 [`blog-g9-recheck/`](research/2026-10-30/blog-g9-recheck/)，说明见[第二十五阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-blog-g9-recheck)。历史分支额度不清零，只有负责人另批新预算后才反馈重答。

@@ -574,3 +574,33 @@ v8 两次初采加这次反馈共 **3 次 API**，输入 **24923**（缓存 **12
 **收口。**本次原请求精确匹配原 runtime repair 的四条消息，保留父对话、父答案与真实失败反馈；响应解码等于候选源码，原 CLI 输出经 bind_static 得到同一 checked 记录，UTF-8 中文完整。旧候选／请求／原始检查不改，两批账本各自仅追加已获批的一条修复记录；冻结 manifest.json／task／system 不变，汇总 MANIFEST.sha256 按新增证据重封，180 个受保护旧文件及学生数据保持原字节。完整审批、预算依据、原始 stdout／stderr、父子零上下文补丁、收集器／检查器绑定与核对脚本在 `datasets/sir/research/2026-10-30/blog-v8-runtime-repair/`。
 
 v8 累计 **4 次 API**，输入 **47722**（缓存 **21888**）、输出 **6055**，合计 **53777 tokens**。新增合格 **0**，仍 **48 条**、博客合格 **0**、学生 v3 不变，未训练。从零分支已经一轮静态反馈失败，改写分支本轮运行反馈也失败，均按批准额度停止；本轮按授权与既有待提交修复记录一起归档提交，不新派业务门、不手改答案或继续消耗模型费用。除原静态检查器的有界 JVM 外，没有本机 Maven／应用／数据库或全量测试。
+
+
+<a id="slm-blog-g9-recheck"></a>
+
+## 第二十五阶段：新静态规则 CI 验收与博客 g9 重查（2026-10-30）
+
+**4.1 同 SHA 验收完成。**负责人通知 CI 完成后，一次性核对 `47bf67c8f3d95fbb81d50b1b927c73bba1d0db21` 的 [verify #204 / 41019419975](https://github.com/HoloNova/Software-IR/actions/runs/41019419975)：gates-and-business-it 与 standalone-deployment 两个 job 均 success，上传 Surefire 为 **295 XML／2086 项，0 失败／0 错误／0 跳过**。新增 A/B 两类分别 29／26 项，原 QueryDiagnosticMessageTest 22 项及候选适配器 9 项全通过；博客裁剪参考四门通过、55 文件、业务 **425/0**，四轮各六连接／六事务等待图、应用退出、schema 删除和锁释放均有原始证明。不是把本机定向或工作流绿色替代参考的业务报告。
+
+**参考证据归档。**`datasets/sir/research/2026-10-30/blog-g9-ci204/` 保存精确 run/jobs/artifacts 元数据、三份原始 ZIP、博客原报告及四份原日志、七类 JUnit XML和摘要。三份 ZIP 的 GitHub digest 均匹配：conformance-evidence=`12960962949`、surefire-reports=`12960414439`、standalone-cli=`12960753406`；参考、DDL、seed 摘要逐项匹配受测 Git blob。复用已提交的 CI #202 归档校验逻辑，仅替换 run/commit/目标目录和选择的测试类，不新增另一份一次性归档脚本；recipe 记录来源与参数。解包检查拒绝逃逸路径、链接及 CI 口令标记，不归档 Actions 原聚合日志。原始 ZIP、日志和 XML 字节不清洗，日志行尾空白保留为证据格式例外。该证据只证明既有参考，不赋予教师资格。
+
+**4.2 重新导入，不搬运旧门。**从受测 `47bf67c8` 用命令级 `core.autocrlf=false`／`core.eol=lf` 导出独立快照，**1444 个文件**逐项匹配 Git blob；再用该快照的原 `import` 把 `blog-change-g8`、`blog-scratch-g8` 导入新 `blog-change-g9`、`blog-scratch-g9`。每批 1 份当前参考 + 2 份原教师，四门最初全部 NOT_RUN。4 份教师的源码、messages、原始 request/response、模型/用量及 parent_id 保留；旧运行门、静态结果和生成摘要均不移植。原收集器快照仍由既有 import 原样核验与复制，本轮不提前改收集器协议或删除冻结副本，归档命令整合仍属于 4.4。
+
+每批 **448 项核心输入／38 项 oracle／239 项实验输入**均与受测 Git blob 一致。新工具链摘要 `bb77b8b40efd6ceb38e8688dbb58243754aa30d3e9db815fe62ff7ac6b2f0eab`；oracle 仍为 `b19875a18b071c0921ad34072f9de4c8c10b668db69fb5415eb3b401d6a7c843`。task、base、reference、v8 system 的冻结字节与 g8 完全相同，题目仍保留 #200 的原 reference_evidence，未修改题目哈希迁就新 CI。
+
+**实际重查。**复用原 `_check_rows`／`bind_static`，以 #204 原 standalone CLI 做完整 GENERATION 上限检查；JAR 摘要为 `d23339bf47b6f4ff574e1dcd82bc33f7c7127fae5882b0a1daa89b5fea648a9a`，逐字节对照原 artifact。没有本机重新构建、另写语义、手改候选或放宽检查。两份既有参考无诊断、均生成 55 文件；教师结果如下：
+
+| 候选短 ID | 来源与旧结果 | 新结果 | 完整诊断 |
+| --- | --- | --- | --- |
+| `906a864f71bf` | 改写初采；旧静态通过，#65 业务 401/25 | SEMANTIC FAILED，3 ERROR | PostTag 写入漏 else（B，L184）；PostTag.tag 自比较（A，L198）；Like 写入漏 else（B，L222） |
+| `af2c42118880` | 改写运行反馈；旧 PARSE FAILED | PARSE FAILED，3 ERROR | 原内联 exists 引出的 PostTag／where／右花括号三条解析错误，尚未到 A/B 检查阶段 |
+| `718c0d88dafa` | 从零初采；旧 SEMANTIC FAILED，3 ERROR | SEMANTIC FAILED，6 ERROR | 原缺 `fails Forbidden` 1 条 + Optional containsLiteral 2 条；新增 PostTag 写入漏 else、tag 自比较、Like 写入漏 else 各 1 条 |
+| `215ebacdb9b3` | 从零静态反馈；旧 SEMANTIC FAILED，2 ERROR | SEMANTIC FAILED，5 ERROR | 原 Optional containsLiteral 2 条；新增 A/B 同上三条 |
+
+**不是新增了运行失败事实。**Like 的 B 命中属于负责人已确认的“即使持父行锁也要声明冲突错误”限制；#65 的点赞并发原本通过，不能把本轮静态错误改写成 #65 新增业务失败。A/B 新消息的 ERROR、完整位置、顺序和原消息均保留在 `checked.jsonl`／`checks/`；没有仅摘新规则而隐去原类型/能力错误。两个新批次 BUILD／START／BUSINESS 仍全部 **NOT_RUN**，没有候选可派发业务门，也没有导出新 SFT。
+
+**完整性与资源。**重查前记录 3717 个既有数据／prompt／task 文件摘要，导入与重查后逐项一致；收尾仅允许本次说明入口及其总清单更新，旧 g7/g8、学生文件、冻结题目和历史资格不改。重查子进程剥离模型密钥及 Java 注入选项；两次 Java 串行，heap 256 MiB、metaspace 128 MiB、ActiveProcessorCount=2，均已退出。新批次来源、输入闭包、checker 和原输出哈希见 `research/2026-10-30/blog-g9-recheck/checkout-verification.json`，前后结果见 `summary.json`。本轮模型调用 **0 次**，未运行 Maven、应用、数据库或训练；合格教师仍 **48 条**、博客 **0 条**、学生 v3 不变。
+
+**下一步仅报预算，未发送请求。**按交接所列 `906a864f71bf`、`718c0d88dafa`、`215ebacdb9b3` 三份各做一次新的静态反馈，沿用 v8、`repair-general-v1` 和新检查的全部诊断。预计输入分别 **11500／11500／14500**，每份输出预计 **2000**，合计输入 **37500**、输出 **6000**、总计 **43500 tokens**。方法为各父候选的真实输入用量，加原答案及新增反馈字符数乘已有校准中位比率 0.2321409948899781，再留 10% 并向上取整到 500；不是服务端精确分词，不承诺缓存，每次输出上限 8192、不自动重试。215 的上下文已含上一轮反馈，故预计更长。
+
+这是针对新工具链诊断的**另批新预算**，不是清除历史修复次数或自动续费。三份中有从零父子关系，仍只对应两道题，不作为三个独立任务或通过率统计。原解析退化子候选不在本轮付费提案中；费用确认前不调用。计划及来源哈希在 `repair-plan.json`。4.3 Parser 改进和 4.4 归档命令尚未实施，仍须各自设计确认。

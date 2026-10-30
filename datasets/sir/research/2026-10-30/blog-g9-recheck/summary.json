@@ -1,0 +1,731 @@
+{
+  "source_commit": "47bf67c8f3d95fbb81d50b1b927c73bba1d0db21",
+  "api_calls": 0,
+  "teacher_candidates_imported": 4,
+  "reference_static_passed": 2,
+  "teacher_static_passed": 0,
+  "qualified_teachers": 48,
+  "student_version": 3,
+  "results": [
+    {
+      "bundle": "datasets/sir/pilots/blog-change-g9",
+      "id": "content-blog-change-v1-reference",
+      "origin": "existing_reference",
+      "parent_id": null,
+      "gates": {
+        "build": "NOT_RUN",
+        "business": "NOT_RUN",
+        "start": "NOT_RUN",
+        "static": "PASSED"
+      },
+      "static_result": {
+        "id": "content-blog-change-v1-reference",
+        "ok": true,
+        "stage": "GENERATION",
+        "diagnostics": [],
+        "fileCount": 55,
+        "digest": "95ebf3692504bd9552da79e02c7db3dc2c68dd3ac52b8abfebecec397a2c73cf",
+        "sourceSha256": "a176cfe521913f6cdd5c6919da5e229e2f67a390940a360c22296c95c96e8f37"
+      },
+      "source_sha256": "a176cfe521913f6cdd5c6919da5e229e2f67a390940a360c22296c95c96e8f37",
+      "previous_static_result": {
+        "diagnostics": [],
+        "digest": "95ebf3692504bd9552da79e02c7db3dc2c68dd3ac52b8abfebecec397a2c73cf",
+        "fileCount": 55,
+        "id": "content-blog-change-v1-reference",
+        "ok": true,
+        "sourceSha256": "a176cfe521913f6cdd5c6919da5e229e2f67a390940a360c22296c95c96e8f37",
+        "stage": "GENERATION"
+      }
+    },
+    {
+      "bundle": "datasets/sir/pilots/blog-change-g9",
+      "id": "content-blog-change-v1-teacher-906a864f71bf",
+      "origin": "teacher",
+      "parent_id": null,
+      "gates": {
+        "build": "NOT_RUN",
+        "business": "NOT_RUN",
+        "start": "NOT_RUN",
+        "static": "FAILED"
+      },
+      "static_result": {
+        "id": "content-blog-change-v1-teacher-906a864f71bf",
+        "ok": false,
+        "stage": "SEMANTIC",
+        "diagnostics": [
+          {
+            "code": "SIR-VALID-004",
+            "severity": "ERROR",
+            "stage": "SEMANTIC",
+            "message": "此前已 exists 检查实体 PostTag，但查重不能替代唯一冲突处理；新行 persist link 必须声明 else 已声明错误。若前面用 validate ... else 拒绝重复，可沿用同一个错误。",
+            "span": {
+              "sourceId": "sample.sir",
+              "startLine": 184,
+              "startColumn": 9,
+              "endLine": 184,
+              "endColumn": 22,
+              "startCodePointOffset": 5381,
+              "endCodePointOffset": 5394
+            },
+            "related": [],
+            "fixes": [],
+            "sourceSymbol": null,
+            "sourceNodeId": null,
+            "loweredNodeId": null,
+            "relativePath": null
+          },
+          {
+            "code": "SIR-VALID-001",
+            "severity": "ERROR",
+            "stage": "SEMANTIC",
+            "message": "any(PostTag, ...) 中比较的两侧都绑定到关联实体字段 PostTag.tag，而不是外层变量。若要与外层变量比较，请给外层变量使用不与字段同名的名称，并在这里引用它。",
+            "span": {
+              "sourceId": "sample.sir",
+              "startLine": 198,
+              "startColumn": 85,
+              "endLine": 198,
+              "endColumn": 95,
+              "startCodePointOffset": 5803,
+              "endCodePointOffset": 5813
+            },
+            "related": [],
+            "fixes": [],
+            "sourceSymbol": null,
+            "sourceNodeId": null,
+            "loweredNodeId": null,
+            "relativePath": null
+          },
+          {
+            "code": "SIR-VALID-004",
+            "severity": "ERROR",
+            "stage": "SEMANTIC",
+            "message": "此前已 exists 检查实体 Like，但查重不能替代唯一冲突处理；新行 persist made 必须声明 else 已声明错误。若前面用 validate ... else 拒绝重复，可沿用同一个错误。",
+            "span": {
+              "sourceId": "sample.sir",
+              "startLine": 222,
+              "startColumn": 9,
+              "endLine": 222,
+              "endColumn": 22,
+              "startCodePointOffset": 6582,
+              "endCodePointOffset": 6595
+            },
+            "related": [],
+            "fixes": [],
+            "sourceSymbol": null,
+            "sourceNodeId": null,
+            "loweredNodeId": null,
+            "relativePath": null
+          }
+        ],
+        "fileCount": 0,
+        "digest": null,
+        "sourceSha256": "2fa0f8f8ad1b85ed4a303336b3940f8d01b3cce5a6272a55b51f852cc376415d"
+      },
+      "source_sha256": "2fa0f8f8ad1b85ed4a303336b3940f8d01b3cce5a6272a55b51f852cc376415d",
+      "previous_static_result": {
+        "diagnostics": [],
+        "digest": "c7d69811695cb8229f7efe854e549b6c4bdef177566a25997f3407b1c6dabb30",
+        "fileCount": 57,
+        "id": "content-blog-change-v1-teacher-906a864f71bf",
+        "ok": true,
+        "sourceSha256": "2fa0f8f8ad1b85ed4a303336b3940f8d01b3cce5a6272a55b51f852cc376415d",
+        "stage": "GENERATION"
+      }
+    },
+    {
+      "bundle": "datasets/sir/pilots/blog-change-g9",
+      "id": "content-blog-change-v1-teacher-af2c42118880",
+      "origin": "teacher",
+      "parent_id": "content-blog-change-v1-teacher-906a864f71bf",
+      "gates": {
+        "build": "NOT_RUN",
+        "business": "NOT_RUN",
+        "start": "NOT_RUN",
+        "static": "FAILED"
+      },
+      "static_result": {
+        "id": "content-blog-change-v1-teacher-af2c42118880",
+        "ok": false,
+        "stage": "PARSE",
+        "diagnostics": [
+          {
+            "code": "SIR-PARSE-001",
+            "severity": "ERROR",
+            "stage": "PARSE",
+            "message": "遇到不符合 SIR 语法的内容：PostTag",
+            "span": {
+              "sourceId": "sample.sir",
+              "startLine": 196,
+              "startColumn": 62,
+              "endLine": 196,
+              "endColumn": 69,
+              "startCodePointOffset": 5669,
+              "endCodePointOffset": 5676
+            },
+            "related": [],
+            "fixes": [],
+            "sourceSymbol": null,
+            "sourceNodeId": null,
+            "loweredNodeId": null,
+            "relativePath": null
+          },
+          {
+            "code": "SIR-PARSE-001",
+            "severity": "ERROR",
+            "stage": "PARSE",
+            "message": "遇到不符合 SIR 语法的内容：where",
+            "span": {
+              "sourceId": "sample.sir",
+              "startLine": 196,
+              "startColumn": 70,
+              "endLine": 196,
+              "endColumn": 75,
+              "startCodePointOffset": 5677,
+              "endCodePointOffset": 5682
+            },
+            "related": [],
+            "fixes": [],
+            "sourceSymbol": null,
+            "sourceNodeId": null,
+            "loweredNodeId": null,
+            "relativePath": null
+          },
+          {
+            "code": "SIR-PARSE-001",
+            "severity": "ERROR",
+            "stage": "PARSE",
+            "message": "遇到不符合 SIR 语法的内容：}",
+            "span": {
+              "sourceId": "sample.sir",
+              "startLine": 201,
+              "startColumn": 5,
+              "endLine": 201,
+              "endColumn": 6,
+              "startCodePointOffset": 5869,
+              "endCodePointOffset": 5870
+            },
+            "related": [],
+            "fixes": [],
+            "sourceSymbol": null,
+            "sourceNodeId": null,
+            "loweredNodeId": null,
+            "relativePath": null
+          }
+        ],
+        "fileCount": 0,
+        "digest": null,
+        "sourceSha256": "9337533ad1caabd1b65adc5a7bfe3889ee7324dd0eb76acc1e32d7aa47b66555"
+      },
+      "source_sha256": "9337533ad1caabd1b65adc5a7bfe3889ee7324dd0eb76acc1e32d7aa47b66555",
+      "previous_static_result": {
+        "diagnostics": [
+          {
+            "code": "SIR-PARSE-001",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "遇到不符合 SIR 语法的内容：PostTag",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 5676,
+              "endColumn": 69,
+              "endLine": 196,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 5669,
+              "startColumn": 62,
+              "startLine": 196
+            },
+            "stage": "PARSE"
+          },
+          {
+            "code": "SIR-PARSE-001",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "遇到不符合 SIR 语法的内容：where",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 5682,
+              "endColumn": 75,
+              "endLine": 196,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 5677,
+              "startColumn": 70,
+              "startLine": 196
+            },
+            "stage": "PARSE"
+          },
+          {
+            "code": "SIR-PARSE-001",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "遇到不符合 SIR 语法的内容：}",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 5870,
+              "endColumn": 6,
+              "endLine": 201,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 5869,
+              "startColumn": 5,
+              "startLine": 201
+            },
+            "stage": "PARSE"
+          }
+        ],
+        "digest": null,
+        "fileCount": 0,
+        "id": "content-blog-change-v1-teacher-af2c42118880",
+        "ok": false,
+        "sourceSha256": "9337533ad1caabd1b65adc5a7bfe3889ee7324dd0eb76acc1e32d7aa47b66555",
+        "stage": "PARSE"
+      }
+    },
+    {
+      "bundle": "datasets/sir/pilots/blog-scratch-g9",
+      "id": "content-blog-scratch-v1-reference",
+      "origin": "existing_reference",
+      "parent_id": null,
+      "gates": {
+        "build": "NOT_RUN",
+        "business": "NOT_RUN",
+        "start": "NOT_RUN",
+        "static": "PASSED"
+      },
+      "static_result": {
+        "id": "content-blog-scratch-v1-reference",
+        "ok": true,
+        "stage": "GENERATION",
+        "diagnostics": [],
+        "fileCount": 55,
+        "digest": "95ebf3692504bd9552da79e02c7db3dc2c68dd3ac52b8abfebecec397a2c73cf",
+        "sourceSha256": "a176cfe521913f6cdd5c6919da5e229e2f67a390940a360c22296c95c96e8f37"
+      },
+      "source_sha256": "a176cfe521913f6cdd5c6919da5e229e2f67a390940a360c22296c95c96e8f37",
+      "previous_static_result": {
+        "diagnostics": [],
+        "digest": "95ebf3692504bd9552da79e02c7db3dc2c68dd3ac52b8abfebecec397a2c73cf",
+        "fileCount": 55,
+        "id": "content-blog-scratch-v1-reference",
+        "ok": true,
+        "sourceSha256": "a176cfe521913f6cdd5c6919da5e229e2f67a390940a360c22296c95c96e8f37",
+        "stage": "GENERATION"
+      }
+    },
+    {
+      "bundle": "datasets/sir/pilots/blog-scratch-g9",
+      "id": "content-blog-scratch-v1-teacher-718c0d88dafa",
+      "origin": "teacher",
+      "parent_id": null,
+      "gates": {
+        "build": "NOT_RUN",
+        "business": "NOT_RUN",
+        "start": "NOT_RUN",
+        "static": "FAILED"
+      },
+      "static_result": {
+        "id": "content-blog-scratch-v1-teacher-718c0d88dafa",
+        "ok": false,
+        "stage": "SEMANTIC",
+        "diagnostics": [
+          {
+            "code": "SIR-FLOW-003",
+            "severity": "ERROR",
+            "stage": "SEMANTIC",
+            "message": "load 引用未声明的 Error: Forbidden",
+            "span": {
+              "sourceId": "sample.sir",
+              "startLine": 139,
+              "startColumn": 60,
+              "endLine": 139,
+              "endColumn": 69,
+              "startCodePointOffset": 3235,
+              "endCodePointOffset": 3244
+            },
+            "related": [],
+            "fixes": [],
+            "sourceSymbol": null,
+            "sourceNodeId": null,
+            "loweredNodeId": null,
+            "relativePath": null
+          },
+          {
+            "code": "SIR-TYPE-001",
+            "severity": "ERROR",
+            "stage": "SEMANTIC",
+            "message": "containsLiteral 的左侧必须是文本字段，右侧必须是非 Optional 文本值；is none/is present 不会把 Optional 文本转换成非 Optional 文本。",
+            "span": {
+              "sourceId": "sample.sir",
+              "startLine": 180,
+              "startColumn": 89,
+              "endLine": 180,
+              "endColumn": 129,
+              "startCodePointOffset": 4385,
+              "endCodePointOffset": 4425
+            },
+            "related": [],
+            "fixes": [],
+            "sourceSymbol": null,
+            "sourceNodeId": null,
+            "loweredNodeId": null,
+            "relativePath": null
+          },
+          {
+            "code": "SIR-TYPE-001",
+            "severity": "ERROR",
+            "stage": "SEMANTIC",
+            "message": "containsLiteral 的左侧必须是文本字段，右侧必须是非 Optional 文本值；is none/is present 不会把 Optional 文本转换成非 Optional 文本。",
+            "span": {
+              "sourceId": "sample.sir",
+              "startLine": 180,
+              "startColumn": 133,
+              "endLine": 180,
+              "endColumn": 175,
+              "startCodePointOffset": 4429,
+              "endCodePointOffset": 4471
+            },
+            "related": [],
+            "fixes": [],
+            "sourceSymbol": null,
+            "sourceNodeId": null,
+            "loweredNodeId": null,
+            "relativePath": null
+          },
+          {
+            "code": "SIR-VALID-004",
+            "severity": "ERROR",
+            "stage": "SEMANTIC",
+            "message": "此前已 exists 检查实体 PostTag，但查重不能替代唯一冲突处理；新行 persist link 必须声明 else 已声明错误。若前面用 validate ... else 拒绝重复，可沿用同一个错误。",
+            "span": {
+              "sourceId": "sample.sir",
+              "startLine": 216,
+              "startColumn": 9,
+              "endLine": 216,
+              "endColumn": 22,
+              "startCodePointOffset": 5636,
+              "endCodePointOffset": 5649
+            },
+            "related": [],
+            "fixes": [],
+            "sourceSymbol": null,
+            "sourceNodeId": null,
+            "loweredNodeId": null,
+            "relativePath": null
+          },
+          {
+            "code": "SIR-VALID-001",
+            "severity": "ERROR",
+            "stage": "SEMANTIC",
+            "message": "any(PostTag, ...) 中比较的两侧都绑定到关联实体字段 PostTag.tag，而不是外层变量。若要与外层变量比较，请给外层变量使用不与字段同名的名称，并在这里引用它。",
+            "span": {
+              "sourceId": "sample.sir",
+              "startLine": 230,
+              "startColumn": 93,
+              "endLine": 230,
+              "endColumn": 103,
+              "startCodePointOffset": 6056,
+              "endCodePointOffset": 6066
+            },
+            "related": [],
+            "fixes": [],
+            "sourceSymbol": null,
+            "sourceNodeId": null,
+            "loweredNodeId": null,
+            "relativePath": null
+          },
+          {
+            "code": "SIR-VALID-004",
+            "severity": "ERROR",
+            "stage": "SEMANTIC",
+            "message": "此前已 exists 检查实体 Like，但查重不能替代唯一冲突处理；新行 persist made 必须声明 else 已声明错误。若前面用 validate ... else 拒绝重复，可沿用同一个错误。",
+            "span": {
+              "sourceId": "sample.sir",
+              "startLine": 250,
+              "startColumn": 9,
+              "endLine": 250,
+              "endColumn": 22,
+              "startCodePointOffset": 6794,
+              "endCodePointOffset": 6807
+            },
+            "related": [],
+            "fixes": [],
+            "sourceSymbol": null,
+            "sourceNodeId": null,
+            "loweredNodeId": null,
+            "relativePath": null
+          }
+        ],
+        "fileCount": 0,
+        "digest": null,
+        "sourceSha256": "99f11f8757bdef41018cf5ffd45b4aee1cd2e01e9689e8178227a6aff0310c1e"
+      },
+      "source_sha256": "99f11f8757bdef41018cf5ffd45b4aee1cd2e01e9689e8178227a6aff0310c1e",
+      "previous_static_result": {
+        "diagnostics": [
+          {
+            "code": "SIR-FLOW-003",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "load 引用未声明的 Error: Forbidden",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 3244,
+              "endColumn": 69,
+              "endLine": 139,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 3235,
+              "startColumn": 60,
+              "startLine": 139
+            },
+            "stage": "SEMANTIC"
+          },
+          {
+            "code": "SIR-TYPE-001",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "containsLiteral 的左侧必须是文本字段，右侧必须是非 Optional 文本值；is none/is present 不会把 Optional 文本转换成非 Optional 文本。",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 4425,
+              "endColumn": 129,
+              "endLine": 180,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 4385,
+              "startColumn": 89,
+              "startLine": 180
+            },
+            "stage": "SEMANTIC"
+          },
+          {
+            "code": "SIR-TYPE-001",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "containsLiteral 的左侧必须是文本字段，右侧必须是非 Optional 文本值；is none/is present 不会把 Optional 文本转换成非 Optional 文本。",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 4471,
+              "endColumn": 175,
+              "endLine": 180,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 4429,
+              "startColumn": 133,
+              "startLine": 180
+            },
+            "stage": "SEMANTIC"
+          }
+        ],
+        "digest": null,
+        "fileCount": 0,
+        "id": "content-blog-scratch-v1-teacher-718c0d88dafa",
+        "ok": false,
+        "sourceSha256": "99f11f8757bdef41018cf5ffd45b4aee1cd2e01e9689e8178227a6aff0310c1e",
+        "stage": "SEMANTIC"
+      }
+    },
+    {
+      "bundle": "datasets/sir/pilots/blog-scratch-g9",
+      "id": "content-blog-scratch-v1-teacher-215ebacdb9b3",
+      "origin": "teacher",
+      "parent_id": "content-blog-scratch-v1-teacher-718c0d88dafa",
+      "gates": {
+        "build": "NOT_RUN",
+        "business": "NOT_RUN",
+        "start": "NOT_RUN",
+        "static": "FAILED"
+      },
+      "static_result": {
+        "id": "content-blog-scratch-v1-teacher-215ebacdb9b3",
+        "ok": false,
+        "stage": "SEMANTIC",
+        "diagnostics": [
+          {
+            "code": "SIR-TYPE-001",
+            "severity": "ERROR",
+            "stage": "SEMANTIC",
+            "message": "containsLiteral 的左侧必须是文本字段，右侧必须是非 Optional 文本值；is none/is present 不会把 Optional 文本转换成非 Optional 文本。",
+            "span": {
+              "sourceId": "sample.sir",
+              "startLine": 181,
+              "startColumn": 89,
+              "endLine": 181,
+              "endColumn": 129,
+              "startCodePointOffset": 4408,
+              "endCodePointOffset": 4448
+            },
+            "related": [],
+            "fixes": [],
+            "sourceSymbol": null,
+            "sourceNodeId": null,
+            "loweredNodeId": null,
+            "relativePath": null
+          },
+          {
+            "code": "SIR-TYPE-001",
+            "severity": "ERROR",
+            "stage": "SEMANTIC",
+            "message": "containsLiteral 的左侧必须是文本字段，右侧必须是非 Optional 文本值；is none/is present 不会把 Optional 文本转换成非 Optional 文本。",
+            "span": {
+              "sourceId": "sample.sir",
+              "startLine": 181,
+              "startColumn": 133,
+              "endLine": 181,
+              "endColumn": 175,
+              "startCodePointOffset": 4452,
+              "endCodePointOffset": 4494
+            },
+            "related": [],
+            "fixes": [],
+            "sourceSymbol": null,
+            "sourceNodeId": null,
+            "loweredNodeId": null,
+            "relativePath": null
+          },
+          {
+            "code": "SIR-VALID-004",
+            "severity": "ERROR",
+            "stage": "SEMANTIC",
+            "message": "此前已 exists 检查实体 PostTag，但查重不能替代唯一冲突处理；新行 persist link 必须声明 else 已声明错误。若前面用 validate ... else 拒绝重复，可沿用同一个错误。",
+            "span": {
+              "sourceId": "sample.sir",
+              "startLine": 217,
+              "startColumn": 9,
+              "endLine": 217,
+              "endColumn": 22,
+              "startCodePointOffset": 5659,
+              "endCodePointOffset": 5672
+            },
+            "related": [],
+            "fixes": [],
+            "sourceSymbol": null,
+            "sourceNodeId": null,
+            "loweredNodeId": null,
+            "relativePath": null
+          },
+          {
+            "code": "SIR-VALID-001",
+            "severity": "ERROR",
+            "stage": "SEMANTIC",
+            "message": "any(PostTag, ...) 中比较的两侧都绑定到关联实体字段 PostTag.tag，而不是外层变量。若要与外层变量比较，请给外层变量使用不与字段同名的名称，并在这里引用它。",
+            "span": {
+              "sourceId": "sample.sir",
+              "startLine": 231,
+              "startColumn": 93,
+              "endLine": 231,
+              "endColumn": 103,
+              "startCodePointOffset": 6079,
+              "endCodePointOffset": 6089
+            },
+            "related": [],
+            "fixes": [],
+            "sourceSymbol": null,
+            "sourceNodeId": null,
+            "loweredNodeId": null,
+            "relativePath": null
+          },
+          {
+            "code": "SIR-VALID-004",
+            "severity": "ERROR",
+            "stage": "SEMANTIC",
+            "message": "此前已 exists 检查实体 Like，但查重不能替代唯一冲突处理；新行 persist made 必须声明 else 已声明错误。若前面用 validate ... else 拒绝重复，可沿用同一个错误。",
+            "span": {
+              "sourceId": "sample.sir",
+              "startLine": 251,
+              "startColumn": 9,
+              "endLine": 251,
+              "endColumn": 22,
+              "startCodePointOffset": 6817,
+              "endCodePointOffset": 6830
+            },
+            "related": [],
+            "fixes": [],
+            "sourceSymbol": null,
+            "sourceNodeId": null,
+            "loweredNodeId": null,
+            "relativePath": null
+          }
+        ],
+        "fileCount": 0,
+        "digest": null,
+        "sourceSha256": "3bc74a37c957b0d70e305bb6e4dc03e1bd134468c2532e5348d0b864ab8fa185"
+      },
+      "source_sha256": "3bc74a37c957b0d70e305bb6e4dc03e1bd134468c2532e5348d0b864ab8fa185",
+      "previous_static_result": {
+        "diagnostics": [
+          {
+            "code": "SIR-TYPE-001",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "containsLiteral 的左侧必须是文本字段，右侧必须是非 Optional 文本值；is none/is present 不会把 Optional 文本转换成非 Optional 文本。",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 4448,
+              "endColumn": 129,
+              "endLine": 181,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 4408,
+              "startColumn": 89,
+              "startLine": 181
+            },
+            "stage": "SEMANTIC"
+          },
+          {
+            "code": "SIR-TYPE-001",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "containsLiteral 的左侧必须是文本字段，右侧必须是非 Optional 文本值；is none/is present 不会把 Optional 文本转换成非 Optional 文本。",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 4494,
+              "endColumn": 175,
+              "endLine": 181,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 4452,
+              "startColumn": 133,
+              "startLine": 181
+            },
+            "stage": "SEMANTIC"
+          }
+        ],
+        "digest": null,
+        "fileCount": 0,
+        "id": "content-blog-scratch-v1-teacher-215ebacdb9b3",
+        "ok": false,
+        "sourceSha256": "3bc74a37c957b0d70e305bb6e4dc03e1bd134468c2532e5348d0b864ab8fa185",
+        "stage": "SEMANTIC"
+      }
+    }
+  ],
+  "historical_gates_reused": false,
+  "current_business_gate_dispatches": 0
+}

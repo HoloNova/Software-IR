@@ -1,0 +1,11 @@
+{
+  "bundle": "C:\\Users\\zdw00\\Desktop\\Software IR\\datasets\\sir\\pilots\\blog-scratch-g9",
+  "business_qualified_answers": 0,
+  "new_teacher_candidates": 0,
+  "reference_seeds": 1
+}
+{
+  "all_gates": "NOT_RUN",
+  "imported_teacher_candidates": 2,
+  "new_api_calls": 0
+}

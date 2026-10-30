@@ -1,0 +1,21 @@
+{
+  "reused_recipe": "datasets/sir/research/2026-10-29/blog-v8-ci202/archive_evidence.py",
+  "recipe_source_sha256": "d7057ceee24c06e0ced3db9102cab2ca9b3535bc78c7b0b41827ff7b68717bfc",
+  "parameter_overrides": {
+    "local_artifacts": "target/ci-investigation/204",
+    "source_commit": "47bf67c8f3d95fbb81d50b1b927c73bba1d0db21",
+    "destination": "datasets/sir/research/2026-10-30/blog-g9-ci204"
+  },
+  "selected_junit": [
+    "AnySelfComparisonSemanticsTest",
+    "PrecheckedUniqueInsertSemanticsTest",
+    "QueryDiagnosticMessageTest",
+    "BlogReferenceContractTest",
+    "BlogOracleTest",
+    "BlogBusinessConformanceIT",
+    "SlmCandidateSupportTest"
+  ],
+  "copy_another_archival_script": false,
+  "raw_zip_digests_verified_before_extraction": true,
+  "actions_aggregate_log_archived": false
+}

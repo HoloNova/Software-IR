@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report.xsd" version="3.0.2" name="io.kcg.sir.application.conformance.SlmCandidateSupportTest" time="0.145" tests="9" errors="0" skipped="0" failures="0" flakes="0">
+  <properties>
+    <property name="java.specification.version" value="21"/>
+    <property name="sun.jnu.encoding" value="UTF-8"/>
+    <property name="java.class.path" value="/home/runner/work/Software-IR/Software-IR/sir-toolchain-application/target/test-classes:/home/runner/work/Software-IR/Software-IR/sir-toolchain-application/target/classes:/home/runner/work/Software-IR/Software-IR/sir-parser/target/sir-parser-0.1.0-SNAPSHOT.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/antlr/antlr4-runtime/4.13.2/antlr4-runtime-4.13.2.jar:/home/runner/work/Software-IR/Software-IR/sir-semantic/target/sir-semantic-0.1.0-SNAPSHOT.jar:/home/runner/work/Software-IR/Software-IR/sir-lowering-api/target/sir-lowering-api-0.1.0-SNAPSHOT.jar:/home/runner/work/Software-IR/Software-IR/sir-lowering-spring-boot/target/sir-lowering-spring-boot-0.1.0-SNAPSHOT.jar:/home/runner/work/Software-IR/Software-IR/sir-generator-spring-boot/target/sir-generator-spring-boot-0.1.0-SNAPSHOT.jar:/home/runner/work/Software-IR/Software-IR/sir-project-graph/target/sir-project-graph-0.1.0-SNAPSHOT.jar:/home/runner/work/Software-IR/Software-IR/sir-change/target/sir-change-0.1.0-SNAPSHOT.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/jupiter/junit-jupiter/5.12.2/junit-jupiter-5.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/jupiter/junit-jupiter-api/5.12.2/junit-jupiter-api-5.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/platform/junit-platform-commons/1.12.2/junit-platform-commons-1.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/jupiter/junit-jupiter-params/5.12.2/junit-jupiter-params-5.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/jupiter/junit-jupiter-engine/5.12.2/junit-jupiter-engine-5.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/platform/junit-platform-engine/1.12.2/junit-platform-engine-1.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/fasterxml/jackson/core/jackson-databind/2.19.4/jackson-databind-2.19.4.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/fasterxml/jackson/core/jackson-annotations/2.19.4/jackson-annotations-2.19.4.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/fasterxml/jackson/core/jackson-core/2.19.4/jackson-core-2.19.4.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/boot/spring-boot/3.5.3/spring-boot-3.5.3.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-core/6.2.8/spring-core-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-jcl/6.2.8/spring-jcl-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-context/6.2.8/spring-context-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-aop/6.2.8/spring-aop-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-beans/6.2.8/spring-beans-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-expression/6.2.8/spring-expression-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/io/micrometer/micrometer-observation/1.14.8/micrometer-observation-1.14.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/io/micrometer/micrometer-commons/1.14.8/micrometer-commons-1.14.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/mysql/mysql-connector-j/9.3.0/mysql-connector-j-9.3.0.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/google/protobuf/protobuf-java/4.29.0/protobuf-java-4.29.0.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/net/java/dev/jna/jna-platform/5.17.0/jna-platform-5.17.0.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/net/java/dev/jna/jna/5.17.0/jna-5.17.0.jar:"/>
+    <property name="java.vm.vendor" value="Eclipse Adoptium"/>
+    <property name="sun.arch.data.model" value="64"/>
+    <property name="java.vendor.url" value="https://adoptium.net/"/>
+    <property name="user.timezone" value="Etc/UTC"/>
+    <property name="os.name" value="Linux"/>
+    <property name="java.vm.specification.version" value="21"/>
+    <property name="sun.java.launcher" value="SUN_STANDARD"/>
+    <property name="sun.boot.library.path" value="/usr/lib/jvm/temurin-21-jdk-amd64/lib"/>
+    <property name="sun.java.command" value="/home/runner/work/Software-IR/Software-IR/sir-toolchain-application/target/surefire/surefirebooter-20261030072300656_58.jar /home/runner/work/Software-IR/Software-IR/sir-toolchain-application/target/surefire 2026-10-30T07-21-27_453-jvmRun1 surefire-20261030072300656_56tmp surefire_7-20261030072300656_57tmp"/>
+    <property name="jdk.debug" value="release"/>
+    <property name="surefire.test.class.path" value="/home/runner/work/Software-IR/Software-IR/sir-toolchain-application/target/test-classes:/home/runner/work/Software-IR/Software-IR/sir-toolchain-application/target/classes:/home/runner/work/Software-IR/Software-IR/sir-parser/target/sir-parser-0.1.0-SNAPSHOT.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/antlr/antlr4-runtime/4.13.2/antlr4-runtime-4.13.2.jar:/home/runner/work/Software-IR/Software-IR/sir-semantic/target/sir-semantic-0.1.0-SNAPSHOT.jar:/home/runner/work/Software-IR/Software-IR/sir-lowering-api/target/sir-lowering-api-0.1.0-SNAPSHOT.jar:/home/runner/work/Software-IR/Software-IR/sir-lowering-spring-boot/target/sir-lowering-spring-boot-0.1.0-SNAPSHOT.jar:/home/runner/work/Software-IR/Software-IR/sir-generator-spring-boot/target/sir-generator-spring-boot-0.1.0-SNAPSHOT.jar:/home/runner/work/Software-IR/Software-IR/sir-project-graph/target/sir-project-graph-0.1.0-SNAPSHOT.jar:/home/runner/work/Software-IR/Software-IR/sir-change/target/sir-change-0.1.0-SNAPSHOT.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/jupiter/junit-jupiter/5.12.2/junit-jupiter-5.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/jupiter/junit-jupiter-api/5.12.2/junit-jupiter-api-5.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/platform/junit-platform-commons/1.12.2/junit-platform-commons-1.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/jupiter/junit-jupiter-params/5.12.2/junit-jupiter-params-5.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/jupiter/junit-jupiter-engine/5.12.2/junit-jupiter-engine-5.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/platform/junit-platform-engine/1.12.2/junit-platform-engine-1.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/fasterxml/jackson/core/jackson-databind/2.19.4/jackson-databind-2.19.4.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/fasterxml/jackson/core/jackson-annotations/2.19.4/jackson-annotations-2.19.4.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/fasterxml/jackson/core/jackson-core/2.19.4/jackson-core-2.19.4.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/boot/spring-boot/3.5.3/spring-boot-3.5.3.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-core/6.2.8/spring-core-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-jcl/6.2.8/spring-jcl-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-context/6.2.8/spring-context-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-aop/6.2.8/spring-aop-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-beans/6.2.8/spring-beans-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-expression/6.2.8/spring-expression-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/io/micrometer/micrometer-observation/1.14.8/micrometer-observation-1.14.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/io/micrometer/micrometer-commons/1.14.8/micrometer-commons-1.14.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/mysql/mysql-connector-j/9.3.0/mysql-connector-j-9.3.0.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/google/protobuf/protobuf-java/4.29.0/protobuf-java-4.29.0.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/net/java/dev/jna/jna-platform/5.17.0/jna-platform-5.17.0.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/net/java/dev/jna/jna/5.17.0/jna-5.17.0.jar:"/>
+    <property name="sun.cpu.endian" value="little"/>
+    <property name="user.home" value="/home/runner"/>
+    <property name="user.language" value="en"/>
+    <property name="java.specification.vendor" value="Oracle Corporation"/>
+    <property name="java.version.date" value="2026-10-20"/>
+    <property name="java.home" value="/usr/lib/jvm/temurin-21-jdk-amd64"/>
+    <property name="file.separator" value="/"/>
+    <property name="basedir" value="/home/runner/work/Software-IR/Software-IR/sir-toolchain-application"/>
+    <property name="java.vm.compressedOopsMode" value="Zero based"/>
+    <property name="line.separator" value="&#10;"/>
+    <property name="junit.platform.execution.dryRun.enabled" value="false"/>
+    <property name="java.specification.name" value="Java Platform API Specification"/>
+    <property name="java.vm.specification.vendor" value="Oracle Corporation"/>
+    <property name="surefire.real.class.path" value="/home/runner/work/Software-IR/Software-IR/sir-toolchain-application/target/surefire/surefirebooter-20261030072300656_58.jar"/>
+    <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
+    <property name="java.runtime.version" value="21.0.13+9-LTS"/>
+    <property name="user.name" value="runner"/>
+    <property name="stdout.encoding" value="UTF-8"/>
+    <property name="path.separator" value=":"/>
+    <property name="os.version" value="7.0.0-1017-azure"/>
+    <property name="java.runtime.name" value="OpenJDK Runtime Environment"/>
+    <property name="file.encoding" value="UTF-8"/>
+    <property name="java.vm.name" value="OpenJDK 64-Bit Server VM"/>
+    <property name="java.vendor.version" value="Temurin-21.0.13+9"/>
+    <property name="localRepository" value="/home/runner/work/Software-IR/Software-IR/.m2-ci"/>
+    <property name="java.vendor.url.bug" value="https://github.com/adoptium/adoptium-support/issues"/>
+    <property name="java.io.tmpdir" value="/tmp"/>
+    <property name="java.version" value="21.0.13"/>
+    <property name="user.dir" value="/home/runner/work/Software-IR/Software-IR/sir-toolchain-application"/>
+    <property name="os.arch" value="amd64"/>
+    <property name="java.vm.specification.name" value="Java Virtual Machine Specification"/>
+    <property name="native.encoding" value="UTF-8"/>
+    <property name="java.library.path" value="/usr/java/packages/lib:/usr/lib64:/lib64:/lib:/usr/lib"/>
+    <property name="java.vm.info" value="mixed mode, sharing"/>
+    <property name="stderr.encoding" value="UTF-8"/>
+    <property name="java.vendor" value="Eclipse Adoptium"/>
+    <property name="java.vm.version" value="21.0.13+9-LTS"/>
+    <property name="sun.io.unicode.encoding" value="UnicodeLittle"/>
+    <property name="maven.repo.local" value="/home/runner/work/Software-IR/Software-IR/.m2-ci"/>
+    <property name="java.class.version" value="65.0"/>
+  </properties>
+  <testcase name="externalSourceIsMaterializedAndItsActualFingerprintIsReported" classname="io.kcg.sir.application.conformance.SlmCandidateSupportTest" time="0.041"/>
+  <testcase name="aCandidateForAnotherProblemIsRefusedBeforeAnyRuntimeWork" classname="io.kcg.sir.application.conformance.SlmCandidateSupportTest" time="0.036"/>
+  <testcase name="absentCandidatePropertiesRetainTheOrdinaryReferenceMode" classname="io.kcg.sir.application.conformance.SlmCandidateSupportTest" time="0.001"/>
+  <testcase name="checkerAndRuntimeCompilationShareTheExactGenerationDigest" classname="io.kcg.sir.application.conformance.SlmCandidateSupportTest" time="0.019"/>
+  <testcase name="sourceAndMetadataMismatchIsRejectedBeforeAnyRuntimeWork" classname="io.kcg.sir.application.conformance.SlmCandidateSupportTest" time="0.002"/>
+  <testcase name="completeMetadataBindsTheActualSourceAndAllowsNullableProviderMetadata" classname="io.kcg.sir.application.conformance.SlmCandidateSupportTest" time="0.013"/>
+  <testcase name="partialCandidateConfigurationCannotTriggerReferenceFallback" classname="io.kcg.sir.application.conformance.SlmCandidateSupportTest" time="0.001"/>
+  <testcase name="invalidExternalSourceDoesNotFallBackOrLeaveAProject" classname="io.kcg.sir.application.conformance.SlmCandidateSupportTest" time="0.001"/>
+  <testcase name="configuredHarnessJudgesTheCandidateAndCompilationAloneNeverPassesBusiness" classname="io.kcg.sir.application.conformance.SlmCandidateSupportTest" time="0.029"/>
+</testsuite>

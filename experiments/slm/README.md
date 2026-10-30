@@ -98,6 +98,12 @@ v8 已按批准预算在新 `blog-change-g8/`、`blog-scratch-g8/` 各初采一�
 
 改写父候选另获批一次原 `repair --runtime-evidence`，实际 24,257 tokens；新子候选 `af2c42118880` 退回解析失败（不支持的内联 exists，3 条诊断），按一轮运行反馈额度停止，未送新业务门。原父候选的 25 条业务失败由两个根因构成：any 内 `tag == tag` 是字段自比较，以及先查后插未将唯一冲突映射为 TagAttached。没有手改题目／候选／判卷，v8 合计 4 次 API／53,777 tokens，合格仍 48、学生 v3 不变。原始记录见 `datasets/sir/research/2026-10-30/blog-v8-runtime-repair/` 和[第二十四阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-blog-v8-runtime-repair)。
 
+## 新静态检查后的博客 g9 重查
+
+`47bf67c8` 的 [verify #204](https://github.com/HoloNova/Software-IR/actions/runs/41019419975) 已通过：关联字段自比较使用 `SIR-VALID-001`，此前 EXISTS 查过的唯一新行 persist 缺 else 使用 `SIR-VALID-004`，不改变 any 名称优先级，也不强制所有唯一新建写 else。两类新回归 55 项通过，上传总计 2086 项零失败／错误／跳过，博客参考业务 425/0；边界与证据见[静态安全检查设计](drafts/design/static-query-safety-design.md#ci-204-accepted)。
+
+按原 import 将 g8 两批导入 `blog-change-g9`、`blog-scratch-g9`，保留题目、v8、原始请求／响应／源码和父子关系，重新冻结新工具链并重置四门。#204 原 standalone CLI 实际检查：参考两份完整生成；`906a864f71bf` 现在被 A/B 静态拦下（3 条语义错误），从零父子为 6／5 条（原 Optional／fails 诊断仍保留），运行修复子候选仍为 3 条解析错误。新批次运行门全 NOT_RUN，API 调用 0 次，无新合格答案或训练。结果和另待批准的三份静态反馈预算见[第二十五阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-blog-g9-recheck)；历史额度不因 import 清零，不自动续修。
+
 ## 通用静态修复
 
 `prompts/repair-general-v1.md` 是不限题型的静态反馈前缀：说明这是同一道题的修复、按编译器诊断逐条改、需求与接口不变，不提示具体改法；诊断原文与 DDL 由 `repair` 自动附上。用法：`repair --bundle … --sample-id … --feedback experiments/slm/prompts/repair-general-v1.md`。每个失败候选只修一轮。

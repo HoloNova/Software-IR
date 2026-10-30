@@ -1,0 +1,74 @@
+{
+  "status": "PROPOSED_AWAITING_OWNER_BUDGET_APPROVAL",
+  "calls_already_made": 0,
+  "model": "deepseek-flash",
+  "plans": [
+    {
+      "bundle": "datasets/sir/pilots/blog-change-g9",
+      "parent_id": "content-blog-change-v1-teacher-906a864f71bf",
+      "checked": "datasets/sir/pilots/blog-change-g9/checked.jsonl",
+      "feedback": "experiments/slm/prompts/repair-general-v1.md",
+      "feedback_prefix_sha256": "9b3b0094ac9c4999f1eaa660501edbba0125474d6a47bd17a01620b8b89cdd1d",
+      "parent_generation_mode": "initial",
+      "historical_child_ids": [
+        "content-blog-change-v1-teacher-af2c42118880"
+      ],
+      "parent_request_input_tokens": 7777,
+      "added_feedback_and_answer_characters": 11434,
+      "feedback_text_sha256": "8b13da4afe044509a537ab5673b5d6f85d953e384e6c6bd6b39952ea020752f6",
+      "estimated_input_tokens": 11500,
+      "estimated_output_tokens": 2000,
+      "max_output_tokens": 8192,
+      "automatic_retries": 0,
+      "calls": 1,
+      "cache_hits": "UNKNOWN"
+    },
+    {
+      "bundle": "datasets/sir/pilots/blog-scratch-g9",
+      "parent_id": "content-blog-scratch-v1-teacher-718c0d88dafa",
+      "checked": "datasets/sir/pilots/blog-scratch-g9/checked.jsonl",
+      "feedback": "experiments/slm/prompts/repair-general-v1.md",
+      "feedback_prefix_sha256": "9b3b0094ac9c4999f1eaa660501edbba0125474d6a47bd17a01620b8b89cdd1d",
+      "parent_generation_mode": "initial",
+      "historical_child_ids": [
+        "content-blog-scratch-v1-teacher-215ebacdb9b3"
+      ],
+      "parent_request_input_tokens": 7066,
+      "added_feedback_and_answer_characters": 13369,
+      "feedback_text_sha256": "7c8de7c9f98c16036a22f413e0df71bd9f84e65bcce7edcd75aaf3efd5585dfa",
+      "estimated_input_tokens": 11500,
+      "estimated_output_tokens": 2000,
+      "max_output_tokens": 8192,
+      "automatic_retries": 0,
+      "calls": 1,
+      "cache_hits": "UNKNOWN"
+    },
+    {
+      "bundle": "datasets/sir/pilots/blog-scratch-g9",
+      "parent_id": "content-blog-scratch-v1-teacher-215ebacdb9b3",
+      "checked": "datasets/sir/pilots/blog-scratch-g9/checked.jsonl",
+      "feedback": "experiments/slm/prompts/repair-general-v1.md",
+      "feedback_prefix_sha256": "9b3b0094ac9c4999f1eaa660501edbba0125474d6a47bd17a01620b8b89cdd1d",
+      "parent_generation_mode": "feedback-repair",
+      "historical_child_ids": [],
+      "parent_request_input_tokens": 10080,
+      "added_feedback_and_answer_characters": 12860,
+      "feedback_text_sha256": "542f1d660462d29deacc14a4c7d94fd6f3229a68023c07412b904f3208695a6a",
+      "estimated_input_tokens": 14500,
+      "estimated_output_tokens": 2000,
+      "max_output_tokens": 8192,
+      "automatic_retries": 0,
+      "calls": 1,
+      "cache_hits": "UNKNOWN"
+    }
+  ],
+  "total_estimated_input_tokens": 37500,
+  "total_estimated_output_tokens": 6000,
+  "total_estimated_tokens": 43500,
+  "calibration": "datasets/sir/research/2026-10-29/blog-v8-initial/repair-plan.json",
+  "calibration_sha256": "83610e21dc4cbbac21ba2d43d8c4aacbbe4fd44a8d9a33d745118db99f3c8a8f",
+  "median_tokens_per_added_character": 0.2321409948899781,
+  "method": "Actual parent input usage plus new answer/feedback characters times recorded median, then 10% headroom and rounding to 500; not exact server tokenization.",
+  "previous_repairs_not_erased": true,
+  "scope": "Proposed new static-feedback pass requiring explicit budget approval; historical repairs retained, no automatic reset or paid retry."
+}

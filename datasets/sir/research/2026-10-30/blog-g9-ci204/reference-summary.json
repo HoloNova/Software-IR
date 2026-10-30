@@ -1,0 +1,168 @@
+{
+  "kind": "existing-reference-only-not-candidate-qualification",
+  "commit": "47bf67c8f3d95fbb81d50b1b927c73bba1d0db21",
+  "run_id": 41019419975,
+  "run_number": 204,
+  "run_url": "https://github.com/HoloNova/Software-IR/actions/runs/41019419975",
+  "gates": {
+    "static": "PASSED",
+    "build": "PASSED",
+    "start": "PASSED",
+    "business": "PASSED"
+  },
+  "checks_passed": 425,
+  "checks_failed": 0,
+  "generated_files": 55,
+  "legacy_business_combined_sha256": "f2c63163afd0badafea272fb5e244f0ae82cc2683d1f5e7e3448f4269fc85e82",
+  "source_bindings": {
+    "sir-toolchain-application/src/test/resources/valid/blog.sir": "a176cfe521913f6cdd5c6919da5e229e2f67a390940a360c22296c95c96e8f37",
+    "sir-toolchain-application/src/test/resources/conformance/mysql/blog-ddl.sql": "0aa092dc8974110951ebd6f9f2ba39938538857ec54c3f7431a0182f2e9acac0",
+    "sir-toolchain-application/src/test/resources/conformance/mysql/blog-seed.sql": "d3a35bfb958c5be15aab30ca8a98f241da242022d1ca3778fe75b56c88c0fa4b"
+  },
+  "contention_proofs": {
+    "X01": {
+      "connections": [
+        "94",
+        "89",
+        "90",
+        "91",
+        "92",
+        "93"
+      ],
+      "transactions": [
+        "2840",
+        "2841",
+        "2842",
+        "2843",
+        "2839",
+        "2838"
+      ]
+    },
+    "X02": {
+      "connections": [
+        "94",
+        "89",
+        "90",
+        "91",
+        "92",
+        "93"
+      ],
+      "transactions": [
+        "2851",
+        "2852",
+        "2853",
+        "2849",
+        "2848",
+        "2850"
+      ]
+    },
+    "X03": {
+      "connections": [
+        "94",
+        "89",
+        "90",
+        "91",
+        "92",
+        "93"
+      ],
+      "transactions": [
+        "2860",
+        "2861",
+        "2862",
+        "2859",
+        "2858",
+        "2857"
+      ]
+    },
+    "X04": {
+      "connections": [
+        "94",
+        "89",
+        "90",
+        "91",
+        "92",
+        "93"
+      ],
+      "transactions": [
+        "2872",
+        "2873",
+        "2874",
+        "2875",
+        "2876",
+        "2877"
+      ]
+    }
+  },
+  "selected_junit": {
+    "AnySelfComparisonSemanticsTest": {
+      "tests": 29,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "PrecheckedUniqueInsertSemanticsTest": {
+      "tests": 26,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "QueryDiagnosticMessageTest": {
+      "tests": 22,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "BlogReferenceContractTest": {
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "BlogOracleTest": {
+      "tests": 11,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "BlogBusinessConformanceIT": {
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "SlmCandidateSupportTest": {
+      "tests": 9,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "uploaded_surefire_totals": {
+    "xml_files": 295,
+    "tests": 2086,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "checker_jar_sha256": "d23339bf47b6f4ff574e1dcd82bc33f7c7127fae5882b0a1daa89b5fea648a9a",
+  "raw_artifacts": {
+    "artifacts.json": "d08dbf96e89ebd3c591416902132c52367b380c4b08c5e12355e2747aa3b1cb3",
+    "blog-reference/blog-slice-report.txt": "93cb71dbbbabf0452ddf2fe7ba67c56192a5ba671020c85e0fb89da6015e3f2a",
+    "blog-reference/logs/maven.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "blog-reference/logs/maven.stdout.log": "d5e34002c8a76c010d1514837f8002d4ca730bd1bd7143763220f6490c59c6a6",
+    "blog-reference/logs/spring.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "blog-reference/logs/spring.stdout.log": "c29f51fa72bfe4a6eb03d1066d29530b7f97d049ee62f11b351e43e883208276",
+    "jobs.json": "27521a7a4c7307222b5e18dbc63c10c89d1ea44139d6d57025f85d2f9ad4c009",
+    "junit/TEST-io.kcg.sir.application.conformance.BlogBusinessConformanceIT.xml": "eb9a75da87d56a1125b3dce3ec74d5b9d9b86142f38beebb440ee5ffc0bf7468",
+    "junit/TEST-io.kcg.sir.application.conformance.BlogOracleTest.xml": "e3294467025cd95d02eb8a857afad85b09cae07ba77a48262ddaf423d349c6da",
+    "junit/TEST-io.kcg.sir.application.conformance.BlogReferenceContractTest.xml": "f699a4d15b89cc26a1cf52d34e79cc6f33782f25a32c6144c90bc97dda42529e",
+    "junit/TEST-io.kcg.sir.application.conformance.SlmCandidateSupportTest.xml": "9666f01973819ab6e2c2b73643db47a3a26d3b56a12d6de5418796d0df36d434",
+    "junit/TEST-io.kcg.sir.semantic.AnySelfComparisonSemanticsTest.xml": "a17da2bf2dc16f2bb0deaa329b669de13e46e3e109f9410388d8877713feae77",
+    "junit/TEST-io.kcg.sir.semantic.PrecheckedUniqueInsertSemanticsTest.xml": "a21dc3f61eb3d2f5a3c249df121582814a01057618b937d4148f2e18380041ed",
+    "junit/TEST-io.kcg.sir.semantic.QueryDiagnosticMessageTest.xml": "85abdfe5628ca9ae961617bbb0f80d9798ae10ca51e09d72b6f258147dee9e91",
+    "original-zips/conformance-evidence.zip": "2915de9e7214ba6a218091b4168b4d8dc79adcc92bb1d4c597c3a2a07103cf82",
+    "original-zips/standalone-cli.zip": "6b1dbcfd5ba33160cd75f2f1b7b62caa5367824047f3fcfc023fe5c17f351074",
+    "original-zips/surefire-reports.zip": "f2ffacdee7a4300300584c44a27d38a6fb61ddb90407c2b51f5b8ac0324a5361",
+    "run.json": "7d8b039087738c321cc91a658dad6e952a8eeceb65f22b6188d3fa337ed0858f"
+  }
+}
