@@ -105,6 +105,8 @@ v2（2026-10-25）补的是首批暴露的两处提示不足：实体成员的�
 
 `sir-0.3-general-v9.md`（2026-10-31）在 v8 上只同步 v8 之后实施的三条规则：any 内同一字段自比较被拒、查重后新建唯一行的 persist 必须写 else（`47bf67c`）、containsLiteral 两侧接受可选文本（`e6f3b1d`），删去 v8 第 95 行的旧限制。本机编译的检查器核对 3 个正例完整生成、2 个反例按预期拒绝；未调用模型。逐项依据见 [v9 改动说明](drafts/prompt-v9/changes.md)。旧版本和冻结批次不改；使用时须显式 `prepare --system-prompt experiments/slm/prompts/sir-0.3-general-v9.md`。
 
+`sir-0.3-general-v10.md`（2026-10-31）在 v9 上只加一条“按引用筛选”：可选的引用筛选字段写 `Optional<Ref<实体>>`，不能写 `Optional<Id>` 与 Ref 比较，可选 Ref 的 HTTP 字段名不带 `Id`。起因是 fitness 从零题 g11 两份教师答案都写成 `Optional<Id>`（`SIR-TYPE-001`）。依据见 [v10 改动说明](drafts/prompt-v10/changes.md)；旧版本和冻结批次不改，使用时须显式 `prepare --system-prompt experiments/slm/prompts/sir-0.3-general-v10.md`。
+
 ```bash
 python -m experiments.slm.data prepare --bundle datasets/sir/pilots/dual-token-v2 \
   --system-prompt experiments/slm/prompts/sir-0.3-auth-v2.md
