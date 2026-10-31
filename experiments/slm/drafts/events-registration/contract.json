@@ -1,0 +1,84 @@
+{
+  "namespace": "example.events",
+  "family": "events.registration",
+  "split": "train",
+  "capabilities": ["CreateEvent", "ListEvents", "Register", "MyRegistrations", "EventRevenue", "EventRegistrationCount"],
+  "entities": ["User", "AccessToken", "Event", "Registration"],
+  "interfaces": {
+    "CreateEvent": {
+      "route": "POST /api/events",
+      "authentication": "Bearer",
+      "request_fields": ["title", "startsAt", "capacity", "fee"],
+      "response_fields": ["id", "organizer", "title", "startsAt", "capacity", "registered", "remaining", "fee"],
+      "body_kind": "EventView",
+      "success_status": 201,
+      "errors": {"unauthenticated": 401, "INVALID_REQUEST": 400}
+    },
+    "ListEvents": {
+      "route": "GET /api/events",
+      "authentication": "none",
+      "request_fields": ["page", "size"],
+      "response_fields": ["total", "page", "size", "records"],
+      "body_kind": "Page<EventView>",
+      "success_status": 200,
+      "errors": {"BadPage": 400}
+    },
+    "Register": {
+      "route": "POST /api/events/{id}/registrations",
+      "authentication": "Bearer",
+      "path_fields": ["id"],
+      "request_fields": [],
+      "response_fields": ["id", "event", "attendee", "fee", "registeredAt"],
+      "body_kind": "RegistrationView",
+      "success_status": 201,
+      "errors": {"unauthenticated": 401, "EventNotFound": 404, "RegistrationClosed": 409, "AlreadyRegistered": 409, "EventFull": 409}
+    },
+    "MyRegistrations": {
+      "route": "GET /api/my/registrations",
+      "authentication": "Bearer",
+      "request_fields": ["page", "size"],
+      "response_fields": ["total", "page", "size", "records"],
+      "body_kind": "Page<RegistrationView>",
+      "success_status": 200,
+      "errors": {"unauthenticated": 401, "BadPage": 400}
+    },
+    "EventRevenue": {
+      "route": "GET /api/events/{id}/revenue",
+      "authentication": "Bearer",
+      "path_fields": ["id"],
+      "request_fields": [],
+      "response_fields": [],
+      "body_kind": "decimal",
+      "success_status": 200,
+      "errors": {"unauthenticated": 401, "Forbidden": 403, "EventNotFound": 404}
+    },
+    "EventRegistrationCount": {
+      "route": "GET /api/events/{id}/registration-count",
+      "authentication": "Bearer",
+      "path_fields": ["id"],
+      "request_fields": [],
+      "response_fields": [],
+      "body_kind": "integer",
+      "success_status": 200,
+      "errors": {"unauthenticated": 401, "Forbidden": 403, "EventNotFound": 404}
+    }
+  },
+  "scalar_bodies": {"integer": "bare JSON integer", "decimal": "bare JSON number, compared by numeric value"},
+  "fee": {"type": "decimal", "precision": 10, "scale": 2, "min": "0"},
+  "capacity": {"type": "integer", "min": 1},
+  "view_fields": {
+    "EventView": ["id", "organizer", "title", "startsAt", "capacity", "registered", "remaining", "fee"],
+    "RegistrationView": ["id", "event", "attendee", "fee", "registeredAt"]
+  },
+  "check_order": ["EventNotFound", "RegistrationClosed", "AlreadyRegistered", "EventFull"],
+  "pagination": {"default_page": 1, "default_size": 20, "max_page": 10000, "max_size": 100},
+  "declared_errors": {"BadPage": 400, "Forbidden": 403, "EventNotFound": 404, "AlreadyRegistered": 409, "EventFull": 409, "RegistrationClosed": 409},
+  "storage": {
+    "user": ["id", "name"],
+    "access_token": ["id", "owner_id", "expires_at"],
+    "event": ["id", "organizer_id", "title", "starts_at", "capacity", "registered", "fee"],
+    "registration": ["id", "event_id", "attendee_id", "fee", "registered_at"]
+  },
+  "readiness": "GET /api/events?page=1&size=10",
+  "fixtures": {"provided_by_oracle": true}
+}
