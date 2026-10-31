@@ -1,0 +1,44 @@
+{
+  "artifacts": [
+    {
+      "archive_download_url": "https://api.github.com/repos/HoloNova/Software-IR/actions/artifacts/13033460418/zip",
+      "created_at": "2026-10-31T06:13:19Z",
+      "digest": "sha256:4177a2c9d067aa0e4f3a19ce3a8748de05ce511d796e2aa5cd5ab0978438b371",
+      "expired": false,
+      "expires_at": "2027-01-29T06:12:18Z",
+      "id": 13033460418,
+      "name": "slm-gate-events-registration-scratch-v1-teacher-3e1de05e7979",
+      "node_id": "MDg6QXJ0aWZhY3QxMzAzMzQ2MDQxOA==",
+      "size_in_bytes": 14568,
+      "updated_at": "2026-10-31T06:13:19Z",
+      "url": "https://api.github.com/repos/HoloNova/Software-IR/actions/artifacts/13033460418",
+      "workflow_run": {
+        "head_branch": "main",
+        "head_repository_id": 1299024893,
+        "head_sha": "9cab86894a1e55af68876af562e677a734d28393",
+        "id": 41175622415,
+        "repository_id": 1299024893
+      }
+    },
+    {
+      "archive_download_url": "https://api.github.com/repos/HoloNova/Software-IR/actions/artifacts/13033355540/zip",
+      "created_at": "2026-10-31T06:13:21Z",
+      "digest": "sha256:9f3d8aecb6d6b1423c7de1f041a522af893e51c5671ee71c0c245b03112a9a76",
+      "expired": false,
+      "expires_at": "2027-01-29T06:12:18Z",
+      "id": 13033355540,
+      "name": "slm-gate-surefire-events-registration-scratch-v1-teacher-3e1de05e7979",
+      "node_id": "MDg6QXJ0aWZhY3QxMzAzMzM1NTU0MA==",
+      "size_in_bytes": 96184,
+      "updated_at": "2026-10-31T06:13:21Z",
+      "url": "https://api.github.com/repos/HoloNova/Software-IR/actions/artifacts/13033355540",
+      "workflow_run": {
+        "head_branch": "main",
+        "head_repository_id": 1299024893,
+        "head_sha": "9cab86894a1e55af68876af562e677a734d28393",
+        "id": 41175622415,
+        "repository_id": 1299024893
+      }
+    }
+  ]
+}

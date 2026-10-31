@@ -1,0 +1,907 @@
+=== Event registration, seat counters, unique attendees and fee sums business conformance ===
+verdict=PASSED
+runId=events-slice-1a190974a5e-18778
+schemaName=kcg_conf_run
+advisoryLock=held during the run
+schemaSource=TEST_FIXTURE_DDL
+productInitializeImplemented=false
+productUpdateImplemented=false
+sirResource=EXTERNAL_CANDIDATE:candidate.sir sha256=067c4294c909d50fd66b7ed392db0a999752efa2d6c0d6c9a263410028a87c15
+fixtureDdl=/conformance/mysql/events-registration-ddl.sql sha256=08f56f71fc86854474563023fd59b619d5f45a3e5ec4fe5b9459b10ac5bb73cc
+fixtureSeed=/conformance/mysql/events-registration-seed.sql sha256=42f0c6af0792ce0fb93c0b785df3e7f40032f476aac51dbb7a14db2d0a1ce54c
+generatedFiles=45 combinedSha256=5d49b25e467b6376ee3f7a8fbbe73746a9bb5cef0fb93c0e974e6a65668bd699
+generatedProjectBuild=PASSED (exit 0)
+httpReadiness=READY (200 from /api/events?page=1&size=10)
+mysqlRowsBefore=9 mysqlRowsAfter=10
+mavenOffline=false
+javaVersion=21.0.13
+osName=Linux osArch=amd64
+serverPort=18080
+slmMysqlVersion=8.4.13
+slmSampleId=events-registration-scratch-v1-teacher-f16cf36e7541
+slmSourceSha256=067c4294c909d50fd66b7ed392db0a999752efa2d6c0d6c9a263410028a87c15
+slmGeneratedDigest=75f5a3a619ceb31d4c2d67e43567acf707ce7d1682cff156d498f66e12460213
+eventsInitialDatabase=State[tables={user=[Row[cells={id=1, name=alice}], Row[cells={id=2, name=bob}], Row[cells={id=3, name=carol}], Row[cells={id=4, name=dave}], Row[cells={id=5, name=erin}], Row[cells={id=6, name=frank}], Row[cells={id=7, name=grace}], Row[cells={id=8, name=heidi}], Row[cells={id=9, name=ivan}], Row[cells={id=10, name=judy}]], access_token=***REDACTED***, owner_id=1, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=30000000-0000-4000-8000-000000000002, owner_id=2, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=30000000-0000-4000-8000-000000000003, owner_id=3, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=30000000-0000-4000-8000-000000000004, owner_id=4, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=30000000-0000-4000-8000-000000000005, owner_id=5, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=30000000-0000-4000-8000-000000000006, owner_id=6, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=30000000-0000-4000-8000-000000000007, owner_id=7, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=30000000-0000-4000-8000-000000000008, owner_id=8, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=30000000-0000-4000-8000-000000000009, owner_id=9, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=30000000-0000-4000-8000-000000000010, owner_id=10, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=30000000-0000-4000-8000-000000000099, owner_id=1, expires_at=2000-01-01T00:00:00Z}]], event=[Row[cells={id=10, organizer_id=1, title=Spring Workshop, starts_at=2099-03-01T09:00:00Z, capacity=3, registered=0, fee=20.00}], Row[cells={id=11, organizer_id=1, title=Free Talk, starts_at=2099-03-02T09:00:00Z, capacity=5, registered=1, fee=0.00}], Row[cells={id=12, organizer_id=2, title=Hack Night, starts_at=2099-03-03T18:00:00Z, capacity=2, registered=1, fee=15.50}], Row[cells={id=13, organizer_id=1, title=Past Meetup, starts_at=2000-01-01T09:00:00Z, capacity=10, registered=1, fee=5.00}], Row[cells={id=14, organizer_id=1, title=Capacity Race, starts_at=2099-04-01T09:00:00Z, capacity=4, registered=0, fee=10.00}], Row[cells={id=15, organizer_id=1, title=Same Person Race, starts_at=2099-04-01T09:00:00Z, capacity=10, registered=0, fee=12.34}], Row[cells={id=16, organizer_id=1, title=Revenue Review, starts_at=2099-05-01T09:00:00Z, capacity=10, registered=3, fee=20.00}], Row[cells={id=17, organizer_id=2, title=Empty Event, starts_at=2099-06-01T09:00:00Z, capacity=10, registered=0, fee=99.99}], Row[cells={id=18, organizer_id=1, title=Dime Event, starts_at=2099-07-01T09:00:00Z, capacity=10, registered=3, fee=0.10}]], registration=[Row[cells={id=1, event_id=12, attendee_id=4, fee=15.50, registered_at=2026-01-01T00:00:00Z}], Row[cells={id=2, event_id=13, attendee_id=6, fee=5.00, registered_at=2026-01-01T00:00:00Z}], Row[cells={id=3, event_id=16, attendee_id=3, fee=17.50, registered_at=2026-01-01T01:00:00Z}], Row[cells={id=4, event_id=16, attendee_id=4, fee=20.00, registered_at=2026-01-02T00:00:00Z}], Row[cells={id=5, event_id=16, attendee_id=5, fee=20.00, registered_at=2026-01-03T00:00:00Z}], Row[cells={id=6, event_id=11, attendee_id=3, fee=0.00, registered_at=2026-01-01T01:00:00Z}], Row[cells={id=7, event_id=18, attendee_id=7, fee=0.10, registered_at=2026-02-01T00:00:00Z}], Row[cells={id=8, event_id=18, attendee_id=8, fee=0.10, registered_at=2026-02-01T00:00:00Z}], Row[cells={id=9, event_id=18, attendee_id=9, fee=0.10, registered_at=2026-02-01T00:00:00Z}]]}]
+eventsSection=identity and creation
+observedFieldErrors[C03 fee 100000000.00]=[{"path":"fee","code":"ExactDecimal","message":"must be exactly representable at the declared precision and scale"}]
+observedFieldErrors[C03 fee 12.345]=[{"path":"fee","code":"ExactDecimal","message":"must be exactly representable at the declared precision and scale"}]
+observedFieldErrors[C03 fee -0.01]=[{"path":"fee","code":"DecimalMin","message":"must be greater than or equal to 0"}]
+observedFieldErrors[C03 fee omitted]=[{"path":"fee","code":"NotNull","message":"must not be null"}]
+observedFieldErrors[C03 fee null]=[{"path":"fee","code":"NotNull","message":"must not be null"}]
+observedFieldErrors[C03 capacity 0]=[{"path":"capacity","code":"DecimalMin","message":"must be greater than or equal to 1"}]
+observedFieldErrors[C03 capacity -1]=[{"path":"capacity","code":"DecimalMin","message":"must be greater than or equal to 1"}]
+observedFieldErrors[C03 capacity omitted]=[{"path":"capacity","code":"NotNull","message":"must not be null"}]
+observedFieldErrors[C03 capacity null]=[{"path":"capacity","code":"NotNull","message":"must not be null"}]
+observedFieldErrors[C03 title omitted]=[{"path":"title","code":"NotBlank","message":"must not be blank"}]
+observedFieldErrors[C03 title null]=[{"path":"title","code":"NotBlank","message":"must not be blank"}]
+observedFieldErrors[C03 title empty]=[{"path":"title","code":"Size","message":"size must be between 1 and 100"},{"path":"title","code":"NotBlank","message":"must not be blank"}]
+observedFieldErrors[C03 title blank]=[{"path":"title","code":"NotBlank","message":"must not be blank"}]
+observedFieldErrors[C03 title 101]=[{"path":"title","code":"Size","message":"size must be between 1 and 100"}]
+observedFieldErrors[C03 startsAt omitted]=[{"path":"startsAt","code":"NotNull","message":"must not be null"}]
+observedFieldErrors[C03 startsAt null]=[{"path":"startsAt","code":"NotNull","message":"must not be null"}]
+eventsSection=listing and own registrations
+eventsSection=revenue and headcount
+eventsSection=registering
+eventsSection=capacity race
+eventsHeldEvent[X01] event=14 blockerConnection=27
+eventsLockWaits[X01] blocker=27 edges=[Edge[transaction=1899, requestingConnection=17, blockingConnection=27, user=***REDACTED***], Edge[transaction=1900, requestingConnection=18, blockingConnection=17, user=***REDACTED***], Edge[transaction=1900, requestingConnection=18, blockingConnection=27, user=***REDACTED***], Edge[transaction=1901, requestingConnection=19, blockingConnection=17, user=***REDACTED***], Edge[transaction=1901, requestingConnection=19, blockingConnection=18, user=***REDACTED***], Edge[transaction=1901, requestingConnection=19, blockingConnection=27, user=***REDACTED***], Edge[transaction=1903, requestingConnection=20, blockingConnection=17, user=***REDACTED***], Edge[transaction=1903, requestingConnection=20, blockingConnection=18, user=***REDACTED***], Edge[transaction=1903, requestingConnection=20, blockingConnection=19, user=***REDACTED***], Edge[transaction=1903, requestingConnection=20, blockingConnection=22, user=***REDACTED***], Edge[transaction=1903, requestingConnection=20, blockingConnection=27, user=***REDACTED***], Edge[transaction=1904, requestingConnection=21, blockingConnection=17, user=***REDACTED***], Edge[transaction=1904, requestingConnection=21, blockingConnection=18, user=***REDACTED***], Edge[transaction=1904, requestingConnection=21, blockingConnection=19, user=***REDACTED***], Edge[transaction=1904, requestingConnection=21, blockingConnection=20, user=***REDACTED***], Edge[transaction=1904, requestingConnection=21, blockingConnection=22, user=***REDACTED***], Edge[transaction=1904, requestingConnection=21, blockingConnection=27, user=***REDACTED***], Edge[transaction=1902, requestingConnection=22, blockingConnection=17, user=***REDACTED***], Edge[transaction=1902, requestingConnection=22, blockingConnection=18, user=***REDACTED***], Edge[transaction=1902, requestingConnection=22, blockingConnection=19, user=***REDACTED***], Edge[transaction=1902, requestingConnection=22, blockingConnection=27, user=***REDACTED***]]
+eventsContentionProof[X01] connections=[18, 17, 22, 21, 20, 19] transactions=[1902, 1901, 1900, 1899, 1904, 1903]
+eventsHttpTimeline[X01] client=0 ready at=2026-10-31T06:13:29.716534342Z actor=3
+eventsHttpTimeline[X01] client=2 ready at=2026-10-31T06:13:29.716839475Z actor=5
+eventsHttpTimeline[X01] client=1 ready at=2026-10-31T06:13:29.717412840Z actor=4
+eventsHttpTimeline[X01] client=4 ready at=2026-10-31T06:13:29.719505793Z actor=7
+eventsHttpTimeline[X01] client=3 ready at=2026-10-31T06:13:29.719635185Z actor=6
+eventsHttpTimeline[X01] client=5 ready at=2026-10-31T06:13:29.719800715Z actor=8
+eventsHttpTimeline[X01] client=1 start at=2026-10-31T06:13:29.719974346Z /api/events/14/registrations
+eventsHttpTimeline[X01] client=4 start at=2026-10-31T06:13:29.720059520Z /api/events/14/registrations
+eventsHttpTimeline[X01] client=0 start at=2026-10-31T06:13:29.720341424Z /api/events/14/registrations
+eventsHttpTimeline[X01] client=2 start at=2026-10-31T06:13:29.720949182Z /api/events/14/registrations
+eventsHttpTimeline[X01] client=3 start at=2026-10-31T06:13:29.721279185Z /api/events/14/registrations
+eventsHttpTimeline[X01] client=5 start at=2026-10-31T06:13:29.726485758Z /api/events/14/registrations
+eventsHttpTimeline[X01] client=3 end at=2026-10-31T06:13:29.801659348Z status=201
+eventsHttpTimeline[X01] client=0 end at=2026-10-31T06:13:29.810139461Z status=201
+eventsHttpTimeline[X01] client=2 end at=2026-10-31T06:13:29.816733721Z status=201
+eventsHttpTimeline[X01] client=4 end at=2026-10-31T06:13:29.822416601Z status=201
+eventsHttpTimeline[X01] client=1 end at=2026-10-31T06:13:29.825846273Z status=409
+eventsHttpTimeline[X01] client=5 end at=2026-10-31T06:13:29.829169739Z status=409
+eventsSection=same attendee race
+eventsHeldEvent[X02] event=15 blockerConnection=28
+eventsLockWaits[X02] blocker=28 edges=[Edge[transaction=1913, requestingConnection=17, blockingConnection=21, user=***REDACTED***], Edge[transaction=1913, requestingConnection=17, blockingConnection=28, user=***REDACTED***], Edge[transaction=1917, requestingConnection=18, blockingConnection=17, user=***REDACTED***], Edge[transaction=1917, requestingConnection=18, blockingConnection=19, user=***REDACTED***], Edge[transaction=1917, requestingConnection=18, blockingConnection=20, user=***REDACTED***], Edge[transaction=1917, requestingConnection=18, blockingConnection=21, user=***REDACTED***], Edge[transaction=1917, requestingConnection=18, blockingConnection=22, user=***REDACTED***], Edge[transaction=1917, requestingConnection=18, blockingConnection=28, user=***REDACTED***], Edge[transaction=1915, requestingConnection=19, blockingConnection=17, user=***REDACTED***], Edge[transaction=1915, requestingConnection=19, blockingConnection=21, user=***REDACTED***], Edge[transaction=1915, requestingConnection=19, blockingConnection=22, user=***REDACTED***], Edge[transaction=1915, requestingConnection=19, blockingConnection=28, user=***REDACTED***], Edge[transaction=1916, requestingConnection=20, blockingConnection=17, user=***REDACTED***], Edge[transaction=1916, requestingConnection=20, blockingConnection=19, user=***REDACTED***], Edge[transaction=1916, requestingConnection=20, blockingConnection=21, user=***REDACTED***], Edge[transaction=1916, requestingConnection=20, blockingConnection=22, user=***REDACTED***], Edge[transaction=1916, requestingConnection=20, blockingConnection=28, user=***REDACTED***], Edge[transaction=1912, requestingConnection=21, blockingConnection=28, user=***REDACTED***], Edge[transaction=1914, requestingConnection=22, blockingConnection=17, user=***REDACTED***], Edge[transaction=1914, requestingConnection=22, blockingConnection=21, user=***REDACTED***], Edge[transaction=1914, requestingConnection=22, blockingConnection=28, user=***REDACTED***]]
+eventsContentionProof[X02] connections=[18, 17, 22, 21, 20, 19] transactions=[1917, 1916, 1915, 1914, 1913, 1912]
+eventsHttpTimeline[X02] client=0 ready at=2026-10-31T06:13:30.072454337Z actor=2
+eventsHttpTimeline[X02] client=1 ready at=2026-10-31T06:13:30.072763925Z actor=2
+eventsHttpTimeline[X02] client=2 ready at=2026-10-31T06:13:30.073459117Z actor=2
+eventsHttpTimeline[X02] client=3 ready at=2026-10-31T06:13:30.074127138Z actor=2
+eventsHttpTimeline[X02] client=4 ready at=2026-10-31T06:13:30.074308908Z actor=2
+eventsHttpTimeline[X02] client=5 ready at=2026-10-31T06:13:30.075454987Z actor=2
+eventsHttpTimeline[X02] client=0 start at=2026-10-31T06:13:30.075794754Z /api/events/15/registrations
+eventsHttpTimeline[X02] client=1 start at=2026-10-31T06:13:30.076358720Z /api/events/15/registrations
+eventsHttpTimeline[X02] client=2 start at=2026-10-31T06:13:30.076408552Z /api/events/15/registrations
+eventsHttpTimeline[X02] client=3 start at=2026-10-31T06:13:30.077004508Z /api/events/15/registrations
+eventsHttpTimeline[X02] client=4 start at=2026-10-31T06:13:30.077608579Z /api/events/15/registrations
+eventsHttpTimeline[X02] client=5 start at=2026-10-31T06:13:30.078241074Z /api/events/15/registrations
+eventsHttpTimeline[X02] client=5 end at=2026-10-31T06:13:30.141181618Z status=201
+eventsHttpTimeline[X02] client=1 end at=2026-10-31T06:13:30.141953664Z status=409
+eventsHttpTimeline[X02] client=3 end at=2026-10-31T06:13:30.145142088Z status=409
+eventsHttpTimeline[X02] client=2 end at=2026-10-31T06:13:30.152068072Z status=409
+eventsHttpTimeline[X02] client=0 end at=2026-10-31T06:13:30.152619887Z status=409
+eventsHttpTimeline[X02] client=4 end at=2026-10-31T06:13:30.154283331Z status=409
+eventsFinalDatabase=State[tables={user=[Row[cells={id=1, name=alice}], Row[cells={id=2, name=bob}], Row[cells={id=3, name=carol}], Row[cells={id=4, name=dave}], Row[cells={id=5, name=erin}], Row[cells={id=6, name=frank}], Row[cells={id=7, name=grace}], Row[cells={id=8, name=heidi}], Row[cells={id=9, name=ivan}], Row[cells={id=10, name=judy}]], access_token=***REDACTED***, owner_id=1, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=30000000-0000-4000-8000-000000000002, owner_id=2, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=30000000-0000-4000-8000-000000000003, owner_id=3, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=30000000-0000-4000-8000-000000000004, owner_id=4, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=30000000-0000-4000-8000-000000000005, owner_id=5, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=30000000-0000-4000-8000-000000000006, owner_id=6, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=30000000-0000-4000-8000-000000000007, owner_id=7, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=30000000-0000-4000-8000-000000000008, owner_id=8, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=30000000-0000-4000-8000-000000000009, owner_id=9, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=30000000-0000-4000-8000-000000000010, owner_id=10, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=30000000-0000-4000-8000-000000000099, owner_id=1, expires_at=2000-01-01T00:00:00Z}]], event=[Row[cells={id=10, organizer_id=1, title=Spring Workshop, starts_at=2099-03-01T09:00:00Z, capacity=3, registered=0, fee=20.00}], Row[cells={id=11, organizer_id=1, title=Free Talk, starts_at=2099-03-02T09:00:00Z, capacity=5, registered=1, fee=0.00}], Row[cells={id=12, organizer_id=2, title=Hack Night, starts_at=2099-03-03T18:00:00Z, capacity=2, registered=1, fee=15.50}], Row[cells={id=13, organizer_id=1, title=Past Meetup, starts_at=2000-01-01T09:00:00Z, capacity=10, registered=1, fee=5.00}], Row[cells={id=14, organizer_id=1, title=Capacity Race, starts_at=2099-04-01T09:00:00Z, capacity=4, registered=0, fee=10.00}], Row[cells={id=15, organizer_id=1, title=Same Person Race, starts_at=2099-04-01T09:00:00Z, capacity=10, registered=1, fee=12.34}], Row[cells={id=16, organizer_id=1, title=Revenue Review, starts_at=2099-05-01T09:00:00Z, capacity=10, registered=3, fee=20.00}], Row[cells={id=17, organizer_id=2, title=Empty Event, starts_at=2099-06-01T09:00:00Z, capacity=10, registered=0, fee=99.99}], Row[cells={id=18, organizer_id=1, title=Dime Event, starts_at=2099-07-01T09:00:00Z, capacity=10, registered=3, fee=0.10}]], registration=[Row[cells={id=1, event_id=12, attendee_id=4, fee=15.50, registered_at=2026-01-01T00:00:00Z}], Row[cells={id=2, event_id=13, attendee_id=6, fee=5.00, registered_at=2026-01-01T00:00:00Z}], Row[cells={id=3, event_id=16, attendee_id=3, fee=17.50, registered_at=2026-01-01T01:00:00Z}], Row[cells={id=4, event_id=16, attendee_id=4, fee=20.00, registered_at=2026-01-02T00:00:00Z}], Row[cells={id=5, event_id=16, attendee_id=5, fee=20.00, registered_at=2026-01-03T00:00:00Z}], Row[cells={id=6, event_id=11, attendee_id=3, fee=0.00, registered_at=2026-01-01T01:00:00Z}], Row[cells={id=7, event_id=18, attendee_id=7, fee=0.10, registered_at=2026-02-01T00:00:00Z}], Row[cells={id=8, event_id=18, attendee_id=8, fee=0.10, registered_at=2026-02-01T00:00:00Z}], Row[cells={id=9, event_id=18, attendee_id=9, fee=0.10, registered_at=2026-02-01T00:00:00Z}], Row[cells={id=21, event_id=15, attendee_id=2, fee=12.34, registered_at=2026-10-31T06:13:30.135187Z}]]}]
+
+checksPassed=626 checksFailed=0
+PASS the SIR slice compiles without errors (warnings remain visible) (diagnostics=[])
+PASS the compiler emitted a generated project (generatedFileCount=45)
+PASS candidate runtime compilation matches full static generation (sourceSha256=067c4294c909d50fd66b7ed392db0a999752efa2d6c0d6c9a263410028a87c15 generatedDigest=75f5a3a619ceb31d4c2d67e43567acf707ce7d1682cff156d498f66e12460213)
+PASS the generated project builds (mvn clean verify) (exitCode=0)
+PASS the build produced an executable jar (projectRoot=/home/runner/work/Software-IR/Software-IR/ci-work/events-slice-1a190974a5e-18778/generated-project)
+PASS the generated application serves the compiled business route (readinessUrl=http://127.0.0.1:18080/api/events?page=1&size=10)
+PASS B01 startup readiness GET changes no business row in any of four tables (all four tables unchanged)
+PASS events fixture seed has complete rows, foreign keys, matching counters and unique pairs ({user=10, event=9, registration=9, access_token=***REDACTED***
+PASS B01 anonymous readiness changes no business row in any of four tables (all four tables unchanged)
+PASS B01 anonymous readiness (expected=200 actual=200)
+PASS B01 anonymous readiness has exact page keys, totals, ordering and full records ({"total":8,"page":1,"size":10,"records":[{"id":10,"organizer":1,"title":"Spring Workshop","startsAt":"2099-03-01T09:00:00Z","capacity":3,"registered":0,"remaining":3,"fee":20.00},{"id":11,"organizer":1,"title":"Free Talk","startsAt":"2099-03-02T09:00:00Z","capacity":5,"registered":1,"remaining":4,"fee":0.00},{"id":12,"organizer":2,"title":"Hack Night","startsAt":"2099-03-03T18:00:00Z","capacity":2,"registered":1,"remaining":1,"fee":15.50},{"id":14,"organizer":1,"title":"Capacity Race","startsAt":"2099-04-01T09:00:00Z","capacity":4,"registered":0,"remaining":4,"fee":10.00},{"id":15,"organizer":1,"title":"Same Person Race","startsAt":"2099-04-01T09:00:00Z","capacity":10,"registered":0,"remaining":10,"fee":12.34},{"id":16,"organizer":1,"title":"Revenue Review","startsAt":"2099-05-01T09:00:00Z","capacity":10,"registered":3,"remaining":7,"fee":20.00},{"id":17,"organizer":2,"title":"Empty Event","startsAt":"2099-06-01T09:00:00Z","capacity":10,"registered":0,"remaining":10,"fee":99.99},{"id":18,"organizer":1,"title":"Dime Event","startsAt":"2099-07-01T09:00:00Z","capacity":10,"registered":3,"remaining":7,"fee":0.10}]})
+PASS B02 /api/events invalid identity 0 (expected=401 actual=401)
+PASS B02 /api/events invalid identity 0 has an empty authentication response ()
+PASS B02 /api/events invalid identity 0 changes no business row in any of four tables (all four tables unchanged)
+PASS B02 /api/events invalid identity 1 (expected=401 actual=401)
+PASS B02 /api/events invalid identity 1 has an empty authentication response ()
+PASS B02 /api/events invalid identity 1 changes no business row in any of four tables (all four tables unchanged)
+PASS B02 /api/events invalid identity 2 (expected=401 actual=401)
+PASS B02 /api/events invalid identity 2 has an empty authentication response ()
+PASS B02 /api/events invalid identity 2 changes no business row in any of four tables (all four tables unchanged)
+PASS B02 /api/events invalid identity 3 (expected=401 actual=401)
+PASS B02 /api/events invalid identity 3 has an empty authentication response ()
+PASS B02 /api/events invalid identity 3 changes no business row in any of four tables (all four tables unchanged)
+PASS B02 /api/events/10/registrations invalid identity 0 (expected=401 actual=401)
+PASS B02 /api/events/10/registrations invalid identity 0 has an empty authentication response ()
+PASS B02 /api/events/10/registrations invalid identity 0 changes no business row in any of four tables (all four tables unchanged)
+PASS B02 /api/events/10/registrations invalid identity 1 (expected=401 actual=401)
+PASS B02 /api/events/10/registrations invalid identity 1 has an empty authentication response ()
+PASS B02 /api/events/10/registrations invalid identity 1 changes no business row in any of four tables (all four tables unchanged)
+PASS B02 /api/events/10/registrations invalid identity 2 (expected=401 actual=401)
+PASS B02 /api/events/10/registrations invalid identity 2 has an empty authentication response ()
+PASS B02 /api/events/10/registrations invalid identity 2 changes no business row in any of four tables (all four tables unchanged)
+PASS B02 /api/events/10/registrations invalid identity 3 (expected=401 actual=401)
+PASS B02 /api/events/10/registrations invalid identity 3 has an empty authentication response ()
+PASS B02 /api/events/10/registrations invalid identity 3 changes no business row in any of four tables (all four tables unchanged)
+PASS B02 /api/my/registrations?page=1&size=10 invalid identity 0 (expected=401 actual=401)
+PASS B02 /api/my/registrations?page=1&size=10 invalid identity 0 has an empty authentication response ()
+PASS B02 /api/my/registrations?page=1&size=10 invalid identity 0 changes no business row in any of four tables (all four tables unchanged)
+PASS B02 /api/my/registrations?page=1&size=10 invalid identity 1 (expected=401 actual=401)
+PASS B02 /api/my/registrations?page=1&size=10 invalid identity 1 has an empty authentication response ()
+PASS B02 /api/my/registrations?page=1&size=10 invalid identity 1 changes no business row in any of four tables (all four tables unchanged)
+PASS B02 /api/my/registrations?page=1&size=10 invalid identity 2 (expected=401 actual=401)
+PASS B02 /api/my/registrations?page=1&size=10 invalid identity 2 has an empty authentication response ()
+PASS B02 /api/my/registrations?page=1&size=10 invalid identity 2 changes no business row in any of four tables (all four tables unchanged)
+PASS B02 /api/my/registrations?page=1&size=10 invalid identity 3 (expected=401 actual=401)
+PASS B02 /api/my/registrations?page=1&size=10 invalid identity 3 has an empty authentication response ()
+PASS B02 /api/my/registrations?page=1&size=10 invalid identity 3 changes no business row in any of four tables (all four tables unchanged)
+PASS B02 /api/events/16/revenue invalid identity 0 (expected=401 actual=401)
+PASS B02 /api/events/16/revenue invalid identity 0 has an empty authentication response ()
+PASS B02 /api/events/16/revenue invalid identity 0 changes no business row in any of four tables (all four tables unchanged)
+PASS B02 /api/events/16/revenue invalid identity 1 (expected=401 actual=401)
+PASS B02 /api/events/16/revenue invalid identity 1 has an empty authentication response ()
+PASS B02 /api/events/16/revenue invalid identity 1 changes no business row in any of four tables (all four tables unchanged)
+PASS B02 /api/events/16/revenue invalid identity 2 (expected=401 actual=401)
+PASS B02 /api/events/16/revenue invalid identity 2 has an empty authentication response ()
+PASS B02 /api/events/16/revenue invalid identity 2 changes no business row in any of four tables (all four tables unchanged)
+PASS B02 /api/events/16/revenue invalid identity 3 (expected=401 actual=401)
+PASS B02 /api/events/16/revenue invalid identity 3 has an empty authentication response ()
+PASS B02 /api/events/16/revenue invalid identity 3 changes no business row in any of four tables (all four tables unchanged)
+PASS B02 /api/events/16/registration-count invalid identity 0 (expected=401 actual=401)
+PASS B02 /api/events/16/registration-count invalid identity 0 has an empty authentication response ()
+PASS B02 /api/events/16/registration-count invalid identity 0 changes no business row in any of four tables (all four tables unchanged)
+PASS B02 /api/events/16/registration-count invalid identity 1 (expected=401 actual=401)
+PASS B02 /api/events/16/registration-count invalid identity 1 has an empty authentication response ()
+PASS B02 /api/events/16/registration-count invalid identity 1 changes no business row in any of four tables (all four tables unchanged)
+PASS B02 /api/events/16/registration-count invalid identity 2 (expected=401 actual=401)
+PASS B02 /api/events/16/registration-count invalid identity 2 has an empty authentication response ()
+PASS B02 /api/events/16/registration-count invalid identity 2 changes no business row in any of four tables (all four tables unchanged)
+PASS B02 /api/events/16/registration-count invalid identity 3 (expected=401 actual=401)
+PASS B02 /api/events/16/registration-count invalid identity 3 has an empty authentication response ()
+PASS B02 /api/events/16/registration-count invalid identity 3 changes no business row in any of four tables (all four tables unchanged)
+PASS C01 organizer creates (expected=201 actual=201)
+PASS C01 organizer creates returns the one newly inserted numeric id (id=19; inserted=1)
+PASS C01 organizer creates stores the token's organizer, a zero counter and the exact fee (Row[cells={id=19, organizer_id=1, title=New Fest, starts_at=2099-08-01T09:00:00Z, capacity=50, registered=0, fee=12.50}])
+PASS C01 organizer creates has only the allowed full-database delta (exact allowed delta)
+PASS C01 organizer creates matches all JSON fields and JDBC values ({"id":19,"organizer":1,"title":"New Fest","startsAt":"2099-08-01T09:00:00Z","capacity":50,"registered":0,"remaining":50,"fee":12.50})
+PASS C02 free past event, identity from token (expected=201 actual=201)
+PASS C02 free past event, identity from token returns the one newly inserted numeric id (id=20; inserted=1)
+PASS C02 free past event, identity from token stores the token's organizer, a zero counter and the exact fee (Row[cells={id=20, organizer_id=2, title=Free Fest, starts_at=2000-01-01T00:00:00Z, capacity=1, registered=0, fee=0.00}])
+PASS C02 free past event, identity from token has only the allowed full-database delta (exact allowed delta)
+PASS C02 free past event, identity from token matches all JSON fields and JDBC values ({"id":20,"organizer":2,"title":"Free Fest","startsAt":"2000-01-01T00:00:00Z","capacity":1,"registered":0,"remaining":1,"fee":0})
+PASS C02 largest fee (expected=201 actual=201)
+PASS C02 largest fee returns the one newly inserted numeric id (id=21; inserted=1)
+PASS C02 largest fee stores the token's organizer, a zero counter and the exact fee (Row[cells={id=21, organizer_id=1, title=Big, starts_at=2099-08-01T09:00:00Z, capacity=5, registered=0, fee=99999999.99}])
+PASS C02 largest fee has only the allowed full-database delta (exact allowed delta)
+PASS C02 largest fee matches all JSON fields and JDBC values ({"id":21,"organizer":1,"title":"Big","startsAt":"2099-08-01T09:00:00Z","capacity":5,"registered":0,"remaining":5,"fee":99999999.99})
+PASS C02 equal-valued fee spelling (expected=201 actual=201)
+PASS C02 equal-valued fee spelling returns the one newly inserted numeric id (id=22; inserted=1)
+PASS C02 equal-valued fee spelling stores the token's organizer, a zero counter and the exact fee (Row[cells={id=22, organizer_id=1, title=Equal, starts_at=2099-08-01T09:00:00Z, capacity=5, registered=0, fee=12.34}])
+PASS C02 equal-valued fee spelling has only the allowed full-database delta (exact allowed delta)
+PASS C02 equal-valued fee spelling matches all JSON fields and JDBC values ({"id":22,"organizer":1,"title":"Equal","startsAt":"2099-08-01T09:00:00Z","capacity":5,"registered":0,"remaining":5,"fee":12.3400})
+PASS C02 100-character title (expected=201 actual=201)
+PASS C02 100-character title returns the one newly inserted numeric id (id=23; inserted=1)
+PASS C02 100-character title stores the token's organizer, a zero counter and the exact fee (Row[cells={id=23, organizer_id=1, title=tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt, starts_at=2099-08-01T09:00:00Z, capacity=5, registered=0, fee=1.00}])
+PASS C02 100-character title has only the allowed full-database delta (exact allowed delta)
+PASS C02 100-character title matches all JSON fields and JDBC values ({"id":23,"organizer":1,"title":"tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt","startsAt":"2099-08-01T09:00:00Z","capacity":5,"registered":0,"remaining":5,"fee":1})
+PASS C03 fee 100000000.00 (expected=400 actual=400)
+PASS C03 fee 100000000.00 is INVALID_REQUEST naming fee (code null) ({"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"fee","code":"ExactDecimal","message":"must be exactly representable at the declared precision and scale"}]})
+PASS C03 fee 100000000.00 changes no business row in any of four tables (all four tables unchanged)
+PASS C03 fee 12.345 (expected=400 actual=400)
+PASS C03 fee 12.345 is INVALID_REQUEST naming fee (code null) ({"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"fee","code":"ExactDecimal","message":"must be exactly representable at the declared precision and scale"}]})
+PASS C03 fee 12.345 changes no business row in any of four tables (all four tables unchanged)
+PASS C03 fee -0.01 (expected=400 actual=400)
+PASS C03 fee -0.01 is INVALID_REQUEST naming fee (code null) ({"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"fee","code":"DecimalMin","message":"must be greater than or equal to 0"}]})
+PASS C03 fee -0.01 changes no business row in any of four tables (all four tables unchanged)
+PASS C03 fee omitted (expected=400 actual=400)
+PASS C03 fee omitted is INVALID_REQUEST naming fee (code NotNull) ({"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"fee","code":"NotNull","message":"must not be null"}]})
+PASS C03 fee omitted changes no business row in any of four tables (all four tables unchanged)
+PASS C03 fee null (expected=400 actual=400)
+PASS C03 fee null is INVALID_REQUEST naming fee (code NotNull) ({"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"fee","code":"NotNull","message":"must not be null"}]})
+PASS C03 fee null changes no business row in any of four tables (all four tables unchanged)
+PASS C03 capacity 0 (expected=400 actual=400)
+PASS C03 capacity 0 is INVALID_REQUEST naming capacity (code null) ({"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"capacity","code":"DecimalMin","message":"must be greater than or equal to 1"}]})
+PASS C03 capacity 0 changes no business row in any of four tables (all four tables unchanged)
+PASS C03 capacity -1 (expected=400 actual=400)
+PASS C03 capacity -1 is INVALID_REQUEST naming capacity (code null) ({"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"capacity","code":"DecimalMin","message":"must be greater than or equal to 1"}]})
+PASS C03 capacity -1 changes no business row in any of four tables (all four tables unchanged)
+PASS C03 capacity omitted (expected=400 actual=400)
+PASS C03 capacity omitted is INVALID_REQUEST naming capacity (code NotNull) ({"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"capacity","code":"NotNull","message":"must not be null"}]})
+PASS C03 capacity omitted changes no business row in any of four tables (all four tables unchanged)
+PASS C03 capacity null (expected=400 actual=400)
+PASS C03 capacity null is INVALID_REQUEST naming capacity (code NotNull) ({"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"capacity","code":"NotNull","message":"must not be null"}]})
+PASS C03 capacity null changes no business row in any of four tables (all four tables unchanged)
+PASS C03 title omitted (expected=400 actual=400)
+PASS C03 title omitted is INVALID_REQUEST naming title (code NotBlank) ({"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"title","code":"NotBlank","message":"must not be blank"}]})
+PASS C03 title omitted changes no business row in any of four tables (all four tables unchanged)
+PASS C03 title null (expected=400 actual=400)
+PASS C03 title null is INVALID_REQUEST naming title (code NotBlank) ({"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"title","code":"NotBlank","message":"must not be blank"}]})
+PASS C03 title null changes no business row in any of four tables (all four tables unchanged)
+PASS C03 title empty (expected=400 actual=400)
+PASS C03 title empty is INVALID_REQUEST naming title (code NotBlank) ({"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"title","code":"Size","message":"size must be between 1 and 100"},{"path":"title","code":"NotBlank","message":"must not be blank"}]})
+PASS C03 title empty changes no business row in any of four tables (all four tables unchanged)
+PASS C03 title blank (expected=400 actual=400)
+PASS C03 title blank is INVALID_REQUEST naming title (code NotBlank) ({"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"title","code":"NotBlank","message":"must not be blank"}]})
+PASS C03 title blank changes no business row in any of four tables (all four tables unchanged)
+PASS C03 title 101 (expected=400 actual=400)
+PASS C03 title 101 is INVALID_REQUEST naming title (code null) ({"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"title","code":"Size","message":"size must be between 1 and 100"}]})
+PASS C03 title 101 changes no business row in any of four tables (all four tables unchanged)
+PASS C03 startsAt omitted (expected=400 actual=400)
+PASS C03 startsAt omitted is INVALID_REQUEST naming startsAt (code NotNull) ({"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"startsAt","code":"NotNull","message":"must not be null"}]})
+PASS C03 startsAt omitted changes no business row in any of four tables (all four tables unchanged)
+PASS C03 startsAt null (expected=400 actual=400)
+PASS C03 startsAt null is INVALID_REQUEST naming startsAt (code NotNull) ({"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"startsAt","code":"NotNull","message":"must not be null"}]})
+PASS C03 startsAt null changes no business row in any of four tables (all four tables unchanged)
+PASS C03 startsAt text (expected=400 actual=400)
+PASS C03 startsAt text is INVALID_REQUEST naming null (code null) ({"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[]})
+PASS C03 startsAt text changes no business row in any of four tables (all four tables unchanged)
+PASS C04 forged "organizer":2 (expected=400 actual=400)
+PASS C04 forged "organizer":2 is INVALID_REQUEST naming null (code null) ({"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"organizer","code":"INVALID_REQUEST","message":"must be a well-formed value"}]})
+PASS C04 forged "organizer":2 changes no business row in any of four tables (all four tables unchanged)
+PASS C04 forged "registered":5 (expected=400 actual=400)
+PASS C04 forged "registered":5 is INVALID_REQUEST naming null (code null) ({"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"registered","code":"INVALID_REQUEST","message":"must be a well-formed value"}]})
+PASS C04 forged "registered":5 changes no business row in any of four tables (all four tables unchanged)
+PASS events fixture seed has complete rows, foreign keys, matching counters and unique pairs ({user=10, event=9, registration=9, access_token=***REDACTED***
+PASS L01 size 3 page 1 changes no business row in any of four tables (all four tables unchanged)
+PASS L01 size 3 page 1 (expected=200 actual=200)
+PASS L01 size 3 page 1 has exact page keys, totals, ordering and full records ({"total":8,"page":1,"size":3,"records":[{"id":10,"organizer":1,"title":"Spring Workshop","startsAt":"2099-03-01T09:00:00Z","capacity":3,"registered":0,"remaining":3,"fee":20.00},{"id":11,"organizer":1,"title":"Free Talk","startsAt":"2099-03-02T09:00:00Z","capacity":5,"registered":1,"remaining":4,"fee":0.00},{"id":12,"organizer":2,"title":"Hack Night","startsAt":"2099-03-03T18:00:00Z","capacity":2,"registered":1,"remaining":1,"fee":15.50}]})
+PASS L01 size 3 page 2 changes no business row in any of four tables (all four tables unchanged)
+PASS L01 size 3 page 2 (expected=200 actual=200)
+PASS L01 size 3 page 2 has exact page keys, totals, ordering and full records ({"total":8,"page":2,"size":3,"records":[{"id":14,"organizer":1,"title":"Capacity Race","startsAt":"2099-04-01T09:00:00Z","capacity":4,"registered":0,"remaining":4,"fee":10.00},{"id":15,"organizer":1,"title":"Same Person Race","startsAt":"2099-04-01T09:00:00Z","capacity":10,"registered":0,"remaining":10,"fee":12.34},{"id":16,"organizer":1,"title":"Revenue Review","startsAt":"2099-05-01T09:00:00Z","capacity":10,"registered":3,"remaining":7,"fee":20.00}]})
+PASS L01 size 3 page 3 changes no business row in any of four tables (all four tables unchanged)
+PASS L01 size 3 page 3 (expected=200 actual=200)
+PASS L01 size 3 page 3 has exact page keys, totals, ordering and full records ({"total":8,"page":3,"size":3,"records":[{"id":17,"organizer":2,"title":"Empty Event","startsAt":"2099-06-01T09:00:00Z","capacity":10,"registered":0,"remaining":10,"fee":99.99},{"id":18,"organizer":1,"title":"Dime Event","startsAt":"2099-07-01T09:00:00Z","capacity":10,"registered":3,"remaining":7,"fee":0.10}]})
+PASS L01 size 3 page 4 changes no business row in any of four tables (all four tables unchanged)
+PASS L01 size 3 page 4 (expected=200 actual=200)
+PASS L01 size 3 page 4 has exact page keys, totals, ordering and full records ({"total":8,"page":4,"size":3,"records":[]})
+PASS L02 defaults changes no business row in any of four tables (all four tables unchanged)
+PASS L02 defaults (expected=200 actual=200)
+PASS L02 defaults has exact page keys, totals, ordering and full records ({"total":8,"page":1,"size":20,"records":[{"id":10,"organizer":1,"title":"Spring Workshop","startsAt":"2099-03-01T09:00:00Z","capacity":3,"registered":0,"remaining":3,"fee":20.00},{"id":11,"organizer":1,"title":"Free Talk","startsAt":"2099-03-02T09:00:00Z","capacity":5,"registered":1,"remaining":4,"fee":0.00},{"id":12,"organizer":2,"title":"Hack Night","startsAt":"2099-03-03T18:00:00Z","capacity":2,"registered":1,"remaining":1,"fee":15.50},{"id":14,"organizer":1,"title":"Capacity Race","startsAt":"2099-04-01T09:00:00Z","capacity":4,"registered":0,"remaining":4,"fee":10.00},{"id":15,"organizer":1,"title":"Same Person Race","startsAt":"2099-04-01T09:00:00Z","capacity":10,"registered":0,"remaining":10,"fee":12.34},{"id":16,"organizer":1,"title":"Revenue Review","startsAt":"2099-05-01T09:00:00Z","capacity":10,"registered":3,"remaining":7,"fee":20.00},{"id":17,"organizer":2,"title":"Empty Event","startsAt":"2099-06-01T09:00:00Z","capacity":10,"registered":0,"remaining":10,"fee":99.99},{"id":18,"organizer":1,"title":"Dime Event","startsAt":"2099-07-01T09:00:00Z","capacity":10,"registered":3,"remaining":7,"fee":0.10}]})
+PASS L02 page default alone changes no business row in any of four tables (all four tables unchanged)
+PASS L02 page default alone (expected=200 actual=200)
+PASS L02 page default alone has exact page keys, totals, ordering and full records ({"total":8,"page":1,"size":2,"records":[{"id":10,"organizer":1,"title":"Spring Workshop","startsAt":"2099-03-01T09:00:00Z","capacity":3,"registered":0,"remaining":3,"fee":20.00},{"id":11,"organizer":1,"title":"Free Talk","startsAt":"2099-03-02T09:00:00Z","capacity":5,"registered":1,"remaining":4,"fee":0.00}]})
+PASS L02 size default alone changes no business row in any of four tables (all four tables unchanged)
+PASS L02 size default alone (expected=200 actual=200)
+PASS L02 size default alone has exact page keys, totals, ordering and full records ({"total":8,"page":2,"size":20,"records":[]})
+PASS L02 inclusive upper bounds changes no business row in any of four tables (all four tables unchanged)
+PASS L02 inclusive upper bounds (expected=200 actual=200)
+PASS L02 inclusive upper bounds has exact page keys, totals, ordering and full records ({"total":8,"page":10000,"size":100,"records":[]})
+PASS L03 rejected page 0 changes no business row in any of four tables (all four tables unchanged)
+PASS L03 rejected page 0 (expected=400 actual=400)
+PASS L03 rejected page 0 has the exact declared error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS L03 rejected page -1 changes no business row in any of four tables (all four tables unchanged)
+PASS L03 rejected page -1 (expected=400 actual=400)
+PASS L03 rejected page -1 has the exact declared error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS L03 rejected page 10001 changes no business row in any of four tables (all four tables unchanged)
+PASS L03 rejected page 10001 (expected=400 actual=400)
+PASS L03 rejected page 10001 has the exact declared error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS L03 rejected size 0 changes no business row in any of four tables (all four tables unchanged)
+PASS L03 rejected size 0 (expected=400 actual=400)
+PASS L03 rejected size 0 has the exact declared error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS L03 rejected size -1 changes no business row in any of four tables (all four tables unchanged)
+PASS L03 rejected size -1 (expected=400 actual=400)
+PASS L03 rejected size -1 has the exact declared error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS L03 rejected size 101 changes no business row in any of four tables (all four tables unchanged)
+PASS L03 rejected size 101 (expected=400 actual=400)
+PASS L03 rejected size 101 has the exact declared error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS L03 mine rejected page 0 changes no business row in any of four tables (all four tables unchanged)
+PASS L03 mine rejected page 0 (expected=400 actual=400)
+PASS L03 mine rejected page 0 has the exact declared error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS L03 mine rejected page -1 changes no business row in any of four tables (all four tables unchanged)
+PASS L03 mine rejected page -1 (expected=400 actual=400)
+PASS L03 mine rejected page -1 has the exact declared error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS L03 mine rejected page 10001 changes no business row in any of four tables (all four tables unchanged)
+PASS L03 mine rejected page 10001 (expected=400 actual=400)
+PASS L03 mine rejected page 10001 has the exact declared error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS L03 mine rejected size 0 changes no business row in any of four tables (all four tables unchanged)
+PASS L03 mine rejected size 0 (expected=400 actual=400)
+PASS L03 mine rejected size 0 has the exact declared error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS L03 mine rejected size -1 changes no business row in any of four tables (all four tables unchanged)
+PASS L03 mine rejected size -1 (expected=400 actual=400)
+PASS L03 mine rejected size -1 has the exact declared error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS L03 mine rejected size 101 changes no business row in any of four tables (all four tables unchanged)
+PASS L03 mine rejected size 101 (expected=400 actual=400)
+PASS L03 mine rejected size 101 has the exact declared error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS M01 registrations of user 7 changes no business row in any of four tables (all four tables unchanged)
+PASS M01 registrations of user 7 (expected=200 actual=200)
+PASS M01 registrations of user 7 has exact page keys, totals, ordering and full records ({"total":1,"page":1,"size":20,"records":[{"id":7,"event":18,"attendee":7,"fee":0.10,"registeredAt":"2026-02-01T00:00:00Z"}]})
+PASS M01 registrations of user 6 changes no business row in any of four tables (all four tables unchanged)
+PASS M01 registrations of user 6 (expected=200 actual=200)
+PASS M01 registrations of user 6 has exact page keys, totals, ordering and full records ({"total":1,"page":1,"size":20,"records":[{"id":2,"event":13,"attendee":6,"fee":5.00,"registeredAt":"2026-01-01T00:00:00Z"}]})
+PASS M01 registrations of user 5 changes no business row in any of four tables (all four tables unchanged)
+PASS M01 registrations of user 5 (expected=200 actual=200)
+PASS M01 registrations of user 5 has exact page keys, totals, ordering and full records ({"total":1,"page":1,"size":20,"records":[{"id":5,"event":16,"attendee":5,"fee":20.00,"registeredAt":"2026-01-03T00:00:00Z"}]})
+PASS M01 registrations of user 4 changes no business row in any of four tables (all four tables unchanged)
+PASS M01 registrations of user 4 (expected=200 actual=200)
+PASS M01 registrations of user 4 has exact page keys, totals, ordering and full records ({"total":2,"page":1,"size":20,"records":[{"id":4,"event":16,"attendee":4,"fee":20.00,"registeredAt":"2026-01-02T00:00:00Z"},{"id":1,"event":12,"attendee":4,"fee":15.50,"registeredAt":"2026-01-01T00:00:00Z"}]})
+PASS M01 registrations of user 3 changes no business row in any of four tables (all four tables unchanged)
+PASS M01 registrations of user 3 (expected=200 actual=200)
+PASS M01 registrations of user 3 has exact page keys, totals, ordering and full records ({"total":2,"page":1,"size":20,"records":[{"id":6,"event":11,"attendee":3,"fee":0.00,"registeredAt":"2026-01-01T01:00:00Z"},{"id":3,"event":16,"attendee":3,"fee":17.50,"registeredAt":"2026-01-01T01:00:00Z"}]})
+PASS M01 registrations of user 2 changes no business row in any of four tables (all four tables unchanged)
+PASS M01 registrations of user 2 (expected=200 actual=200)
+PASS M01 registrations of user 2 has exact page keys, totals, ordering and full records ({"total":0,"page":1,"size":20,"records":[]})
+PASS M01 registrations of user 1 changes no business row in any of four tables (all four tables unchanged)
+PASS M01 registrations of user 1 (expected=200 actual=200)
+PASS M01 registrations of user 1 has exact page keys, totals, ordering and full records ({"total":0,"page":1,"size":20,"records":[]})
+PASS M01 registrations of user 10 changes no business row in any of four tables (all four tables unchanged)
+PASS M01 registrations of user 10 (expected=200 actual=200)
+PASS M01 registrations of user 10 has exact page keys, totals, ordering and full records ({"total":0,"page":1,"size":20,"records":[]})
+PASS M02 carol size 1 page 1 changes no business row in any of four tables (all four tables unchanged)
+PASS M02 carol size 1 page 1 (expected=200 actual=200)
+PASS M02 carol size 1 page 1 has exact page keys, totals, ordering and full records ({"total":2,"page":1,"size":1,"records":[{"id":6,"event":11,"attendee":3,"fee":0.00,"registeredAt":"2026-01-01T01:00:00Z"}]})
+PASS M02 carol size 1 page 2 changes no business row in any of four tables (all four tables unchanged)
+PASS M02 carol size 1 page 2 (expected=200 actual=200)
+PASS M02 carol size 1 page 2 has exact page keys, totals, ordering and full records ({"total":2,"page":2,"size":1,"records":[{"id":3,"event":16,"attendee":3,"fee":17.50,"registeredAt":"2026-01-01T01:00:00Z"}]})
+PASS M02 carol size 1 page 3 changes no business row in any of four tables (all four tables unchanged)
+PASS M02 carol size 1 page 3 (expected=200 actual=200)
+PASS M02 carol size 1 page 3 has exact page keys, totals, ordering and full records ({"total":2,"page":3,"size":1,"records":[]})
+PASS events fixture seed has complete rows, foreign keys, matching counters and unique pairs ({user=10, event=9, registration=9, access_token=***REDACTED***
+PASS V01 event 16 revenue changes no business row in any of four tables (all four tables unchanged)
+PASS V01 event 16 revenue (expected=200 actual=200)
+PASS V01 event 16 revenue is the bare JSON number 57.50 (57.50)
+PASS V01 event 16 registration count changes no business row in any of four tables (all four tables unchanged)
+PASS V01 event 16 registration count (expected=200 actual=200)
+PASS V01 event 16 registration count is the bare JSON integer 3 (3)
+PASS V02 free event 11 revenue changes no business row in any of four tables (all four tables unchanged)
+PASS V02 free event 11 revenue (expected=200 actual=200)
+PASS V02 free event 11 revenue is the bare JSON number 0 (0.00)
+PASS V02 free event 11 registration count changes no business row in any of four tables (all four tables unchanged)
+PASS V02 free event 11 registration count (expected=200 actual=200)
+PASS V02 free event 11 registration count is the bare JSON integer 1 (1)
+PASS V02 started event 13 revenue changes no business row in any of four tables (all four tables unchanged)
+PASS V02 started event 13 revenue (expected=200 actual=200)
+PASS V02 started event 13 revenue is the bare JSON number 5.00 (5.00)
+PASS V02 started event 13 registration count changes no business row in any of four tables (all four tables unchanged)
+PASS V02 started event 13 registration count (expected=200 actual=200)
+PASS V02 started event 13 registration count is the bare JSON integer 1 (1)
+PASS V02 dime event 18 revenue changes no business row in any of four tables (all four tables unchanged)
+PASS V02 dime event 18 revenue (expected=200 actual=200)
+PASS V02 dime event 18 revenue is the bare JSON number 0.30 (0.30)
+PASS V02 dime event 18 registration count changes no business row in any of four tables (all four tables unchanged)
+PASS V02 dime event 18 registration count (expected=200 actual=200)
+PASS V02 dime event 18 registration count is the bare JSON integer 3 (3)
+PASS V02 empty event 10 revenue changes no business row in any of four tables (all four tables unchanged)
+PASS V02 empty event 10 revenue (expected=200 actual=200)
+PASS V02 empty event 10 revenue is the bare JSON number 0 (0.00)
+PASS V02 empty event 10 registration count changes no business row in any of four tables (all four tables unchanged)
+PASS V02 empty event 10 registration count (expected=200 actual=200)
+PASS V02 empty event 10 registration count is the bare JSON integer 0 (0)
+PASS V02 empty event 14 revenue changes no business row in any of four tables (all four tables unchanged)
+PASS V02 empty event 14 revenue (expected=200 actual=200)
+PASS V02 empty event 14 revenue is the bare JSON number 0 (0.00)
+PASS V02 empty event 14 registration count changes no business row in any of four tables (all four tables unchanged)
+PASS V02 empty event 14 registration count (expected=200 actual=200)
+PASS V02 empty event 14 registration count is the bare JSON integer 0 (0)
+PASS V02 empty event 15 revenue changes no business row in any of four tables (all four tables unchanged)
+PASS V02 empty event 15 revenue (expected=200 actual=200)
+PASS V02 empty event 15 revenue is the bare JSON number 0 (0.00)
+PASS V02 empty event 15 registration count changes no business row in any of four tables (all four tables unchanged)
+PASS V02 empty event 15 registration count (expected=200 actual=200)
+PASS V02 empty event 15 registration count is the bare JSON integer 0 (0)
+PASS V02 event 12 revenue changes no business row in any of four tables (all four tables unchanged)
+PASS V02 event 12 revenue (expected=200 actual=200)
+PASS V02 event 12 revenue is the bare JSON number 15.50 (15.50)
+PASS V02 event 12 registration count changes no business row in any of four tables (all four tables unchanged)
+PASS V02 event 12 registration count (expected=200 actual=200)
+PASS V02 event 12 registration count is the bare JSON integer 1 (1)
+PASS V02 empty event 17 revenue changes no business row in any of four tables (all four tables unchanged)
+PASS V02 empty event 17 revenue (expected=200 actual=200)
+PASS V02 empty event 17 revenue is the bare JSON number 0 (0.00)
+PASS V02 empty event 17 registration count changes no business row in any of four tables (all four tables unchanged)
+PASS V02 empty event 17 registration count (expected=200 actual=200)
+PASS V02 empty event 17 registration count is the bare JSON integer 0 (0)
+PASS V03 user 2 on 16 revenue changes no business row in any of four tables (all four tables unchanged)
+PASS V03 user 2 on 16 revenue (expected=403 actual=403)
+PASS V03 user 2 on 16 revenue has the exact declared error envelope ({"code":"Forbidden","message":"Forbidden","fields":[]})
+PASS V03 user 2 on 16 registration-count changes no business row in any of four tables (all four tables unchanged)
+PASS V03 user 2 on 16 registration-count (expected=403 actual=403)
+PASS V03 user 2 on 16 registration-count has the exact declared error envelope ({"code":"Forbidden","message":"Forbidden","fields":[]})
+PASS V03 user 1 on 12 revenue changes no business row in any of four tables (all four tables unchanged)
+PASS V03 user 1 on 12 revenue (expected=403 actual=403)
+PASS V03 user 1 on 12 revenue has the exact declared error envelope ({"code":"Forbidden","message":"Forbidden","fields":[]})
+PASS V03 user 1 on 12 registration-count changes no business row in any of four tables (all four tables unchanged)
+PASS V03 user 1 on 12 registration-count (expected=403 actual=403)
+PASS V03 user 1 on 12 registration-count has the exact declared error envelope ({"code":"Forbidden","message":"Forbidden","fields":[]})
+PASS V03 user 3 on 11 revenue changes no business row in any of four tables (all four tables unchanged)
+PASS V03 user 3 on 11 revenue (expected=403 actual=403)
+PASS V03 user 3 on 11 revenue has the exact declared error envelope ({"code":"Forbidden","message":"Forbidden","fields":[]})
+PASS V03 user 3 on 11 registration-count changes no business row in any of four tables (all four tables unchanged)
+PASS V03 user 3 on 11 registration-count (expected=403 actual=403)
+PASS V03 user 3 on 11 registration-count has the exact declared error envelope ({"code":"Forbidden","message":"Forbidden","fields":[]})
+PASS V04 unknown event revenue changes no business row in any of four tables (all four tables unchanged)
+PASS V04 unknown event revenue (expected=404 actual=404)
+PASS V04 unknown event revenue has the exact declared error envelope ({"code":"EventNotFound","message":"EventNotFound","fields":[]})
+PASS V04 unknown event registration-count changes no business row in any of four tables (all four tables unchanged)
+PASS V04 unknown event registration-count (expected=404 actual=404)
+PASS V04 unknown event registration-count has the exact declared error envelope ({"code":"EventNotFound","message":"EventNotFound","fields":[]})
+PASS events fixture seed has complete rows, foreign keys, matching counters and unique pairs ({user=10, event=9, registration=9, access_token=***REDACTED***
+PASS R01 first registration (expected=201 actual=201)
+PASS R01 first registration returns the one newly inserted numeric id (id=10; inserted=1)
+PASS R01 first registration stores the token's attendee, the event and the fee at that moment and the request time (Row[cells={id=10, event_id=10, attendee_id=1, fee=20.00, registered_at=2026-10-31T06:13:29.171258Z}]; request=2026-10-31T06:13:29.146356887Z..2026-10-31T06:13:29.178545524Z)
+PASS R01 first registration has only the allowed full-database delta (exact allowed delta)
+PASS R01 first registration matches all JSON fields and JDBC values ({"id":10,"event":10,"attendee":1,"fee":20.00,"registeredAt":"2026-10-31T06:13:29.171258331Z"})
+PASS R02 repeat (expected=409 actual=409)
+PASS R02 repeat has the exact declared error envelope ({"code":"AlreadyRegistered","message":"AlreadyRegistered","fields":[]})
+PASS R02 repeat changes no business row in any of four tables (all four tables unchanged)
+PASS R03 second attendee (expected=201 actual=201)
+PASS R03 second attendee returns the one newly inserted numeric id (id=11; inserted=1)
+PASS R03 second attendee stores the token's attendee, the event and the fee at that moment and the request time (Row[cells={id=11, event_id=10, attendee_id=2, fee=20.00, registered_at=2026-10-31T06:13:29.215508Z}]; request=2026-10-31T06:13:29.200163799Z..2026-10-31T06:13:29.220420114Z)
+PASS R03 second attendee has only the allowed full-database delta (exact allowed delta)
+PASS R03 second attendee matches all JSON fields and JDBC values ({"id":11,"event":10,"attendee":2,"fee":20.00,"registeredAt":"2026-10-31T06:13:29.215507584Z"})
+PASS R03 third attendee fills the event (expected=201 actual=201)
+PASS R03 third attendee fills the event returns the one newly inserted numeric id (id=12; inserted=1)
+PASS R03 third attendee fills the event stores the token's attendee, the event and the fee at that moment and the request time (Row[cells={id=12, event_id=10, attendee_id=3, fee=20.00, registered_at=2026-10-31T06:13:29.233260Z}]; request=2026-10-31T06:13:29.224554166Z..2026-10-31T06:13:29.238299455Z)
+PASS R03 third attendee fills the event has only the allowed full-database delta (exact allowed delta)
+PASS R03 third attendee fills the event matches all JSON fields and JDBC values ({"id":12,"event":10,"attendee":3,"fee":20.00,"registeredAt":"2026-10-31T06:13:29.233260415Z"})
+PASS V05 revenue after three registrations revenue changes no business row in any of four tables (all four tables unchanged)
+PASS V05 revenue after three registrations revenue (expected=200 actual=200)
+PASS V05 revenue after three registrations revenue is the bare JSON number 60.00 (60.00)
+PASS V05 revenue after three registrations registration count changes no business row in any of four tables (all four tables unchanged)
+PASS V05 revenue after three registrations registration count (expected=200 actual=200)
+PASS V05 revenue after three registrations registration count is the bare JSON integer 3 (3)
+PASS R04 event is full (expected=409 actual=409)
+PASS R04 event is full has the exact declared error envelope ({"code":"EventFull","message":"EventFull","fields":[]})
+PASS R04 event is full changes no business row in any of four tables (all four tables unchanged)
+PASS R05 already registered is reported before full (expected=409 actual=409)
+PASS R05 already registered is reported before full has the exact declared error envelope ({"code":"AlreadyRegistered","message":"AlreadyRegistered","fields":[]})
+PASS R05 already registered is reported before full changes no business row in any of four tables (all four tables unchanged)
+PASS R06 started event (expected=409 actual=409)
+PASS R06 started event has the exact declared error envelope ({"code":"RegistrationClosed","message":"RegistrationClosed","fields":[]})
+PASS R06 started event changes no business row in any of four tables (all four tables unchanged)
+PASS R06 started event is reported before already registered (expected=409 actual=409)
+PASS R06 started event is reported before already registered has the exact declared error envelope ({"code":"RegistrationClosed","message":"RegistrationClosed","fields":[]})
+PASS R06 started event is reported before already registered changes no business row in any of four tables (all four tables unchanged)
+PASS R07 unknown event (expected=404 actual=404)
+PASS R07 unknown event has the exact declared error envelope ({"code":"EventNotFound","message":"EventNotFound","fields":[]})
+PASS R07 unknown event changes no business row in any of four tables (all four tables unchanged)
+PASS R08 free event (expected=201 actual=201)
+PASS R08 free event returns the one newly inserted numeric id (id=13; inserted=1)
+PASS R08 free event stores the token's attendee, the event and the fee at that moment and the request time (Row[cells={id=13, event_id=11, attendee_id=1, fee=0.00, registered_at=2026-10-31T06:13:29.334675Z}]; request=2026-10-31T06:13:29.327719241Z..2026-10-31T06:13:29.338468337Z)
+PASS R08 free event has only the allowed full-database delta (exact allowed delta)
+PASS R08 free event matches all JSON fields and JDBC values ({"id":13,"event":11,"attendee":1,"fee":0.00,"registeredAt":"2026-10-31T06:13:29.334675086Z"})
+PASS R09 URL id overrides the body id (expected=201 actual=201)
+PASS R09 URL id overrides the body id returns the one newly inserted numeric id (id=14; inserted=1)
+PASS R09 URL id overrides the body id stores the token's attendee, the event and the fee at that moment and the request time (Row[cells={id=14, event_id=11, attendee_id=2, fee=0.00, registered_at=2026-10-31T06:13:29.351627Z}]; request=2026-10-31T06:13:29.342657266Z..2026-10-31T06:13:29.355785869Z)
+PASS R09 URL id overrides the body id has only the allowed full-database delta (exact allowed delta)
+PASS R09 URL id overrides the body id matches all JSON fields and JDBC values ({"id":14,"event":11,"attendee":2,"fee":0.00,"registeredAt":"2026-10-31T06:13:29.351627056Z"})
+PASS R10 organizer registers for own event (expected=201 actual=201)
+PASS R10 organizer registers for own event returns the one newly inserted numeric id (id=15; inserted=1)
+PASS R10 organizer registers for own event stores the token's attendee, the event and the fee at that moment and the request time (Row[cells={id=15, event_id=14, attendee_id=1, fee=10.00, registered_at=2026-10-31T06:13:29.367770Z}]; request=2026-10-31T06:13:29.359260468Z..2026-10-31T06:13:29.371521043Z)
+PASS R10 organizer registers for own event has only the allowed full-database delta (exact allowed delta)
+PASS R10 organizer registers for own event matches all JSON fields and JDBC values ({"id":15,"event":14,"attendee":1,"fee":10.00,"registeredAt":"2026-10-31T06:13:29.367770201Z"})
+PASS R11 fee is a snapshot (expected=201 actual=201)
+PASS R11 fee is a snapshot returns the one newly inserted numeric id (id=16; inserted=1)
+PASS R11 fee is a snapshot stores the token's attendee, the event and the fee at that moment and the request time (Row[cells={id=16, event_id=12, attendee_id=7, fee=25.00, registered_at=2026-10-31T06:13:29.386596Z}]; request=2026-10-31T06:13:29.375620492Z..2026-10-31T06:13:29.390200549Z)
+PASS R11 fee is a snapshot has only the allowed full-database delta (exact allowed delta)
+PASS R11 fee is a snapshot matches all JSON fields and JDBC values ({"id":16,"event":12,"attendee":7,"fee":25.00,"registeredAt":"2026-10-31T06:13:29.386596485Z"})
+PASS R11 revenue sums the stored fees revenue changes no business row in any of four tables (all four tables unchanged)
+PASS R11 revenue sums the stored fees revenue (expected=200 actual=200)
+PASS R11 revenue sums the stored fees revenue is the bare JSON number 40.50 (40.50)
+PASS R11 revenue sums the stored fees registration count changes no business row in any of four tables (all four tables unchanged)
+PASS R11 revenue sums the stored fees registration count (expected=200 actual=200)
+PASS R11 revenue sums the stored fees registration count is the bare JSON integer 2 (2)
+PASS R12 full event stays listed changes no business row in any of four tables (all four tables unchanged)
+PASS R12 full event stays listed (expected=200 actual=200)
+PASS R12 full event stays listed has exact page keys, totals, ordering and full records ({"total":8,"page":1,"size":20,"records":[{"id":10,"organizer":1,"title":"Spring Workshop","startsAt":"2099-03-01T09:00:00Z","capacity":3,"registered":3,"remaining":0,"fee":20.00},{"id":11,"organizer":1,"title":"Free Talk","startsAt":"2099-03-02T09:00:00Z","capacity":5,"registered":3,"remaining":2,"fee":0.00},{"id":12,"organizer":2,"title":"Hack Night","startsAt":"2099-03-03T18:00:00Z","capacity":2,"registered":2,"remaining":0,"fee":15.50},{"id":14,"organizer":1,"title":"Capacity Race","startsAt":"2099-04-01T09:00:00Z","capacity":4,"registered":1,"remaining":3,"fee":10.00},{"id":15,"organizer":1,"title":"Same Person Race","startsAt":"2099-04-01T09:00:00Z","capacity":10,"registered":0,"remaining":10,"fee":12.34},{"id":16,"organizer":1,"title":"Revenue Review","startsAt":"2099-05-01T09:00:00Z","capacity":10,"registered":3,"remaining":7,"fee":20.00},{"id":17,"organizer":2,"title":"Empty Event","startsAt":"2099-06-01T09:00:00Z","capacity":10,"registered":0,"remaining":10,"fee":99.99},{"id":18,"organizer":1,"title":"Dime Event","startsAt":"2099-07-01T09:00:00Z","capacity":10,"registered":3,"remaining":7,"fee":0.10}]})
+PASS R12 event 10 is full yet still listed (Row[cells={id=10, organizer_id=1, title=Spring Workshop, starts_at=2099-03-01T09:00:00Z, capacity=3, registered=3, fee=20.00}])
+PASS R13 own list ids are exactly the three new registrations ([15, 13, 10] vs [10, 13, 15])
+PASS R13 own list changes no business row in any of four tables (all four tables unchanged)
+PASS R13 own list (expected=200 actual=200)
+PASS R13 own list has exact page keys, totals, ordering and full records ({"total":3,"page":1,"size":20,"records":[{"id":15,"event":14,"attendee":1,"fee":10.00,"registeredAt":"2026-10-31T06:13:29.367770Z"},{"id":13,"event":11,"attendee":1,"fee":0.00,"registeredAt":"2026-10-31T06:13:29.334675Z"},{"id":10,"event":10,"attendee":1,"fee":20.00,"registeredAt":"2026-10-31T06:13:29.171258Z"}]})
+PASS I01 after registrations every registered counter equals its stored rows and stays within capacity (checked all event and registration rows)
+PASS I01 after registrations every attendee registered at most once per event ([12/4, 13/6, 16/3, 16/4, 16/5, 11/3, 18/7, 18/8, 18/9, 10/1, 10/2, 10/3, 11/1, 11/2, 14/1, 12/7])
+PASS I01 after registrations event 10 revenue changes no business row in any of four tables (all four tables unchanged)
+PASS I01 after registrations event 10 revenue (expected=200 actual=200)
+PASS I01 after registrations event 10 revenue is the bare JSON number 60.00 (60.00)
+PASS I01 after registrations event 10 registration count changes no business row in any of four tables (all four tables unchanged)
+PASS I01 after registrations event 10 registration count (expected=200 actual=200)
+PASS I01 after registrations event 10 registration count is the bare JSON integer 3 (3)
+PASS I01 after registrations event 11 revenue changes no business row in any of four tables (all four tables unchanged)
+PASS I01 after registrations event 11 revenue (expected=200 actual=200)
+PASS I01 after registrations event 11 revenue is the bare JSON number 0.00 (0.00)
+PASS I01 after registrations event 11 registration count changes no business row in any of four tables (all four tables unchanged)
+PASS I01 after registrations event 11 registration count (expected=200 actual=200)
+PASS I01 after registrations event 11 registration count is the bare JSON integer 3 (3)
+PASS I01 after registrations event 12 revenue changes no business row in any of four tables (all four tables unchanged)
+PASS I01 after registrations event 12 revenue (expected=200 actual=200)
+PASS I01 after registrations event 12 revenue is the bare JSON number 40.50 (40.50)
+PASS I01 after registrations event 12 registration count changes no business row in any of four tables (all four tables unchanged)
+PASS I01 after registrations event 12 registration count (expected=200 actual=200)
+PASS I01 after registrations event 12 registration count is the bare JSON integer 2 (2)
+PASS I01 after registrations event 13 revenue changes no business row in any of four tables (all four tables unchanged)
+PASS I01 after registrations event 13 revenue (expected=200 actual=200)
+PASS I01 after registrations event 13 revenue is the bare JSON number 5.00 (5.00)
+PASS I01 after registrations event 13 registration count changes no business row in any of four tables (all four tables unchanged)
+PASS I01 after registrations event 13 registration count (expected=200 actual=200)
+PASS I01 after registrations event 13 registration count is the bare JSON integer 1 (1)
+PASS I01 after registrations event 14 revenue changes no business row in any of four tables (all four tables unchanged)
+PASS I01 after registrations event 14 revenue (expected=200 actual=200)
+PASS I01 after registrations event 14 revenue is the bare JSON number 10.00 (10.00)
+PASS I01 after registrations event 14 registration count changes no business row in any of four tables (all four tables unchanged)
+PASS I01 after registrations event 14 registration count (expected=200 actual=200)
+PASS I01 after registrations event 14 registration count is the bare JSON integer 1 (1)
+PASS I01 after registrations event 15 revenue changes no business row in any of four tables (all four tables unchanged)
+PASS I01 after registrations event 15 revenue (expected=200 actual=200)
+PASS I01 after registrations event 15 revenue is the bare JSON number 0 (0.00)
+PASS I01 after registrations event 15 registration count changes no business row in any of four tables (all four tables unchanged)
+PASS I01 after registrations event 15 registration count (expected=200 actual=200)
+PASS I01 after registrations event 15 registration count is the bare JSON integer 0 (0)
+PASS I01 after registrations event 16 revenue changes no business row in any of four tables (all four tables unchanged)
+PASS I01 after registrations event 16 revenue (expected=200 actual=200)
+PASS I01 after registrations event 16 revenue is the bare JSON number 57.50 (57.50)
+PASS I01 after registrations event 16 registration count changes no business row in any of four tables (all four tables unchanged)
+PASS I01 after registrations event 16 registration count (expected=200 actual=200)
+PASS I01 after registrations event 16 registration count is the bare JSON integer 3 (3)
+PASS I01 after registrations event 17 revenue changes no business row in any of four tables (all four tables unchanged)
+PASS I01 after registrations event 17 revenue (expected=200 actual=200)
+PASS I01 after registrations event 17 revenue is the bare JSON number 0 (0.00)
+PASS I01 after registrations event 17 registration count changes no business row in any of four tables (all four tables unchanged)
+PASS I01 after registrations event 17 registration count (expected=200 actual=200)
+PASS I01 after registrations event 17 registration count is the bare JSON integer 0 (0)
+PASS I01 after registrations event 18 revenue changes no business row in any of four tables (all four tables unchanged)
+PASS I01 after registrations event 18 revenue (expected=200 actual=200)
+PASS I01 after registrations event 18 revenue is the bare JSON number 0.30 (0.30)
+PASS I01 after registrations event 18 registration count changes no business row in any of four tables (all four tables unchanged)
+PASS I01 after registrations event 18 registration count (expected=200 actual=200)
+PASS I01 after registrations event 18 registration count is the bare JSON integer 3 (3)
+PASS events fixture seed has complete rows, foreign keys, matching counters and unique pairs ({user=10, event=9, registration=9, access_token=***REDACTED***
+PASS X01 six independent clients reach the ready latch (remaining=0)
+PASS X01 six distinct runtime connections and transactions demonstrably wait on the held event (blockerConnection=27; target transactions=6)
+PASS X01 client 0 completed its real HTTP request (HTTP 201)
+PASS X01 client 1 completed its real HTTP request (HTTP 409)
+PASS X01 client 2 completed its real HTTP request (HTTP 201)
+PASS X01 client 3 completed its real HTTP request (HTTP 201)
+PASS X01 client 4 completed its real HTTP request (HTTP 201)
+PASS X01 client 5 completed its real HTTP request (HTTP 409)
+PASS X01 records all six actual ready events (events=6)
+PASS X01 records all six actual start events (events=6)
+PASS X01 records all six actual end events (events=6)
+PASS X01 capacity has exactly 4 successes and 2 EventFull conflicts ([201, 409, 201, 201, 201, 409])
+PASS X01 exactly four distinct attendees hold the four seats ([Row[cells={id=17, event_id=14, attendee_id=6, fee=10.00, registered_at=2026-10-31T06:13:29.791668Z}], Row[cells={id=18, event_id=14, attendee_id=3, fee=10.00, registered_at=2026-10-31T06:13:29.803796Z}], Row[cells={id=19, event_id=14, attendee_id=5, fee=10.00, registered_at=2026-10-31T06:13:29.812803Z}], Row[cells={id=20, event_id=14, attendee_id=7, fee=10.00, registered_at=2026-10-31T06:13:29.818469Z}]])
+PASS X01 capacity competition has only the allowed full-database delta (exact allowed delta)
+PASS X01 winner response matches its stored row ({"id":18,"event":14,"attendee":3,"fee":10.00,"registeredAt":"2026-10-31T06:13:29.803796321Z"})
+PASS X01 loser (expected=409 actual=409)
+PASS X01 loser has the exact declared error envelope ({"code":"EventFull","message":"EventFull","fields":[]})
+PASS X01 winner response matches its stored row ({"id":19,"event":14,"attendee":5,"fee":10.00,"registeredAt":"2026-10-31T06:13:29.812803178Z"})
+PASS X01 winner response matches its stored row ({"id":17,"event":14,"attendee":6,"fee":10.00,"registeredAt":"2026-10-31T06:13:29.791667908Z"})
+PASS X01 winner response matches its stored row ({"id":20,"event":14,"attendee":7,"fee":10.00,"registeredAt":"2026-10-31T06:13:29.818469084Z"})
+PASS X01 loser (expected=409 actual=409)
+PASS X01 loser has the exact declared error envelope ({"code":"EventFull","message":"EventFull","fields":[]})
+PASS X01 invariant every registered counter equals its stored rows and stays within capacity (checked all event and registration rows)
+PASS X01 invariant every attendee registered at most once per event ([12/4, 13/6, 16/3, 16/4, 16/5, 11/3, 18/7, 18/8, 18/9, 14/6, 14/3, 14/5, 14/7])
+PASS X01 invariant event 10 revenue changes no business row in any of four tables (all four tables unchanged)
+PASS X01 invariant event 10 revenue (expected=200 actual=200)
+PASS X01 invariant event 10 revenue is the bare JSON number 0 (0.00)
+PASS X01 invariant event 10 registration count changes no business row in any of four tables (all four tables unchanged)
+PASS X01 invariant event 10 registration count (expected=200 actual=200)
+PASS X01 invariant event 10 registration count is the bare JSON integer 0 (0)
+PASS X01 invariant event 11 revenue changes no business row in any of four tables (all four tables unchanged)
+PASS X01 invariant event 11 revenue (expected=200 actual=200)
+PASS X01 invariant event 11 revenue is the bare JSON number 0.00 (0.00)
+PASS X01 invariant event 11 registration count changes no business row in any of four tables (all four tables unchanged)
+PASS X01 invariant event 11 registration count (expected=200 actual=200)
+PASS X01 invariant event 11 registration count is the bare JSON integer 1 (1)
+PASS X01 invariant event 12 revenue changes no business row in any of four tables (all four tables unchanged)
+PASS X01 invariant event 12 revenue (expected=200 actual=200)
+PASS X01 invariant event 12 revenue is the bare JSON number 15.50 (15.50)
+PASS X01 invariant event 12 registration count changes no business row in any of four tables (all four tables unchanged)
+PASS X01 invariant event 12 registration count (expected=200 actual=200)
+PASS X01 invariant event 12 registration count is the bare JSON integer 1 (1)
+PASS X01 invariant event 13 revenue changes no business row in any of four tables (all four tables unchanged)
+PASS X01 invariant event 13 revenue (expected=200 actual=200)
+PASS X01 invariant event 13 revenue is the bare JSON number 5.00 (5.00)
+PASS X01 invariant event 13 registration count changes no business row in any of four tables (all four tables unchanged)
+PASS X01 invariant event 13 registration count (expected=200 actual=200)
+PASS X01 invariant event 13 registration count is the bare JSON integer 1 (1)
+PASS X01 invariant event 14 revenue changes no business row in any of four tables (all four tables unchanged)
+PASS X01 invariant event 14 revenue (expected=200 actual=200)
+PASS X01 invariant event 14 revenue is the bare JSON number 40.00 (40.00)
+PASS X01 invariant event 14 registration count changes no business row in any of four tables (all four tables unchanged)
+PASS X01 invariant event 14 registration count (expected=200 actual=200)
+PASS X01 invariant event 14 registration count is the bare JSON integer 4 (4)
+PASS X01 invariant event 15 revenue changes no business row in any of four tables (all four tables unchanged)
+PASS X01 invariant event 15 revenue (expected=200 actual=200)
+PASS X01 invariant event 15 revenue is the bare JSON number 0 (0.00)
+PASS X01 invariant event 15 registration count changes no business row in any of four tables (all four tables unchanged)
+PASS X01 invariant event 15 registration count (expected=200 actual=200)
+PASS X01 invariant event 15 registration count is the bare JSON integer 0 (0)
+PASS X01 invariant event 16 revenue changes no business row in any of four tables (all four tables unchanged)
+PASS X01 invariant event 16 revenue (expected=200 actual=200)
+PASS X01 invariant event 16 revenue is the bare JSON number 57.50 (57.50)
+PASS X01 invariant event 16 registration count changes no business row in any of four tables (all four tables unchanged)
+PASS X01 invariant event 16 registration count (expected=200 actual=200)
+PASS X01 invariant event 16 registration count is the bare JSON integer 3 (3)
+PASS X01 invariant event 17 revenue changes no business row in any of four tables (all four tables unchanged)
+PASS X01 invariant event 17 revenue (expected=200 actual=200)
+PASS X01 invariant event 17 revenue is the bare JSON number 0 (0.00)
+PASS X01 invariant event 17 registration count changes no business row in any of four tables (all four tables unchanged)
+PASS X01 invariant event 17 registration count (expected=200 actual=200)
+PASS X01 invariant event 17 registration count is the bare JSON integer 0 (0)
+PASS X01 invariant event 18 revenue changes no business row in any of four tables (all four tables unchanged)
+PASS X01 invariant event 18 revenue (expected=200 actual=200)
+PASS X01 invariant event 18 revenue is the bare JSON number 0.30 (0.30)
+PASS X01 invariant event 18 registration count changes no business row in any of four tables (all four tables unchanged)
+PASS X01 invariant event 18 registration count (expected=200 actual=200)
+PASS X01 invariant event 18 registration count is the bare JSON integer 3 (3)
+PASS X01 organizer sees four paid seats revenue changes no business row in any of four tables (all four tables unchanged)
+PASS X01 organizer sees four paid seats revenue (expected=200 actual=200)
+PASS X01 organizer sees four paid seats revenue is the bare JSON number 40.00 (40.00)
+PASS X01 organizer sees four paid seats registration count changes no business row in any of four tables (all four tables unchanged)
+PASS X01 organizer sees four paid seats registration count (expected=200 actual=200)
+PASS X01 organizer sees four paid seats registration count is the bare JSON integer 4 (4)
+PASS events fixture seed has complete rows, foreign keys, matching counters and unique pairs ({user=10, event=9, registration=9, access_token=***REDACTED***
+PASS X02 six independent clients reach the ready latch (remaining=0)
+PASS X02 six distinct runtime connections and transactions demonstrably wait on the held event (blockerConnection=28; target transactions=6)
+PASS X02 client 0 completed its real HTTP request (HTTP 409)
+PASS X02 client 1 completed its real HTTP request (HTTP 409)
+PASS X02 client 2 completed its real HTTP request (HTTP 409)
+PASS X02 client 3 completed its real HTTP request (HTTP 409)
+PASS X02 client 4 completed its real HTTP request (HTTP 409)
+PASS X02 client 5 completed its real HTTP request (HTTP 201)
+PASS X02 records all six actual ready events (events=6)
+PASS X02 records all six actual start events (events=6)
+PASS X02 records all six actual end events (events=6)
+PASS X02 same user has exactly 1 successes and 5 AlreadyRegistered conflicts ([409, 409, 409, 409, 409, 201])
+PASS X02 exactly one registration survives ([Row[cells={id=21, event_id=15, attendee_id=2, fee=12.34, registered_at=2026-10-31T06:13:30.135187Z}]])
+PASS X02 repeated-registration competition has only the allowed full-database delta (exact allowed delta)
+PASS X02 the counter rose once, not once per attempt (Row[cells={id=15, organizer_id=1, title=Same Person Race, starts_at=2099-04-01T09:00:00Z, capacity=10, registered=1, fee=12.34}])
+PASS X02 loser (expected=409 actual=409)
+PASS X02 loser has the exact declared error envelope ({"code":"AlreadyRegistered","message":"AlreadyRegistered","fields":[]})
+PASS X02 loser (expected=409 actual=409)
+PASS X02 loser has the exact declared error envelope ({"code":"AlreadyRegistered","message":"AlreadyRegistered","fields":[]})
+PASS X02 loser (expected=409 actual=409)
+PASS X02 loser has the exact declared error envelope ({"code":"AlreadyRegistered","message":"AlreadyRegistered","fields":[]})
+PASS X02 loser (expected=409 actual=409)
+PASS X02 loser has the exact declared error envelope ({"code":"AlreadyRegistered","message":"AlreadyRegistered","fields":[]})
+PASS X02 loser (expected=409 actual=409)
+PASS X02 loser has the exact declared error envelope ({"code":"AlreadyRegistered","message":"AlreadyRegistered","fields":[]})
+PASS X02 invariant every registered counter equals its stored rows and stays within capacity (checked all event and registration rows)
+PASS X02 invariant every attendee registered at most once per event ([12/4, 13/6, 16/3, 16/4, 16/5, 11/3, 18/7, 18/8, 18/9, 15/2])
+PASS X02 invariant event 10 revenue changes no business row in any of four tables (all four tables unchanged)
+PASS X02 invariant event 10 revenue (expected=200 actual=200)
+PASS X02 invariant event 10 revenue is the bare JSON number 0 (0.00)
+PASS X02 invariant event 10 registration count changes no business row in any of four tables (all four tables unchanged)
+PASS X02 invariant event 10 registration count (expected=200 actual=200)
+PASS X02 invariant event 10 registration count is the bare JSON integer 0 (0)
+PASS X02 invariant event 11 revenue changes no business row in any of four tables (all four tables unchanged)
+PASS X02 invariant event 11 revenue (expected=200 actual=200)
+PASS X02 invariant event 11 revenue is the bare JSON number 0.00 (0.00)
+PASS X02 invariant event 11 registration count changes no business row in any of four tables (all four tables unchanged)
+PASS X02 invariant event 11 registration count (expected=200 actual=200)
+PASS X02 invariant event 11 registration count is the bare JSON integer 1 (1)
+PASS X02 invariant event 12 revenue changes no business row in any of four tables (all four tables unchanged)
+PASS X02 invariant event 12 revenue (expected=200 actual=200)
+PASS X02 invariant event 12 revenue is the bare JSON number 15.50 (15.50)
+PASS X02 invariant event 12 registration count changes no business row in any of four tables (all four tables unchanged)
+PASS X02 invariant event 12 registration count (expected=200 actual=200)
+PASS X02 invariant event 12 registration count is the bare JSON integer 1 (1)
+PASS X02 invariant event 13 revenue changes no business row in any of four tables (all four tables unchanged)
+PASS X02 invariant event 13 revenue (expected=200 actual=200)
+PASS X02 invariant event 13 revenue is the bare JSON number 5.00 (5.00)
+PASS X02 invariant event 13 registration count changes no business row in any of four tables (all four tables unchanged)
+PASS X02 invariant event 13 registration count (expected=200 actual=200)
+PASS X02 invariant event 13 registration count is the bare JSON integer 1 (1)
+PASS X02 invariant event 14 revenue changes no business row in any of four tables (all four tables unchanged)
+PASS X02 invariant event 14 revenue (expected=200 actual=200)
+PASS X02 invariant event 14 revenue is the bare JSON number 0 (0.00)
+PASS X02 invariant event 14 registration count changes no business row in any of four tables (all four tables unchanged)
+PASS X02 invariant event 14 registration count (expected=200 actual=200)
+PASS X02 invariant event 14 registration count is the bare JSON integer 0 (0)
+PASS X02 invariant event 15 revenue changes no business row in any of four tables (all four tables unchanged)
+PASS X02 invariant event 15 revenue (expected=200 actual=200)
+PASS X02 invariant event 15 revenue is the bare JSON number 12.34 (12.34)
+PASS X02 invariant event 15 registration count changes no business row in any of four tables (all four tables unchanged)
+PASS X02 invariant event 15 registration count (expected=200 actual=200)
+PASS X02 invariant event 15 registration count is the bare JSON integer 1 (1)
+PASS X02 invariant event 16 revenue changes no business row in any of four tables (all four tables unchanged)
+PASS X02 invariant event 16 revenue (expected=200 actual=200)
+PASS X02 invariant event 16 revenue is the bare JSON number 57.50 (57.50)
+PASS X02 invariant event 16 registration count changes no business row in any of four tables (all four tables unchanged)
+PASS X02 invariant event 16 registration count (expected=200 actual=200)
+PASS X02 invariant event 16 registration count is the bare JSON integer 3 (3)
+PASS X02 invariant event 17 revenue changes no business row in any of four tables (all four tables unchanged)
+PASS X02 invariant event 17 revenue (expected=200 actual=200)
+PASS X02 invariant event 17 revenue is the bare JSON number 0 (0.00)
+PASS X02 invariant event 17 registration count changes no business row in any of four tables (all four tables unchanged)
+PASS X02 invariant event 17 registration count (expected=200 actual=200)
+PASS X02 invariant event 17 registration count is the bare JSON integer 0 (0)
+PASS X02 invariant event 18 revenue changes no business row in any of four tables (all four tables unchanged)
+PASS X02 invariant event 18 revenue (expected=200 actual=200)
+PASS X02 invariant event 18 revenue is the bare JSON number 0.30 (0.30)
+PASS X02 invariant event 18 registration count changes no business row in any of four tables (all four tables unchanged)
+PASS X02 invariant event 18 registration count (expected=200 actual=200)
+PASS X02 invariant event 18 registration count is the bare JSON integer 3 (3)
+PASS the generated application process exited (stopped=true)
+PASS the owned schema was dropped and its absence proved (schema=kcg_conf_run)
+PASS the advisory lock for the owned schema was released (released=true)
+
+B01 anonymous readiness: status=200 body={"total":8,"page":1,"size":10,"records":[{"id":10,"organizer":1,"title":"Spring Workshop","startsAt":"2099-03-01T09:00:00Z","capacity":3,"registered":0,"remaining":3,"fee":20.00},{"id":11,"organizer":1,"title":"Free Talk","startsAt":"2099-03-02T09:00:00Z","capacity":5,"registered":1,"remaining":4,"fee":0.00},{"id":12,"organizer":2,"title":"Hack Night","startsAt":"2099-03-03T18:00:00Z","capacity":2,"registered":1,"remaining":1,"fee":15.50},{"id":14,"organizer":1,"title":"Capacity Race","startsAt":"2099-04-01T09:00:00Z","capacity":4,"registered":0,"remaining":4,"fee":10.00},{"id":15,"organizer":1,"title":"Same Person Race","startsAt":"2099-04-01T09:00:00Z","capacity":10,"registered":0,"remaining":10,"fee":12.34},{"id":16,"organizer":1,"title":"Revenue Review","startsAt":"2099-05-01T09:00:00Z","capacity":10,"registered":3,"remaining":7,"fee":20.00},{"id":17,"organizer":2,"title":"Empty Event","startsAt":"2099-06-01T09:00:00Z","capacity":10,"registered":0,"remaining":10,"fee":99.99},{"id":18,"organizer":1,"title":"Dime Event","startsAt":"2099-07-01T09:00:00Z","capacity":10,"registered":3,"remaining":7,"fee":0.10}]}
+B02 /api/events invalid identity 0: status=401 body=
+B02 /api/events invalid identity 1: status=401 body=
+B02 /api/events invalid identity 2: status=401 body=
+B02 /api/events invalid identity 3: status=401 body=
+B02 /api/events/10/registrations invalid identity 0: status=401 body=
+B02 /api/events/10/registrations invalid identity 1: status=401 body=
+B02 /api/events/10/registrations invalid identity 2: status=401 body=
+B02 /api/events/10/registrations invalid identity 3: status=401 body=
+B02 /api/my/registrations?page=1&size=10 invalid identity 0: status=401 body=
+B02 /api/my/registrations?page=1&size=10 invalid identity 1: status=401 body=
+B02 /api/my/registrations?page=1&size=10 invalid identity 2: status=401 body=
+B02 /api/my/registrations?page=1&size=10 invalid identity 3: status=401 body=
+B02 /api/events/16/revenue invalid identity 0: status=401 body=
+B02 /api/events/16/revenue invalid identity 1: status=401 body=
+B02 /api/events/16/revenue invalid identity 2: status=401 body=
+B02 /api/events/16/revenue invalid identity 3: status=401 body=
+B02 /api/events/16/registration-count invalid identity 0: status=401 body=
+B02 /api/events/16/registration-count invalid identity 1: status=401 body=
+B02 /api/events/16/registration-count invalid identity 2: status=401 body=
+B02 /api/events/16/registration-count invalid identity 3: status=401 body=
+C01 organizer creates: status=201 body={"id":19,"organizer":1,"title":"New Fest","startsAt":"2099-08-01T09:00:00Z","capacity":50,"registered":0,"remaining":50,"fee":12.50}
+C02 free past event, identity from token: status=201 body={"id":20,"organizer":2,"title":"Free Fest","startsAt":"2000-01-01T00:00:00Z","capacity":1,"registered":0,"remaining":1,"fee":0}
+C02 largest fee: status=201 body={"id":21,"organizer":1,"title":"Big","startsAt":"2099-08-01T09:00:00Z","capacity":5,"registered":0,"remaining":5,"fee":99999999.99}
+C02 equal-valued fee spelling: status=201 body={"id":22,"organizer":1,"title":"Equal","startsAt":"2099-08-01T09:00:00Z","capacity":5,"registered":0,"remaining":5,"fee":12.3400}
+C02 100-character title: status=201 body={"id":23,"organizer":1,"title":"tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt","startsAt":"2099-08-01T09:00:00Z","capacity":5,"registered":0,"remaining":5,"fee":1}
+C03 fee 100000000.00: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"fee","code":"ExactDecimal","message":"must be exactly representable at the declared precision and scale"}]}
+C03 fee 12.345: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"fee","code":"ExactDecimal","message":"must be exactly representable at the declared precision and scale"}]}
+C03 fee -0.01: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"fee","code":"DecimalMin","message":"must be greater than or equal to 0"}]}
+C03 fee omitted: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"fee","code":"NotNull","message":"must not be null"}]}
+C03 fee null: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"fee","code":"NotNull","message":"must not be null"}]}
+C03 capacity 0: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"capacity","code":"DecimalMin","message":"must be greater than or equal to 1"}]}
+C03 capacity -1: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"capacity","code":"DecimalMin","message":"must be greater than or equal to 1"}]}
+C03 capacity omitted: status=400 body={"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"capacity","code":"NotNull","message":"must not be null"}]}
+C03 capacity null: status=400 body={"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"capacity","code":"NotNull","message":"must not be null"}]}
+C03 title omitted: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"title","code":"NotBlank","message":"must not be blank"}]}
+C03 title null: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"title","code":"NotBlank","message":"must not be blank"}]}
+C03 title empty: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"title","code":"Size","message":"size must be between 1 and 100"},{"path":"title","code":"NotBlank","message":"must not be blank"}]}
+C03 title blank: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"title","code":"NotBlank","message":"must not be blank"}]}
+C03 title 101: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"title","code":"Size","message":"size must be between 1 and 100"}]}
+C03 startsAt omitted: status=400 body={"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"startsAt","code":"NotNull","message":"must not be null"}]}
+C03 startsAt null: status=400 body={"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"startsAt","code":"NotNull","message":"must not be null"}]}
+C03 startsAt text: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[]}
+C04 forged "organizer":2: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"organizer","code":"INVALID_REQUEST","message":"must be a well-formed value"}]}
+C04 forged "registered":5: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"registered","code":"INVALID_REQUEST","message":"must be a well-formed value"}]}
+L01 size 3 page 1: status=200 body={"total":8,"page":1,"size":3,"records":[{"id":10,"organizer":1,"title":"Spring Workshop","startsAt":"2099-03-01T09:00:00Z","capacity":3,"registered":0,"remaining":3,"fee":20.00},{"id":11,"organizer":1,"title":"Free Talk","startsAt":"2099-03-02T09:00:00Z","capacity":5,"registered":1,"remaining":4,"fee":0.00},{"id":12,"organizer":2,"title":"Hack Night","startsAt":"2099-03-03T18:00:00Z","capacity":2,"registered":1,"remaining":1,"fee":15.50}]}
+L01 size 3 page 2: status=200 body={"total":8,"page":2,"size":3,"records":[{"id":14,"organizer":1,"title":"Capacity Race","startsAt":"2099-04-01T09:00:00Z","capacity":4,"registered":0,"remaining":4,"fee":10.00},{"id":15,"organizer":1,"title":"Same Person Race","startsAt":"2099-04-01T09:00:00Z","capacity":10,"registered":0,"remaining":10,"fee":12.34},{"id":16,"organizer":1,"title":"Revenue Review","startsAt":"2099-05-01T09:00:00Z","capacity":10,"registered":3,"remaining":7,"fee":20.00}]}
+L01 size 3 page 3: status=200 body={"total":8,"page":3,"size":3,"records":[{"id":17,"organizer":2,"title":"Empty Event","startsAt":"2099-06-01T09:00:00Z","capacity":10,"registered":0,"remaining":10,"fee":99.99},{"id":18,"organizer":1,"title":"Dime Event","startsAt":"2099-07-01T09:00:00Z","capacity":10,"registered":3,"remaining":7,"fee":0.10}]}
+L01 size 3 page 4: status=200 body={"total":8,"page":4,"size":3,"records":[]}
+L02 defaults: status=200 body={"total":8,"page":1,"size":20,"records":[{"id":10,"organizer":1,"title":"Spring Workshop","startsAt":"2099-03-01T09:00:00Z","capacity":3,"registered":0,"remaining":3,"fee":20.00},{"id":11,"organizer":1,"title":"Free Talk","startsAt":"2099-03-02T09:00:00Z","capacity":5,"registered":1,"remaining":4,"fee":0.00},{"id":12,"organizer":2,"title":"Hack Night","startsAt":"2099-03-03T18:00:00Z","capacity":2,"registered":1,"remaining":1,"fee":15.50},{"id":14,"organizer":1,"title":"Capacity Race","startsAt":"2099-04-01T09:00:00Z","capacity":4,"registered":0,"remaining":4,"fee":10.00},{"id":15,"organizer":1,"title":"Same Person Race","startsAt":"2099-04-01T09:00:00Z","capacity":10,"registered":0,"remaining":10,"fee":12.34},{"id":16,"organizer":1,"title":"Revenue Review","startsAt":"2099-05-01T09:00:00Z","capacity":10,"registered":3,"remaining":7,"fee":20.00},{"id":17,"organizer":2,"title":"Empty Event","startsAt":"2099-06-01T09:00:00Z","capacity":10,"registered":0,"remaining":10,"fee":99.99},{"id":18,"organizer":1,"title":"Dime Event","startsAt":"2099-07-01T09:00:00Z","capacity":10,"registered":3,"remaining":7,"fee":0.10}]}
+L02 page default alone: status=200 body={"total":8,"page":1,"size":2,"records":[{"id":10,"organizer":1,"title":"Spring Workshop","startsAt":"2099-03-01T09:00:00Z","capacity":3,"registered":0,"remaining":3,"fee":20.00},{"id":11,"organizer":1,"title":"Free Talk","startsAt":"2099-03-02T09:00:00Z","capacity":5,"registered":1,"remaining":4,"fee":0.00}]}
+L02 size default alone: status=200 body={"total":8,"page":2,"size":20,"records":[]}
+L02 inclusive upper bounds: status=200 body={"total":8,"page":10000,"size":100,"records":[]}
+L03 rejected page 0: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+L03 rejected page -1: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+L03 rejected page 10001: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+L03 rejected size 0: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+L03 rejected size -1: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+L03 rejected size 101: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+L03 mine rejected page 0: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+L03 mine rejected page -1: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+L03 mine rejected page 10001: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+L03 mine rejected size 0: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+L03 mine rejected size -1: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+L03 mine rejected size 101: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+M01 registrations of user 7: status=200 body={"total":1,"page":1,"size":20,"records":[{"id":7,"event":18,"attendee":7,"fee":0.10,"registeredAt":"2026-02-01T00:00:00Z"}]}
+M01 registrations of user 6: status=200 body={"total":1,"page":1,"size":20,"records":[{"id":2,"event":13,"attendee":6,"fee":5.00,"registeredAt":"2026-01-01T00:00:00Z"}]}
+M01 registrations of user 5: status=200 body={"total":1,"page":1,"size":20,"records":[{"id":5,"event":16,"attendee":5,"fee":20.00,"registeredAt":"2026-01-03T00:00:00Z"}]}
+M01 registrations of user 4: status=200 body={"total":2,"page":1,"size":20,"records":[{"id":4,"event":16,"attendee":4,"fee":20.00,"registeredAt":"2026-01-02T00:00:00Z"},{"id":1,"event":12,"attendee":4,"fee":15.50,"registeredAt":"2026-01-01T00:00:00Z"}]}
+M01 registrations of user 3: status=200 body={"total":2,"page":1,"size":20,"records":[{"id":6,"event":11,"attendee":3,"fee":0.00,"registeredAt":"2026-01-01T01:00:00Z"},{"id":3,"event":16,"attendee":3,"fee":17.50,"registeredAt":"2026-01-01T01:00:00Z"}]}
+M01 registrations of user 2: status=200 body={"total":0,"page":1,"size":20,"records":[]}
+M01 registrations of user 1: status=200 body={"total":0,"page":1,"size":20,"records":[]}
+M01 registrations of user 10: status=200 body={"total":0,"page":1,"size":20,"records":[]}
+M02 carol size 1 page 1: status=200 body={"total":2,"page":1,"size":1,"records":[{"id":6,"event":11,"attendee":3,"fee":0.00,"registeredAt":"2026-01-01T01:00:00Z"}]}
+M02 carol size 1 page 2: status=200 body={"total":2,"page":2,"size":1,"records":[{"id":3,"event":16,"attendee":3,"fee":17.50,"registeredAt":"2026-01-01T01:00:00Z"}]}
+M02 carol size 1 page 3: status=200 body={"total":2,"page":3,"size":1,"records":[]}
+V01 event 16 revenue: status=200 body=57.50
+V01 event 16 registration count: status=200 body=3
+V02 free event 11 revenue: status=200 body=0.00
+V02 free event 11 registration count: status=200 body=1
+V02 started event 13 revenue: status=200 body=5.00
+V02 started event 13 registration count: status=200 body=1
+V02 dime event 18 revenue: status=200 body=0.30
+V02 dime event 18 registration count: status=200 body=3
+V02 empty event 10 revenue: status=200 body=0.00
+V02 empty event 10 registration count: status=200 body=0
+V02 empty event 14 revenue: status=200 body=0.00
+V02 empty event 14 registration count: status=200 body=0
+V02 empty event 15 revenue: status=200 body=0.00
+V02 empty event 15 registration count: status=200 body=0
+V02 event 12 revenue: status=200 body=15.50
+V02 event 12 registration count: status=200 body=1
+V02 empty event 17 revenue: status=200 body=0.00
+V02 empty event 17 registration count: status=200 body=0
+V03 user 2 on 16 revenue: status=403 body={"code":"Forbidden","message":"Forbidden","fields":[]}
+V03 user 2 on 16 registration-count: status=403 body={"code":"Forbidden","message":"Forbidden","fields":[]}
+V03 user 1 on 12 revenue: status=403 body={"code":"Forbidden","message":"Forbidden","fields":[]}
+V03 user 1 on 12 registration-count: status=403 body={"code":"Forbidden","message":"Forbidden","fields":[]}
+V03 user 3 on 11 revenue: status=403 body={"code":"Forbidden","message":"Forbidden","fields":[]}
+V03 user 3 on 11 registration-count: status=403 body={"code":"Forbidden","message":"Forbidden","fields":[]}
+V04 unknown event revenue: status=404 body={"code":"EventNotFound","message":"EventNotFound","fields":[]}
+V04 unknown event registration-count: status=404 body={"code":"EventNotFound","message":"EventNotFound","fields":[]}
+R01 first registration: status=201 body={"id":10,"event":10,"attendee":1,"fee":20.00,"registeredAt":"2026-10-31T06:13:29.171258331Z"}
+R02 repeat: status=409 body={"code":"AlreadyRegistered","message":"AlreadyRegistered","fields":[]}
+R03 second attendee: status=201 body={"id":11,"event":10,"attendee":2,"fee":20.00,"registeredAt":"2026-10-31T06:13:29.215507584Z"}
+R03 third attendee fills the event: status=201 body={"id":12,"event":10,"attendee":3,"fee":20.00,"registeredAt":"2026-10-31T06:13:29.233260415Z"}
+V05 revenue after three registrations revenue: status=200 body=60.00
+V05 revenue after three registrations registration count: status=200 body=3
+R04 event is full: status=409 body={"code":"EventFull","message":"EventFull","fields":[]}
+R05 already registered is reported before full: status=409 body={"code":"AlreadyRegistered","message":"AlreadyRegistered","fields":[]}
+R06 started event: status=409 body={"code":"RegistrationClosed","message":"RegistrationClosed","fields":[]}
+R06 started event is reported before already registered: status=409 body={"code":"RegistrationClosed","message":"RegistrationClosed","fields":[]}
+R07 unknown event: status=404 body={"code":"EventNotFound","message":"EventNotFound","fields":[]}
+R08 free event: status=201 body={"id":13,"event":11,"attendee":1,"fee":0.00,"registeredAt":"2026-10-31T06:13:29.334675086Z"}
+R09 URL id overrides the body id: status=201 body={"id":14,"event":11,"attendee":2,"fee":0.00,"registeredAt":"2026-10-31T06:13:29.351627056Z"}
+R10 organizer registers for own event: status=201 body={"id":15,"event":14,"attendee":1,"fee":10.00,"registeredAt":"2026-10-31T06:13:29.367770201Z"}
+R11 fee is a snapshot: status=201 body={"id":16,"event":12,"attendee":7,"fee":25.00,"registeredAt":"2026-10-31T06:13:29.386596485Z"}
+R11 revenue sums the stored fees revenue: status=200 body=40.50
+R11 revenue sums the stored fees registration count: status=200 body=2
+R12 full event stays listed: status=200 body={"total":8,"page":1,"size":20,"records":[{"id":10,"organizer":1,"title":"Spring Workshop","startsAt":"2099-03-01T09:00:00Z","capacity":3,"registered":3,"remaining":0,"fee":20.00},{"id":11,"organizer":1,"title":"Free Talk","startsAt":"2099-03-02T09:00:00Z","capacity":5,"registered":3,"remaining":2,"fee":0.00},{"id":12,"organizer":2,"title":"Hack Night","startsAt":"2099-03-03T18:00:00Z","capacity":2,"registered":2,"remaining":0,"fee":15.50},{"id":14,"organizer":1,"title":"Capacity Race","startsAt":"2099-04-01T09:00:00Z","capacity":4,"registered":1,"remaining":3,"fee":10.00},{"id":15,"organizer":1,"title":"Same Person Race","startsAt":"2099-04-01T09:00:00Z","capacity":10,"registered":0,"remaining":10,"fee":12.34},{"id":16,"organizer":1,"title":"Revenue Review","startsAt":"2099-05-01T09:00:00Z","capacity":10,"registered":3,"remaining":7,"fee":20.00},{"id":17,"organizer":2,"title":"Empty Event","startsAt":"2099-06-01T09:00:00Z","capacity":10,"registered":0,"remaining":10,"fee":99.99},{"id":18,"organizer":1,"title":"Dime Event","startsAt":"2099-07-01T09:00:00Z","capacity":10,"registered":3,"remaining":7,"fee":0.10}]}
+R13 own list: status=200 body={"total":3,"page":1,"size":20,"records":[{"id":15,"event":14,"attendee":1,"fee":10.00,"registeredAt":"2026-10-31T06:13:29.367770Z"},{"id":13,"event":11,"attendee":1,"fee":0.00,"registeredAt":"2026-10-31T06:13:29.334675Z"},{"id":10,"event":10,"attendee":1,"fee":20.00,"registeredAt":"2026-10-31T06:13:29.171258Z"}]}
+I01 after registrations event 10 revenue: status=200 body=60.00
+I01 after registrations event 10 registration count: status=200 body=3
+I01 after registrations event 11 revenue: status=200 body=0.00
+I01 after registrations event 11 registration count: status=200 body=3
+I01 after registrations event 12 revenue: status=200 body=40.50
+I01 after registrations event 12 registration count: status=200 body=2
+I01 after registrations event 13 revenue: status=200 body=5.00
+I01 after registrations event 13 registration count: status=200 body=1
+I01 after registrations event 14 revenue: status=200 body=10.00
+I01 after registrations event 14 registration count: status=200 body=1
+I01 after registrations event 15 revenue: status=200 body=0.00
+I01 after registrations event 15 registration count: status=200 body=0
+I01 after registrations event 16 revenue: status=200 body=57.50
+I01 after registrations event 16 registration count: status=200 body=3
+I01 after registrations event 17 revenue: status=200 body=0.00
+I01 after registrations event 17 registration count: status=200 body=0
+I01 after registrations event 18 revenue: status=200 body=0.30
+I01 after registrations event 18 registration count: status=200 body=3
+X01 client 0: status=201 body={"id":18,"event":14,"attendee":3,"fee":10.00,"registeredAt":"2026-10-31T06:13:29.803796321Z"}
+X01 client 1: status=409 body={"code":"EventFull","message":"EventFull","fields":[]}
+X01 client 2: status=201 body={"id":19,"event":14,"attendee":5,"fee":10.00,"registeredAt":"2026-10-31T06:13:29.812803178Z"}
+X01 client 3: status=201 body={"id":17,"event":14,"attendee":6,"fee":10.00,"registeredAt":"2026-10-31T06:13:29.791667908Z"}
+X01 client 4: status=201 body={"id":20,"event":14,"attendee":7,"fee":10.00,"registeredAt":"2026-10-31T06:13:29.818469084Z"}
+X01 client 5: status=409 body={"code":"EventFull","message":"EventFull","fields":[]}
+X01 invariant event 10 revenue: status=200 body=0.00
+X01 invariant event 10 registration count: status=200 body=0
+X01 invariant event 11 revenue: status=200 body=0.00
+X01 invariant event 11 registration count: status=200 body=1
+X01 invariant event 12 revenue: status=200 body=15.50
+X01 invariant event 12 registration count: status=200 body=1
+X01 invariant event 13 revenue: status=200 body=5.00
+X01 invariant event 13 registration count: status=200 body=1
+X01 invariant event 14 revenue: status=200 body=40.00
+X01 invariant event 14 registration count: status=200 body=4
+X01 invariant event 15 revenue: status=200 body=0.00
+X01 invariant event 15 registration count: status=200 body=0
+X01 invariant event 16 revenue: status=200 body=57.50
+X01 invariant event 16 registration count: status=200 body=3
+X01 invariant event 17 revenue: status=200 body=0.00
+X01 invariant event 17 registration count: status=200 body=0
+X01 invariant event 18 revenue: status=200 body=0.30
+X01 invariant event 18 registration count: status=200 body=3
+X01 organizer sees four paid seats revenue: status=200 body=40.00
+X01 organizer sees four paid seats registration count: status=200 body=4
+X02 client 0: status=409 body={"code":"AlreadyRegistered","message":"AlreadyRegistered","fields":[]}
+X02 client 1: status=409 body={"code":"AlreadyRegistered","message":"AlreadyRegistered","fields":[]}
+X02 client 2: status=409 body={"code":"AlreadyRegistered","message":"AlreadyRegistered","fields":[]}
+X02 client 3: status=409 body={"code":"AlreadyRegistered","message":"AlreadyRegistered","fields":[]}
+X02 client 4: status=409 body={"code":"AlreadyRegistered","message":"AlreadyRegistered","fields":[]}
+X02 client 5: status=201 body={"id":21,"event":15,"attendee":2,"fee":12.34,"registeredAt":"2026-10-31T06:13:30.135186515Z"}
+X02 invariant event 10 revenue: status=200 body=0.00
+X02 invariant event 10 registration count: status=200 body=0
+X02 invariant event 11 revenue: status=200 body=0.00
+X02 invariant event 11 registration count: status=200 body=1
+X02 invariant event 12 revenue: status=200 body=15.50
+X02 invariant event 12 registration count: status=200 body=1
+X02 invariant event 13 revenue: status=200 body=5.00
+X02 invariant event 13 registration count: status=200 body=1
+X02 invariant event 14 revenue: status=200 body=0.00
+X02 invariant event 14 registration count: status=200 body=0
+X02 invariant event 15 revenue: status=200 body=12.34
+X02 invariant event 15 registration count: status=200 body=1
+X02 invariant event 16 revenue: status=200 body=57.50
+X02 invariant event 16 registration count: status=200 body=3
+X02 invariant event 17 revenue: status=200 body=0.00
+X02 invariant event 17 registration count: status=200 body=0
+X02 invariant event 18 revenue: status=200 body=0.30
+X02 invariant event 18 registration count: status=200 body=3
