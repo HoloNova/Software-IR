@@ -263,3 +263,7 @@ python -m experiments.slm.data export \
 ### g13 一轮反馈及送门范围
 
 负责人已批准两份报修各一轮反馈、提交/普通推送及候选业务CI。通用repair-general-v1配原诊断/DDL，实际两次28206 tokens；初采加修复6次70419。两个报修子仍失败，按一轮上限封存；只送排班两份静态通过教师，分别使用原checked-initial.jsonl。先发布原件/哈希再派发slm-business-gate；结果必须由本次CI与archive-gate绑定。原件见[一修及送门记录](../../datasets/sir/research/2026-10-31/bounded-g13-repair/README.md)，学生v5和12变体不动，不export、训练或追加修复。
+
+### g13 候选业务结果
+
+46671b9a受测的排班改写/从零候选分别在业务门#94/#95四门通过，各871/0，三轮真实锁等待屏障各6/3/6；原archive-gate已核验并归档[原ZIP/日志/JUnit和Git绑定](../../datasets/sir/research/2026-10-31/bounded-g13-gate/README.md)。报修各一修仍失败封存，累计模型6次70419 tokens；新增2份合格教师待export，学生v5未改，未训练或扩采。全库历史300份缺项仅在隔离快照依原哈希恢复以完成原归档器校验，主工作区fitness/events未改；细节与后续边界见上述记录。

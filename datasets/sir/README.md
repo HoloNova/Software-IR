@@ -1,6 +1,6 @@
 # SIR 实验数据
 
-本目录同时保存研究轨迹与合格训练输出，**不是每条记录都可用于当前学生 SFT**。失败答案／报错会归档并可用于本轮教师反馈；只有四门通过的最终答案才导出为正确 completion，student 包装还会去掉修复历史。当前合格 **57 条（鉴权29、课程26、博客2）**，覆盖56题，学生格式为 **v5**，没有开始模型训练；验收与组装见[第三十一阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md)。本轮报修/排班只冻结题目与参考，不增加教师合格答案或改写学生原字节。
+本目录同时保存研究轨迹与合格训练输出，**不是每条记录都可用于当前学生 SFT**。失败答案／报错会归档并可用于本轮教师反馈；只有四门通过的最终答案才导出为正确 completion，student 包装还会去掉修复历史。当前已导出合格 **57 条（鉴权29、课程26、博客2）**，本轮另增排班2份独立四门通过待导出；其他工作线待补原件/待导出资格不在本轮重算，学生格式仍为 **v5**，没有开始模型训练；验收与组装见[第三十一阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md)。报修/排班进展见[第三十四阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-maintenance-staffing-repair-gate)，学生原字节不变。
 
 ## 首批采样与后续运行
 
@@ -147,3 +147,9 @@
 ### g13 一轮反馈与候选业务门
 
 后续已获准两份报修各反馈一次及本轮提交/普通推送/候选CI。实际两次28206 tokens，连同初采累计6次70419。两份子候选仍静态失败并按一轮上限封存：改写原样返回三元表达式，从零写转为缺fails和误读expectedVersion两项语义错误。原件及checked-r1在对应批次，[完整说明](research/2026-10-31/bounded-g13-repair/README.md)。本轮发布初采/一修后，只送两份排班初采教师；未将参考资格给教师，运行结论由实际CI和原archive-gate绑定。学生v5不变，不export或训练，不扩采/追修。
+
+### g13 候选资格：排班两份四门通过，待导出
+
+受测46671b9a的候选CI [#94](https://github.com/HoloNova/Software-IR/actions/runs/41203150293) / [#95](https://github.com/HoloNova/Software-IR/actions/runs/41203161844) 均871/0，各三轮真实竞争屏障6/3/6，独立四门全过。原archive-gate已核验run、Git blob、生成摘要、ZIP/附件/JUnit并归档两批runtime；[原件与对账](research/2026-10-31/bounded-g13-gate/README.md)。新增2份合格教师尚未export/student包装，学生v5仍57条不变；报修一修失败封存，不追加采样。
+
+全库清单中另一工作线300份缺失原件曾阻断归档；本轮只在隔离快照依据20个原ZIP恢复并逐项验原哈希后跑原归档器，仅回写新排班证据/清单。fitness/events主目录不动，旧缺项仍应由原工作线补全，不删除其清单或继承资格。

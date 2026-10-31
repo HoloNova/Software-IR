@@ -1,0 +1,1221 @@
+=== Empty weekly shifts and multi-employee store rosters business conformance ===
+verdict=PASSED
+runId=staffing-slice-1a192076d8f-33929
+schemaName=kcg_conf_run
+advisoryLock=held during the run
+schemaSource=TEST_FIXTURE_DDL
+productInitializeImplemented=false
+productUpdateImplemented=false
+sirResource=EXTERNAL_CANDIDATE:candidate.sir sha256=d75880276a275146ceb3e69fc4e704006fc50d0d4581a5fb0170632285a64e74
+fixtureDdl=/conformance/mysql/staffing-shift-roster-ddl.sql sha256=5b21a1165d021269d3d197c2e6da5216e2201c0816e2712dd2d7d2159d9307af
+fixtureSeed=/conformance/mysql/staffing-shift-roster-seed.sql sha256=d9972e5984ead0e773adcd985c6f1bc916bd07cee8e453bc4836b4fbbfd6f8b8
+generatedFiles=57 combinedSha256=9234258f18abb0d60a1551a7cfc638ec1bb8f827f1d807c05d2bd07c4fcc666f
+generatedProjectBuild=PASSED (exit 0)
+httpReadiness=READY (200 from /api/stores?page=1&size=10)
+mysqlRowsBefore=4 mysqlRowsAfter=4
+mavenOffline=false
+javaVersion=21.0.13
+osName=Linux osArch=amd64
+serverPort=18080
+slmMysqlVersion=8.4.13
+slmSampleId=staffing-shift-roster-scratch-v1-teacher-2027a6702825
+slmSourceSha256=d75880276a275146ceb3e69fc4e704006fc50d0d4581a5fb0170632285a64e74
+slmGeneratedDigest=16f22022556db08d223bf6ebea67f39d4465eb1a3056c6a12499146224117f2f
+section=B identity
+section=Q lists permissions and seeded headcounts
+section=G01-G02 generation and both bands
+section=G03-G04 bounds and late rollback
+section=G05-G06 validation and path identity
+section=G07 leap year
+section=A01-A05 assignments and refusal ordering
+section=A06 same employee both bands
+section=A07 path identity
+section=A08 relation order
+section=X01 same employee
+X01 same employee lockWaits=[Edge[transaction=1946, requestingConnection=17, blockingConnection=19, user=***REDACTED***], Edge[transaction=1946, requestingConnection=17, blockingConnection=20, user=***REDACTED***], Edge[transaction=1946, requestingConnection=17, blockingConnection=21, user=***REDACTED***], Edge[transaction=1946, requestingConnection=17, blockingConnection=22, user=***REDACTED***], Edge[transaction=1946, requestingConnection=17, blockingConnection=27, user=***REDACTED***], Edge[transaction=1947, requestingConnection=18, blockingConnection=17, user=***REDACTED***], Edge[transaction=1947, requestingConnection=18, blockingConnection=19, user=***REDACTED***], Edge[transaction=1947, requestingConnection=18, blockingConnection=20, user=***REDACTED***], Edge[transaction=1947, requestingConnection=18, blockingConnection=21, user=***REDACTED***], Edge[transaction=1947, requestingConnection=18, blockingConnection=22, user=***REDACTED***], Edge[transaction=1947, requestingConnection=18, blockingConnection=27, user=***REDACTED***], Edge[transaction=1944, requestingConnection=19, blockingConnection=20, user=***REDACTED***], Edge[transaction=1944, requestingConnection=19, blockingConnection=21, user=***REDACTED***], Edge[transaction=1944, requestingConnection=19, blockingConnection=27, user=***REDACTED***], Edge[transaction=1943, requestingConnection=20, blockingConnection=21, user=***REDACTED***], Edge[transaction=1943, requestingConnection=20, blockingConnection=27, user=***REDACTED***], Edge[transaction=1942, requestingConnection=21, blockingConnection=27, user=***REDACTED***], Edge[transaction=1945, requestingConnection=22, blockingConnection=19, user=***REDACTED***], Edge[transaction=1945, requestingConnection=22, blockingConnection=20, user=***REDACTED***], Edge[transaction=1945, requestingConnection=22, blockingConnection=21, user=***REDACTED***], Edge[transaction=1945, requestingConnection=22, blockingConnection=27, user=***REDACTED***]]
+X01 same employee contentionProof=Observed[connections=[22, 21, 20, 19, 18, 17], transactions=[1946, 1945, 1944, 1943, 1942, 1947]]
+X01 same employee timeline=Event[client=0, phase=ready, at=2026-10-31T12:55:38.215703088Z, detail=actor=1]
+X01 same employee timeline=Event[client=1, phase=ready, at=2026-10-31T12:55:38.215790980Z, detail=actor=1]
+X01 same employee timeline=Event[client=2, phase=ready, at=2026-10-31T12:55:38.216914997Z, detail=actor=1]
+X01 same employee timeline=Event[client=3, phase=ready, at=2026-10-31T12:55:38.217916180Z, detail=actor=1]
+X01 same employee timeline=Event[client=4, phase=ready, at=2026-10-31T12:55:38.218027315Z, detail=actor=1]
+X01 same employee timeline=Event[client=5, phase=ready, at=2026-10-31T12:55:38.218156508Z, detail=actor=1]
+X01 same employee timeline=Event[client=1, phase=start, at=2026-10-31T12:55:38.218721862Z, detail=POST /api/shifts/203/assignments]
+X01 same employee timeline=Event[client=0, phase=start, at=2026-10-31T12:55:38.218743876Z, detail=POST /api/shifts/203/assignments]
+X01 same employee timeline=Event[client=2, phase=start, at=2026-10-31T12:55:38.219022380Z, detail=POST /api/shifts/203/assignments]
+X01 same employee timeline=Event[client=3, phase=start, at=2026-10-31T12:55:38.219303429Z, detail=POST /api/shifts/203/assignments]
+X01 same employee timeline=Event[client=4, phase=start, at=2026-10-31T12:55:38.219792154Z, detail=POST /api/shifts/203/assignments]
+X01 same employee timeline=Event[client=5, phase=start, at=2026-10-31T12:55:38.220215681Z, detail=POST /api/shifts/203/assignments]
+X01 same employee timeline=Event[client=5, phase=end, at=2026-10-31T12:55:38.293890414Z, detail=status=201]
+X01 same employee timeline=Event[client=3, phase=end, at=2026-10-31T12:55:38.299853070Z, detail=status=409]
+X01 same employee timeline=Event[client=2, phase=end, at=2026-10-31T12:55:38.301110132Z, detail=status=409]
+X01 same employee timeline=Event[client=4, phase=end, at=2026-10-31T12:55:38.305749927Z, detail=status=409]
+X01 same employee timeline=Event[client=1, phase=end, at=2026-10-31T12:55:38.309022251Z, detail=status=409]
+X01 same employee timeline=Event[client=0, phase=end, at=2026-10-31T12:55:38.313240507Z, detail=status=409]
+section=X02 different employees
+X02 different employees lockWaits=[Edge[transaction=1951, requestingConnection=17, blockingConnection=28, user=***REDACTED***], Edge[transaction=1952, requestingConnection=18, blockingConnection=17, user=***REDACTED***], Edge[transaction=1952, requestingConnection=18, blockingConnection=28, user=***REDACTED***], Edge[transaction=1953, requestingConnection=20, blockingConnection=17, user=***REDACTED***], Edge[transaction=1953, requestingConnection=20, blockingConnection=18, user=***REDACTED***], Edge[transaction=1953, requestingConnection=20, blockingConnection=28, user=***REDACTED***]]
+X02 different employees contentionProof=Observed[connections=[18, 17, 20], transactions=[1953, 1952, 1951]]
+X02 different employees timeline=Event[client=0, phase=ready, at=2026-10-31T12:55:38.510197201Z, detail=actor=1]
+X02 different employees timeline=Event[client=1, phase=ready, at=2026-10-31T12:55:38.510345383Z, detail=actor=1]
+X02 different employees timeline=Event[client=2, phase=ready, at=2026-10-31T12:55:38.510499530Z, detail=actor=1]
+X02 different employees timeline=Event[client=0, phase=start, at=2026-10-31T12:55:38.514550051Z, detail=POST /api/shifts/203/assignments]
+X02 different employees timeline=Event[client=1, phase=start, at=2026-10-31T12:55:38.515627687Z, detail=POST /api/shifts/203/assignments]
+X02 different employees timeline=Event[client=2, phase=start, at=2026-10-31T12:55:38.516130319Z, detail=POST /api/shifts/203/assignments]
+X02 different employees timeline=Event[client=0, phase=end, at=2026-10-31T12:55:38.574598915Z, detail=status=201]
+X02 different employees timeline=Event[client=2, phase=end, at=2026-10-31T12:55:38.581870240Z, detail=status=201]
+X02 different employees timeline=Event[client=1, phase=end, at=2026-10-31T12:55:38.585718781Z, detail=status=201]
+section=X03 same weekly plan
+X03 same weekly plan lockWaits=[Edge[transaction=1957, requestingConnection=17, blockingConnection=29, user=***REDACTED***], Edge[transaction=1958, requestingConnection=18, blockingConnection=17, user=***REDACTED***], Edge[transaction=1958, requestingConnection=18, blockingConnection=29, user=***REDACTED***], Edge[transaction=1961, requestingConnection=19, blockingConnection=17, user=***REDACTED***], Edge[transaction=1961, requestingConnection=19, blockingConnection=18, user=***REDACTED***], Edge[transaction=1961, requestingConnection=19, blockingConnection=20, user=***REDACTED***], Edge[transaction=1961, requestingConnection=19, blockingConnection=22, user=***REDACTED***], Edge[transaction=1961, requestingConnection=19, blockingConnection=29, user=***REDACTED***], Edge[transaction=1960, requestingConnection=20, blockingConnection=17, user=***REDACTED***], Edge[transaction=1960, requestingConnection=20, blockingConnection=18, user=***REDACTED***], Edge[transaction=1960, requestingConnection=20, blockingConnection=22, user=***REDACTED***], Edge[transaction=1960, requestingConnection=20, blockingConnection=29, user=***REDACTED***], Edge[transaction=1962, requestingConnection=21, blockingConnection=17, user=***REDACTED***], Edge[transaction=1962, requestingConnection=21, blockingConnection=18, user=***REDACTED***], Edge[transaction=1962, requestingConnection=21, blockingConnection=19, user=***REDACTED***], Edge[transaction=1962, requestingConnection=21, blockingConnection=20, user=***REDACTED***], Edge[transaction=1962, requestingConnection=21, blockingConnection=22, user=***REDACTED***], Edge[transaction=1962, requestingConnection=21, blockingConnection=29, user=***REDACTED***], Edge[transaction=1959, requestingConnection=22, blockingConnection=17, user=***REDACTED***], Edge[transaction=1959, requestingConnection=22, blockingConnection=18, user=***REDACTED***], Edge[transaction=1959, requestingConnection=22, blockingConnection=29, user=***REDACTED***]]
+X03 same weekly plan contentionProof=Observed[connections=[22, 21, 20, 19, 18, 17], transactions=[1958, 1959, 1962, 1961, 1960, 1957]]
+X03 same weekly plan timeline=Event[client=0, phase=ready, at=2026-10-31T12:55:38.709725147Z, detail=actor=1]
+X03 same weekly plan timeline=Event[client=2, phase=ready, at=2026-10-31T12:55:38.711984783Z, detail=actor=1]
+X03 same weekly plan timeline=Event[client=1, phase=ready, at=2026-10-31T12:55:38.712138112Z, detail=actor=1]
+X03 same weekly plan timeline=Event[client=3, phase=ready, at=2026-10-31T12:55:38.713150148Z, detail=actor=1]
+X03 same weekly plan timeline=Event[client=4, phase=ready, at=2026-10-31T12:55:38.713374591Z, detail=actor=1]
+X03 same weekly plan timeline=Event[client=5, phase=ready, at=2026-10-31T12:55:38.713527224Z, detail=actor=1]
+X03 same weekly plan timeline=Event[client=0, phase=start, at=2026-10-31T12:55:38.714370891Z, detail=POST /api/stores/12/weekly-shifts]
+X03 same weekly plan timeline=Event[client=2, phase=start, at=2026-10-31T12:55:38.714573371Z, detail=POST /api/stores/12/weekly-shifts]
+X03 same weekly plan timeline=Event[client=1, phase=start, at=2026-10-31T12:55:38.717088391Z, detail=POST /api/stores/12/weekly-shifts]
+X03 same weekly plan timeline=Event[client=4, phase=start, at=2026-10-31T12:55:38.717130734Z, detail=POST /api/stores/12/weekly-shifts]
+X03 same weekly plan timeline=Event[client=3, phase=start, at=2026-10-31T12:55:38.717463690Z, detail=POST /api/stores/12/weekly-shifts]
+X03 same weekly plan timeline=Event[client=5, phase=start, at=2026-10-31T12:55:38.717838986Z, detail=POST /api/stores/12/weekly-shifts]
+X03 same weekly plan timeline=Event[client=5, phase=end, at=2026-10-31T12:55:38.773527651Z, detail=status=201]
+X03 same weekly plan timeline=Event[client=0, phase=end, at=2026-10-31T12:55:38.776161545Z, detail=status=409]
+X03 same weekly plan timeline=Event[client=3, phase=end, at=2026-10-31T12:55:38.779212626Z, detail=status=409]
+X03 same weekly plan timeline=Event[client=4, phase=end, at=2026-10-31T12:55:38.786533423Z, detail=status=409]
+X03 same weekly plan timeline=Event[client=1, phase=end, at=2026-10-31T12:55:38.787271918Z, detail=status=409]
+X03 same weekly plan timeline=Event[client=2, phase=end, at=2026-10-31T12:55:38.787983036Z, detail=status=409]
+finalDatabase=BoundedProblemState[tables={user=[Row[cells={id=1, name=alice}], Row[cells={id=2, name=bob}], Row[cells={id=3, name=carol}]], store=[Row[cells={id=10, name=North, manager_id=1}], Row[cells={id=11, name=South, manager_id=2}], Row[cells={id=12, name=Empty, manager_id=1}]], access_token=***REDACTED***, owner_id=1, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=50000000-0000-4000-8000-000000000002, owner_id=2, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=50000000-0000-4000-8000-000000000003, owner_id=3, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=50000000-0000-4000-8000-000000000099, owner_id=1, expires_at=2000-01-01T00:00:00Z}]], employee=[Row[cells={id=101, store_id=10, name=Amy}], Row[cells={id=102, store_id=10, name=Ben}], Row[cells={id=103, store_id=10, name=Ben}], Row[cells={id=104, store_id=11, name=Dana}]], shift=[Row[cells={id=201, store_id=10, day=2026-01-05, band=OPENING}], Row[cells={id=202, store_id=10, day=2026-01-05, band=CLOSING}], Row[cells={id=203, store_id=10, day=2026-01-12, band=OPENING}], Row[cells={id=204, store_id=11, day=2026-01-05, band=OPENING}], Row[cells={id=205, store_id=10, day=2026-01-19, band=OPENING}], Row[cells={id=206, store_id=10, day=2026-01-21, band=CLOSING}], Row[cells={id=231, store_id=12, day=2026-02-02, band=OPENING}], Row[cells={id=232, store_id=12, day=2026-02-09, band=OPENING}], Row[cells={id=233, store_id=12, day=2026-02-16, band=OPENING}]], assignment=[Row[cells={id=301, employee_id=101, shift_id=201}], Row[cells={id=302, employee_id=102, shift_id=201}], Row[cells={id=303, employee_id=101, shift_id=202}], Row[cells={id=304, employee_id=104, shift_id=204}]]}]
+
+checksPassed=871 checksFailed=0
+PASS the SIR slice compiles without errors (warnings remain visible) (diagnostics=[])
+PASS the compiler emitted a generated project (generatedFileCount=57)
+PASS candidate runtime compilation matches full static generation (sourceSha256=d75880276a275146ceb3e69fc4e704006fc50d0d4581a5fb0170632285a64e74 generatedDigest=16f22022556db08d223bf6ebea67f39d4465eb1a3056c6a12499146224117f2f)
+PASS fixture seed counts, foreign keys and business invariants ({user=3, store=3, access_token=***REDACTED***, employee=4, shift=6, assignment=4})
+PASS the generated project builds (mvn clean verify) (exitCode=0)
+PASS the build produced an executable jar (projectRoot=/home/runner/work/Software-IR/Software-IR/ci-work/staffing-slice-1a192076d8f-33929/generated-project)
+PASS the generated application serves the compiled business route (readinessUrl=http://127.0.0.1:18080/api/stores?page=1&size=10)
+PASS startup readiness unchanged exact full-database delta (all tables/columns match)
+PASS fixture seed counts, foreign keys and business invariants ({user=3, store=3, access_token=***REDACTED***, employee=4, shift=6, assignment=4})
+PASS B01 anonymous stores GET unchanged exact full-database delta (all tables/columns match)
+PASS B01 anonymous stores (expected=200 actual=200)
+PASS B01 anonymous stores exact page/order/total/projections ({"total":3,"page":1,"size":20,"records":[{"id":12,"name":"Empty"},{"id":10,"name":"North"},{"id":11,"name":"South"}]})
+PASS B01 first page GET unchanged exact full-database delta (all tables/columns match)
+PASS B01 first page (expected=200 actual=200)
+PASS B01 first page exact page/order/total/projections ({"total":3,"page":1,"size":2,"records":[{"id":12,"name":"Empty"},{"id":10,"name":"North"}]})
+PASS B01 second page GET unchanged exact full-database delta (all tables/columns match)
+PASS B01 second page (expected=200 actual=200)
+PASS B01 second page exact page/order/total/projections ({"total":3,"page":2,"size":2,"records":[{"id":11,"name":"South"}]})
+PASS B02 POST /api/stores/12/weekly-shifts (expected=401 actual=401)
+PASS B02 POST /api/stores/12/weekly-shifts empty body ()
+PASS B02 POST /api/stores/12/weekly-shifts anonymous unchanged exact full-database delta (all tables/columns match)
+PASS B02 POST /api/stores/12/weekly-shifts (expected=401 actual=401)
+PASS B02 POST /api/stores/12/weekly-shifts empty body ()
+PASS B02 POST /api/stores/12/weekly-shifts anonymous unchanged exact full-database delta (all tables/columns match)
+PASS B02 POST /api/stores/12/weekly-shifts (expected=401 actual=401)
+PASS B02 POST /api/stores/12/weekly-shifts empty body ()
+PASS B02 POST /api/stores/12/weekly-shifts anonymous unchanged exact full-database delta (all tables/columns match)
+PASS B02 POST /api/stores/12/weekly-shifts (expected=401 actual=401)
+PASS B02 POST /api/stores/12/weekly-shifts empty body ()
+PASS B02 POST /api/stores/12/weekly-shifts anonymous unchanged exact full-database delta (all tables/columns match)
+PASS B02 GET /api/stores/10/shifts (expected=401 actual=401)
+PASS B02 GET /api/stores/10/shifts empty body ()
+PASS B02 GET /api/stores/10/shifts anonymous unchanged exact full-database delta (all tables/columns match)
+PASS B02 GET /api/stores/10/shifts (expected=401 actual=401)
+PASS B02 GET /api/stores/10/shifts empty body ()
+PASS B02 GET /api/stores/10/shifts anonymous unchanged exact full-database delta (all tables/columns match)
+PASS B02 GET /api/stores/10/shifts (expected=401 actual=401)
+PASS B02 GET /api/stores/10/shifts empty body ()
+PASS B02 GET /api/stores/10/shifts anonymous unchanged exact full-database delta (all tables/columns match)
+PASS B02 GET /api/stores/10/shifts (expected=401 actual=401)
+PASS B02 GET /api/stores/10/shifts empty body ()
+PASS B02 GET /api/stores/10/shifts anonymous unchanged exact full-database delta (all tables/columns match)
+PASS B02 GET /api/stores/10/employees (expected=401 actual=401)
+PASS B02 GET /api/stores/10/employees empty body ()
+PASS B02 GET /api/stores/10/employees anonymous unchanged exact full-database delta (all tables/columns match)
+PASS B02 GET /api/stores/10/employees (expected=401 actual=401)
+PASS B02 GET /api/stores/10/employees empty body ()
+PASS B02 GET /api/stores/10/employees anonymous unchanged exact full-database delta (all tables/columns match)
+PASS B02 GET /api/stores/10/employees (expected=401 actual=401)
+PASS B02 GET /api/stores/10/employees empty body ()
+PASS B02 GET /api/stores/10/employees anonymous unchanged exact full-database delta (all tables/columns match)
+PASS B02 GET /api/stores/10/employees (expected=401 actual=401)
+PASS B02 GET /api/stores/10/employees empty body ()
+PASS B02 GET /api/stores/10/employees anonymous unchanged exact full-database delta (all tables/columns match)
+PASS B02 POST /api/shifts/203/assignments (expected=401 actual=401)
+PASS B02 POST /api/shifts/203/assignments empty body ()
+PASS B02 POST /api/shifts/203/assignments anonymous unchanged exact full-database delta (all tables/columns match)
+PASS B02 POST /api/shifts/203/assignments (expected=401 actual=401)
+PASS B02 POST /api/shifts/203/assignments empty body ()
+PASS B02 POST /api/shifts/203/assignments anonymous unchanged exact full-database delta (all tables/columns match)
+PASS B02 POST /api/shifts/203/assignments (expected=401 actual=401)
+PASS B02 POST /api/shifts/203/assignments empty body ()
+PASS B02 POST /api/shifts/203/assignments anonymous unchanged exact full-database delta (all tables/columns match)
+PASS B02 POST /api/shifts/203/assignments (expected=401 actual=401)
+PASS B02 POST /api/shifts/203/assignments empty body ()
+PASS B02 POST /api/shifts/203/assignments anonymous unchanged exact full-database delta (all tables/columns match)
+PASS B02 GET /api/shifts/201/headcount (expected=401 actual=401)
+PASS B02 GET /api/shifts/201/headcount empty body ()
+PASS B02 GET /api/shifts/201/headcount anonymous unchanged exact full-database delta (all tables/columns match)
+PASS B02 GET /api/shifts/201/headcount (expected=401 actual=401)
+PASS B02 GET /api/shifts/201/headcount empty body ()
+PASS B02 GET /api/shifts/201/headcount anonymous unchanged exact full-database delta (all tables/columns match)
+PASS B02 GET /api/shifts/201/headcount (expected=401 actual=401)
+PASS B02 GET /api/shifts/201/headcount empty body ()
+PASS B02 GET /api/shifts/201/headcount anonymous unchanged exact full-database delta (all tables/columns match)
+PASS B02 GET /api/shifts/201/headcount (expected=401 actual=401)
+PASS B02 GET /api/shifts/201/headcount empty body ()
+PASS B02 GET /api/shifts/201/headcount anonymous unchanged exact full-database delta (all tables/columns match)
+PASS B02 GET /api/employees/101/roster (expected=401 actual=401)
+PASS B02 GET /api/employees/101/roster empty body ()
+PASS B02 GET /api/employees/101/roster anonymous unchanged exact full-database delta (all tables/columns match)
+PASS B02 GET /api/employees/101/roster (expected=401 actual=401)
+PASS B02 GET /api/employees/101/roster empty body ()
+PASS B02 GET /api/employees/101/roster anonymous unchanged exact full-database delta (all tables/columns match)
+PASS B02 GET /api/employees/101/roster (expected=401 actual=401)
+PASS B02 GET /api/employees/101/roster empty body ()
+PASS B02 GET /api/employees/101/roster anonymous unchanged exact full-database delta (all tables/columns match)
+PASS B02 GET /api/employees/101/roster (expected=401 actual=401)
+PASS B02 GET /api/employees/101/roster empty body ()
+PASS B02 GET /api/employees/101/roster anonymous unchanged exact full-database delta (all tables/columns match)
+PASS fixture seed counts, foreign keys and business invariants ({user=3, store=3, access_token=***REDACTED***, employee=4, shift=6, assignment=4})
+PASS Q01 shift page 1 GET unchanged exact full-database delta (all tables/columns match)
+PASS Q01 shift page 1 (expected=200 actual=200)
+PASS Q01 shift page 1 exact page/order/total/projections ({"total":5,"page":1,"size":2,"records":[{"id":201,"store":10,"day":"2026-01-05","band":"OPENING"},{"id":202,"store":10,"day":"2026-01-05","band":"CLOSING"}]})
+PASS Q01 shift page 2 GET unchanged exact full-database delta (all tables/columns match)
+PASS Q01 shift page 2 (expected=200 actual=200)
+PASS Q01 shift page 2 exact page/order/total/projections ({"total":5,"page":2,"size":2,"records":[{"id":203,"store":10,"day":"2026-01-12","band":"OPENING"},{"id":205,"store":10,"day":"2026-01-19","band":"OPENING"}]})
+PASS Q01 shift page 3 GET unchanged exact full-database delta (all tables/columns match)
+PASS Q01 shift page 3 (expected=200 actual=200)
+PASS Q01 shift page 3 exact page/order/total/projections ({"total":5,"page":3,"size":2,"records":[{"id":206,"store":10,"day":"2026-01-21","band":"CLOSING"}]})
+PASS Q01 shift page 4 GET unchanged exact full-database delta (all tables/columns match)
+PASS Q01 shift page 4 (expected=200 actual=200)
+PASS Q01 shift page 4 exact page/order/total/projections ({"total":5,"page":4,"size":2,"records":[]})
+PASS Q01 other store GET unchanged exact full-database delta (all tables/columns match)
+PASS Q01 other store (expected=200 actual=200)
+PASS Q01 other store exact page/order/total/projections ({"total":1,"page":1,"size":20,"records":[{"id":204,"store":11,"day":"2026-01-05","band":"OPENING"}]})
+PASS Q01 empty store GET unchanged exact full-database delta (all tables/columns match)
+PASS Q01 empty store (expected=200 actual=200)
+PASS Q01 empty store exact page/order/total/projections ({"total":0,"page":1,"size":20,"records":[]})
+PASS Q02 employees first GET unchanged exact full-database delta (all tables/columns match)
+PASS Q02 employees first (expected=200 actual=200)
+PASS Q02 employees first exact page/order/total/projections ({"total":3,"page":1,"size":2,"records":[{"id":101,"store":10,"name":"Amy"},{"id":102,"store":10,"name":"Ben"}]})
+PASS Q02 employees second GET unchanged exact full-database delta (all tables/columns match)
+PASS Q02 employees second (expected=200 actual=200)
+PASS Q02 employees second exact page/order/total/projections ({"total":3,"page":2,"size":2,"records":[{"id":103,"store":10,"name":"Ben"}]})
+PASS Q02 empty employees GET unchanged exact full-database delta (all tables/columns match)
+PASS Q02 empty employees (expected=200 actual=200)
+PASS Q02 empty employees exact page/order/total/projections ({"total":0,"page":1,"size":20,"records":[]})
+PASS Q03 roster page 1 GET unchanged exact full-database delta (all tables/columns match)
+PASS Q03 roster page 1 (expected=200 actual=200)
+PASS Q03 roster page 1 exact page/order/total/projections ({"total":2,"page":1,"size":1,"records":[{"id":301,"employee":101,"shift":201}]})
+PASS Q03 roster page 2 GET unchanged exact full-database delta (all tables/columns match)
+PASS Q03 roster page 2 (expected=200 actual=200)
+PASS Q03 roster page 2 exact page/order/total/projections ({"total":2,"page":2,"size":1,"records":[{"id":303,"employee":101,"shift":202}]})
+PASS Q03 roster page 3 GET unchanged exact full-database delta (all tables/columns match)
+PASS Q03 roster page 3 (expected=200 actual=200)
+PASS Q03 roster page 3 exact page/order/total/projections ({"total":2,"page":3,"size":1,"records":[]})
+PASS Q03 employee 102 GET unchanged exact full-database delta (all tables/columns match)
+PASS Q03 employee 102 (expected=200 actual=200)
+PASS Q03 employee 102 exact page/order/total/projections ({"total":1,"page":1,"size":20,"records":[{"id":302,"employee":102,"shift":201}]})
+PASS Q03 unassigned employee GET unchanged exact full-database delta (all tables/columns match)
+PASS Q03 unassigned employee (expected=200 actual=200)
+PASS Q03 unassigned employee exact page/order/total/projections ({"total":0,"page":1,"size":20,"records":[]})
+PASS Q03 other manager's employee GET unchanged exact full-database delta (all tables/columns match)
+PASS Q03 other manager's employee (expected=200 actual=200)
+PASS Q03 other manager's employee exact page/order/total/projections ({"total":1,"page":1,"size":20,"records":[{"id":304,"employee":104,"shift":204}]})
+PASS Q04 /api/stores page=0 (expected=400 actual=400)
+PASS Q04 /api/stores page=0 exact error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS Q04 /api/stores page=0 refusal unchanged exact full-database delta (all tables/columns match)
+PASS Q04 /api/stores page=-1 (expected=400 actual=400)
+PASS Q04 /api/stores page=-1 exact error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS Q04 /api/stores page=-1 refusal unchanged exact full-database delta (all tables/columns match)
+PASS Q04 /api/stores page=10001 (expected=400 actual=400)
+PASS Q04 /api/stores page=10001 exact error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS Q04 /api/stores page=10001 refusal unchanged exact full-database delta (all tables/columns match)
+PASS Q04 /api/stores size=0 (expected=400 actual=400)
+PASS Q04 /api/stores size=0 exact error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS Q04 /api/stores size=0 refusal unchanged exact full-database delta (all tables/columns match)
+PASS Q04 /api/stores size=-1 (expected=400 actual=400)
+PASS Q04 /api/stores size=-1 exact error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS Q04 /api/stores size=-1 refusal unchanged exact full-database delta (all tables/columns match)
+PASS Q04 /api/stores size=101 (expected=400 actual=400)
+PASS Q04 /api/stores size=101 exact error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS Q04 /api/stores size=101 refusal unchanged exact full-database delta (all tables/columns match)
+PASS Q04 both defaults /api/stores GET unchanged exact full-database delta (all tables/columns match)
+PASS Q04 both defaults /api/stores (expected=200 actual=200)
+PASS Q04 both defaults /api/stores exact page/order/total/projections ({"total":3,"page":1,"size":20,"records":[{"id":12,"name":"Empty"},{"id":10,"name":"North"},{"id":11,"name":"South"}]})
+PASS Q04 page default /api/stores GET unchanged exact full-database delta (all tables/columns match)
+PASS Q04 page default /api/stores (expected=200 actual=200)
+PASS Q04 page default /api/stores exact page/order/total/projections ({"total":3,"page":1,"size":1,"records":[{"id":12,"name":"Empty"}]})
+PASS Q04 size default /api/stores GET unchanged exact full-database delta (all tables/columns match)
+PASS Q04 size default /api/stores (expected=200 actual=200)
+PASS Q04 size default /api/stores exact page/order/total/projections ({"total":3,"page":2,"size":20,"records":[]})
+PASS Q04 inclusive maxima /api/stores GET unchanged exact full-database delta (all tables/columns match)
+PASS Q04 inclusive maxima /api/stores (expected=200 actual=200)
+PASS Q04 inclusive maxima /api/stores exact page/order/total/projections ({"total":3,"page":10000,"size":100,"records":[]})
+PASS Q04 /api/stores/10/shifts page=0 (expected=400 actual=400)
+PASS Q04 /api/stores/10/shifts page=0 exact error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS Q04 /api/stores/10/shifts page=0 refusal unchanged exact full-database delta (all tables/columns match)
+PASS Q04 /api/stores/10/shifts page=-1 (expected=400 actual=400)
+PASS Q04 /api/stores/10/shifts page=-1 exact error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS Q04 /api/stores/10/shifts page=-1 refusal unchanged exact full-database delta (all tables/columns match)
+PASS Q04 /api/stores/10/shifts page=10001 (expected=400 actual=400)
+PASS Q04 /api/stores/10/shifts page=10001 exact error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS Q04 /api/stores/10/shifts page=10001 refusal unchanged exact full-database delta (all tables/columns match)
+PASS Q04 /api/stores/10/shifts size=0 (expected=400 actual=400)
+PASS Q04 /api/stores/10/shifts size=0 exact error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS Q04 /api/stores/10/shifts size=0 refusal unchanged exact full-database delta (all tables/columns match)
+PASS Q04 /api/stores/10/shifts size=-1 (expected=400 actual=400)
+PASS Q04 /api/stores/10/shifts size=-1 exact error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS Q04 /api/stores/10/shifts size=-1 refusal unchanged exact full-database delta (all tables/columns match)
+PASS Q04 /api/stores/10/shifts size=101 (expected=400 actual=400)
+PASS Q04 /api/stores/10/shifts size=101 exact error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS Q04 /api/stores/10/shifts size=101 refusal unchanged exact full-database delta (all tables/columns match)
+PASS Q04 both defaults /api/stores/10/shifts GET unchanged exact full-database delta (all tables/columns match)
+PASS Q04 both defaults /api/stores/10/shifts (expected=200 actual=200)
+PASS Q04 both defaults /api/stores/10/shifts exact page/order/total/projections ({"total":5,"page":1,"size":20,"records":[{"id":201,"store":10,"day":"2026-01-05","band":"OPENING"},{"id":202,"store":10,"day":"2026-01-05","band":"CLOSING"},{"id":203,"store":10,"day":"2026-01-12","band":"OPENING"},{"id":205,"store":10,"day":"2026-01-19","band":"OPENING"},{"id":206,"store":10,"day":"2026-01-21","band":"CLOSING"}]})
+PASS Q04 page default /api/stores/10/shifts GET unchanged exact full-database delta (all tables/columns match)
+PASS Q04 page default /api/stores/10/shifts (expected=200 actual=200)
+PASS Q04 page default /api/stores/10/shifts exact page/order/total/projections ({"total":5,"page":1,"size":1,"records":[{"id":201,"store":10,"day":"2026-01-05","band":"OPENING"}]})
+PASS Q04 size default /api/stores/10/shifts GET unchanged exact full-database delta (all tables/columns match)
+PASS Q04 size default /api/stores/10/shifts (expected=200 actual=200)
+PASS Q04 size default /api/stores/10/shifts exact page/order/total/projections ({"total":5,"page":2,"size":20,"records":[]})
+PASS Q04 inclusive maxima /api/stores/10/shifts GET unchanged exact full-database delta (all tables/columns match)
+PASS Q04 inclusive maxima /api/stores/10/shifts (expected=200 actual=200)
+PASS Q04 inclusive maxima /api/stores/10/shifts exact page/order/total/projections ({"total":5,"page":10000,"size":100,"records":[]})
+PASS Q04 /api/stores/10/employees page=0 (expected=400 actual=400)
+PASS Q04 /api/stores/10/employees page=0 exact error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS Q04 /api/stores/10/employees page=0 refusal unchanged exact full-database delta (all tables/columns match)
+PASS Q04 /api/stores/10/employees page=-1 (expected=400 actual=400)
+PASS Q04 /api/stores/10/employees page=-1 exact error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS Q04 /api/stores/10/employees page=-1 refusal unchanged exact full-database delta (all tables/columns match)
+PASS Q04 /api/stores/10/employees page=10001 (expected=400 actual=400)
+PASS Q04 /api/stores/10/employees page=10001 exact error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS Q04 /api/stores/10/employees page=10001 refusal unchanged exact full-database delta (all tables/columns match)
+PASS Q04 /api/stores/10/employees size=0 (expected=400 actual=400)
+PASS Q04 /api/stores/10/employees size=0 exact error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS Q04 /api/stores/10/employees size=0 refusal unchanged exact full-database delta (all tables/columns match)
+PASS Q04 /api/stores/10/employees size=-1 (expected=400 actual=400)
+PASS Q04 /api/stores/10/employees size=-1 exact error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS Q04 /api/stores/10/employees size=-1 refusal unchanged exact full-database delta (all tables/columns match)
+PASS Q04 /api/stores/10/employees size=101 (expected=400 actual=400)
+PASS Q04 /api/stores/10/employees size=101 exact error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS Q04 /api/stores/10/employees size=101 refusal unchanged exact full-database delta (all tables/columns match)
+PASS Q04 both defaults /api/stores/10/employees GET unchanged exact full-database delta (all tables/columns match)
+PASS Q04 both defaults /api/stores/10/employees (expected=200 actual=200)
+PASS Q04 both defaults /api/stores/10/employees exact page/order/total/projections ({"total":3,"page":1,"size":20,"records":[{"id":101,"store":10,"name":"Amy"},{"id":102,"store":10,"name":"Ben"},{"id":103,"store":10,"name":"Ben"}]})
+PASS Q04 page default /api/stores/10/employees GET unchanged exact full-database delta (all tables/columns match)
+PASS Q04 page default /api/stores/10/employees (expected=200 actual=200)
+PASS Q04 page default /api/stores/10/employees exact page/order/total/projections ({"total":3,"page":1,"size":1,"records":[{"id":101,"store":10,"name":"Amy"}]})
+PASS Q04 size default /api/stores/10/employees GET unchanged exact full-database delta (all tables/columns match)
+PASS Q04 size default /api/stores/10/employees (expected=200 actual=200)
+PASS Q04 size default /api/stores/10/employees exact page/order/total/projections ({"total":3,"page":2,"size":20,"records":[]})
+PASS Q04 inclusive maxima /api/stores/10/employees GET unchanged exact full-database delta (all tables/columns match)
+PASS Q04 inclusive maxima /api/stores/10/employees (expected=200 actual=200)
+PASS Q04 inclusive maxima /api/stores/10/employees exact page/order/total/projections ({"total":3,"page":10000,"size":100,"records":[]})
+PASS Q04 /api/employees/101/roster page=0 (expected=400 actual=400)
+PASS Q04 /api/employees/101/roster page=0 exact error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS Q04 /api/employees/101/roster page=0 refusal unchanged exact full-database delta (all tables/columns match)
+PASS Q04 /api/employees/101/roster page=-1 (expected=400 actual=400)
+PASS Q04 /api/employees/101/roster page=-1 exact error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS Q04 /api/employees/101/roster page=-1 refusal unchanged exact full-database delta (all tables/columns match)
+PASS Q04 /api/employees/101/roster page=10001 (expected=400 actual=400)
+PASS Q04 /api/employees/101/roster page=10001 exact error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS Q04 /api/employees/101/roster page=10001 refusal unchanged exact full-database delta (all tables/columns match)
+PASS Q04 /api/employees/101/roster size=0 (expected=400 actual=400)
+PASS Q04 /api/employees/101/roster size=0 exact error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS Q04 /api/employees/101/roster size=0 refusal unchanged exact full-database delta (all tables/columns match)
+PASS Q04 /api/employees/101/roster size=-1 (expected=400 actual=400)
+PASS Q04 /api/employees/101/roster size=-1 exact error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS Q04 /api/employees/101/roster size=-1 refusal unchanged exact full-database delta (all tables/columns match)
+PASS Q04 /api/employees/101/roster size=101 (expected=400 actual=400)
+PASS Q04 /api/employees/101/roster size=101 exact error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS Q04 /api/employees/101/roster size=101 refusal unchanged exact full-database delta (all tables/columns match)
+PASS Q04 both defaults /api/employees/101/roster GET unchanged exact full-database delta (all tables/columns match)
+PASS Q04 both defaults /api/employees/101/roster (expected=200 actual=200)
+PASS Q04 both defaults /api/employees/101/roster exact page/order/total/projections ({"total":2,"page":1,"size":20,"records":[{"id":301,"employee":101,"shift":201},{"id":303,"employee":101,"shift":202}]})
+PASS Q04 page default /api/employees/101/roster GET unchanged exact full-database delta (all tables/columns match)
+PASS Q04 page default /api/employees/101/roster (expected=200 actual=200)
+PASS Q04 page default /api/employees/101/roster exact page/order/total/projections ({"total":2,"page":1,"size":1,"records":[{"id":301,"employee":101,"shift":201}]})
+PASS Q04 size default /api/employees/101/roster GET unchanged exact full-database delta (all tables/columns match)
+PASS Q04 size default /api/employees/101/roster (expected=200 actual=200)
+PASS Q04 size default /api/employees/101/roster exact page/order/total/projections ({"total":2,"page":2,"size":20,"records":[]})
+PASS Q04 inclusive maxima /api/employees/101/roster GET unchanged exact full-database delta (all tables/columns match)
+PASS Q04 inclusive maxima /api/employees/101/roster (expected=200 actual=200)
+PASS Q04 inclusive maxima /api/employees/101/roster exact page/order/total/projections ({"total":2,"page":10000,"size":100,"records":[]})
+PASS Q05 seeded headcounts same-store foreign keys and unique employee/shift pairs (all assignment rows)
+PASS Q05 seeded headcounts unique store/day/band (all shift rows)
+PASS Q05 seeded headcounts shift=201 GET unchanged exact full-database delta (all tables/columns match)
+PASS Q05 seeded headcounts shift=201 (expected=200 actual=200)
+PASS Q05 seeded headcounts shift=201 bare JSON integer (2)
+PASS Q05 seeded headcounts shift=202 GET unchanged exact full-database delta (all tables/columns match)
+PASS Q05 seeded headcounts shift=202 (expected=200 actual=200)
+PASS Q05 seeded headcounts shift=202 bare JSON integer (1)
+PASS Q05 seeded headcounts shift=203 GET unchanged exact full-database delta (all tables/columns match)
+PASS Q05 seeded headcounts shift=203 (expected=200 actual=200)
+PASS Q05 seeded headcounts shift=203 bare JSON integer (0)
+PASS Q05 seeded headcounts shift=204 GET unchanged exact full-database delta (all tables/columns match)
+PASS Q05 seeded headcounts shift=204 (expected=200 actual=200)
+PASS Q05 seeded headcounts shift=204 bare JSON integer (1)
+PASS Q05 seeded headcounts shift=205 GET unchanged exact full-database delta (all tables/columns match)
+PASS Q05 seeded headcounts shift=205 (expected=200 actual=200)
+PASS Q05 seeded headcounts shift=205 bare JSON integer (0)
+PASS Q05 seeded headcounts shift=206 GET unchanged exact full-database delta (all tables/columns match)
+PASS Q05 seeded headcounts shift=206 (expected=200 actual=200)
+PASS Q05 seeded headcounts shift=206 bare JSON integer (0)
+PASS Q06 forbidden /api/stores/10/shifts (expected=403 actual=403)
+PASS Q06 forbidden /api/stores/10/shifts exact error envelope ({"code":"Forbidden","message":"Forbidden","fields":[]})
+PASS Q06 forbidden /api/stores/10/shifts refusal unchanged exact full-database delta (all tables/columns match)
+PASS Q06 forbidden /api/stores/10/employees (expected=403 actual=403)
+PASS Q06 forbidden /api/stores/10/employees exact error envelope ({"code":"Forbidden","message":"Forbidden","fields":[]})
+PASS Q06 forbidden /api/stores/10/employees refusal unchanged exact full-database delta (all tables/columns match)
+PASS Q06 forbidden /api/shifts/201/headcount (expected=403 actual=403)
+PASS Q06 forbidden /api/shifts/201/headcount exact error envelope ({"code":"Forbidden","message":"Forbidden","fields":[]})
+PASS Q06 forbidden /api/shifts/201/headcount refusal unchanged exact full-database delta (all tables/columns match)
+PASS Q06 forbidden /api/employees/101/roster (expected=403 actual=403)
+PASS Q06 forbidden /api/employees/101/roster exact error envelope ({"code":"Forbidden","message":"Forbidden","fields":[]})
+PASS Q06 forbidden /api/employees/101/roster refusal unchanged exact full-database delta (all tables/columns match)
+PASS Q06 unknown shifts store (expected=404 actual=404)
+PASS Q06 unknown shifts store exact error envelope ({"code":"StoreNotFound","message":"StoreNotFound","fields":[]})
+PASS Q06 unknown shifts store refusal unchanged exact full-database delta (all tables/columns match)
+PASS Q06 unknown employees store (expected=404 actual=404)
+PASS Q06 unknown employees store exact error envelope ({"code":"StoreNotFound","message":"StoreNotFound","fields":[]})
+PASS Q06 unknown employees store refusal unchanged exact full-database delta (all tables/columns match)
+PASS Q06 unknown headcount shift (expected=404 actual=404)
+PASS Q06 unknown headcount shift exact error envelope ({"code":"ShiftNotFound","message":"ShiftNotFound","fields":[]})
+PASS Q06 unknown headcount shift refusal unchanged exact full-database delta (all tables/columns match)
+PASS Q06 unknown roster employee (expected=404 actual=404)
+PASS Q06 unknown roster employee exact error envelope ({"code":"EmployeeNotFound","message":"EmployeeNotFound","fields":[]})
+PASS Q06 unknown roster employee refusal unchanged exact full-database delta (all tables/columns match)
+PASS fixture seed counts, foreign keys and business invariants ({user=3, store=3, access_token=***REDACTED***, employee=4, shift=6, assignment=4})
+PASS G01 three empty shifts (expected=201 actual=201)
+PASS G01 three empty shifts empty body ()
+PASS G01 three empty shifts exact generated shift count (inserted=3)
+PASS G01 three empty shifts exact full-database delta (all tables/columns match)
+PASS G01 three empty shifts read-back GET unchanged exact full-database delta (all tables/columns match)
+PASS G01 three empty shifts read-back (expected=200 actual=200)
+PASS G01 three empty shifts read-back exact page/order/total/projections ({"total":3,"page":1,"size":100,"records":[{"id":207,"store":12,"day":"2026-02-02","band":"OPENING"},{"id":208,"store":12,"day":"2026-02-09","band":"OPENING"},{"id":209,"store":12,"day":"2026-02-16","band":"OPENING"}]})
+PASS G01 three empty shifts independent counts same-store foreign keys and unique employee/shift pairs (all assignment rows)
+PASS G01 three empty shifts independent counts unique store/day/band (all shift rows)
+PASS G01 three empty shifts independent counts shift=201 GET unchanged exact full-database delta (all tables/columns match)
+PASS G01 three empty shifts independent counts shift=201 (expected=200 actual=200)
+PASS G01 three empty shifts independent counts shift=201 bare JSON integer (2)
+PASS G01 three empty shifts independent counts shift=202 GET unchanged exact full-database delta (all tables/columns match)
+PASS G01 three empty shifts independent counts shift=202 (expected=200 actual=200)
+PASS G01 three empty shifts independent counts shift=202 bare JSON integer (1)
+PASS G01 three empty shifts independent counts shift=203 GET unchanged exact full-database delta (all tables/columns match)
+PASS G01 three empty shifts independent counts shift=203 (expected=200 actual=200)
+PASS G01 three empty shifts independent counts shift=203 bare JSON integer (0)
+PASS G01 three empty shifts independent counts shift=204 GET unchanged exact full-database delta (all tables/columns match)
+PASS G01 three empty shifts independent counts shift=204 (expected=200 actual=200)
+PASS G01 three empty shifts independent counts shift=204 bare JSON integer (1)
+PASS G01 three empty shifts independent counts shift=205 GET unchanged exact full-database delta (all tables/columns match)
+PASS G01 three empty shifts independent counts shift=205 (expected=200 actual=200)
+PASS G01 three empty shifts independent counts shift=205 bare JSON integer (0)
+PASS G01 three empty shifts independent counts shift=206 GET unchanged exact full-database delta (all tables/columns match)
+PASS G01 three empty shifts independent counts shift=206 (expected=200 actual=200)
+PASS G01 three empty shifts independent counts shift=206 bare JSON integer (0)
+PASS G01 three empty shifts independent counts shift=207 GET unchanged exact full-database delta (all tables/columns match)
+PASS G01 three empty shifts independent counts shift=207 (expected=200 actual=200)
+PASS G01 three empty shifts independent counts shift=207 bare JSON integer (0)
+PASS G01 three empty shifts independent counts shift=208 GET unchanged exact full-database delta (all tables/columns match)
+PASS G01 three empty shifts independent counts shift=208 (expected=200 actual=200)
+PASS G01 three empty shifts independent counts shift=208 bare JSON integer (0)
+PASS G01 three empty shifts independent counts shift=209 GET unchanged exact full-database delta (all tables/columns match)
+PASS G01 three empty shifts independent counts shift=209 (expected=200 actual=200)
+PASS G01 three empty shifts independent counts shift=209 bare JSON integer (0)
+PASS G02 repeated plan (expected=409 actual=409)
+PASS G02 repeated plan exact error envelope ({"code":"ShiftExists","message":"ShiftExists","fields":[]})
+PASS G02 repeated plan refusal unchanged exact full-database delta (all tables/columns match)
+PASS G02 other band on same days (expected=201 actual=201)
+PASS G02 other band on same days empty body ()
+PASS G02 other band on same days exact generated shift count (inserted=3)
+PASS G02 other band on same days exact full-database delta (all tables/columns match)
+PASS G02 other band on same days read-back GET unchanged exact full-database delta (all tables/columns match)
+PASS G02 other band on same days read-back (expected=200 actual=200)
+PASS G02 other band on same days read-back exact page/order/total/projections ({"total":6,"page":1,"size":100,"records":[{"id":207,"store":12,"day":"2026-02-02","band":"OPENING"},{"id":211,"store":12,"day":"2026-02-02","band":"CLOSING"},{"id":208,"store":12,"day":"2026-02-09","band":"OPENING"},{"id":212,"store":12,"day":"2026-02-09","band":"CLOSING"},{"id":209,"store":12,"day":"2026-02-16","band":"OPENING"},{"id":213,"store":12,"day":"2026-02-16","band":"CLOSING"}]})
+PASS G02 other band on same days independent counts same-store foreign keys and unique employee/shift pairs (all assignment rows)
+PASS G02 other band on same days independent counts unique store/day/band (all shift rows)
+PASS G02 other band on same days independent counts shift=201 GET unchanged exact full-database delta (all tables/columns match)
+PASS G02 other band on same days independent counts shift=201 (expected=200 actual=200)
+PASS G02 other band on same days independent counts shift=201 bare JSON integer (2)
+PASS G02 other band on same days independent counts shift=202 GET unchanged exact full-database delta (all tables/columns match)
+PASS G02 other band on same days independent counts shift=202 (expected=200 actual=200)
+PASS G02 other band on same days independent counts shift=202 bare JSON integer (1)
+PASS G02 other band on same days independent counts shift=203 GET unchanged exact full-database delta (all tables/columns match)
+PASS G02 other band on same days independent counts shift=203 (expected=200 actual=200)
+PASS G02 other band on same days independent counts shift=203 bare JSON integer (0)
+PASS G02 other band on same days independent counts shift=204 GET unchanged exact full-database delta (all tables/columns match)
+PASS G02 other band on same days independent counts shift=204 (expected=200 actual=200)
+PASS G02 other band on same days independent counts shift=204 bare JSON integer (1)
+PASS G02 other band on same days independent counts shift=205 GET unchanged exact full-database delta (all tables/columns match)
+PASS G02 other band on same days independent counts shift=205 (expected=200 actual=200)
+PASS G02 other band on same days independent counts shift=205 bare JSON integer (0)
+PASS G02 other band on same days independent counts shift=206 GET unchanged exact full-database delta (all tables/columns match)
+PASS G02 other band on same days independent counts shift=206 (expected=200 actual=200)
+PASS G02 other band on same days independent counts shift=206 bare JSON integer (0)
+PASS G02 other band on same days independent counts shift=207 GET unchanged exact full-database delta (all tables/columns match)
+PASS G02 other band on same days independent counts shift=207 (expected=200 actual=200)
+PASS G02 other band on same days independent counts shift=207 bare JSON integer (0)
+PASS G02 other band on same days independent counts shift=208 GET unchanged exact full-database delta (all tables/columns match)
+PASS G02 other band on same days independent counts shift=208 (expected=200 actual=200)
+PASS G02 other band on same days independent counts shift=208 bare JSON integer (0)
+PASS G02 other band on same days independent counts shift=209 GET unchanged exact full-database delta (all tables/columns match)
+PASS G02 other band on same days independent counts shift=209 (expected=200 actual=200)
+PASS G02 other band on same days independent counts shift=209 bare JSON integer (0)
+PASS G02 other band on same days independent counts shift=211 GET unchanged exact full-database delta (all tables/columns match)
+PASS G02 other band on same days independent counts shift=211 (expected=200 actual=200)
+PASS G02 other band on same days independent counts shift=211 bare JSON integer (0)
+PASS G02 other band on same days independent counts shift=212 GET unchanged exact full-database delta (all tables/columns match)
+PASS G02 other band on same days independent counts shift=212 (expected=200 actual=200)
+PASS G02 other band on same days independent counts shift=212 bare JSON integer (0)
+PASS G02 other band on same days independent counts shift=213 GET unchanged exact full-database delta (all tables/columns match)
+PASS G02 other band on same days independent counts shift=213 (expected=200 actual=200)
+PASS G02 other band on same days independent counts shift=213 bare JSON integer (0)
+PASS fixture seed counts, foreign keys and business invariants ({user=3, store=3, access_token=***REDACTED***, employee=4, shift=6, assignment=4})
+PASS G03 eight weeks (expected=201 actual=201)
+PASS G03 eight weeks empty body ()
+PASS G03 eight weeks exact generated shift count (inserted=8)
+PASS G03 eight weeks exact full-database delta (all tables/columns match)
+PASS G03 eight weeks read-back GET unchanged exact full-database delta (all tables/columns match)
+PASS G03 eight weeks read-back (expected=200 actual=200)
+PASS G03 eight weeks read-back exact page/order/total/projections ({"total":8,"page":1,"size":100,"records":[{"id":214,"store":12,"day":"2026-02-02","band":"OPENING"},{"id":215,"store":12,"day":"2026-02-09","band":"OPENING"},{"id":216,"store":12,"day":"2026-02-16","band":"OPENING"},{"id":217,"store":12,"day":"2026-02-23","band":"OPENING"},{"id":218,"store":12,"day":"2026-03-02","band":"OPENING"},{"id":219,"store":12,"day":"2026-03-09","band":"OPENING"},{"id":220,"store":12,"day":"2026-03-16","band":"OPENING"},{"id":221,"store":12,"day":"2026-03-23","band":"OPENING"}]})
+PASS G03 eight weeks independent counts same-store foreign keys and unique employee/shift pairs (all assignment rows)
+PASS G03 eight weeks independent counts unique store/day/band (all shift rows)
+PASS G03 eight weeks independent counts shift=201 GET unchanged exact full-database delta (all tables/columns match)
+PASS G03 eight weeks independent counts shift=201 (expected=200 actual=200)
+PASS G03 eight weeks independent counts shift=201 bare JSON integer (2)
+PASS G03 eight weeks independent counts shift=202 GET unchanged exact full-database delta (all tables/columns match)
+PASS G03 eight weeks independent counts shift=202 (expected=200 actual=200)
+PASS G03 eight weeks independent counts shift=202 bare JSON integer (1)
+PASS G03 eight weeks independent counts shift=203 GET unchanged exact full-database delta (all tables/columns match)
+PASS G03 eight weeks independent counts shift=203 (expected=200 actual=200)
+PASS G03 eight weeks independent counts shift=203 bare JSON integer (0)
+PASS G03 eight weeks independent counts shift=204 GET unchanged exact full-database delta (all tables/columns match)
+PASS G03 eight weeks independent counts shift=204 (expected=200 actual=200)
+PASS G03 eight weeks independent counts shift=204 bare JSON integer (1)
+PASS G03 eight weeks independent counts shift=205 GET unchanged exact full-database delta (all tables/columns match)
+PASS G03 eight weeks independent counts shift=205 (expected=200 actual=200)
+PASS G03 eight weeks independent counts shift=205 bare JSON integer (0)
+PASS G03 eight weeks independent counts shift=206 GET unchanged exact full-database delta (all tables/columns match)
+PASS G03 eight weeks independent counts shift=206 (expected=200 actual=200)
+PASS G03 eight weeks independent counts shift=206 bare JSON integer (0)
+PASS G03 eight weeks independent counts shift=214 GET unchanged exact full-database delta (all tables/columns match)
+PASS G03 eight weeks independent counts shift=214 (expected=200 actual=200)
+PASS G03 eight weeks independent counts shift=214 bare JSON integer (0)
+PASS G03 eight weeks independent counts shift=215 GET unchanged exact full-database delta (all tables/columns match)
+PASS G03 eight weeks independent counts shift=215 (expected=200 actual=200)
+PASS G03 eight weeks independent counts shift=215 bare JSON integer (0)
+PASS G03 eight weeks independent counts shift=216 GET unchanged exact full-database delta (all tables/columns match)
+PASS G03 eight weeks independent counts shift=216 (expected=200 actual=200)
+PASS G03 eight weeks independent counts shift=216 bare JSON integer (0)
+PASS G03 eight weeks independent counts shift=217 GET unchanged exact full-database delta (all tables/columns match)
+PASS G03 eight weeks independent counts shift=217 (expected=200 actual=200)
+PASS G03 eight weeks independent counts shift=217 bare JSON integer (0)
+PASS G03 eight weeks independent counts shift=218 GET unchanged exact full-database delta (all tables/columns match)
+PASS G03 eight weeks independent counts shift=218 (expected=200 actual=200)
+PASS G03 eight weeks independent counts shift=218 bare JSON integer (0)
+PASS G03 eight weeks independent counts shift=219 GET unchanged exact full-database delta (all tables/columns match)
+PASS G03 eight weeks independent counts shift=219 (expected=200 actual=200)
+PASS G03 eight weeks independent counts shift=219 bare JSON integer (0)
+PASS G03 eight weeks independent counts shift=220 GET unchanged exact full-database delta (all tables/columns match)
+PASS G03 eight weeks independent counts shift=220 (expected=200 actual=200)
+PASS G03 eight weeks independent counts shift=220 bare JSON integer (0)
+PASS G03 eight weeks independent counts shift=221 GET unchanged exact full-database delta (all tables/columns match)
+PASS G03 eight weeks independent counts shift=221 (expected=200 actual=200)
+PASS G03 eight weeks independent counts shift=221 bare JSON integer (0)
+PASS fixture seed counts, foreign keys and business invariants ({user=3, store=3, access_token=***REDACTED***, employee=4, shift=6, assignment=4})
+PASS G03 over limit 9 (expected=409 actual=409)
+PASS G03 over limit 9 exact error envelope ({"code":"TooManyWeeks","message":"TooManyWeeks","fields":[]})
+PASS G03 over limit 9 refusal unchanged exact full-database delta (all tables/columns match)
+PASS fixture seed counts, foreign keys and business invariants ({user=3, store=3, access_token=***REDACTED***, employee=4, shift=6, assignment=4})
+PASS G03 over limit 2147483647 (expected=409 actual=409)
+PASS G03 over limit 2147483647 exact error envelope ({"code":"TooManyWeeks","message":"TooManyWeeks","fields":[]})
+PASS G03 over limit 2147483647 refusal unchanged exact full-database delta (all tables/columns match)
+PASS fixture seed counts, foreign keys and business invariants ({user=3, store=3, access_token=***REDACTED***, employee=4, shift=6, assignment=4})
+PASS G04 third week conflicts and earlier writes roll back (expected=409 actual=409)
+PASS G04 third week conflicts and earlier writes roll back exact error envelope ({"code":"ShiftExists","message":"ShiftExists","fields":[]})
+PASS G04 third week conflicts and earlier writes roll back refusal unchanged exact full-database delta (all tables/columns match)
+PASS fixture seed counts, foreign keys and business invariants ({user=3, store=3, access_token=***REDACTED***, employee=4, shift=6, assignment=4})
+PASS G05 missing firstDay (expected=400 actual=400)
+PASS G05 missing firstDay INVALID_REQUEST firstDay/NotNull ({"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"firstDay","code":"NotNull","message":"must not be null"}]})
+PASS G05 missing firstDay invalid unchanged exact full-database delta (all tables/columns match)
+PASS G05 null firstDay (expected=400 actual=400)
+PASS G05 null firstDay INVALID_REQUEST firstDay/NotNull ({"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"firstDay","code":"NotNull","message":"must not be null"}]})
+PASS G05 null firstDay invalid unchanged exact full-database delta (all tables/columns match)
+PASS G05 missing band (expected=400 actual=400)
+PASS G05 missing band INVALID_REQUEST band/NotNull ({"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"band","code":"NotNull","message":"must not be null"}]})
+PASS G05 missing band invalid unchanged exact full-database delta (all tables/columns match)
+PASS G05 null band (expected=400 actual=400)
+PASS G05 null band INVALID_REQUEST band/NotNull ({"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"band","code":"NotNull","message":"must not be null"}]})
+PASS G05 null band invalid unchanged exact full-database delta (all tables/columns match)
+PASS G05 missing weeks (expected=400 actual=400)
+PASS G05 missing weeks INVALID_REQUEST weeks/NotNull ({"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"weeks","code":"NotNull","message":"must not be null"}]})
+PASS G05 missing weeks invalid unchanged exact full-database delta (all tables/columns match)
+PASS G05 null weeks (expected=400 actual=400)
+PASS G05 null weeks INVALID_REQUEST weeks/NotNull ({"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"weeks","code":"NotNull","message":"must not be null"}]})
+PASS G05 null weeks invalid unchanged exact full-database delta (all tables/columns match)
+PASS G05 weeks 0 (expected=400 actual=400)
+PASS G05 weeks 0 INVALID_REQUEST weeks/null ({"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"weeks","code":"DecimalMin","message":"must be greater than or equal to 1"}]})
+PASS G05 weeks 0 invalid unchanged exact full-database delta (all tables/columns match)
+PASS G05 weeks -1 (expected=400 actual=400)
+PASS G05 weeks -1 INVALID_REQUEST weeks/null ({"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"weeks","code":"DecimalMin","message":"must be greater than or equal to 1"}]})
+PASS G05 weeks -1 invalid unchanged exact full-database delta (all tables/columns match)
+PASS G05 unreadable day (expected=400 actual=400)
+PASS G05 unreadable day INVALID_REQUEST null/null ({"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[]})
+PASS G05 unreadable day invalid unchanged exact full-database delta (all tables/columns match)
+PASS G05 invalid enum (expected=400 actual=400)
+PASS G05 invalid enum INVALID_REQUEST null/null ({"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"band","code":"INVALID_REQUEST","message":"must be a well-formed value"}]})
+PASS G05 invalid enum invalid unchanged exact full-database delta (all tables/columns match)
+PASS G06 forbidden (expected=403 actual=403)
+PASS G06 forbidden exact error envelope ({"code":"Forbidden","message":"Forbidden","fields":[]})
+PASS G06 forbidden refusal unchanged exact full-database delta (all tables/columns match)
+PASS G06 unknown store (expected=404 actual=404)
+PASS G06 unknown store exact error envelope ({"code":"StoreNotFound","message":"StoreNotFound","fields":[]})
+PASS G06 unknown store refusal unchanged exact full-database delta (all tables/columns match)
+PASS G06 path store wins (expected=201 actual=201)
+PASS G06 path store wins empty body ()
+PASS G06 path store wins exact generated shift count (inserted=3)
+PASS G06 path store wins exact full-database delta (all tables/columns match)
+PASS G06 path store wins read-back GET unchanged exact full-database delta (all tables/columns match)
+PASS G06 path store wins read-back (expected=200 actual=200)
+PASS G06 path store wins read-back exact page/order/total/projections ({"total":3,"page":1,"size":100,"records":[{"id":225,"store":12,"day":"2026-02-02","band":"OPENING"},{"id":226,"store":12,"day":"2026-02-09","band":"OPENING"},{"id":227,"store":12,"day":"2026-02-16","band":"OPENING"}]})
+PASS G06 path store wins independent counts same-store foreign keys and unique employee/shift pairs (all assignment rows)
+PASS G06 path store wins independent counts unique store/day/band (all shift rows)
+PASS G06 path store wins independent counts shift=201 GET unchanged exact full-database delta (all tables/columns match)
+PASS G06 path store wins independent counts shift=201 (expected=200 actual=200)
+PASS G06 path store wins independent counts shift=201 bare JSON integer (2)
+PASS G06 path store wins independent counts shift=202 GET unchanged exact full-database delta (all tables/columns match)
+PASS G06 path store wins independent counts shift=202 (expected=200 actual=200)
+PASS G06 path store wins independent counts shift=202 bare JSON integer (1)
+PASS G06 path store wins independent counts shift=203 GET unchanged exact full-database delta (all tables/columns match)
+PASS G06 path store wins independent counts shift=203 (expected=200 actual=200)
+PASS G06 path store wins independent counts shift=203 bare JSON integer (0)
+PASS G06 path store wins independent counts shift=204 GET unchanged exact full-database delta (all tables/columns match)
+PASS G06 path store wins independent counts shift=204 (expected=200 actual=200)
+PASS G06 path store wins independent counts shift=204 bare JSON integer (1)
+PASS G06 path store wins independent counts shift=205 GET unchanged exact full-database delta (all tables/columns match)
+PASS G06 path store wins independent counts shift=205 (expected=200 actual=200)
+PASS G06 path store wins independent counts shift=205 bare JSON integer (0)
+PASS G06 path store wins independent counts shift=206 GET unchanged exact full-database delta (all tables/columns match)
+PASS G06 path store wins independent counts shift=206 (expected=200 actual=200)
+PASS G06 path store wins independent counts shift=206 bare JSON integer (0)
+PASS G06 path store wins independent counts shift=225 GET unchanged exact full-database delta (all tables/columns match)
+PASS G06 path store wins independent counts shift=225 (expected=200 actual=200)
+PASS G06 path store wins independent counts shift=225 bare JSON integer (0)
+PASS G06 path store wins independent counts shift=226 GET unchanged exact full-database delta (all tables/columns match)
+PASS G06 path store wins independent counts shift=226 (expected=200 actual=200)
+PASS G06 path store wins independent counts shift=226 bare JSON integer (0)
+PASS G06 path store wins independent counts shift=227 GET unchanged exact full-database delta (all tables/columns match)
+PASS G06 path store wins independent counts shift=227 (expected=200 actual=200)
+PASS G06 path store wins independent counts shift=227 bare JSON integer (0)
+PASS fixture seed counts, foreign keys and business invariants ({user=3, store=3, access_token=***REDACTED***, employee=4, shift=6, assignment=4})
+PASS G07 leap-year month crossing (expected=201 actual=201)
+PASS G07 leap-year month crossing empty body ()
+PASS G07 leap-year month crossing exact generated shift count (inserted=3)
+PASS G07 leap-year month crossing exact full-database delta (all tables/columns match)
+PASS G07 leap-year month crossing read-back GET unchanged exact full-database delta (all tables/columns match)
+PASS G07 leap-year month crossing read-back (expected=200 actual=200)
+PASS G07 leap-year month crossing read-back exact page/order/total/projections ({"total":3,"page":1,"size":100,"records":[{"id":228,"store":12,"day":"2028-02-23","band":"OPENING"},{"id":229,"store":12,"day":"2028-03-01","band":"OPENING"},{"id":230,"store":12,"day":"2028-03-08","band":"OPENING"}]})
+PASS G07 leap-year month crossing independent counts same-store foreign keys and unique employee/shift pairs (all assignment rows)
+PASS G07 leap-year month crossing independent counts unique store/day/band (all shift rows)
+PASS G07 leap-year month crossing independent counts shift=201 GET unchanged exact full-database delta (all tables/columns match)
+PASS G07 leap-year month crossing independent counts shift=201 (expected=200 actual=200)
+PASS G07 leap-year month crossing independent counts shift=201 bare JSON integer (2)
+PASS G07 leap-year month crossing independent counts shift=202 GET unchanged exact full-database delta (all tables/columns match)
+PASS G07 leap-year month crossing independent counts shift=202 (expected=200 actual=200)
+PASS G07 leap-year month crossing independent counts shift=202 bare JSON integer (1)
+PASS G07 leap-year month crossing independent counts shift=203 GET unchanged exact full-database delta (all tables/columns match)
+PASS G07 leap-year month crossing independent counts shift=203 (expected=200 actual=200)
+PASS G07 leap-year month crossing independent counts shift=203 bare JSON integer (0)
+PASS G07 leap-year month crossing independent counts shift=204 GET unchanged exact full-database delta (all tables/columns match)
+PASS G07 leap-year month crossing independent counts shift=204 (expected=200 actual=200)
+PASS G07 leap-year month crossing independent counts shift=204 bare JSON integer (1)
+PASS G07 leap-year month crossing independent counts shift=205 GET unchanged exact full-database delta (all tables/columns match)
+PASS G07 leap-year month crossing independent counts shift=205 (expected=200 actual=200)
+PASS G07 leap-year month crossing independent counts shift=205 bare JSON integer (0)
+PASS G07 leap-year month crossing independent counts shift=206 GET unchanged exact full-database delta (all tables/columns match)
+PASS G07 leap-year month crossing independent counts shift=206 (expected=200 actual=200)
+PASS G07 leap-year month crossing independent counts shift=206 bare JSON integer (0)
+PASS G07 leap-year month crossing independent counts shift=228 GET unchanged exact full-database delta (all tables/columns match)
+PASS G07 leap-year month crossing independent counts shift=228 (expected=200 actual=200)
+PASS G07 leap-year month crossing independent counts shift=228 bare JSON integer (0)
+PASS G07 leap-year month crossing independent counts shift=229 GET unchanged exact full-database delta (all tables/columns match)
+PASS G07 leap-year month crossing independent counts shift=229 (expected=200 actual=200)
+PASS G07 leap-year month crossing independent counts shift=229 bare JSON integer (0)
+PASS G07 leap-year month crossing independent counts shift=230 GET unchanged exact full-database delta (all tables/columns match)
+PASS G07 leap-year month crossing independent counts shift=230 (expected=200 actual=200)
+PASS G07 leap-year month crossing independent counts shift=230 bare JSON integer (0)
+PASS fixture seed counts, foreign keys and business invariants ({user=3, store=3, access_token=***REDACTED***, employee=4, shift=6, assignment=4})
+PASS A01 employee is not the actor (expected=201 actual=201)
+PASS A01 employee is not the actor positive numeric identity (305)
+PASS A01 employee is not the actor exact full-database delta (all tables/columns match)
+PASS A01 employee is not the actor (expected=201 actual=201)
+PASS A01 employee is not the actor exact complete projection ({"id":305,"employee":103,"shift":203})
+PASS A01 count GET unchanged exact full-database delta (all tables/columns match)
+PASS A01 count (expected=200 actual=200)
+PASS A01 count bare JSON integer (1)
+PASS A01 roster GET unchanged exact full-database delta (all tables/columns match)
+PASS A01 roster (expected=200 actual=200)
+PASS A01 roster exact page/order/total/projections ({"total":1,"page":1,"size":20,"records":[{"id":305,"employee":103,"shift":203}]})
+PASS A02 duplicate (expected=409 actual=409)
+PASS A02 duplicate exact error envelope ({"code":"AlreadyAssigned","message":"AlreadyAssigned","fields":[]})
+PASS A02 duplicate refusal unchanged exact full-database delta (all tables/columns match)
+PASS A02 count remains one GET unchanged exact full-database delta (all tables/columns match)
+PASS A02 count remains one (expected=200 actual=200)
+PASS A02 count remains one bare JSON integer (1)
+PASS A03 employee 101 (expected=201 actual=201)
+PASS A03 employee 101 positive numeric identity (306)
+PASS A03 employee 101 exact full-database delta (all tables/columns match)
+PASS A03 employee 101 (expected=201 actual=201)
+PASS A03 employee 101 exact complete projection ({"id":306,"employee":101,"shift":203})
+PASS A03 employee 102 (expected=201 actual=201)
+PASS A03 employee 102 positive numeric identity (307)
+PASS A03 employee 102 exact full-database delta (all tables/columns match)
+PASS A03 employee 102 (expected=201 actual=201)
+PASS A03 employee 102 exact complete projection ({"id":307,"employee":102,"shift":203})
+PASS A03 three employees no capacity restriction GET unchanged exact full-database delta (all tables/columns match)
+PASS A03 three employees no capacity restriction (expected=200 actual=200)
+PASS A03 three employees no capacity restriction bare JSON integer (3)
+PASS A04 shift first (expected=404 actual=404)
+PASS A04 shift first exact error envelope ({"code":"ShiftNotFound","message":"ShiftNotFound","fields":[]})
+PASS A04 shift first refusal unchanged exact full-database delta (all tables/columns match)
+PASS A04 unknown employee (expected=404 actual=404)
+PASS A04 unknown employee exact error envelope ({"code":"EmployeeNotFound","message":"EmployeeNotFound","fields":[]})
+PASS A04 unknown employee refusal unchanged exact full-database delta (all tables/columns match)
+PASS A04 permission before employee (expected=403 actual=403)
+PASS A04 permission before employee exact error envelope ({"code":"Forbidden","message":"Forbidden","fields":[]})
+PASS A04 permission before employee refusal unchanged exact full-database delta (all tables/columns match)
+PASS A04 wrong store (expected=409 actual=409)
+PASS A04 wrong store exact error envelope ({"code":"WrongStore","message":"WrongStore","fields":[]})
+PASS A04 wrong store refusal unchanged exact full-database delta (all tables/columns match)
+PASS A05 missing employee (expected=400 actual=400)
+PASS A05 missing employee INVALID_REQUEST employeeId/NotNull ({"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"employeeId","code":"NotNull","message":"must not be null"}]})
+PASS A05 missing employee invalid unchanged exact full-database delta (all tables/columns match)
+PASS A05 null employee (expected=400 actual=400)
+PASS A05 null employee INVALID_REQUEST employeeId/NotNull ({"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"employeeId","code":"NotNull","message":"must not be null"}]})
+PASS A05 null employee invalid unchanged exact full-database delta (all tables/columns match)
+PASS A05 forged employee (expected=400 actual=400)
+PASS A05 forged employee INVALID_REQUEST null/null ({"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"employee","code":"INVALID_REQUEST","message":"must be a well-formed value"}]})
+PASS A05 forged employee invalid unchanged exact full-database delta (all tables/columns match)
+PASS A05 forged manager (expected=400 actual=400)
+PASS A05 forged manager INVALID_REQUEST null/null ({"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"manager","code":"INVALID_REQUEST","message":"must be a well-formed value"}]})
+PASS A05 forged manager invalid unchanged exact full-database delta (all tables/columns match)
+PASS A01-A05 invariants same-store foreign keys and unique employee/shift pairs (all assignment rows)
+PASS A01-A05 invariants unique store/day/band (all shift rows)
+PASS A01-A05 invariants shift=201 GET unchanged exact full-database delta (all tables/columns match)
+PASS A01-A05 invariants shift=201 (expected=200 actual=200)
+PASS A01-A05 invariants shift=201 bare JSON integer (2)
+PASS A01-A05 invariants shift=202 GET unchanged exact full-database delta (all tables/columns match)
+PASS A01-A05 invariants shift=202 (expected=200 actual=200)
+PASS A01-A05 invariants shift=202 bare JSON integer (1)
+PASS A01-A05 invariants shift=203 GET unchanged exact full-database delta (all tables/columns match)
+PASS A01-A05 invariants shift=203 (expected=200 actual=200)
+PASS A01-A05 invariants shift=203 bare JSON integer (3)
+PASS A01-A05 invariants shift=204 GET unchanged exact full-database delta (all tables/columns match)
+PASS A01-A05 invariants shift=204 (expected=200 actual=200)
+PASS A01-A05 invariants shift=204 bare JSON integer (1)
+PASS A01-A05 invariants shift=205 GET unchanged exact full-database delta (all tables/columns match)
+PASS A01-A05 invariants shift=205 (expected=200 actual=200)
+PASS A01-A05 invariants shift=205 bare JSON integer (0)
+PASS A01-A05 invariants shift=206 GET unchanged exact full-database delta (all tables/columns match)
+PASS A01-A05 invariants shift=206 (expected=200 actual=200)
+PASS A01-A05 invariants shift=206 bare JSON integer (0)
+PASS fixture seed counts, foreign keys and business invariants ({user=3, store=3, access_token=***REDACTED***, employee=4, shift=6, assignment=4})
+PASS A06 same employee two bands (expected=201 actual=201)
+PASS A06 same employee two bands positive numeric identity (308)
+PASS A06 same employee two bands exact full-database delta (all tables/columns match)
+PASS A06 same employee two bands (expected=201 actual=201)
+PASS A06 same employee two bands exact complete projection ({"id":308,"employee":102,"shift":202})
+PASS A06 first shift unchanged GET unchanged exact full-database delta (all tables/columns match)
+PASS A06 first shift unchanged (expected=200 actual=200)
+PASS A06 first shift unchanged bare JSON integer (2)
+PASS A06 second shift now two GET unchanged exact full-database delta (all tables/columns match)
+PASS A06 second shift now two (expected=200 actual=200)
+PASS A06 second shift now two bare JSON integer (2)
+PASS A06 roster in relation id order GET unchanged exact full-database delta (all tables/columns match)
+PASS A06 roster in relation id order (expected=200 actual=200)
+PASS A06 roster in relation id order exact page/order/total/projections ({"total":2,"page":1,"size":20,"records":[{"id":302,"employee":102,"shift":201},{"id":308,"employee":102,"shift":202}]})
+PASS A06 invariant same-store foreign keys and unique employee/shift pairs (all assignment rows)
+PASS A06 invariant unique store/day/band (all shift rows)
+PASS A06 invariant shift=201 GET unchanged exact full-database delta (all tables/columns match)
+PASS A06 invariant shift=201 (expected=200 actual=200)
+PASS A06 invariant shift=201 bare JSON integer (2)
+PASS A06 invariant shift=202 GET unchanged exact full-database delta (all tables/columns match)
+PASS A06 invariant shift=202 (expected=200 actual=200)
+PASS A06 invariant shift=202 bare JSON integer (2)
+PASS A06 invariant shift=203 GET unchanged exact full-database delta (all tables/columns match)
+PASS A06 invariant shift=203 (expected=200 actual=200)
+PASS A06 invariant shift=203 bare JSON integer (0)
+PASS A06 invariant shift=204 GET unchanged exact full-database delta (all tables/columns match)
+PASS A06 invariant shift=204 (expected=200 actual=200)
+PASS A06 invariant shift=204 bare JSON integer (1)
+PASS A06 invariant shift=205 GET unchanged exact full-database delta (all tables/columns match)
+PASS A06 invariant shift=205 (expected=200 actual=200)
+PASS A06 invariant shift=205 bare JSON integer (0)
+PASS A06 invariant shift=206 GET unchanged exact full-database delta (all tables/columns match)
+PASS A06 invariant shift=206 (expected=200 actual=200)
+PASS A06 invariant shift=206 bare JSON integer (0)
+PASS fixture seed counts, foreign keys and business invariants ({user=3, store=3, access_token=***REDACTED***, employee=4, shift=6, assignment=4})
+PASS A07 path shift wins (expected=201 actual=201)
+PASS A07 path shift wins positive numeric identity (309)
+PASS A07 path shift wins exact full-database delta (all tables/columns match)
+PASS A07 path shift wins (expected=201 actual=201)
+PASS A07 path shift wins exact complete projection ({"id":309,"employee":103,"shift":203})
+PASS A07 target shift GET unchanged exact full-database delta (all tables/columns match)
+PASS A07 target shift (expected=200 actual=200)
+PASS A07 target shift bare JSON integer (1)
+PASS A07 forged shift unchanged GET unchanged exact full-database delta (all tables/columns match)
+PASS A07 forged shift unchanged (expected=200 actual=200)
+PASS A07 forged shift unchanged bare JSON integer (2)
+PASS fixture seed counts, foreign keys and business invariants ({user=3, store=3, access_token=***REDACTED***, employee=4, shift=6, assignment=4})
+PASS A08 sort relations not shift days GET unchanged exact full-database delta (all tables/columns match)
+PASS A08 sort relations not shift days (expected=200 actual=200)
+PASS A08 sort relations not shift days exact page/order/total/projections ({"total":4,"page":1,"size":20,"records":[{"id":301,"employee":101,"shift":201},{"id":303,"employee":101,"shift":202},{"id":900,"employee":101,"shift":206},{"id":901,"employee":101,"shift":203}]})
+PASS A08 shift 206 GET unchanged exact full-database delta (all tables/columns match)
+PASS A08 shift 206 (expected=200 actual=200)
+PASS A08 shift 206 bare JSON integer (1)
+PASS A08 shift 203 GET unchanged exact full-database delta (all tables/columns match)
+PASS A08 shift 203 (expected=200 actual=200)
+PASS A08 shift 203 bare JSON integer (1)
+PASS A08 invariant same-store foreign keys and unique employee/shift pairs (all assignment rows)
+PASS A08 invariant unique store/day/band (all shift rows)
+PASS A08 invariant shift=201 GET unchanged exact full-database delta (all tables/columns match)
+PASS A08 invariant shift=201 (expected=200 actual=200)
+PASS A08 invariant shift=201 bare JSON integer (2)
+PASS A08 invariant shift=202 GET unchanged exact full-database delta (all tables/columns match)
+PASS A08 invariant shift=202 (expected=200 actual=200)
+PASS A08 invariant shift=202 bare JSON integer (1)
+PASS A08 invariant shift=203 GET unchanged exact full-database delta (all tables/columns match)
+PASS A08 invariant shift=203 (expected=200 actual=200)
+PASS A08 invariant shift=203 bare JSON integer (1)
+PASS A08 invariant shift=204 GET unchanged exact full-database delta (all tables/columns match)
+PASS A08 invariant shift=204 (expected=200 actual=200)
+PASS A08 invariant shift=204 bare JSON integer (1)
+PASS A08 invariant shift=205 GET unchanged exact full-database delta (all tables/columns match)
+PASS A08 invariant shift=205 (expected=200 actual=200)
+PASS A08 invariant shift=205 bare JSON integer (0)
+PASS A08 invariant shift=206 GET unchanged exact full-database delta (all tables/columns match)
+PASS A08 invariant shift=206 (expected=200 actual=200)
+PASS A08 invariant shift=206 bare JSON integer (1)
+PASS fixture seed counts, foreign keys and business invariants ({user=3, store=3, access_token=***REDACTED***, employee=4, shift=6, assignment=4})
+PASS X01 same employee all clients ready (remaining=0)
+PASS X01 same employee all 6 distinct runtime connections/transactions wait on shift/203 (blockerConnection=27)
+PASS X01 same employee client 0 completed (HTTP 409)
+PASS X01 same employee client 1 completed (HTTP 409)
+PASS X01 same employee client 2 completed (HTTP 409)
+PASS X01 same employee client 3 completed (HTTP 409)
+PASS X01 same employee client 4 completed (HTTP 409)
+PASS X01 same employee client 5 completed (HTTP 201)
+PASS X01 same employee records all ready events (events=6)
+PASS X01 same employee records all start events (events=6)
+PASS X01 same employee records all end events (events=6)
+PASS X01 one created and five already assigned ([Outcome[call=Call[method=POST, actor=1, path=/api/shifts/203/assignments, body={"employeeId":103}], response=Response[statusCode=409, body={"code":"AlreadyAssigned","message":"AlreadyAssigned","fields":[]}], error=null], Outcome[call=Call[method=POST, actor=1, path=/api/shifts/203/assignments, body={"employeeId":103}], response=Response[statusCode=409, body={"code":"AlreadyAssigned","message":"AlreadyAssigned","fields":[]}], error=null], Outcome[call=Call[method=POST, actor=1, path=/api/shifts/203/assignments, body={"employeeId":103}], response=Response[statusCode=409, body={"code":"AlreadyAssigned","message":"AlreadyAssigned","fields":[]}], error=null], Outcome[call=Call[method=POST, actor=1, path=/api/shifts/203/assignments, body={"employeeId":103}], response=Response[statusCode=409, body={"code":"AlreadyAssigned","message":"AlreadyAssigned","fields":[]}], error=null], Outcome[call=Call[method=POST, actor=1, path=/api/shifts/203/assignments, body={"employeeId":103}], response=Response[statusCode=409, body={"code":"AlreadyAssigned","message":"AlreadyAssigned","fields":[]}], error=null], Outcome[call=Call[method=POST, actor=1, path=/api/shifts/203/assignments, body={"employeeId":103}], response=Response[statusCode=201, body={"id":902,"employee":103,"shift":203}], error=null]])
+PASS X01 loser (expected=409 actual=409)
+PASS X01 loser exact error envelope ({"code":"AlreadyAssigned","message":"AlreadyAssigned","fields":[]})
+PASS X01 loser (expected=409 actual=409)
+PASS X01 loser exact error envelope ({"code":"AlreadyAssigned","message":"AlreadyAssigned","fields":[]})
+PASS X01 loser (expected=409 actual=409)
+PASS X01 loser exact error envelope ({"code":"AlreadyAssigned","message":"AlreadyAssigned","fields":[]})
+PASS X01 loser (expected=409 actual=409)
+PASS X01 loser exact error envelope ({"code":"AlreadyAssigned","message":"AlreadyAssigned","fields":[]})
+PASS X01 loser (expected=409 actual=409)
+PASS X01 loser exact error envelope ({"code":"AlreadyAssigned","message":"AlreadyAssigned","fields":[]})
+PASS X01 winner positive numeric identity (902)
+PASS X01 only one relation exact full-database delta (all tables/columns match)
+PASS X01 winner projection (expected=201 actual=201)
+PASS X01 winner projection exact complete projection ({"id":902,"employee":103,"shift":203})
+PASS X01 count GET unchanged exact full-database delta (all tables/columns match)
+PASS X01 count (expected=200 actual=200)
+PASS X01 count bare JSON integer (1)
+PASS X01 roster GET unchanged exact full-database delta (all tables/columns match)
+PASS X01 roster (expected=200 actual=200)
+PASS X01 roster exact page/order/total/projections ({"total":1,"page":1,"size":20,"records":[{"id":902,"employee":103,"shift":203}]})
+PASS X01 invariant same-store foreign keys and unique employee/shift pairs (all assignment rows)
+PASS X01 invariant unique store/day/band (all shift rows)
+PASS X01 invariant shift=201 GET unchanged exact full-database delta (all tables/columns match)
+PASS X01 invariant shift=201 (expected=200 actual=200)
+PASS X01 invariant shift=201 bare JSON integer (2)
+PASS X01 invariant shift=202 GET unchanged exact full-database delta (all tables/columns match)
+PASS X01 invariant shift=202 (expected=200 actual=200)
+PASS X01 invariant shift=202 bare JSON integer (1)
+PASS X01 invariant shift=203 GET unchanged exact full-database delta (all tables/columns match)
+PASS X01 invariant shift=203 (expected=200 actual=200)
+PASS X01 invariant shift=203 bare JSON integer (1)
+PASS X01 invariant shift=204 GET unchanged exact full-database delta (all tables/columns match)
+PASS X01 invariant shift=204 (expected=200 actual=200)
+PASS X01 invariant shift=204 bare JSON integer (1)
+PASS X01 invariant shift=205 GET unchanged exact full-database delta (all tables/columns match)
+PASS X01 invariant shift=205 (expected=200 actual=200)
+PASS X01 invariant shift=205 bare JSON integer (0)
+PASS X01 invariant shift=206 GET unchanged exact full-database delta (all tables/columns match)
+PASS X01 invariant shift=206 (expected=200 actual=200)
+PASS X01 invariant shift=206 bare JSON integer (0)
+PASS fixture seed counts, foreign keys and business invariants ({user=3, store=3, access_token=***REDACTED***, employee=4, shift=6, assignment=4})
+PASS X02 different employees all clients ready (remaining=0)
+PASS X02 different employees all 3 distinct runtime connections/transactions wait on shift/203 (blockerConnection=28)
+PASS X02 different employees client 0 completed (HTTP 201)
+PASS X02 different employees client 1 completed (HTTP 201)
+PASS X02 different employees client 2 completed (HTTP 201)
+PASS X02 different employees records all ready events (events=3)
+PASS X02 different employees records all start events (events=3)
+PASS X02 different employees records all end events (events=3)
+PASS X02 each employee succeeds (expected=201 actual=201)
+PASS X02 winner positive numeric identity (903)
+PASS X02 stored projection (expected=201 actual=201)
+PASS X02 stored projection exact complete projection ({"id":903,"employee":101,"shift":203})
+PASS X02 each employee succeeds (expected=201 actual=201)
+PASS X02 winner positive numeric identity (905)
+PASS X02 stored projection (expected=201 actual=201)
+PASS X02 stored projection exact complete projection ({"id":905,"employee":102,"shift":203})
+PASS X02 each employee succeeds (expected=201 actual=201)
+PASS X02 winner positive numeric identity (904)
+PASS X02 stored projection (expected=201 actual=201)
+PASS X02 stored projection exact complete projection ({"id":904,"employee":103,"shift":203})
+PASS X02 exactly three independent employees exact full-database delta (all tables/columns match)
+PASS X02 three headcount GET unchanged exact full-database delta (all tables/columns match)
+PASS X02 three headcount (expected=200 actual=200)
+PASS X02 three headcount bare JSON integer (3)
+PASS X02 invariant same-store foreign keys and unique employee/shift pairs (all assignment rows)
+PASS X02 invariant unique store/day/band (all shift rows)
+PASS X02 invariant shift=201 GET unchanged exact full-database delta (all tables/columns match)
+PASS X02 invariant shift=201 (expected=200 actual=200)
+PASS X02 invariant shift=201 bare JSON integer (2)
+PASS X02 invariant shift=202 GET unchanged exact full-database delta (all tables/columns match)
+PASS X02 invariant shift=202 (expected=200 actual=200)
+PASS X02 invariant shift=202 bare JSON integer (1)
+PASS X02 invariant shift=203 GET unchanged exact full-database delta (all tables/columns match)
+PASS X02 invariant shift=203 (expected=200 actual=200)
+PASS X02 invariant shift=203 bare JSON integer (3)
+PASS X02 invariant shift=204 GET unchanged exact full-database delta (all tables/columns match)
+PASS X02 invariant shift=204 (expected=200 actual=200)
+PASS X02 invariant shift=204 bare JSON integer (1)
+PASS X02 invariant shift=205 GET unchanged exact full-database delta (all tables/columns match)
+PASS X02 invariant shift=205 (expected=200 actual=200)
+PASS X02 invariant shift=205 bare JSON integer (0)
+PASS X02 invariant shift=206 GET unchanged exact full-database delta (all tables/columns match)
+PASS X02 invariant shift=206 (expected=200 actual=200)
+PASS X02 invariant shift=206 bare JSON integer (0)
+PASS fixture seed counts, foreign keys and business invariants ({user=3, store=3, access_token=***REDACTED***, employee=4, shift=6, assignment=4})
+PASS X03 same weekly plan all clients ready (remaining=0)
+PASS X03 same weekly plan all 6 distinct runtime connections/transactions wait on store/12 (blockerConnection=29)
+PASS X03 same weekly plan client 0 completed (HTTP 409)
+PASS X03 same weekly plan client 1 completed (HTTP 409)
+PASS X03 same weekly plan client 2 completed (HTTP 409)
+PASS X03 same weekly plan client 3 completed (HTTP 409)
+PASS X03 same weekly plan client 4 completed (HTTP 409)
+PASS X03 same weekly plan client 5 completed (HTTP 201)
+PASS X03 same weekly plan records all ready events (events=6)
+PASS X03 same weekly plan records all start events (events=6)
+PASS X03 same weekly plan records all end events (events=6)
+PASS X03 exactly one whole plan and five conflicts ([Outcome[call=Call[method=POST, actor=1, path=/api/stores/12/weekly-shifts, body={"firstDay":"2026-02-02","band":"OPENING","weeks":3}], response=Response[statusCode=409, body={"code":"ShiftExists","message":"ShiftExists","fields":[]}], error=null], Outcome[call=Call[method=POST, actor=1, path=/api/stores/12/weekly-shifts, body={"firstDay":"2026-02-02","band":"OPENING","weeks":3}], response=Response[statusCode=409, body={"code":"ShiftExists","message":"ShiftExists","fields":[]}], error=null], Outcome[call=Call[method=POST, actor=1, path=/api/stores/12/weekly-shifts, body={"firstDay":"2026-02-02","band":"OPENING","weeks":3}], response=Response[statusCode=409, body={"code":"ShiftExists","message":"ShiftExists","fields":[]}], error=null], Outcome[call=Call[method=POST, actor=1, path=/api/stores/12/weekly-shifts, body={"firstDay":"2026-02-02","band":"OPENING","weeks":3}], response=Response[statusCode=409, body={"code":"ShiftExists","message":"ShiftExists","fields":[]}], error=null], Outcome[call=Call[method=POST, actor=1, path=/api/stores/12/weekly-shifts, body={"firstDay":"2026-02-02","band":"OPENING","weeks":3}], response=Response[statusCode=409, body={"code":"ShiftExists","message":"ShiftExists","fields":[]}], error=null], Outcome[call=Call[method=POST, actor=1, path=/api/stores/12/weekly-shifts, body={"firstDay":"2026-02-02","band":"OPENING","weeks":3}], response=Response[statusCode=201, body=], error=null]])
+PASS X03 winner (expected=201 actual=201)
+PASS X03 winner empty body ()
+PASS X03 loser (expected=409 actual=409)
+PASS X03 loser exact error envelope ({"code":"ShiftExists","message":"ShiftExists","fields":[]})
+PASS X03 loser (expected=409 actual=409)
+PASS X03 loser exact error envelope ({"code":"ShiftExists","message":"ShiftExists","fields":[]})
+PASS X03 loser (expected=409 actual=409)
+PASS X03 loser exact error envelope ({"code":"ShiftExists","message":"ShiftExists","fields":[]})
+PASS X03 loser (expected=409 actual=409)
+PASS X03 loser exact error envelope ({"code":"ShiftExists","message":"ShiftExists","fields":[]})
+PASS X03 loser (expected=409 actual=409)
+PASS X03 loser exact error envelope ({"code":"ShiftExists","message":"ShiftExists","fields":[]})
+PASS X03 exact generated shift count (inserted=3)
+PASS X03 no partial or extra plans and no assignments exact full-database delta (all tables/columns match)
+PASS X03 exact shifts read-back GET unchanged exact full-database delta (all tables/columns match)
+PASS X03 exact shifts read-back (expected=200 actual=200)
+PASS X03 exact shifts read-back exact page/order/total/projections ({"total":3,"page":1,"size":20,"records":[{"id":231,"store":12,"day":"2026-02-02","band":"OPENING"},{"id":232,"store":12,"day":"2026-02-09","band":"OPENING"},{"id":233,"store":12,"day":"2026-02-16","band":"OPENING"}]})
+PASS X03 invariant same-store foreign keys and unique employee/shift pairs (all assignment rows)
+PASS X03 invariant unique store/day/band (all shift rows)
+PASS X03 invariant shift=201 GET unchanged exact full-database delta (all tables/columns match)
+PASS X03 invariant shift=201 (expected=200 actual=200)
+PASS X03 invariant shift=201 bare JSON integer (2)
+PASS X03 invariant shift=202 GET unchanged exact full-database delta (all tables/columns match)
+PASS X03 invariant shift=202 (expected=200 actual=200)
+PASS X03 invariant shift=202 bare JSON integer (1)
+PASS X03 invariant shift=203 GET unchanged exact full-database delta (all tables/columns match)
+PASS X03 invariant shift=203 (expected=200 actual=200)
+PASS X03 invariant shift=203 bare JSON integer (0)
+PASS X03 invariant shift=204 GET unchanged exact full-database delta (all tables/columns match)
+PASS X03 invariant shift=204 (expected=200 actual=200)
+PASS X03 invariant shift=204 bare JSON integer (1)
+PASS X03 invariant shift=205 GET unchanged exact full-database delta (all tables/columns match)
+PASS X03 invariant shift=205 (expected=200 actual=200)
+PASS X03 invariant shift=205 bare JSON integer (0)
+PASS X03 invariant shift=206 GET unchanged exact full-database delta (all tables/columns match)
+PASS X03 invariant shift=206 (expected=200 actual=200)
+PASS X03 invariant shift=206 bare JSON integer (0)
+PASS X03 invariant shift=231 GET unchanged exact full-database delta (all tables/columns match)
+PASS X03 invariant shift=231 (expected=200 actual=200)
+PASS X03 invariant shift=231 bare JSON integer (0)
+PASS X03 invariant shift=232 GET unchanged exact full-database delta (all tables/columns match)
+PASS X03 invariant shift=232 (expected=200 actual=200)
+PASS X03 invariant shift=232 bare JSON integer (0)
+PASS X03 invariant shift=233 GET unchanged exact full-database delta (all tables/columns match)
+PASS X03 invariant shift=233 (expected=200 actual=200)
+PASS X03 invariant shift=233 bare JSON integer (0)
+PASS the generated application process exited (stopped=true)
+PASS the owned schema was dropped and its absence proved (schema=kcg_conf_run)
+PASS the advisory lock for the owned schema was released (released=true)
+
+B01 anonymous stores: status=200 body={"total":3,"page":1,"size":20,"records":[{"id":12,"name":"Empty"},{"id":10,"name":"North"},{"id":11,"name":"South"}]}
+B01 first page: status=200 body={"total":3,"page":1,"size":2,"records":[{"id":12,"name":"Empty"},{"id":10,"name":"North"}]}
+B01 second page: status=200 body={"total":3,"page":2,"size":2,"records":[{"id":11,"name":"South"}]}
+B02 POST /api/stores/12/weekly-shifts: status=401 body=
+B02 POST /api/stores/12/weekly-shifts: status=401 body=
+B02 POST /api/stores/12/weekly-shifts: status=401 body=
+B02 POST /api/stores/12/weekly-shifts: status=401 body=
+B02 GET /api/stores/10/shifts: status=401 body=
+B02 GET /api/stores/10/shifts: status=401 body=
+B02 GET /api/stores/10/shifts: status=401 body=
+B02 GET /api/stores/10/shifts: status=401 body=
+B02 GET /api/stores/10/employees: status=401 body=
+B02 GET /api/stores/10/employees: status=401 body=
+B02 GET /api/stores/10/employees: status=401 body=
+B02 GET /api/stores/10/employees: status=401 body=
+B02 POST /api/shifts/203/assignments: status=401 body=
+B02 POST /api/shifts/203/assignments: status=401 body=
+B02 POST /api/shifts/203/assignments: status=401 body=
+B02 POST /api/shifts/203/assignments: status=401 body=
+B02 GET /api/shifts/201/headcount: status=401 body=
+B02 GET /api/shifts/201/headcount: status=401 body=
+B02 GET /api/shifts/201/headcount: status=401 body=
+B02 GET /api/shifts/201/headcount: status=401 body=
+B02 GET /api/employees/101/roster: status=401 body=
+B02 GET /api/employees/101/roster: status=401 body=
+B02 GET /api/employees/101/roster: status=401 body=
+B02 GET /api/employees/101/roster: status=401 body=
+Q01 shift page 1: status=200 body={"total":5,"page":1,"size":2,"records":[{"id":201,"store":10,"day":"2026-01-05","band":"OPENING"},{"id":202,"store":10,"day":"2026-01-05","band":"CLOSING"}]}
+Q01 shift page 2: status=200 body={"total":5,"page":2,"size":2,"records":[{"id":203,"store":10,"day":"2026-01-12","band":"OPENING"},{"id":205,"store":10,"day":"2026-01-19","band":"OPENING"}]}
+Q01 shift page 3: status=200 body={"total":5,"page":3,"size":2,"records":[{"id":206,"store":10,"day":"2026-01-21","band":"CLOSING"}]}
+Q01 shift page 4: status=200 body={"total":5,"page":4,"size":2,"records":[]}
+Q01 other store: status=200 body={"total":1,"page":1,"size":20,"records":[{"id":204,"store":11,"day":"2026-01-05","band":"OPENING"}]}
+Q01 empty store: status=200 body={"total":0,"page":1,"size":20,"records":[]}
+Q02 employees first: status=200 body={"total":3,"page":1,"size":2,"records":[{"id":101,"store":10,"name":"Amy"},{"id":102,"store":10,"name":"Ben"}]}
+Q02 employees second: status=200 body={"total":3,"page":2,"size":2,"records":[{"id":103,"store":10,"name":"Ben"}]}
+Q02 empty employees: status=200 body={"total":0,"page":1,"size":20,"records":[]}
+Q03 roster page 1: status=200 body={"total":2,"page":1,"size":1,"records":[{"id":301,"employee":101,"shift":201}]}
+Q03 roster page 2: status=200 body={"total":2,"page":2,"size":1,"records":[{"id":303,"employee":101,"shift":202}]}
+Q03 roster page 3: status=200 body={"total":2,"page":3,"size":1,"records":[]}
+Q03 employee 102: status=200 body={"total":1,"page":1,"size":20,"records":[{"id":302,"employee":102,"shift":201}]}
+Q03 unassigned employee: status=200 body={"total":0,"page":1,"size":20,"records":[]}
+Q03 other manager's employee: status=200 body={"total":1,"page":1,"size":20,"records":[{"id":304,"employee":104,"shift":204}]}
+Q04 /api/stores page=0: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+Q04 /api/stores page=-1: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+Q04 /api/stores page=10001: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+Q04 /api/stores size=0: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+Q04 /api/stores size=-1: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+Q04 /api/stores size=101: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+Q04 both defaults /api/stores: status=200 body={"total":3,"page":1,"size":20,"records":[{"id":12,"name":"Empty"},{"id":10,"name":"North"},{"id":11,"name":"South"}]}
+Q04 page default /api/stores: status=200 body={"total":3,"page":1,"size":1,"records":[{"id":12,"name":"Empty"}]}
+Q04 size default /api/stores: status=200 body={"total":3,"page":2,"size":20,"records":[]}
+Q04 inclusive maxima /api/stores: status=200 body={"total":3,"page":10000,"size":100,"records":[]}
+Q04 /api/stores/10/shifts page=0: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+Q04 /api/stores/10/shifts page=-1: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+Q04 /api/stores/10/shifts page=10001: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+Q04 /api/stores/10/shifts size=0: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+Q04 /api/stores/10/shifts size=-1: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+Q04 /api/stores/10/shifts size=101: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+Q04 both defaults /api/stores/10/shifts: status=200 body={"total":5,"page":1,"size":20,"records":[{"id":201,"store":10,"day":"2026-01-05","band":"OPENING"},{"id":202,"store":10,"day":"2026-01-05","band":"CLOSING"},{"id":203,"store":10,"day":"2026-01-12","band":"OPENING"},{"id":205,"store":10,"day":"2026-01-19","band":"OPENING"},{"id":206,"store":10,"day":"2026-01-21","band":"CLOSING"}]}
+Q04 page default /api/stores/10/shifts: status=200 body={"total":5,"page":1,"size":1,"records":[{"id":201,"store":10,"day":"2026-01-05","band":"OPENING"}]}
+Q04 size default /api/stores/10/shifts: status=200 body={"total":5,"page":2,"size":20,"records":[]}
+Q04 inclusive maxima /api/stores/10/shifts: status=200 body={"total":5,"page":10000,"size":100,"records":[]}
+Q04 /api/stores/10/employees page=0: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+Q04 /api/stores/10/employees page=-1: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+Q04 /api/stores/10/employees page=10001: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+Q04 /api/stores/10/employees size=0: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+Q04 /api/stores/10/employees size=-1: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+Q04 /api/stores/10/employees size=101: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+Q04 both defaults /api/stores/10/employees: status=200 body={"total":3,"page":1,"size":20,"records":[{"id":101,"store":10,"name":"Amy"},{"id":102,"store":10,"name":"Ben"},{"id":103,"store":10,"name":"Ben"}]}
+Q04 page default /api/stores/10/employees: status=200 body={"total":3,"page":1,"size":1,"records":[{"id":101,"store":10,"name":"Amy"}]}
+Q04 size default /api/stores/10/employees: status=200 body={"total":3,"page":2,"size":20,"records":[]}
+Q04 inclusive maxima /api/stores/10/employees: status=200 body={"total":3,"page":10000,"size":100,"records":[]}
+Q04 /api/employees/101/roster page=0: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+Q04 /api/employees/101/roster page=-1: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+Q04 /api/employees/101/roster page=10001: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+Q04 /api/employees/101/roster size=0: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+Q04 /api/employees/101/roster size=-1: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+Q04 /api/employees/101/roster size=101: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+Q04 both defaults /api/employees/101/roster: status=200 body={"total":2,"page":1,"size":20,"records":[{"id":301,"employee":101,"shift":201},{"id":303,"employee":101,"shift":202}]}
+Q04 page default /api/employees/101/roster: status=200 body={"total":2,"page":1,"size":1,"records":[{"id":301,"employee":101,"shift":201}]}
+Q04 size default /api/employees/101/roster: status=200 body={"total":2,"page":2,"size":20,"records":[]}
+Q04 inclusive maxima /api/employees/101/roster: status=200 body={"total":2,"page":10000,"size":100,"records":[]}
+Q05 seeded headcounts shift=201: status=200 body=2
+Q05 seeded headcounts shift=202: status=200 body=1
+Q05 seeded headcounts shift=203: status=200 body=0
+Q05 seeded headcounts shift=204: status=200 body=1
+Q05 seeded headcounts shift=205: status=200 body=0
+Q05 seeded headcounts shift=206: status=200 body=0
+Q06 forbidden /api/stores/10/shifts: status=403 body={"code":"Forbidden","message":"Forbidden","fields":[]}
+Q06 forbidden /api/stores/10/employees: status=403 body={"code":"Forbidden","message":"Forbidden","fields":[]}
+Q06 forbidden /api/shifts/201/headcount: status=403 body={"code":"Forbidden","message":"Forbidden","fields":[]}
+Q06 forbidden /api/employees/101/roster: status=403 body={"code":"Forbidden","message":"Forbidden","fields":[]}
+Q06 unknown shifts store: status=404 body={"code":"StoreNotFound","message":"StoreNotFound","fields":[]}
+Q06 unknown employees store: status=404 body={"code":"StoreNotFound","message":"StoreNotFound","fields":[]}
+Q06 unknown headcount shift: status=404 body={"code":"ShiftNotFound","message":"ShiftNotFound","fields":[]}
+Q06 unknown roster employee: status=404 body={"code":"EmployeeNotFound","message":"EmployeeNotFound","fields":[]}
+G01 three empty shifts: status=201 body=
+G01 three empty shifts read-back: status=200 body={"total":3,"page":1,"size":100,"records":[{"id":207,"store":12,"day":"2026-02-02","band":"OPENING"},{"id":208,"store":12,"day":"2026-02-09","band":"OPENING"},{"id":209,"store":12,"day":"2026-02-16","band":"OPENING"}]}
+G01 three empty shifts independent counts shift=201: status=200 body=2
+G01 three empty shifts independent counts shift=202: status=200 body=1
+G01 three empty shifts independent counts shift=203: status=200 body=0
+G01 three empty shifts independent counts shift=204: status=200 body=1
+G01 three empty shifts independent counts shift=205: status=200 body=0
+G01 three empty shifts independent counts shift=206: status=200 body=0
+G01 three empty shifts independent counts shift=207: status=200 body=0
+G01 three empty shifts independent counts shift=208: status=200 body=0
+G01 three empty shifts independent counts shift=209: status=200 body=0
+G02 repeated plan: status=409 body={"code":"ShiftExists","message":"ShiftExists","fields":[]}
+G02 other band on same days: status=201 body=
+G02 other band on same days read-back: status=200 body={"total":6,"page":1,"size":100,"records":[{"id":207,"store":12,"day":"2026-02-02","band":"OPENING"},{"id":211,"store":12,"day":"2026-02-02","band":"CLOSING"},{"id":208,"store":12,"day":"2026-02-09","band":"OPENING"},{"id":212,"store":12,"day":"2026-02-09","band":"CLOSING"},{"id":209,"store":12,"day":"2026-02-16","band":"OPENING"},{"id":213,"store":12,"day":"2026-02-16","band":"CLOSING"}]}
+G02 other band on same days independent counts shift=201: status=200 body=2
+G02 other band on same days independent counts shift=202: status=200 body=1
+G02 other band on same days independent counts shift=203: status=200 body=0
+G02 other band on same days independent counts shift=204: status=200 body=1
+G02 other band on same days independent counts shift=205: status=200 body=0
+G02 other band on same days independent counts shift=206: status=200 body=0
+G02 other band on same days independent counts shift=207: status=200 body=0
+G02 other band on same days independent counts shift=208: status=200 body=0
+G02 other band on same days independent counts shift=209: status=200 body=0
+G02 other band on same days independent counts shift=211: status=200 body=0
+G02 other band on same days independent counts shift=212: status=200 body=0
+G02 other band on same days independent counts shift=213: status=200 body=0
+G03 eight weeks: status=201 body=
+G03 eight weeks read-back: status=200 body={"total":8,"page":1,"size":100,"records":[{"id":214,"store":12,"day":"2026-02-02","band":"OPENING"},{"id":215,"store":12,"day":"2026-02-09","band":"OPENING"},{"id":216,"store":12,"day":"2026-02-16","band":"OPENING"},{"id":217,"store":12,"day":"2026-02-23","band":"OPENING"},{"id":218,"store":12,"day":"2026-03-02","band":"OPENING"},{"id":219,"store":12,"day":"2026-03-09","band":"OPENING"},{"id":220,"store":12,"day":"2026-03-16","band":"OPENING"},{"id":221,"store":12,"day":"2026-03-23","band":"OPENING"}]}
+G03 eight weeks independent counts shift=201: status=200 body=2
+G03 eight weeks independent counts shift=202: status=200 body=1
+G03 eight weeks independent counts shift=203: status=200 body=0
+G03 eight weeks independent counts shift=204: status=200 body=1
+G03 eight weeks independent counts shift=205: status=200 body=0
+G03 eight weeks independent counts shift=206: status=200 body=0
+G03 eight weeks independent counts shift=214: status=200 body=0
+G03 eight weeks independent counts shift=215: status=200 body=0
+G03 eight weeks independent counts shift=216: status=200 body=0
+G03 eight weeks independent counts shift=217: status=200 body=0
+G03 eight weeks independent counts shift=218: status=200 body=0
+G03 eight weeks independent counts shift=219: status=200 body=0
+G03 eight weeks independent counts shift=220: status=200 body=0
+G03 eight weeks independent counts shift=221: status=200 body=0
+G03 over limit 9: status=409 body={"code":"TooManyWeeks","message":"TooManyWeeks","fields":[]}
+G03 over limit 2147483647: status=409 body={"code":"TooManyWeeks","message":"TooManyWeeks","fields":[]}
+G04 third week conflicts and earlier writes roll back: status=409 body={"code":"ShiftExists","message":"ShiftExists","fields":[]}
+G05 missing firstDay: status=400 body={"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"firstDay","code":"NotNull","message":"must not be null"}]}
+G05 null firstDay: status=400 body={"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"firstDay","code":"NotNull","message":"must not be null"}]}
+G05 missing band: status=400 body={"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"band","code":"NotNull","message":"must not be null"}]}
+G05 null band: status=400 body={"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"band","code":"NotNull","message":"must not be null"}]}
+G05 missing weeks: status=400 body={"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"weeks","code":"NotNull","message":"must not be null"}]}
+G05 null weeks: status=400 body={"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"weeks","code":"NotNull","message":"must not be null"}]}
+G05 weeks 0: status=400 body={"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"weeks","code":"DecimalMin","message":"must be greater than or equal to 1"}]}
+G05 weeks -1: status=400 body={"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"weeks","code":"DecimalMin","message":"must be greater than or equal to 1"}]}
+G05 unreadable day: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[]}
+G05 invalid enum: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"band","code":"INVALID_REQUEST","message":"must be a well-formed value"}]}
+G06 forbidden: status=403 body={"code":"Forbidden","message":"Forbidden","fields":[]}
+G06 unknown store: status=404 body={"code":"StoreNotFound","message":"StoreNotFound","fields":[]}
+G06 path store wins: status=201 body=
+G06 path store wins read-back: status=200 body={"total":3,"page":1,"size":100,"records":[{"id":225,"store":12,"day":"2026-02-02","band":"OPENING"},{"id":226,"store":12,"day":"2026-02-09","band":"OPENING"},{"id":227,"store":12,"day":"2026-02-16","band":"OPENING"}]}
+G06 path store wins independent counts shift=201: status=200 body=2
+G06 path store wins independent counts shift=202: status=200 body=1
+G06 path store wins independent counts shift=203: status=200 body=0
+G06 path store wins independent counts shift=204: status=200 body=1
+G06 path store wins independent counts shift=205: status=200 body=0
+G06 path store wins independent counts shift=206: status=200 body=0
+G06 path store wins independent counts shift=225: status=200 body=0
+G06 path store wins independent counts shift=226: status=200 body=0
+G06 path store wins independent counts shift=227: status=200 body=0
+G07 leap-year month crossing: status=201 body=
+G07 leap-year month crossing read-back: status=200 body={"total":3,"page":1,"size":100,"records":[{"id":228,"store":12,"day":"2028-02-23","band":"OPENING"},{"id":229,"store":12,"day":"2028-03-01","band":"OPENING"},{"id":230,"store":12,"day":"2028-03-08","band":"OPENING"}]}
+G07 leap-year month crossing independent counts shift=201: status=200 body=2
+G07 leap-year month crossing independent counts shift=202: status=200 body=1
+G07 leap-year month crossing independent counts shift=203: status=200 body=0
+G07 leap-year month crossing independent counts shift=204: status=200 body=1
+G07 leap-year month crossing independent counts shift=205: status=200 body=0
+G07 leap-year month crossing independent counts shift=206: status=200 body=0
+G07 leap-year month crossing independent counts shift=228: status=200 body=0
+G07 leap-year month crossing independent counts shift=229: status=200 body=0
+G07 leap-year month crossing independent counts shift=230: status=200 body=0
+A01 employee is not the actor: status=201 body={"id":305,"employee":103,"shift":203}
+A01 count: status=200 body=1
+A01 roster: status=200 body={"total":1,"page":1,"size":20,"records":[{"id":305,"employee":103,"shift":203}]}
+A02 duplicate: status=409 body={"code":"AlreadyAssigned","message":"AlreadyAssigned","fields":[]}
+A02 count remains one: status=200 body=1
+A03 employee 101: status=201 body={"id":306,"employee":101,"shift":203}
+A03 employee 102: status=201 body={"id":307,"employee":102,"shift":203}
+A03 three employees no capacity restriction: status=200 body=3
+A04 shift first: status=404 body={"code":"ShiftNotFound","message":"ShiftNotFound","fields":[]}
+A04 unknown employee: status=404 body={"code":"EmployeeNotFound","message":"EmployeeNotFound","fields":[]}
+A04 permission before employee: status=403 body={"code":"Forbidden","message":"Forbidden","fields":[]}
+A04 wrong store: status=409 body={"code":"WrongStore","message":"WrongStore","fields":[]}
+A05 missing employee: status=400 body={"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"employeeId","code":"NotNull","message":"must not be null"}]}
+A05 null employee: status=400 body={"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"employeeId","code":"NotNull","message":"must not be null"}]}
+A05 forged employee: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"employee","code":"INVALID_REQUEST","message":"must be a well-formed value"}]}
+A05 forged manager: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"manager","code":"INVALID_REQUEST","message":"must be a well-formed value"}]}
+A01-A05 invariants shift=201: status=200 body=2
+A01-A05 invariants shift=202: status=200 body=1
+A01-A05 invariants shift=203: status=200 body=3
+A01-A05 invariants shift=204: status=200 body=1
+A01-A05 invariants shift=205: status=200 body=0
+A01-A05 invariants shift=206: status=200 body=0
+A06 same employee two bands: status=201 body={"id":308,"employee":102,"shift":202}
+A06 first shift unchanged: status=200 body=2
+A06 second shift now two: status=200 body=2
+A06 roster in relation id order: status=200 body={"total":2,"page":1,"size":20,"records":[{"id":302,"employee":102,"shift":201},{"id":308,"employee":102,"shift":202}]}
+A06 invariant shift=201: status=200 body=2
+A06 invariant shift=202: status=200 body=2
+A06 invariant shift=203: status=200 body=0
+A06 invariant shift=204: status=200 body=1
+A06 invariant shift=205: status=200 body=0
+A06 invariant shift=206: status=200 body=0
+A07 path shift wins: status=201 body={"id":309,"employee":103,"shift":203}
+A07 target shift: status=200 body=1
+A07 forged shift unchanged: status=200 body=2
+A08 sort relations not shift days: status=200 body={"total":4,"page":1,"size":20,"records":[{"id":301,"employee":101,"shift":201},{"id":303,"employee":101,"shift":202},{"id":900,"employee":101,"shift":206},{"id":901,"employee":101,"shift":203}]}
+A08 shift 206: status=200 body=1
+A08 shift 203: status=200 body=1
+A08 invariant shift=201: status=200 body=2
+A08 invariant shift=202: status=200 body=1
+A08 invariant shift=203: status=200 body=1
+A08 invariant shift=204: status=200 body=1
+A08 invariant shift=205: status=200 body=0
+A08 invariant shift=206: status=200 body=1
+X01 same employee client 0: status=409 body={"code":"AlreadyAssigned","message":"AlreadyAssigned","fields":[]}
+X01 same employee client 1: status=409 body={"code":"AlreadyAssigned","message":"AlreadyAssigned","fields":[]}
+X01 same employee client 2: status=409 body={"code":"AlreadyAssigned","message":"AlreadyAssigned","fields":[]}
+X01 same employee client 3: status=409 body={"code":"AlreadyAssigned","message":"AlreadyAssigned","fields":[]}
+X01 same employee client 4: status=409 body={"code":"AlreadyAssigned","message":"AlreadyAssigned","fields":[]}
+X01 same employee client 5: status=201 body={"id":902,"employee":103,"shift":203}
+X01 count: status=200 body=1
+X01 roster: status=200 body={"total":1,"page":1,"size":20,"records":[{"id":902,"employee":103,"shift":203}]}
+X01 invariant shift=201: status=200 body=2
+X01 invariant shift=202: status=200 body=1
+X01 invariant shift=203: status=200 body=1
+X01 invariant shift=204: status=200 body=1
+X01 invariant shift=205: status=200 body=0
+X01 invariant shift=206: status=200 body=0
+X02 different employees client 0: status=201 body={"id":903,"employee":101,"shift":203}
+X02 different employees client 1: status=201 body={"id":905,"employee":102,"shift":203}
+X02 different employees client 2: status=201 body={"id":904,"employee":103,"shift":203}
+X02 three headcount: status=200 body=3
+X02 invariant shift=201: status=200 body=2
+X02 invariant shift=202: status=200 body=1
+X02 invariant shift=203: status=200 body=3
+X02 invariant shift=204: status=200 body=1
+X02 invariant shift=205: status=200 body=0
+X02 invariant shift=206: status=200 body=0
+X03 same weekly plan client 0: status=409 body={"code":"ShiftExists","message":"ShiftExists","fields":[]}
+X03 same weekly plan client 1: status=409 body={"code":"ShiftExists","message":"ShiftExists","fields":[]}
+X03 same weekly plan client 2: status=409 body={"code":"ShiftExists","message":"ShiftExists","fields":[]}
+X03 same weekly plan client 3: status=409 body={"code":"ShiftExists","message":"ShiftExists","fields":[]}
+X03 same weekly plan client 4: status=409 body={"code":"ShiftExists","message":"ShiftExists","fields":[]}
+X03 same weekly plan client 5: status=201 body=
+X03 exact shifts read-back: status=200 body={"total":3,"page":1,"size":20,"records":[{"id":231,"store":12,"day":"2026-02-02","band":"OPENING"},{"id":232,"store":12,"day":"2026-02-09","band":"OPENING"},{"id":233,"store":12,"day":"2026-02-16","band":"OPENING"}]}
+X03 invariant shift=201: status=200 body=2
+X03 invariant shift=202: status=200 body=1
+X03 invariant shift=203: status=200 body=0
+X03 invariant shift=204: status=200 body=1
+X03 invariant shift=205: status=200 body=0
+X03 invariant shift=206: status=200 body=0
+X03 invariant shift=231: status=200 body=0
+X03 invariant shift=232: status=200 body=0
+X03 invariant shift=233: status=200 body=0

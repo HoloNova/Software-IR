@@ -1,0 +1,20 @@
+{
+  "actual_module_junit": "PASSED",
+  "business_checks_each": "871/0",
+  "concurrency_each": [
+    6,
+    3,
+    6
+  ],
+  "copied_runtime_original_hashes": "PASSED",
+  "historical_missing_300": "Restored and fully hash-verified only in isolated repository; main workspace unchanged",
+  "model_calls_total": 6,
+  "new_qualified_teachers": 2,
+  "old_manifest_entries_removed": 0,
+  "pending_export": 2,
+  "production_changes": 0,
+  "run_git_blob_and_generation_bindings": "PASSED",
+  "student_v5": "UNCHANGED",
+  "tested_commit": "46671b9a089d7d56b4518e19d7098dea118ac180",
+  "tokens_total": 70419
+}

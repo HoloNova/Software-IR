@@ -1,0 +1,30 @@
+{
+  "tested_commit": "46671b9a089d7d56b4518e19d7098dea118ac180",
+  "runs": [
+    {
+      "bundle": "datasets/sir/pilots/staffing-shift-roster-change-g13",
+      "checked": "datasets/sir/pilots/staffing-shift-roster-change-g13/checked-initial.jsonl",
+      "generated_digest": "185ed5d90adbbbf494d32fe66fbc7d4e2626bff18f3b158f02fdd98ba6c81a38",
+      "it": "StaffingShiftRosterBusinessConformanceIT",
+      "sample_id": "staffing-shift-roster-change-v1-teacher-23ed7f759fcd",
+      "source_sha256": "35ffdf7ddb5d030331fcdeb084147bded3b103d4b03b5613ee97c5acc24b65e0",
+      "run_id": 41203150293,
+      "run_number": 94,
+      "head_sha": "46671b9a089d7d56b4518e19d7098dea118ac180",
+      "url": "https://github.com/HoloNova/Software-IR/actions/runs/41203150293"
+    },
+    {
+      "bundle": "datasets/sir/pilots/staffing-shift-roster-scratch-g13",
+      "checked": "datasets/sir/pilots/staffing-shift-roster-scratch-g13/checked-initial.jsonl",
+      "generated_digest": "16f22022556db08d223bf6ebea67f39d4465eb1a3056c6a12499146224117f2f",
+      "it": "StaffingShiftRosterBusinessConformanceIT",
+      "sample_id": "staffing-shift-roster-scratch-v1-teacher-2027a6702825",
+      "source_sha256": "d75880276a275146ceb3e69fc4e704006fc50d0d4581a5fb0170632285a64e74",
+      "run_id": 41203161844,
+      "run_number": 95,
+      "head_sha": "46671b9a089d7d56b4518e19d7098dea118ac180",
+      "url": "https://github.com/HoloNova/Software-IR/actions/runs/41203161844"
+    }
+  ],
+  "dispatch_reconciliation": "Second run appeared after the POST response; one read reconciled identity, no redispatch"
+}

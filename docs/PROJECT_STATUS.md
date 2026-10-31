@@ -107,15 +107,15 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 
 ### 数据与实验状态
 
-合格教师答案 **57 条**（鉴权 29、课程 26、博客 2），学生文件为 [train-student-v5.jsonl](../datasets/sir/student/train-student-v5.jsonl)，[索引](../datasets/sir/student/train-student-v5.index.json)记录原始来源；未训练、未产生学生模型评测结果。只有四门通过的最终答案作为 SFT completion，失败答案和报错仅保留为研究/教师反馈记录。v5 保留 v4 的 49 条原字节，历史资格、冻结输入、日志和采集器副本不重写。
+已导出合格教师答案 **57 条**（鉴权 29、课程 26、博客 2），另有 **2 份排班教师已独立四门通过并归档、待导出**；学生文件为 [train-student-v5.jsonl](../datasets/sir/student/train-student-v5.jsonl)，[索引](../datasets/sir/student/train-student-v5.index.json)记录原始来源；未训练、未产生学生模型评测结果。只有四门通过的最终答案作为 SFT completion，失败答案和报错仅保留为研究/教师反馈记录。v5 保留 v4 的 49 条原字节，历史资格、冻结输入、日志和采集器副本不重写。
 
-按本轮工作区的题目定义与 v5 索引复核：**93 道题**（train 87、development 2、test 4；原77题加fdbb83a5已提交的报修/排班16题），57 条答案覆盖 **56 道题**，另 **37 道尚无合格答案**（train 31、development 2、test 4）。v9 补采与业务门 #67–#77 见[第三十一阶段](qualification/SLM_DATA_PILOT_REPORT.md#slm-v9-g10)。这是数据覆盖数，不是模型通过率；不会据此自动补采。首条博客答案已在[候选业务门 #66](https://github.com/HoloNova/Software-IR/actions/runs/41031591392)独立四门通过、业务 426/0；历史失败分支保持封存；当前g13的2份排班静态通过，按已批准范围准备提交后送业务门；2份报修各一轮反馈后仍静态失败并封存，见[第三十四阶段](qualification/SLM_DATA_PILOT_REPORT.md#slm-maintenance-staffing-repair-gate)。完整来源与边界见[数据说明](../datasets/sir/README.md)及[第二十七阶段](qualification/SLM_DATA_PILOT_REPORT.md#slm-blog-g9-qualified)。
+按本轮工作区的题目定义与 v5 索引复核：**93 道题**（train 87、development 2、test 4；原77题加fdbb83a5已提交的报修/排班16题），学生v5的57条覆盖56题，93题中37题尚不在该学生集覆盖中（train31、development2、test4）。本轮新增排班2份四门通过待导出；其他工作线已有待补原件/待导出的候选，另行跟进，不把学生覆盖数当作全库资格总数。v9 补采与业务门 #67–#77 见[第三十一阶段](qualification/SLM_DATA_PILOT_REPORT.md#slm-v9-g10)。这是数据覆盖数，不是模型通过率；不会据此自动补采。首条博客答案已在[候选业务门 #66](https://github.com/HoloNova/Software-IR/actions/runs/41031591392)独立四门通过、业务 426/0；历史失败分支保持封存；当前g13的2份排班已在46671b9a的候选CI #94/#95各以871/0独立四门通过并归档、待导出；2份报修各一轮反馈后仍静态失败并封存，见[第三十四阶段](qualification/SLM_DATA_PILOT_REPORT.md#slm-maintenance-staffing-repair-gate)。完整来源与边界见[数据说明](../datasets/sir/README.md)及[第二十七阶段](qualification/SLM_DATA_PILOT_REPORT.md#slm-blog-g9-qualified)。
 
 ### 报修/排班参考与下一步冻结
 
 `5fe4c8339a927fb526c004c276beb4c1c8892996` 的 [verify 41194982453](https://github.com/HoloNova/Software-IR/actions/runs/41194982453) 已完整通过：报修599/0、排班870/0，六轮真实锁等待屏障与独立验证/部署均成功。原失败与修复历史保留，当前参考不再FAILED；原ZIP、JUnit、日志及Git blob绑定见[第三十二阶段](qualification/SLM_DATA_PILOT_REPORT.md#slm-maintenance-staffing-frozen)。
 
-两family各8题、16个仅参考g13批次及CI原件已于fdbb83a5提交并普通推送；不改工具链/判卷，不重跑同源码参考CI。随后按已批准范围对四道原题各初采1次deepseek-flash，实际42213 tokens；排班2份静态通过、报修2份静态失败，全部运行门NOT_RUN。负责人随后批准报修各一轮反馈与本轮提交/普通推送/候选CI：两次修复28206 tokens，两个新子仍失败，按上限停止；初采加一修累计6次70419 tokens。提交发布原件后只送两份排班，真实结果另记，派发前运行门仍NOT_RUN。12份变体不采，学生v5和base HTTP负例状态不变，详见[第三十四阶段](qualification/SLM_DATA_PILOT_REPORT.md#slm-maintenance-staffing-repair-gate)。
+两family各8题、16个仅参考g13批次及CI原件已于fdbb83a5提交并普通推送；不改工具链/判卷，不重跑同源码参考CI。随后按已批准范围对四道原题各初采1次deepseek-flash，实际42213 tokens；排班2份静态通过、报修2份静态失败，全部运行门NOT_RUN。负责人随后批准报修各一轮反馈与本轮提交/普通推送/候选CI：两次修复28206 tokens，两个新子仍失败，按上限停止；初采加一修累计6次70419 tokens。原件已由46671b9a提交推送，排班两份在同SHA候选CI #94/#95各以871/0四门通过、三轮屏障各6/3/6，原archive-gate已核验归档。新增2份待导出，学生v5仍57条。归档全库校验遇到另一工作线300份历史缺项，已在隔离快照依原哈希恢复后完整核验，主工作区fitness/events和旧清单条目不改；缺项仍需原工作线另补。12份变体不采，base HTTP负例状态不变，详见[第三十四阶段](qualification/SLM_DATA_PILOT_REPORT.md#slm-maintenance-staffing-repair-gate)。
 
 ### 本轮交接任务的落实情况
 

@@ -790,3 +790,13 @@ verify已接入轻量Python套件并上传`slm-python-contracts`，等待提交�
 临时后处理器在两次付费结束后读取参考行不存在的parent_id键而中断，原响应已完整保存；独立离线脚本只续做新子候选静态和复制，没有重新付费或重发。原collector与工具链不改。
 
 本轮提交发布初采/一修和原始静态输出，数据提交skip ci；随后只将两份排班教师23ed7f759fcd、2027a6702825按各自checked-initial送StaffingShiftRosterBusinessConformanceIT。业务门独立验证构建/启动/业务/真实并发，不移植参考资格。run/head_sha及结果另由实际CI与archive-gate证据绑定；派发前均NOT_RUN，不预报通过。学生v5仍57条/56题不变，新增合格项以随后真实归档为准。
+
+### 第三十四阶段结果：排班两份教师独立四门通过
+
+初采/一修原件已由 `46671b9a089d7d56b4518e19d7098dea118ac180` 提交普通推送，86文件纯data/docs、skip ci。随后在该精确SHA仅派发两份排班：[改写#94 / 41203150293](https://github.com/HoloNova/Software-IR/actions/runs/41203150293)、[从零#95 / 41203161844](https://github.com/HoloNova/Software-IR/actions/runs/41203161844)。两份STATIC/BUILD/START/BUSINESS全PASSED，均 **871/0**，各三轮真实锁等待屏障为6/3/6个不同连接/事务。生成56/57文件，分别绑定自己的CLI生成摘要，不借参考或另一候选资格；只计本次实际模块JUnit，不混入Surefire ZIP附带的历史报告。
+
+原archive-gate已校验run/head_sha、受测Git blob、四项绑定、生成摘要、GitHub ZIP摘要、原日志/报告附件及JUnit，原件在两个排班g13批次的runtime/<teacher>/github-<run>-attempt-1。[汇总/核验记录](../../datasets/sir/research/2026-10-31/bounded-g13-gate/README.md)保存完整派发与归档对账。
+
+归档最后的全库清单验证最初被另一工作线10次fitness/events运行的300份未纳Git原件阻断。没有删清单、改校验或触碰其主工作区；在独立LF快照按原artifact元数据下载20个ZIP，恢复并逐项匹配这300份原SHA256，完整校验全库后再运行未修改的archive-gate。仅回写本轮两份排班原件与原生清单增量。旧缺项及隔离处理详见上述记录，仍应由原工作线另补，不冒称本轮已修复主工作区历史缺项。
+
+本轮新增四门合格教师2份，**尚未export/student包装**。已导出57条/学生v5原字节不变；本轮只增记排班2份待导出资格，其他工作线已有待补原件/待导出候选，不自动重算或继承。学生v5仍覆盖56题，93题中37题不在当前学生集覆盖中；该数不是全库尚无合格答案的题数。报修失败父子全部封存，零追加追修；模型累计6次70419 tokens，不扩采、不训练、不改工具链。

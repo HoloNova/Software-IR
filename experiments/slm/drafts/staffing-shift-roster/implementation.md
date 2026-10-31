@@ -117,3 +117,7 @@ lowering 的实体声明、版本元数据、成员绑定、引用主键和 CAS 
 ## 10. 两份初采教师准备独立业务验收
 
 负责人已批准初采/一修记录提交普通推送后，将静态通过教师送候选CI。报修两份一修仍失败，因此本轮仅本题change 23ed7f759fcd、scratch 2027a6702825送StaffingShiftRosterBusinessConformanceIT；每份绑定各批checked-initial，不继承参考或另一候选资格。真实run/head_sha、构建/启动/业务/并发与原件由后续archive-gate记录；派发前仍NOT_RUN，不预报通过。原件与阶段范围见[一修/送门记录](../../../../datasets/sir/research/2026-10-31/bounded-g13-repair/README.md)。不export或训练，不扩采变体。
+
+## 11. 两份教师独立四门验收：PASSED
+
+受测46671b9a的改写23ed7f759fcd在[候选#94](https://github.com/HoloNova/Software-IR/actions/runs/41203150293)、从零2027a6702825在[#95](https://github.com/HoloNova/Software-IR/actions/runs/41203161844)均四门PASSED，业务各871/0，三轮真实屏障各6/3/6。原archive-gate核验受测Git、候选/生成/ZIP/附件/JUnit后已归档两批runtime。新增两份教师待导出，不继承参考资格或混算历史JUnit，学生v5未改；原件及全库缺项的隔离核验见[候选CI记录](../../../../datasets/sir/research/2026-10-31/bounded-g13-gate/README.md)。未追加模型调用或修改工具链。

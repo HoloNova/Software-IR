@@ -1,0 +1,37 @@
+{
+  "artifacts": {
+    "slm-gate-staffing-shift-roster-scratch-v1-teacher-2027a6702825": {
+      "id": 13043079311,
+      "zip_sha256": "c05d626712e38567b4890ec8d711795cb7502ed8796e4127c03f6837b709fb29"
+    },
+    "slm-gate-surefire-staffing-shift-roster-scratch-v1-teacher-2027a6702825": {
+      "id": 13043885186,
+      "zip_sha256": "48250115936ab541d1549bdbc2af1bfbc115483c925cc66de58f20ef11dc5f96"
+    }
+  },
+  "checked": "datasets/sir/pilots/staffing-shift-roster-scratch-g13/checked-initial.jsonl",
+  "checks_failed": 0,
+  "checks_passed": 871,
+  "failed_checks": [],
+  "gates": {
+    "build": "PASSED",
+    "business": "PASSED",
+    "start": "PASSED",
+    "static": "PASSED"
+  },
+  "head_sha": "46671b9a089d7d56b4518e19d7098dea118ac180",
+  "index_before": {
+    "datasets/sir/MANIFEST.sha256": "1cbf4ad949ae0ea51d6783428431107c519332b1cedf67bec0487202c432a5e2",
+    "datasets/sir/pilots/staffing-shift-roster-scratch-g13/MANIFEST.sha256": "b9c66cb8df26f19c3484408adc36266f00b716e167b5cbd41f4ca00c272c7744"
+  },
+  "inputs": {
+    "bundle": "datasets/sir/pilots/staffing-shift-roster-scratch-g13",
+    "it": "StaffingShiftRosterBusinessConformanceIT",
+    "sample_id": "staffing-shift-roster-scratch-v1-teacher-2027a6702825"
+  },
+  "job_conclusion": "success",
+  "run_attempt": 1,
+  "run_id": 41203161844,
+  "run_url": "https://github.com/HoloNova/Software-IR/actions/runs/41203161844",
+  "workflow": ".github/workflows/slm-business-gate.yml"
+}
