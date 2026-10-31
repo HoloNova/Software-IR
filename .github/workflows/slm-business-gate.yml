@@ -193,5 +193,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: slm-gate-surefire-${{ inputs.sample_id }}
-          path: '**/target/surefire-reports/**'
+          # Only this run's module reports: JUnit already archived under datasets/ is another run's evidence.
+          path: |
+            **/target/surefire-reports/**
+            !datasets/**
           if-no-files-found: warn

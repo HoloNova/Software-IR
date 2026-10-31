@@ -70,6 +70,10 @@ def _junit(surefire: Path, task: dict, gates: dict) -> str:
     expected = _one(its, "oracle must identify exactly one business IT")
     found = ()
     for path in sorted(surefire.rglob("TEST-*.xml")):
+        # The upload glob also catches JUnit already archived in the checkout under datasets/; that is another
+        # run's evidence (kept in the raw ZIP), never this run's result.
+        if path.relative_to(surefire).parts[0] == "datasets":
+            continue
         try:
             text = path.read_bytes().decode("utf-8")
         except UnicodeError:

@@ -142,6 +142,21 @@ class ArchiveTests(unittest.TestCase):
         self.fx.refresh()
         self.reject()
 
+    def test_archived_history_inside_the_surefire_zip_is_not_this_runs_junit(self):
+        # The upload glob also matched JUnit already archived under datasets/; a failed old copy must not count.
+        old = next(v for p, v in self.fx.sf_files.items() if p.endswith(".xml"))
+        failed = old.replace(b'failures="0"', b'failures="1"').replace(b"</testcase>", b'<failure message="old"/></testcase>')
+        self.fx.sf_files[f"datasets/sir/pilots/old/runtime/s/github-1-attempt-1/junit/toy/target/surefire-reports/TEST-{IT}.xml"] = failed
+        self.fx.refresh()
+        result = self.fx.archive(self.api())
+        self.assertEqual("PASSED", result["gates"]["business"])
+        self.assertEqual(0, result["checks_failed"])
+
+    def test_archived_history_alone_cannot_stand_in_for_a_missing_business_it(self):
+        self.fx.sf_files = {"datasets/sir/pilots/old/runtime/s/github-1-attempt-1/junit/" + p: v for p, v in self.fx.sf_files.items()}
+        self.fx.refresh()
+        self.reject()
+
     def test_junit_doctype_is_refused_without_entity_resolution(self):
         key = next(p for p in self.fx.sf_files if p.endswith(".xml"))
         self.fx.sf_files[key] = b'<!DOCTYPE a [<!ENTITY a "boom">]>' + self.fx.sf_files[key]

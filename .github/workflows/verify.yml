@@ -152,7 +152,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: frozen-failure-surefire-reports
-          path: '**/target/surefire-reports/**'
+          # JUnit already archived under datasets/ belongs to earlier runs, not this one.
+          path: |
+            **/target/surefire-reports/**
+            !datasets/**
           if-no-files-found: warn
 
       - name: Completion diagnostics (only after frozen-gate failure)
@@ -310,7 +313,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: surefire-reports
-          path: '**/target/surefire-reports/**'
+          # JUnit already archived under datasets/ belongs to earlier runs, not this one.
+          path: |
+            **/target/surefire-reports/**
+            !datasets/**
           if-no-files-found: warn
 
   standalone-deployment:
