@@ -157,3 +157,7 @@
 ## 学生 v6（65 条，13 个 family）
 
 `student/train-student-v6.jsonl` 保留 v5 的 57 条原字节，追加 fitness/events g11 的 6 条与排班 g13 的 2 条；两部分分别在其受测工具链对应的检出（`22a4c65`、`918c1fb`）中由 `student` 包装，来源记在索引的 `assembly.new_parts`。g11/g12 业务门漏提交的 300 份原件已从原 artifact 补回。详见[第三十五阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-student-v6)。
+
+## 学生 v7（78 条）
+
+`student/train-student-v7.jsonl` 保留 v6 的 65 条原字节，追加 g14 排班改写 6 条、g15 events 改写 6 条与 fitness 从零 p1 修复子候选 1 条。g14 那 8 次业务门的 `junit/` 下含被上传路径带入的历史报告副本（见 `c24db1c`），只对应已有 blob。详见[第三十六阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-student-v7)。

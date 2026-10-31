@@ -1,0 +1,37 @@
+{
+  "artifacts": {
+    "slm-gate-fitness-check-in-scratch-p1-v1-teacher-5def1a44bbef": {
+      "id": 13045316594,
+      "zip_sha256": "7b04a37d4313c5b83bfb1426d9e9edeb061035e4affca1619b5e5cd80b84fee7"
+    },
+    "slm-gate-surefire-fitness-check-in-scratch-p1-v1-teacher-5def1a44bbef": {
+      "id": 13045436459,
+      "zip_sha256": "0399be90f55fa4e513d2026902c3938d1e1460502d9ae8c18c33ee139c88b8ad"
+    }
+  },
+  "checked": "datasets/sir/pilots/fitness-check-in-scratch-p1-g15/checked-rt1.jsonl",
+  "checks_failed": 0,
+  "checks_passed": 778,
+  "failed_checks": [],
+  "gates": {
+    "build": "PASSED",
+    "business": "PASSED",
+    "start": "PASSED",
+    "static": "PASSED"
+  },
+  "head_sha": "c8ed28f20cee28c224695d6dd8f38252025ae2e5",
+  "index_before": {
+    "datasets/sir/MANIFEST.sha256": "34c16b2b08280b7a028735df91ce6c6f176dcc10fd47b498c7a65df8fab67e87",
+    "datasets/sir/pilots/fitness-check-in-scratch-p1-g15/MANIFEST.sha256": "12bf18987ba1099eac1ccf1a03c2cc5507beea307fc746f4e4de3fefdf447bb7"
+  },
+  "inputs": {
+    "bundle": "datasets/sir/pilots/fitness-check-in-scratch-p1-g15",
+    "it": "FitnessCheckInBusinessConformanceIT",
+    "sample_id": "fitness-check-in-scratch-p1-v1-teacher-5def1a44bbef"
+  },
+  "job_conclusion": "success",
+  "run_attempt": 1,
+  "run_id": 41207704133,
+  "run_url": "https://github.com/HoloNova/Software-IR/actions/runs/41207704133",
+  "workflow": ".github/workflows/slm-business-gate.yml"
+}

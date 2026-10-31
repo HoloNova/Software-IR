@@ -1,0 +1,14 @@
+{
+  "all_four_gates_required": true,
+  "corpus_sha256": "384578721854e9e4959e28025d47e5f488c02788b5a78bcac1b74523c2134c80",
+  "count": 1,
+  "rows": [
+    {
+      "id": "fitness-check-in-scratch-p1-v1-teacher-5def1a44bbef",
+      "oracle_sha256": "853d94eb3291378cdfea2fa4b76f0f2f7d896c47bd26e8574d5413427320fa31",
+      "runtime_run_id": "fitness-slice-1a1923ed402-7964",
+      "source_sha256": "4c789a70f59985d7cbe63ba1576a8ecf0305b29bd73aa36020e26f494fb80d4a",
+      "task_sha256": "5253848ad77e494c242ec711c6c276606c3b843bd09a5e3f794fc55867625c7e"
+    }
+  ]
+}

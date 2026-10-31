@@ -93,7 +93,7 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 4. **Git 钩子照常生效。** 提交钩子拒绝时，保存当前版本失败则应用在改动前停止；保存新版本失败只给警告。
 5. **SIR 目录与生成目录必须是仓库内互不包含的两个目录，且在同一文件系统**（原子移动需要）。
 6. 编译与生成是完整的，不是局部增量编译。
-7. 证据范围：已有 65 条四门合格教师答案，但尚未开始学生模型训练或评测；数据准备不等于模型成绩，详见[数据报告第三十一阶段](qualification/SLM_DATA_PILOT_REPORT.md#slm-v9-g10)。历史全链基线不替代后续改动的同 SHA CI，第 7 节单列其状态；进程树终止与日志脱敏的既有边界见 [R5 报告](history/roadmap/R5-independent-verification-report.md) 第 4–5 节。
+7. 证据范围：已有 78 条四门合格教师答案，但尚未开始学生模型训练或评测；数据准备不等于模型成绩，详见[数据报告第三十一阶段](qualification/SLM_DATA_PILOT_REPORT.md#slm-v9-g10)。历史全链基线不替代后续改动的同 SHA CI，第 7 节单列其状态；进程树终止与日志脱敏的既有边界见 [R5 报告](history/roadmap/R5-independent-verification-report.md) 第 4–5 节。
 
 ## 6. 尚未作为产品能力发布
 
@@ -107,9 +107,9 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 
 ### 数据与实验状态
 
-已导出合格教师答案 **65 条**（鉴权 29、课程 26、活动报名 4、博客 2、健身 2、排班 2，共 13 个 family）；学生文件为 [train-student-v6.jsonl](../datasets/sir/student/train-student-v6.jsonl)，[索引](../datasets/sir/student/train-student-v6.index.json)记录原始来源；未训练、未产生学生模型评测结果。只有四门通过的最终答案作为 SFT completion，失败答案和报错仅保留为研究/教师反馈记录。v6 保留 v5 的 57 条原字节，历史资格、冻结输入、日志和采集器副本不重写。
+已导出合格教师答案 **78 条**（鉴权 29、课程 26、活动报名 10、排班 8、健身 3、博客 2，共 13 个 family）；学生文件为 [train-student-v7.jsonl](../datasets/sir/student/train-student-v7.jsonl)，[索引](../datasets/sir/student/train-student-v7.index.json)记录原始来源；未训练、未产生学生模型评测结果。只有四门通过的最终答案作为 SFT completion，失败答案和报错仅保留为研究/教师反馈记录。v7 保留 v6 的 65 条原字节，历史资格、冻结输入、日志和采集器副本不重写。
 
-按当前题目定义与 v6 索引复核：**93 道题**（train 87、development 2、test 4），65 条答案覆盖 **61 道题**，另 **32 道尚无合格答案**（train 26、development 2、test 4）。fitness/events 的 g11–g12、排班导出与 v6 见[第三十五阶段](qualification/SLM_DATA_PILOT_REPORT.md#slm-student-v6)。v9 补采与业务门 #67–#77 见[第三十一阶段](qualification/SLM_DATA_PILOT_REPORT.md#slm-v9-g10)。这是数据覆盖数，不是模型通过率；不会据此自动补采。首条博客答案已在[候选业务门 #66](https://github.com/HoloNova/Software-IR/actions/runs/41031591392)独立四门通过、业务 426/0；历史失败分支保持封存；当前g13的2份排班已在46671b9a的候选CI #94/#95各以871/0独立四门通过并归档、待导出；2份报修各一轮反馈后仍静态失败并封存，见[第三十四阶段](qualification/SLM_DATA_PILOT_REPORT.md#slm-maintenance-staffing-repair-gate)。完整来源与边界见[数据说明](../datasets/sir/README.md)及[第二十七阶段](qualification/SLM_DATA_PILOT_REPORT.md#slm-blog-g9-qualified)。
+按当前题目定义与 v7 索引复核：**105 道题**（train 99、development 2、test 4），78 条答案覆盖 **74 道题**，另 **31 道尚无合格答案**（train 25、development 2、test 4）。g14–g15 的采样、归档修复与 v7 见[第三十六阶段](qualification/SLM_DATA_PILOT_REPORT.md#slm-student-v7)。v9 补采与业务门 #67–#77 见[第三十一阶段](qualification/SLM_DATA_PILOT_REPORT.md#slm-v9-g10)。这是数据覆盖数，不是模型通过率；不会据此自动补采。首条博客答案已在[候选业务门 #66](https://github.com/HoloNova/Software-IR/actions/runs/41031591392)独立四门通过、业务 426/0；历史失败分支保持封存；当前g13的2份排班已在46671b9a的候选CI #94/#95各以871/0独立四门通过并归档、待导出；2份报修各一轮反馈后仍静态失败并封存，见[第三十四阶段](qualification/SLM_DATA_PILOT_REPORT.md#slm-maintenance-staffing-repair-gate)。完整来源与边界见[数据说明](../datasets/sir/README.md)及[第二十七阶段](qualification/SLM_DATA_PILOT_REPORT.md#slm-blog-g9-qualified)。
 
 ### 报修/排班参考与下一步冻结
 
@@ -132,7 +132,7 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 
 | 事项 | 当前边界 |
 | --- | --- |
-| 学生训练与评测 | 模型、样本规模、评分和预算尚未确定；65 条/v6 就绪不自动授权下载权重、租 GPU 或开训。 |
+| 学生训练与评测 | 模型、样本规模、评分和预算尚未确定；78 条/v7 就绪不自动授权下载权重、租 GPU 或开训。 |
 | test 集采样 | finance、library 共 4 道尚未采样；何时采样及最终评估安排另定，不用于训练和调参。 |
 | 新任务板训练题 | `experiments/slm/drafts/task-board/spec.md` 尚未到位；是否继续及规格由负责人决定，不将已有主题样例冒充新题。 |
 | 扩大唯一冲突处理规则 | 是否要求所有唯一新行 persist 都写 else 尚未批准；当前仅执行 4.1 已确认的窄规则。 |
