@@ -1043,11 +1043,12 @@ final class TypePass {
       if (leftType != null && rightType != null) {
          switch (expr.operator()) {
                case CONTAINS_LITERAL:
+                  // Like a comparison, either side may be optional: an absent value makes the match false.
                   SirType matchable = leftType instanceof OptionalType optional ? optional.element() : leftType;
-                  if (matchable != PrimitiveType.STRING || rightType != PrimitiveType.STRING) {
+                  SirType literal = rightType instanceof OptionalType optional ? optional.element() : rightType;
+                  if (matchable != PrimitiveType.STRING || literal != PrimitiveType.STRING) {
                      this.diagnostics.add(DiagnosticBuilder.error(
-                  "SIR-TYPE-001", "containsLiteral 的左侧必须是文本字段，右侧必须是非 Optional 文本值；"
-                      + "is none/is present 不会把 Optional 文本转换成非 Optional 文本。", expr.span()));
+                  "SIR-TYPE-001", "containsLiteral 的左侧必须是文本字段，右侧必须是文本值（可以是 Optional，空值时结果为 false）", expr.span()));
                      return null;
                   }
 

@@ -29,6 +29,65 @@ class GeneratorOptionalValueContractTest {
         assertTrue(guard.contains("COALESCE(score < {0}, FALSE)"), guard);
     }
 
+    private static final String KEYWORD_SEARCH = """
+            sir 0.3
+            software Search {
+              metadata { displayName "Search"; namespace "example.search"; }
+              target { language java 21; framework spring_boot; persistence mybatis_plus;
+                database mysql; build maven; interface rest; }
+              sources { } imports { }
+              declarations {
+                entity Note persistent {
+                  identity id: Id generated auto; field title: Text; field note: Optional<Text>;
+                }
+                view NoteView from Note { field id: Id; field title: Text; }
+                input Query { field keyword: Optional<Text>; field word: Text; field page: PageNo; field size: PageSize; }
+                error BadPage;
+                capability OptionalKeyword {
+                  input Query; output Page<NoteView>; fails BadPage; requires readonly; expose query;
+                  workflow {
+                    find Note where input.keyword is none or item.title containsLiteral input.keyword
+                      order by id ascending Page input.page, input.size else BadPage as found;
+                    return found;
+                  }
+                }
+                capability OptionalColumn {
+                  input Query; output Page<NoteView>; fails BadPage; requires readonly; expose query;
+                  workflow {
+                    find Note where not (item.note containsLiteral input.word)
+                      order by id ascending Page input.page, input.size else BadPage as found;
+                    return found;
+                  }
+                }
+                capability RequiredBoth {
+                  input Query; output Page<NoteView>; fails BadPage; requires readonly; expose query;
+                  workflow {
+                    find Note where item.title containsLiteral input.word
+                      order by id ascending Page input.page, input.size else BadPage as found;
+                    return found;
+                  }
+                }
+              }
+            }
+            """;
+
+    @Test
+    void optionalLiteralMatchCollapsesUnknownToFalseAndCompiles(@TempDir Path dir) throws Exception {
+        List<GeneratedFile> generated = GeneratorTestSupport.generateSuccessFromText(KEYWORD_SEARCH);
+        String keyword = GeneratorTestSupport.contentEndingWith(generated, "/OptionalKeywordService.java");
+        String column = GeneratorTestSupport.contentEndingWith(generated, "/OptionalColumnService.java");
+        String required = GeneratorTestSupport.contentEndingWith(generated, "/RequiredBothService.java");
+        assertTrue(keyword.contains("\"COALESCE(title LIKE CONCAT('%', {0}, '%') ESCAPE "), keyword);
+        assertTrue(keyword.contains("', FALSE)\", escapeLikeLiteral((input.getKeyword() == null ? null : input.getKeyword().orElse(null))))"), keyword);
+        assertTrue(column.contains("COALESCE(note LIKE CONCAT('%', {0}, '%')"), column);
+        assertTrue(column.contains(".not("), column);
+        assertTrue(required.contains("\"title LIKE CONCAT('%', {0}, '%') ESCAPE"), required);
+        assertFalse(required.contains("COALESCE"), required);
+        try (var loader = GeneratedRuntimeSupport.compile(KEYWORD_SEARCH, dir)) {
+            assertNotNull(loader.loadClass("example.search.application.OptionalKeywordService"));
+        }
+    }
+
     @Test
     void emittedJavaComparisonIsExecutableAndMissingIsFalse(@TempDir Path dir) throws Exception {
         String service = service("Check");

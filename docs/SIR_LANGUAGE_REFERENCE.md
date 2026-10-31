@@ -1249,6 +1249,37 @@ capability FilterTickets {
 }
 ```
 
+`containsLiteral` 遵守同一张真值表：两侧都可以是可选文本，任一侧为空时结果为 false，外面套 `not` 时为 true。没给关键字就不限制，同样明确写出来：
+
+```sir-declarations
+entity Article persistent {
+  identity id: Id generated auto;
+  field title: Text;
+}
+view ArticleView from Article {
+  field id: Id;
+  field title: Text;
+}
+input Search {
+  field keyword: Optional<Text>;
+  field page: PageNo;
+  field size: PageSize;
+}
+error BadPage;
+capability SearchArticles {
+  input Search;
+  output Page<ArticleView>;
+  fails BadPage;
+  requires readonly;
+  expose query;
+  workflow {
+    find Article where input.keyword is none or item.title containsLiteral input.keyword
+      order by id descending Page input.page, input.size else BadPage as found;
+    return found;
+  }
+}
+```
+
 **关联存在性：`any(实体, 条件)`。** 在查询步骤的谓词里问“有没有另一个实体的行指向我，并满足条件”：
 
 ```sir-declarations
@@ -2009,7 +2040,7 @@ capability RecordSale {
 
 **算术用到的输入同样必填。**按第 3.3 节，非可选输入不管怎样使用都必填；参与加、减、乘、取负、内置函数或 `repeat` 次数的输入，没传或传 `null` 同样在工作流之前返回 `400 INVALID_REQUEST`、字段错误码 `NotNull`，不会当成 0，哪怕只在某个分支里用到。分页参数是唯一的例外：在一个能力里只被分页步骤用作页码、页大小时有默认值；作者如果把 `page` 也拿去做运算，它就必须传。局部更新的 `changes` 不受这条影响，仍区分没传和 `null`，也不能参与算术。`Optional` 值不能参与算术，判过空也不行。引用不能参与算术，但整数主键的 `input.ref.id` 可以。查询条件里仍不能对列做乘法，`any` 里也不能做算术；请求这一侧算出的值可以作为普通查询参数。
 
-**可选值。**`is none`／`is present` 只能用于 `Optional<T>`，可以写在查询条件、`validate` 和更新守卫里，优先级和大小比较相同；要否定就写 `not (x is none)`。可选值可以和同底层类型的值比较：任一边为空时，`==`、`!=`、`<` 等比较的结果都是 false，包括 `!=`，两个空值也不相等。`not (x == y)` 是普通取反，有空值时为 true，所以它和 `x != y` 不一样（见下表）。查询和工作流里的比较遵守同一张表。判过空并不改变类型：仍不能取可选引用的成员，不能对可选值做加减乘或时间平移；`containsLiteral` 的右边仍要求非可选文本。`is none` 也不表示“局部更新没传”：普通输入里没传和传 `null` 都算空；要问局部更新里传了没有，用 `.present`。
+**可选值。**`is none`／`is present` 只能用于 `Optional<T>`，可以写在查询条件、`validate` 和更新守卫里，优先级和大小比较相同；要否定就写 `not (x is none)`。可选值可以和同底层类型的值比较：任一边为空时，`==`、`!=`、`<` 等比较的结果都是 false，包括 `!=`，两个空值也不相等。`not (x == y)` 是普通取反，有空值时为 true，所以它和 `x != y` 不一样（见下表）。查询和工作流里的比较遵守同一张表。判过空并不改变类型：仍不能取可选引用的成员，不能对可选值做加减乘或时间平移。`containsLiteral` 和比较一样，两侧都可以是可选文本，任一侧为空时为 false。`is none` 也不表示“局部更新没传”：普通输入里没传和传 `null` 都算空；要问局部更新里传了没有，用 `.present`。
 
 | 左值 | 右值 | `==` | `!=` | `not (==)` |
 | --- | --- | --- | --- | --- |

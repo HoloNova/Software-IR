@@ -113,13 +113,17 @@ class QueryDiagnosticMessageTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"input.keyword is none or ", "input.keyword is present and "})
-    void optionalRightOperandRemainsRejectedAfterEitherNullTest(String prefix) {
+    @ValueSource(strings = {"", "input.keyword is none or ", "input.keyword is present and "})
+    void optionalTextParameterIsAcceptedLikeAnOptionalComparison(String prefix) {
         String declarations = DECLARATIONS.replace("field keyword: Text;", "field keyword: Optional<Text>;");
-        Diagnostic diagnostic = rejectOnce(find(declarations, prefix + STRING_MATCH), "SIR-TYPE-001", STRING_MATCH);
+        assertClean(find(declarations, prefix + STRING_MATCH));
+    }
 
-        assertTrue(diagnostic.message().contains("非 Optional 文本值"), diagnostic::message);
-        assertTrue(diagnostic.message().contains("is none/is present"), diagnostic::message);
+    @Test
+    void nonTextOptionalParameterIsStillRejected() {
+        String declarations = DECLARATIONS.replace("field keyword: Text;", "field keyword: Optional<Count>;");
+        Diagnostic diagnostic = rejectOnce(find(declarations, STRING_MATCH), "SIR-TYPE-001", STRING_MATCH);
+        assertTrue(diagnostic.message().contains("右侧必须是文本值"), diagnostic::message);
     }
 
     @Test

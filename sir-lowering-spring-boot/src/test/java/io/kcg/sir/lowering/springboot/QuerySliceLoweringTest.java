@@ -137,7 +137,7 @@ class QuerySliceLoweringTest {
                         find.id(), find.origin(), find.entitySymbol(), find.predicate(), find.orderKeys(), find.page(),
                         List.of(new SpringExpression.StringMatch(
                                 find.stringMatches().getFirst().id(), find.stringMatches().getFirst().origin(),
-                                new io.kcg.sir.lowering.api.LoweredNodeId("lir://absent"), '\\', List.of("\\", "%", "_"))),
+                                new io.kcg.sir.lowering.api.LoweredNodeId("lir://absent"), '\\', List.of("\\", "%", "_"), false)),
                         find.statementBudget(), find.result(), find.itemVariable())),
                 "has no predicate node");
     }
@@ -149,9 +149,23 @@ class QuerySliceLoweringTest {
                         find.id(), find.origin(), find.entitySymbol(), find.predicate(), find.orderKeys(), find.page(),
                         List.of(new SpringExpression.StringMatch(
                                 find.stringMatches().getFirst().id(), find.stringMatches().getFirst().origin(),
-                                find.stringMatches().getFirst().expressionId(), '!', List.of("!", "%", "_"))),
+                                find.stringMatches().getFirst().expressionId(), '!', List.of("!", "%", "_"), false)),
                         find.statementBudget(), find.result(), find.itemVariable())),
                 "escaping must match the target query policy");
+    }
+
+    @Test
+    void absentValuePlanThatContradictsTheOperandsIsRejected() {
+        assertRejected(
+                withFindStep(LoweringTestSupport.lowerSuccess(SOURCE), find -> {
+                    SpringExpression.StringMatch match = find.stringMatches().getFirst();
+                    return new SpringBootWorkflow.FindStep(
+                        find.id(), find.origin(), find.entitySymbol(), find.predicate(), find.orderKeys(), find.page(),
+                        List.of(new SpringExpression.StringMatch(match.id(), match.origin(), match.expressionId(),
+                                match.escapeCharacter(), match.escapedLiterals(), !match.absentIsFalse())),
+                        find.statementBudget(), find.result(), find.itemVariable());
+                }),
+                "absent-value plan does not match its operands");
     }
 
     @Test

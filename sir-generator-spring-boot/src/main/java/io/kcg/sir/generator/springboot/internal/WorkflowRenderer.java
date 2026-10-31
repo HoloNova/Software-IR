@@ -1437,7 +1437,9 @@ final class WorkflowRenderer {
       SpringExpression expression, Variable itemVariable, EntityDeclaration entity, SpringExpression.StringMatch match
    ) {
       String column = columnOf(entity, memberSymbol(expression, itemVariable));
-      return column + " LIKE CONCAT('%', {0}, '%') ESCAPE " + sqlCharacterLiteral(match.escapeCharacter());
+      String like = column + " LIKE CONCAT('%', {0}, '%') ESCAPE " + sqlCharacterLiteral(match.escapeCharacter());
+      // An absent operand makes LIKE UNKNOWN; the plan turns that into false, as for an optional comparison.
+      return match.absentIsFalse() ? "COALESCE(" + like + ", FALSE)" : like;
    }
 
    private static SymbolId memberSymbol(SpringExpression expression, Variable itemVariable) {

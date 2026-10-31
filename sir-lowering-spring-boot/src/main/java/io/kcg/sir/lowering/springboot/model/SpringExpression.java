@@ -142,9 +142,12 @@ public sealed interface SpringExpression
    * <p>{@link #expressionId()} is the lowered node of the operator it describes, so the plan and the
    * predicate can be checked against each other in both directions. {@link #escapeCharacter()} and
    * {@link #escapedLiterals()} come from the target query policy, never from the renderer.
+   * {@link #absentIsFalse()} says that an operand is optional, so an absent value must make the match false
+   * rather than UNKNOWN (the same truth table as an optional comparison, also under {@code not}).
    */
    record StringMatch(
-      LoweredNodeId id, LoweredOrigin origin, LoweredNodeId expressionId, char escapeCharacter, List<String> escapedLiterals
+      LoweredNodeId id, LoweredOrigin origin, LoweredNodeId expressionId, char escapeCharacter, List<String> escapedLiterals,
+      boolean absentIsFalse
    ) {
       public StringMatch {
          Objects.requireNonNull(id, "id");

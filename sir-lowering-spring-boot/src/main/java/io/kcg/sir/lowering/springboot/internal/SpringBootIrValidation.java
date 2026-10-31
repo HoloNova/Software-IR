@@ -1336,26 +1336,35 @@ case SpringBootWorkflow.FindStep value:
          }
       }
 
-      Set<LoweredNodeId> actual = new LinkedHashSet<>();
+      Map<LoweredNodeId, Boolean> actual = new LinkedHashMap<>();
       this.collectLiteralMatches(predicate, actual);
-      for (LoweredNodeId expressionId : actual) {
+      for (LoweredNodeId expressionId : actual.keySet()) {
          if (!planned.contains(expressionId)) {
          this.error(owner, "literal match in the predicate has no plan entry: " + expressionId);
          }
       }
 
+      for (SpringExpression.StringMatch match : matches) {
+         Boolean optional = actual.get(match.expressionId());
+         if (optional != null && optional != match.absentIsFalse()) {
+         this.error(owner, "literal-match absent-value plan does not match its operands: " + match.expressionId());
+         }
+      }
+
       for (LoweredNodeId expressionId : planned) {
-         if (!actual.contains(expressionId)) {
+         if (!actual.containsKey(expressionId)) {
          this.error(owner, "literal-match plan entry has no predicate node: " + expressionId);
          }
       }
    }
 
-   private void collectLiteralMatches(SpringExpression expression, Set<LoweredNodeId> sink) {
+   /** Each literal match in the predicate, with whether one of its operands is optional. */
+   private void collectLiteralMatches(SpringExpression expression, Map<LoweredNodeId, Boolean> sink) {
       switch (expression) {
          case SpringExpression.BinaryExpression binary:
          if (binary.operator() == SpringExpression.BinaryOperator.CONTAINS_LITERAL) {
-               sink.add(binary.id());
+               sink.put(binary.id(), binary.left().type() instanceof LoweredJavaType.OptionalValue
+                  || binary.right().type() instanceof LoweredJavaType.OptionalValue);
          }
 
          this.collectLiteralMatches(binary.left(), sink);

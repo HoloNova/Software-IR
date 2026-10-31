@@ -1199,7 +1199,8 @@ public final class SpringBootModelLowerer {
                     this.origin(owner, binary.sourceNodeId(), binary.span()),
                     this.nodeId(binary.sourceNodeId().value(), "expression"),
                     this.queryPolicy.likeEscapeCharacter(),
-                    this.queryPolicy.likeEscapedLiterals()));
+                    this.queryPolicy.likeEscapedLiterals(),
+                    binary.left().type() instanceof OptionalType || binary.right().type() instanceof OptionalType));
         }
 
         this.collectStringMatches(binary.left(), owner, matches);
