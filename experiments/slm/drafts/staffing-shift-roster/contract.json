@@ -2,7 +2,7 @@
   "namespace": "example.staffing",
   "family": "staffing.shift-roster",
   "split": "train",
-  "status": "owner-approved specification; oracle implemented; runtime NOT_RUN",
+  "status": "owner-approved specification; oracle implemented; reference CI FAILED (d31af6af / 41187721552)",
   "capabilities": ["ListStores", "GenerateWeeklyShifts", "StoreShifts", "StoreEmployees", "AssignEmployee", "ShiftHeadcount", "EmployeeRoster"],
   "entities": ["User", "AccessToken", "Store", "Employee", "Shift", "Assignment"],
   "interfaces": {

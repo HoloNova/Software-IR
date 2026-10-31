@@ -1,6 +1,6 @@
-# 门店排班题追溯（判卷源码已落地，业务门 NOT_RUN）
+# 门店排班题追溯（判卷源码已落地，参考业务 CI FAILED）
 
-family `staffing.shift-roster` / train，基线 `e81200e0e039c5d178c95bbab2f12195ac13f0dd`。规格已确认；现已另获授权并落地Java/IT、DDL/seed和两个workflow；尚无task或CI证据。实现入口见§6，验证状态见 [implementation.md](implementation.md)。reference/base最终均GENERATION、diagnostics=[]、56/50文件，真实stdout见spec §0.3；首轮引用排序失败也已登记，不隐去失败。
+family `staffing.shift-roster` / train，基线 `e81200e0e039c5d178c95bbab2f12195ac13f0dd`。规格已确认；现已另获授权并落地Java/IT、DDL/seed和两个workflow；尚无task或合格CI资格，已有失败CI证据见implementation §5。实现入口见§6，验证状态见 [implementation.md](implementation.md)。reference/base最终均GENERATION、diagnostics=[]、56/50文件，真实stdout见spec §0.3；首轮引用排序失败也已登记，不隐去失败。
 
 ## 1. 参考、base与输入
 
@@ -55,7 +55,7 @@ X01六请求编同一(103,203)，1×201/5×AlreadyAssigned，只增一关系；X
 
 每轮先重置；目标Shift或Store由控制连接持锁；ready/start同时放行N个独立HTTP客户端；必须看到N个不同运行时连接/事务均进入该目标等待图后释放。观察5秒、请求30秒、整轮35秒；缺锁观测权限NOT_RUN，死锁/500/超时均失败，不能拿顺序执行替代。最终读取六表完整差异，并独立从JDBC重算各班人数与每个唯一键、归属不变量，不从成功请求数推导正确性。实现细则见spec §6.5。
 
-构建/启动/真库/并发均NOT_RUN；就绪/种子/环境/清理是执行器前置，不要求教师实现判卷器。任何未来候选都要独立过四门，不继承参考或其他题资格。
+同SHA CI构建/启动通过，业务752项通过、22失败；X01/X02业务通过，X03因band的OGNL错误失败，三轮真实锁屏障均已观测，见implementation §5；就绪/种子/环境/清理是执行器前置，不要求教师实现判卷器。任何未来候选都要独立过四门，不继承参考或其他题资格。
 
 ## 5. 发现与负责人已确认的裁决
 
@@ -63,7 +63,7 @@ X01六请求编同一(103,203)，1×201/5×AlreadyAssigned，只增一关系；X
 - S2：与booking的repeat机制重合，但“空班次→多员工编排、无起止区间/排他”的业务形状不同；负责人已确认接受train隔离结论。若要改成逐周直接为员工占用区间，则过近，应换题或归dev。
 - 负责人已确认S1的关系id排序及不设容量、工资和跨店调动的边界；下一阶段不得自行补业务。保留本题，不启用spec §0.1的production.checklist备选。
 
-规格阶段文档已单独提交；本阶段是在另行授权后落地判卷，并已获负责人一次提交、普通推送与同SHA CI的授权；不改工具链。四门资格待真实CI证据，task冻结仍未办理。
+规格阶段文档已单独提交；本阶段是在另行授权后落地判卷，并已获负责人一次提交、普通推送与同SHA CI的授权；判卷实现提交未改工具链；CI失败后的根因修复另获本地提交授权，未推送或运行新CI。已有失败CI证据，尚无四门资格，task冻结仍未办理。
 
 ## 6. 本阶段源码入口（尚无业务资格）
 
@@ -81,4 +81,4 @@ X01六请求编同一(103,203)，1×201/5×AlreadyAssigned，只增一关系；X
 | 真实N客户端/锁等待/收齐与释放 | `BoundedProblemRace`，复用既有 `BlogLockWaits` |
 | 六表种子/夹具/external/执行器 | `StaffingShiftRosterBusinessConformanceIT` → `BoundedProblemConformance` / `BoundedProblemFixture` → 既有 `BusinessSliceHarness` |
 
-运行资源为 `valid/staffing-shift-roster.sir` 和 `conformance/mysql/staffing-shift-roster-{ddl,seed}.sql`。两个workflow接入同一IT；既有Harness切换参考或候选，不改变oracle。真实业务与并发尚未执行，定向检查记录见 [implementation.md](implementation.md)。
+运行资源为 `valid/staffing-shift-roster.sir` 和 `conformance/mysql/staffing-shift-roster-{ddl,seed}.sql`。两个workflow接入同一IT；既有Harness切换参考或候选，不改变oracle。真实业务与并发已执行且参考整体FAILED，证据与原因见 [implementation.md §5](implementation.md#5-已执行的同-sha-cifailed)。

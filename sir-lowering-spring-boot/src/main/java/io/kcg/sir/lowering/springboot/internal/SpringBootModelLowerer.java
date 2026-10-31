@@ -25,6 +25,7 @@ import io.kcg.sir.lowering.springboot.model.SpringBootWorkflow;
 import io.kcg.sir.lowering.springboot.model.SpringExpression;
 import io.kcg.sir.lowering.springboot.model.TransportPlan;
 import io.kcg.sir.lowering.springboot.profile.MySqlIdentifiers;
+import io.kcg.sir.lowering.springboot.profile.OgnlPropertyNames;
 import io.kcg.sir.lowering.springboot.profile.SpringBootQueryPolicy;
 import io.kcg.sir.lowering.springboot.profile.SpringBootWritePolicy;
 import io.kcg.sir.lowering.springboot.profile.SpringBootTargetProfile;
@@ -98,7 +99,7 @@ public final class SpringBootModelLowerer {
             if (declaration instanceof NormalizedEntity) {
                 NormalizedEntity entity = (NormalizedEntity)declaration;
                 this.entities.put(entity.id(), entity);
-                this.targetMemberNames.put(entity.identity().id(), entity.identity().name());
+                this.targetMemberNames.put(entity.identity().id(), OgnlPropertyNames.persistent(entity.identity().name()));
                 for (NormalizedField field : entity.fields()) {
                     if (field.secret()) {
                         this.secretFields.add(field.id());
@@ -556,7 +557,7 @@ public final class SpringBootModelLowerer {
 
     private SpringBootDeclaration.EntityDeclaration lowerEntity(NormalizedEntity value) {
         NormalizedIdentity identity = value.identity();
-        SpringBootDeclaration.Identity loweredIdentity = new SpringBootDeclaration.Identity(this.symbolId(identity.id(), "identity"), this.origin(value.id(), identity.sourceNodeId(), identity.span()), identity.id(), identity.name(), this.snake(identity.name()), this.scalar(identity.type()), identity.generation() == AstGenerationStrategy.AUTO ? SpringBootDeclaration.Generation.AUTO_INCREMENT : SpringBootDeclaration.Generation.UUID);
+        SpringBootDeclaration.Identity loweredIdentity = new SpringBootDeclaration.Identity(this.symbolId(identity.id(), "identity"), this.origin(value.id(), identity.sourceNodeId(), identity.span()), identity.id(), this.targetMemberName(identity.id(), identity.name()), this.snake(identity.name()), this.scalar(identity.type()), identity.generation() == AstGenerationStrategy.AUTO ? SpringBootDeclaration.Generation.AUTO_INCREMENT : SpringBootDeclaration.Generation.UUID);
         List<SpringBootDeclaration.Property> fields = value.fields().stream().map(field -> this.lowerProperty((NormalizedField)field, value.id(), true)).toList();
         return new SpringBootDeclaration.EntityDeclaration(this.symbolId(value.id(), "entity"), this.origin(value.id(), value.sourceNodeId(), value.span()), value.id(), value.name(), this.snake(value.name()), loweredIdentity, fields, this.lowerVersionSpec(value));
     }
@@ -1022,7 +1023,7 @@ public final class SpringBootModelLowerer {
                 entity.id(),
                 this.snake(entity.name()),
                 entity.identity().id(),
-                entity.identity().name(),
+                this.targetMemberName(entity.identity().id(), entity.identity().name()),
                 this.snake(entity.identity().name()),
                 version.fieldSymbol(),
                 version.javaName(),
@@ -1348,7 +1349,7 @@ public final class SpringBootModelLowerer {
             NormalizedEntity entity = this.entities.get(reference.entitySymbol());
             return new SpringExpression.MemberExpression(
                     this.nodeId(name.id().value(), "referenced-identity"), name.origin(), reference.identityStorageType(), name,
-                    entity.identity().id(), entity.identity().name());
+                    entity.identity().id(), this.targetMemberName(entity.identity().id(), entity.identity().name()));
         }
 
         return value;
@@ -1940,7 +1941,8 @@ public final class SpringBootModelLowerer {
     }
 
     private String targetPropertyName(NormalizedField field, boolean persistent) {
-        return field.type() instanceof RefType ? field.name() + "Id" : field.name();
+        String property = field.type() instanceof RefType ? field.name() + "Id" : field.name();
+        return persistent ? OgnlPropertyNames.persistent(property) : property;
     }
 
     private String snake(String value) {

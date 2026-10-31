@@ -1,4 +1,4 @@
-# 门店排班题出题规格（已确认；判卷源码已落地，业务门 NOT_RUN）
+# 门店排班题出题规格（已确认；判卷源码已落地，参考业务 CI FAILED）
 
 ## 0. 定位、基线与交付边界
 
@@ -213,7 +213,7 @@ EmployeeRoster 分页返回路径 employeeId 对应员工的编排关系，按�
 只返回完整的软件描述文档，不要 Java、SQL 或解释。
 ```
 
-## 6. 判卷检查清单与逐句追溯（源码已落地，业务门 NOT_RUN）
+## 6. 判卷检查清单与逐句追溯（源码已落地，参考业务 CI FAILED）
 
 ### 6.1 执行与完整比较
 
@@ -283,7 +283,7 @@ A08先插晚日期班206、后插早日期班203，让“编排id顺序”和“
 
 I01：对每班次用JDBC全部assignment独立计数，与Headcount比较；不从201条数推导。I02：每关系employee.store=shift.store，unique(employee,shift)无重复。I03：unique(store,day,band)且周生成的完整日期/枚举集合精确匹配，不只是行数。I04：所有成功/拒绝的六表差异与投影精确符合合同。I05：生成不增编排；Assign不改已有班次/员工/身份。
 
-逐句索引见 [traceability.md](traceability.md)。S13/C08为输出静态格式，不算HTTP业务项；readiness、schema/种子自检、进程、清理、报告是执行器前置/收尾，不附加教师业务需求。所有表项已有对应 IT 源码；真实业务 IT 运行数仍为0，不把轻量单测计作业务验收。
+逐句索引见 [traceability.md](traceability.md)。S13/C08为输出静态格式，不算HTTP业务项；readiness、schema/种子自检、进程、清理、报告是执行器前置/收尾，不附加教师业务需求。所有表项已有对应 IT 源码，现已在同SHA CI执行：本题752项检查通过、22失败。band属性触发OGNL解析错误的证据见 [implementation.md §5](implementation.md)，不把轻量单测计作业务验收。
 
 ## 7. 风险、语言依据与发现
 
@@ -304,4 +304,4 @@ I01：对每班次用JDBC全部assignment独立计数，与Headcount比较；不
 
 **发现S2（负责人边界裁决）：**周生成与booking机制确实相同。当前用“生成空班次+员工与班次多对多关系、无区间排他、同班多员工”的三项硬边界区分，负责人已确认接受为train。若要员工区间排他/每周直接派人，这一形状就太接近booking，应换题或留在development，不顺带扩展。
 
-**已确认：**接受S2隔离结论、S1的关系id排序及本题不设容量/工资/跨店规则。指定结构全部可静态生成，无需工具链修改。规格文档此前已单独提交并推送。负责人现已另行授权 DDL/种子/IT 和两个 workflow 的接入，见 [implementation.md](implementation.md)；本次已另获一次提交、普通推送与同SHA CI的授权；不改工具链，四门资格等待真实CI结果，task冻结仍未办理。
+**已确认：**接受S2隔离结论、S1的关系id排序及本题不设容量/工资/跨店规则。指定结构全部可静态生成，无需工具链修改。规格文档此前已单独提交并推送。负责人现已另行授权 DDL/种子/IT 和两个 workflow 的接入，见 [implementation.md](implementation.md)；判卷实现提交d31af6af未改工具链，其同SHA CI业务失败；两处根因修复随后另获本地修复及提交授权，未推送或运行新CI，尚无四门资格，task冻结仍未办理。
