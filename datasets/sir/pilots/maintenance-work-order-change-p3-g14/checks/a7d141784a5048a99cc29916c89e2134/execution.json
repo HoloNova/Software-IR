@@ -1,0 +1,15 @@
+{
+  "command": [
+    "java",
+    "-XX:-UsePerfData",
+    "-XX:ActiveProcessorCount=2",
+    "-Xmx256m",
+    "-XX:MaxMetaspaceSize=128m",
+    "-cp",
+    "/home/user/Software-IR/kcg-cli/target/classes:/home/user/Software-IR/sir-toolchain-application/target/classes:/home/user/Software-IR/sir-change/target/classes:/home/user/Software-IR/sir-project-graph/target/classes:/home/user/Software-IR/sir-generator-spring-boot/target/classes:/home/user/Software-IR/sir-lowering-spring-boot/target/classes:/home/user/Software-IR/sir-lowering-api/target/classes:/home/user/Software-IR/sir-semantic/target/classes:/home/user/Software-IR/sir-parser/target/classes:/root/.m2/repository/org/antlr/antlr4-runtime/4.13.2/antlr4-runtime-4.13.2.jar",
+    "io.kcg.cli.KcgCli",
+    "check"
+  ],
+  "input_sha256": "048a80a9427a26f5ef219b1340aa7b7f587de14482b1c76093895ac4e31720bd",
+  "returncode": 0
+}

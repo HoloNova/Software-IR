@@ -1,0 +1,421 @@
+{
+  "base_source": "experiments/slm/drafts/staffing-shift-roster/base.sir",
+  "contract": {
+    "business_boundaries": {
+      "capacity": "none",
+      "delete_or_cancel": false,
+      "interval_overlap_check": false,
+      "payment_or_wage": false,
+      "same_employee_two_bands_same_day": "allowed",
+      "slot_identity": "store + calendar day + opening/closing band"
+    },
+    "capabilities": [
+      "ListStores",
+      "GenerateWeeklyShifts",
+      "StoreShifts",
+      "StoreEmployees",
+      "AssignEmployee",
+      "ShiftHeadcount",
+      "EmployeeRoster"
+    ],
+    "declared_errors": {
+      "AlreadyAssigned": 409,
+      "BadPage": 400,
+      "EmployeeNotFound": 404,
+      "Forbidden": 403,
+      "ShiftExists": 409,
+      "ShiftNotFound": 404,
+      "StoreNotFound": 404,
+      "TooManyWeeks": 409,
+      "WrongStore": 409
+    },
+    "entities": [
+      "User",
+      "AccessToken",
+      "Store",
+      "Employee",
+      "Shift",
+      "Assignment"
+    ],
+    "enums": {
+      "ShiftBand": [
+        "OPENING",
+        "CLOSING"
+      ]
+    },
+    "error_envelope": {
+      "declared": {
+        "code": "error name",
+        "fields": [],
+        "message": "error name"
+      },
+      "unauthenticated": "401 with empty body",
+      "validation": "code=INVALID_REQUEST; fields entries have path/code/message"
+    },
+    "family": "staffing.shift-roster",
+    "field_types": {
+      "band": "OPENING or CLOSING",
+      "day": "YYYY-MM-DD date",
+      "employee": "JSON integer (int64)",
+      "firstDay": "YYYY-MM-DD date",
+      "headcount": "bare JSON integer (int64)",
+      "id": "JSON integer (int64)",
+      "name": "nonblank string, 1..100 characters",
+      "shift": "JSON integer (int64)",
+      "store": "JSON integer (int64)",
+      "weeks": "int32, at least 1"
+    },
+    "fixtures": {
+      "provided_by_oracle": true
+    },
+    "interfaces": {
+      "AssignEmployee": {
+        "authentication": "Bearer",
+        "body_kind": "AssignmentView",
+        "check_order": [
+          "request validation",
+          "ShiftNotFound",
+          "StoreNotFound",
+          "Forbidden",
+          "EmployeeNotFound",
+          "WrongStore",
+          "AlreadyAssigned"
+        ],
+        "errors": {
+          "AlreadyAssigned": 409,
+          "EmployeeNotFound": 404,
+          "Forbidden": 403,
+          "INVALID_REQUEST": 400,
+          "ShiftNotFound": 404,
+          "StoreNotFound": 404,
+          "WrongStore": 409,
+          "unauthenticated": 401
+        },
+        "path_fields": [
+          "shiftId"
+        ],
+        "request_fields": [
+          "employeeId"
+        ],
+        "response_fields": [
+          "id",
+          "employee",
+          "shift"
+        ],
+        "route": "POST /api/shifts/{shiftId}/assignments",
+        "success_status": 201
+      },
+      "EmployeeRoster": {
+        "authentication": "Bearer",
+        "body_kind": "Page<AssignmentView>",
+        "errors": {
+          "BadPage": 400,
+          "EmployeeNotFound": 404,
+          "Forbidden": 403,
+          "StoreNotFound": 404,
+          "unauthenticated": 401
+        },
+        "order": [
+          "id ASC"
+        ],
+        "path_fields": [
+          "employeeId"
+        ],
+        "request_fields": [
+          "page",
+          "size"
+        ],
+        "response_fields": [
+          "total",
+          "page",
+          "size",
+          "records"
+        ],
+        "route": "GET /api/employees/{employeeId}/roster",
+        "success_status": 200
+      },
+      "GenerateWeeklyShifts": {
+        "authentication": "Bearer",
+        "body_kind": "empty",
+        "check_order": [
+          "request validation",
+          "StoreNotFound",
+          "Forbidden",
+          "TooManyWeeks",
+          "ShiftExists"
+        ],
+        "errors": {
+          "Forbidden": 403,
+          "INVALID_REQUEST": 400,
+          "ShiftExists": 409,
+          "StoreNotFound": 404,
+          "TooManyWeeks": 409,
+          "unauthenticated": 401
+        },
+        "path_fields": [
+          "storeId"
+        ],
+        "request_fields": [
+          "firstDay",
+          "band",
+          "weeks"
+        ],
+        "response_fields": [],
+        "route": "POST /api/stores/{storeId}/weekly-shifts",
+        "success_status": 201
+      },
+      "ListStores": {
+        "authentication": "none",
+        "body_kind": "Page<StoreView>",
+        "errors": {
+          "BadPage": 400
+        },
+        "order": [
+          "name ASC",
+          "id ASC"
+        ],
+        "request_fields": [
+          "page",
+          "size"
+        ],
+        "response_fields": [
+          "total",
+          "page",
+          "size",
+          "records"
+        ],
+        "route": "GET /api/stores",
+        "success_status": 200
+      },
+      "ShiftHeadcount": {
+        "authentication": "Bearer",
+        "body_kind": "integer",
+        "errors": {
+          "Forbidden": 403,
+          "ShiftNotFound": 404,
+          "StoreNotFound": 404,
+          "unauthenticated": 401
+        },
+        "path_fields": [
+          "shiftId"
+        ],
+        "request_fields": [],
+        "response_fields": [],
+        "route": "GET /api/shifts/{shiftId}/headcount",
+        "success_status": 200
+      },
+      "StoreEmployees": {
+        "authentication": "Bearer",
+        "body_kind": "Page<EmployeeView>",
+        "errors": {
+          "BadPage": 400,
+          "Forbidden": 403,
+          "StoreNotFound": 404,
+          "unauthenticated": 401
+        },
+        "order": [
+          "name ASC",
+          "id ASC"
+        ],
+        "path_fields": [
+          "storeId"
+        ],
+        "request_fields": [
+          "page",
+          "size"
+        ],
+        "response_fields": [
+          "total",
+          "page",
+          "size",
+          "records"
+        ],
+        "route": "GET /api/stores/{storeId}/employees",
+        "success_status": 200
+      },
+      "StoreShifts": {
+        "authentication": "Bearer",
+        "body_kind": "Page<ShiftView>",
+        "errors": {
+          "BadPage": 400,
+          "Forbidden": 403,
+          "StoreNotFound": 404,
+          "unauthenticated": 401
+        },
+        "order": [
+          "day ASC",
+          "id ASC"
+        ],
+        "path_fields": [
+          "storeId"
+        ],
+        "request_fields": [
+          "page",
+          "size"
+        ],
+        "response_fields": [
+          "total",
+          "page",
+          "size",
+          "records"
+        ],
+        "route": "GET /api/stores/{storeId}/shifts",
+        "success_status": 200
+      }
+    },
+    "locking": {
+      "AssignEmployee": "Shift primary-key lock before duplicate checks, until transaction ends",
+      "GenerateWeeklyShifts": "Store primary-key lock before duplicate checks, until transaction ends",
+      "isolation_for_explicit_locks": "READ_COMMITTED"
+    },
+    "namespace": "example.staffing",
+    "pagination": {
+      "beyond_last_page": "empty records with full matching total",
+      "default_page": 1,
+      "default_size": 20,
+      "max_page": 10000,
+      "max_size": 100,
+      "min_page": 1,
+      "min_size": 1
+    },
+    "readiness": "GET /api/stores?page=1&size=10",
+    "required_input_errors": {
+      "missing_or_null": "400 INVALID_REQUEST; fields path=<HTTP field name>, code=NotNull",
+      "pagination_exception": true,
+      "weeks_zero_or_negative": "400 INVALID_REQUEST"
+    },
+    "split": "train",
+    "storage": {
+      "access_token": [
+        "id",
+        "owner_id",
+        "expires_at"
+      ],
+      "assignment": [
+        "id",
+        "employee_id",
+        "shift_id"
+      ],
+      "employee": [
+        "id",
+        "store_id",
+        "name"
+      ],
+      "shift": [
+        "id",
+        "store_id",
+        "day",
+        "band"
+      ],
+      "store": [
+        "id",
+        "name",
+        "manager_id"
+      ],
+      "user": [
+        "id",
+        "name"
+      ]
+    },
+    "uniqueness": {
+      "Assignment": [
+        "employee",
+        "shift"
+      ],
+      "Shift": [
+        "store",
+        "day",
+        "band"
+      ]
+    },
+    "view_fields": {
+      "AssignmentView": [
+        "id",
+        "employee",
+        "shift"
+      ],
+      "EmployeeView": [
+        "id",
+        "store",
+        "name"
+      ],
+      "ShiftView": [
+        "id",
+        "store",
+        "day",
+        "band"
+      ],
+      "StoreView": [
+        "id",
+        "name"
+      ]
+    },
+    "weekly_plan": {
+      "index_origin": 0,
+      "late_conflict": "rollback all earlier weeks",
+      "limit": 8,
+      "no_implicit_assignments": true,
+      "over_limit": "reject entire batch before body",
+      "step_calendar_days": 7
+    }
+  },
+  "ddl_source": "sir-toolchain-application/src/test/resources/conformance/mysql/staffing-shift-roster-ddl.sql",
+  "family": "staffing.shift-roster",
+  "id": "staffing-shift-roster-change-p3-v1",
+  "oracle": {
+    "files": [
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/AdvisoryLockKey.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BlogLockWaits.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BoundedProblemConformance.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BoundedProblemFixture.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BoundedProblemHttp.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BoundedProblemRace.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BoundedProblemState.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BusinessEndpointReadiness.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BusinessSliceHarness.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/ChildEnvironmentBuilder.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/ConformanceFixtures.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/ConformanceJvmLimits.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/DiskTree.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceDirectory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceOwnershipInventory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceRootProof.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceSecretScanner.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/HttpAssertionClient.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MavenProjectRunner.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MysqlObserver.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MysqlRuntimeJdbcUrl.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MysqlRuntimeTrace.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/OwnedPathEntry.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/OwnedPathInventory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/OwnedRunDirectory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SchemaName.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SchemaSqlRenderer.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SecretCatalog.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SlmCandidateSupport.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SpringApplicationProcess.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/StaffingAssignmentChecks.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/StaffingConcurrencyChecks.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/StaffingRosterChecks.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/StaffingShiftRosterBusinessConformanceIT.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/StaffingWeeklyChecks.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/StreamingSecretRedactor.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/StrongFileIdentity.java",
+      "sir-toolchain-application/src/test/resources/conformance/mysql/staffing-shift-roster-ddl.sql",
+      "sir-toolchain-application/src/test/resources/conformance/mysql/staffing-shift-roster-seed.sql",
+      "sir-toolchain-application/src/test/resources/valid/staffing-shift-roster.sir"
+    ],
+    "id": "staffing-http-mysql-v1"
+  },
+  "reference_evidence": {
+    "commit": "5fe4c8339a927fb526c004c276beb4c1c8892996",
+    "kind": "existing-reference-only-not-candidate-qualification",
+    "run_url": "https://github.com/HoloNova/Software-IR/actions/runs/41194982453"
+  },
+  "reference_source": "sir-toolchain-application/src/test/resources/valid/staffing-shift-roster.sir",
+  "requirement": "现有软件缺少以下能力，请补全 GenerateWeeklyShifts、AssignEmployee、ShiftHeadcount，保留 ListStores、StoreShifts、StoreEmployees、EmployeeRoster 的现有行为、现有的所有声明及接口合同。\n\nListStores 对匿名请求开放，其余接口使用数据库中的真实 Authorization: Bearer 凭据识别用户，缺少、格式错误、未知或过期返回空体 401，仅允许对应门店 manager 操作，不实现注册或登录。\n\n其余交付行为如下：\nAssignEmployee 按路径 shiftId 和必填 employeeId 新增员工编排关系，成功 201 AssignmentView；按班次不存在（404 ShiftNotFound）、非门店 manager（403 Forbidden）、员工不存在（404 EmployeeNotFound）、员工不在该店（409 WrongStore）、员工已在该班次（409 AlreadyAssigned）的顺序拒绝；同一员工同一班次并发编排恰好一次成功，其余 AlreadyAssigned，最终只有一行，不同本店员工并发编入同一班次全部成功，同一员工能参加同日两个不同班次，不设容量、工资和预约冲突规则。\n\nShiftHeadcount 返回班次全部编排关系条数，是 JSON 整数，无人是 0，班次不存在返回 404 ShiftNotFound，非该店 manager 返回 403 Forbidden，先判断存在再判断权限；新编排提交后统计立即可见。\n\nGenerateWeeklyShifts 接收路径 storeId 及必填 firstDay、band、weeks，firstDay 是日期，band 为 OPENING 或 CLOSING，weeks 是至少 1 的整数，缺失、null 或非法值返回 400 INVALID_REQUEST；门店不存在返回 404 StoreNotFound，非 manager 返回 403 Forbidden，之后检查最多 8 周，超过返回 409 TooManyWeeks 且不得留下本批的任何写入；成功空体 201，第零周为 firstDay，以后每周加 7 个日历日，band 不变，同一门店、日期、band 已存在则返回 409 ShiftExists 并撤销本批先前所有新建班次，两个不同 band 可在同一天存在，生成时不编排员工，不引入资源预约，也不检验起止区间重叠。\n\n同一门店相同三周班次计划并发提交恰好一批成功，其余 409 ShiftExists，只增加三张班次且不增加编排关系；全部拒绝情形不得变更业务行，成功只产生本操作规定的变化，路径优先于同名请求体字段，路由、字段名、字段类型、错误信封及必填校验均按合同。\n\n保留所有分页约定：page、size 可各自省略，默认 1、20，范围 1 到 10000、1 到 100，非法为 400 BadPage，响应 total、page、size、records，越界空页仍有正确 total；EmployeeRoster 按编排关系 id 升序而不是按班次日期排序。\n\n输出仅为完整的软件描述文档，不要 Java、SQL 或解释。\n",
+  "revision": "1",
+  "schema_version": "sir-task/1",
+  "sir_version": "0.3",
+  "split": "train"
+}

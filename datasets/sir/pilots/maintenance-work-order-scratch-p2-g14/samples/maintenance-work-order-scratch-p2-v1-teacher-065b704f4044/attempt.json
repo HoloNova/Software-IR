@@ -1,0 +1,21 @@
+{
+  "actual_model": "deepseek-flash",
+  "created_at": "2026-10-31T13:33:45.732161+00:00",
+  "id": "maintenance-work-order-scratch-p2-v1-teacher-065b704f4044",
+  "raw_response_sha256": "ba1b41f846a29c8248ee0a9e7d85f14826df1f79b510fba4da2669848af0f334",
+  "requested_model": "deepseek-flash",
+  "status": "CANDIDATE_NOT_YET_QUALIFIED",
+  "system_fingerprint": "bc19ba97cbe016479903222bb1578db6",
+  "usage": {
+    "completion_tokens": 1995,
+    "completion_tokens_details": null,
+    "prompt_cache_hit_tokens": 4480,
+    "prompt_cache_miss_tokens": 4487,
+    "prompt_tokens": 8967,
+    "prompt_tokens_details": {
+      "audio_tokens": null,
+      "cached_tokens": 4480
+    },
+    "total_tokens": 10962
+  }
+}

@@ -1,0 +1,467 @@
+{
+  "base_source": null,
+  "contract": {
+    "capabilities": [
+      "ListFacilities",
+      "OpenWorkOrder",
+      "EditWorkOrder",
+      "GetWorkOrder",
+      "ListWorkOrders",
+      "GenerateInspections",
+      "CloseOverdueInspections",
+      "ListInspections"
+    ],
+    "close_overdue": {
+      "empty_success": true,
+      "limit": 50,
+      "over_limit": "reject entire batch before body",
+      "predicate": "same facility AND closed=false AND dueAt<cutoff"
+    },
+    "declared_errors": {
+      "BadPage": 400,
+      "EmptyChange": 400,
+      "FacilityNotFound": 404,
+      "Forbidden": 403,
+      "StaleVersion": 409,
+      "TooManyInspections": 409,
+      "TooManyOccurrences": 409,
+      "WorkOrderNotFound": 404
+    },
+    "entities": [
+      "User",
+      "AccessToken",
+      "Facility",
+      "WorkOrder",
+      "InspectionOrder"
+    ],
+    "error_envelope": {
+      "declared": {
+        "code": "error name",
+        "fields": [],
+        "message": "error name"
+      },
+      "unauthenticated": "401 with empty body",
+      "validation": "code=INVALID_REQUEST; fields entries have path/code/message"
+    },
+    "family": "maintenance.work-order",
+    "field_types": {
+      "assignee": "JSON integer (int64) or null",
+      "closed": "boolean",
+      "cutoff": "UTC instant",
+      "dueAt": "UTC instant",
+      "facility": "JSON integer (int64)",
+      "firstDueAt": "UTC instant",
+      "id": "JSON integer (int64)",
+      "note": "string or null, at most 500 characters",
+      "removed": "boolean",
+      "reporter": "JSON integer (int64)",
+      "title": "nonblank string, 1..100 characters",
+      "version": "JSON integer (int64)"
+    },
+    "fixtures": {
+      "provided_by_oracle": true
+    },
+    "inspection_plan": {
+      "day_seconds": 86400,
+      "duplicates_allowed": true,
+      "index_origin": 0,
+      "interval_days_max": 30,
+      "interval_days_min": 1,
+      "occurrences_limit": 24,
+      "occurrences_min": 1,
+      "over_limit": "reject entire batch before body"
+    },
+    "interfaces": {
+      "CloseOverdueInspections": {
+        "authentication": "Bearer",
+        "body_kind": "empty",
+        "errors": {
+          "FacilityNotFound": 404,
+          "Forbidden": 403,
+          "INVALID_REQUEST": 400,
+          "TooManyInspections": 409,
+          "unauthenticated": 401
+        },
+        "path_fields": [
+          "facilityId"
+        ],
+        "request_fields": [
+          "cutoff"
+        ],
+        "response_fields": [],
+        "route": "POST /api/facilities/{facilityId}/close-overdue-inspections",
+        "success_status": 200
+      },
+      "EditWorkOrder": {
+        "authentication": "Bearer",
+        "body_kind": "WorkOrderView",
+        "change_fields": [
+          "title",
+          "assignee",
+          "note",
+          "removed"
+        ],
+        "check_order": [
+          "request validation",
+          "EmptyChange",
+          "WorkOrderNotFound",
+          "FacilityNotFound",
+          "Forbidden",
+          "StaleVersion expectedVersion precheck",
+          "merged-field validation",
+          "StaleVersion conditional persist"
+        ],
+        "errors": {
+          "EmptyChange": 400,
+          "FacilityNotFound": 404,
+          "Forbidden": 403,
+          "INVALID_REQUEST": 400,
+          "StaleVersion": 409,
+          "WorkOrderNotFound": 404,
+          "unauthenticated": 401
+        },
+        "path_fields": [
+          "id"
+        ],
+        "request_fields": [
+          "id",
+          "expectedVersion",
+          "changes"
+        ],
+        "response_fields": [
+          "id",
+          "facility",
+          "reporter",
+          "title",
+          "assignee",
+          "note",
+          "removed",
+          "version"
+        ],
+        "route": "PATCH /api/work-orders/{id}",
+        "success_status": 200
+      },
+      "GenerateInspections": {
+        "authentication": "Bearer",
+        "body_kind": "empty",
+        "errors": {
+          "FacilityNotFound": 404,
+          "Forbidden": 403,
+          "INVALID_REQUEST": 400,
+          "TooManyOccurrences": 409,
+          "unauthenticated": 401
+        },
+        "path_fields": [
+          "facilityId"
+        ],
+        "request_fields": [
+          "title",
+          "firstDueAt",
+          "intervalDays",
+          "occurrences"
+        ],
+        "response_fields": [],
+        "route": "POST /api/facilities/{facilityId}/inspection-series",
+        "success_status": 201
+      },
+      "GetWorkOrder": {
+        "authentication": "Bearer",
+        "body_kind": "WorkOrderView",
+        "errors": {
+          "FacilityNotFound": 404,
+          "Forbidden": 403,
+          "WorkOrderNotFound": 404,
+          "unauthenticated": 401
+        },
+        "path_fields": [
+          "id"
+        ],
+        "request_fields": [],
+        "response_fields": [
+          "id",
+          "facility",
+          "reporter",
+          "title",
+          "assignee",
+          "note",
+          "removed",
+          "version"
+        ],
+        "route": "GET /api/work-orders/{id}",
+        "success_status": 200
+      },
+      "ListFacilities": {
+        "authentication": "none",
+        "body_kind": "Page<FacilityView>",
+        "errors": {
+          "BadPage": 400
+        },
+        "order": [
+          "name ASC",
+          "id ASC"
+        ],
+        "request_fields": [
+          "page",
+          "size"
+        ],
+        "response_fields": [
+          "total",
+          "page",
+          "size",
+          "records"
+        ],
+        "route": "GET /api/facilities",
+        "success_status": 200
+      },
+      "ListInspections": {
+        "authentication": "Bearer",
+        "body_kind": "Page<InspectionView>",
+        "errors": {
+          "BadPage": 400,
+          "FacilityNotFound": 404,
+          "Forbidden": 403,
+          "unauthenticated": 401
+        },
+        "order": [
+          "dueAt ASC",
+          "id ASC"
+        ],
+        "path_fields": [
+          "facilityId"
+        ],
+        "request_fields": [
+          "page",
+          "size"
+        ],
+        "response_fields": [
+          "total",
+          "page",
+          "size",
+          "records"
+        ],
+        "route": "GET /api/facilities/{facilityId}/inspections",
+        "success_status": 200
+      },
+      "ListWorkOrders": {
+        "authentication": "Bearer",
+        "body_kind": "Page<WorkOrderView>",
+        "errors": {
+          "BadPage": 400,
+          "FacilityNotFound": 404,
+          "Forbidden": 403,
+          "unauthenticated": 401
+        },
+        "order": [
+          "id ASC"
+        ],
+        "path_fields": [
+          "facilityId"
+        ],
+        "request_fields": [
+          "assignee",
+          "page",
+          "size"
+        ],
+        "response_fields": [
+          "total",
+          "page",
+          "size",
+          "records"
+        ],
+        "route": "GET /api/facilities/{facilityId}/work-orders",
+        "success_status": 200
+      },
+      "OpenWorkOrder": {
+        "authentication": "Bearer",
+        "body_kind": "WorkOrderView",
+        "errors": {
+          "FacilityNotFound": 404,
+          "INVALID_REQUEST": 400,
+          "unauthenticated": 401
+        },
+        "request_fields": [
+          "facilityId",
+          "title"
+        ],
+        "response_fields": [
+          "id",
+          "facility",
+          "reporter",
+          "title",
+          "assignee",
+          "note",
+          "removed",
+          "version"
+        ],
+        "route": "POST /api/work-orders",
+        "success_status": 201
+      }
+    },
+    "namespace": "example.maintenance",
+    "pagination": {
+      "beyond_last_page": "empty records with full matching total",
+      "default_page": 1,
+      "default_size": 20,
+      "max_page": 10000,
+      "max_size": 100,
+      "min_page": 1,
+      "min_size": 1
+    },
+    "patch": {
+      "absent_change": "preserve",
+      "assignee_http_name": "assignee, NOT assigneeId",
+      "assignment_domain": "null or an existing fixture User id; missing-user assignment has no graded business error in this approved scope",
+      "explicit_null_clearable": [
+        "assignee",
+        "note"
+      ],
+      "identity_from_path": "id",
+      "required_envelope_fields": [
+        "expectedVersion",
+        "changes"
+      ],
+      "soft_delete": "changes.removed=true; response includes removed=true; subsequent reads/edits hide the row",
+      "version_increment": 1,
+      "version_initial": 0
+    },
+    "patch_field_errors": {
+      "expected_version_missing_or_null": {
+        "code": "NotNull",
+        "path": "expectedVersion"
+      },
+      "note_too_long": {
+        "code": "length",
+        "path": "changes.note"
+      },
+      "title_blank_or_null": {
+        "code": "notBlank",
+        "path": "changes.title"
+      },
+      "title_too_long": {
+        "code": "length",
+        "path": "changes.title"
+      }
+    },
+    "readiness": "GET /api/facilities?page=1&size=10",
+    "required_input_errors": {
+      "missing_or_null": "400 INVALID_REQUEST, fields path=<HTTP field name>, code=NotNull",
+      "pagination_exception": true,
+      "title": "ordinary creation input: NotBlank for missing/null/blank; Size for too long"
+    },
+    "split": "train",
+    "storage": {
+      "access_token": [
+        "id",
+        "owner_id",
+        "expires_at"
+      ],
+      "facility": [
+        "id",
+        "name",
+        "manager_id"
+      ],
+      "inspection_order": [
+        "id",
+        "facility_id",
+        "title",
+        "due_at",
+        "closed"
+      ],
+      "user": [
+        "id",
+        "name"
+      ],
+      "work_order": [
+        "id",
+        "facility_id",
+        "reporter_id",
+        "title",
+        "assignee",
+        "note",
+        "removed",
+        "version"
+      ]
+    },
+    "view_fields": {
+      "FacilityView": [
+        "id",
+        "name"
+      ],
+      "InspectionView": [
+        "id",
+        "facility",
+        "title",
+        "dueAt",
+        "closed"
+      ],
+      "WorkOrderView": [
+        "id",
+        "facility",
+        "reporter",
+        "title",
+        "assignee",
+        "note",
+        "removed",
+        "version"
+      ]
+    }
+  },
+  "ddl_source": "sir-toolchain-application/src/test/resources/conformance/mysql/maintenance-work-order-ddl.sql",
+  "family": "maintenance.work-order",
+  "id": "maintenance-work-order-scratch-p1-v1",
+  "oracle": {
+    "files": [
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/AdvisoryLockKey.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BlogLockWaits.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BoundedProblemConformance.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BoundedProblemFixture.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BoundedProblemHttp.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BoundedProblemRace.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BoundedProblemState.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BusinessEndpointReadiness.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BusinessSliceHarness.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/ChildEnvironmentBuilder.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/ConformanceFixtures.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/ConformanceJvmLimits.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/DiskTree.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceDirectory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceOwnershipInventory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceRootProof.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceSecretScanner.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/HttpAssertionClient.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MaintenanceConcurrencyChecks.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MaintenanceInspectionChecks.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MaintenanceWorkOrderBusinessConformanceIT.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MaintenanceWorkOrderChecks.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MavenProjectRunner.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MysqlObserver.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MysqlRuntimeJdbcUrl.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MysqlRuntimeTrace.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/OwnedPathEntry.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/OwnedPathInventory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/OwnedRunDirectory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SchemaName.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SchemaSqlRenderer.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SecretCatalog.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SlmCandidateSupport.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SpringApplicationProcess.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/StreamingSecretRedactor.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/StrongFileIdentity.java",
+      "sir-toolchain-application/src/test/resources/conformance/mysql/maintenance-work-order-ddl.sql",
+      "sir-toolchain-application/src/test/resources/conformance/mysql/maintenance-work-order-seed.sql",
+      "sir-toolchain-application/src/test/resources/valid/maintenance-work-order.sir"
+    ],
+    "id": "maintenance-http-mysql-v1"
+  },
+  "reference_evidence": {
+    "commit": "5fe4c8339a927fb526c004c276beb4c1c8892996",
+    "kind": "existing-reference-only-not-candidate-qualification",
+    "run_url": "https://github.com/HoloNova/Software-IR/actions/runs/41194982453"
+  },
+  "reference_source": "sir-toolchain-application/src/test/resources/valid/maintenance-work-order.sir",
+  "requirement": "ListFacilities 无需登录即可访问；其余接口用 Authorization: Bearer 访问令牌识别当前用户，令牌未提供、格式无效、查无记录或已过期均以空响应体返回 401，用户和令牌由夹具预置，不要实现注册或登录。\n\nListFacilities 按 name、id 都升序分页返回设施的 id、name；设施和各自的 manager 由夹具预置。\n\nOpenWorkOrder 接收 facilityId 和 title，为当前用户新建一张报修单，成功时返回 201 和 WorkOrderView；facility 不存在返回 404 FacilityNotFound；title 必须是 1 到 100 字符的非空白文本，缺失、null、空串、纯空白、过长均返回 400 INVALID_REQUEST；facilityId 缺失或 null 也返回 400 INVALID_REQUEST；新行 reporter 为当前用户，assignee、note 为空，removed 为 false，version 为 0。\n\nGetWorkOrder 按 id 返回未删除报修单的 WorkOrderView，报修单不存在或已删除返回 404 WorkOrderNotFound，只有该设施的 manager 能读取，否则返回 403 Forbidden；先判断报修单存在，再判断权限。\n\nEditWorkOrder 仅允许该设施的 manager 编辑未删除的报修单，成功时返回 200 和更新后的 WorkOrderView；请求的外层字段为 id、expectedVersion、changes，id 以路径为准，expectedVersion 是必填版本号，changes 仅允许 title、assignee、note、removed，最少提供一项，否则返回 400 EmptyChange；缺席的可变字段沿用原值，assignee、note 显式提交 null 则清空，assignee 有值时为夹具中已有用户的编号，title 有值仍需满足原规则，note 最长 500 字符，removed 提交布尔值；不能修改 facility、reporter、version。\n\nEditWorkOrder 的 id 不存在或已删除返回 404 WorkOrderNotFound，非 manager 返回 403 Forbidden，已通过权限检查但 expectedVersion 与当前版本不等返回 409 StaleVersion；成功时 version 只加一，即使提交的值与旧值相等也加一；同一版本被并发编辑恰好一次成功，其余返回 StaleVersion 且不能覆盖赢家。\n\nEditWorkOrder 提交 removed=true 就是软删除，保留数据库中的整行；该次成功响应含 removed=true，之后详情、列表、再次编辑都看不到该行，不能通过再次编辑恢复，也不连带删除该设施或巡检单。\n\nListWorkOrders 仅允许路径 facilityId 对应设施的 manager 使用，设施不存在返回 404 FacilityNotFound，非 manager 返回 403 Forbidden；按 id 升序分页列未删除的报修单，可用 assignee 筛选，不传则不过滤（包括未指派行），提供不存在的用户编号则返回空页，不是 404。\n\nGenerateInspections 仅允许路径 facilityId 对应设施的 manager 使用，设施不存在返回 404 FacilityNotFound，非 manager 返回 403 Forbidden；接收 title、firstDueAt、intervalDays、occurrences，title 规则同报修标题，firstDueAt 是 UTC 时刻，intervalDays 是 1 到 30 的整数，occurrences 是最少 1 的整数，字段均必填，缺失、null 或违反范围返回 400 INVALID_REQUEST；至多一次生成 24 张例行巡检单，超过返回 409 TooManyOccurrences 且本批一行也不落库；第零张的 dueAt 为 firstDueAt，之后每张增加 intervalDays 个完整的 24 小时，保存同一设施和标题且 closed=false，成功时返回空体 201；重复提交是新的独立巡检计划，允许生成相同日期、标题的行，不做预约占用或去重。\n\nCloseOverdueInspections 仅允许路径 facilityId 对应设施的 manager 使用，设施不存在返回 404 FacilityNotFound，非 manager 返回 403 Forbidden；必填 cutoff 是 UTC 时刻，缺失或 null 返回 400 INVALID_REQUEST；只把该设施 closed=false 且 dueAt 严格早于 cutoff 的巡检单改为 closed=true，按 id 升序处理，一次至多 50 张，匹配 51 张或更多返回 409 TooManyInspections 且所有匹配行均保持原状；没有匹配行时也成功，成功时返回空体 200；已关闭、恰好等于 cutoff、晚于 cutoff、其他设施的行和所有报修单都不改变。\n\nListInspections 仅允许路径 facilityId 对应设施的 manager 使用，设施不存在返回 404 FacilityNotFound，非 manager 返回 403 Forbidden，按 dueAt、id 都升序分页返回该设施的全部巡检单（包括已关闭的）；同一设施的巡检生成与批量关闭并发时必须等价于先完整执行其中一个，再完整执行另一个，不得交错执行部分批次。\n\n所有分页的 page、size 允许单独省略，缺省值为 1、20，有效范围分别为 1 到 10000、1 到 100，超出范围返回 400 BadPage；返回 total、page、size、records，total 是全部匹配行数，越界空页仍有正确 total。\n\n路由、请求名、响应字段和字段类型严格按接口合同；引用响应是数字编号，未指派的 assignee 和空 note 返回 null，不能泄露 manager 或凭据；路径字段覆盖请求体的同名字段，所有拒绝均不改变业务行，成功只产生该操作规定的行差异，声明错误为合同中的 code、message、fields，普通输入缺值的字段错误按合同给出。\n\n只返回完整的软件描述文档，不要 Java、SQL 或解释。\n",
+  "revision": "1",
+  "schema_version": "sir-task/1",
+  "sir_version": "0.3",
+  "split": "train"
+}

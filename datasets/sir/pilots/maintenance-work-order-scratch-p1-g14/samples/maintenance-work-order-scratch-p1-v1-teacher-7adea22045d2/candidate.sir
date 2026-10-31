@@ -1,0 +1,294 @@
+sir 0.3
+software MaintenanceWorkOrder {
+  metadata { displayName "MaintenanceWorkOrder"; namespace "example.maintenance"; }
+  target { language java 21; framework spring_boot; persistence mybatis_plus; database mysql; build maven; interface rest; }
+  sources { }
+  imports { }
+  declarations {
+    entity User persistent {
+      identity id: Id generated auto;
+      field name: Name where length(1, 100) unique;
+    }
+
+    entity AccessToken persistent {
+      identity id: Token generated uuid;
+      field owner: Ref<User>;
+      field expiresAt: Moment;
+      credential subject owner expires expiresAt;
+    }
+
+    entity Facility persistent {
+      identity id: Id generated auto;
+      field name: Name where length(1, 100);
+      field manager: Ref<User>;
+    }
+
+    entity WorkOrder persistent {
+      identity id: Id generated auto;
+      field facility: Ref<Facility>;
+      field reporter: Ref<User>;
+      field title: Name where length(1, 100);
+      field assignee: Optional<Ref<User>>;
+      field note: Optional<Text> where length(0, 500);
+      field removed: Flag default false;
+      field version: Version versioned;
+    }
+
+    entity InspectionOrder persistent {
+      identity id: Id generated auto;
+      field facility: Ref<Facility>;
+      field title: Name where length(1, 100);
+      field dueAt: Moment;
+      field closed: Flag default false;
+    }
+
+    view FacilityView from Facility {
+      field id: Id;
+      field name: Name;
+    }
+
+    view WorkOrderView from WorkOrder {
+      field id: Id;
+      field facility: Ref<Facility>;
+      field reporter: Ref<User>;
+      field title: Name;
+      field assignee: Optional<Ref<User>>;
+      field note: Optional<Text>;
+      field removed: Flag;
+      field version: Version;
+    }
+
+    view InspectionView from InspectionOrder {
+      field id: Id;
+      field facility: Ref<Facility>;
+      field title: Name;
+      field dueAt: Moment;
+      field closed: Flag;
+    }
+
+    input ListFacilitiesInput {
+      field page: PageNo;
+      field size: PageSize;
+    }
+
+    input OpenWorkOrderInput {
+      field facilityId: Id;
+      field title: Name where notBlank, length(1, 100);
+    }
+
+    input GetWorkOrderInput {
+      field id: Id;
+    }
+
+    input EditWorkOrderInput patch of WorkOrder {
+      field id: Id;
+      field title: Text;
+      field assignee: Optional<Id>;
+      field note: Optional<Text>;
+      field removed: Flag;
+    }
+
+    input ListWorkOrdersInput {
+      field facilityId: Id;
+      field assignee: Optional<Ref<User>>;
+      field page: PageNo;
+      field size: PageSize;
+    }
+
+    input GenerateInspectionsInput {
+      field facilityId: Id;
+      field title: Name where notBlank, length(1, 100);
+      field firstDueAt: Moment;
+      field intervalDays: Count where min(1), max(30);
+      field occurrences: Count where min(1);
+    }
+
+    input CloseOverdueInspectionsInput {
+      field facilityId: Id;
+      field cutoff: Moment;
+    }
+
+    input ListInspectionsInput {
+      field facilityId: Id;
+      field page: PageNo;
+      field size: PageSize;
+    }
+
+    error BadPage http 400;
+    error EmptyChange http 400;
+    error FacilityNotFound http 404;
+    error Forbidden http 403;
+    error StaleVersion http 409;
+    error TooManyInspections http 409;
+    error TooManyOccurrences http 409;
+    error WorkOrderNotFound http 404;
+
+    capability ListFacilities {
+      input ListFacilitiesInput;
+      output Page<FacilityView>;
+      fails BadPage;
+      requires readonly;
+      expose query at "/facilities";
+      workflow {
+        find Facility where true order by name ascending, id ascending Page input.page, input.size else BadPage as facilities;
+        return facilities;
+      }
+    }
+
+    capability OpenWorkOrder {
+      actor Ref<User>;
+      input OpenWorkOrderInput;
+      output WorkOrderView;
+      fails FacilityNotFound;
+      requires authenticated;
+      requires atomic;
+      expose command at "/work-orders";
+      workflow {
+        load Facility by input.facilityId as facility else FacilityNotFound;
+        create WorkOrder as made {
+          facility: facility;
+          reporter: actor;
+          title: input.title;
+          removed: false;
+          version: 0;
+        }
+        persist made;
+        return made;
+      }
+    }
+
+    capability GetWorkOrder {
+      actor Ref<User>;
+      input GetWorkOrderInput;
+      output WorkOrderView;
+      fails FacilityNotFound;
+      fails Forbidden;
+      fails WorkOrderNotFound;
+      requires authenticated;
+      requires readonly;
+      expose query at "/work-orders/{id}";
+      workflow {
+        load WorkOrder by input.id as found else WorkOrderNotFound;
+        validate found.removed == false else WorkOrderNotFound;
+        load Facility by found.facility as facility else FacilityNotFound;
+        validate facility.manager == actor else Forbidden;
+        return found;
+      }
+    }
+
+    capability EditWorkOrder {
+      actor Ref<User>;
+      input EditWorkOrderInput;
+      output WorkOrderView;
+      fails EmptyChange;
+      fails FacilityNotFound;
+      fails Forbidden;
+      fails StaleVersion;
+      fails WorkOrderNotFound;
+      requires authenticated;
+      requires atomic;
+      expose command at "/work-orders/{id}";
+      workflow {
+        validate input.title.present or input.assignee.present or input.note.present or input.removed.present else EmptyChange;
+        load WorkOrder by input.id as found for update else WorkOrderNotFound;
+        validate found.removed == false else WorkOrderNotFound;
+        load Facility by found.facility as facility else FacilityNotFound;
+        validate facility.manager == actor else Forbidden;
+        validate found.version == input.expectedVersion else StaleVersion;
+        update found {
+          title: input.title;
+          assignee: input.assignee;
+          note: input.note;
+          removed: input.removed;
+          version: found.version + 1;
+        }
+        persist found else StaleVersion;
+        return found;
+      }
+    }
+
+    capability ListWorkOrders {
+      actor Ref<User>;
+      input ListWorkOrdersInput;
+      output Page<WorkOrderView>;
+      fails BadPage;
+      fails FacilityNotFound;
+      fails Forbidden;
+      requires authenticated;
+      requires readonly;
+      expose query at "/facilities/{facilityId}/work-orders";
+      workflow {
+        load Facility by input.facilityId as facility else FacilityNotFound;
+        validate facility.manager == actor else Forbidden;
+        find WorkOrder where item.facility == facility and item.removed == false and (input.assignee is none or item.assignee == input.assignee) order by id ascending Page input.page, input.size else BadPage as orders;
+        return orders;
+      }
+    }
+
+    capability GenerateInspections {
+      actor Ref<User>;
+      input GenerateInspectionsInput;
+      output Unit;
+      fails FacilityNotFound;
+      fails Forbidden;
+      fails TooManyOccurrences;
+      requires authenticated;
+      requires atomic;
+      expose command at "/facilities/{facilityId}/inspection-series";
+      workflow {
+        load Facility by input.facilityId as facility else FacilityNotFound;
+        validate facility.manager == actor else Forbidden;
+        validate input.occurrences <= 24 else TooManyOccurrences;
+        repeat input.occurrences times limit 24 else TooManyOccurrences as index {
+          create InspectionOrder as made {
+            facility: facility;
+            title: input.title;
+            dueAt: addDays(input.firstDueAt, index * input.intervalDays);
+            closed: false;
+          }
+          persist made;
+        }
+        return unit;
+      }
+    }
+
+    capability CloseOverdueInspections {
+      actor Ref<User>;
+      input CloseOverdueInspectionsInput;
+      output Unit;
+      fails FacilityNotFound;
+      fails Forbidden;
+      fails TooManyInspections;
+      requires authenticated;
+      requires atomic;
+      expose command at "/facilities/{facilityId}/close-overdue-inspections";
+      workflow {
+        load Facility by input.facilityId as facility else FacilityNotFound;
+        validate facility.manager == actor else Forbidden;
+        each InspectionOrder where item.facility == facility and item.closed == false and item.dueAt < input.cutoff order by id ascending limit 50 else TooManyInspections as row {
+          update row { closed: true; }
+          persist row;
+        }
+        return unit;
+      }
+    }
+
+    capability ListInspections {
+      actor Ref<User>;
+      input ListInspectionsInput;
+      output Page<InspectionView>;
+      fails BadPage;
+      fails FacilityNotFound;
+      fails Forbidden;
+      requires authenticated;
+      requires readonly;
+      expose query at "/facilities/{facilityId}/inspections";
+      workflow {
+        load Facility by input.facilityId as facility else FacilityNotFound;
+        validate facility.manager == actor else Forbidden;
+        find InspectionOrder where item.facility == facility order by dueAt ascending, id ascending Page input.page, input.size else BadPage as inspections;
+        return inspections;
+      }
+    }
+  }
+}
