@@ -1,0 +1,95 @@
+{
+  "namespace": "example.maintenance",
+  "family": "maintenance.work-order",
+  "split": "train",
+  "status": "specification approved by owner; static generation only; runtime NOT_RUN",
+  "capabilities": ["ListFacilities", "OpenWorkOrder", "EditWorkOrder", "GetWorkOrder", "ListWorkOrders", "GenerateInspections", "CloseOverdueInspections", "ListInspections"],
+  "entities": ["User", "AccessToken", "Facility", "WorkOrder", "InspectionOrder"],
+  "interfaces": {
+    "ListFacilities": {
+      "route": "GET /api/facilities", "authentication": "none",
+      "request_fields": ["page", "size"], "response_fields": ["total", "page", "size", "records"],
+      "body_kind": "Page<FacilityView>", "success_status": 200,
+      "errors": {"BadPage": 400}, "order": ["name ASC", "id ASC"]
+    },
+    "OpenWorkOrder": {
+      "route": "POST /api/work-orders", "authentication": "Bearer",
+      "request_fields": ["facilityId", "title"],
+      "response_fields": ["id", "facility", "reporter", "title", "assignee", "note", "removed", "version"],
+      "body_kind": "WorkOrderView", "success_status": 201,
+      "errors": {"unauthenticated": 401, "INVALID_REQUEST": 400, "FacilityNotFound": 404}
+    },
+    "EditWorkOrder": {
+      "route": "PATCH /api/work-orders/{id}", "authentication": "Bearer", "path_fields": ["id"],
+      "request_fields": ["id", "expectedVersion", "changes"],
+      "change_fields": ["title", "assignee", "note", "removed"],
+      "response_fields": ["id", "facility", "reporter", "title", "assignee", "note", "removed", "version"],
+      "body_kind": "WorkOrderView", "success_status": 200,
+      "errors": {"unauthenticated": 401, "INVALID_REQUEST": 400, "EmptyChange": 400, "FacilityNotFound": 404, "Forbidden": 403, "StaleVersion": 409, "WorkOrderNotFound": 404},
+      "check_order": ["request validation", "EmptyChange", "WorkOrderNotFound", "FacilityNotFound", "Forbidden", "merged-field validation", "StaleVersion"]
+    },
+    "GetWorkOrder": {
+      "route": "GET /api/work-orders/{id}", "authentication": "Bearer", "path_fields": ["id"], "request_fields": [],
+      "response_fields": ["id", "facility", "reporter", "title", "assignee", "note", "removed", "version"],
+      "body_kind": "WorkOrderView", "success_status": 200,
+      "errors": {"unauthenticated": 401, "FacilityNotFound": 404, "Forbidden": 403, "WorkOrderNotFound": 404}
+    },
+    "ListWorkOrders": {
+      "route": "GET /api/facilities/{facilityId}/work-orders", "authentication": "Bearer", "path_fields": ["facilityId"],
+      "request_fields": ["assignee", "page", "size"], "response_fields": ["total", "page", "size", "records"],
+      "body_kind": "Page<WorkOrderView>", "success_status": 200,
+      "errors": {"unauthenticated": 401, "BadPage": 400, "FacilityNotFound": 404, "Forbidden": 403}, "order": ["id ASC"]
+    },
+    "GenerateInspections": {
+      "route": "POST /api/facilities/{facilityId}/inspection-series", "authentication": "Bearer", "path_fields": ["facilityId"],
+      "request_fields": ["title", "firstDueAt", "intervalDays", "occurrences"], "response_fields": [],
+      "body_kind": "empty", "success_status": 201,
+      "errors": {"unauthenticated": 401, "INVALID_REQUEST": 400, "FacilityNotFound": 404, "Forbidden": 403, "TooManyOccurrences": 409}
+    },
+    "CloseOverdueInspections": {
+      "route": "POST /api/facilities/{facilityId}/close-overdue-inspections", "authentication": "Bearer", "path_fields": ["facilityId"],
+      "request_fields": ["cutoff"], "response_fields": [], "body_kind": "empty", "success_status": 200,
+      "errors": {"unauthenticated": 401, "INVALID_REQUEST": 400, "FacilityNotFound": 404, "Forbidden": 403, "TooManyInspections": 409}
+    },
+    "ListInspections": {
+      "route": "GET /api/facilities/{facilityId}/inspections", "authentication": "Bearer", "path_fields": ["facilityId"],
+      "request_fields": ["page", "size"], "response_fields": ["total", "page", "size", "records"],
+      "body_kind": "Page<InspectionView>", "success_status": 200,
+      "errors": {"unauthenticated": 401, "BadPage": 400, "FacilityNotFound": 404, "Forbidden": 403}, "order": ["dueAt ASC", "id ASC"]
+    }
+  },
+  "view_fields": {
+    "FacilityView": ["id", "name"],
+    "WorkOrderView": ["id", "facility", "reporter", "title", "assignee", "note", "removed", "version"],
+    "InspectionView": ["id", "facility", "title", "dueAt", "closed"]
+  },
+  "field_types": {
+    "id": "JSON integer (int64)", "facility": "JSON integer (int64)", "reporter": "JSON integer (int64)",
+    "assignee": "JSON integer (int64) or null", "version": "JSON integer (int64)",
+    "note": "string or null, at most 500 characters", "title": "nonblank string, 1..100 characters",
+    "dueAt": "UTC instant", "firstDueAt": "UTC instant", "cutoff": "UTC instant", "removed": "boolean", "closed": "boolean"
+  },
+  "patch": {
+    "required_envelope_fields": ["expectedVersion", "changes"], "identity_from_path": "id",
+    "absent_change": "preserve", "explicit_null_clearable": ["assignee", "note"],
+    "assignee_http_name": "assignee, NOT assigneeId", "version_initial": 0, "version_increment": 1,
+    "soft_delete": "changes.removed=true; response includes removed=true; subsequent reads/edits hide the row",
+    "assignment_domain": "null or an existing fixture User id; missing-user assignment has no graded business error in this approved scope"
+  },
+  "required_input_errors": {"missing_or_null": "400 INVALID_REQUEST, fields path=<HTTP field name>, code=NotNull", "title": "ordinary creation input: NotBlank for missing/null/blank; Size for too long", "pagination_exception": true},
+  "patch_field_errors": {"title_blank_or_null": {"path": "changes.title", "code": "notBlank"}, "title_too_long": {"path": "changes.title", "code": "length"}, "note_too_long": {"path": "changes.note", "code": "length"}, "expected_version_missing_or_null": {"path": "expectedVersion", "code": "NotNull"}},
+  "inspection_plan": {"occurrences_min": 1, "occurrences_limit": 24, "interval_days_min": 1, "interval_days_max": 30, "index_origin": 0, "day_seconds": 86400, "duplicates_allowed": true, "over_limit": "reject entire batch before body"},
+  "close_overdue": {"predicate": "same facility AND closed=false AND dueAt<cutoff", "limit": 50, "empty_success": true, "over_limit": "reject entire batch before body"},
+  "pagination": {"default_page": 1, "default_size": 20, "min_page": 1, "min_size": 1, "max_page": 10000, "max_size": 100, "beyond_last_page": "empty records with full matching total"},
+  "declared_errors": {"BadPage": 400, "EmptyChange": 400, "FacilityNotFound": 404, "Forbidden": 403, "StaleVersion": 409, "TooManyInspections": 409, "TooManyOccurrences": 409, "WorkOrderNotFound": 404},
+  "error_envelope": {"declared": {"code": "error name", "message": "error name", "fields": []}, "validation": "code=INVALID_REQUEST; fields entries have path/code/message", "unauthenticated": "401 with empty body"},
+  "storage": {
+    "user": ["id", "name"], "access_token": ["id", "owner_id", "expires_at"], "facility": ["id", "name", "manager_id"],
+    "work_order": ["id", "facility_id", "reporter_id", "title", "assignee", "note", "removed", "version"],
+    "inspection_order": ["id", "facility_id", "title", "due_at", "closed"]
+  },
+  "readiness": "GET /api/facilities?page=1&size=10",
+  "fixtures": {"provided_by_oracle": true, "actor_mode": "external", "credentials": "synthetic database Bearer rows"},
+  "scoring_exclusions_approved_by_owner": ["PATCH assignee set to a nonexistent User", "PATCH removed=null; nonnullable PATCH null policy is unresolved upstream"],
+  "runtime_evidence": "NOT_RUN"
+}

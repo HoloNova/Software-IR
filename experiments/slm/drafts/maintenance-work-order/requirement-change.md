@@ -1,0 +1,9 @@
+在给定软件上补回 EditWorkOrder、ListWorkOrders、GenerateInspections、CloseOverdueInspections，保留 ListFacilities、OpenWorkOrder、GetWorkOrder、ListInspections 的行为、全部声明和接口合同。
+ListFacilities 允许匿名访问，其余接口用数据库中真实的 Authorization: Bearer 凭据识别用户，缺少、格式错误、未知或过期的令牌均返回空体 401，不实现注册或登录。
+EditWorkOrder 只允许该设施的 manager 编辑未删除的报修单，成功返回 200 和更新后的 WorkOrderView；请求外层为 id、必填 expectedVersion、changes，路径 id 优先，changes 只允许 title、assignee、note、removed，至少给出一项，否则返回 400 EmptyChange；没给的字段保留，assignee、note 显式 null 清空，assignee 有值是已有用户编号，title 仍是 1 到 100 字符非空白文本，note 最长 500，removed 给布尔值，不允许改 facility、reporter、version。
+报修单不存在或已删除返回 404 WorkOrderNotFound，非 manager 返回 403 Forbidden，版本不一致返回 409 StaleVersion，按此顺序判断（空 changes 先返回 EmptyChange）；成功 version 加一，包括同值编辑；同一版本被并发编辑恰好一次成功，其余 StaleVersion，不覆盖赢家。
+提交 removed=true 软删除报修单，保留整行，该次响应含 removed=true，后续详情、列表和再次编辑都不可见，也不能恢复，不连带删除设施或巡检单；ListWorkOrders 仅设施 manager 可用，设施不存在返回 FacilityNotFound，非 manager 返回 Forbidden，按 id 升序分页列未删除行，可按 assignee 筛选，省略时不限制且包括未指派行，不存在的用户编号返回空页。
+GenerateInspections 仅设施 manager 可用，设施不存在返回 404 FacilityNotFound，非 manager 返回 403 Forbidden；title、firstDueAt、intervalDays、occurrences 都必填，title 规则同报修标题，intervalDays 为 1 到 30 的整数，occurrences 至少 1，缺失、null 或范围非法返回 400 INVALID_REQUEST；一次最多 24 张，超出返回 409 TooManyOccurrences 且整批不写；第零张 dueAt=firstDueAt，随后每张增加 intervalDays 个 24 小时，同设施、同标题、closed=false，成功空体 201，重复请求允许另建同日期、标题的巡检单。
+CloseOverdueInspections 仅设施 manager 可用，设施不存在返回 404 FacilityNotFound，非 manager 返回 403 Forbidden；必填 cutoff 缺失或 null 返回 400 INVALID_REQUEST，只将该设施未关闭且 dueAt 严格早于 cutoff 的巡检单按 id 升序关闭，最多 50 张，51 张或更多返回 409 TooManyInspections 且一张也不改，空集合成功空体 200；其他行和报修单不变；同一设施的生成与关闭并发时等价于两个完整批次串行执行，不允许半批交错。
+分页 page、size 可分别省略，默认 1、20，范围 1 到 10000、1 到 100，非法为 400 BadPage，返回 total、page、size、records，越界空页保留正确 total；所有路由、请求名、字段类型及响应采用合同，路径字段优先，拒绝不改变业务行，成功只改变本操作应改变的行，错误信封和普通输入必填错误采用合同。
+只返回完整的软件描述文档，不要 Java、SQL 或解释。
