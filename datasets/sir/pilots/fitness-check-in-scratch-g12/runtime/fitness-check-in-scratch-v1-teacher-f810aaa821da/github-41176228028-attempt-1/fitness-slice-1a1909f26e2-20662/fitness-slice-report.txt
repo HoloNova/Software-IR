@@ -1,0 +1,1070 @@
+=== Gym check-ins, Asia/Shanghai monthly statistics and coach views business conformance ===
+verdict=FAILED
+runId=fitness-slice-1a1909f26e2-20662
+schemaName=kcg_conf_run
+advisoryLock=held during the run
+schemaSource=TEST_FIXTURE_DDL
+productInitializeImplemented=false
+productUpdateImplemented=false
+sirResource=EXTERNAL_CANDIDATE:candidate.sir sha256=8ad97d8f7f302c78a92948c222bbb1e00fa4913663281bd8d10ff023f6e980fd
+fixtureDdl=/conformance/mysql/fitness-check-in-ddl.sql sha256=9f49dbd2dc7e00815c0e2cc6003bab389476dae8feeaee293b8e037875aad81c
+fixtureSeed=/conformance/mysql/fitness-check-in-seed.sql sha256=33415aba453cb720627a98e709d97f9e140ac7c05008a159ffbcb6db4f6750e9
+generatedFiles=45 combinedSha256=27bb20977c350bb201540d834a015a7e755146c38526d2358b44658de8f7d8db
+generatedProjectBuild=PASSED (exit 0)
+httpReadiness=READY (200 from /api/programs?page=1&size=10)
+mysqlRowsBefore=10 mysqlRowsAfter=13
+mavenOffline=false
+javaVersion=21.0.13
+osName=Linux osArch=amd64
+serverPort=18080
+slmMysqlVersion=8.4.13
+slmSampleId=fitness-check-in-scratch-v1-teacher-f810aaa821da
+slmSourceSha256=8ad97d8f7f302c78a92948c222bbb1e00fa4913663281bd8d10ff023f6e980fd
+slmGeneratedDigest=ff8a141a5ccde12747cc33845a883be48e0c54f098e32496ca710fc70c78b5df
+fitnessInitialDatabase=State[tables={user=[Row[cells={id=1, name=alice, role=MEMBER}], Row[cells={id=2, name=bob, role=MEMBER}], Row[cells={id=3, name=carol, role=MEMBER}], Row[cells={id=4, name=dave, role=COACH}]], access_token=***REDACTED***, owner_id=1, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=20000000-0000-4000-8000-000000000002, owner_id=2, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=20000000-0000-4000-8000-000000000003, owner_id=3, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=20000000-0000-4000-8000-000000000004, owner_id=4, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=20000000-0000-4000-8000-000000000099, owner_id=1, expires_at=2000-01-01T00:00:00Z}]], program=[Row[cells={id=10, name=spin}], Row[cells={id=11, name=yoga}], Row[cells={id=12, name=swim}]], check_in=[Row[cells={id=201, member_id=1, program_id=10, hours=1.25, checked_in_at=2026-01-05T02:00:00Z}], Row[cells={id=202, member_id=1, program_id=11, hours=1.00, checked_in_at=2026-01-20T12:00:00Z}], Row[cells={id=203, member_id=1, program_id=10, hours=1.50, checked_in_at=2026-01-31T16:30:00Z}], Row[cells={id=204, member_id=1, program_id=10, hours=2.00, checked_in_at=2026-02-14T03:00:00Z}], Row[cells={id=205, member_id=1, program_id=11, hours=0.75, checked_in_at=2026-02-28T15:59:59.999999Z}], Row[cells={id=206, member_id=1, program_id=10, hours=1.25, checked_in_at=2026-02-28T16:00:00Z}], Row[cells={id=207, member_id=1, program_id=11, hours=1.00, checked_in_at=2025-12-31T16:00:00Z}], Row[cells={id=208, member_id=1, program_id=10, hours=3.00, checked_in_at=2025-12-31T15:59:59.999999Z}], Row[cells={id=301, member_id=2, program_id=10, hours=1.00, checked_in_at=2026-02-10T02:00:00Z}], Row[cells={id=302, member_id=2, program_id=11, hours=1.01, checked_in_at=2026-02-14T03:00:00Z}]]}]
+fitnessSection=identity and programs
+fitnessSection=logging workouts
+observedFieldErrors[W04 hours omitted]=[{"path":"hours","code":"NotNull","message":"must not be null"}]
+observedFieldErrors[W04 hours null]=[{"path":"hours","code":"NotNull","message":"must not be null"}]
+observedFieldErrors[W04 hours 0.24]=[{"path":"hours","code":"DecimalMin","message":"must be greater than or equal to 0.25"}]
+observedFieldErrors[W04 hours 12.01]=[{"path":"hours","code":"DecimalMax","message":"must be less than or equal to 12"}]
+observedFieldErrors[W04 hours 0]=[{"path":"hours","code":"DecimalMin","message":"must be greater than or equal to 0.25"}]
+observedFieldErrors[W04 hours -1]=[{"path":"hours","code":"DecimalMin","message":"must be greater than or equal to 0.25"}]
+observedFieldErrors[W04 hours 1.234]=[{"path":"hours","code":"ExactDecimal","message":"must be exactly representable at the declared precision and scale"}]
+observedFieldErrors[W04 hours 100]=[{"path":"hours","code":"DecimalMax","message":"must be less than or equal to 12"},{"path":"hours","code":"ExactDecimal","message":"must be exactly representable at the declared precision and scale"}]
+observedFieldErrors[W05 programId omitted]=[{"path":"programId","code":"NotNull","message":"must not be null"}]
+observedFieldErrors[W05 programId null]=[{"path":"programId","code":"NotNull","message":"must not be null"}]
+fitnessSection=monthly statistics
+fitnessSection=statistics after writes
+fitnessSection=coach views
+fitnessSection=coach sees new data
+fitnessSection=independent recomputation
+fitnessFinalDatabase=State[tables={user=[Row[cells={id=1, name=alice, role=MEMBER}], Row[cells={id=2, name=bob, role=MEMBER}], Row[cells={id=3, name=carol, role=MEMBER}], Row[cells={id=4, name=dave, role=COACH}]], access_token=***REDACTED***, owner_id=1, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=20000000-0000-4000-8000-000000000002, owner_id=2, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=20000000-0000-4000-8000-000000000003, owner_id=3, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=20000000-0000-4000-8000-000000000004, owner_id=4, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=20000000-0000-4000-8000-000000000099, owner_id=1, expires_at=2000-01-01T00:00:00Z}]], program=[Row[cells={id=10, name=spin}], Row[cells={id=11, name=yoga}], Row[cells={id=12, name=swim}]], check_in=[Row[cells={id=201, member_id=1, program_id=10, hours=1.25, checked_in_at=2026-01-05T02:00:00Z}], Row[cells={id=202, member_id=1, program_id=11, hours=1.00, checked_in_at=2026-01-20T12:00:00Z}], Row[cells={id=203, member_id=1, program_id=10, hours=1.50, checked_in_at=2026-01-31T16:30:00Z}], Row[cells={id=204, member_id=1, program_id=10, hours=2.00, checked_in_at=2026-02-14T03:00:00Z}], Row[cells={id=205, member_id=1, program_id=11, hours=0.75, checked_in_at=2026-02-28T15:59:59.999999Z}], Row[cells={id=206, member_id=1, program_id=10, hours=1.25, checked_in_at=2026-02-28T16:00:00Z}], Row[cells={id=207, member_id=1, program_id=11, hours=1.00, checked_in_at=2025-12-31T16:00:00Z}], Row[cells={id=208, member_id=1, program_id=10, hours=3.00, checked_in_at=2025-12-31T15:59:59.999999Z}], Row[cells={id=301, member_id=2, program_id=10, hours=1.00, checked_in_at=2026-02-10T02:00:00Z}], Row[cells={id=302, member_id=2, program_id=11, hours=1.01, checked_in_at=2026-02-14T03:00:00Z}], Row[cells={id=310, member_id=1, program_id=10, hours=1.50, checked_in_at=2026-10-31T06:22:05.434709Z}], Row[cells={id=311, member_id=2, program_id=11, hours=2.25, checked_in_at=2026-10-31T06:22:05.444415Z}], Row[cells={id=312, member_id=4, program_id=12, hours=0.25, checked_in_at=2026-10-31T06:22:05.454889Z}]]}]
+
+checksPassed=773 checksFailed=5
+PASS the SIR slice compiles without errors (warnings remain visible) (diagnostics=[])
+PASS the compiler emitted a generated project (generatedFileCount=45)
+PASS candidate runtime compilation matches full static generation (sourceSha256=8ad97d8f7f302c78a92948c222bbb1e00fa4913663281bd8d10ff023f6e980fd generatedDigest=ff8a141a5ccde12747cc33845a883be48e0c54f098e32496ca710fc70c78b5df)
+PASS the generated project builds (mvn clean verify) (exitCode=0)
+PASS the build produced an executable jar (projectRoot=/home/runner/work/Software-IR/Software-IR/ci-work/fitness-slice-1a1909f26e2-20662/generated-project)
+PASS the generated application serves the compiled business route (readinessUrl=http://127.0.0.1:18080/api/programs?page=1&size=10)
+PASS B01 startup readiness GET changes no business row in any of four tables (all four tables unchanged)
+PASS gym fixture seed has complete rows, foreign keys and in-range hours ({user=4, program=3, check_in=10, access_token=***REDACTED***
+PASS B01 anonymous readiness changes no business row in any of four tables (all four tables unchanged)
+PASS B01 anonymous readiness (expected=200 actual=200)
+PASS B01 anonymous readiness has exact page keys, totals, ordering and full records ({"total":3,"page":1,"size":10,"records":[{"id":10,"name":"spin"},{"id":12,"name":"swim"},{"id":11,"name":"yoga"}]})
+PASS B02 defaults changes no business row in any of four tables (all four tables unchanged)
+PASS B02 defaults (expected=200 actual=200)
+PASS B02 defaults has exact page keys, totals, ordering and full records ({"total":3,"page":1,"size":20,"records":[{"id":10,"name":"spin"},{"id":12,"name":"swim"},{"id":11,"name":"yoga"}]})
+PASS B02 page default alone changes no business row in any of four tables (all four tables unchanged)
+PASS B02 page default alone (expected=200 actual=200)
+PASS B02 page default alone has exact page keys, totals, ordering and full records ({"total":3,"page":1,"size":2,"records":[{"id":10,"name":"spin"},{"id":12,"name":"swim"}]})
+PASS B02 size default alone changes no business row in any of four tables (all four tables unchanged)
+PASS B02 size default alone (expected=200 actual=200)
+PASS B02 size default alone has exact page keys, totals, ordering and full records ({"total":3,"page":2,"size":20,"records":[]})
+PASS B02 second page changes no business row in any of four tables (all four tables unchanged)
+PASS B02 second page (expected=200 actual=200)
+PASS B02 second page has exact page keys, totals, ordering and full records ({"total":3,"page":2,"size":2,"records":[{"id":11,"name":"yoga"}]})
+PASS B02 past last page changes no business row in any of four tables (all four tables unchanged)
+PASS B02 past last page (expected=200 actual=200)
+PASS B02 past last page has exact page keys, totals, ordering and full records ({"total":3,"page":3,"size":2,"records":[]})
+PASS B02 inclusive upper bounds changes no business row in any of four tables (all four tables unchanged)
+PASS B02 inclusive upper bounds (expected=200 actual=200)
+PASS B02 inclusive upper bounds has exact page keys, totals, ordering and full records ({"total":3,"page":10000,"size":100,"records":[]})
+PASS B03 rejected page 0 on /api/programs? changes no business row in any of four tables (all four tables unchanged)
+PASS B03 rejected page 0 on /api/programs? (expected=400 actual=400)
+PASS B03 rejected page 0 on /api/programs? has the exact declared error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS B03 rejected page -1 on /api/programs? changes no business row in any of four tables (all four tables unchanged)
+PASS B03 rejected page -1 on /api/programs? (expected=400 actual=400)
+PASS B03 rejected page -1 on /api/programs? has the exact declared error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS B03 rejected page 10001 on /api/programs? changes no business row in any of four tables (all four tables unchanged)
+PASS B03 rejected page 10001 on /api/programs? (expected=400 actual=400)
+PASS B03 rejected page 10001 on /api/programs? has the exact declared error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS B03 rejected size 0 on /api/programs? changes no business row in any of four tables (all four tables unchanged)
+PASS B03 rejected size 0 on /api/programs? (expected=400 actual=400)
+PASS B03 rejected size 0 on /api/programs? has the exact declared error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS B03 rejected size -1 on /api/programs? changes no business row in any of four tables (all four tables unchanged)
+PASS B03 rejected size -1 on /api/programs? (expected=400 actual=400)
+PASS B03 rejected size -1 on /api/programs? has the exact declared error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS B03 rejected size 101 on /api/programs? changes no business row in any of four tables (all four tables unchanged)
+PASS B03 rejected size 101 on /api/programs? (expected=400 actual=400)
+PASS B03 rejected size 101 on /api/programs? has the exact declared error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS B04 /api/check-ins invalid identity 0 (expected=401 actual=401)
+PASS B04 /api/check-ins invalid identity 0 has an empty authentication response ()
+PASS B04 /api/check-ins invalid identity 0 changes no business row in any of four tables (all four tables unchanged)
+PASS B04 /api/check-ins invalid identity 1 (expected=401 actual=401)
+PASS B04 /api/check-ins invalid identity 1 has an empty authentication response ()
+PASS B04 /api/check-ins invalid identity 1 changes no business row in any of four tables (all four tables unchanged)
+PASS B04 /api/check-ins invalid identity 2 (expected=401 actual=401)
+PASS B04 /api/check-ins invalid identity 2 has an empty authentication response ()
+PASS B04 /api/check-ins invalid identity 2 changes no business row in any of four tables (all four tables unchanged)
+PASS B04 /api/check-ins invalid identity 3 (expected=401 actual=401)
+PASS B04 /api/check-ins invalid identity 3 has an empty authentication response ()
+PASS B04 /api/check-ins invalid identity 3 changes no business row in any of four tables (all four tables unchanged)
+PASS B04 /api/my/month/visits?month=2026-01 invalid identity 0 (expected=401 actual=401)
+PASS B04 /api/my/month/visits?month=2026-01 invalid identity 0 has an empty authentication response ()
+PASS B04 /api/my/month/visits?month=2026-01 invalid identity 0 changes no business row in any of four tables (all four tables unchanged)
+PASS B04 /api/my/month/visits?month=2026-01 invalid identity 1 (expected=401 actual=401)
+PASS B04 /api/my/month/visits?month=2026-01 invalid identity 1 has an empty authentication response ()
+PASS B04 /api/my/month/visits?month=2026-01 invalid identity 1 changes no business row in any of four tables (all four tables unchanged)
+PASS B04 /api/my/month/visits?month=2026-01 invalid identity 2 (expected=401 actual=401)
+PASS B04 /api/my/month/visits?month=2026-01 invalid identity 2 has an empty authentication response ()
+PASS B04 /api/my/month/visits?month=2026-01 invalid identity 2 changes no business row in any of four tables (all four tables unchanged)
+PASS B04 /api/my/month/visits?month=2026-01 invalid identity 3 (expected=401 actual=401)
+PASS B04 /api/my/month/visits?month=2026-01 invalid identity 3 has an empty authentication response ()
+PASS B04 /api/my/month/visits?month=2026-01 invalid identity 3 changes no business row in any of four tables (all four tables unchanged)
+PASS B04 /api/my/month/hours?month=2026-01 invalid identity 0 (expected=401 actual=401)
+PASS B04 /api/my/month/hours?month=2026-01 invalid identity 0 has an empty authentication response ()
+PASS B04 /api/my/month/hours?month=2026-01 invalid identity 0 changes no business row in any of four tables (all four tables unchanged)
+PASS B04 /api/my/month/hours?month=2026-01 invalid identity 1 (expected=401 actual=401)
+PASS B04 /api/my/month/hours?month=2026-01 invalid identity 1 has an empty authentication response ()
+PASS B04 /api/my/month/hours?month=2026-01 invalid identity 1 changes no business row in any of four tables (all four tables unchanged)
+PASS B04 /api/my/month/hours?month=2026-01 invalid identity 2 (expected=401 actual=401)
+PASS B04 /api/my/month/hours?month=2026-01 invalid identity 2 has an empty authentication response ()
+PASS B04 /api/my/month/hours?month=2026-01 invalid identity 2 changes no business row in any of four tables (all four tables unchanged)
+PASS B04 /api/my/month/hours?month=2026-01 invalid identity 3 (expected=401 actual=401)
+PASS B04 /api/my/month/hours?month=2026-01 invalid identity 3 has an empty authentication response ()
+PASS B04 /api/my/month/hours?month=2026-01 invalid identity 3 changes no business row in any of four tables (all four tables unchanged)
+PASS B04 /api/my/month/average?month=2026-01 invalid identity 0 (expected=401 actual=401)
+PASS B04 /api/my/month/average?month=2026-01 invalid identity 0 has an empty authentication response ()
+PASS B04 /api/my/month/average?month=2026-01 invalid identity 0 changes no business row in any of four tables (all four tables unchanged)
+PASS B04 /api/my/month/average?month=2026-01 invalid identity 1 (expected=401 actual=401)
+PASS B04 /api/my/month/average?month=2026-01 invalid identity 1 has an empty authentication response ()
+PASS B04 /api/my/month/average?month=2026-01 invalid identity 1 changes no business row in any of four tables (all four tables unchanged)
+PASS B04 /api/my/month/average?month=2026-01 invalid identity 2 (expected=401 actual=401)
+PASS B04 /api/my/month/average?month=2026-01 invalid identity 2 has an empty authentication response ()
+PASS B04 /api/my/month/average?month=2026-01 invalid identity 2 changes no business row in any of four tables (all four tables unchanged)
+PASS B04 /api/my/month/average?month=2026-01 invalid identity 3 (expected=401 actual=401)
+PASS B04 /api/my/month/average?month=2026-01 invalid identity 3 has an empty authentication response ()
+PASS B04 /api/my/month/average?month=2026-01 invalid identity 3 changes no business row in any of four tables (all four tables unchanged)
+PASS B04 /api/coach/check-ins?page=1&size=10 invalid identity 0 (expected=401 actual=401)
+PASS B04 /api/coach/check-ins?page=1&size=10 invalid identity 0 has an empty authentication response ()
+PASS B04 /api/coach/check-ins?page=1&size=10 invalid identity 0 changes no business row in any of four tables (all four tables unchanged)
+PASS B04 /api/coach/check-ins?page=1&size=10 invalid identity 1 (expected=401 actual=401)
+PASS B04 /api/coach/check-ins?page=1&size=10 invalid identity 1 has an empty authentication response ()
+PASS B04 /api/coach/check-ins?page=1&size=10 invalid identity 1 changes no business row in any of four tables (all four tables unchanged)
+PASS B04 /api/coach/check-ins?page=1&size=10 invalid identity 2 (expected=401 actual=401)
+PASS B04 /api/coach/check-ins?page=1&size=10 invalid identity 2 has an empty authentication response ()
+PASS B04 /api/coach/check-ins?page=1&size=10 invalid identity 2 changes no business row in any of four tables (all four tables unchanged)
+PASS B04 /api/coach/check-ins?page=1&size=10 invalid identity 3 (expected=401 actual=401)
+PASS B04 /api/coach/check-ins?page=1&size=10 invalid identity 3 has an empty authentication response ()
+PASS B04 /api/coach/check-ins?page=1&size=10 invalid identity 3 changes no business row in any of four tables (all four tables unchanged)
+PASS B04 /api/coach/month/visits?month=2026-01 invalid identity 0 (expected=401 actual=401)
+PASS B04 /api/coach/month/visits?month=2026-01 invalid identity 0 has an empty authentication response ()
+PASS B04 /api/coach/month/visits?month=2026-01 invalid identity 0 changes no business row in any of four tables (all four tables unchanged)
+PASS B04 /api/coach/month/visits?month=2026-01 invalid identity 1 (expected=401 actual=401)
+PASS B04 /api/coach/month/visits?month=2026-01 invalid identity 1 has an empty authentication response ()
+PASS B04 /api/coach/month/visits?month=2026-01 invalid identity 1 changes no business row in any of four tables (all four tables unchanged)
+PASS B04 /api/coach/month/visits?month=2026-01 invalid identity 2 (expected=401 actual=401)
+PASS B04 /api/coach/month/visits?month=2026-01 invalid identity 2 has an empty authentication response ()
+PASS B04 /api/coach/month/visits?month=2026-01 invalid identity 2 changes no business row in any of four tables (all four tables unchanged)
+PASS B04 /api/coach/month/visits?month=2026-01 invalid identity 3 (expected=401 actual=401)
+PASS B04 /api/coach/month/visits?month=2026-01 invalid identity 3 has an empty authentication response ()
+PASS B04 /api/coach/month/visits?month=2026-01 invalid identity 3 changes no business row in any of four tables (all four tables unchanged)
+PASS gym fixture seed has complete rows, foreign keys and in-range hours ({user=4, program=3, check_in=10, access_token=***REDACTED***
+PASS W01 member logs (expected=201 actual=201)
+PASS W01 member logs returns the one newly inserted numeric id (id=303; inserted=1)
+PASS W01 member logs stores the token's member, the input and the request time (Row[cells={id=303, member_id=1, program_id=10, hours=1.50, checked_in_at=2026-10-31T06:22:03.814144Z}]; request=2026-10-31T06:22:03.718414643Z..2026-10-31T06:22:03.837274103Z)
+PASS W01 member logs has only the allowed full-database delta (exact allowed delta)
+PASS W01 member logs matches all JSON fields and JDBC values ({"id":303,"member":1,"program":10,"hours":1.50,"checkedInAt":"2026-10-31T06:22:03.814143902Z"})
+PASS W02 identity comes from the token, lower bound (expected=201 actual=201)
+PASS W02 identity comes from the token, lower bound returns the one newly inserted numeric id (id=304; inserted=1)
+PASS W02 identity comes from the token, lower bound stores the token's member, the input and the request time (Row[cells={id=304, member_id=2, program_id=11, hours=0.25, checked_in_at=2026-10-31T06:22:03.869508Z}]; request=2026-10-31T06:22:03.861926766Z..2026-10-31T06:22:03.876333213Z)
+PASS W02 identity comes from the token, lower bound has only the allowed full-database delta (exact allowed delta)
+PASS W02 identity comes from the token, lower bound matches all JSON fields and JDBC values ({"id":304,"member":2,"program":11,"hours":0.25,"checkedInAt":"2026-10-31T06:22:03.869507538Z"})
+PASS W03 upper bound, coach may log (expected=201 actual=201)
+PASS W03 upper bound, coach may log returns the one newly inserted numeric id (id=305; inserted=1)
+PASS W03 upper bound, coach may log stores the token's member, the input and the request time (Row[cells={id=305, member_id=4, program_id=12, hours=12.00, checked_in_at=2026-10-31T06:22:03.894853Z}]; request=2026-10-31T06:22:03.883691589Z..2026-10-31T06:22:03.900676113Z)
+PASS W03 upper bound, coach may log has only the allowed full-database delta (exact allowed delta)
+PASS W03 upper bound, coach may log matches all JSON fields and JDBC values ({"id":305,"member":4,"program":12,"hours":12,"checkedInAt":"2026-10-31T06:22:03.894852988Z"})
+PASS W03 equal-valued spelling (expected=201 actual=201)
+PASS W03 equal-valued spelling returns the one newly inserted numeric id (id=306; inserted=1)
+PASS W03 equal-valued spelling stores the token's member, the input and the request time (Row[cells={id=306, member_id=3, program_id=10, hours=1.25, checked_in_at=2026-10-31T06:22:03.916828Z}]; request=2026-10-31T06:22:03.909725097Z..2026-10-31T06:22:03.923551309Z)
+PASS W03 equal-valued spelling has only the allowed full-database delta (exact allowed delta)
+PASS W03 equal-valued spelling matches all JSON fields and JDBC values ({"id":306,"member":3,"program":10,"hours":1.2500,"checkedInAt":"2026-10-31T06:22:03.916828285Z"})
+PASS W04 hours omitted (expected=400 actual=400)
+PASS W04 hours omitted is INVALID_REQUEST naming hours (code NotNull) ({"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"hours","code":"NotNull","message":"must not be null"}]})
+PASS W04 hours omitted changes no business row in any of four tables (all four tables unchanged)
+PASS W04 hours null (expected=400 actual=400)
+PASS W04 hours null is INVALID_REQUEST naming hours (code NotNull) ({"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"hours","code":"NotNull","message":"must not be null"}]})
+PASS W04 hours null changes no business row in any of four tables (all four tables unchanged)
+PASS W04 hours 0.24 (expected=400 actual=400)
+PASS W04 hours 0.24 is INVALID_REQUEST naming hours (code null) ({"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"hours","code":"DecimalMin","message":"must be greater than or equal to 0.25"}]})
+PASS W04 hours 0.24 changes no business row in any of four tables (all four tables unchanged)
+PASS W04 hours 12.01 (expected=400 actual=400)
+PASS W04 hours 12.01 is INVALID_REQUEST naming hours (code null) ({"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"hours","code":"DecimalMax","message":"must be less than or equal to 12"}]})
+PASS W04 hours 12.01 changes no business row in any of four tables (all four tables unchanged)
+PASS W04 hours 0 (expected=400 actual=400)
+PASS W04 hours 0 is INVALID_REQUEST naming hours (code null) ({"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"hours","code":"DecimalMin","message":"must be greater than or equal to 0.25"}]})
+PASS W04 hours 0 changes no business row in any of four tables (all four tables unchanged)
+PASS W04 hours -1 (expected=400 actual=400)
+PASS W04 hours -1 is INVALID_REQUEST naming hours (code null) ({"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"hours","code":"DecimalMin","message":"must be greater than or equal to 0.25"}]})
+PASS W04 hours -1 changes no business row in any of four tables (all four tables unchanged)
+PASS W04 hours 1.234 (expected=400 actual=400)
+PASS W04 hours 1.234 is INVALID_REQUEST naming hours (code null) ({"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"hours","code":"ExactDecimal","message":"must be exactly representable at the declared precision and scale"}]})
+PASS W04 hours 1.234 changes no business row in any of four tables (all four tables unchanged)
+PASS W04 hours 100 (expected=400 actual=400)
+PASS W04 hours 100 is INVALID_REQUEST naming hours (code null) ({"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"hours","code":"DecimalMax","message":"must be less than or equal to 12"},{"path":"hours","code":"ExactDecimal","message":"must be exactly representable at the declared precision and scale"}]})
+PASS W04 hours 100 changes no business row in any of four tables (all four tables unchanged)
+PASS W05 programId omitted (expected=400 actual=400)
+PASS W05 programId omitted is INVALID_REQUEST naming programId (code NotNull) ({"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"programId","code":"NotNull","message":"must not be null"}]})
+PASS W05 programId omitted changes no business row in any of four tables (all four tables unchanged)
+PASS W05 programId null (expected=400 actual=400)
+PASS W05 programId null is INVALID_REQUEST naming programId (code NotNull) ({"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"programId","code":"NotNull","message":"must not be null"}]})
+PASS W05 programId null changes no business row in any of four tables (all four tables unchanged)
+PASS W05 unknown program (expected=404 actual=404)
+PASS W05 unknown program has the exact declared error envelope ({"code":"ProgramNotFound","message":"ProgramNotFound","fields":[]})
+PASS W05 unknown program changes no business row in any of four tables (all four tables unchanged)
+PASS W06 forged member (expected=400 actual=400)
+PASS W06 forged member is INVALID_REQUEST naming null (code null) ({"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"member","code":"INVALID_REQUEST","message":"must be a well-formed value"}]})
+PASS W06 forged member changes no business row in any of four tables (all four tables unchanged)
+PASS gym fixture seed has complete rows, foreign keys and in-range hours ({user=4, program=3, check_in=10, access_token=***REDACTED***
+PASS Q 1/2025-12 visits changes no business row in any of four tables (all four tables unchanged)
+PASS Q 1/2025-12 visits (expected=200 actual=200)
+PASS Q 1/2025-12 visits is the bare JSON integer 1 (1)
+PASS Q 1/2025-12 hours changes no business row in any of four tables (all four tables unchanged)
+PASS Q 1/2025-12 hours (expected=200 actual=200)
+PASS Q 1/2025-12 hours is the bare JSON number 3.00 (3.00)
+PASS Q 1/2025-12 average changes no business row in any of four tables (all four tables unchanged)
+PASS Q 1/2025-12 average (expected=200 actual=200)
+PASS Q 1/2025-12 average is the bare JSON number 3.00 (3.00)
+PASS Q 1/2026-01 visits changes no business row in any of four tables (all four tables unchanged)
+PASS Q 1/2026-01 visits (expected=200 actual=200)
+PASS Q 1/2026-01 visits is the bare JSON integer 3 (3)
+PASS Q 1/2026-01 hours changes no business row in any of four tables (all four tables unchanged)
+PASS Q 1/2026-01 hours (expected=200 actual=200)
+PASS Q 1/2026-01 hours is the bare JSON number 3.25 (3.25)
+PASS Q 1/2026-01 average changes no business row in any of four tables (all four tables unchanged)
+PASS Q 1/2026-01 average (expected=200 actual=200)
+PASS Q 1/2026-01 average is the bare JSON number 1.08 (1.08)
+PASS Q 1/2026-02 visits changes no business row in any of four tables (all four tables unchanged)
+PASS Q 1/2026-02 visits (expected=200 actual=200)
+PASS Q 1/2026-02 visits is the bare JSON integer 3 (3)
+PASS Q 1/2026-02 hours changes no business row in any of four tables (all four tables unchanged)
+PASS Q 1/2026-02 hours (expected=200 actual=200)
+PASS Q 1/2026-02 hours is the bare JSON number 4.25 (4.25)
+PASS Q 1/2026-02 average changes no business row in any of four tables (all four tables unchanged)
+PASS Q 1/2026-02 average (expected=200 actual=200)
+PASS Q 1/2026-02 average is the bare JSON number 1.42 (1.42)
+PASS Q 1/2026-03 visits changes no business row in any of four tables (all four tables unchanged)
+PASS Q 1/2026-03 visits (expected=200 actual=200)
+PASS Q 1/2026-03 visits is the bare JSON integer 1 (1)
+PASS Q 1/2026-03 hours changes no business row in any of four tables (all four tables unchanged)
+PASS Q 1/2026-03 hours (expected=200 actual=200)
+PASS Q 1/2026-03 hours is the bare JSON number 1.25 (1.25)
+PASS Q 1/2026-03 average changes no business row in any of four tables (all four tables unchanged)
+PASS Q 1/2026-03 average (expected=200 actual=200)
+PASS Q 1/2026-03 average is the bare JSON number 1.25 (1.25)
+PASS Q 1/2026-04 visits changes no business row in any of four tables (all four tables unchanged)
+PASS Q 1/2026-04 visits (expected=200 actual=200)
+PASS Q 1/2026-04 visits is the bare JSON integer 0 (0)
+PASS Q 1/2026-04 hours changes no business row in any of four tables (all four tables unchanged)
+PASS Q 1/2026-04 hours (expected=200 actual=200)
+PASS Q 1/2026-04 hours is the bare JSON number 0 (0.00)
+PASS Q 1/2026-04 average changes no business row in any of four tables (all four tables unchanged)
+PASS Q 1/2026-04 average (expected=200 actual=200)
+PASS Q 1/2026-04 average is the bare JSON number 0 (0.00)
+PASS Q 2/2026-02 visits changes no business row in any of four tables (all four tables unchanged)
+PASS Q 2/2026-02 visits (expected=200 actual=200)
+PASS Q 2/2026-02 visits is the bare JSON integer 2 (2)
+PASS Q 2/2026-02 hours changes no business row in any of four tables (all four tables unchanged)
+PASS Q 2/2026-02 hours (expected=200 actual=200)
+PASS Q 2/2026-02 hours is the bare JSON number 2.01 (2.01)
+PASS Q 2/2026-02 average changes no business row in any of four tables (all four tables unchanged)
+PASS Q 2/2026-02 average (expected=200 actual=200)
+PASS Q 2/2026-02 average is the bare JSON number 1.01 (1.01)
+PASS Q 2/2026-01 visits changes no business row in any of four tables (all four tables unchanged)
+PASS Q 2/2026-01 visits (expected=200 actual=200)
+PASS Q 2/2026-01 visits is the bare JSON integer 0 (0)
+PASS Q 2/2026-01 hours changes no business row in any of four tables (all four tables unchanged)
+PASS Q 2/2026-01 hours (expected=200 actual=200)
+PASS Q 2/2026-01 hours is the bare JSON number 0 (0.00)
+PASS Q 2/2026-01 average changes no business row in any of four tables (all four tables unchanged)
+PASS Q 2/2026-01 average (expected=200 actual=200)
+PASS Q 2/2026-01 average is the bare JSON number 0 (0.00)
+PASS Q 3/2026-02 visits changes no business row in any of four tables (all four tables unchanged)
+PASS Q 3/2026-02 visits (expected=200 actual=200)
+PASS Q 3/2026-02 visits is the bare JSON integer 0 (0)
+PASS Q 3/2026-02 hours changes no business row in any of four tables (all four tables unchanged)
+PASS Q 3/2026-02 hours (expected=200 actual=200)
+PASS Q 3/2026-02 hours is the bare JSON number 0 (0.00)
+PASS Q 3/2026-02 average changes no business row in any of four tables (all four tables unchanged)
+PASS Q 3/2026-02 average (expected=200 actual=200)
+PASS Q 3/2026-02 average is the bare JSON number 0 (0.00)
+PASS Q 4/2026-02 visits changes no business row in any of four tables (all four tables unchanged)
+PASS Q 4/2026-02 visits (expected=200 actual=200)
+PASS Q 4/2026-02 visits is the bare JSON integer 0 (0)
+PASS Q 4/2026-02 hours changes no business row in any of four tables (all four tables unchanged)
+PASS Q 4/2026-02 hours (expected=200 actual=200)
+PASS Q 4/2026-02 hours is the bare JSON number 0 (0.00)
+PASS Q 4/2026-02 average changes no business row in any of four tables (all four tables unchanged)
+PASS Q 4/2026-02 average (expected=200 actual=200)
+PASS Q 4/2026-02 average is the bare JSON number 0 (0.00)
+PASS Q06 forged member visits changes no business row in any of four tables (all four tables unchanged)
+PASS Q06 forged member visits (expected=200 actual=200)
+PASS Q06 forged member visits is the bare JSON integer 0 (0)
+PASS Q06 forged member hours changes no business row in any of four tables (all four tables unchanged)
+PASS Q06 forged member hours (expected=200 actual=200)
+PASS Q06 forged member hours is the bare JSON number 0 (0.00)
+PASS Q06 forged member average changes no business row in any of four tables (all four tables unchanged)
+PASS Q06 forged member average (expected=200 actual=200)
+PASS Q06 forged member average is the bare JSON number 0 (0.00)
+PASS Q07 visits month 2026-1 changes no business row in any of four tables (all four tables unchanged)
+PASS Q07 visits month 2026-1 (expected=400 actual=400)
+PASS Q07 visits month 2026-1 has the exact declared error envelope ({"code":"BadPeriod","message":"BadPeriod","fields":[]})
+PASS Q07 visits month 2026-13 changes no business row in any of four tables (all four tables unchanged)
+PASS Q07 visits month 2026-13 (expected=400 actual=400)
+PASS Q07 visits month 2026-13 has the exact declared error envelope ({"code":"BadPeriod","message":"BadPeriod","fields":[]})
+PASS Q07 visits month 2026-00 changes no business row in any of four tables (all four tables unchanged)
+PASS Q07 visits month 2026-00 (expected=400 actual=400)
+PASS Q07 visits month 2026-00 has the exact declared error envelope ({"code":"BadPeriod","message":"BadPeriod","fields":[]})
+PASS Q07 visits month 2026-02-01 changes no business row in any of four tables (all four tables unchanged)
+PASS Q07 visits month 2026-02-01 (expected=400 actual=400)
+PASS Q07 visits month 2026-02-01 has the exact declared error envelope ({"code":"BadPeriod","message":"BadPeriod","fields":[]})
+PASS Q07 visits month abcd-ef changes no business row in any of four tables (all four tables unchanged)
+PASS Q07 visits month abcd-ef (expected=400 actual=400)
+PASS Q07 visits month abcd-ef has the exact declared error envelope ({"code":"BadPeriod","message":"BadPeriod","fields":[]})
+PASS Q07 visits month 0000-01 changes no business row in any of four tables (all four tables unchanged)
+PASS Q07 visits month 0000-01 (expected=400 actual=400)
+PASS Q07 visits month 0000-01 has the exact declared error envelope ({"code":"BadPeriod","message":"BadPeriod","fields":[]})
+PASS Q07 visits month 0999-12 changes no business row in any of four tables (all four tables unchanged)
+PASS Q07 visits month 0999-12 (expected=400 actual=400)
+PASS Q07 visits month 0999-12 has the exact declared error envelope ({"code":"BadPeriod","message":"BadPeriod","fields":[]})
+PASS Q07 visits month 1000-01 changes no business row in any of four tables (all four tables unchanged)
+PASS Q07 visits month 1000-01 (expected=400 actual=400)
+PASS Q07 visits month 1000-01 has the exact declared error envelope ({"code":"BadPeriod","message":"BadPeriod","fields":[]})
+PASS Q07 largest representable month is valid changes no business row in any of four tables (all four tables unchanged)
+PASS Q07 largest representable month is valid (expected=200 actual=200)
+PASS Q07 largest representable month is valid is the bare JSON integer 0 (0)
+PASS Q07 visits month omitted changes no business row in any of four tables (all four tables unchanged)
+PASS Q07 visits month omitted (expected=400 actual=400)
+PASS Q07 visits month empty changes no business row in any of four tables (all four tables unchanged)
+PASS Q07 visits month empty (expected=400 actual=400)
+PASS Q07 /api/my/month/hours omitted changes no business row in any of four tables (all four tables unchanged)
+PASS Q07 /api/my/month/hours omitted (expected=400 actual=400)
+PASS Q07 /api/my/month/hours month 13 changes no business row in any of four tables (all four tables unchanged)
+PASS Q07 /api/my/month/hours month 13 (expected=400 actual=400)
+PASS Q07 /api/my/month/hours month 13 has the exact declared error envelope ({"code":"BadPeriod","message":"BadPeriod","fields":[]})
+PASS Q07 /api/my/month/average omitted changes no business row in any of four tables (all four tables unchanged)
+PASS Q07 /api/my/month/average omitted (expected=400 actual=400)
+PASS Q07 /api/my/month/average month 13 changes no business row in any of four tables (all four tables unchanged)
+PASS Q07 /api/my/month/average month 13 (expected=400 actual=400)
+PASS Q07 /api/my/month/average month 13 has the exact declared error envelope ({"code":"BadPeriod","message":"BadPeriod","fields":[]})
+PASS Q07 coach visits month omitted changes no business row in any of four tables (all four tables unchanged)
+PASS Q07 coach visits month omitted (expected=400 actual=400)
+PASS Q07 coach visits month 13 changes no business row in any of four tables (all four tables unchanged)
+PASS Q07 coach visits month 13 (expected=400 actual=400)
+PASS Q07 coach visits month 13 has the exact declared error envelope ({"code":"BadPeriod","message":"BadPeriod","fields":[]})
+PASS gym fixture seed has complete rows, foreign keys and in-range hours ({user=4, program=3, check_in=10, access_token=***REDACTED***
+PASS Q08 first workout (expected=201 actual=201)
+PASS Q08 first workout returns the one newly inserted numeric id (id=307; inserted=1)
+PASS Q08 first workout stores the token's member, the input and the request time (Row[cells={id=307, member_id=1, program_id=10, hours=1.50, checked_in_at=2026-10-31T06:22:04.779275Z}]; request=2026-10-31T06:22:04.773321945Z..2026-10-31T06:22:04.793074860Z)
+PASS Q08 first workout has only the allowed full-database delta (exact allowed delta)
+PASS Q08 first workout matches all JSON fields and JDBC values ({"id":307,"member":1,"program":10,"hours":1.50,"checkedInAt":"2026-10-31T06:22:04.779275311Z"})
+PASS Q08 second workout (expected=201 actual=201)
+PASS Q08 second workout returns the one newly inserted numeric id (id=308; inserted=1)
+PASS Q08 second workout stores the token's member, the input and the request time (Row[cells={id=308, member_id=1, program_id=11, hours=2.25, checked_in_at=2026-10-31T06:22:04.807202Z}]; request=2026-10-31T06:22:04.799022308Z..2026-10-31T06:22:04.814774170Z)
+PASS Q08 second workout has only the allowed full-database delta (exact allowed delta)
+PASS Q08 second workout matches all JSON fields and JDBC values ({"id":308,"member":1,"program":11,"hours":2.25,"checkedInAt":"2026-10-31T06:22:04.807202498Z"})
+PASS Q08 current month 2026-10 visits changes no business row in any of four tables (all four tables unchanged)
+PASS Q08 current month 2026-10 visits (expected=200 actual=200)
+PASS Q08 current month 2026-10 visits is the bare JSON integer 2 (2)
+PASS Q08 current month 2026-10 hours changes no business row in any of four tables (all four tables unchanged)
+PASS Q08 current month 2026-10 hours (expected=200 actual=200)
+PASS Q08 current month 2026-10 hours is the bare JSON number 3.75 (3.75)
+PASS Q08 current month 2026-10 average changes no business row in any of four tables (all four tables unchanged)
+PASS Q08 current month 2026-10 average (expected=200 actual=200)
+PASS Q08 current month 2026-10 average is the bare JSON number 1.88 (1.88)
+PASS Q08 seeded February is untouched visits changes no business row in any of four tables (all four tables unchanged)
+PASS Q08 seeded February is untouched visits (expected=200 actual=200)
+PASS Q08 seeded February is untouched visits is the bare JSON integer 3 (3)
+PASS Q08 seeded February is untouched hours changes no business row in any of four tables (all four tables unchanged)
+PASS Q08 seeded February is untouched hours (expected=200 actual=200)
+PASS Q08 seeded February is untouched hours is the bare JSON number 4.25 (4.25)
+PASS Q08 seeded February is untouched average changes no business row in any of four tables (all four tables unchanged)
+PASS Q08 seeded February is untouched average (expected=200 actual=200)
+PASS Q08 seeded February is untouched average is the bare JSON number 1.42 (1.42)
+PASS gym fixture seed has complete rows, foreign keys and in-range hours ({user=4, program=3, check_in=10, access_token=***REDACTED***
+PASS K01 member 1 /api/coach/check-ins?page=1&size=10 changes no business row in any of four tables (all four tables unchanged)
+PASS K01 member 1 /api/coach/check-ins?page=1&size=10 (expected=403 actual=403)
+PASS K01 member 1 /api/coach/check-ins?page=1&size=10 has the exact declared error envelope ({"code":"Forbidden","message":"Forbidden","fields":[]})
+PASS K01 member 1 /api/coach/month/visits?month=2026-02 changes no business row in any of four tables (all four tables unchanged)
+PASS K01 member 1 /api/coach/month/visits?month=2026-02 (expected=403 actual=403)
+PASS K01 member 1 /api/coach/month/visits?month=2026-02 has the exact declared error envelope ({"code":"Forbidden","message":"Forbidden","fields":[]})
+PASS K01 member 2 /api/coach/check-ins?page=1&size=10 changes no business row in any of four tables (all four tables unchanged)
+PASS K01 member 2 /api/coach/check-ins?page=1&size=10 (expected=403 actual=403)
+PASS K01 member 2 /api/coach/check-ins?page=1&size=10 has the exact declared error envelope ({"code":"Forbidden","message":"Forbidden","fields":[]})
+PASS K01 member 2 /api/coach/month/visits?month=2026-02 changes no business row in any of four tables (all four tables unchanged)
+PASS K01 member 2 /api/coach/month/visits?month=2026-02 (expected=403 actual=403)
+PASS K01 member 2 /api/coach/month/visits?month=2026-02 has the exact declared error envelope ({"code":"Forbidden","message":"Forbidden","fields":[]})
+PASS K02 all rows changes no business row in any of four tables (all four tables unchanged)
+PASS K02 all rows (expected=200 actual=200)
+PASS K02 all rows has exact page keys, totals, ordering and full records ({"total":10,"page":1,"size":20,"records":[{"id":206,"member":1,"program":10,"hours":1.25,"checkedInAt":"2026-02-28T16:00:00Z"},{"id":205,"member":1,"program":11,"hours":0.75,"checkedInAt":"2026-02-28T15:59:59.999999Z"},{"id":302,"member":2,"program":11,"hours":1.01,"checkedInAt":"2026-02-14T03:00:00Z"},{"id":204,"member":1,"program":10,"hours":2.00,"checkedInAt":"2026-02-14T03:00:00Z"},{"id":301,"member":2,"program":10,"hours":1.00,"checkedInAt":"2026-02-10T02:00:00Z"},{"id":203,"member":1,"program":10,"hours":1.50,"checkedInAt":"2026-01-31T16:30:00Z"},{"id":202,"member":1,"program":11,"hours":1.00,"checkedInAt":"2026-01-20T12:00:00Z"},{"id":201,"member":1,"program":10,"hours":1.25,"checkedInAt":"2026-01-05T02:00:00Z"},{"id":207,"member":1,"program":11,"hours":1.00,"checkedInAt":"2025-12-31T16:00:00Z"},{"id":208,"member":1,"program":10,"hours":3.00,"checkedInAt":"2025-12-31T15:59:59.999999Z"}]})
+PASS K02 size 3 page 1 changes no business row in any of four tables (all four tables unchanged)
+PASS K02 size 3 page 1 (expected=200 actual=200)
+PASS K02 size 3 page 1 has exact page keys, totals, ordering and full records ({"total":10,"page":1,"size":3,"records":[{"id":206,"member":1,"program":10,"hours":1.25,"checkedInAt":"2026-02-28T16:00:00Z"},{"id":205,"member":1,"program":11,"hours":0.75,"checkedInAt":"2026-02-28T15:59:59.999999Z"},{"id":302,"member":2,"program":11,"hours":1.01,"checkedInAt":"2026-02-14T03:00:00Z"}]})
+PASS K02 size 3 page 2 changes no business row in any of four tables (all four tables unchanged)
+PASS K02 size 3 page 2 (expected=200 actual=200)
+PASS K02 size 3 page 2 has exact page keys, totals, ordering and full records ({"total":10,"page":2,"size":3,"records":[{"id":204,"member":1,"program":10,"hours":2.00,"checkedInAt":"2026-02-14T03:00:00Z"},{"id":301,"member":2,"program":10,"hours":1.00,"checkedInAt":"2026-02-10T02:00:00Z"},{"id":203,"member":1,"program":10,"hours":1.50,"checkedInAt":"2026-01-31T16:30:00Z"}]})
+PASS K02 size 3 page 3 changes no business row in any of four tables (all four tables unchanged)
+PASS K02 size 3 page 3 (expected=200 actual=200)
+PASS K02 size 3 page 3 has exact page keys, totals, ordering and full records ({"total":10,"page":3,"size":3,"records":[{"id":202,"member":1,"program":11,"hours":1.00,"checkedInAt":"2026-01-20T12:00:00Z"},{"id":201,"member":1,"program":10,"hours":1.25,"checkedInAt":"2026-01-05T02:00:00Z"},{"id":207,"member":1,"program":11,"hours":1.00,"checkedInAt":"2025-12-31T16:00:00Z"}]})
+PASS K02 size 3 page 4 changes no business row in any of four tables (all four tables unchanged)
+PASS K02 size 3 page 4 (expected=200 actual=200)
+PASS K02 size 3 page 4 has exact page keys, totals, ordering and full records ({"total":10,"page":4,"size":3,"records":[{"id":208,"member":1,"program":10,"hours":3.00,"checkedInAt":"2025-12-31T15:59:59.999999Z"}]})
+PASS K02 size 3 page 5 changes no business row in any of four tables (all four tables unchanged)
+PASS K02 size 3 page 5 (expected=200 actual=200)
+PASS K02 size 3 page 5 has exact page keys, totals, ordering and full records ({"total":10,"page":5,"size":3,"records":[]})
+PASS K03 member 1 changes no business row in any of four tables (all four tables unchanged)
+PASS K03 member 1 (expected=200 actual=200)
+PASS K03 member 1 has exact page keys, totals, ordering and full records ({"total":8,"page":1,"size":20,"records":[{"id":206,"member":1,"program":10,"hours":1.25,"checkedInAt":"2026-02-28T16:00:00Z"},{"id":205,"member":1,"program":11,"hours":0.75,"checkedInAt":"2026-02-28T15:59:59.999999Z"},{"id":204,"member":1,"program":10,"hours":2.00,"checkedInAt":"2026-02-14T03:00:00Z"},{"id":203,"member":1,"program":10,"hours":1.50,"checkedInAt":"2026-01-31T16:30:00Z"},{"id":202,"member":1,"program":11,"hours":1.00,"checkedInAt":"2026-01-20T12:00:00Z"},{"id":201,"member":1,"program":10,"hours":1.25,"checkedInAt":"2026-01-05T02:00:00Z"},{"id":207,"member":1,"program":11,"hours":1.00,"checkedInAt":"2025-12-31T16:00:00Z"},{"id":208,"member":1,"program":10,"hours":3.00,"checkedInAt":"2025-12-31T15:59:59.999999Z"}]})
+PASS K03 member 2 changes no business row in any of four tables (all four tables unchanged)
+PASS K03 member 2 (expected=200 actual=200)
+PASS K03 member 2 has exact page keys, totals, ordering and full records ({"total":2,"page":1,"size":20,"records":[{"id":302,"member":2,"program":11,"hours":1.01,"checkedInAt":"2026-02-14T03:00:00Z"},{"id":301,"member":2,"program":10,"hours":1.00,"checkedInAt":"2026-02-10T02:00:00Z"}]})
+PASS K03 member without rows changes no business row in any of four tables (all four tables unchanged)
+PASS K03 member without rows (expected=200 actual=200)
+PASS K03 member without rows has exact page keys, totals, ordering and full records ({"total":0,"page":1,"size":20,"records":[]})
+PASS K03 unknown member is an empty page changes no business row in any of four tables (all four tables unchanged)
+PASS K03 unknown member is an empty page (expected=200 actual=200)
+PASS K03 unknown member is an empty page has exact page keys, totals, ordering and full records ({"total":0,"page":1,"size":20,"records":[]})
+PASS K03 member 1 second page of two changes no business row in any of four tables (all four tables unchanged)
+PASS K03 member 1 second page of two (expected=200 actual=200)
+PASS K03 member 1 second page of two has exact page keys, totals, ordering and full records ({"total":8,"page":2,"size":2,"records":[{"id":204,"member":1,"program":10,"hours":2.00,"checkedInAt":"2026-02-14T03:00:00Z"},{"id":203,"member":1,"program":10,"hours":1.50,"checkedInAt":"2026-01-31T16:30:00Z"}]})
+PASS K04 program 10 changes no business row in any of four tables (all four tables unchanged)
+PASS K04 program 10 (expected=200 actual=200)
+PASS K04 program 10 has exact page keys, totals, ordering and full records ({"total":6,"page":1,"size":20,"records":[{"id":206,"member":1,"program":10,"hours":1.25,"checkedInAt":"2026-02-28T16:00:00Z"},{"id":204,"member":1,"program":10,"hours":2.00,"checkedInAt":"2026-02-14T03:00:00Z"},{"id":301,"member":2,"program":10,"hours":1.00,"checkedInAt":"2026-02-10T02:00:00Z"},{"id":203,"member":1,"program":10,"hours":1.50,"checkedInAt":"2026-01-31T16:30:00Z"},{"id":201,"member":1,"program":10,"hours":1.25,"checkedInAt":"2026-01-05T02:00:00Z"},{"id":208,"member":1,"program":10,"hours":3.00,"checkedInAt":"2025-12-31T15:59:59.999999Z"}]})
+PASS K04 program 11 changes no business row in any of four tables (all four tables unchanged)
+PASS K04 program 11 (expected=200 actual=200)
+PASS K04 program 11 has exact page keys, totals, ordering and full records ({"total":4,"page":1,"size":20,"records":[{"id":205,"member":1,"program":11,"hours":0.75,"checkedInAt":"2026-02-28T15:59:59.999999Z"},{"id":302,"member":2,"program":11,"hours":1.01,"checkedInAt":"2026-02-14T03:00:00Z"},{"id":202,"member":1,"program":11,"hours":1.00,"checkedInAt":"2026-01-20T12:00:00Z"},{"id":207,"member":1,"program":11,"hours":1.00,"checkedInAt":"2025-12-31T16:00:00Z"}]})
+PASS K04 program without rows changes no business row in any of four tables (all four tables unchanged)
+PASS K04 program without rows (expected=200 actual=200)
+PASS K04 program without rows has exact page keys, totals, ordering and full records ({"total":0,"page":1,"size":20,"records":[]})
+PASS K04 unknown program is an empty page changes no business row in any of four tables (all four tables unchanged)
+PASS K04 unknown program is an empty page (expected=200 actual=200)
+PASS K04 unknown program is an empty page has exact page keys, totals, ordering and full records ({"total":0,"page":1,"size":20,"records":[]})
+PASS K05 member 1 and program 11 changes no business row in any of four tables (all four tables unchanged)
+PASS K05 member 1 and program 11 (expected=200 actual=200)
+PASS K05 member 1 and program 11 has exact page keys, totals, ordering and full records ({"total":3,"page":1,"size":20,"records":[{"id":205,"member":1,"program":11,"hours":0.75,"checkedInAt":"2026-02-28T15:59:59.999999Z"},{"id":202,"member":1,"program":11,"hours":1.00,"checkedInAt":"2026-01-20T12:00:00Z"},{"id":207,"member":1,"program":11,"hours":1.00,"checkedInAt":"2025-12-31T16:00:00Z"}]})
+PASS K05 member 2 and program 10 changes no business row in any of four tables (all four tables unchanged)
+PASS K05 member 2 and program 10 (expected=200 actual=200)
+PASS K05 member 2 and program 10 has exact page keys, totals, ordering and full records ({"total":1,"page":1,"size":20,"records":[{"id":301,"member":2,"program":10,"hours":1.00,"checkedInAt":"2026-02-10T02:00:00Z"}]})
+PASS K05 member 2 and program 12 changes no business row in any of four tables (all four tables unchanged)
+PASS K05 member 2 and program 12 (expected=200 actual=200)
+PASS K05 member 2 and program 12 has exact page keys, totals, ordering and full records ({"total":0,"page":1,"size":20,"records":[]})
+PASS K06 rejected page 0 on /api/coach/check-ins? changes no business row in any of four tables (all four tables unchanged)
+PASS K06 rejected page 0 on /api/coach/check-ins? (expected=400 actual=400)
+PASS K06 rejected page 0 on /api/coach/check-ins? has the exact declared error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS K06 rejected page -1 on /api/coach/check-ins? changes no business row in any of four tables (all four tables unchanged)
+PASS K06 rejected page -1 on /api/coach/check-ins? (expected=400 actual=400)
+PASS K06 rejected page -1 on /api/coach/check-ins? has the exact declared error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS K06 rejected page 10001 on /api/coach/check-ins? changes no business row in any of four tables (all four tables unchanged)
+PASS K06 rejected page 10001 on /api/coach/check-ins? (expected=400 actual=400)
+PASS K06 rejected page 10001 on /api/coach/check-ins? has the exact declared error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS K06 rejected size 0 on /api/coach/check-ins? changes no business row in any of four tables (all four tables unchanged)
+PASS K06 rejected size 0 on /api/coach/check-ins? (expected=400 actual=400)
+PASS K06 rejected size 0 on /api/coach/check-ins? has the exact declared error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS K06 rejected size -1 on /api/coach/check-ins? changes no business row in any of four tables (all four tables unchanged)
+PASS K06 rejected size -1 on /api/coach/check-ins? (expected=400 actual=400)
+PASS K06 rejected size -1 on /api/coach/check-ins? has the exact declared error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS K06 rejected size 101 on /api/coach/check-ins? changes no business row in any of four tables (all four tables unchanged)
+PASS K06 rejected size 101 on /api/coach/check-ins? (expected=400 actual=400)
+PASS K06 rejected size 101 on /api/coach/check-ins? has the exact declared error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS K07 coach visits month=2026-02 changes no business row in any of four tables (all four tables unchanged)
+PASS K07 coach visits month=2026-02 (expected=200 actual=200)
+PASS K07 coach visits month=2026-02 is the bare JSON integer 5 (5)
+PASS K07 coach visits month=2026-02&program=10 changes no business row in any of four tables (all four tables unchanged)
+PASS K07 coach visits month=2026-02&program=10 (expected=200 actual=200)
+PASS K07 coach visits month=2026-02&program=10 is the bare JSON integer 3 (3)
+PASS K07 coach visits month=2026-02&program=11 changes no business row in any of four tables (all four tables unchanged)
+PASS K07 coach visits month=2026-02&program=11 (expected=200 actual=200)
+PASS K07 coach visits month=2026-02&program=11 is the bare JSON integer 2 (2)
+PASS K07 coach visits month=2026-02&program=12 changes no business row in any of four tables (all four tables unchanged)
+PASS K07 coach visits month=2026-02&program=12 (expected=200 actual=200)
+PASS K07 coach visits month=2026-02&program=12 is the bare JSON integer 0 (0)
+PASS K07 coach visits month=2026-02&program=999999 changes no business row in any of four tables (all four tables unchanged)
+PASS K07 coach visits month=2026-02&program=999999 (expected=200 actual=200)
+PASS K07 coach visits month=2026-02&program=999999 is the bare JSON integer 0 (0)
+PASS K07 coach visits 2026-01 changes no business row in any of four tables (all four tables unchanged)
+PASS K07 coach visits 2026-01 (expected=200 actual=200)
+PASS K07 coach visits 2026-01 is the bare JSON integer 3 (3)
+PASS K07 coach visits 2026-03 changes no business row in any of four tables (all four tables unchanged)
+PASS K07 coach visits 2026-03 (expected=200 actual=200)
+PASS K07 coach visits 2026-03 is the bare JSON integer 1 (1)
+PASS K07 coach visits 2025-12 changes no business row in any of four tables (all four tables unchanged)
+PASS K07 coach visits 2025-12 (expected=200 actual=200)
+PASS K07 coach visits 2025-12 is the bare JSON integer 1 (1)
+PASS K07 coach visits 2026-04 changes no business row in any of four tables (all four tables unchanged)
+PASS K07 coach visits 2026-04 (expected=200 actual=200)
+PASS K07 coach visits 2026-04 is the bare JSON integer 0 (0)
+PASS gym fixture seed has complete rows, foreign keys and in-range hours ({user=4, program=3, check_in=10, access_token=***REDACTED***
+PASS K08 member logs swim (expected=201 actual=201)
+PASS K08 member logs swim returns the one newly inserted numeric id (id=309; inserted=1)
+PASS K08 member logs swim stores the token's member, the input and the request time (Row[cells={id=309, member_id=1, program_id=12, hours=1.00, checked_in_at=2026-10-31T06:22:05.392202Z}]; request=2026-10-31T06:22:05.388019894Z..2026-10-31T06:22:05.396326498Z)
+PASS K08 member logs swim has only the allowed full-database delta (exact allowed delta)
+PASS K08 member logs swim matches all JSON fields and JDBC values ({"id":309,"member":1,"program":12,"hours":1,"checkedInAt":"2026-10-31T06:22:05.392201762Z"})
+PASS K08 coach list starts with the new row changes no business row in any of four tables (all four tables unchanged)
+PASS K08 coach list starts with the new row (expected=200 actual=200)
+PASS K08 coach list starts with the new row has exact page keys, totals, ordering and full records ({"total":11,"page":1,"size":3,"records":[{"id":309,"member":1,"program":12,"hours":1.00,"checkedInAt":"2026-10-31T06:22:05.392202Z"},{"id":206,"member":1,"program":10,"hours":1.25,"checkedInAt":"2026-02-28T16:00:00Z"},{"id":205,"member":1,"program":11,"hours":0.75,"checkedInAt":"2026-02-28T15:59:59.999999Z"}]})
+PASS K08 coach month count for the new program changes no business row in any of four tables (all four tables unchanged)
+PASS K08 coach month count for the new program (expected=200 actual=200)
+PASS K08 coach month count for the new program is the bare JSON integer 1 (1)
+PASS gym fixture seed has complete rows, foreign keys and in-range hours ({user=4, program=3, check_in=10, access_token=***REDACTED***
+PASS I01 alice (expected=201 actual=201)
+PASS I01 alice returns the one newly inserted numeric id (id=310; inserted=1)
+PASS I01 alice stores the token's member, the input and the request time (Row[cells={id=310, member_id=1, program_id=10, hours=1.50, checked_in_at=2026-10-31T06:22:05.434709Z}]; request=2026-10-31T06:22:05.431157724Z..2026-10-31T06:22:05.438043513Z)
+PASS I01 alice has only the allowed full-database delta (exact allowed delta)
+PASS I01 alice matches all JSON fields and JDBC values ({"id":310,"member":1,"program":10,"hours":1.50,"checkedInAt":"2026-10-31T06:22:05.434709007Z"})
+PASS I01 bob (expected=201 actual=201)
+PASS I01 bob returns the one newly inserted numeric id (id=311; inserted=1)
+PASS I01 bob stores the token's member, the input and the request time (Row[cells={id=311, member_id=2, program_id=11, hours=2.25, checked_in_at=2026-10-31T06:22:05.444415Z}]; request=2026-10-31T06:22:05.441100999Z..2026-10-31T06:22:05.447728162Z)
+PASS I01 bob has only the allowed full-database delta (exact allowed delta)
+PASS I01 bob matches all JSON fields and JDBC values ({"id":311,"member":2,"program":11,"hours":2.25,"checkedInAt":"2026-10-31T06:22:05.444415247Z"})
+PASS I01 dave (expected=201 actual=201)
+PASS I01 dave returns the one newly inserted numeric id (id=312; inserted=1)
+PASS I01 dave stores the token's member, the input and the request time (Row[cells={id=312, member_id=4, program_id=12, hours=0.25, checked_in_at=2026-10-31T06:22:05.454889Z}]; request=2026-10-31T06:22:05.451095509Z..2026-10-31T06:22:05.458981694Z)
+PASS I01 dave has only the allowed full-database delta (exact allowed delta)
+PASS I01 dave matches all JSON fields and JDBC values ({"id":312,"member":4,"program":12,"hours":0.25,"checkedInAt":"2026-10-31T06:22:05.454888558Z"})
+PASS I01 user 1 2025-12 visits changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 1 2025-12 visits (expected=200 actual=200)
+PASS I01 user 1 2025-12 visits is the bare JSON integer 1 (1)
+PASS I01 user 1 2025-12 hours changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 1 2025-12 hours (expected=200 actual=200)
+PASS I01 user 1 2025-12 hours is the bare JSON number 3.00 (3.00)
+PASS I01 user 1 2025-12 average changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 1 2025-12 average (expected=200 actual=200)
+PASS I01 user 1 2025-12 average is the bare JSON number 3.00 (3.00)
+PASS I01 user 1 2026-01 visits changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 1 2026-01 visits (expected=200 actual=200)
+PASS I01 user 1 2026-01 visits is the bare JSON integer 3 (3)
+PASS I01 user 1 2026-01 hours changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 1 2026-01 hours (expected=200 actual=200)
+PASS I01 user 1 2026-01 hours is the bare JSON number 3.25 (3.25)
+PASS I01 user 1 2026-01 average changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 1 2026-01 average (expected=200 actual=200)
+PASS I01 user 1 2026-01 average is the bare JSON number 1.08 (1.08)
+PASS I01 user 1 2026-02 visits changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 1 2026-02 visits (expected=200 actual=200)
+PASS I01 user 1 2026-02 visits is the bare JSON integer 3 (3)
+PASS I01 user 1 2026-02 hours changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 1 2026-02 hours (expected=200 actual=200)
+PASS I01 user 1 2026-02 hours is the bare JSON number 4.25 (4.25)
+PASS I01 user 1 2026-02 average changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 1 2026-02 average (expected=200 actual=200)
+PASS I01 user 1 2026-02 average is the bare JSON number 1.42 (1.42)
+PASS I01 user 1 2026-03 visits changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 1 2026-03 visits (expected=200 actual=200)
+PASS I01 user 1 2026-03 visits is the bare JSON integer 1 (1)
+PASS I01 user 1 2026-03 hours changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 1 2026-03 hours (expected=200 actual=200)
+PASS I01 user 1 2026-03 hours is the bare JSON number 1.25 (1.25)
+PASS I01 user 1 2026-03 average changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 1 2026-03 average (expected=200 actual=200)
+PASS I01 user 1 2026-03 average is the bare JSON number 1.25 (1.25)
+PASS I01 user 1 2026-04 visits changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 1 2026-04 visits (expected=200 actual=200)
+PASS I01 user 1 2026-04 visits is the bare JSON integer 0 (0)
+PASS I01 user 1 2026-04 hours changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 1 2026-04 hours (expected=200 actual=200)
+PASS I01 user 1 2026-04 hours is the bare JSON number 0 (0.00)
+PASS I01 user 1 2026-04 average changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 1 2026-04 average (expected=200 actual=200)
+PASS I01 user 1 2026-04 average is the bare JSON number 0 (0.00)
+PASS I01 user 1 2026-10 visits changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 1 2026-10 visits (expected=200 actual=200)
+PASS I01 user 1 2026-10 visits is the bare JSON integer 1 (1)
+PASS I01 user 1 2026-10 hours changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 1 2026-10 hours (expected=200 actual=200)
+PASS I01 user 1 2026-10 hours is the bare JSON number 1.50 (1.50)
+PASS I01 user 1 2026-10 average changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 1 2026-10 average (expected=200 actual=200)
+PASS I01 user 1 2026-10 average is the bare JSON number 1.50 (1.50)
+PASS I01 user 2 2025-12 visits changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 2 2025-12 visits (expected=200 actual=200)
+PASS I01 user 2 2025-12 visits is the bare JSON integer 0 (0)
+PASS I01 user 2 2025-12 hours changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 2 2025-12 hours (expected=200 actual=200)
+PASS I01 user 2 2025-12 hours is the bare JSON number 0 (0.00)
+PASS I01 user 2 2025-12 average changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 2 2025-12 average (expected=200 actual=200)
+PASS I01 user 2 2025-12 average is the bare JSON number 0 (0.00)
+PASS I01 user 2 2026-01 visits changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 2 2026-01 visits (expected=200 actual=200)
+PASS I01 user 2 2026-01 visits is the bare JSON integer 0 (0)
+PASS I01 user 2 2026-01 hours changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 2 2026-01 hours (expected=200 actual=200)
+PASS I01 user 2 2026-01 hours is the bare JSON number 0 (0.00)
+PASS I01 user 2 2026-01 average changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 2 2026-01 average (expected=200 actual=200)
+PASS I01 user 2 2026-01 average is the bare JSON number 0 (0.00)
+PASS I01 user 2 2026-02 visits changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 2 2026-02 visits (expected=200 actual=200)
+PASS I01 user 2 2026-02 visits is the bare JSON integer 2 (2)
+PASS I01 user 2 2026-02 hours changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 2 2026-02 hours (expected=200 actual=200)
+PASS I01 user 2 2026-02 hours is the bare JSON number 2.01 (2.01)
+PASS I01 user 2 2026-02 average changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 2 2026-02 average (expected=200 actual=200)
+PASS I01 user 2 2026-02 average is the bare JSON number 1.01 (1.01)
+PASS I01 user 2 2026-03 visits changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 2 2026-03 visits (expected=200 actual=200)
+PASS I01 user 2 2026-03 visits is the bare JSON integer 0 (0)
+PASS I01 user 2 2026-03 hours changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 2 2026-03 hours (expected=200 actual=200)
+PASS I01 user 2 2026-03 hours is the bare JSON number 0 (0.00)
+PASS I01 user 2 2026-03 average changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 2 2026-03 average (expected=200 actual=200)
+PASS I01 user 2 2026-03 average is the bare JSON number 0 (0.00)
+PASS I01 user 2 2026-04 visits changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 2 2026-04 visits (expected=200 actual=200)
+PASS I01 user 2 2026-04 visits is the bare JSON integer 0 (0)
+PASS I01 user 2 2026-04 hours changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 2 2026-04 hours (expected=200 actual=200)
+PASS I01 user 2 2026-04 hours is the bare JSON number 0 (0.00)
+PASS I01 user 2 2026-04 average changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 2 2026-04 average (expected=200 actual=200)
+PASS I01 user 2 2026-04 average is the bare JSON number 0 (0.00)
+PASS I01 user 2 2026-10 visits changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 2 2026-10 visits (expected=200 actual=200)
+PASS I01 user 2 2026-10 visits is the bare JSON integer 1 (1)
+PASS I01 user 2 2026-10 hours changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 2 2026-10 hours (expected=200 actual=200)
+PASS I01 user 2 2026-10 hours is the bare JSON number 2.25 (2.25)
+PASS I01 user 2 2026-10 average changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 2 2026-10 average (expected=200 actual=200)
+PASS I01 user 2 2026-10 average is the bare JSON number 2.25 (2.25)
+PASS I01 user 3 2025-12 visits changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 3 2025-12 visits (expected=200 actual=200)
+PASS I01 user 3 2025-12 visits is the bare JSON integer 0 (0)
+PASS I01 user 3 2025-12 hours changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 3 2025-12 hours (expected=200 actual=200)
+PASS I01 user 3 2025-12 hours is the bare JSON number 0 (0.00)
+PASS I01 user 3 2025-12 average changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 3 2025-12 average (expected=200 actual=200)
+PASS I01 user 3 2025-12 average is the bare JSON number 0 (0.00)
+PASS I01 user 3 2026-01 visits changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 3 2026-01 visits (expected=200 actual=200)
+PASS I01 user 3 2026-01 visits is the bare JSON integer 0 (0)
+PASS I01 user 3 2026-01 hours changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 3 2026-01 hours (expected=200 actual=200)
+PASS I01 user 3 2026-01 hours is the bare JSON number 0 (0.00)
+PASS I01 user 3 2026-01 average changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 3 2026-01 average (expected=200 actual=200)
+PASS I01 user 3 2026-01 average is the bare JSON number 0 (0.00)
+PASS I01 user 3 2026-02 visits changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 3 2026-02 visits (expected=200 actual=200)
+PASS I01 user 3 2026-02 visits is the bare JSON integer 0 (0)
+PASS I01 user 3 2026-02 hours changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 3 2026-02 hours (expected=200 actual=200)
+PASS I01 user 3 2026-02 hours is the bare JSON number 0 (0.00)
+PASS I01 user 3 2026-02 average changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 3 2026-02 average (expected=200 actual=200)
+PASS I01 user 3 2026-02 average is the bare JSON number 0 (0.00)
+PASS I01 user 3 2026-03 visits changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 3 2026-03 visits (expected=200 actual=200)
+PASS I01 user 3 2026-03 visits is the bare JSON integer 0 (0)
+PASS I01 user 3 2026-03 hours changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 3 2026-03 hours (expected=200 actual=200)
+PASS I01 user 3 2026-03 hours is the bare JSON number 0 (0.00)
+PASS I01 user 3 2026-03 average changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 3 2026-03 average (expected=200 actual=200)
+PASS I01 user 3 2026-03 average is the bare JSON number 0 (0.00)
+PASS I01 user 3 2026-04 visits changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 3 2026-04 visits (expected=200 actual=200)
+PASS I01 user 3 2026-04 visits is the bare JSON integer 0 (0)
+PASS I01 user 3 2026-04 hours changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 3 2026-04 hours (expected=200 actual=200)
+PASS I01 user 3 2026-04 hours is the bare JSON number 0 (0.00)
+PASS I01 user 3 2026-04 average changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 3 2026-04 average (expected=200 actual=200)
+PASS I01 user 3 2026-04 average is the bare JSON number 0 (0.00)
+PASS I01 user 3 2026-10 visits changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 3 2026-10 visits (expected=200 actual=200)
+PASS I01 user 3 2026-10 visits is the bare JSON integer 0 (0)
+PASS I01 user 3 2026-10 hours changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 3 2026-10 hours (expected=200 actual=200)
+PASS I01 user 3 2026-10 hours is the bare JSON number 0 (0.00)
+PASS I01 user 3 2026-10 average changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 3 2026-10 average (expected=200 actual=200)
+PASS I01 user 3 2026-10 average is the bare JSON number 0 (0.00)
+PASS I01 user 4 2025-12 visits changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 4 2025-12 visits (expected=200 actual=200)
+PASS I01 user 4 2025-12 visits is the bare JSON integer 0 (0)
+PASS I01 user 4 2025-12 hours changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 4 2025-12 hours (expected=200 actual=200)
+PASS I01 user 4 2025-12 hours is the bare JSON number 0 (0.00)
+PASS I01 user 4 2025-12 average changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 4 2025-12 average (expected=200 actual=200)
+PASS I01 user 4 2025-12 average is the bare JSON number 0 (0.00)
+PASS I01 user 4 2026-01 visits changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 4 2026-01 visits (expected=200 actual=200)
+PASS I01 user 4 2026-01 visits is the bare JSON integer 0 (0)
+PASS I01 user 4 2026-01 hours changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 4 2026-01 hours (expected=200 actual=200)
+PASS I01 user 4 2026-01 hours is the bare JSON number 0 (0.00)
+PASS I01 user 4 2026-01 average changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 4 2026-01 average (expected=200 actual=200)
+PASS I01 user 4 2026-01 average is the bare JSON number 0 (0.00)
+PASS I01 user 4 2026-02 visits changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 4 2026-02 visits (expected=200 actual=200)
+PASS I01 user 4 2026-02 visits is the bare JSON integer 0 (0)
+PASS I01 user 4 2026-02 hours changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 4 2026-02 hours (expected=200 actual=200)
+PASS I01 user 4 2026-02 hours is the bare JSON number 0 (0.00)
+PASS I01 user 4 2026-02 average changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 4 2026-02 average (expected=200 actual=200)
+PASS I01 user 4 2026-02 average is the bare JSON number 0 (0.00)
+PASS I01 user 4 2026-03 visits changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 4 2026-03 visits (expected=200 actual=200)
+PASS I01 user 4 2026-03 visits is the bare JSON integer 0 (0)
+PASS I01 user 4 2026-03 hours changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 4 2026-03 hours (expected=200 actual=200)
+PASS I01 user 4 2026-03 hours is the bare JSON number 0 (0.00)
+PASS I01 user 4 2026-03 average changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 4 2026-03 average (expected=200 actual=200)
+PASS I01 user 4 2026-03 average is the bare JSON number 0 (0.00)
+PASS I01 user 4 2026-04 visits changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 4 2026-04 visits (expected=200 actual=200)
+PASS I01 user 4 2026-04 visits is the bare JSON integer 0 (0)
+PASS I01 user 4 2026-04 hours changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 4 2026-04 hours (expected=200 actual=200)
+PASS I01 user 4 2026-04 hours is the bare JSON number 0 (0.00)
+PASS I01 user 4 2026-04 average changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 4 2026-04 average (expected=200 actual=200)
+PASS I01 user 4 2026-04 average is the bare JSON number 0 (0.00)
+PASS I01 user 4 2026-10 visits changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 4 2026-10 visits (expected=200 actual=200)
+PASS I01 user 4 2026-10 visits is the bare JSON integer 1 (1)
+PASS I01 user 4 2026-10 hours changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 4 2026-10 hours (expected=200 actual=200)
+PASS I01 user 4 2026-10 hours is the bare JSON number 0.25 (0.25)
+PASS I01 user 4 2026-10 average changes no business row in any of four tables (all four tables unchanged)
+PASS I01 user 4 2026-10 average (expected=200 actual=200)
+PASS I01 user 4 2026-10 average is the bare JSON number 0.25 (0.25)
+PASS I01 coach all programs 2025-12 changes no business row in any of four tables (all four tables unchanged)
+PASS I01 coach all programs 2025-12 (expected=200 actual=200)
+PASS I01 coach all programs 2025-12 is the bare JSON integer 1 (1)
+PASS I01 coach program 10 2025-12 changes no business row in any of four tables (all four tables unchanged)
+PASS I01 coach program 10 2025-12 (expected=200 actual=200)
+PASS I01 coach program 10 2025-12 is the bare JSON integer 1 (1)
+PASS I01 coach program 11 2025-12 changes no business row in any of four tables (all four tables unchanged)
+PASS I01 coach program 11 2025-12 (expected=200 actual=200)
+PASS I01 coach program 11 2025-12 is the bare JSON integer 0 (0)
+PASS I01 coach program 12 2025-12 changes no business row in any of four tables (all four tables unchanged)
+PASS I01 coach program 12 2025-12 (expected=200 actual=200)
+PASS I01 coach program 12 2025-12 is the bare JSON integer 0 (0)
+PASS I01 coach all programs 2026-01 changes no business row in any of four tables (all four tables unchanged)
+PASS I01 coach all programs 2026-01 (expected=200 actual=200)
+PASS I01 coach all programs 2026-01 is the bare JSON integer 3 (3)
+PASS I01 coach program 10 2026-01 changes no business row in any of four tables (all four tables unchanged)
+PASS I01 coach program 10 2026-01 (expected=200 actual=200)
+PASS I01 coach program 10 2026-01 is the bare JSON integer 1 (1)
+PASS I01 coach program 11 2026-01 changes no business row in any of four tables (all four tables unchanged)
+PASS I01 coach program 11 2026-01 (expected=200 actual=200)
+PASS I01 coach program 11 2026-01 is the bare JSON integer 2 (2)
+PASS I01 coach program 12 2026-01 changes no business row in any of four tables (all four tables unchanged)
+PASS I01 coach program 12 2026-01 (expected=200 actual=200)
+PASS I01 coach program 12 2026-01 is the bare JSON integer 0 (0)
+PASS I01 coach all programs 2026-02 changes no business row in any of four tables (all four tables unchanged)
+PASS I01 coach all programs 2026-02 (expected=200 actual=200)
+PASS I01 coach all programs 2026-02 is the bare JSON integer 5 (5)
+PASS I01 coach program 10 2026-02 changes no business row in any of four tables (all four tables unchanged)
+PASS I01 coach program 10 2026-02 (expected=200 actual=200)
+PASS I01 coach program 10 2026-02 is the bare JSON integer 3 (3)
+PASS I01 coach program 11 2026-02 changes no business row in any of four tables (all four tables unchanged)
+PASS I01 coach program 11 2026-02 (expected=200 actual=200)
+PASS I01 coach program 11 2026-02 is the bare JSON integer 2 (2)
+PASS I01 coach program 12 2026-02 changes no business row in any of four tables (all four tables unchanged)
+PASS I01 coach program 12 2026-02 (expected=200 actual=200)
+PASS I01 coach program 12 2026-02 is the bare JSON integer 0 (0)
+PASS I01 coach all programs 2026-03 changes no business row in any of four tables (all four tables unchanged)
+PASS I01 coach all programs 2026-03 (expected=200 actual=200)
+PASS I01 coach all programs 2026-03 is the bare JSON integer 1 (1)
+PASS I01 coach program 10 2026-03 changes no business row in any of four tables (all four tables unchanged)
+PASS I01 coach program 10 2026-03 (expected=200 actual=200)
+PASS I01 coach program 10 2026-03 is the bare JSON integer 1 (1)
+PASS I01 coach program 11 2026-03 changes no business row in any of four tables (all four tables unchanged)
+PASS I01 coach program 11 2026-03 (expected=200 actual=200)
+PASS I01 coach program 11 2026-03 is the bare JSON integer 0 (0)
+PASS I01 coach program 12 2026-03 changes no business row in any of four tables (all four tables unchanged)
+PASS I01 coach program 12 2026-03 (expected=200 actual=200)
+PASS I01 coach program 12 2026-03 is the bare JSON integer 0 (0)
+PASS I01 coach all programs 2026-04 changes no business row in any of four tables (all four tables unchanged)
+PASS I01 coach all programs 2026-04 (expected=200 actual=200)
+PASS I01 coach all programs 2026-04 is the bare JSON integer 0 (0)
+PASS I01 coach program 10 2026-04 changes no business row in any of four tables (all four tables unchanged)
+PASS I01 coach program 10 2026-04 (expected=200 actual=200)
+PASS I01 coach program 10 2026-04 is the bare JSON integer 0 (0)
+PASS I01 coach program 11 2026-04 changes no business row in any of four tables (all four tables unchanged)
+PASS I01 coach program 11 2026-04 (expected=200 actual=200)
+PASS I01 coach program 11 2026-04 is the bare JSON integer 0 (0)
+PASS I01 coach program 12 2026-04 changes no business row in any of four tables (all four tables unchanged)
+PASS I01 coach program 12 2026-04 (expected=200 actual=200)
+PASS I01 coach program 12 2026-04 is the bare JSON integer 0 (0)
+PASS I01 coach all programs 2026-10 changes no business row in any of four tables (all four tables unchanged)
+PASS I01 coach all programs 2026-10 (expected=200 actual=200)
+PASS I01 coach all programs 2026-10 is the bare JSON integer 3 (3)
+PASS I01 coach program 10 2026-10 changes no business row in any of four tables (all four tables unchanged)
+PASS I01 coach program 10 2026-10 (expected=200 actual=200)
+PASS I01 coach program 10 2026-10 is the bare JSON integer 1 (1)
+PASS I01 coach program 11 2026-10 changes no business row in any of four tables (all four tables unchanged)
+PASS I01 coach program 11 2026-10 (expected=200 actual=200)
+PASS I01 coach program 11 2026-10 is the bare JSON integer 1 (1)
+PASS I01 coach program 12 2026-10 changes no business row in any of four tables (all four tables unchanged)
+PASS I01 coach program 12 2026-10 (expected=200 actual=200)
+PASS I01 coach program 12 2026-10 is the bare JSON integer 1 (1)
+PASS the generated application process exited (stopped=true)
+PASS the owned schema was dropped and its absence proved (schema=kcg_conf_run)
+PASS the advisory lock for the owned schema was released (released=true)
+FAIL Q07 visits month omitted has the exact declared error envelope ({"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"month","code":"NotBlank","message":"must not be blank"}]})
+FAIL Q07 visits month empty has the exact declared error envelope ({"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"month","code":"NotBlank","message":"must not be blank"}]})
+FAIL Q07 /api/my/month/hours omitted has the exact declared error envelope ({"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"month","code":"NotBlank","message":"must not be blank"}]})
+FAIL Q07 /api/my/month/average omitted has the exact declared error envelope ({"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"month","code":"NotBlank","message":"must not be blank"}]})
+FAIL Q07 coach visits month omitted has the exact declared error envelope ({"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"month","code":"NotBlank","message":"must not be blank"}]})
+
+B01 anonymous readiness: status=200 body={"total":3,"page":1,"size":10,"records":[{"id":10,"name":"spin"},{"id":12,"name":"swim"},{"id":11,"name":"yoga"}]}
+B02 defaults: status=200 body={"total":3,"page":1,"size":20,"records":[{"id":10,"name":"spin"},{"id":12,"name":"swim"},{"id":11,"name":"yoga"}]}
+B02 page default alone: status=200 body={"total":3,"page":1,"size":2,"records":[{"id":10,"name":"spin"},{"id":12,"name":"swim"}]}
+B02 size default alone: status=200 body={"total":3,"page":2,"size":20,"records":[]}
+B02 second page: status=200 body={"total":3,"page":2,"size":2,"records":[{"id":11,"name":"yoga"}]}
+B02 past last page: status=200 body={"total":3,"page":3,"size":2,"records":[]}
+B02 inclusive upper bounds: status=200 body={"total":3,"page":10000,"size":100,"records":[]}
+B03 rejected page 0 on /api/programs?: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+B03 rejected page -1 on /api/programs?: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+B03 rejected page 10001 on /api/programs?: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+B03 rejected size 0 on /api/programs?: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+B03 rejected size -1 on /api/programs?: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+B03 rejected size 101 on /api/programs?: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+B04 /api/check-ins invalid identity 0: status=401 body=
+B04 /api/check-ins invalid identity 1: status=401 body=
+B04 /api/check-ins invalid identity 2: status=401 body=
+B04 /api/check-ins invalid identity 3: status=401 body=
+B04 /api/my/month/visits?month=2026-01 invalid identity 0: status=401 body=
+B04 /api/my/month/visits?month=2026-01 invalid identity 1: status=401 body=
+B04 /api/my/month/visits?month=2026-01 invalid identity 2: status=401 body=
+B04 /api/my/month/visits?month=2026-01 invalid identity 3: status=401 body=
+B04 /api/my/month/hours?month=2026-01 invalid identity 0: status=401 body=
+B04 /api/my/month/hours?month=2026-01 invalid identity 1: status=401 body=
+B04 /api/my/month/hours?month=2026-01 invalid identity 2: status=401 body=
+B04 /api/my/month/hours?month=2026-01 invalid identity 3: status=401 body=
+B04 /api/my/month/average?month=2026-01 invalid identity 0: status=401 body=
+B04 /api/my/month/average?month=2026-01 invalid identity 1: status=401 body=
+B04 /api/my/month/average?month=2026-01 invalid identity 2: status=401 body=
+B04 /api/my/month/average?month=2026-01 invalid identity 3: status=401 body=
+B04 /api/coach/check-ins?page=1&size=10 invalid identity 0: status=401 body=
+B04 /api/coach/check-ins?page=1&size=10 invalid identity 1: status=401 body=
+B04 /api/coach/check-ins?page=1&size=10 invalid identity 2: status=401 body=
+B04 /api/coach/check-ins?page=1&size=10 invalid identity 3: status=401 body=
+B04 /api/coach/month/visits?month=2026-01 invalid identity 0: status=401 body=
+B04 /api/coach/month/visits?month=2026-01 invalid identity 1: status=401 body=
+B04 /api/coach/month/visits?month=2026-01 invalid identity 2: status=401 body=
+B04 /api/coach/month/visits?month=2026-01 invalid identity 3: status=401 body=
+W01 member logs: status=201 body={"id":303,"member":1,"program":10,"hours":1.50,"checkedInAt":"2026-10-31T06:22:03.814143902Z"}
+W02 identity comes from the token, lower bound: status=201 body={"id":304,"member":2,"program":11,"hours":0.25,"checkedInAt":"2026-10-31T06:22:03.869507538Z"}
+W03 upper bound, coach may log: status=201 body={"id":305,"member":4,"program":12,"hours":12,"checkedInAt":"2026-10-31T06:22:03.894852988Z"}
+W03 equal-valued spelling: status=201 body={"id":306,"member":3,"program":10,"hours":1.2500,"checkedInAt":"2026-10-31T06:22:03.916828285Z"}
+W04 hours omitted: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"hours","code":"NotNull","message":"must not be null"}]}
+W04 hours null: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"hours","code":"NotNull","message":"must not be null"}]}
+W04 hours 0.24: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"hours","code":"DecimalMin","message":"must be greater than or equal to 0.25"}]}
+W04 hours 12.01: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"hours","code":"DecimalMax","message":"must be less than or equal to 12"}]}
+W04 hours 0: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"hours","code":"DecimalMin","message":"must be greater than or equal to 0.25"}]}
+W04 hours -1: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"hours","code":"DecimalMin","message":"must be greater than or equal to 0.25"}]}
+W04 hours 1.234: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"hours","code":"ExactDecimal","message":"must be exactly representable at the declared precision and scale"}]}
+W04 hours 100: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"hours","code":"DecimalMax","message":"must be less than or equal to 12"},{"path":"hours","code":"ExactDecimal","message":"must be exactly representable at the declared precision and scale"}]}
+W05 programId omitted: status=400 body={"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"programId","code":"NotNull","message":"must not be null"}]}
+W05 programId null: status=400 body={"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"programId","code":"NotNull","message":"must not be null"}]}
+W05 unknown program: status=404 body={"code":"ProgramNotFound","message":"ProgramNotFound","fields":[]}
+W06 forged member: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"member","code":"INVALID_REQUEST","message":"must be a well-formed value"}]}
+Q 1/2025-12 visits: status=200 body=1
+Q 1/2025-12 hours: status=200 body=3.00
+Q 1/2025-12 average: status=200 body=3.00
+Q 1/2026-01 visits: status=200 body=3
+Q 1/2026-01 hours: status=200 body=3.25
+Q 1/2026-01 average: status=200 body=1.08
+Q 1/2026-02 visits: status=200 body=3
+Q 1/2026-02 hours: status=200 body=4.25
+Q 1/2026-02 average: status=200 body=1.42
+Q 1/2026-03 visits: status=200 body=1
+Q 1/2026-03 hours: status=200 body=1.25
+Q 1/2026-03 average: status=200 body=1.25
+Q 1/2026-04 visits: status=200 body=0
+Q 1/2026-04 hours: status=200 body=0.00
+Q 1/2026-04 average: status=200 body=0.00
+Q 2/2026-02 visits: status=200 body=2
+Q 2/2026-02 hours: status=200 body=2.01
+Q 2/2026-02 average: status=200 body=1.01
+Q 2/2026-01 visits: status=200 body=0
+Q 2/2026-01 hours: status=200 body=0.00
+Q 2/2026-01 average: status=200 body=0.00
+Q 3/2026-02 visits: status=200 body=0
+Q 3/2026-02 hours: status=200 body=0.00
+Q 3/2026-02 average: status=200 body=0.00
+Q 4/2026-02 visits: status=200 body=0
+Q 4/2026-02 hours: status=200 body=0.00
+Q 4/2026-02 average: status=200 body=0.00
+Q06 forged member visits: status=200 body=0
+Q06 forged member hours: status=200 body=0.00
+Q06 forged member average: status=200 body=0.00
+Q07 visits month 2026-1: status=400 body={"code":"BadPeriod","message":"BadPeriod","fields":[]}
+Q07 visits month 2026-13: status=400 body={"code":"BadPeriod","message":"BadPeriod","fields":[]}
+Q07 visits month 2026-00: status=400 body={"code":"BadPeriod","message":"BadPeriod","fields":[]}
+Q07 visits month 2026-02-01: status=400 body={"code":"BadPeriod","message":"BadPeriod","fields":[]}
+Q07 visits month abcd-ef: status=400 body={"code":"BadPeriod","message":"BadPeriod","fields":[]}
+Q07 visits month 0000-01: status=400 body={"code":"BadPeriod","message":"BadPeriod","fields":[]}
+Q07 visits month 0999-12: status=400 body={"code":"BadPeriod","message":"BadPeriod","fields":[]}
+Q07 visits month 1000-01: status=400 body={"code":"BadPeriod","message":"BadPeriod","fields":[]}
+Q07 largest representable month is valid: status=200 body=0
+Q07 visits month omitted: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"month","code":"NotBlank","message":"must not be blank"}]}
+Q07 visits month empty: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"month","code":"NotBlank","message":"must not be blank"}]}
+Q07 /api/my/month/hours omitted: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"month","code":"NotBlank","message":"must not be blank"}]}
+Q07 /api/my/month/hours month 13: status=400 body={"code":"BadPeriod","message":"BadPeriod","fields":[]}
+Q07 /api/my/month/average omitted: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"month","code":"NotBlank","message":"must not be blank"}]}
+Q07 /api/my/month/average month 13: status=400 body={"code":"BadPeriod","message":"BadPeriod","fields":[]}
+Q07 coach visits month omitted: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"month","code":"NotBlank","message":"must not be blank"}]}
+Q07 coach visits month 13: status=400 body={"code":"BadPeriod","message":"BadPeriod","fields":[]}
+Q08 first workout: status=201 body={"id":307,"member":1,"program":10,"hours":1.50,"checkedInAt":"2026-10-31T06:22:04.779275311Z"}
+Q08 second workout: status=201 body={"id":308,"member":1,"program":11,"hours":2.25,"checkedInAt":"2026-10-31T06:22:04.807202498Z"}
+Q08 current month 2026-10 visits: status=200 body=2
+Q08 current month 2026-10 hours: status=200 body=3.75
+Q08 current month 2026-10 average: status=200 body=1.88
+Q08 seeded February is untouched visits: status=200 body=3
+Q08 seeded February is untouched hours: status=200 body=4.25
+Q08 seeded February is untouched average: status=200 body=1.42
+K01 member 1 /api/coach/check-ins?page=1&size=10: status=403 body={"code":"Forbidden","message":"Forbidden","fields":[]}
+K01 member 1 /api/coach/month/visits?month=2026-02: status=403 body={"code":"Forbidden","message":"Forbidden","fields":[]}
+K01 member 2 /api/coach/check-ins?page=1&size=10: status=403 body={"code":"Forbidden","message":"Forbidden","fields":[]}
+K01 member 2 /api/coach/month/visits?month=2026-02: status=403 body={"code":"Forbidden","message":"Forbidden","fields":[]}
+K02 all rows: status=200 body={"total":10,"page":1,"size":20,"records":[{"id":206,"member":1,"program":10,"hours":1.25,"checkedInAt":"2026-02-28T16:00:00Z"},{"id":205,"member":1,"program":11,"hours":0.75,"checkedInAt":"2026-02-28T15:59:59.999999Z"},{"id":302,"member":2,"program":11,"hours":1.01,"checkedInAt":"2026-02-14T03:00:00Z"},{"id":204,"member":1,"program":10,"hours":2.00,"checkedInAt":"2026-02-14T03:00:00Z"},{"id":301,"member":2,"program":10,"hours":1.00,"checkedInAt":"2026-02-10T02:00:00Z"},{"id":203,"member":1,"program":10,"hours":1.50,"checkedInAt":"2026-01-31T16:30:00Z"},{"id":202,"member":1,"program":11,"hours":1.00,"checkedInAt":"2026-01-20T12:00:00Z"},{"id":201,"member":1,"program":10,"hours":1.25,"checkedInAt":"2026-01-05T02:00:00Z"},{"id":207,"member":1,"program":11,"hours":1.00,"checkedInAt":"2025-12-31T16:00:00Z"},{"id":208,"member":1,"program":10,"hours":3.00,"checkedInAt":"2025-12-31T15:59:59.999999Z"}]}
+K02 size 3 page 1: status=200 body={"total":10,"page":1,"size":3,"records":[{"id":206,"member":1,"program":10,"hours":1.25,"checkedInAt":"2026-02-28T16:00:00Z"},{"id":205,"member":1,"program":11,"hours":0.75,"checkedInAt":"2026-02-28T15:59:59.999999Z"},{"id":302,"member":2,"program":11,"hours":1.01,"checkedInAt":"2026-02-14T03:00:00Z"}]}
+K02 size 3 page 2: status=200 body={"total":10,"page":2,"size":3,"records":[{"id":204,"member":1,"program":10,"hours":2.00,"checkedInAt":"2026-02-14T03:00:00Z"},{"id":301,"member":2,"program":10,"hours":1.00,"checkedInAt":"2026-02-10T02:00:00Z"},{"id":203,"member":1,"program":10,"hours":1.50,"checkedInAt":"2026-01-31T16:30:00Z"}]}
+K02 size 3 page 3: status=200 body={"total":10,"page":3,"size":3,"records":[{"id":202,"member":1,"program":11,"hours":1.00,"checkedInAt":"2026-01-20T12:00:00Z"},{"id":201,"member":1,"program":10,"hours":1.25,"checkedInAt":"2026-01-05T02:00:00Z"},{"id":207,"member":1,"program":11,"hours":1.00,"checkedInAt":"2025-12-31T16:00:00Z"}]}
+K02 size 3 page 4: status=200 body={"total":10,"page":4,"size":3,"records":[{"id":208,"member":1,"program":10,"hours":3.00,"checkedInAt":"2025-12-31T15:59:59.999999Z"}]}
+K02 size 3 page 5: status=200 body={"total":10,"page":5,"size":3,"records":[]}
+K03 member 1: status=200 body={"total":8,"page":1,"size":20,"records":[{"id":206,"member":1,"program":10,"hours":1.25,"checkedInAt":"2026-02-28T16:00:00Z"},{"id":205,"member":1,"program":11,"hours":0.75,"checkedInAt":"2026-02-28T15:59:59.999999Z"},{"id":204,"member":1,"program":10,"hours":2.00,"checkedInAt":"2026-02-14T03:00:00Z"},{"id":203,"member":1,"program":10,"hours":1.50,"checkedInAt":"2026-01-31T16:30:00Z"},{"id":202,"member":1,"program":11,"hours":1.00,"checkedInAt":"2026-01-20T12:00:00Z"},{"id":201,"member":1,"program":10,"hours":1.25,"checkedInAt":"2026-01-05T02:00:00Z"},{"id":207,"member":1,"program":11,"hours":1.00,"checkedInAt":"2025-12-31T16:00:00Z"},{"id":208,"member":1,"program":10,"hours":3.00,"checkedInAt":"2025-12-31T15:59:59.999999Z"}]}
+K03 member 2: status=200 body={"total":2,"page":1,"size":20,"records":[{"id":302,"member":2,"program":11,"hours":1.01,"checkedInAt":"2026-02-14T03:00:00Z"},{"id":301,"member":2,"program":10,"hours":1.00,"checkedInAt":"2026-02-10T02:00:00Z"}]}
+K03 member without rows: status=200 body={"total":0,"page":1,"size":20,"records":[]}
+K03 unknown member is an empty page: status=200 body={"total":0,"page":1,"size":20,"records":[]}
+K03 member 1 second page of two: status=200 body={"total":8,"page":2,"size":2,"records":[{"id":204,"member":1,"program":10,"hours":2.00,"checkedInAt":"2026-02-14T03:00:00Z"},{"id":203,"member":1,"program":10,"hours":1.50,"checkedInAt":"2026-01-31T16:30:00Z"}]}
+K04 program 10: status=200 body={"total":6,"page":1,"size":20,"records":[{"id":206,"member":1,"program":10,"hours":1.25,"checkedInAt":"2026-02-28T16:00:00Z"},{"id":204,"member":1,"program":10,"hours":2.00,"checkedInAt":"2026-02-14T03:00:00Z"},{"id":301,"member":2,"program":10,"hours":1.00,"checkedInAt":"2026-02-10T02:00:00Z"},{"id":203,"member":1,"program":10,"hours":1.50,"checkedInAt":"2026-01-31T16:30:00Z"},{"id":201,"member":1,"program":10,"hours":1.25,"checkedInAt":"2026-01-05T02:00:00Z"},{"id":208,"member":1,"program":10,"hours":3.00,"checkedInAt":"2025-12-31T15:59:59.999999Z"}]}
+K04 program 11: status=200 body={"total":4,"page":1,"size":20,"records":[{"id":205,"member":1,"program":11,"hours":0.75,"checkedInAt":"2026-02-28T15:59:59.999999Z"},{"id":302,"member":2,"program":11,"hours":1.01,"checkedInAt":"2026-02-14T03:00:00Z"},{"id":202,"member":1,"program":11,"hours":1.00,"checkedInAt":"2026-01-20T12:00:00Z"},{"id":207,"member":1,"program":11,"hours":1.00,"checkedInAt":"2025-12-31T16:00:00Z"}]}
+K04 program without rows: status=200 body={"total":0,"page":1,"size":20,"records":[]}
+K04 unknown program is an empty page: status=200 body={"total":0,"page":1,"size":20,"records":[]}
+K05 member 1 and program 11: status=200 body={"total":3,"page":1,"size":20,"records":[{"id":205,"member":1,"program":11,"hours":0.75,"checkedInAt":"2026-02-28T15:59:59.999999Z"},{"id":202,"member":1,"program":11,"hours":1.00,"checkedInAt":"2026-01-20T12:00:00Z"},{"id":207,"member":1,"program":11,"hours":1.00,"checkedInAt":"2025-12-31T16:00:00Z"}]}
+K05 member 2 and program 10: status=200 body={"total":1,"page":1,"size":20,"records":[{"id":301,"member":2,"program":10,"hours":1.00,"checkedInAt":"2026-02-10T02:00:00Z"}]}
+K05 member 2 and program 12: status=200 body={"total":0,"page":1,"size":20,"records":[]}
+K06 rejected page 0 on /api/coach/check-ins?: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+K06 rejected page -1 on /api/coach/check-ins?: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+K06 rejected page 10001 on /api/coach/check-ins?: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+K06 rejected size 0 on /api/coach/check-ins?: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+K06 rejected size -1 on /api/coach/check-ins?: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+K06 rejected size 101 on /api/coach/check-ins?: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+K07 coach visits month=2026-02: status=200 body=5
+K07 coach visits month=2026-02&program=10: status=200 body=3
+K07 coach visits month=2026-02&program=11: status=200 body=2
+K07 coach visits month=2026-02&program=12: status=200 body=0
+K07 coach visits month=2026-02&program=999999: status=200 body=0
+K07 coach visits 2026-01: status=200 body=3
+K07 coach visits 2026-03: status=200 body=1
+K07 coach visits 2025-12: status=200 body=1
+K07 coach visits 2026-04: status=200 body=0
+K08 member logs swim: status=201 body={"id":309,"member":1,"program":12,"hours":1,"checkedInAt":"2026-10-31T06:22:05.392201762Z"}
+K08 coach list starts with the new row: status=200 body={"total":11,"page":1,"size":3,"records":[{"id":309,"member":1,"program":12,"hours":1.00,"checkedInAt":"2026-10-31T06:22:05.392202Z"},{"id":206,"member":1,"program":10,"hours":1.25,"checkedInAt":"2026-02-28T16:00:00Z"},{"id":205,"member":1,"program":11,"hours":0.75,"checkedInAt":"2026-02-28T15:59:59.999999Z"}]}
+K08 coach month count for the new program: status=200 body=1
+I01 alice: status=201 body={"id":310,"member":1,"program":10,"hours":1.50,"checkedInAt":"2026-10-31T06:22:05.434709007Z"}
+I01 bob: status=201 body={"id":311,"member":2,"program":11,"hours":2.25,"checkedInAt":"2026-10-31T06:22:05.444415247Z"}
+I01 dave: status=201 body={"id":312,"member":4,"program":12,"hours":0.25,"checkedInAt":"2026-10-31T06:22:05.454888558Z"}
+I01 user 1 2025-12 visits: status=200 body=1
+I01 user 1 2025-12 hours: status=200 body=3.00
+I01 user 1 2025-12 average: status=200 body=3.00
+I01 user 1 2026-01 visits: status=200 body=3
+I01 user 1 2026-01 hours: status=200 body=3.25
+I01 user 1 2026-01 average: status=200 body=1.08
+I01 user 1 2026-02 visits: status=200 body=3
+I01 user 1 2026-02 hours: status=200 body=4.25
+I01 user 1 2026-02 average: status=200 body=1.42
+I01 user 1 2026-03 visits: status=200 body=1
+I01 user 1 2026-03 hours: status=200 body=1.25
+I01 user 1 2026-03 average: status=200 body=1.25
+I01 user 1 2026-04 visits: status=200 body=0
+I01 user 1 2026-04 hours: status=200 body=0.00
+I01 user 1 2026-04 average: status=200 body=0.00
+I01 user 1 2026-10 visits: status=200 body=1
+I01 user 1 2026-10 hours: status=200 body=1.50
+I01 user 1 2026-10 average: status=200 body=1.50
+I01 user 2 2025-12 visits: status=200 body=0
+I01 user 2 2025-12 hours: status=200 body=0.00
+I01 user 2 2025-12 average: status=200 body=0.00
+I01 user 2 2026-01 visits: status=200 body=0
+I01 user 2 2026-01 hours: status=200 body=0.00
+I01 user 2 2026-01 average: status=200 body=0.00
+I01 user 2 2026-02 visits: status=200 body=2
+I01 user 2 2026-02 hours: status=200 body=2.01
+I01 user 2 2026-02 average: status=200 body=1.01
+I01 user 2 2026-03 visits: status=200 body=0
+I01 user 2 2026-03 hours: status=200 body=0.00
+I01 user 2 2026-03 average: status=200 body=0.00
+I01 user 2 2026-04 visits: status=200 body=0
+I01 user 2 2026-04 hours: status=200 body=0.00
+I01 user 2 2026-04 average: status=200 body=0.00
+I01 user 2 2026-10 visits: status=200 body=1
+I01 user 2 2026-10 hours: status=200 body=2.25
+I01 user 2 2026-10 average: status=200 body=2.25
+I01 user 3 2025-12 visits: status=200 body=0
+I01 user 3 2025-12 hours: status=200 body=0.00
+I01 user 3 2025-12 average: status=200 body=0.00
+I01 user 3 2026-01 visits: status=200 body=0
+I01 user 3 2026-01 hours: status=200 body=0.00
+I01 user 3 2026-01 average: status=200 body=0.00
+I01 user 3 2026-02 visits: status=200 body=0
+I01 user 3 2026-02 hours: status=200 body=0.00
+I01 user 3 2026-02 average: status=200 body=0.00
+I01 user 3 2026-03 visits: status=200 body=0
+I01 user 3 2026-03 hours: status=200 body=0.00
+I01 user 3 2026-03 average: status=200 body=0.00
+I01 user 3 2026-04 visits: status=200 body=0
+I01 user 3 2026-04 hours: status=200 body=0.00
+I01 user 3 2026-04 average: status=200 body=0.00
+I01 user 3 2026-10 visits: status=200 body=0
+I01 user 3 2026-10 hours: status=200 body=0.00
+I01 user 3 2026-10 average: status=200 body=0.00
+I01 user 4 2025-12 visits: status=200 body=0
+I01 user 4 2025-12 hours: status=200 body=0.00
+I01 user 4 2025-12 average: status=200 body=0.00
+I01 user 4 2026-01 visits: status=200 body=0
+I01 user 4 2026-01 hours: status=200 body=0.00
+I01 user 4 2026-01 average: status=200 body=0.00
+I01 user 4 2026-02 visits: status=200 body=0
+I01 user 4 2026-02 hours: status=200 body=0.00
+I01 user 4 2026-02 average: status=200 body=0.00
+I01 user 4 2026-03 visits: status=200 body=0
+I01 user 4 2026-03 hours: status=200 body=0.00
+I01 user 4 2026-03 average: status=200 body=0.00
+I01 user 4 2026-04 visits: status=200 body=0
+I01 user 4 2026-04 hours: status=200 body=0.00
+I01 user 4 2026-04 average: status=200 body=0.00
+I01 user 4 2026-10 visits: status=200 body=1
+I01 user 4 2026-10 hours: status=200 body=0.25
+I01 user 4 2026-10 average: status=200 body=0.25
+I01 coach all programs 2025-12: status=200 body=1
+I01 coach program 10 2025-12: status=200 body=1
+I01 coach program 11 2025-12: status=200 body=0
+I01 coach program 12 2025-12: status=200 body=0
+I01 coach all programs 2026-01: status=200 body=3
+I01 coach program 10 2026-01: status=200 body=1
+I01 coach program 11 2026-01: status=200 body=2
+I01 coach program 12 2026-01: status=200 body=0
+I01 coach all programs 2026-02: status=200 body=5
+I01 coach program 10 2026-02: status=200 body=3
+I01 coach program 11 2026-02: status=200 body=2
+I01 coach program 12 2026-02: status=200 body=0
+I01 coach all programs 2026-03: status=200 body=1
+I01 coach program 10 2026-03: status=200 body=1
+I01 coach program 11 2026-03: status=200 body=0
+I01 coach program 12 2026-03: status=200 body=0
+I01 coach all programs 2026-04: status=200 body=0
+I01 coach program 10 2026-04: status=200 body=0
+I01 coach program 11 2026-04: status=200 body=0
+I01 coach program 12 2026-04: status=200 body=0
+I01 coach all programs 2026-10: status=200 body=3
+I01 coach program 10 2026-10: status=200 body=1
+I01 coach program 11 2026-10: status=200 body=1
+I01 coach program 12 2026-10: status=200 body=1
