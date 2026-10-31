@@ -107,6 +107,8 @@ v2（2026-10-25）补的是首批暴露的两处提示不足：实体成员的�
 
 `sir-0.3-general-v10.md`（2026-10-31）在 v9 上只加一条“按引用筛选”：可选的引用筛选字段写 `Optional<Ref<实体>>`，不能写 `Optional<Id>` 与 Ref 比较，可选 Ref 的 HTTP 字段名不带 `Id`。起因是 fitness 从零题 g11 两份教师答案都写成 `Optional<Id>`（`SIR-TYPE-001`）。依据见 [v10 改动说明](drafts/prompt-v10/changes.md)；旧版本和冻结批次不改，使用时须显式 `prepare --system-prompt experiments/slm/prompts/sir-0.3-general-v10.md`。
 
+`sir-0.3-general-v11.md`（2026-10-31）在 v10 上只补两条：需求要求缺值时报指定错误（如 month 缺少报 BadPeriod）时，把字段声明为 Optional，因为非 Optional 字段缺值在工作流之前就返回 400 INVALID_REQUEST；时间平移 `+ 数量 单位` 的数量只能是整数字面量，变量天数用 `addDays`。起因是 fitness 从零题连续 4 个业务门失败、报修从零题在变量平移处语法失败。本机检查器核对 3 个正例完整生成、1 个反例按预期拒绝；未调用模型。逐项依据见 [v11 改动说明](drafts/prompt-v11/changes.md)。旧版本和冻结批次不改；使用时须显式 `prepare --system-prompt experiments/slm/prompts/sir-0.3-general-v11.md`。
+
 ```bash
 python -m experiments.slm.data prepare --bundle datasets/sir/pilots/dual-token-v2 \
   --system-prompt experiments/slm/prompts/sir-0.3-auth-v2.md
