@@ -1,0 +1,244 @@
+{
+  "accounted_tokens": 28206,
+  "automatic_retries": 0,
+  "budget_tokens": 120000,
+  "collector": {
+    "collector_reference": {
+      "commit": "fdbb83a5d3a38a3bce9c3504f1a7aa54e5a0c4a1",
+      "files": {
+        "archive_index.py": {
+          "path": "experiments/slm/archive_index.py",
+          "sha256": "b133be0206c119012ef9fa85fdd99f82e2177ba432746d76be6b5638d4d90fcc"
+        },
+        "collector_provenance.py": {
+          "path": "experiments/slm/collector_provenance.py",
+          "sha256": "a673e5e6cf3ee01e09c10fbc1fbdbf514e90494c23420445167a039a3b25a4da"
+        },
+        "corpus.py": {
+          "path": "experiments/slm/corpus.py",
+          "sha256": "cc345af9c18948aa5d8ec9bb9faca703ada7ede8b534ac214afe7cf0c8ef43e9"
+        },
+        "data.py": {
+          "path": "experiments/slm/data.py",
+          "sha256": "e8c92ce44440accd5e9cd3a75ac1c45f3838437352dc57595b295710864ebb54"
+        },
+        "dataset_io.py": {
+          "path": "experiments/slm/dataset_io.py",
+          "sha256": "965c01def1f829d989bc17c0118bfc691a54f10f9ac70080efeb5dd50f961e7f"
+        },
+        "gate_archive.py": {
+          "path": "experiments/slm/gate_archive.py",
+          "sha256": "e70d668c7de8b5be66358129839299b781c71106c452b8e7628b9f060d96b80d"
+        },
+        "gate_artifacts.py": {
+          "path": "experiments/slm/gate_artifacts.py",
+          "sha256": "d8d66cc4aeba7acaa6b8d548d42fda90bbe1892d4e984733af78823f25838316"
+        },
+        "git_source.py": {
+          "path": "experiments/slm/git_source.py",
+          "sha256": "4e34796dd094d26e80257f25b9cce0960168b9eb0ac877ac4a45ed7e962db0d7"
+        }
+      },
+      "kind": "native",
+      "schema_version": "sir-collector-reference/1"
+    },
+    "collector_sha256": "66dfb137a02619b145e67be0e9392aae4f42c06b6add6de7c4090a9e18140216"
+  },
+  "execution": {
+    "directory": "C:\\Users\\zdw00\\Desktop\\Software IR\\target\\msf\\p\\datasets\\sir\\research\\2026-10-31\\bounded-g13-repair\\checks\\0d03c6e30d1444f7b96857675953e364",
+    "stdout_sha256": "2fb14cac17e0dfd9cb3db11688986212561753bd65d4e5388dbac07639986ff6"
+  },
+  "extra_repairs": 0,
+  "feedback_prompt": "experiments/slm/prompts/repair-general-v1.md",
+  "known_usage": {
+    "completion_tokens": 3826,
+    "prompt_tokens": 24380,
+    "total_tokens": 28206
+  },
+  "local_postprocess_incident": {
+    "error": "KeyError parent_id on existing_reference row",
+    "paid_calls_repeated": 0,
+    "resolution": "Optional-key selection in separate offline continuation"
+  },
+  "max_output_tokens": 8192,
+  "model_calls": 2,
+  "new_children": 2,
+  "results": [
+    {
+      "gates": {
+        "build": "NOT_RUN",
+        "business": "NOT_RUN",
+        "start": "NOT_RUN",
+        "static": "FAILED"
+      },
+      "id": "maintenance-work-order-change-v1-teacher-3a0cc743ec66",
+      "parent_id": "maintenance-work-order-change-v1-teacher-66485d05ad4a",
+      "source_sha256": "6be72486f3ff282870af2b797d98c9ca2ee80047f1ba9738d4099f3fa9b8b565",
+      "static_result": {
+        "diagnostics": [
+          {
+            "code": "SIR-LEX-001",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "存在 SIR 不允许的字符",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 4772,
+              "endColumn": 39,
+              "endLine": 156,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 4771,
+              "startColumn": 38,
+              "startLine": 156
+            },
+            "stage": "PARSE"
+          },
+          {
+            "code": "SIR-LEX-001",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "存在 SIR 不允许的字符",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 4842,
+              "endColumn": 45,
+              "endLine": 157,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 4841,
+              "startColumn": 44,
+              "startLine": 157
+            },
+            "stage": "PARSE"
+          },
+          {
+            "code": "SIR-LEX-001",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "存在 SIR 不允许的字符",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 4910,
+              "endColumn": 37,
+              "endLine": 158,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 4909,
+              "startColumn": 36,
+              "startLine": 158
+            },
+            "stage": "PARSE"
+          },
+          {
+            "code": "SIR-LEX-001",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "存在 SIR 不允许的字符",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 4976,
+              "endColumn": 43,
+              "endLine": 159,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 4975,
+              "startColumn": 42,
+              "startLine": 159
+            },
+            "stage": "PARSE"
+          }
+        ],
+        "digest": null,
+        "fileCount": 0,
+        "id": "maintenance-work-order-change-v1-teacher-3a0cc743ec66",
+        "ok": false,
+        "sourceSha256": "6be72486f3ff282870af2b797d98c9ca2ee80047f1ba9738d4099f3fa9b8b565",
+        "stage": "PARSE"
+      },
+      "task_id": "maintenance-work-order-change-v1"
+    },
+    {
+      "gates": {
+        "build": "NOT_RUN",
+        "business": "NOT_RUN",
+        "start": "NOT_RUN",
+        "static": "FAILED"
+      },
+      "id": "maintenance-work-order-scratch-v1-teacher-e2bcf34bd576",
+      "parent_id": "maintenance-work-order-scratch-v1-teacher-1b3afbe59ca1",
+      "source_sha256": "9ee70454aa88012120d629a8654939174def4240905d42bc2011f574f83790ca",
+      "static_result": {
+        "diagnostics": [
+          {
+            "code": "SIR-FLOW-003",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "load 引用未声明的 Error: FacilityNotFound",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 4603,
+              "endColumn": 74,
+              "endLine": 171,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 4587,
+              "startColumn": 58,
+              "startLine": 171
+            },
+            "stage": "SEMANTIC"
+          },
+          {
+            "code": "SIR-SYMBOL-002",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "未定义字段: EditWorkOrderInput.expectedVersion",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 5514,
+              "endColumn": 56,
+              "endLine": 195,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 5499,
+              "startColumn": 41,
+              "startLine": 195
+            },
+            "stage": "SEMANTIC"
+          }
+        ],
+        "digest": null,
+        "fileCount": 0,
+        "id": "maintenance-work-order-scratch-v1-teacher-e2bcf34bd576",
+        "ok": false,
+        "sourceSha256": "9ee70454aa88012120d629a8654939174def4240905d42bc2011f574f83790ca",
+        "stage": "SEMANTIC"
+      },
+      "task_id": "maintenance-work-order-scratch-v1"
+    }
+  ],
+  "runtime_gates": "NOT_RUN",
+  "source_commit": "fdbb83a5d3a38a3bce9c3504f1a7aa54e5a0c4a1",
+  "static_failed": 2,
+  "static_passed": 0,
+  "student_data_changed": false,
+  "unknown_usage_calls": 0
+}

@@ -144,3 +144,20 @@ $env:MAVEN_OPTS='-Xmx384m -XX:MaxMetaspaceSize=192m -XX:ActiveProcessorCount=2 -
 | `maintenance-work-order-scratch-p3-v1` | `maintenance-work-order-scratch-p3-g13` | 55 |
 
 冻结明细、输入指纹、逐句等义追溯、原始检查器输入/输出和MANIFEST在[共享证据目录](../../../../datasets/sir/research/2026-10-31/bounded-reference-ci41194982453/README.md)及各批次。工具链450份输入和oracle原字节与受测Git blob一致；scratch base为空，change base不变，两份base仅静态检查通过。未调用模型、未导出训练数据、未改学生v5；本阶段没有提交、推送或重新触发CI。负责人现已确认先提交/普通推送，再按18万tokens保守预算对四道原题各初采1次；每次最大8192输出，不含失败修复，不自动重试。
+
+## 9. 原题初采与静态失败（未修复、未送业务门）
+
+冻结输入/原始CI证据已由 `fdbb83a5` 提交并普通推送。负责人只批准四道原题各初采1次，18万tokens总预算、8192最大输出/次、不含失败修复。报修两次实际deepseek-flash、finish_reason=stop：
+
+| 原题 | teacher后缀 | input/output/total | 静态结果 |
+|---|---|---|---|
+| change-v1 | 66485d05ad4a | 9508/1919/11427 | PARSE失败，156–159行四个问号触发SIR-LEX-001 |
+| scratch-v1 | 1b3afbe59ca1 | 8770/1906/10676 | PARSE失败，243行动态days触发SIR-PARSE-001 |
+
+第一份使用 `.present ? ... : ...`，第二份写 `firstDueAt + index * intervalDays days`；手册已说明PATCH直接绑定和addDays。本轮只登记原始错误，不手改教师、不改题面/手册/工具链，也不推测被PARSE阻断的后续语义结果。原响应、用量、collector引用和同JVM静态输入/输出见[四题初采原件](../../../../datasets/sir/research/2026-10-31/bounded-g13-initial/README.md)。两批追加teacher与checked-initial，原checked.jsonl和失败原件不覆盖；运行门均NOT_RUN。
+
+四题合计42213 tokens，零重试/修复；未用额度不自动授权额外调用。新增合格答案0、学生v5不变，12份变体不采。新增采样/结果记录尚未额外提交或推送；两份报修各一轮反馈及后续业务门需另行确认。
+
+## 10. 一轮静态反馈后封存
+
+负责人另批两份各一轮及提交/推送/候选CI。实际两次28206 tokens；改写子3a0cc743ec66与父源码相同，仍PARSE失败；scratch子e2bcf34bd576修正时间语法后SEMANTIC失败（FacilityNotFound缺fails、patch输入无expectedVersion）。按一轮上限停止，不手改或继续调用，两份不送业务门。原件与checked-r1见[一修记录](../../../../datasets/sir/research/2026-10-31/bounded-g13-repair/README.md)。报修新增合格答案0，运行门NOT_RUN，学生不变。

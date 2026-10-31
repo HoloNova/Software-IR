@@ -317,4 +317,4 @@ S14/C09输出格式由静态门检查，不算业务HTTP断言。构建、readin
 
 **发现 M3（既有未决规则）：**项目状态§7列出“PATCH显式null写非可选目标”待设计；因此removed只提交布尔值，本版不评分removed=null。title=null已有非空白目标规则，P05仍检验（PATCH模板的字段错误码为小写notBlank）。若要统一null错误，另立项，不在规格里虚称已解决。
 
-负责人已确认结构覆盖、M1/M2/M3及dev/test隔离；其中未知用户指派和removed=null的评分排除项保留，不等于相应语言缺口已修复。规格文档此前已单独提交并推送。负责人现已另行授权 DDL/种子/业务IT 和两个 workflow 的接入，落地状态见 [implementation.md](implementation.md)；d31af6af的失败与修复过程保留；随后5fe4c833同SHA CI已通过，当前进入task定义/冻结。参考验收不代表已有教师合格答案，采样、候选判卷、导出与训练均未开始。
+负责人已确认结构覆盖、M1/M2/M3及dev/test隔离；其中未知用户指派和removed=null的评分排除项保留，不等于相应语言缺口已修复。规格文档此前已单独提交并推送。负责人现已另行授权 DDL/种子/业务IT 和两个 workflow 的接入，落地状态见 [implementation.md](implementation.md)；d31af6af的失败与修复过程保留；随后5fe4c833同SHA CI已通过，当前进入task定义/冻结。参考验收不代表教师合格；原题初采已完成，结果见implementation §9，候选业务判卷、导出与训练未开始。

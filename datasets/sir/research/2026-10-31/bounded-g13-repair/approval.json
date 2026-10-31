@@ -1,0 +1,52 @@
+{
+  "approved": "two failed originals, one static feedback each; then static, commit/push, candidate CI and archive",
+  "budget_tokens": 120000,
+  "collector": {
+    "collector_reference": {
+      "commit": "fdbb83a5d3a38a3bce9c3504f1a7aa54e5a0c4a1",
+      "files": {
+        "archive_index.py": {
+          "path": "experiments/slm/archive_index.py",
+          "sha256": "b133be0206c119012ef9fa85fdd99f82e2177ba432746d76be6b5638d4d90fcc"
+        },
+        "collector_provenance.py": {
+          "path": "experiments/slm/collector_provenance.py",
+          "sha256": "a673e5e6cf3ee01e09c10fbc1fbdbf514e90494c23420445167a039a3b25a4da"
+        },
+        "corpus.py": {
+          "path": "experiments/slm/corpus.py",
+          "sha256": "cc345af9c18948aa5d8ec9bb9faca703ada7ede8b534ac214afe7cf0c8ef43e9"
+        },
+        "data.py": {
+          "path": "experiments/slm/data.py",
+          "sha256": "e8c92ce44440accd5e9cd3a75ac1c45f3838437352dc57595b295710864ebb54"
+        },
+        "dataset_io.py": {
+          "path": "experiments/slm/dataset_io.py",
+          "sha256": "965c01def1f829d989bc17c0118bfc691a54f10f9ac70080efeb5dd50f961e7f"
+        },
+        "gate_archive.py": {
+          "path": "experiments/slm/gate_archive.py",
+          "sha256": "e70d668c7de8b5be66358129839299b781c71106c452b8e7628b9f060d96b80d"
+        },
+        "gate_artifacts.py": {
+          "path": "experiments/slm/gate_artifacts.py",
+          "sha256": "d8d66cc4aeba7acaa6b8d548d42fda90bbe1892d4e984733af78823f25838316"
+        },
+        "git_source.py": {
+          "path": "experiments/slm/git_source.py",
+          "sha256": "4e34796dd094d26e80257f25b9cce0960168b9eb0ac877ac4a45ed7e962db0d7"
+        }
+      },
+      "kind": "native",
+      "schema_version": "sir-collector-reference/1"
+    },
+    "collector_sha256": "66dfb137a02619b145e67be0e9392aae4f42c06b6add6de7c4090a9e18140216"
+  },
+  "estimated_reservation_total": 117827,
+  "feedback_prompt": "experiments/slm/prompts/repair-general-v1.md",
+  "feedback_prompt_sha256": "9b3b0094ac9c4999f1eaa660501edbba0125474d6a47bd17a01620b8b89cdd1d",
+  "max_output_tokens": 8192,
+  "retries": 0,
+  "source_commit": "fdbb83a5d3a38a3bce9c3504f1a7aa54e5a0c4a1"
+}

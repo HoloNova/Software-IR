@@ -1,0 +1,260 @@
+{
+  "accounted_tokens_including_unknown_reservations": 42213,
+  "actual_usage_known": {
+    "completion_tokens": 7015,
+    "prompt_tokens": 35198,
+    "total_tokens": 42213
+  },
+  "approved_budget": 180000,
+  "authorized_initial_calls": 4,
+  "automatic_retries": 0,
+  "build_start_business": "NOT_RUN",
+  "business_qualified_answers_added": 0,
+  "collector": {
+    "collector_reference": {
+      "commit": "fdbb83a5d3a38a3bce9c3504f1a7aa54e5a0c4a1",
+      "files": {
+        "archive_index.py": {
+          "path": "experiments/slm/archive_index.py",
+          "sha256": "b133be0206c119012ef9fa85fdd99f82e2177ba432746d76be6b5638d4d90fcc"
+        },
+        "collector_provenance.py": {
+          "path": "experiments/slm/collector_provenance.py",
+          "sha256": "a673e5e6cf3ee01e09c10fbc1fbdbf514e90494c23420445167a039a3b25a4da"
+        },
+        "corpus.py": {
+          "path": "experiments/slm/corpus.py",
+          "sha256": "cc345af9c18948aa5d8ec9bb9faca703ada7ede8b534ac214afe7cf0c8ef43e9"
+        },
+        "data.py": {
+          "path": "experiments/slm/data.py",
+          "sha256": "e8c92ce44440accd5e9cd3a75ac1c45f3838437352dc57595b295710864ebb54"
+        },
+        "dataset_io.py": {
+          "path": "experiments/slm/dataset_io.py",
+          "sha256": "965c01def1f829d989bc17c0118bfc691a54f10f9ac70080efeb5dd50f961e7f"
+        },
+        "gate_archive.py": {
+          "path": "experiments/slm/gate_archive.py",
+          "sha256": "e70d668c7de8b5be66358129839299b781c71106c452b8e7628b9f060d96b80d"
+        },
+        "gate_artifacts.py": {
+          "path": "experiments/slm/gate_artifacts.py",
+          "sha256": "d8d66cc4aeba7acaa6b8d548d42fda90bbe1892d4e984733af78823f25838316"
+        },
+        "git_source.py": {
+          "path": "experiments/slm/git_source.py",
+          "sha256": "4e34796dd094d26e80257f25b9cce0960168b9eb0ac877ac4a45ed7e962db0d7"
+        }
+      },
+      "kind": "native",
+      "schema_version": "sir-collector-reference/1"
+    },
+    "collector_sha256": "66dfb137a02619b145e67be0e9392aae4f42c06b6add6de7c4090a9e18140216"
+  },
+  "execution": {
+    "directory": "C:\\Users\\zdw00\\Desktop\\Software IR\\target\\msf\\p\\datasets\\sir\\research\\2026-10-31\\bounded-g13-initial\\checks\\586b9c781d204e248f8e8b00b710b3c0",
+    "stdout_sha256": "36c4fafcb10e87a21f8840abdf4bb6bfb5af03ccf9906c2246d8eaa560b68fa6"
+  },
+  "feedback_repairs": 0,
+  "max_output_tokens": 8192,
+  "model": "deepseek-flash",
+  "model_calls_attempted": 4,
+  "rejected_or_failed_attempts": 0,
+  "results": [
+    {
+      "gates": {
+        "build": "NOT_RUN",
+        "business": "NOT_RUN",
+        "start": "NOT_RUN",
+        "static": "FAILED"
+      },
+      "id": "maintenance-work-order-change-v1-teacher-66485d05ad4a",
+      "source_sha256": "6be72486f3ff282870af2b797d98c9ca2ee80047f1ba9738d4099f3fa9b8b565",
+      "static_result": {
+        "diagnostics": [
+          {
+            "code": "SIR-LEX-001",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "存在 SIR 不允许的字符",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 4772,
+              "endColumn": 39,
+              "endLine": 156,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 4771,
+              "startColumn": 38,
+              "startLine": 156
+            },
+            "stage": "PARSE"
+          },
+          {
+            "code": "SIR-LEX-001",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "存在 SIR 不允许的字符",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 4842,
+              "endColumn": 45,
+              "endLine": 157,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 4841,
+              "startColumn": 44,
+              "startLine": 157
+            },
+            "stage": "PARSE"
+          },
+          {
+            "code": "SIR-LEX-001",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "存在 SIR 不允许的字符",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 4910,
+              "endColumn": 37,
+              "endLine": 158,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 4909,
+              "startColumn": 36,
+              "startLine": 158
+            },
+            "stage": "PARSE"
+          },
+          {
+            "code": "SIR-LEX-001",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "存在 SIR 不允许的字符",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 4976,
+              "endColumn": 43,
+              "endLine": 159,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 4975,
+              "startColumn": 42,
+              "startLine": 159
+            },
+            "stage": "PARSE"
+          }
+        ],
+        "digest": null,
+        "fileCount": 0,
+        "id": "maintenance-work-order-change-v1-teacher-66485d05ad4a",
+        "ok": false,
+        "sourceSha256": "6be72486f3ff282870af2b797d98c9ca2ee80047f1ba9738d4099f3fa9b8b565",
+        "stage": "PARSE"
+      },
+      "task_id": "maintenance-work-order-change-v1"
+    },
+    {
+      "gates": {
+        "build": "NOT_RUN",
+        "business": "NOT_RUN",
+        "start": "NOT_RUN",
+        "static": "FAILED"
+      },
+      "id": "maintenance-work-order-scratch-v1-teacher-1b3afbe59ca1",
+      "source_sha256": "c00900555bcc7fc89000035745891da8a673139c31e7d57ecfe948dbba9c94f2",
+      "static_result": {
+        "diagnostics": [
+          {
+            "code": "SIR-PARSE-001",
+            "fixes": [],
+            "loweredNodeId": null,
+            "message": "遇到不符合 SIR 语法的内容：days",
+            "related": [],
+            "relativePath": null,
+            "severity": "ERROR",
+            "sourceNodeId": null,
+            "sourceSymbol": null,
+            "span": {
+              "endCodePointOffset": 7299,
+              "endColumn": 70,
+              "endLine": 243,
+              "sourceId": "sample.sir",
+              "startCodePointOffset": 7295,
+              "startColumn": 66,
+              "startLine": 243
+            },
+            "stage": "PARSE"
+          }
+        ],
+        "digest": null,
+        "fileCount": 0,
+        "id": "maintenance-work-order-scratch-v1-teacher-1b3afbe59ca1",
+        "ok": false,
+        "sourceSha256": "c00900555bcc7fc89000035745891da8a673139c31e7d57ecfe948dbba9c94f2",
+        "stage": "PARSE"
+      },
+      "task_id": "maintenance-work-order-scratch-v1"
+    },
+    {
+      "gates": {
+        "build": "NOT_RUN",
+        "business": "NOT_RUN",
+        "start": "NOT_RUN",
+        "static": "PASSED"
+      },
+      "id": "staffing-shift-roster-change-v1-teacher-23ed7f759fcd",
+      "source_sha256": "35ffdf7ddb5d030331fcdeb084147bded3b103d4b03b5613ee97c5acc24b65e0",
+      "static_result": {
+        "diagnostics": [],
+        "digest": "185ed5d90adbbbf494d32fe66fbc7d4e2626bff18f3b158f02fdd98ba6c81a38",
+        "fileCount": 56,
+        "id": "staffing-shift-roster-change-v1-teacher-23ed7f759fcd",
+        "ok": true,
+        "sourceSha256": "35ffdf7ddb5d030331fcdeb084147bded3b103d4b03b5613ee97c5acc24b65e0",
+        "stage": "GENERATION"
+      },
+      "task_id": "staffing-shift-roster-change-v1"
+    },
+    {
+      "gates": {
+        "build": "NOT_RUN",
+        "business": "NOT_RUN",
+        "start": "NOT_RUN",
+        "static": "PASSED"
+      },
+      "id": "staffing-shift-roster-scratch-v1-teacher-2027a6702825",
+      "source_sha256": "d75880276a275146ceb3e69fc4e704006fc50d0d4581a5fb0170632285a64e74",
+      "static_result": {
+        "diagnostics": [],
+        "digest": "16f22022556db08d223bf6ebea67f39d4465eb1a3056c6a12499146224117f2f",
+        "fileCount": 57,
+        "id": "staffing-shift-roster-scratch-v1-teacher-2027a6702825",
+        "ok": true,
+        "sourceSha256": "d75880276a275146ceb3e69fc4e704006fc50d0d4581a5fb0170632285a64e74",
+        "stage": "GENERATION"
+      },
+      "task_id": "staffing-shift-roster-scratch-v1"
+    }
+  ],
+  "source_commit": "fdbb83a5d3a38a3bce9c3504f1a7aa54e5a0c4a1",
+  "static_failed": 2,
+  "static_passed": 2,
+  "student_data_changed": false,
+  "teacher_candidates": 4,
+  "unknown_usage_attempts": 0,
+  "variant_calls": 0
+}

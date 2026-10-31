@@ -100,3 +100,20 @@ lowering 的实体声明、版本元数据、成员绑定、引用主键和 CAS 
 | `staffing-shift-roster-scratch-p3-v1` | `staffing-shift-roster-scratch-p3-g13` | 56 |
 
 冻结明细、输入指纹、逐句等义追溯、原始检查器输入/输出和MANIFEST在[共享证据目录](../../../../datasets/sir/research/2026-10-31/bounded-reference-ci41194982453/README.md)及各批次。工具链450份输入和oracle原字节与受测Git blob一致；scratch base为空，change base不变，两份base仅静态检查通过。未调用模型、未导出训练数据、未改学生v5；本阶段没有提交、推送或重新触发CI。负责人现已确认先提交/普通推送，再按18万tokens保守预算对四道原题各初采1次；每次最大8192输出，不含失败修复，不自动重试。
+
+## 9. 原题初采与静态通过（业务仍NOT_RUN）
+
+冻结输入/原始CI证据已由 `fdbb83a5` 提交并普通推送。按负责人批准的四道原题初采范围，排班两次实际deepseek-flash均finish_reason=stop，无重试：
+
+| 原题 | teacher后缀 | input/output/total | 静态结果 |
+|---|---|---|---|
+| change-v1 | 23ed7f759fcd | 8873/1567/10440 | GENERATION通过，56文件，diagnostics=[] |
+| scratch-v1 | 2027a6702825 | 8047/1623/9670 | GENERATION通过，57文件，diagnostics=[] |
+
+原响应/usage、8份首方collector源码的已提交LF字节引用、本次原CLI输入/输出见[四题初采原件](../../../../datasets/sir/research/2026-10-31/bounded-g13-initial/README.md)。两批各追加一份teacher；checked-initial保留参考行并绑定本次教师新结果，不覆盖原checked或把参考digest移给教师。
+
+四题实际42213 tokens，低于批准的18万保守预算；零反馈修复，12份变体不采，新增合格答案0、学生v5不变。这里的GENERATION不是业务通过：两份教师build/start/business均NOT_RUN，未送业务门；新增采样/结果说明尚未额外提交/推送。报修两份失败各一轮反馈及后续业务门仍需另行授权。
+
+## 10. 两份初采教师准备独立业务验收
+
+负责人已批准初采/一修记录提交普通推送后，将静态通过教师送候选CI。报修两份一修仍失败，因此本轮仅本题change 23ed7f759fcd、scratch 2027a6702825送StaffingShiftRosterBusinessConformanceIT；每份绑定各批checked-initial，不继承参考或另一候选资格。真实run/head_sha、构建/启动/业务/并发与原件由后续archive-gate记录；派发前仍NOT_RUN，不预报通过。原件与阶段范围见[一修/送门记录](../../../../datasets/sir/research/2026-10-31/bounded-g13-repair/README.md)。不export或训练，不扩采变体。

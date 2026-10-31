@@ -255,3 +255,11 @@ python -m experiments.slm.data export \
 原prepare在精确LF快照、v10手册下冻结16个 `pilots/<题号去掉-v1>-g13/`，每批只1份existing_reference，全部由该CI的原CLI完整静态生成通过、无诊断；报修55、排班56文件，两个base仅静态生成47/50文件，未运行base HTTP负例。原样保留16次检查输入/输出、冻结清单与MANIFEST；运行门全NOT_RUN，不移植参考资格。工具链450份输入及39/40项oracle闭包与受测Git blob原字节一致；没有重新编译工具链或启动业务应用。
 
 冻结检查时未提交、推送、触发CI、调用模型、采样、export或变更学生v5。负责人现已确认先提交/普通推送，再对四道原题各初采1次；12份变体不采。每次最大8192输出tokens、零自动重试，四次初采保守总预算18万tokens，实际输入大小与估算方法见 `sampling-plan.json`。失败修复不在本次费用授权内。将来采样/送门须在包含新定义与批次的已提交LF快照操作，不能直接使用Windows CRLF工作区或借参考资格。
+
+### g13 原题初采结果
+
+`fdbb83a5` 已提交并普通推送上述冻结输入/原件，未改变工具链，skip ci。随后按授权对四道原题各初采1次deepseek-flash，实际42213 tokens；两份排班静态GENERATION通过，两份报修PARSE失败（擅写三元表达式、动态days）。[原请求、响应、用量与检查记录](../../datasets/sir/research/2026-10-31/bounded-g13-initial/README.md)及各原题 `checked-initial.jsonl` 尚未额外提交。零自动重试/修复，12份变体不采，未送业务门，各运行门NOT_RUN，学生v5与合格答案数不变；修复费用及送门须另行授权。
+
+### g13 一轮反馈及送门范围
+
+负责人已批准两份报修各一轮反馈、提交/普通推送及候选业务CI。通用repair-general-v1配原诊断/DDL，实际两次28206 tokens；初采加修复6次70419。两个报修子仍失败，按一轮上限封存；只送排班两份静态通过教师，分别使用原checked-initial.jsonl。先发布原件/哈希再派发slm-business-gate；结果必须由本次CI与archive-gate绑定。原件见[一修及送门记录](../../datasets/sir/research/2026-10-31/bounded-g13-repair/README.md)，学生v5和12变体不动，不export、训练或追加修复。

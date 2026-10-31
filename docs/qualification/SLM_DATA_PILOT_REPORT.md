@@ -757,3 +757,36 @@ verify已接入轻量Python套件并上传`slm-python-contracts`，等待提交�
 本轮工作区共93题（train87/development2/test4；原已提交77题加本轮16题）；合格教师仍57条、覆盖56题，学生v5原字节不变，未训练。这里包含此前另一端已创建的4份fitness/events定义，但本轮不修改其文件或资格。新增16题及冻结证据尚未提交，不能以5fe4c833冒称这些新定义已进入该次CI。
 
 模型调用0、新教师候选0、新四门合格答案0、导出0。建议后续先对四道原题各初采1次deepseek-flash，每次最大8192输出tokens、无自动重试；按完整prompt的138267 UTF-8字节加最大输出32768及余量，提出18万tokens的保守预算，仅是估算，不是分词器实测或实际用量，不包含失败修复。`sampling-plan.json` 记录四份输入规模；冻结核对时预算/Git操作尚未授权；负责人随后已确认先提交/普通推送，再执行上述四次初采，不含失败修复，不自动采12份变体。
+
+<a id="slm-maintenance-staffing-initial"></a>
+## 第三十三阶段：g13 四道原题初采与静态检查（2026-10-31）
+
+负责人确认先提交/推送，再按18万tokens保守预算对四道原题各初采1次，零自动重试，不包含失败修复。`fdbb83a5d3a38a3bce9c3504f1a7aa54e5a0c4a1` 已普通推送main，296文件只含task/data/docs及原始附件，所有11份被忽略的原日志/ZIP均显式纳入并按暂存Git blob核对；生产代码、工具链、oracle和学生文件不变。提交标记skip ci，不重跑同源码参考全量门。原始CRLF元数据按字节保留，空白检查使用一次性cr-at-eol配置，不改全局配置或清洗原件。
+
+付费前在独立Git身份的LF导出目录验证8份collector首方源码与fdbb83a5的Git blob完全一致，collector_sha256为 `66dfb137a02619b145e67be0e9392aae4f42c06b6add6de7c4090a9e18140216`。复用原collector与原CI的standalone CLI，不改程序、题面、合同、SIR/base或冻结manifest。
+
+4次实际模型均deepseek-flash，thinking禁用，finish_reason全stop；无网络失败、重试或截断。**input 35198、output 7015、total 42213 tokens**；输入缓存命中16896、未命中18302。不把保守18万估算当实际花费，不将137787未用额度自动分配修复或变体。
+
+| 原题 | 新教师后缀 | 总tokens | 静态 |
+|---|---|---:|---|
+| maintenance-work-order-change-v1 | 66485d05ad4a | 11427 | PARSE失败；156–159行擅写三元表达式，4×SIR-LEX-001 |
+| maintenance-work-order-scratch-v1 | 1b3afbe59ca1 | 10676 | PARSE失败；243行动态days时间写法，SIR-PARSE-001 |
+| staffing-shift-roster-change-v1 | 23ed7f759fcd | 10440 | GENERATION通过，56文件，无诊断 |
+| staffing-shift-roster-scratch-v1 | 2027a6702825 | 9670 | GENERATION通过，57文件，无诊断 |
+
+[采样原件及摘要](../../datasets/sir/research/2026-10-31/bounded-g13-initial/README.md)含原请求/响应/usage/collector引用、四次调用边界和本次原始CLI输出。四批 `checked-initial.jsonl` 保留原参考行并绑定本次教师静态结果，不覆盖此前checked.jsonl或失败候选。控制台可能乱码，原UTF-8诊断正确，不转写原件。
+
+新增候选4，静态2通过/2失败；全部运行门NOT_RUN，未修复、未送业务门，12份变体不采，不export、不新增合格答案或训练记录，学生v5仍57条/56题原字节不变。本次新增采样记录和结果说明尚未额外提交/推送。下一步两份报修各修一轮及后续业务门需另获明确授权，不因初采低于预算而自动调用。
+
+<a id="slm-maintenance-staffing-repair-gate"></a>
+## 第三十四阶段：g13 一轮静态反馈及两份排班候选送门（2026-10-31）
+
+负责人确认两份报修各修一轮、静态复检、提交/普通推送初采和修复原件，再将静态通过者送候选CI并归档。本轮修复预算12万tokens、8192最大输出/次、零自动重试；不改工具链/题面/合同/判卷，不扩采12份变体、不export或训练。
+
+使用原repair并显式选择已提交的通用repair-general-v1.md，避免默认鉴权专用说明；只附原始诊断和原DDL，不给完整参考或人工修法。八份首方程序与fdbb83a5的Git blob原字节一致。两次实际deepseek-flash均finish_reason=stop，input24380/output3826/total**28206 tokens**，缓存命中22016、未命中2364。连同初采，6次累计**70419 tokens**。
+
+改写子候选3a0cc743ec66与父66485d05ad4a源码完全相同，仍4×SIR-LEX-001/PARSE失败。从零子e2bcf34bd576修正days写法，进入SEMANTIC后失败：load的FacilityNotFound缺本能力fails声明（SIR-FLOW-003），以及patch输入不存在expectedVersion字段（SIR-SYMBOL-002）。按一轮上限停止，两份均不送门。原件、调用边界和精确诊断见[一修记录](../../datasets/sir/research/2026-10-31/bounded-g13-repair/README.md)，两个报修批次新增checked-r1.jsonl，保留全部父/子失败轨迹。
+
+临时后处理器在两次付费结束后读取参考行不存在的parent_id键而中断，原响应已完整保存；独立离线脚本只续做新子候选静态和复制，没有重新付费或重发。原collector与工具链不改。
+
+本轮提交发布初采/一修和原始静态输出，数据提交skip ci；随后只将两份排班教师23ed7f759fcd、2027a6702825按各自checked-initial送StaffingShiftRosterBusinessConformanceIT。业务门独立验证构建/启动/业务/真实并发，不移植参考资格。run/head_sha及结果另由实际CI与archive-gate证据绑定；派发前均NOT_RUN，不预报通过。学生v5仍57条/56题不变，新增合格项以随后真实归档为准。

@@ -1,0 +1,13 @@
+{
+  "actual_tokens": 70419,
+  "business_candidates": 2,
+  "collector_and_raw_bindings": "PASSED",
+  "failed_children_sealed": 2,
+  "feedback_repairs": 2,
+  "frozen_inputs": "UNCHANGED",
+  "production_changes": 0,
+  "repeated_paid_calls": 0,
+  "secret_scan": "PASSED",
+  "student_v5": "UNCHANGED",
+  "total_calls": 6
+}

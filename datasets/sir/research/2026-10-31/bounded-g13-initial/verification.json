@@ -1,0 +1,20 @@
+{
+  "budget_tokens": 180000,
+  "calls": 4,
+  "collector_reference_and_raw_response_binding": "PASSED",
+  "configured_secret_scan": "PASSED",
+  "feedback_repairs": 0,
+  "frozen_bundle_files": "UNCHANGED",
+  "native_static_output_binding": "PASSED",
+  "new_teacher_runtime_gates": "NOT_RUN",
+  "publication": "New initial records not committed or pushed",
+  "raw_diagnostics": "Original UTF-8 retained; console mojibake not rewritten",
+  "retries": 0,
+  "source_commit": "fdbb83a5d3a38a3bce9c3504f1a7aa54e5a0c4a1",
+  "staged_files": 0,
+  "static_failed": 2,
+  "static_passed": 2,
+  "student_v5": "UNCHANGED",
+  "usage_tokens": 42213,
+  "variants_12": "UNCHANGED_NO_CALLS"
+}

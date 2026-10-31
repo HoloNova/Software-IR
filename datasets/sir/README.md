@@ -137,3 +137,13 @@
 新增maintenance.work-order与staffing.shift-roster各8份train题定义，共16；每个family的change/scratch原题各有p1/p2/p3三种等义表述，同题共用base、参考、合同与oracle。相应 `pilots/maintenance-work-order-*-g13/`、`staffing-shift-roster-*-g13/` 在LF快照/v10下由原prepare冻结，每批仅1份existing_reference，原CI检查器静态全通过，运行门均NOT_RUN。base仅静态检查，不冒称HTTP负例已跑。
 
 这些参考种子不是新教师答案；新增四门合格答案0、模型调用0，学生v5不变。冻结核对时定义/批次和证据尚未入Git；负责人现已确认提交/普通推送及四道原题初采的18万tokens预算，不含修复。完整原件、MANIFEST及已批准的初采计划见上述证据目录。既有fitness/events、旧批次及学生文件不改。
+
+### g13 四道原题初采（冻结提交之后）
+
+冻结输入与原始CI证据已于 `fdbb83a5` 提交/普通推送，skip ci且工具链未变。随后在该提交的精确LF快照用原collector各初采1次deepseek-flash，共4候选、**42213 tokens**：报修两份PARSE失败（三元表达式、动态days），排班两份GENERATION通过。原请求/响应、usage、collector引用和检查器输出见 [`research/2026-10-31/bounded-g13-initial/`](research/2026-10-31/bounded-g13-initial/README.md)；四批追加 `checked-initial.jsonl`，保留旧检查及失败原件。
+
+本次新增采样记录尚未另行提交；零重试/修复/变体调用，未送业务门，各运行门NOT_RUN，新增合格答案0、学生v5不变。137787未用token额度不构成修复授权；下一步两份失败各一轮反馈须另行确认。
+
+### g13 一轮反馈与候选业务门
+
+后续已获准两份报修各反馈一次及本轮提交/普通推送/候选CI。实际两次28206 tokens，连同初采累计6次70419。两份子候选仍静态失败并按一轮上限封存：改写原样返回三元表达式，从零写转为缺fails和误读expectedVersion两项语义错误。原件及checked-r1在对应批次，[完整说明](research/2026-10-31/bounded-g13-repair/README.md)。本轮发布初采/一修后，只送两份排班初采教师；未将参考资格给教师，运行结论由实际CI和原archive-gate绑定。学生v5不变，不export或训练，不扩采/追修。
