@@ -167,7 +167,7 @@ jobs:
           set -euo pipefail
           mvn -B -o -pl sir-toolchain-application -am \
             -Dmaven.repo.local="$MAVEN_REPO" \
-            -Dtest=QuerySliceBusinessConformanceIT,WriteSliceBusinessConformanceIT,RelationSliceBusinessConformanceIT,GuardedTransitionBusinessConformanceIT,TokenDeskBusinessConformanceIT,BearerCredentialBusinessConformanceIT,DualTokenBusinessConformanceIT,CrudAccessBusinessConformanceIT,MoneyBusinessConformanceIT,MultiplicationBusinessConformanceIT,LibraryBorrowingBusinessConformanceIT,CourseSelectionBusinessConformanceIT,BlogBusinessConformanceIT,FitnessCheckInBusinessConformanceIT,EventsRegistrationBusinessConformanceIT \
+            -Dtest=QuerySliceBusinessConformanceIT,WriteSliceBusinessConformanceIT,RelationSliceBusinessConformanceIT,GuardedTransitionBusinessConformanceIT,TokenDeskBusinessConformanceIT,BearerCredentialBusinessConformanceIT,DualTokenBusinessConformanceIT,CrudAccessBusinessConformanceIT,MoneyBusinessConformanceIT,MultiplicationBusinessConformanceIT,LibraryBorrowingBusinessConformanceIT,CourseSelectionBusinessConformanceIT,BlogBusinessConformanceIT,FitnessCheckInBusinessConformanceIT,EventsRegistrationBusinessConformanceIT,MaintenanceWorkOrderBusinessConformanceIT,StaffingShiftRosterBusinessConformanceIT \
             -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false \
             -Dkcg.query-conformance.enabled=true \
             -Dkcg.write-conformance.enabled=true \
@@ -184,6 +184,8 @@ jobs:
             -Dkcg.blog-conformance.enabled=true \
             -Dkcg.fitness-conformance.enabled=true \
             -Dkcg.events-conformance.enabled=true \
+            -Dkcg.maintenance-conformance.enabled=true \
+            -Dkcg.staffing-conformance.enabled=true \
             -Dkcg.conformance.work-parent="$KCG_CONF_WORK_PARENT" \
             -Dkcg.conformance.evidence-parent="$KCG_CONF_EVIDENCE_PARENT" \
             -Dkcg.conformance.maven-executable="$(command -v mvn)" \
@@ -233,6 +235,23 @@ jobs:
           if len(lines) < 2 or lines[1] != "verdict=PASSED":
               raise SystemExit("events reference was not fully verified; FAILED/NOT_RUN cannot qualify")
           print(f"events reference PASSED: {reports[0]}")
+          PY
+
+      - name: Require complete maintenance and staffing reference evidence
+        run: |
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          root = Path(os.environ["KCG_CONF_EVIDENCE_PARENT"])
+          for problem in ("maintenance", "staffing"):
+              reports = list(root.rglob(f"{problem}-slice-report.txt"))
+              if len(reports) != 1:
+                  raise SystemExit(f"expected one {problem} reference report, found {len(reports)}")
+              lines = reports[0].read_text(encoding="utf-8").splitlines()
+              # Only the fixed header verdict qualifies; a response/row may echo arbitrary text.
+              if len(lines) < 2 or lines[1] != "verdict=PASSED":
+                  raise SystemExit(f"{problem} reference incomplete; FAILED/NOT_RUN cannot qualify")
+              print(f"{problem} reference PASSED: {reports[0]}")
           PY
 
       - name: Independent verification IT

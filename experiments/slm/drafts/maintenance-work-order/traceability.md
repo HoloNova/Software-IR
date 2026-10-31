@@ -1,12 +1,12 @@
-# 设施报修与巡检工单题追溯（规格已确认，判卷未实施）
+# 设施报修与巡检工单题追溯（判卷源码已落地，业务门 NOT_RUN）
 
-family `maintenance.work-order` / train；基线 `e81200e0e039c5d178c95bbab2f12195ac13f0dd`。本目录七份文件是规格，尚无本题业务IT、DDL/seed落地文件、task或CI资格。spec §6列的是待实现检查，不能写成已有测试方法。静态实测：reference/base均GENERATION、diagnostics=[]、55/47文件，原输出和摘要在spec §0.3。
+family `maintenance.work-order` / train；基线 `e81200e0e039c5d178c95bbab2f12195ac13f0dd`。规格已获确认；现已另获授权并落地业务IT、DDL/seed和两个workflow，但没有task或CI资格。spec §6检查对应本文件§6中的实现入口；验证状态见 [implementation.md](implementation.md)。静态实测：reference/base均GENERATION、diagnostics=[]、55/47文件，原输出和摘要在spec §0.3。
 
 ## 1. 输入、参考与base
 
 - [reference.sir](reference.sir)：5实体、8能力；版本化人工报修与非版本化批处理巡检分开，理由及已确认的M1边界见spec §0.2/§7。
 - [base.sir](base.sir)：仅删除EditWorkOrder、ListWorkOrders、GenerateInspections、CloseOverdueInspections四个完整能力块，其余字节不变；55→47生成文件，不冒称base已启动并得到HTTP失败。
-- [contract.json](contract.json)：固定接口、类型、排序、错误和评分排除项；assignee的HTTP名及物理列均不加Id/_id；§2/§3的DDL/seed只存在于spec。
+- [contract.json](contract.json)：固定接口、类型、排序、错误和评分排除项；assignee的HTTP名及物理列均不加Id/_id；spec §2/§3的DDL/seed已原样提取到test resources，尚未执行。
 - 自然语言题面：[requirement-scratch.md](requirement-scratch.md)与[requirement-change.md](requirement-change.md)。S/C编号是非空行顺序；最后一行是输出约定，不算业务HTTP断言。spec §5保留同一原文。
 
 ## 2. 逐句追溯
@@ -61,4 +61,22 @@ X01目标work_order105：六个同版本编辑，1胜5冲突，最终版本1/赢
 - M3：removed=null沿用上游未决边界，本题暂不评分；title=null仍按目标非空白规则检查，PATCH错误路径changes.title、模板码notBlank，不与普通新建DTO的NotBlank混同。
 - 接受spec §0.1的dev/test隔离结论，保留maintenance.work-order作为train；不启用质检批次备选。
 
-以上边界已获负责人确认。本轮仅办理本目录七份规格文件的一次文档提交与推送，不触发CI；落地/四门/任务冻结仍须另行安排，不由规格确认自动启动。
+以上边界已获负责人确认。规格阶段文档已单独提交；本阶段是在另行授权后落地判卷，并已获负责人一次提交、普通推送与同SHA CI的授权；不改工具链。四门资格待真实CI证据，任务冻结仍未办理。
+
+## 6. 本阶段源码入口（尚无业务资格）
+
+源码目录为 `sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/`。
+
+| 检查 | 实现 |
+|---|---|
+| B01–B02、W01–W03、D01 | `MaintenanceWorkOrderChecks.identityAndCreation/details` |
+| P01–P08、I02–I03 | `MaintenanceWorkOrderChecks.edits` |
+| L01–L05 | `MaintenanceWorkOrderChecks.lists` |
+| R01–R05、I04 | `MaintenanceInspectionChecks.generation/rejectedGeneration/generatedState` |
+| E01–E04、I05 | `MaintenanceInspectionChecks.closure/closureBoundaries/closedState` |
+| X01–X03 | `MaintenanceConcurrencyChecks.sameVersion/concurrentClosures/generationVersusClosure` |
+| I01、所有GET/拒绝/成功写差异 | `BoundedProblemHttp`、`BoundedProblemState`，各业务检查提供独立期望值 |
+| 真实N客户端/锁等待/收齐与释放 | `BoundedProblemRace`，复用已有 `BlogLockWaits` 的间接链证明 |
+| 夹具、自检、external、构建/清理/证据 | `MaintenanceWorkOrderBusinessConformanceIT` → `BoundedProblemConformance` / `BoundedProblemFixture` → 已有 `BusinessSliceHarness` |
+
+参考/DDL/seed分别为test resources的 `valid/maintenance-work-order.sir` 和 `conformance/mysql/maintenance-work-order-{ddl,seed}.sql`，均与批准规格的内容对应。两个workflow同时接入参考和候选；同一个IT仅由既有Harness切换SIR输入，不另写候选专用断言。定向测试结果不构成四门验收，完整记录见 [implementation.md](implementation.md)。

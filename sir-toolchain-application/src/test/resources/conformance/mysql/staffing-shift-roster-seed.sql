@@ -1,0 +1,17 @@
+INSERT INTO `user` (id,name) VALUES (1,'alice'),(2,'bob'),(3,'carol');
+INSERT INTO access_token (id,owner_id,expires_at) VALUES
+ ('50000000-0000-4000-8000-000000000001',1,'2099-01-01 00:00:00.000000'),
+ ('50000000-0000-4000-8000-000000000002',2,'2099-01-01 00:00:00.000000'),
+ ('50000000-0000-4000-8000-000000000003',3,'2099-01-01 00:00:00.000000'),
+ ('50000000-0000-4000-8000-000000000099',1,'2000-01-01 00:00:00.000000');
+INSERT INTO store (id,name,manager_id) VALUES (10,'North',1),(11,'South',2),(12,'Empty',1);
+INSERT INTO employee (id,store_id,name) VALUES (101,10,'Amy'),(102,10,'Ben'),(103,10,'Ben'),(104,11,'Dana');
+INSERT INTO shift (id,store_id,day,band) VALUES
+ (201,10,'2026-01-05','OPENING'),
+ (202,10,'2026-01-05','CLOSING'),
+ (203,10,'2026-01-12','OPENING'),
+ (204,11,'2026-01-05','OPENING'),
+ (205,10,'2026-01-19','OPENING'),
+ (206,10,'2026-01-21','CLOSING');
+INSERT INTO assignment (id,employee_id,shift_id) VALUES
+ (301,101,201),(302,102,201),(303,101,202),(304,104,204);

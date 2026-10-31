@@ -2,7 +2,7 @@
   "namespace": "example.maintenance",
   "family": "maintenance.work-order",
   "split": "train",
-  "status": "specification approved by owner; static generation only; runtime NOT_RUN",
+  "status": "owner-approved specification; oracle implemented; runtime NOT_RUN",
   "capabilities": ["ListFacilities", "OpenWorkOrder", "EditWorkOrder", "GetWorkOrder", "ListWorkOrders", "GenerateInspections", "CloseOverdueInspections", "ListInspections"],
   "entities": ["User", "AccessToken", "Facility", "WorkOrder", "InspectionOrder"],
   "interfaces": {

@@ -29,6 +29,8 @@ on:
           - BlogBusinessConformanceIT
           - FitnessCheckInBusinessConformanceIT
           - EventsRegistrationBusinessConformanceIT
+          - MaintenanceWorkOrderBusinessConformanceIT
+          - StaffingShiftRosterBusinessConformanceIT
           - CrudAccessBusinessConformanceIT
           - GuardedTransitionBusinessConformanceIT
           - LibraryBorrowingBusinessConformanceIT
@@ -100,6 +102,8 @@ jobs:
             BlogBusinessConformanceIT) p=blog ;;
             FitnessCheckInBusinessConformanceIT) p=fitness ;;
             EventsRegistrationBusinessConformanceIT) p=events ;;
+            MaintenanceWorkOrderBusinessConformanceIT) p=maintenance ;;
+            StaffingShiftRosterBusinessConformanceIT) p=staffing ;;
             CrudAccessBusinessConformanceIT) p=crud ;;
             GuardedTransitionBusinessConformanceIT) p=guard ;;
             LibraryBorrowingBusinessConformanceIT) p=library ;;

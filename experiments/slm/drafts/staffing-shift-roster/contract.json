@@ -2,7 +2,7 @@
   "namespace": "example.staffing",
   "family": "staffing.shift-roster",
   "split": "train",
-  "status": "specification approved by owner; static generation only; runtime NOT_RUN",
+  "status": "owner-approved specification; oracle implemented; runtime NOT_RUN",
   "capabilities": ["ListStores", "GenerateWeeklyShifts", "StoreShifts", "StoreEmployees", "AssignEmployee", "ShiftHeadcount", "EmployeeRoster"],
   "entities": ["User", "AccessToken", "Store", "Employee", "Shift", "Assignment"],
   "interfaces": {

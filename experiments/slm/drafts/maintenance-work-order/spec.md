@@ -1,10 +1,10 @@
-# 设施报修与例行巡检工单题出题规格（负责人已确认，判卷未实施）
+# 设施报修与例行巡检工单题出题规格（已确认；判卷源码已落地，业务门 NOT_RUN）
 
 ## 0. 定位、基线与交付边界
 
 family=`maintenance.work-order`，split=`train`；建议题号 `maintenance-work-order-change-v1` / `maintenance-work-order-scratch-v1`（未创建 task）。基线为 main `e81200e0e039c5d178c95bbab2f12195ac13f0dd`。负责人已确认本规格、M1/M2/M3边界及train隔离结论；本目录仅为出题设计，不是已验收业务。
 
-本轮只新建本目录七份文件；SQL 只在本文中设计，不落 `.sql`，不写 Java/IT，不接 CI，不冻结任务，不调用模型。另一会话负责的 fitness/events 不修改。参考与 base 的静态生成已实际检查；生成工程构建、应用启动、MySQL/HTTP、并发均 **NOT_RUN**。
+规格阶段仅交付本目录七份设计文件。负责人随后明确授权判卷落地：现已有参考资源、DDL/seed、Java业务IT及两个workflow接入；实现和定向检查见 [implementation.md](implementation.md)。未改工具链、参考/base或题面，不修改另一会话的fitness/events；不冻结任务、不调用模型；负责人已另行授权一次提交、普通推送并运行同SHA CI。本机阶段的生成工程构建、应用启动、MySQL/HTTP、并发均 **NOT_RUN**，正式资格以CI原始证据为准。
 
 ### 0.1 与 dev/test 的边界核对（独立审查）
 
@@ -26,7 +26,7 @@ family=`maintenance.work-order`，split=`train`；建议题号 `maintenance-work
 
 **必须拆分两种工单。**报修记录 WorkOrder 用版本号保护人工编辑；例行巡检 InspectionOrder 是非版本化的批处理任务。R:1374 要求版本化实体的每次更新都使用该实体的局部更新输入；R:404–448 的输入携带一个主键/expectedVersion，不是“每行各有一个版本”的列表。因此不能让一份普通批关闭请求直接修改多张版本化报修单。这里没有把版本号移除或绕过冲突检查；两个业务流程本来就有不同的输入和生命周期。负责人已确认M1的范围拆分；不宣称“报修单也能批量关闭”。
 
-### 0.3 本轮实际静态检查
+### 0.3 规格阶段实际静态检查（保留原始证据）
 
 环境：Windows 11、Temurin Java 21.0.11、Maven 3.9.14，18 个逻辑核、23.53 GiB 内存，执行前可用约 2.92 GiB。未启动应用/数据库。按负责人要求仅编译 CLI 依赖链，去掉 JAVA_TOOL_OPTIONS，MAVEN_OPTS=-Xmx2g，无 -T、无测试，42 秒、退出 0。Windows 没有 env/systemd-run，实际等价命令：
 
@@ -219,11 +219,11 @@ ListInspections 只允许路径 facilityId 对应设施的 manager 使用，设�
 只返回完整的软件描述文档，不要 Java、SQL 或解释。
 ```
 
-## 6. 判卷检查清单与逐句追溯（均待实现）
+## 6. 判卷检查清单与逐句追溯（源码已落地，业务门 NOT_RUN）
 
 ### 6.1 执行与比较规则
 
-下一阶段复用 BusinessSliceHarness，但本轮没有 IT 类。每个表的小节重放 §3；同表按顺序执行；并发轮次独立重置。先删 inspection_order、work_order、access_token，再 facility、user，仅在无在途请求时重放。应用用 external 凭据模式，不用 local-fixed。新 ID 从响应取得，不猜自增下一个数。
+本节现由 `MaintenanceWorkOrderBusinessConformanceIT` 及 `Maintenance*Checks` 实现，复用 BusinessSliceHarness；落地文件和验证状态见 [implementation.md](implementation.md)。各小节重放 §3；同表按顺序执行；并发轮次独立重置。先删 inspection_order、work_order、access_token，再 facility、user，仅在无在途请求时重放。应用用 external 凭据模式，不用 local-fixed。新 ID 从响应取得，不猜自增下一个数。
 
 WV/IV/FV：分别按合同精确比较 WorkOrderView/InspectionView/FacilityView 的键集合、JSON 类型和 JDBC 同行全部值；空 assignee/note 必须有键且为 null。Moment 转 UTC 比较，非字符串比对。PAGE(ids,total,page,size) 同时断言200、外层恰好total/page/size/records、完整id顺序及每项投影。ERR(status,code) 校验精确声明错误；AUTH401 校验空体401。UNCHANGED=独立连接按主键读取五表全部行、全部列，逐值相等，不是仅比较行数。所有 GET/拒绝逐次 UNCHANGED；所有成功写也做全库差异，仅允许本项列出的变化。AUTO_INCREMENT 空号不作为业务行变化。
 
@@ -295,7 +295,7 @@ WV/IV/FV：分别按合同精确比较 WorkOrderView/InspectionView/FacilityView
 
 完整对应见 [traceability.md](traceability.md)。I01：每次响应投影和完整行相符；I02：scope外报修仍在数据库但详情/列表/编辑全不可见；I03：每个成功编辑版本恰加1、拒绝不增；I04：生成序列的设施/标题/逐日间隔完全一致；I05：关闭集合严格等于独立JDBC读行后计算的谓词集合，不能仅用成功条数推导。所有GET后再做UNCHANGED。
 
-S14/C09输出格式由静态门检查，不算业务HTTP断言。构建、readiness、种子自检、清理、报告是夹具前置/收尾，不是教师要实现的业务能力。以上均为下一阶段可执行检查设计，实际运行数为0。
+S14/C09输出格式由静态门检查，不算业务HTTP断言。构建、readiness、种子自检、清理、报告是夹具前置/收尾，不是教师要实现的业务能力。以上已有对应 IT 源码，真实业务 IT 运行数仍为0；轻量合同与比较器单测不计作业务门证据。
 
 ## 7. 依赖生成器的风险、依据与发现
 
@@ -317,4 +317,4 @@ S14/C09输出格式由静态门检查，不算业务HTTP断言。构建、readin
 
 **发现 M3（既有未决规则）：**项目状态§7列出“PATCH显式null写非可选目标”待设计；因此removed只提交布尔值，本版不评分removed=null。title=null已有非空白目标规则，P05仍检验（PATCH模板的字段错误码为小写notBlank）。若要统一null错误，另立项，不在规格里虚称已解决。
 
-负责人已确认结构覆盖、M1/M2/M3及dev/test隔离；其中未知用户指派和removed=null的评分排除项保留，不等于相应语言缺口已修复。本轮按授权仅将本目录七份文件作为一次文档提交并推送，不触发CI；DDL/种子/业务IT、CI接入、四门资格及task冻结须由负责人另行安排。
+负责人已确认结构覆盖、M1/M2/M3及dev/test隔离；其中未知用户指派和removed=null的评分排除项保留，不等于相应语言缺口已修复。规格文档此前已单独提交并推送。负责人现已另行授权 DDL/种子/业务IT 和两个 workflow 的接入，落地状态见 [implementation.md](implementation.md)；本次已另获一次提交、普通推送与同SHA CI的授权；不改工具链，四门资格等待真实CI结果，task冻结仍未办理。

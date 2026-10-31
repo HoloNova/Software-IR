@@ -1,10 +1,10 @@
-# 门店排班题出题规格（负责人已确认，判卷未实施）
+# 门店排班题出题规格（已确认；判卷源码已落地，业务门 NOT_RUN）
 
 ## 0. 定位、基线与交付边界
 
 family=`staffing.shift-roster`，split=`train`；建议题号 `staffing-shift-roster-change-v1` / `staffing-shift-roster-scratch-v1`（未创建task）。基线 main `e81200e0e039c5d178c95bbab2f12195ac13f0dd`。负责人已确认本规格、train隔离、关系id排序及不设容量/工资/跨店调动的边界；本目录七个文件是出题设计，不是已实施的排班应用。
 
-本轮只办理本目录七份规格文件的一次文档提交与推送，不触发CI；不写Java/IT、不落DDL/seed文件、不改工具链/工作流/task、不调用模型。静态编译与内存生成已运行；生成工程构建、启动、真库业务和并发均 **NOT_RUN**。不修改另一会话的fitness/events。
+规格阶段已办理七份文档的独立提交。负责人随后明确授权判卷落地：现已有参考资源、DDL/seed、Java业务IT和两个workflow接入，见 [implementation.md](implementation.md)。本轮不改工具链、参考/base、题面或task，不调用模型，也不修改另一会话的fitness/events；负责人已另行授权一次提交、普通推送并运行同SHA CI。定向合同/比较器检查已运行；本机阶段的生成工程构建、启动、真库业务和并发均 **NOT_RUN**，正式资格以CI证据为准。
 
 ### 0.1 与 dev/test 的边界核对（独立审查）
 
@@ -26,7 +26,7 @@ family=`staffing.shift-roster`，split=`train`；建议题号 `staffing-shift-ro
 
 选“生成空班次→分页看班次/员工→把员工编入班次→按班次计数/按员工看编排”的七能力闭环。没有工资、打卡、跨店借调、自动优化排班、精确时刻冲突或人数上限；**count只是实际关系条数，不伪造一个名额计数器**。这样既补count，又不把排班做成booking或报名名额题的换名。
 
-### 0.3 本轮实际检查结果
+### 0.3 规格阶段实际检查结果（保留原始证据）
 
 与maintenance规格共享同一次CLI编译：Windows 11、Java21.0.11、Maven3.9.14，18逻辑核/23.53GiB内存，编译前可用约2.92GiB；单次离线CLI依赖链编译、42秒、退出0，没有测试/全量构建。实际PowerShell命令：
 
@@ -213,11 +213,11 @@ EmployeeRoster 分页返回路径 employeeId 对应员工的编排关系，按�
 只返回完整的软件描述文档，不要 Java、SQL 或解释。
 ```
 
-## 6. 判卷检查清单与逐句追溯（均待实现）
+## 6. 判卷检查清单与逐句追溯（源码已落地，业务门 NOT_RUN）
 
 ### 6.1 执行与完整比较
 
-下一阶段复用BusinessSliceHarness，不在本轮创建IT。每小节独立重放§3，同表按行顺序；并发每轮独立重置。无在途请求时按assignment→shift→employee→access_token→store→user删除，再按种子插入。使用external数据库凭据模式，不用local-fixed。
+本节现由 `StaffingShiftRosterBusinessConformanceIT` 及 `Staffing*Checks` 实现，复用 BusinessSliceHarness；文件和验证状态见 [implementation.md](implementation.md)。每小节独立重放§3，同表按行顺序；并发每轮独立重置。无在途请求时按assignment→shift→employee→access_token→store→user删除，再按种子插入。使用external数据库凭据模式，不用local-fixed。
 
 SV/EV/AV/TV=合同的ShiftView/EmployeeView/AssignmentView/StoreView：精确键集合、JSON类型及同一JDBC行全字段相等；Day按LocalDate比较，不能因时区移一天。PAGE(ids,total,page,size)同时检查200、精确四外层键、全部id顺序及逐项视图。INT(n)要求裸JSON整数，不能是字符串、对象或3.0。ERR校验声明信封、AUTH401检查空体。
 
@@ -283,7 +283,7 @@ A08先插晚日期班206、后插早日期班203，让“编排id顺序”和“
 
 I01：对每班次用JDBC全部assignment独立计数，与Headcount比较；不从201条数推导。I02：每关系employee.store=shift.store，unique(employee,shift)无重复。I03：unique(store,day,band)且周生成的完整日期/枚举集合精确匹配，不只是行数。I04：所有成功/拒绝的六表差异与投影精确符合合同。I05：生成不增编排；Assign不改已有班次/员工/身份。
 
-逐句索引见 [traceability.md](traceability.md)。S13/C08为输出静态格式，不算HTTP业务项；readiness、schema/种子自检、进程、清理、报告是执行器前置/收尾，不附加教师业务需求。所有表项均待下一阶段实现，未冒报实际IT计数。
+逐句索引见 [traceability.md](traceability.md)。S13/C08为输出静态格式，不算HTTP业务项；readiness、schema/种子自检、进程、清理、报告是执行器前置/收尾，不附加教师业务需求。所有表项已有对应 IT 源码；真实业务 IT 运行数仍为0，不把轻量单测计作业务验收。
 
 ## 7. 风险、语言依据与发现
 
@@ -304,4 +304,4 @@ I01：对每班次用JDBC全部assignment独立计数，与Headcount比较；不
 
 **发现S2（负责人边界裁决）：**周生成与booking机制确实相同。当前用“生成空班次+员工与班次多对多关系、无区间排他、同班多员工”的三项硬边界区分，负责人已确认接受为train。若要员工区间排他/每周直接派人，这一形状就太接近booking，应换题或留在development，不顺带扩展。
 
-**已确认：**接受S2隔离结论、S1的关系id排序及本题不设容量/工资/跨店规则。指定结构全部可静态生成，无需工具链修改。本轮仅办理规格文档提交与推送；DDL/种子/IT/CI、四门资格和task冻结由负责人另行安排，不因本次确认自动开始。
+**已确认：**接受S2隔离结论、S1的关系id排序及本题不设容量/工资/跨店规则。指定结构全部可静态生成，无需工具链修改。规格文档此前已单独提交并推送。负责人现已另行授权 DDL/种子/IT 和两个 workflow 的接入，见 [implementation.md](implementation.md)；本次已另获一次提交、普通推送与同SHA CI的授权；不改工具链，四门资格等待真实CI结果，task冻结仍未办理。

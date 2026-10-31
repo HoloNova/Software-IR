@@ -1,6 +1,6 @@
-# 门店排班题追溯（规格已确认，判卷未实施）
+# 门店排班题追溯（判卷源码已落地，业务门 NOT_RUN）
 
-family `staffing.shift-roster` / train，基线 `e81200e0e039c5d178c95bbab2f12195ac13f0dd`。七份文件仅为规格；没有本题Java/IT、DDL/seed文件、task或CI证据。reference/base最终均GENERATION、diagnostics=[]、56/50文件，真实stdout见spec §0.3；首轮引用排序失败也已登记，不隐去失败。
+family `staffing.shift-roster` / train，基线 `e81200e0e039c5d178c95bbab2f12195ac13f0dd`。规格已确认；现已另获授权并落地Java/IT、DDL/seed和两个workflow；尚无task或CI证据。实现入口见§6，验证状态见 [implementation.md](implementation.md)。reference/base最终均GENERATION、diagnostics=[]、56/50文件，真实stdout见spec §0.3；首轮引用排序失败也已登记，不隐去失败。
 
 ## 1. 参考、base与输入
 
@@ -8,7 +8,7 @@ family `staffing.shift-roster` / train，基线 `e81200e0e039c5d178c95bbab2f1219
 - [base.sir](base.sir)：仅删除GenerateWeeklyShifts、AssignEmployee、ShiftHeadcount三能力，其余字节不动，少三个Controller/Service。base仍有门店/班次/员工/员工编排列表，种子使其可观察；没有运行base HTTP。
 - [contract.json](contract.json)：路由、字段、类型、错误、排序、唯一键、limit及不考容量/区间排他的边界。
 - 两份自然语言全文：[requirement-scratch.md](requirement-scratch.md)（S01–S13）、[requirement-change.md](requirement-change.md)（C01–C08）；编号为非空行次序，最后一行静态输出约定不当作HTTP业务项。spec §5保留同一原文。
-- SQL仅在spec §2/§3，未执行；两个真实联合唯一键和完整外键是下一阶段夹具要求，不能省掉再声称并发去重已验收。
+- spec §2/§3的SQL已原样提取到test resources，未执行；保留两个真实联合唯一键和完整外键，但不声称并发去重已验收。
 
 ## 2. 逐句追溯
 
@@ -63,4 +63,22 @@ X01六请求编同一(103,203)，1×201/5×AlreadyAssigned，只增一关系；X
 - S2：与booking的repeat机制重合，但“空班次→多员工编排、无起止区间/排他”的业务形状不同；负责人已确认接受train隔离结论。若要改成逐周直接为员工占用区间，则过近，应换题或归dev。
 - 负责人已确认S1的关系id排序及不设容量、工资和跨店调动的边界；下一阶段不得自行补业务。保留本题，不启用spec §0.1的production.checklist备选。
 
-本轮仅办理本目录七份规格文件的一次文档提交与推送，不触发CI；判卷落地、四门资格及task冻结须由负责人另行安排，本次规格确认不启动下一阶段。
+规格阶段文档已单独提交；本阶段是在另行授权后落地判卷，并已获负责人一次提交、普通推送与同SHA CI的授权；不改工具链。四门资格待真实CI证据，task冻结仍未办理。
+
+## 6. 本阶段源码入口（尚无业务资格）
+
+源码目录为 `sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/`。
+
+| 检查 | 实现 |
+|---|---|
+| B01–B02 | `StaffingRosterChecks.identity` |
+| Q01–Q06、I01–I03 | `StaffingRosterChecks.listings/recompute/validRelations/uniqueShifts` |
+| G01–G07、I03/I05 | `StaffingWeeklyChecks.generation/boundsAndLateRollback/invalidPlans/leapYear/generatedState` |
+| A01–A05 | `StaffingAssignmentChecks.assignmentsAndRefusals/assign` |
+| A06–A08 | `StaffingAssignmentChecks.sameDayBands/pathIdentity/relationOrder` |
+| X01–X03 | `StaffingConcurrencyChecks.sameEmployee/differentEmployees/sameWeeklyPlan` |
+| I04–I05、所有完整投影/全库差异 | `BoundedProblemHttp` / `BoundedProblemState`，业务检查只用请求参数和夹具常量构造允许差异，新ID取响应或JDBC差集 |
+| 真实N客户端/锁等待/收齐与释放 | `BoundedProblemRace`，复用既有 `BlogLockWaits` |
+| 六表种子/夹具/external/执行器 | `StaffingShiftRosterBusinessConformanceIT` → `BoundedProblemConformance` / `BoundedProblemFixture` → 既有 `BusinessSliceHarness` |
+
+运行资源为 `valid/staffing-shift-roster.sir` 和 `conformance/mysql/staffing-shift-roster-{ddl,seed}.sql`。两个workflow接入同一IT；既有Harness切换参考或候选，不改变oracle。真实业务与并发尚未执行，定向检查记录见 [implementation.md](implementation.md)。
