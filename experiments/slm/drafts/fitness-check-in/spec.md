@@ -246,7 +246,7 @@ INSERT INTO check_in (id, member_id, program_id, hours, checked_in_at) VALUES
 - CheckInView 的 member、program 是数值主键，不是嵌套对象；键集合必须精确为 `id、member、program、hours、checkedInAt`。
 - 三个统计接口响应体是单个标量：次数是不带引号的 JSON 整数，总时长和平均时长是 JSON 数字，按数值比较（不要求固定小数位数）。
 - 分页：page/size 可各自省略，默认 1/20，上限 10000/100，来自 `L/profile/SpringBootQueryPolicy.java`:21，本题显式冻结。
-- `month` 严格写成 `YYYY-MM`；缺失、空串、格式不对、或自然月超出 `1000-01-01`…`9999-12-31` 的可表示范围，都是 400 BadPeriod（依据 §7 第 4 行）。
+- `month` 严格写成 `YYYY-MM`；缺失、空串、格式不对、或自然月（换算成 UTC 后）超出 `1000-01-01`…`9999-12-31` 的可表示范围，都是 400 BadPeriod（依据 §7 第 4 行；在 Asia/Shanghai 下 `0999-12`、`1000-01` 被拒，`9999-12` 合法）。
 
 ## 5. 两种需求原文
 
@@ -327,7 +327,7 @@ CheckInView 仅包含 id、member、program、hours、checkedInAt，其中 membe
 | Q04 | 2026-02，bob | INT(2) / DEC(2.01) / DEC(1.01) | 平均 1.005 半进位得 1.01 | S05；C03 |
 | Q05 | 空集合：2026-04，alice；2026-01，bob；2026-02，carol；2026-02，dave | 每个都是 INT(0) / DEC(0) / DEC(0) | 无记录是 0，不是 404、不是 null、不是错误 | S05；C03 |
 | Q06 | 只能看自己：bob 请求 `?month=2026-01&member=1&memberId=1`（额外查询参数） | 三个接口都是 INT(0)/DEC(0)/DEC(0)，状态 200 | alice 在 1 月有 3 次；额外参数不能改变统计对象（生成的 GET 绑定忽略多余查询参数，已有证据 `CalendarLedgerChecks.java`:27） | S05/S10；C07 |
-| Q07 | 非法 month：`MyMonthVisits` 对缺失、空串、`2026-1`、`2026-13`、`2026-00`、`2026-02-01`、`abcd-ef`、`9999-12`、`0000-01`、`0999-12` 各一次；`MyMonthHours`、`MyMonthAverage`、`CoachMonthVisits`（A(4)）各对缺失、`2026-13` 一次 | 每次 ERR(400,BadPeriod) | 逐次 UNCHANGED；缺失不是 400 INVALID_REQUEST | S05/S07；C03/C05 |
+| Q07 | 非法 month：`MyMonthVisits` 对缺失、空串、`2026-1`、`2026-13`、`2026-00`、`2026-02-01`、`abcd-ef`、`0000-01`、`0999-12`、`1000-01` 各一次；另外 `9999-12` 是合法月份，预期 200 与 INT(0)；`MyMonthHours`、`MyMonthAverage`、`CoachMonthVisits`（A(4)）各对缺失、`2026-13` 一次 | 每次 ERR(400,BadPeriod) | 逐次 UNCHANGED；缺失不是 400 INVALID_REQUEST | S05/S07；C03/C05 |
 | Q08 | 新写入后统计：重置后 A(1) 先后记录 `{"programId":10,"hours":1.50}`、`{"programId":11,"hours":2.25}`，取响应中两行 checkedInAt 所在的 Asia/Shanghai 月份 M，再对 M 请求三个接口 | INT(2) / DEC(3.75) / DEC(1.88) | 3.75/2 = 1.875 半进位得 1.88；新写入立刻被统计读到；对 2025-12～2026-04 的结果与 Q01–Q05 相同（不被新行污染）。若两行的月份不同（恰好跨月），或 M 落在 2025-12～2026-04 内，记夹具错误 NOT_RUN，不判教师业务失败 | S04/S05；C03 |
 
 ### 6.5 教练查询
@@ -382,7 +382,7 @@ CheckInView 仅包含 id、member、program、hours、checkedInAt，其中 membe
 | 1 | 统计接口响应体是单个标量：`count` 为 64 位整数，`sum`/`avg` 为十进制；直接写 `output Serial;`、`output Money;` 即可，不必起别名 | R:1631（count 结果为 64 位整数）、R:1708–1710（sum）、R:1718–1724（avg） | 生成的 Controller 返回 `Long`/`BigDecimal`，因此响应体是裸数字；`A/conformance/DecimalSumChecks.java`:42–55 以 `BigDecimal` 数值比较，本题照做，不检查小数位数（R:1710 说明 0 的显示位数不保证） |
 | 2 | `sum`/`avg` 只能用在十进制字段上 | R:1708（“不支持整数字段”） | `sir-semantic/.../TypePass.java`:658、678：`SIR-TYPE-001 sum requires a Decimal field`；§0.2 负例已确认。**见发现 F1** |
 | 3 | `avg` 按字段小数位四舍五入，0.5 进位；空集合为 0 | R:1724 | `L/internal/SpringBootModelLowerer.java`:1139–1146 取字段的 `precision` 小数位；`DecimalSumChecks.java`:52 已用 1.785→1.79 验证半进位；本题种子用 1.005→1.01、1.875→1.88 再验证，并让 3.25/3、4.25/3 取两位 |
-| 4 | `month` 是只读 query 的步骤；严格 `YYYY-MM`；区间半开；缺失/非法都走声明的错误；可表示范围有限 | R:1778–1795 | `G/CalendarStepRenderer.java`:22–34：月份为空、不符合“四位数字-两位月份（01 到 12）”、区域不被接受或结果超出 `1000-01-01T00:00:00Z`…`9999-12-31T23:59:59.999999Z` 都抛声明错误；`A/conformance/CalendarLedgerChecks.java`:30–31 已有 `2026-1`、`2026-13`、`9999-12`、`0000-01`、缺失都是 400 BadPeriod 的证据。`0999-12` 的起点早于 1000-01-01 因而也是 BadPeriod（由同一段代码推出，首次 CI 实测确认） |
+| 4 | `month` 是只读 query 的步骤；严格 `YYYY-MM`；区间半开；缺失/非法都走声明的错误；可表示范围有限 | R:1778–1795 | `G/CalendarStepRenderer.java`:22–34：月份为空、不符合“四位数字-两位月份（01 到 12）”、区域不被接受或结果超出 `1000-01-01T00:00:00Z`…`9999-12-31T23:59:59.999999Z` 都抛声明错误；`A/conformance/CalendarLedgerChecks.java`:30–31 已有 `2026-1`、`2026-13`、`9999-12`、`0000-01`、缺失都是 400 BadPeriod 的证据。上限与时区有关：账本测试用 UTC，`9999-12` 的下月起点超限而被拒；本题固定 Asia/Shanghai（UTC+8），`9999-12` 的下月起点是 `9999-12-31T16:00Z`，仍在上限之内，**合法**（verify #210 实测 200、结果 0）。下限同理：`0999-12` 实测 BadPeriod；`1000-01` 在 +8 时区起点为 `0999-12-31T16:00Z`，早于下限，由同一段代码推出为 BadPeriod，待 CI 确认 |
 | 5 | 时区写成字面量 `"Asia/Shanghai"` | R:1793（两个表达式是文本或可选文本）、R:1997（表达式表里的文本字面量） | 检查器已让 `month input.month in "Asia/Shanghai" …` 通过 GENERATION；生成代码里区域变量是该字面量。手册（v9）只展示 `input.zone` 形式，没有字面量示例；R:1793 说明“两个表达式是文本”，因此需求原文没有要求手册之外的能力 |
 | 6 | 可选筛选：参数缺省或 null 即不限制，不存在的 id 不是错误 | R:1222–1250、R:2043–2050（真值表） | 参考用 `input.member is none or item.member == input.member`；K03/K04 的“不存在的 id 返回空页”是该写法的直接结果，需求原文已写明 |
 | 7 | **可选 Ref 输入的 HTTP 字段名不带 `Id`** | R:109（引用存主键）；v9 手册写“Ref 对应 HTTP 字段 xxxId”，没有可选情形 | `L/internal/SpringBootModelLowerer.java`:1942–1944：只有 `RefType` 加 `Id`，`Optional<Ref<…>>` 不是 `RefType`；本轮生成的 `CoachQuery` 字段是 `member`、`program`（`Optional<Long>`），而 `LogInput` 里必填 Ref 才是 `programId`。**见发现 F2** |
@@ -413,6 +413,6 @@ CheckInView 仅包含 id、member、program、hours、checkedInAt，其中 membe
 
 **F3（已用业务方式解决，无需决定）：**所有接口都要认证时没有匿名可读的就绪探针；通过增加公开的 `ListPrograms` 解决。
 
-**F4（待首次 CI 实测，非工具链问题）：**§7.1 第 8 行的校验错误 code 字符串，以及第 4 行 `0999-12` 的结果，需要首次业务 IT 实测后写入 IT 断言；在此之前规格只固定 `path` 与状态码。
+**F4（已由 verify #210 实测，非工具链问题）：**hours 校验错误的 code 实测为：缺失/null 是 `NotNull`，低于 0.25 或 0、负数是 `DecimalMin`，高于 12 是 `DecimalMax`，超过两位小数是 `ExactDecimal`，`100` 同时报 `ExactDecimal` 与 `DecimalMax`；未知请求字段 `member` 是 400，`fields` 为 `path=member`、code `INVALID_REQUEST`。`9999-12` 的结果见 §7.1 第 4 行。
 
 **收口条件：**负责人审核本规格 → 确认是否接受 F1/F2 → 才进入下一阶段（`.sir` 参考落库、DDL/种子文件、业务 IT、verify.yml 接入）。本规格不触发 CI，不冻结 task，不调用模型。

@@ -128,9 +128,11 @@ final class FitnessCheckInChecks {
         a.decimal("Q06 forged member hours", bob, "/api/my/month/hours?month=2026-01&member=1&memberId=1", "0");
         a.decimal("Q06 forged member average", bob, "/api/my/month/average?month=2026-01&member=1&memberId=1", "0");
         var alice = FitnessAssertions.actor(1);
-        for (String month : List.of("2026-1", "2026-13", "2026-00", "2026-02-01", "abcd-ef", "9999-12", "0000-01", "0999-12")) {
+        for (String month : List.of("2026-1", "2026-13", "2026-00", "2026-02-01", "abcd-ef", "0000-01", "0999-12", "1000-01")) {
             a.refusedRead("Q07 visits month " + month, alice, "/api/my/month/visits?month=" + month, 400, "BadPeriod");
         }
+        // In Asia/Shanghai the last representable month starts 8 hours before the UTC limit, so it is valid, not an error.
+        a.integer("Q07 largest representable month is valid", alice, "/api/my/month/visits?month=9999-12", 0);
         a.refusedRead("Q07 visits month omitted", alice, "/api/my/month/visits", 400, "BadPeriod");
         a.refusedRead("Q07 visits month empty", alice, "/api/my/month/visits?month=", 400, "BadPeriod");
         for (String endpoint : List.of("/api/my/month/hours", "/api/my/month/average")) {

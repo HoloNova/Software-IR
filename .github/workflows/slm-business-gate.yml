@@ -27,6 +27,8 @@ on:
           - BearerCredentialBusinessConformanceIT
           - CourseSelectionBusinessConformanceIT
           - BlogBusinessConformanceIT
+          - FitnessCheckInBusinessConformanceIT
+          - EventsRegistrationBusinessConformanceIT
           - CrudAccessBusinessConformanceIT
           - GuardedTransitionBusinessConformanceIT
           - LibraryBorrowingBusinessConformanceIT
@@ -96,6 +98,8 @@ jobs:
             BearerCredentialBusinessConformanceIT) p=bearer ;;
             CourseSelectionBusinessConformanceIT) p=course ;;
             BlogBusinessConformanceIT) p=blog ;;
+            FitnessCheckInBusinessConformanceIT) p=fitness ;;
+            EventsRegistrationBusinessConformanceIT) p=events ;;
             CrudAccessBusinessConformanceIT) p=crud ;;
             GuardedTransitionBusinessConformanceIT) p=guard ;;
             LibraryBorrowingBusinessConformanceIT) p=library ;;
