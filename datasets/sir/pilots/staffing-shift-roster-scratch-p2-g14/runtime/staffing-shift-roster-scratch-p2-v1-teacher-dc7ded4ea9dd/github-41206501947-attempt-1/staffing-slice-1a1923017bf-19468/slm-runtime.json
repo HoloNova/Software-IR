@@ -1,0 +1,37 @@
+{
+  "schema_version" : "sir-runtime-evidence/1",
+  "id" : "staffing-shift-roster-scratch-p2-v1-teacher-dc7ded4ea9dd",
+  "task_sha256" : "d5f45574c6fbb9088f4bc5770c2bce9ce575579a5e11cf1d60349eab3d09b05b",
+  "oracle_sha256" : "b95c7e56722148eb2b60549c6a091a7a7e260d01211b10afded1defd81d70035",
+  "toolchain_core_sha256" : "806ff83b9e8213a6ef1877febfcfa7199ea625f7ca85976d62692b90575d35df",
+  "source_sha256" : "a3c1a9e5073b3c26114f4b20d12310873e1f95f0e69b16e5b27ba57bfe6b5d5f",
+  "generated_digest" : "7d2b53abc8cfa2918fe319f0ea304e1c2cb0540dbdb5670d57557c2a4c001ed4",
+  "run_id" : "staffing-slice-1a1923017bf-19468",
+  "gates" : {
+    "start" : "PASSED",
+    "business" : "PASSED",
+    "build" : "PASSED",
+    "static" : "PASSED"
+  },
+  "environment" : {
+    "mysql" : "8.4.13",
+    "java" : "21.0.13",
+    "test_revision" : "1"
+  },
+  "artifacts" : [ {
+    "path" : "staffing-slice-report.txt",
+    "sha256" : "172ab1b21987ec24435c7271d7385963a3e465738570ae9efcb259ac97cc367b"
+  }, {
+    "path" : "logs/maven.stdout.log",
+    "sha256" : "c0a5969aaad2ca489bd3cc43ff5299cb285633f6bc3a196ca759dbc6d7659b55"
+  }, {
+    "path" : "logs/maven.stderr.log",
+    "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }, {
+    "path" : "logs/spring.stdout.log",
+    "sha256" : "16adb43fe6ad8875d959d6e6e358a6b7608d502bf99daea898749d35734d84bd"
+  }, {
+    "path" : "logs/spring.stderr.log",
+    "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  } ]
+}

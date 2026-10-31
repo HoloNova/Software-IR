@@ -1,0 +1,40 @@
+{
+  "artifacts": {
+    "slm-gate-maintenance-work-order-scratch-p2-v1-teacher-292e05874571": {
+      "id": 13044611310,
+      "zip_sha256": "76e4c391da252d006fbeeef267abb7406095ee71e80aae80dc639e28d0ccb10a"
+    },
+    "slm-gate-surefire-maintenance-work-order-scratch-p2-v1-teacher-292e05874571": {
+      "id": 13045030006,
+      "zip_sha256": "cfda0c98e6efd07b04d0527c26465889c4a6dea71dc5ff643db5050c78877e1c"
+    }
+  },
+  "checked": "datasets/sir/pilots/maintenance-work-order-scratch-p2-g14/checked-r1.jsonl",
+  "checks_failed": 2,
+  "checks_passed": 598,
+  "failed_checks": [
+    "X02 concurrent closures all 6 distinct runtime connections/transactions wait on facility/10 (blockerConnection=27)",
+    "X03 serialize whole batches all 2 distinct runtime connections/transactions wait on facility/10 (blockerConnection=28)"
+  ],
+  "gates": {
+    "build": "PASSED",
+    "business": "FAILED",
+    "start": "PASSED",
+    "static": "PASSED"
+  },
+  "head_sha": "c2c7324deb93e60fef3b2043f190a23ef2e4881f",
+  "index_before": {
+    "datasets/sir/MANIFEST.sha256": "79fef0722b4b4896f79d452cf5902a453d73a0c6d28dd23be7a07b625c88aeab",
+    "datasets/sir/pilots/maintenance-work-order-scratch-p2-g14/MANIFEST.sha256": "64aea6602237c39c563cad3d54406217167713bf5cd1b6ab7cb0860f6f9244ae"
+  },
+  "inputs": {
+    "bundle": "datasets/sir/pilots/maintenance-work-order-scratch-p2-g14",
+    "it": "MaintenanceWorkOrderBusinessConformanceIT",
+    "sample_id": "maintenance-work-order-scratch-p2-v1-teacher-292e05874571"
+  },
+  "job_conclusion": "failure",
+  "run_attempt": 1,
+  "run_id": 41206491804,
+  "run_url": "https://github.com/HoloNova/Software-IR/actions/runs/41206491804",
+  "workflow": ".github/workflows/slm-business-gate.yml"
+}

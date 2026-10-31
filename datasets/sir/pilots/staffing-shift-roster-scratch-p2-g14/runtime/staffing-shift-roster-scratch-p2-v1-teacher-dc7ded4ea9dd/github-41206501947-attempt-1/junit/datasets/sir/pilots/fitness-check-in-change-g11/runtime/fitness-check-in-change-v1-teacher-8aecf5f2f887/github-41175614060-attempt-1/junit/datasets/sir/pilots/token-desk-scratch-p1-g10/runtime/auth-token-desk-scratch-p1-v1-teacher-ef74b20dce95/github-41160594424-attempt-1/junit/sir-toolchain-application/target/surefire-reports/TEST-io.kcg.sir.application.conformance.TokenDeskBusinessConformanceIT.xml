@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report.xsd" version="3.0.2" name="io.kcg.sir.application.conformance.TokenDeskBusinessConformanceIT" time="7.428" tests="1" errors="0" skipped="0" failures="1" flakes="0">
+  <properties>
+    <property name="java.specification.version" value="21"/>
+    <property name="sun.jnu.encoding" value="UTF-8"/>
+    <property name="java.class.path" value="/home/runner/work/Software-IR/Software-IR/sir-toolchain-application/target/test-classes:/home/runner/work/Software-IR/Software-IR/sir-toolchain-application/target/classes:/home/runner/work/Software-IR/Software-IR/sir-parser/target/classes:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/antlr/antlr4-runtime/4.13.2/antlr4-runtime-4.13.2.jar:/home/runner/work/Software-IR/Software-IR/sir-semantic/target/classes:/home/runner/work/Software-IR/Software-IR/sir-lowering-api/target/classes:/home/runner/work/Software-IR/Software-IR/sir-lowering-spring-boot/target/classes:/home/runner/work/Software-IR/Software-IR/sir-generator-spring-boot/target/classes:/home/runner/work/Software-IR/Software-IR/sir-project-graph/target/classes:/home/runner/work/Software-IR/Software-IR/sir-change/target/classes:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/jupiter/junit-jupiter/5.12.2/junit-jupiter-5.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/jupiter/junit-jupiter-api/5.12.2/junit-jupiter-api-5.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/platform/junit-platform-commons/1.12.2/junit-platform-commons-1.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/jupiter/junit-jupiter-params/5.12.2/junit-jupiter-params-5.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/jupiter/junit-jupiter-engine/5.12.2/junit-jupiter-engine-5.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/platform/junit-platform-engine/1.12.2/junit-platform-engine-1.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/fasterxml/jackson/core/jackson-databind/2.19.4/jackson-databind-2.19.4.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/fasterxml/jackson/core/jackson-annotations/2.19.4/jackson-annotations-2.19.4.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/fasterxml/jackson/core/jackson-core/2.19.4/jackson-core-2.19.4.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/boot/spring-boot/3.5.3/spring-boot-3.5.3.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-core/6.2.8/spring-core-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-jcl/6.2.8/spring-jcl-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-context/6.2.8/spring-context-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-aop/6.2.8/spring-aop-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-beans/6.2.8/spring-beans-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-expression/6.2.8/spring-expression-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/io/micrometer/micrometer-observation/1.14.8/micrometer-observation-1.14.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/io/micrometer/micrometer-commons/1.14.8/micrometer-commons-1.14.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/mysql/mysql-connector-j/9.3.0/mysql-connector-j-9.3.0.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/google/protobuf/protobuf-java/4.29.0/protobuf-java-4.29.0.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/net/java/dev/jna/jna-platform/5.17.0/jna-platform-5.17.0.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/net/java/dev/jna/jna/5.17.0/jna-5.17.0.jar:"/>
+    <property name="kcg.slm.repo-root" value="/home/runner/work/Software-IR/Software-IR"/>
+    <property name="java.vm.vendor" value="Eclipse Adoptium"/>
+    <property name="sun.arch.data.model" value="64"/>
+    <property name="java.vendor.url" value="https://adoptium.net/"/>
+    <property name="user.timezone" value="Etc/UTC"/>
+    <property name="kcg.conformance.evidence-parent" value="/home/runner/work/Software-IR/Software-IR/ci-evidence"/>
+    <property name="os.name" value="Linux"/>
+    <property name="java.vm.specification.version" value="21"/>
+    <property name="sun.java.launcher" value="SUN_STANDARD"/>
+    <property name="kcg.slm.bundle-root" value="/home/runner/work/Software-IR/Software-IR/datasets/sir/pilots/token-desk-scratch-p1-g10"/>
+    <property name="sun.boot.library.path" value="/usr/lib/jvm/temurin-21-jdk-amd64/lib"/>
+    <property name="sun.java.command" value="/home/runner/work/Software-IR/Software-IR/sir-toolchain-application/target/surefire/surefirebooter-20261031023500572_3.jar /home/runner/work/Software-IR/Software-IR/sir-toolchain-application/target/surefire 2026-10-31T02-34-52_570-jvmRun1 surefire-20261031023500572_1tmp surefire_0-20261031023500572_2tmp"/>
+    <property name="jdk.debug" value="release"/>
+    <property name="test" value="TokenDeskBusinessConformanceIT"/>
+    <property name="surefire.test.class.path" value="/home/runner/work/Software-IR/Software-IR/sir-toolchain-application/target/test-classes:/home/runner/work/Software-IR/Software-IR/sir-toolchain-application/target/classes:/home/runner/work/Software-IR/Software-IR/sir-parser/target/classes:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/antlr/antlr4-runtime/4.13.2/antlr4-runtime-4.13.2.jar:/home/runner/work/Software-IR/Software-IR/sir-semantic/target/classes:/home/runner/work/Software-IR/Software-IR/sir-lowering-api/target/classes:/home/runner/work/Software-IR/Software-IR/sir-lowering-spring-boot/target/classes:/home/runner/work/Software-IR/Software-IR/sir-generator-spring-boot/target/classes:/home/runner/work/Software-IR/Software-IR/sir-project-graph/target/classes:/home/runner/work/Software-IR/Software-IR/sir-change/target/classes:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/jupiter/junit-jupiter/5.12.2/junit-jupiter-5.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/jupiter/junit-jupiter-api/5.12.2/junit-jupiter-api-5.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/platform/junit-platform-commons/1.12.2/junit-platform-commons-1.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/jupiter/junit-jupiter-params/5.12.2/junit-jupiter-params-5.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/jupiter/junit-jupiter-engine/5.12.2/junit-jupiter-engine-5.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/junit/platform/junit-platform-engine/1.12.2/junit-platform-engine-1.12.2.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/fasterxml/jackson/core/jackson-databind/2.19.4/jackson-databind-2.19.4.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/fasterxml/jackson/core/jackson-annotations/2.19.4/jackson-annotations-2.19.4.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/fasterxml/jackson/core/jackson-core/2.19.4/jackson-core-2.19.4.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/boot/spring-boot/3.5.3/spring-boot-3.5.3.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-core/6.2.8/spring-core-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-jcl/6.2.8/spring-jcl-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-context/6.2.8/spring-context-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-aop/6.2.8/spring-aop-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-beans/6.2.8/spring-beans-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/org/springframework/spring-expression/6.2.8/spring-expression-6.2.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/io/micrometer/micrometer-observation/1.14.8/micrometer-observation-1.14.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/io/micrometer/micrometer-commons/1.14.8/micrometer-commons-1.14.8.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/mysql/mysql-connector-j/9.3.0/mysql-connector-j-9.3.0.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/com/google/protobuf/protobuf-java/4.29.0/protobuf-java-4.29.0.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/net/java/dev/jna/jna-platform/5.17.0/jna-platform-5.17.0.jar:/home/runner/work/Software-IR/Software-IR/.m2-ci/net/java/dev/jna/jna/5.17.0/jna-5.17.0.jar:"/>
+    <property name="sun.cpu.endian" value="little"/>
+    <property name="user.home" value="/home/runner"/>
+    <property name="user.language" value="en"/>
+    <property name="kcg.conformance.maven-executable" value="/usr/bin/mvn"/>
+    <property name="java.specification.vendor" value="Oracle Corporation"/>
+    <property name="kcg.conformance.maven-repo" value="/home/runner/work/Software-IR/Software-IR/.m2-ci"/>
+    <property name="java.version.date" value="2026-10-20"/>
+    <property name="java.home" value="/usr/lib/jvm/temurin-21-jdk-amd64"/>
+    <property name="kcg.query-conformance.maven-offline" value="false"/>
+    <property name="file.separator" value="/"/>
+    <property name="basedir" value="/home/runner/work/Software-IR/Software-IR/sir-toolchain-application"/>
+    <property name="java.vm.compressedOopsMode" value="Zero based"/>
+    <property name="line.separator" value="&#10;"/>
+    <property name="java.vm.specification.vendor" value="Oracle Corporation"/>
+    <property name="java.specification.name" value="Java Platform API Specification"/>
+    <property name="kcg.slm.candidate-root" value="/home/runner/work/Software-IR/Software-IR/datasets/sir/pilots/token-desk-scratch-p1-g10/samples/auth-token-desk-scratch-p1-v1-teacher-ef74b20dce95"/>
+    <property name="surefire.real.class.path" value="/home/runner/work/Software-IR/Software-IR/sir-toolchain-application/target/surefire/surefirebooter-20261031023500572_3.jar"/>
+    <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
+    <property name="java.runtime.version" value="21.0.13+9-LTS"/>
+    <property name="user.name" value="runner"/>
+    <property name="stdout.encoding" value="UTF-8"/>
+    <property name="path.separator" value=":"/>
+    <property name="os.version" value="7.0.0-1017-azure"/>
+    <property name="kcg.conformance.work-parent" value="/home/runner/work/Software-IR/Software-IR/ci-work"/>
+    <property name="java.runtime.name" value="OpenJDK Runtime Environment"/>
+    <property name="file.encoding" value="UTF-8"/>
+    <property name="surefire.failIfNoSpecifiedTests" value="false"/>
+    <property name="java.vm.name" value="OpenJDK 64-Bit Server VM"/>
+    <property name="java.vendor.version" value="Temurin-21.0.13+9"/>
+    <property name="localRepository" value="/home/runner/work/Software-IR/Software-IR/.m2-ci"/>
+    <property name="java.vendor.url.bug" value="https://github.com/adoptium/adoptium-support/issues"/>
+    <property name="java.io.tmpdir" value="/tmp"/>
+    <property name="java.version" value="21.0.13"/>
+    <property name="kcg.token-conformance.enabled" value="true"/>
+    <property name="user.dir" value="/home/runner/work/Software-IR/Software-IR/sir-toolchain-application"/>
+    <property name="os.arch" value="amd64"/>
+    <property name="java.vm.specification.name" value="Java Virtual Machine Specification"/>
+    <property name="failIfNoTests" value="false"/>
+    <property name="native.encoding" value="UTF-8"/>
+    <property name="java.library.path" value="/usr/java/packages/lib:/usr/lib64:/lib64:/lib:/usr/lib"/>
+    <property name="java.vm.info" value="mixed mode, sharing"/>
+    <property name="stderr.encoding" value="UTF-8"/>
+    <property name="java.vendor" value="Eclipse Adoptium"/>
+    <property name="java.vm.version" value="21.0.13+9-LTS"/>
+    <property name="sun.io.unicode.encoding" value="UnicodeLittle"/>
+    <property name="maven.repo.local" value="/home/runner/work/Software-IR/Software-IR/.m2-ci"/>
+    <property name="java.class.version" value="65.0"/>
+  </properties>
+  <testcase name="uuidKeysNoOpGuardedUpdatesAndBrokenUniquenessBehaveAgainstRealMysql" classname="io.kcg.sir.application.conformance.TokenDeskBusinessConformanceIT" time="7.401">
+    <failure message="token desk business conformance FAILED:&#10;=== Token desk (Uuid keys, no-op guarded update, unique lookup) business conformance ===&#10;verdict=FAILED&#10;runId=token-slice-1a18fcf7942-62048&#10;schemaName=kcg_conf_run&#10;advisoryLock=held during the run&#10;schemaSource=TEST_FIXTURE_DDL&#10;productInitializeImplemented=false&#10;productUpdateImplemented=false&#10;sirResource=EXTERNAL_CANDIDATE:candidate.sir sha256=9fb952f4ad734b72eb643a21e48f069cf9f7c7c865bc1a74e4f845fa1cdd37fd&#10;fixtureDdl=/conformance/mysql/token-desk-ddl.sql sha256=fec003ab48d0e4f1e1bd6949cb884ec2d3ec6b100e3c050f630f006425aac072&#10;fixtureSeed=/conformance/mysql/token-desk-seed.sql sha256=a2b431d018c4213aa3c27934298f8da8c0f8d9a555d4e84d29b96a3ce8737741&#10;generatedFiles=38 combinedSha256=650ef286e5f7ac73733cadda2fade9dfa2f85b5d22ffb016be8f3782d45506b4&#10;generatedProjectBuild=PASSED (exit 0)&#10;httpReadiness=NOT_RUN&#10;readinessDiagnostic=processAlive=false springStdoutBytes=5025 springStderrBytes=0 unreachable=java.net.ConnectException &lt;- java.net.ConnectException &lt;- java.nio.channels.ClosedChannelException&#10;mysqlRowsBefore=0 mysqlRowsAfter=0&#10;mavenOffline=false&#10;javaVersion=21.0.13&#10;osName=Linux osArch=amd64&#10;serverPort=18080&#10;slmMysqlVersion=8.4.13&#10;slmSampleId=auth-token-desk-scratch-p1-v1-teacher-ef74b20dce95&#10;slmSourceSha256=9fb952f4ad734b72eb643a21e48f069cf9f7c7c865bc1a74e4f845fa1cdd37fd&#10;slmGeneratedDigest=db3e8670202f28b0bfde70dc3d16600ef32591c486052a7112937d5bd4236054&#10;&#10;checksPassed=8 checksFailed=1&#10;PASS the SIR slice compiles without errors (warnings remain visible) (diagnostics=[])&#10;PASS the compiler emitted a generated project (generatedFileCount=38)&#10;PASS candidate runtime compilation matches full static generation (sourceSha256=9fb952f4ad734b72eb643a21e48f069cf9f7c7c865bc1a74e4f845fa1cdd37fd generatedDigest=db3e8670202f28b0bfde70dc3d16600ef32591c486052a7112937d5bd4236054)&#10;PASS the generated project builds (mvn clean verify) (exitCode=0)&#10;PASS the build produced an executable jar (projectRoot=/home/runner/work/Software-IR/Software-IR/ci-work/token-slice-1a18fcf7942-62048/generated-project)&#10;PASS the generated application process exited (stopped=true)&#10;PASS the owned schema was dropped and its absence proved (schema=kcg_conf_run)&#10;PASS the advisory lock for the owned schema was released (released=true)&#10;FAIL the generated application serves the compiled business route (readinessUrl=http://127.0.0.1:18080/api/get-credential?id=11111111-1111-4111-8111-111111111111)&#10;&#10;failure=the generated application never became ready&#10; ==&gt; expected: &lt;true&gt; but was: &lt;false&gt;" type="org.opentest4j.AssertionFailedError"><![CDATA[org.opentest4j.AssertionFailedError: 
+token desk business conformance FAILED:
+=== Token desk (Uuid keys, no-op guarded update, unique lookup) business conformance ===
+verdict=FAILED
+runId=token-slice-1a18fcf7942-62048
+schemaName=kcg_conf_run
+advisoryLock=held during the run
+schemaSource=TEST_FIXTURE_DDL
+productInitializeImplemented=false
+productUpdateImplemented=false
+sirResource=EXTERNAL_CANDIDATE:candidate.sir sha256=9fb952f4ad734b72eb643a21e48f069cf9f7c7c865bc1a74e4f845fa1cdd37fd
+fixtureDdl=/conformance/mysql/token-desk-ddl.sql sha256=fec003ab48d0e4f1e1bd6949cb884ec2d3ec6b100e3c050f630f006425aac072
+fixtureSeed=/conformance/mysql/token-desk-seed.sql sha256=a2b431d018c4213aa3c27934298f8da8c0f8d9a555d4e84d29b96a3ce8737741
+generatedFiles=38 combinedSha256=650ef286e5f7ac73733cadda2fade9dfa2f85b5d22ffb016be8f3782d45506b4
+generatedProjectBuild=PASSED (exit 0)
+httpReadiness=NOT_RUN
+readinessDiagnostic=processAlive=false springStdoutBytes=5025 springStderrBytes=0 unreachable=java.net.ConnectException <- java.net.ConnectException <- java.nio.channels.ClosedChannelException
+mysqlRowsBefore=0 mysqlRowsAfter=0
+mavenOffline=false
+javaVersion=21.0.13
+osName=Linux osArch=amd64
+serverPort=18080
+slmMysqlVersion=8.4.13
+slmSampleId=auth-token-desk-scratch-p1-v1-teacher-ef74b20dce95
+slmSourceSha256=9fb952f4ad734b72eb643a21e48f069cf9f7c7c865bc1a74e4f845fa1cdd37fd
+slmGeneratedDigest=db3e8670202f28b0bfde70dc3d16600ef32591c486052a7112937d5bd4236054
+
+checksPassed=8 checksFailed=1
+PASS the SIR slice compiles without errors (warnings remain visible) (diagnostics=[])
+PASS the compiler emitted a generated project (generatedFileCount=38)
+PASS candidate runtime compilation matches full static generation (sourceSha256=9fb952f4ad734b72eb643a21e48f069cf9f7c7c865bc1a74e4f845fa1cdd37fd generatedDigest=db3e8670202f28b0bfde70dc3d16600ef32591c486052a7112937d5bd4236054)
+PASS the generated project builds (mvn clean verify) (exitCode=0)
+PASS the build produced an executable jar (projectRoot=/home/runner/work/Software-IR/Software-IR/ci-work/token-slice-1a18fcf7942-62048/generated-project)
+PASS the generated application process exited (stopped=true)
+PASS the owned schema was dropped and its absence proved (schema=kcg_conf_run)
+PASS the advisory lock for the owned schema was released (released=true)
+FAIL the generated application serves the compiled business route (readinessUrl=http://127.0.0.1:18080/api/get-credential?id=11111111-1111-4111-8111-111111111111)
+
+failure=the generated application never became ready
+ ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:42)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:191)
+	at io.kcg.sir.application.conformance.TokenDeskBusinessConformanceIT.uuidKeysNoOpGuardedUpdatesAndBrokenUniquenessBehaveAgainstRealMysql(TokenDeskBusinessConformanceIT.java:94)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+]]></failure>
+    <system-out><![CDATA[[CONFORMANCE] work directory retained for inspection: /home/runner/work/Software-IR/Software-IR/ci-work/token-slice-1a18fcf7942-62048
+=== Token desk (Uuid keys, no-op guarded update, unique lookup) business conformance ===
+verdict=FAILED
+runId=token-slice-1a18fcf7942-62048
+schemaName=kcg_conf_run
+advisoryLock=held during the run
+schemaSource=TEST_FIXTURE_DDL
+productInitializeImplemented=false
+productUpdateImplemented=false
+sirResource=EXTERNAL_CANDIDATE:candidate.sir sha256=9fb952f4ad734b72eb643a21e48f069cf9f7c7c865bc1a74e4f845fa1cdd37fd
+fixtureDdl=/conformance/mysql/token-desk-ddl.sql sha256=fec003ab48d0e4f1e1bd6949cb884ec2d3ec6b100e3c050f630f006425aac072
+fixtureSeed=/conformance/mysql/token-desk-seed.sql sha256=a2b431d018c4213aa3c27934298f8da8c0f8d9a555d4e84d29b96a3ce8737741
+generatedFiles=38 combinedSha256=650ef286e5f7ac73733cadda2fade9dfa2f85b5d22ffb016be8f3782d45506b4
+generatedProjectBuild=PASSED (exit 0)
+httpReadiness=NOT_RUN
+readinessDiagnostic=processAlive=false springStdoutBytes=5025 springStderrBytes=0 unreachable=java.net.ConnectException <- java.net.ConnectException <- java.nio.channels.ClosedChannelException
+mysqlRowsBefore=0 mysqlRowsAfter=0
+mavenOffline=false
+javaVersion=21.0.13
+osName=Linux osArch=amd64
+serverPort=18080
+slmMysqlVersion=8.4.13
+slmSampleId=auth-token-desk-scratch-p1-v1-teacher-ef74b20dce95
+slmSourceSha256=9fb952f4ad734b72eb643a21e48f069cf9f7c7c865bc1a74e4f845fa1cdd37fd
+slmGeneratedDigest=db3e8670202f28b0bfde70dc3d16600ef32591c486052a7112937d5bd4236054
+
+checksPassed=8 checksFailed=1
+PASS the SIR slice compiles without errors (warnings remain visible) (diagnostics=[])
+PASS the compiler emitted a generated project (generatedFileCount=38)
+PASS candidate runtime compilation matches full static generation (sourceSha256=9fb952f4ad734b72eb643a21e48f069cf9f7c7c865bc1a74e4f845fa1cdd37fd generatedDigest=db3e8670202f28b0bfde70dc3d16600ef32591c486052a7112937d5bd4236054)
+PASS the generated project builds (mvn clean verify) (exitCode=0)
+PASS the build produced an executable jar (projectRoot=/home/runner/work/Software-IR/Software-IR/ci-work/token-slice-1a18fcf7942-62048/generated-project)
+PASS the generated application process exited (stopped=true)
+PASS the owned schema was dropped and its absence proved (schema=kcg_conf_run)
+PASS the advisory lock for the owned schema was released (released=true)
+FAIL the generated application serves the compiled business route (readinessUrl=http://127.0.0.1:18080/api/get-credential?id=11111111-1111-4111-8111-111111111111)
+
+failure=the generated application never became ready
+
+]]></system-out>
+  </testcase>
+</testsuite>

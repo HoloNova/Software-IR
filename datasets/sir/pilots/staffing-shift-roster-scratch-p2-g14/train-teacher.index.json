@@ -1,0 +1,14 @@
+{
+  "all_four_gates_required": true,
+  "corpus_sha256": "c62dfc57eb1e00ec2717a015e37047ebfab5422c1cdcf58a08843fe12df517ae",
+  "count": 1,
+  "rows": [
+    {
+      "id": "staffing-shift-roster-scratch-p2-v1-teacher-dc7ded4ea9dd",
+      "oracle_sha256": "b95c7e56722148eb2b60549c6a091a7a7e260d01211b10afded1defd81d70035",
+      "runtime_run_id": "staffing-slice-1a1923017bf-19468",
+      "source_sha256": "a3c1a9e5073b3c26114f4b20d12310873e1f95f0e69b16e5b27ba57bfe6b5d5f",
+      "task_sha256": "d5f45574c6fbb9088f4bc5770c2bce9ce575579a5e11cf1d60349eab3d09b05b"
+    }
+  ]
+}

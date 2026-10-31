@@ -1,0 +1,883 @@
+-------------------------------------------------------------------------------
+Test set: io.kcg.sir.application.conformance.MaintenanceWorkOrderBusinessConformanceIT
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 13.87 s <<< FAILURE! -- in io.kcg.sir.application.conformance.MaintenanceWorkOrderBusinessConformanceIT
+io.kcg.sir.application.conformance.MaintenanceWorkOrderBusinessConformanceIT.workOrdersAndInspectionBatchesMatchHttpAndIndependentDatabaseState -- Time elapsed: 13.84 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: 
+=== Versioned work orders, optional assignees and bounded inspection batches business conformance ===
+verdict=FAILED
+runId=maintenance-slice-1a1922fd074-51432
+schemaName=kcg_conf_run
+advisoryLock=held during the run
+schemaSource=TEST_FIXTURE_DDL
+productInitializeImplemented=false
+productUpdateImplemented=false
+sirResource=EXTERNAL_CANDIDATE:candidate.sir sha256=5b0643510330c4caad78f30e399c05b13e70de61c979107f9122e8c807c23636
+fixtureDdl=/conformance/mysql/maintenance-work-order-ddl.sql sha256=074a6d4bf175e671303d61e26e1ddc4857c26bf6944c9742dccb6d19ed688029
+fixtureSeed=/conformance/mysql/maintenance-work-order-seed.sql sha256=f40a24b7f8caa86e1460744a43633808d893b67eafe342a925140c1ccf4d27b7
+generatedFiles=55 combinedSha256=c50dc34dc6c2d182c4177792ffc83e5601fef654675f1447d6bb6dc90b20745c
+generatedProjectBuild=PASSED (exit 0)
+httpReadiness=READY (200 from /api/facilities?page=1&size=10)
+mysqlRowsBefore=6 mysqlRowsAfter=6
+mavenOffline=false
+javaVersion=21.0.13
+osName=Linux osArch=amd64
+serverPort=18080
+slmMysqlVersion=8.4.13
+slmSampleId=maintenance-work-order-scratch-p2-v1-teacher-292e05874571
+slmSourceSha256=5b0643510330c4caad78f30e399c05b13e70de61c979107f9122e8c807c23636
+slmGeneratedDigest=f408afc4e51085acde9a9edd415c8678caecb349dae15007c0f0b71280d24ea5
+section=B/W identity and creation
+section=D details
+section=P edits and soft deletion
+section=L optional filters and pagination
+section=R generation
+section=R rejection and validation
+section=E closure
+section=E closure boundaries
+section=X01 same version
+X01 same version lockWaits=[Edge[transaction=2038, requestingConnection=16, blockingConnection=26, user=kcg_conf_runtime], Edge[transaction=2040, requestingConnection=17, blockingConnection=16, user=kcg_conf_runtime], Edge[transaction=2040, requestingConnection=17, blockingConnection=18, user=kcg_conf_runtime], Edge[transaction=2040, requestingConnection=17, blockingConnection=26, user=kcg_conf_runtime], Edge[transaction=2039, requestingConnection=18, blockingConnection=16, user=kcg_conf_runtime], Edge[transaction=2039, requestingConnection=18, blockingConnection=26, user=kcg_conf_runtime], Edge[transaction=2041, requestingConnection=19, blockingConnection=16, user=kcg_conf_runtime], Edge[transaction=2041, requestingConnection=19, blockingConnection=17, user=kcg_conf_runtime], Edge[transaction=2041, requestingConnection=19, blockingConnection=18, user=kcg_conf_runtime], Edge[transaction=2041, requestingConnection=19, blockingConnection=26, user=kcg_conf_runtime], Edge[transaction=2042, requestingConnection=20, blockingConnection=16, user=kcg_conf_runtime], Edge[transaction=2042, requestingConnection=20, blockingConnection=17, user=kcg_conf_runtime], Edge[transaction=2042, requestingConnection=20, blockingConnection=18, user=kcg_conf_runtime], Edge[transaction=2042, requestingConnection=20, blockingConnection=19, user=kcg_conf_runtime], Edge[transaction=2042, requestingConnection=20, blockingConnection=26, user=kcg_conf_runtime], Edge[transaction=2043, requestingConnection=21, blockingConnection=16, user=kcg_conf_runtime], Edge[transaction=2043, requestingConnection=21, blockingConnection=17, user=kcg_conf_runtime], Edge[transaction=2043, requestingConnection=21, blockingConnection=18, user=kcg_conf_runtime], Edge[transaction=2043, requestingConnection=21, blockingConnection=19, user=kcg_conf_runtime], Edge[transaction=2043, requestingConnection=21, blockingConnection=20, user=kcg_conf_runtime], Edge[transaction=2043, requestingConnection=21, blockingConnection=26, user=kcg_conf_runtime]]
+X01 same version contentionProof=Observed[connections=[21, 20, 19, 18, 17, 16], transactions=[2041, 2042, 2043, 2039, 2038, 2040]]
+X01 same version timeline=Event[client=0, phase=ready, at=2026-10-31T13:39:42.443604447Z, detail=actor=1]
+X01 same version timeline=Event[client=1, phase=ready, at=2026-10-31T13:39:42.444085829Z, detail=actor=1]
+X01 same version timeline=Event[client=2, phase=ready, at=2026-10-31T13:39:42.444186297Z, detail=actor=1]
+X01 same version timeline=Event[client=3, phase=ready, at=2026-10-31T13:39:42.445084644Z, detail=actor=1]
+X01 same version timeline=Event[client=4, phase=ready, at=2026-10-31T13:39:42.445982390Z, detail=actor=1]
+X01 same version timeline=Event[client=5, phase=ready, at=2026-10-31T13:39:42.446058426Z, detail=actor=1]
+X01 same version timeline=Event[client=0, phase=start, at=2026-10-31T13:39:42.447201298Z, detail=PATCH /api/work-orders/105]
+X01 same version timeline=Event[client=1, phase=start, at=2026-10-31T13:39:42.448064553Z, detail=PATCH /api/work-orders/105]
+X01 same version timeline=Event[client=3, phase=start, at=2026-10-31T13:39:42.448208660Z, detail=PATCH /api/work-orders/105]
+X01 same version timeline=Event[client=2, phase=start, at=2026-10-31T13:39:42.448505616Z, detail=PATCH /api/work-orders/105]
+X01 same version timeline=Event[client=4, phase=start, at=2026-10-31T13:39:42.448723502Z, detail=PATCH /api/work-orders/105]
+X01 same version timeline=Event[client=5, phase=start, at=2026-10-31T13:39:42.449605309Z, detail=PATCH /api/work-orders/105]
+X01 same version timeline=Event[client=3, phase=end, at=2026-10-31T13:39:42.516962172Z, detail=status=200]
+X01 same version timeline=Event[client=1, phase=end, at=2026-10-31T13:39:42.519185358Z, detail=status=409]
+X01 same version timeline=Event[client=4, phase=end, at=2026-10-31T13:39:42.521897483Z, detail=status=409]
+X01 same version timeline=Event[client=5, phase=end, at=2026-10-31T13:39:42.530020653Z, detail=status=409]
+X01 same version timeline=Event[client=0, phase=end, at=2026-10-31T13:39:42.537356124Z, detail=status=409]
+X01 same version timeline=Event[client=2, phase=end, at=2026-10-31T13:39:42.539954917Z, detail=status=409]
+section=X02 concurrent closures
+X02 concurrent closures timeline=Event[client=0, phase=ready, at=2026-10-31T13:39:42.594985026Z, detail=actor=1]
+X02 concurrent closures timeline=Event[client=1, phase=ready, at=2026-10-31T13:39:42.595059932Z, detail=actor=1]
+X02 concurrent closures timeline=Event[client=2, phase=ready, at=2026-10-31T13:39:42.596058145Z, detail=actor=1]
+X02 concurrent closures timeline=Event[client=4, phase=ready, at=2026-10-31T13:39:42.597982005Z, detail=actor=1]
+X02 concurrent closures timeline=Event[client=3, phase=ready, at=2026-10-31T13:39:42.598050391Z, detail=actor=1]
+X02 concurrent closures timeline=Event[client=5, phase=ready, at=2026-10-31T13:39:42.598973930Z, detail=actor=1]
+X02 concurrent closures timeline=Event[client=0, phase=start, at=2026-10-31T13:39:42.599598553Z, detail=POST /api/facilities/10/close-overdue-inspections]
+X02 concurrent closures timeline=Event[client=1, phase=start, at=2026-10-31T13:39:42.599829869Z, detail=POST /api/facilities/10/close-overdue-inspections]
+X02 concurrent closures timeline=Event[client=2, phase=start, at=2026-10-31T13:39:42.600412396Z, detail=POST /api/facilities/10/close-overdue-inspections]
+X02 concurrent closures timeline=Event[client=4, phase=start, at=2026-10-31T13:39:42.600701391Z, detail=POST /api/facilities/10/close-overdue-inspections]
+X02 concurrent closures timeline=Event[client=3, phase=start, at=2026-10-31T13:39:42.601126777Z, detail=POST /api/facilities/10/close-overdue-inspections]
+X02 concurrent closures timeline=Event[client=5, phase=start, at=2026-10-31T13:39:42.601426057Z, detail=POST /api/facilities/10/close-overdue-inspections]
+X02 concurrent closures timeline=Event[client=2, phase=end, at=2026-10-31T13:39:42.627509072Z, detail=status=200]
+X02 concurrent closures timeline=Event[client=5, phase=end, at=2026-10-31T13:39:42.627672127Z, detail=status=200]
+X02 concurrent closures timeline=Event[client=1, phase=end, at=2026-10-31T13:39:42.628275915Z, detail=status=200]
+X02 concurrent closures timeline=Event[client=4, phase=end, at=2026-10-31T13:39:42.629084766Z, detail=status=200]
+X02 concurrent closures timeline=Event[client=3, phase=end, at=2026-10-31T13:39:42.634718774Z, detail=status=200]
+X02 concurrent closures timeline=Event[client=0, phase=end, at=2026-10-31T13:39:42.635722881Z, detail=status=200]
+section=X03 generation versus closure
+X03 serialize whole batches lockWaits=[Edge[transaction=2057, requestingConnection=17, blockingConnection=28, user=kcg_conf_runtime]]
+X03 serialize whole batches timeline=Event[client=1, phase=ready, at=2026-10-31T13:39:42.678989540Z, detail=actor=1]
+X03 serialize whole batches timeline=Event[client=0, phase=ready, at=2026-10-31T13:39:42.679820282Z, detail=actor=1]
+X03 serialize whole batches timeline=Event[client=1, phase=start, at=2026-10-31T13:39:42.680435477Z, detail=POST /api/facilities/10/close-overdue-inspections]
+X03 serialize whole batches timeline=Event[client=0, phase=start, at=2026-10-31T13:39:42.680477294Z, detail=POST /api/facilities/10/inspection-series]
+X03 serialize whole batches timeline=Event[client=1, phase=end, at=2026-10-31T13:39:42.699718064Z, detail=status=200]
+X03 serialize whole batches timeline=Event[client=0, phase=end, at=2026-10-31T13:39:42.739349350Z, detail=status=201]
+finalDatabase=BoundedProblemState[tables={user=[Row[cells={id=1, name=alice}], Row[cells={id=2, name=bob}], Row[cells={id=3, name=carol}], Row[cells={id=4, name=dave}]], facility=[Row[cells={id=10, name=Boiler, manager_id=1}], Row[cells={id=11, name=Lift, manager_id=2}], Row[cells={id=12, name=Empty, manager_id=1}]], access_token=[Row[cells={id=40000000-0000-4000-8000-000000000001, owner_id=1, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=40000000-0000-4000-8000-000000000002, owner_id=2, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=40000000-0000-4000-8000-000000000003, owner_id=3, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=40000000-0000-4000-8000-000000000004, owner_id=4, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=40000000-0000-4000-8000-000000000099, owner_id=1, expires_at=2000-01-01T00:00:00Z}]], work_order=[Row[cells={id=101, facility_id=10, reporter_id=4, title=Leak, assignee=null, note=null, removed=0, version=0}], Row[cells={id=102, facility_id=10, reporter_id=4, title=Valve, assignee=3, note=checked, removed=0, version=2}], Row[cells={id=103, facility_id=10, reporter_id=2, title=Archived, assignee=3, note=old, removed=1, version=5}], Row[cells={id=104, facility_id=11, reporter_id=1, title=Button, assignee=2, note=null, removed=0, version=0}], Row[cells={id=105, facility_id=10, reporter_id=4, title=Race, assignee=3, note=race, removed=0, version=0}], Row[cells={id=106, facility_id=10, reporter_id=4, title=Gauge, assignee=2, note=null, removed=0, version=0}]], inspection_order=[Row[cells={id=201, facility_id=10, title=Inspect A, due_at=2000-01-01T00:00:00Z, closed=1}], Row[cells={id=202, facility_id=10, title=Inspect B, due_at=2000-01-01T00:00:00Z, closed=1}], Row[cells={id=203, facility_id=10, title=At cutoff, due_at=2000-01-02T00:00:00Z, closed=1}], Row[cells={id=204, facility_id=10, title=Already done, due_at=2000-01-01T00:00:00Z, closed=1}], Row[cells={id=205, facility_id=11, title=Other site, due_at=2000-01-01T00:00:00Z, closed=0}], Row[cells={id=206, facility_id=10, title=Future, due_at=2099-01-01T00:00:00Z, closed=0}], Row[cells={id=1052, facility_id=10, title=Routine, due_at=2000-01-01T00:00:00Z, closed=0}], Row[cells={id=1053, facility_id=10, title=Routine, due_at=2000-01-02T00:00:00Z, closed=0}], Row[cells={id=1054, facility_id=10, title=Routine, due_at=2000-01-03T00:00:00Z, closed=0}]]}]
+
+checksPassed=598 checksFailed=2
+PASS the SIR slice compiles without errors (warnings remain visible) (diagnostics=[])
+PASS the compiler emitted a generated project (generatedFileCount=55)
+PASS candidate runtime compilation matches full static generation (sourceSha256=5b0643510330c4caad78f30e399c05b13e70de61c979107f9122e8c807c23636 generatedDigest=f408afc4e51085acde9a9edd415c8678caecb349dae15007c0f0b71280d24ea5)
+PASS fixture seed counts, foreign keys and business invariants ({user=4, facility=3, access_token=5, work_order=6, inspection_order=6})
+PASS the generated project builds (mvn clean verify) (exitCode=0)
+PASS the build produced an executable jar (projectRoot=/home/runner/work/Software-IR/Software-IR/ci-work/maintenance-slice-1a1922fd074-51432/generated-project)
+PASS the generated application serves the compiled business route (readinessUrl=http://127.0.0.1:18080/api/facilities?page=1&size=10)
+PASS startup readiness unchanged exact full-database delta (all tables/columns match)
+PASS fixture seed counts, foreign keys and business invariants ({user=4, facility=3, access_token=5, work_order=6, inspection_order=6})
+PASS B01 anonymous facilities GET unchanged exact full-database delta (all tables/columns match)
+PASS B01 anonymous facilities (expected=200 actual=200)
+PASS B01 anonymous facilities exact page/order/total/projections ({"total":3,"page":1,"size":20,"records":[{"id":10,"name":"Boiler"},{"id":12,"name":"Empty"},{"id":11,"name":"Lift"}]})
+PASS B01 first page GET unchanged exact full-database delta (all tables/columns match)
+PASS B01 first page (expected=200 actual=200)
+PASS B01 first page exact page/order/total/projections ({"total":3,"page":1,"size":2,"records":[{"id":10,"name":"Boiler"},{"id":12,"name":"Empty"}]})
+PASS B01 second page GET unchanged exact full-database delta (all tables/columns match)
+PASS B01 second page (expected=200 actual=200)
+PASS B01 second page exact page/order/total/projections ({"total":3,"page":2,"size":2,"records":[{"id":11,"name":"Lift"}]})
+PASS B02 POST /api/work-orders (expected=401 actual=401)
+PASS B02 POST /api/work-orders empty body ()
+PASS B02 POST /api/work-orders anonymous unchanged exact full-database delta (all tables/columns match)
+PASS B02 POST /api/work-orders (expected=401 actual=401)
+PASS B02 POST /api/work-orders empty body ()
+PASS B02 POST /api/work-orders anonymous unchanged exact full-database delta (all tables/columns match)
+PASS B02 POST /api/work-orders (expected=401 actual=401)
+PASS B02 POST /api/work-orders empty body ()
+PASS B02 POST /api/work-orders anonymous unchanged exact full-database delta (all tables/columns match)
+PASS B02 POST /api/work-orders (expected=401 actual=401)
+PASS B02 POST /api/work-orders empty body ()
+PASS B02 POST /api/work-orders anonymous unchanged exact full-database delta (all tables/columns match)
+PASS B02 PATCH /api/work-orders/102 (expected=401 actual=401)
+PASS B02 PATCH /api/work-orders/102 empty body ()
+PASS B02 PATCH /api/work-orders/102 anonymous unchanged exact full-database delta (all tables/columns match)
+PASS B02 PATCH /api/work-orders/102 (expected=401 actual=401)
+PASS B02 PATCH /api/work-orders/102 empty body ()
+PASS B02 PATCH /api/work-orders/102 anonymous unchanged exact full-database delta (all tables/columns match)
+PASS B02 PATCH /api/work-orders/102 (expected=401 actual=401)
+PASS B02 PATCH /api/work-orders/102 empty body ()
+PASS B02 PATCH /api/work-orders/102 anonymous unchanged exact full-database delta (all tables/columns match)
+PASS B02 PATCH /api/work-orders/102 (expected=401 actual=401)
+PASS B02 PATCH /api/work-orders/102 empty body ()
+PASS B02 PATCH /api/work-orders/102 anonymous unchanged exact full-database delta (all tables/columns match)
+PASS B02 GET /api/work-orders/102 (expected=401 actual=401)
+PASS B02 GET /api/work-orders/102 empty body ()
+PASS B02 GET /api/work-orders/102 anonymous unchanged exact full-database delta (all tables/columns match)
+PASS B02 GET /api/work-orders/102 (expected=401 actual=401)
+PASS B02 GET /api/work-orders/102 empty body ()
+PASS B02 GET /api/work-orders/102 anonymous unchanged exact full-database delta (all tables/columns match)
+PASS B02 GET /api/work-orders/102 (expected=401 actual=401)
+PASS B02 GET /api/work-orders/102 empty body ()
+PASS B02 GET /api/work-orders/102 anonymous unchanged exact full-database delta (all tables/columns match)
+PASS B02 GET /api/work-orders/102 (expected=401 actual=401)
+PASS B02 GET /api/work-orders/102 empty body ()
+PASS B02 GET /api/work-orders/102 anonymous unchanged exact full-database delta (all tables/columns match)
+PASS B02 GET /api/facilities/10/work-orders (expected=401 actual=401)
+PASS B02 GET /api/facilities/10/work-orders empty body ()
+PASS B02 GET /api/facilities/10/work-orders anonymous unchanged exact full-database delta (all tables/columns match)
+PASS B02 GET /api/facilities/10/work-orders (expected=401 actual=401)
+PASS B02 GET /api/facilities/10/work-orders empty body ()
+PASS B02 GET /api/facilities/10/work-orders anonymous unchanged exact full-database delta (all tables/columns match)
+PASS B02 GET /api/facilities/10/work-orders (expected=401 actual=401)
+PASS B02 GET /api/facilities/10/work-orders empty body ()
+PASS B02 GET /api/facilities/10/work-orders anonymous unchanged exact full-database delta (all tables/columns match)
+PASS B02 GET /api/facilities/10/work-orders (expected=401 actual=401)
+PASS B02 GET /api/facilities/10/work-orders empty body ()
+PASS B02 GET /api/facilities/10/work-orders anonymous unchanged exact full-database delta (all tables/columns match)
+PASS B02 GET /api/facilities/10/inspections (expected=401 actual=401)
+PASS B02 GET /api/facilities/10/inspections empty body ()
+PASS B02 GET /api/facilities/10/inspections anonymous unchanged exact full-database delta (all tables/columns match)
+PASS B02 GET /api/facilities/10/inspections (expected=401 actual=401)
+PASS B02 GET /api/facilities/10/inspections empty body ()
+PASS B02 GET /api/facilities/10/inspections anonymous unchanged exact full-database delta (all tables/columns match)
+PASS B02 GET /api/facilities/10/inspections (expected=401 actual=401)
+PASS B02 GET /api/facilities/10/inspections empty body ()
+PASS B02 GET /api/facilities/10/inspections anonymous unchanged exact full-database delta (all tables/columns match)
+PASS B02 GET /api/facilities/10/inspections (expected=401 actual=401)
+PASS B02 GET /api/facilities/10/inspections empty body ()
+PASS B02 GET /api/facilities/10/inspections anonymous unchanged exact full-database delta (all tables/columns match)
+PASS B02 POST /api/facilities/10/inspection-series (expected=401 actual=401)
+PASS B02 POST /api/facilities/10/inspection-series empty body ()
+PASS B02 POST /api/facilities/10/inspection-series anonymous unchanged exact full-database delta (all tables/columns match)
+PASS B02 POST /api/facilities/10/inspection-series (expected=401 actual=401)
+PASS B02 POST /api/facilities/10/inspection-series empty body ()
+PASS B02 POST /api/facilities/10/inspection-series anonymous unchanged exact full-database delta (all tables/columns match)
+PASS B02 POST /api/facilities/10/inspection-series (expected=401 actual=401)
+PASS B02 POST /api/facilities/10/inspection-series empty body ()
+PASS B02 POST /api/facilities/10/inspection-series anonymous unchanged exact full-database delta (all tables/columns match)
+PASS B02 POST /api/facilities/10/inspection-series (expected=401 actual=401)
+PASS B02 POST /api/facilities/10/inspection-series empty body ()
+PASS B02 POST /api/facilities/10/inspection-series anonymous unchanged exact full-database delta (all tables/columns match)
+PASS B02 POST /api/facilities/10/close-overdue-inspections (expected=401 actual=401)
+PASS B02 POST /api/facilities/10/close-overdue-inspections empty body ()
+PASS B02 POST /api/facilities/10/close-overdue-inspections anonymous unchanged exact full-database delta (all tables/columns match)
+PASS B02 POST /api/facilities/10/close-overdue-inspections (expected=401 actual=401)
+PASS B02 POST /api/facilities/10/close-overdue-inspections empty body ()
+PASS B02 POST /api/facilities/10/close-overdue-inspections anonymous unchanged exact full-database delta (all tables/columns match)
+PASS B02 POST /api/facilities/10/close-overdue-inspections (expected=401 actual=401)
+PASS B02 POST /api/facilities/10/close-overdue-inspections empty body ()
+PASS B02 POST /api/facilities/10/close-overdue-inspections anonymous unchanged exact full-database delta (all tables/columns match)
+PASS B02 POST /api/facilities/10/close-overdue-inspections (expected=401 actual=401)
+PASS B02 POST /api/facilities/10/close-overdue-inspections empty body ()
+PASS B02 POST /api/facilities/10/close-overdue-inspections anonymous unchanged exact full-database delta (all tables/columns match)
+PASS W01 reporter dave (expected=201 actual=201)
+PASS W01 reporter dave positive numeric identity (107)
+PASS W01 reporter dave exact full-database delta (all tables/columns match)
+PASS W01 reporter dave (expected=201 actual=201)
+PASS W01 reporter dave exact complete projection ({"id":107,"facility":10,"reporter":4,"title":"Pipe","assignee":null,"note":null,"removed":false,"version":0})
+PASS W01 reporter bob is not manager (expected=201 actual=201)
+PASS W01 reporter bob is not manager positive numeric identity (108)
+PASS W01 reporter bob is not manager exact full-database delta (all tables/columns match)
+PASS W01 reporter bob is not manager (expected=201 actual=201)
+PASS W01 reporter bob is not manager exact complete projection ({"id":108,"facility":10,"reporter":2,"title":"Pipe B","assignee":null,"note":null,"removed":false,"version":0})
+PASS W03 maximum title (expected=201 actual=201)
+PASS W03 maximum title positive numeric identity (109)
+PASS W03 maximum title exact full-database delta (all tables/columns match)
+PASS W03 maximum title (expected=201 actual=201)
+PASS W03 maximum title exact complete projection ({"id":109,"facility":10,"reporter":1,"title":"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx","assignee":null,"note":null,"removed":false,"version":0})
+PASS W02 invalid title 4 (expected=400 actual=400)
+PASS W02 invalid title 4 INVALID_REQUEST title/NotBlank ({"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"title","code":"NotBlank","message":"must not be blank"}]})
+PASS W02 invalid title 4 invalid unchanged exact full-database delta (all tables/columns match)
+PASS W02 invalid title 2 (expected=400 actual=400)
+PASS W02 invalid title 2 INVALID_REQUEST title/NotBlank ({"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"title","code":"Size","message":"size must be between 1 and 100"},{"path":"title","code":"NotBlank","message":"must not be blank"}]})
+PASS W02 invalid title 2 invalid unchanged exact full-database delta (all tables/columns match)
+PASS W02 invalid title 5 (expected=400 actual=400)
+PASS W02 invalid title 5 INVALID_REQUEST title/NotBlank ({"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"title","code":"NotBlank","message":"must not be blank"}]})
+PASS W02 invalid title 5 invalid unchanged exact full-database delta (all tables/columns match)
+PASS W02 invalid title 103 (expected=400 actual=400)
+PASS W02 invalid title 103 INVALID_REQUEST title/null ({"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"title","code":"Size","message":"size must be between 1 and 100"}]})
+PASS W02 invalid title 103 invalid unchanged exact full-database delta (all tables/columns match)
+PASS W02 omitted title (expected=400 actual=400)
+PASS W02 omitted title INVALID_REQUEST title/NotBlank ({"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"title","code":"NotBlank","message":"must not be blank"}]})
+PASS W02 omitted title invalid unchanged exact full-database delta (all tables/columns match)
+PASS W02 omitted facility (expected=400 actual=400)
+PASS W02 omitted facility INVALID_REQUEST facilityId/NotNull ({"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"facilityId","code":"NotNull","message":"must not be null"}]})
+PASS W02 omitted facility invalid unchanged exact full-database delta (all tables/columns match)
+PASS W02 null facility (expected=400 actual=400)
+PASS W02 null facility INVALID_REQUEST facilityId/NotNull ({"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"facilityId","code":"NotNull","message":"must not be null"}]})
+PASS W02 null facility invalid unchanged exact full-database delta (all tables/columns match)
+PASS W02 unknown facility (expected=404 actual=404)
+PASS W02 unknown facility exact error envelope ({"code":"FacilityNotFound","message":"FacilityNotFound","fields":[]})
+PASS W02 unknown facility refusal unchanged exact full-database delta (all tables/columns match)
+PASS W03 forged reporter (expected=400 actual=400)
+PASS W03 forged reporter INVALID_REQUEST null/null ({"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"reporter","code":"INVALID_REQUEST","message":"must be a well-formed value"}]})
+PASS W03 forged reporter invalid unchanged exact full-database delta (all tables/columns match)
+PASS W03 forged version (expected=400 actual=400)
+PASS W03 forged version INVALID_REQUEST null/null ({"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"version","code":"INVALID_REQUEST","message":"must be a well-formed value"}]})
+PASS W03 forged version invalid unchanged exact full-database delta (all tables/columns match)
+PASS fixture seed counts, foreign keys and business invariants ({user=4, facility=3, access_token=5, work_order=6, inspection_order=6})
+PASS D01 manager reads GET unchanged exact full-database delta (all tables/columns match)
+PASS D01 manager reads (expected=200 actual=200)
+PASS D01 manager reads exact complete projection ({"id":102,"facility":10,"reporter":4,"title":"Valve","assignee":3,"note":"checked","removed":false,"version":2})
+PASS D01 reporter cannot read (expected=403 actual=403)
+PASS D01 reporter cannot read exact error envelope ({"code":"Forbidden","message":"Forbidden","fields":[]})
+PASS D01 reporter cannot read refusal unchanged exact full-database delta (all tables/columns match)
+PASS D01 hidden or absent 103 (expected=404 actual=404)
+PASS D01 hidden or absent 103 exact error envelope ({"code":"WorkOrderNotFound","message":"WorkOrderNotFound","fields":[]})
+PASS D01 hidden or absent 103 refusal unchanged exact full-database delta (all tables/columns match)
+PASS D01 hidden or absent 999999 (expected=404 actual=404)
+PASS D01 hidden or absent 999999 exact error envelope ({"code":"WorkOrderNotFound","message":"WorkOrderNotFound","fields":[]})
+PASS D01 hidden or absent 999999 refusal unchanged exact full-database delta (all tables/columns match)
+PASS fixture seed counts, foreign keys and business invariants ({user=4, facility=3, access_token=5, work_order=6, inspection_order=6})
+PASS P01 note only exact full-database delta (all tables/columns match)
+PASS P01 note only (expected=200 actual=200)
+PASS P01 note only exact complete projection ({"id":102,"facility":10,"reporter":4,"title":"Valve","assignee":3,"note":"fixed","removed":false,"version":3})
+PASS P01 read-back GET unchanged exact full-database delta (all tables/columns match)
+PASS P01 read-back (expected=200 actual=200)
+PASS P01 read-back exact complete projection ({"id":102,"facility":10,"reporter":4,"title":"Valve","assignee":3,"note":"fixed","removed":false,"version":3})
+PASS P02 clear nullable fields exact full-database delta (all tables/columns match)
+PASS P02 clear nullable fields (expected=200 actual=200)
+PASS P02 clear nullable fields exact complete projection ({"id":102,"facility":10,"reporter":4,"title":"Valve","assignee":null,"note":null,"removed":false,"version":4})
+PASS P02 clear read-back GET unchanged exact full-database delta (all tables/columns match)
+PASS P02 clear read-back (expected=200 actual=200)
+PASS P02 clear read-back exact complete projection ({"id":102,"facility":10,"reporter":4,"title":"Valve","assignee":null,"note":null,"removed":false,"version":4})
+PASS P03 assign and rename exact full-database delta (all tables/columns match)
+PASS P03 assign and rename (expected=200 actual=200)
+PASS P03 assign and rename exact complete projection ({"id":102,"facility":10,"reporter":4,"title":"Renamed","assignee":2,"note":null,"removed":false,"version":5})
+PASS P03 same-value change increments version exact full-database delta (all tables/columns match)
+PASS P03 same-value change increments version (expected=200 actual=200)
+PASS P03 same-value change increments version exact complete projection ({"id":102,"facility":10,"reporter":4,"title":"Renamed","assignee":2,"note":null,"removed":false,"version":6})
+PASS P04 stale (expected=409 actual=409)
+PASS P04 stale exact error envelope ({"code":"StaleVersion","message":"StaleVersion","fields":[]})
+PASS P04 stale refusal unchanged exact full-database delta (all tables/columns match)
+PASS P04 permission before stale (expected=403 actual=403)
+PASS P04 permission before stale exact error envelope ({"code":"Forbidden","message":"Forbidden","fields":[]})
+PASS P04 permission before stale refusal unchanged exact full-database delta (all tables/columns match)
+PASS P04 empty changes (expected=400 actual=400)
+PASS P04 empty changes exact error envelope ({"code":"EmptyChange","message":"EmptyChange","fields":[]})
+PASS P04 empty changes refusal unchanged exact full-database delta (all tables/columns match)
+PASS P04 absent row (expected=404 actual=404)
+PASS P04 absent row exact error envelope ({"code":"WorkOrderNotFound","message":"WorkOrderNotFound","fields":[]})
+PASS P04 absent row refusal unchanged exact full-database delta (all tables/columns match)
+PASS P05 title (expected=400 actual=400)
+PASS P05 title INVALID_REQUEST changes.title/notBlank ({"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"changes.title","code":"notBlank","message":"must not be blank"}]})
+PASS P05 title invalid unchanged exact full-database delta (all tables/columns match)
+PASS P05 title (expected=400 actual=400)
+PASS P05 title INVALID_REQUEST changes.title/notBlank ({"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"changes.title","code":"notBlank","message":"must not be blank"}]})
+PASS P05 title invalid unchanged exact full-database delta (all tables/columns match)
+PASS P05 title (expected=400 actual=400)
+PASS P05 title INVALID_REQUEST changes.title/length ({"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"changes.title","code":"length","message":"size must be between 1 and 100"}]})
+PASS P05 title invalid unchanged exact full-database delta (all tables/columns match)
+PASS P05 long note (expected=400 actual=400)
+PASS P05 long note INVALID_REQUEST changes.note/length ({"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"changes.note","code":"length","message":"size must be between 0 and 500"}]})
+PASS P05 long note invalid unchanged exact full-database delta (all tables/columns match)
+PASS P05 omitted version (expected=400 actual=400)
+PASS P05 omitted version INVALID_REQUEST expectedVersion/NotNull ({"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"expectedVersion","code":"NotNull","message":"must not be null"}]})
+PASS P05 omitted version invalid unchanged exact full-database delta (all tables/columns match)
+PASS P05 null version (expected=400 actual=400)
+PASS P05 null version INVALID_REQUEST expectedVersion/NotNull ({"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"expectedVersion","code":"NotNull","message":"must not be null"}]})
+PASS P05 null version invalid unchanged exact full-database delta (all tables/columns match)
+PASS P06 exact full-database delta (all tables/columns match)
+PASS P06 (expected=200 actual=200)
+PASS P06 exact complete projection ({"id":102,"facility":10,"reporter":4,"title":"Renamed","assignee":2,"note":"path wins","removed":false,"version":7})
+PASS P07 soft delete exact full-database delta (all tables/columns match)
+PASS P07 soft delete (expected=200 actual=200)
+PASS P07 soft delete exact complete projection ({"id":101,"facility":10,"reporter":4,"title":"Leak","assignee":null,"note":null,"removed":true,"version":1})
+PASS P07 removed detail (expected=404 actual=404)
+PASS P07 removed detail exact error envelope ({"code":"WorkOrderNotFound","message":"WorkOrderNotFound","fields":[]})
+PASS P07 removed detail refusal unchanged exact full-database delta (all tables/columns match)
+PASS P07 removed cannot restore (expected=404 actual=404)
+PASS P07 removed cannot restore exact error envelope ({"code":"WorkOrderNotFound","message":"WorkOrderNotFound","fields":[]})
+PASS P07 removed cannot restore refusal unchanged exact full-database delta (all tables/columns match)
+PASS P07 scope also hides list row GET unchanged exact full-database delta (all tables/columns match)
+PASS P07 scope also hides list row (expected=200 actual=200)
+PASS P07 scope also hides list row exact page/order/total/projections ({"total":3,"page":1,"size":20,"records":[{"id":102,"facility":10,"reporter":4,"title":"Renamed","assignee":2,"note":"path wins","removed":false,"version":7},{"id":105,"facility":10,"reporter":4,"title":"Race","assignee":3,"note":"race","removed":false,"version":0},{"id":106,"facility":10,"reporter":4,"title":"Gauge","assignee":2,"note":null,"removed":false,"version":0}]})
+PASS P08 empty note exact full-database delta (all tables/columns match)
+PASS P08 empty note (expected=200 actual=200)
+PASS P08 empty note exact complete projection ({"id":102,"facility":10,"reporter":4,"title":"Renamed","assignee":2,"note":"","removed":false,"version":8})
+PASS P08 500-character note exact full-database delta (all tables/columns match)
+PASS P08 500-character note (expected=200 actual=200)
+PASS P08 500-character note exact complete projection ({"id":102,"facility":10,"reporter":4,"title":"Renamed","assignee":2,"note":"nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn","removed":false,"version":9})
+PASS P08 forbidden change facility (expected=400 actual=400)
+PASS P08 forbidden change facility INVALID_REQUEST null/null ({"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"changes.facility","code":"INVALID_REQUEST","message":"must be a well-formed value"}]})
+PASS P08 forbidden change facility invalid unchanged exact full-database delta (all tables/columns match)
+PASS P08 forbidden change reporter (expected=400 actual=400)
+PASS P08 forbidden change reporter INVALID_REQUEST null/null ({"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"changes.reporter","code":"INVALID_REQUEST","message":"must be a well-formed value"}]})
+PASS P08 forbidden change reporter invalid unchanged exact full-database delta (all tables/columns match)
+PASS P08 forbidden change version (expected=400 actual=400)
+PASS P08 forbidden change version INVALID_REQUEST null/null ({"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"changes.version","code":"INVALID_REQUEST","message":"must be a well-formed value"}]})
+PASS P08 forbidden change version invalid unchanged exact full-database delta (all tables/columns match)
+PASS fixture seed counts, foreign keys and business invariants ({user=4, facility=3, access_token=5, work_order=6, inspection_order=6})
+PASS L01 all including unassigned GET unchanged exact full-database delta (all tables/columns match)
+PASS L01 all including unassigned (expected=200 actual=200)
+PASS L01 all including unassigned exact page/order/total/projections ({"total":4,"page":1,"size":20,"records":[{"id":101,"facility":10,"reporter":4,"title":"Leak","assignee":null,"note":null,"removed":false,"version":0},{"id":102,"facility":10,"reporter":4,"title":"Valve","assignee":3,"note":"checked","removed":false,"version":2},{"id":105,"facility":10,"reporter":4,"title":"Race","assignee":3,"note":"race","removed":false,"version":0},{"id":106,"facility":10,"reporter":4,"title":"Gauge","assignee":2,"note":null,"removed":false,"version":0}]})
+PASS L01 assignee 3 GET unchanged exact full-database delta (all tables/columns match)
+PASS L01 assignee 3 (expected=200 actual=200)
+PASS L01 assignee 3 exact page/order/total/projections ({"total":2,"page":1,"size":20,"records":[{"id":102,"facility":10,"reporter":4,"title":"Valve","assignee":3,"note":"checked","removed":false,"version":2},{"id":105,"facility":10,"reporter":4,"title":"Race","assignee":3,"note":"race","removed":false,"version":0}]})
+PASS L01 assignee 2 GET unchanged exact full-database delta (all tables/columns match)
+PASS L01 assignee 2 (expected=200 actual=200)
+PASS L01 assignee 2 exact page/order/total/projections ({"total":1,"page":1,"size":20,"records":[{"id":106,"facility":10,"reporter":4,"title":"Gauge","assignee":2,"note":null,"removed":false,"version":0}]})
+PASS L01 unknown assignee is empty GET unchanged exact full-database delta (all tables/columns match)
+PASS L01 unknown assignee is empty (expected=200 actual=200)
+PASS L01 unknown assignee is empty exact page/order/total/projections ({"total":0,"page":1,"size":20,"records":[]})
+PASS L02 page 1 GET unchanged exact full-database delta (all tables/columns match)
+PASS L02 page 1 (expected=200 actual=200)
+PASS L02 page 1 exact page/order/total/projections ({"total":4,"page":1,"size":2,"records":[{"id":101,"facility":10,"reporter":4,"title":"Leak","assignee":null,"note":null,"removed":false,"version":0},{"id":102,"facility":10,"reporter":4,"title":"Valve","assignee":3,"note":"checked","removed":false,"version":2}]})
+PASS L02 page 2 GET unchanged exact full-database delta (all tables/columns match)
+PASS L02 page 2 (expected=200 actual=200)
+PASS L02 page 2 exact page/order/total/projections ({"total":4,"page":2,"size":2,"records":[{"id":105,"facility":10,"reporter":4,"title":"Race","assignee":3,"note":"race","removed":false,"version":0},{"id":106,"facility":10,"reporter":4,"title":"Gauge","assignee":2,"note":null,"removed":false,"version":0}]})
+PASS L02 page 3 GET unchanged exact full-database delta (all tables/columns match)
+PASS L02 page 3 (expected=200 actual=200)
+PASS L02 page 3 exact page/order/total/projections ({"total":4,"page":3,"size":2,"records":[]})
+PASS L03 forbidden (expected=403 actual=403)
+PASS L03 forbidden exact error envelope ({"code":"Forbidden","message":"Forbidden","fields":[]})
+PASS L03 forbidden refusal unchanged exact full-database delta (all tables/columns match)
+PASS L03 unknown facility (expected=404 actual=404)
+PASS L03 unknown facility exact error envelope ({"code":"FacilityNotFound","message":"FacilityNotFound","fields":[]})
+PASS L03 unknown facility refusal unchanged exact full-database delta (all tables/columns match)
+PASS L03 empty facility GET unchanged exact full-database delta (all tables/columns match)
+PASS L03 empty facility (expected=200 actual=200)
+PASS L03 empty facility exact page/order/total/projections ({"total":0,"page":1,"size":20,"records":[]})
+PASS L04 /api/facilities page=0 (expected=400 actual=400)
+PASS L04 /api/facilities page=0 exact error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS L04 /api/facilities page=0 refusal unchanged exact full-database delta (all tables/columns match)
+PASS L04 /api/facilities page=-1 (expected=400 actual=400)
+PASS L04 /api/facilities page=-1 exact error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS L04 /api/facilities page=-1 refusal unchanged exact full-database delta (all tables/columns match)
+PASS L04 /api/facilities page=10001 (expected=400 actual=400)
+PASS L04 /api/facilities page=10001 exact error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS L04 /api/facilities page=10001 refusal unchanged exact full-database delta (all tables/columns match)
+PASS L04 /api/facilities size=0 (expected=400 actual=400)
+PASS L04 /api/facilities size=0 exact error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS L04 /api/facilities size=0 refusal unchanged exact full-database delta (all tables/columns match)
+PASS L04 /api/facilities size=-1 (expected=400 actual=400)
+PASS L04 /api/facilities size=-1 exact error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS L04 /api/facilities size=-1 refusal unchanged exact full-database delta (all tables/columns match)
+PASS L04 /api/facilities size=101 (expected=400 actual=400)
+PASS L04 /api/facilities size=101 exact error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS L04 /api/facilities size=101 refusal unchanged exact full-database delta (all tables/columns match)
+PASS L04 defaults /api/facilities GET unchanged exact full-database delta (all tables/columns match)
+PASS L04 defaults /api/facilities (expected=200 actual=200)
+PASS L04 defaults /api/facilities exact page/order/total/projections ({"total":3,"page":1,"size":20,"records":[{"id":10,"name":"Boiler"},{"id":12,"name":"Empty"},{"id":11,"name":"Lift"}]})
+PASS L04 default page /api/facilities GET unchanged exact full-database delta (all tables/columns match)
+PASS L04 default page /api/facilities (expected=200 actual=200)
+PASS L04 default page /api/facilities exact page/order/total/projections ({"total":3,"page":1,"size":1,"records":[{"id":10,"name":"Boiler"}]})
+PASS L04 default size /api/facilities GET unchanged exact full-database delta (all tables/columns match)
+PASS L04 default size /api/facilities (expected=200 actual=200)
+PASS L04 default size /api/facilities exact page/order/total/projections ({"total":3,"page":2,"size":20,"records":[]})
+PASS L04 maximum /api/facilities GET unchanged exact full-database delta (all tables/columns match)
+PASS L04 maximum /api/facilities (expected=200 actual=200)
+PASS L04 maximum /api/facilities exact page/order/total/projections ({"total":3,"page":10000,"size":100,"records":[]})
+PASS L04 /api/facilities/10/work-orders page=0 (expected=400 actual=400)
+PASS L04 /api/facilities/10/work-orders page=0 exact error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS L04 /api/facilities/10/work-orders page=0 refusal unchanged exact full-database delta (all tables/columns match)
+PASS L04 /api/facilities/10/work-orders page=-1 (expected=400 actual=400)
+PASS L04 /api/facilities/10/work-orders page=-1 exact error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS L04 /api/facilities/10/work-orders page=-1 refusal unchanged exact full-database delta (all tables/columns match)
+PASS L04 /api/facilities/10/work-orders page=10001 (expected=400 actual=400)
+PASS L04 /api/facilities/10/work-orders page=10001 exact error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS L04 /api/facilities/10/work-orders page=10001 refusal unchanged exact full-database delta (all tables/columns match)
+PASS L04 /api/facilities/10/work-orders size=0 (expected=400 actual=400)
+PASS L04 /api/facilities/10/work-orders size=0 exact error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS L04 /api/facilities/10/work-orders size=0 refusal unchanged exact full-database delta (all tables/columns match)
+PASS L04 /api/facilities/10/work-orders size=-1 (expected=400 actual=400)
+PASS L04 /api/facilities/10/work-orders size=-1 exact error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS L04 /api/facilities/10/work-orders size=-1 refusal unchanged exact full-database delta (all tables/columns match)
+PASS L04 /api/facilities/10/work-orders size=101 (expected=400 actual=400)
+PASS L04 /api/facilities/10/work-orders size=101 exact error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS L04 /api/facilities/10/work-orders size=101 refusal unchanged exact full-database delta (all tables/columns match)
+PASS L04 defaults /api/facilities/10/work-orders GET unchanged exact full-database delta (all tables/columns match)
+PASS L04 defaults /api/facilities/10/work-orders (expected=200 actual=200)
+PASS L04 defaults /api/facilities/10/work-orders exact page/order/total/projections ({"total":4,"page":1,"size":20,"records":[{"id":101,"facility":10,"reporter":4,"title":"Leak","assignee":null,"note":null,"removed":false,"version":0},{"id":102,"facility":10,"reporter":4,"title":"Valve","assignee":3,"note":"checked","removed":false,"version":2},{"id":105,"facility":10,"reporter":4,"title":"Race","assignee":3,"note":"race","removed":false,"version":0},{"id":106,"facility":10,"reporter":4,"title":"Gauge","assignee":2,"note":null,"removed":false,"version":0}]})
+PASS L04 default page /api/facilities/10/work-orders GET unchanged exact full-database delta (all tables/columns match)
+PASS L04 default page /api/facilities/10/work-orders (expected=200 actual=200)
+PASS L04 default page /api/facilities/10/work-orders exact page/order/total/projections ({"total":4,"page":1,"size":1,"records":[{"id":101,"facility":10,"reporter":4,"title":"Leak","assignee":null,"note":null,"removed":false,"version":0}]})
+PASS L04 default size /api/facilities/10/work-orders GET unchanged exact full-database delta (all tables/columns match)
+PASS L04 default size /api/facilities/10/work-orders (expected=200 actual=200)
+PASS L04 default size /api/facilities/10/work-orders exact page/order/total/projections ({"total":4,"page":2,"size":20,"records":[]})
+PASS L04 maximum /api/facilities/10/work-orders GET unchanged exact full-database delta (all tables/columns match)
+PASS L04 maximum /api/facilities/10/work-orders (expected=200 actual=200)
+PASS L04 maximum /api/facilities/10/work-orders exact page/order/total/projections ({"total":4,"page":10000,"size":100,"records":[]})
+PASS L04 /api/facilities/10/inspections page=0 (expected=400 actual=400)
+PASS L04 /api/facilities/10/inspections page=0 exact error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS L04 /api/facilities/10/inspections page=0 refusal unchanged exact full-database delta (all tables/columns match)
+PASS L04 /api/facilities/10/inspections page=-1 (expected=400 actual=400)
+PASS L04 /api/facilities/10/inspections page=-1 exact error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS L04 /api/facilities/10/inspections page=-1 refusal unchanged exact full-database delta (all tables/columns match)
+PASS L04 /api/facilities/10/inspections page=10001 (expected=400 actual=400)
+PASS L04 /api/facilities/10/inspections page=10001 exact error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS L04 /api/facilities/10/inspections page=10001 refusal unchanged exact full-database delta (all tables/columns match)
+PASS L04 /api/facilities/10/inspections size=0 (expected=400 actual=400)
+PASS L04 /api/facilities/10/inspections size=0 exact error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS L04 /api/facilities/10/inspections size=0 refusal unchanged exact full-database delta (all tables/columns match)
+PASS L04 /api/facilities/10/inspections size=-1 (expected=400 actual=400)
+PASS L04 /api/facilities/10/inspections size=-1 exact error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS L04 /api/facilities/10/inspections size=-1 refusal unchanged exact full-database delta (all tables/columns match)
+PASS L04 /api/facilities/10/inspections size=101 (expected=400 actual=400)
+PASS L04 /api/facilities/10/inspections size=101 exact error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS L04 /api/facilities/10/inspections size=101 refusal unchanged exact full-database delta (all tables/columns match)
+PASS L04 defaults /api/facilities/10/inspections GET unchanged exact full-database delta (all tables/columns match)
+PASS L04 defaults /api/facilities/10/inspections (expected=200 actual=200)
+PASS L04 defaults /api/facilities/10/inspections exact page/order/total/projections ({"total":5,"page":1,"size":20,"records":[{"id":201,"facility":10,"title":"Inspect A","dueAt":"2000-01-01T00:00:00Z","closed":false},{"id":202,"facility":10,"title":"Inspect B","dueAt":"2000-01-01T00:00:00Z","closed":false},{"id":204,"facility":10,"title":"Already done","dueAt":"2000-01-01T00:00:00Z","closed":true},{"id":203,"facility":10,"title":"At cutoff","dueAt":"2000-01-02T00:00:00Z","closed":false},{"id":206,"facility":10,"title":"Future","dueAt":"2099-01-01T00:00:00Z","closed":false}]})
+PASS L04 default page /api/facilities/10/inspections GET unchanged exact full-database delta (all tables/columns match)
+PASS L04 default page /api/facilities/10/inspections (expected=200 actual=200)
+PASS L04 default page /api/facilities/10/inspections exact page/order/total/projections ({"total":5,"page":1,"size":1,"records":[{"id":201,"facility":10,"title":"Inspect A","dueAt":"2000-01-01T00:00:00Z","closed":false}]})
+PASS L04 default size /api/facilities/10/inspections GET unchanged exact full-database delta (all tables/columns match)
+PASS L04 default size /api/facilities/10/inspections (expected=200 actual=200)
+PASS L04 default size /api/facilities/10/inspections exact page/order/total/projections ({"total":5,"page":2,"size":20,"records":[]})
+PASS L04 maximum /api/facilities/10/inspections GET unchanged exact full-database delta (all tables/columns match)
+PASS L04 maximum /api/facilities/10/inspections (expected=200 actual=200)
+PASS L04 maximum /api/facilities/10/inspections exact page/order/total/projections ({"total":5,"page":10000,"size":100,"records":[]})
+PASS L04 /api/facilities/12/work-orders page=0 (expected=400 actual=400)
+PASS L04 /api/facilities/12/work-orders page=0 exact error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS L04 /api/facilities/12/work-orders page=0 refusal unchanged exact full-database delta (all tables/columns match)
+PASS L04 /api/facilities/12/work-orders page=-1 (expected=400 actual=400)
+PASS L04 /api/facilities/12/work-orders page=-1 exact error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS L04 /api/facilities/12/work-orders page=-1 refusal unchanged exact full-database delta (all tables/columns match)
+PASS L04 /api/facilities/12/work-orders page=10001 (expected=400 actual=400)
+PASS L04 /api/facilities/12/work-orders page=10001 exact error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS L04 /api/facilities/12/work-orders page=10001 refusal unchanged exact full-database delta (all tables/columns match)
+PASS L04 /api/facilities/12/work-orders size=0 (expected=400 actual=400)
+PASS L04 /api/facilities/12/work-orders size=0 exact error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS L04 /api/facilities/12/work-orders size=0 refusal unchanged exact full-database delta (all tables/columns match)
+PASS L04 /api/facilities/12/work-orders size=-1 (expected=400 actual=400)
+PASS L04 /api/facilities/12/work-orders size=-1 exact error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS L04 /api/facilities/12/work-orders size=-1 refusal unchanged exact full-database delta (all tables/columns match)
+PASS L04 /api/facilities/12/work-orders size=101 (expected=400 actual=400)
+PASS L04 /api/facilities/12/work-orders size=101 exact error envelope ({"code":"BadPage","message":"BadPage","fields":[]})
+PASS L04 /api/facilities/12/work-orders size=101 refusal unchanged exact full-database delta (all tables/columns match)
+PASS L04 defaults /api/facilities/12/work-orders GET unchanged exact full-database delta (all tables/columns match)
+PASS L04 defaults /api/facilities/12/work-orders (expected=200 actual=200)
+PASS L04 defaults /api/facilities/12/work-orders exact page/order/total/projections ({"total":0,"page":1,"size":20,"records":[]})
+PASS L04 default page /api/facilities/12/work-orders GET unchanged exact full-database delta (all tables/columns match)
+PASS L04 default page /api/facilities/12/work-orders (expected=200 actual=200)
+PASS L04 default page /api/facilities/12/work-orders exact page/order/total/projections ({"total":0,"page":1,"size":1,"records":[]})
+PASS L04 default size /api/facilities/12/work-orders GET unchanged exact full-database delta (all tables/columns match)
+PASS L04 default size /api/facilities/12/work-orders (expected=200 actual=200)
+PASS L04 default size /api/facilities/12/work-orders exact page/order/total/projections ({"total":0,"page":2,"size":20,"records":[]})
+PASS L04 maximum /api/facilities/12/work-orders GET unchanged exact full-database delta (all tables/columns match)
+PASS L04 maximum /api/facilities/12/work-orders (expected=200 actual=200)
+PASS L04 maximum /api/facilities/12/work-orders exact page/order/total/projections ({"total":0,"page":10000,"size":100,"records":[]})
+PASS L05 inspection page 1 GET unchanged exact full-database delta (all tables/columns match)
+PASS L05 inspection page 1 (expected=200 actual=200)
+PASS L05 inspection page 1 exact page/order/total/projections ({"total":5,"page":1,"size":2,"records":[{"id":201,"facility":10,"title":"Inspect A","dueAt":"2000-01-01T00:00:00Z","closed":false},{"id":202,"facility":10,"title":"Inspect B","dueAt":"2000-01-01T00:00:00Z","closed":false}]})
+PASS L05 inspection page 2 GET unchanged exact full-database delta (all tables/columns match)
+PASS L05 inspection page 2 (expected=200 actual=200)
+PASS L05 inspection page 2 exact page/order/total/projections ({"total":5,"page":2,"size":2,"records":[{"id":204,"facility":10,"title":"Already done","dueAt":"2000-01-01T00:00:00Z","closed":true},{"id":203,"facility":10,"title":"At cutoff","dueAt":"2000-01-02T00:00:00Z","closed":false}]})
+PASS L05 inspection page 3 GET unchanged exact full-database delta (all tables/columns match)
+PASS L05 inspection page 3 (expected=200 actual=200)
+PASS L05 inspection page 3 exact page/order/total/projections ({"total":5,"page":3,"size":2,"records":[{"id":206,"facility":10,"title":"Future","dueAt":"2099-01-01T00:00:00Z","closed":false}]})
+PASS L05 inspection page 4 GET unchanged exact full-database delta (all tables/columns match)
+PASS L05 inspection page 4 (expected=200 actual=200)
+PASS L05 inspection page 4 exact page/order/total/projections ({"total":5,"page":4,"size":2,"records":[]})
+PASS L05 other manager GET unchanged exact full-database delta (all tables/columns match)
+PASS L05 other manager (expected=200 actual=200)
+PASS L05 other manager exact page/order/total/projections ({"total":1,"page":1,"size":20,"records":[{"id":205,"facility":11,"title":"Other site","dueAt":"2000-01-01T00:00:00Z","closed":false}]})
+PASS L05 empty GET unchanged exact full-database delta (all tables/columns match)
+PASS L05 empty (expected=200 actual=200)
+PASS L05 empty exact page/order/total/projections ({"total":0,"page":1,"size":20,"records":[]})
+PASS fixture seed counts, foreign keys and business invariants ({user=4, facility=3, access_token=5, work_order=6, inspection_order=6})
+PASS R01 three inspections (expected=201 actual=201)
+PASS R01 three inspections empty body ()
+PASS R01 three inspections exact new inspection count (inserted=3)
+PASS R01 three inspections exact full-database delta (all tables/columns match)
+PASS R01 three inspections read-back GET unchanged exact full-database delta (all tables/columns match)
+PASS R01 three inspections read-back (expected=200 actual=200)
+PASS R01 three inspections read-back exact page/order/total/projections ({"total":3,"page":1,"size":100,"records":[{"id":207,"facility":12,"title":"Routine","dueAt":"2000-01-01T06:00:00Z","closed":false},{"id":208,"facility":12,"title":"Routine","dueAt":"2000-01-04T06:00:00Z","closed":false},{"id":209,"facility":12,"title":"Routine","dueAt":"2000-01-07T06:00:00Z","closed":false}]})
+PASS R02 identical plan allowed (expected=201 actual=201)
+PASS R02 identical plan allowed empty body ()
+PASS R02 identical plan allowed exact new inspection count (inserted=3)
+PASS R02 identical plan allowed exact full-database delta (all tables/columns match)
+PASS R02 identical plan allowed read-back GET unchanged exact full-database delta (all tables/columns match)
+PASS R02 identical plan allowed read-back (expected=200 actual=200)
+PASS R02 identical plan allowed read-back exact page/order/total/projections ({"total":6,"page":1,"size":100,"records":[{"id":207,"facility":12,"title":"Routine","dueAt":"2000-01-01T06:00:00Z","closed":false},{"id":210,"facility":12,"title":"Routine","dueAt":"2000-01-01T06:00:00Z","closed":false},{"id":208,"facility":12,"title":"Routine","dueAt":"2000-01-04T06:00:00Z","closed":false},{"id":211,"facility":12,"title":"Routine","dueAt":"2000-01-04T06:00:00Z","closed":false},{"id":209,"facility":12,"title":"Routine","dueAt":"2000-01-07T06:00:00Z","closed":false},{"id":212,"facility":12,"title":"Routine","dueAt":"2000-01-07T06:00:00Z","closed":false}]})
+PASS R02 limit 24 and interval 30 (expected=201 actual=201)
+PASS R02 limit 24 and interval 30 empty body ()
+PASS R02 limit 24 and interval 30 exact new inspection count (inserted=24)
+PASS R02 limit 24 and interval 30 exact full-database delta (all tables/columns match)
+PASS R02 limit 24 and interval 30 read-back GET unchanged exact full-database delta (all tables/columns match)
+PASS R02 limit 24 and interval 30 read-back (expected=200 actual=200)
+PASS R02 limit 24 and interval 30 read-back exact page/order/total/projections ({"total":30,"page":1,"size":100,"records":[{"id":207,"facility":12,"title":"Routine","dueAt":"2000-01-01T06:00:00Z","closed":false},{"id":210,"facility":12,"title":"Routine","dueAt":"2000-01-01T06:00:00Z","closed":false},{"id":213,"facility":12,"title":"Boundary","dueAt":"2000-01-01T06:00:00Z","closed":false},{"id":208,"facility":12,"title":"Routine","dueAt":"2000-01-04T06:00:00Z","closed":false},{"id":211,"facility":12,"title":"Routine","dueAt":"2000-01-04T06:00:00Z","closed":false},{"id":209,"facility":12,"title":"Routine","dueAt":"2000-01-07T06:00:00Z","closed":false},{"id":212,"facility":12,"title":"Routine","dueAt":"2000-01-07T06:00:00Z","closed":false},{"id":214,"facility":12,"title":"Boundary","dueAt":"2000-01-31T06:00:00Z","closed":false},{"id":215,"facility":12,"title":"Boundary","dueAt":"2000-03-01T06:00:00Z","closed":false},{"id":216,"facility":12,"title":"Boundary","dueAt":"2000-03-31T06:00:00Z","closed":false},{"id":217,"facility":12,"title":"Boundary","dueAt":"2000-04-30T06:00:00Z","closed":false},{"id":218,"facility":12,"title":"Boundary","dueAt":"2000-05-30T06:00:00Z","closed":false},{"id":219,"facility":12,"title":"Boundary","dueAt":"2000-06-29T06:00:00Z","closed":false},{"id":220,"facility":12,"title":"Boundary","dueAt":"2000-07-29T06:00:00Z","closed":false},{"id":221,"facility":12,"title":"Boundary","dueAt":"2000-08-28T06:00:00Z","closed":false},{"id":222,"facility":12,"title":"Boundary","dueAt":"2000-09-27T06:00:00Z","closed":false},{"id":223,"facility":12,"title":"Boundary","dueAt":"2000-10-27T06:00:00Z","closed":false},{"id":224,"facility":12,"title":"Boundary","dueAt":"2000-11-26T06:00:00Z","closed":false},{"id":225,"facility":12,"title":"Boundary","dueAt":"2000-12-26T06:00:00Z","closed":false},{"id":226,"facility":12,"title":"Boundary","dueAt":"2001-01-25T06:00:00Z","closed":false},{"id":227,"facility":12,"title":"Boundary","dueAt":"2001-02-24T06:00:00Z","closed":false},{"id":228,"facility":12,"title":"Boundary","dueAt":"2001-03-26T06:00:00Z","closed":false},{"id":229,"facility":12,"title":"Boundary","dueAt":"2001-04-25T06:00:00Z","closed":false},{"id":230,"facility":12,"title":"Boundary","dueAt":"2001-05-25T06:00:00Z","closed":false},{"id":231,"facility":12,"title":"Boundary","dueAt":"2001-06-24T06:00:00Z","closed":false},{"id":232,"facility":12,"title":"Boundary","dueAt":"2001-07-24T06:00:00Z","closed":false},{"id":233,"facility":12,"title":"Boundary","dueAt":"2001-08-23T06:00:00Z","closed":false},{"id":234,"facility":12,"title":"Boundary","dueAt":"2001-09-22T06:00:00Z","closed":false},{"id":235,"facility":12,"title":"Boundary","dueAt":"2001-10-22T06:00:00Z","closed":false},{"id":236,"facility":12,"title":"Boundary","dueAt":"2001-11-21T06:00:00Z","closed":false}]})
+PASS fixture seed counts, foreign keys and business invariants ({user=4, facility=3, access_token=5, work_order=6, inspection_order=6})
+PASS R03 occurrences=25 (expected=409 actual=409)
+PASS R03 occurrences=25 exact error envelope ({"code":"TooManyOccurrences","message":"TooManyOccurrences","fields":[]})
+PASS R03 occurrences=25 refusal unchanged exact full-database delta (all tables/columns match)
+PASS R03 occurrences=2147483647 (expected=409 actual=409)
+PASS R03 occurrences=2147483647 exact error envelope ({"code":"TooManyOccurrences","message":"TooManyOccurrences","fields":[]})
+PASS R03 occurrences=2147483647 refusal unchanged exact full-database delta (all tables/columns match)
+PASS R04 omitted occurrences (expected=400 actual=400)
+PASS R04 omitted occurrences INVALID_REQUEST occurrences/NotNull ({"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"occurrences","code":"NotNull","message":"must not be null"}]})
+PASS R04 omitted occurrences invalid unchanged exact full-database delta (all tables/columns match)
+PASS R04 null occurrences (expected=400 actual=400)
+PASS R04 null occurrences INVALID_REQUEST occurrences/NotNull ({"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"occurrences","code":"NotNull","message":"must not be null"}]})
+PASS R04 null occurrences invalid unchanged exact full-database delta (all tables/columns match)
+PASS R04 omitted intervalDays (expected=400 actual=400)
+PASS R04 omitted intervalDays INVALID_REQUEST intervalDays/NotNull ({"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"intervalDays","code":"NotNull","message":"must not be null"}]})
+PASS R04 omitted intervalDays invalid unchanged exact full-database delta (all tables/columns match)
+PASS R04 null intervalDays (expected=400 actual=400)
+PASS R04 null intervalDays INVALID_REQUEST intervalDays/NotNull ({"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"intervalDays","code":"NotNull","message":"must not be null"}]})
+PASS R04 null intervalDays invalid unchanged exact full-database delta (all tables/columns match)
+PASS R04 omitted firstDueAt (expected=400 actual=400)
+PASS R04 omitted firstDueAt INVALID_REQUEST firstDueAt/NotNull ({"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"firstDueAt","code":"NotNull","message":"must not be null"}]})
+PASS R04 omitted firstDueAt invalid unchanged exact full-database delta (all tables/columns match)
+PASS R04 null firstDueAt (expected=400 actual=400)
+PASS R04 null firstDueAt INVALID_REQUEST firstDueAt/NotNull ({"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"firstDueAt","code":"NotNull","message":"must not be null"}]})
+PASS R04 null firstDueAt invalid unchanged exact full-database delta (all tables/columns match)
+PASS R04 omitted title (expected=400 actual=400)
+PASS R04 omitted title INVALID_REQUEST title/NotBlank ({"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"title","code":"NotBlank","message":"must not be blank"}]})
+PASS R04 omitted title invalid unchanged exact full-database delta (all tables/columns match)
+PASS R04 null title (expected=400 actual=400)
+PASS R04 null title INVALID_REQUEST title/NotBlank ({"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"title","code":"NotBlank","message":"must not be blank"}]})
+PASS R04 null title invalid unchanged exact full-database delta (all tables/columns match)
+PASS R04 count 0 (expected=400 actual=400)
+PASS R04 count 0 INVALID_REQUEST occurrences/null ({"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"occurrences","code":"DecimalMin","message":"must be greater than or equal to 1"}]})
+PASS R04 count 0 invalid unchanged exact full-database delta (all tables/columns match)
+PASS R04 count -1 (expected=400 actual=400)
+PASS R04 count -1 INVALID_REQUEST occurrences/null ({"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"occurrences","code":"DecimalMin","message":"must be greater than or equal to 1"}]})
+PASS R04 count -1 invalid unchanged exact full-database delta (all tables/columns match)
+PASS R04 interval 0 (expected=400 actual=400)
+PASS R04 interval 0 INVALID_REQUEST intervalDays/null ({"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"intervalDays","code":"DecimalMin","message":"must be greater than or equal to 1"}]})
+PASS R04 interval 0 invalid unchanged exact full-database delta (all tables/columns match)
+PASS R04 interval 31 (expected=400 actual=400)
+PASS R04 interval 31 INVALID_REQUEST intervalDays/null ({"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"intervalDays","code":"DecimalMax","message":"must be less than or equal to 30"}]})
+PASS R04 interval 31 invalid unchanged exact full-database delta (all tables/columns match)
+PASS R04 blank title (expected=400 actual=400)
+PASS R04 blank title INVALID_REQUEST title/NotBlank ({"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"title","code":"NotBlank","message":"must not be blank"}]})
+PASS R04 blank title invalid unchanged exact full-database delta (all tables/columns match)
+PASS R04 long title (expected=400 actual=400)
+PASS R04 long title INVALID_REQUEST title/null ({"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"title","code":"Size","message":"size must be between 1 and 100"}]})
+PASS R04 long title invalid unchanged exact full-database delta (all tables/columns match)
+PASS R05 unauthorized generation (expected=403 actual=403)
+PASS R05 unauthorized generation exact error envelope ({"code":"Forbidden","message":"Forbidden","fields":[]})
+PASS R05 unauthorized generation refusal unchanged exact full-database delta (all tables/columns match)
+PASS R05 unknown generation facility (expected=404 actual=404)
+PASS R05 unknown generation facility exact error envelope ({"code":"FacilityNotFound","message":"FacilityNotFound","fields":[]})
+PASS R05 unknown generation facility refusal unchanged exact full-database delta (all tables/columns match)
+PASS R05 unauthorized closure (expected=403 actual=403)
+PASS R05 unauthorized closure exact error envelope ({"code":"Forbidden","message":"Forbidden","fields":[]})
+PASS R05 unauthorized closure refusal unchanged exact full-database delta (all tables/columns match)
+PASS R05 unknown closure facility (expected=404 actual=404)
+PASS R05 unknown closure facility exact error envelope ({"code":"FacilityNotFound","message":"FacilityNotFound","fields":[]})
+PASS R05 unknown closure facility refusal unchanged exact full-database delta (all tables/columns match)
+PASS fixture seed counts, foreign keys and business invariants ({user=4, facility=3, access_token=5, work_order=6, inspection_order=6})
+PASS E01 exact strict-before set (expected=200 actual=200)
+PASS E01 exact strict-before set empty body ()
+PASS E01 exact strict-before set exact full-database delta (all tables/columns match)
+PASS E01 repeat is empty success (expected=200 actual=200)
+PASS E01 repeat is empty success empty body ()
+PASS E01 repeat is empty success exact full-database delta (all tables/columns match)
+PASS E02 empty facility (expected=200 actual=200)
+PASS E02 empty facility empty body ()
+PASS E02 empty facility exact full-database delta (all tables/columns match)
+PASS E02 omitted cutoff (expected=400 actual=400)
+PASS E02 omitted cutoff INVALID_REQUEST cutoff/NotNull ({"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"cutoff","code":"NotNull","message":"must not be null"}]})
+PASS E02 omitted cutoff invalid unchanged exact full-database delta (all tables/columns match)
+PASS E02 null cutoff (expected=400 actual=400)
+PASS E02 null cutoff INVALID_REQUEST cutoff/NotNull ({"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"cutoff","code":"NotNull","message":"must not be null"}]})
+PASS E02 null cutoff invalid unchanged exact full-database delta (all tables/columns match)
+PASS E04 closed inspections remain listed GET unchanged exact full-database delta (all tables/columns match)
+PASS E04 closed inspections remain listed (expected=200 actual=200)
+PASS E04 closed inspections remain listed exact page/order/total/projections ({"total":5,"page":1,"size":20,"records":[{"id":201,"facility":10,"title":"Inspect A","dueAt":"2000-01-01T00:00:00Z","closed":true},{"id":202,"facility":10,"title":"Inspect B","dueAt":"2000-01-01T00:00:00Z","closed":true},{"id":204,"facility":10,"title":"Already done","dueAt":"2000-01-01T00:00:00Z","closed":true},{"id":203,"facility":10,"title":"At cutoff","dueAt":"2000-01-02T00:00:00Z","closed":false},{"id":206,"facility":10,"title":"Future","dueAt":"2099-01-01T00:00:00Z","closed":false}]})
+PASS E04 work order unchanged GET unchanged exact full-database delta (all tables/columns match)
+PASS E04 work order unchanged (expected=200 actual=200)
+PASS E04 work order unchanged exact complete projection ({"id":102,"facility":10,"reporter":4,"title":"Valve","assignee":3,"note":"checked","removed":false,"version":2})
+PASS E04 work scope unchanged GET unchanged exact full-database delta (all tables/columns match)
+PASS E04 work scope unchanged (expected=200 actual=200)
+PASS E04 work scope unchanged exact page/order/total/projections ({"total":4,"page":1,"size":20,"records":[{"id":101,"facility":10,"reporter":4,"title":"Leak","assignee":null,"note":null,"removed":false,"version":0},{"id":102,"facility":10,"reporter":4,"title":"Valve","assignee":3,"note":"checked","removed":false,"version":2},{"id":105,"facility":10,"reporter":4,"title":"Race","assignee":3,"note":"race","removed":false,"version":0},{"id":106,"facility":10,"reporter":4,"title":"Gauge","assignee":2,"note":null,"removed":false,"version":0}]})
+PASS fixture seed counts, foreign keys and business invariants ({user=4, facility=3, access_token=5, work_order=6, inspection_order=6})
+PASS fixture seed counts, foreign keys and business invariants ({user=4, facility=3, access_token=5, work_order=6, inspection_order=6})
+PASS E03 exactly 1 closed (expected=200 actual=200)
+PASS E03 exactly 1 closed empty body ()
+PASS E03 exactly 1 closed exact full-database delta (all tables/columns match)
+PASS fixture seed counts, foreign keys and business invariants ({user=4, facility=3, access_token=5, work_order=6, inspection_order=6})
+PASS E03 exactly 50 closed (expected=200 actual=200)
+PASS E03 exactly 50 closed empty body ()
+PASS E03 exactly 50 closed exact full-database delta (all tables/columns match)
+PASS fixture seed counts, foreign keys and business invariants ({user=4, facility=3, access_token=5, work_order=6, inspection_order=6})
+PASS E03 51 rejects whole batch (expected=409 actual=409)
+PASS E03 51 rejects whole batch exact error envelope ({"code":"TooManyInspections","message":"TooManyInspections","fields":[]})
+PASS E03 51 rejects whole batch refusal unchanged exact full-database delta (all tables/columns match)
+PASS fixture seed counts, foreign keys and business invariants ({user=4, facility=3, access_token=5, work_order=6, inspection_order=6})
+PASS X01 same version all clients ready (remaining=0)
+PASS X01 same version all 6 distinct runtime connections/transactions wait on work_order/105 (blockerConnection=26)
+PASS X01 same version client 0 completed (HTTP 409)
+PASS X01 same version client 1 completed (HTTP 409)
+PASS X01 same version client 2 completed (HTTP 409)
+PASS X01 same version client 3 completed (HTTP 200)
+PASS X01 same version client 4 completed (HTTP 409)
+PASS X01 same version client 5 completed (HTTP 409)
+PASS X01 same version records all ready events (events=6)
+PASS X01 same version records all start events (events=6)
+PASS X01 same version records all end events (events=6)
+PASS X01 exactly one winner and five stale versions ([Outcome[call=Call[method=PATCH, actor=1, path=/api/work-orders/105, body={"expectedVersion":0,"changes":{"note":"race-1"}}], response=Response[statusCode=409, body={"code":"StaleVersion","message":"StaleVersion","fields":[]}], error=null], Outcome[call=Call[method=PATCH, actor=1, path=/api/work-orders/105, body={"expectedVersion":0,"changes":{"note":"race-2"}}], response=Response[statusCode=409, body={"code":"StaleVersion","message":"StaleVersion","fields":[]}], error=null], Outcome[call=Call[method=PATCH, actor=1, path=/api/work-orders/105, body={"expectedVersion":0,"changes":{"note":"race-3"}}], response=Response[statusCode=409, body={"code":"StaleVersion","message":"StaleVersion","fields":[]}], error=null], Outcome[call=Call[method=PATCH, actor=1, path=/api/work-orders/105, body={"expectedVersion":0,"changes":{"note":"race-4"}}], response=Response[statusCode=200, body={"id":105,"facility":10,"reporter":4,"title":"Race","assignee":3,"note":"race-4","removed":false,"version":1}], error=null], Outcome[call=Call[method=PATCH, actor=1, path=/api/work-orders/105, body={"expectedVersion":0,"changes":{"note":"race-5"}}], response=Response[statusCode=409, body={"code":"StaleVersion","message":"StaleVersion","fields":[]}], error=null], Outcome[call=Call[method=PATCH, actor=1, path=/api/work-orders/105, body={"expectedVersion":0,"changes":{"note":"race-6"}}], response=Response[statusCode=409, body={"code":"StaleVersion","message":"StaleVersion","fields":[]}], error=null]])
+PASS X01 loser (expected=409 actual=409)
+PASS X01 loser exact error envelope ({"code":"StaleVersion","message":"StaleVersion","fields":[]})
+PASS X01 loser (expected=409 actual=409)
+PASS X01 loser exact error envelope ({"code":"StaleVersion","message":"StaleVersion","fields":[]})
+PASS X01 loser (expected=409 actual=409)
+PASS X01 loser exact error envelope ({"code":"StaleVersion","message":"StaleVersion","fields":[]})
+PASS X01 loser (expected=409 actual=409)
+PASS X01 loser exact error envelope ({"code":"StaleVersion","message":"StaleVersion","fields":[]})
+PASS X01 loser (expected=409 actual=409)
+PASS X01 loser exact error envelope ({"code":"StaleVersion","message":"StaleVersion","fields":[]})
+PASS X01 only winner changes 105 exact full-database delta (all tables/columns match)
+PASS X01 winner (expected=200 actual=200)
+PASS X01 winner exact complete projection ({"id":105,"facility":10,"reporter":4,"title":"Race","assignee":3,"note":"race-4","removed":false,"version":1})
+PASS X01 read-back GET unchanged exact full-database delta (all tables/columns match)
+PASS X01 read-back (expected=200 actual=200)
+PASS X01 read-back exact complete projection ({"id":105,"facility":10,"reporter":4,"title":"Race","assignee":3,"note":"race-4","removed":false,"version":1})
+PASS fixture seed counts, foreign keys and business invariants ({user=4, facility=3, access_token=5, work_order=6, inspection_order=6})
+PASS X02 concurrent closures all clients ready (remaining=0)
+PASS X02 concurrent closures client 0 completed (HTTP 200)
+PASS X02 concurrent closures client 1 completed (HTTP 200)
+PASS X02 concurrent closures client 2 completed (HTTP 200)
+PASS X02 concurrent closures client 3 completed (HTTP 200)
+PASS X02 concurrent closures client 4 completed (HTTP 200)
+PASS X02 concurrent closures client 5 completed (HTTP 200)
+PASS X02 concurrent closures records all ready events (events=6)
+PASS X02 concurrent closures records all start events (events=6)
+PASS X02 concurrent closures records all end events (events=6)
+PASS X02 every closure succeeds (expected=200 actual=200)
+PASS X02 every closure succeeds empty body ()
+PASS X02 every closure succeeds (expected=200 actual=200)
+PASS X02 every closure succeeds empty body ()
+PASS X02 every closure succeeds (expected=200 actual=200)
+PASS X02 every closure succeeds empty body ()
+PASS X02 every closure succeeds (expected=200 actual=200)
+PASS X02 every closure succeeds empty body ()
+PASS X02 every closure succeeds (expected=200 actual=200)
+PASS X02 every closure succeeds empty body ()
+PASS X02 every closure succeeds (expected=200 actual=200)
+PASS X02 every closure succeeds empty body ()
+PASS X02 strict set closed once exact full-database delta (all tables/columns match)
+PASS fixture seed counts, foreign keys and business invariants ({user=4, facility=3, access_token=5, work_order=6, inspection_order=6})
+PASS X03 serialize whole batches all clients ready (remaining=0)
+PASS X03 serialize whole batches client 0 completed (HTTP 201)
+PASS X03 serialize whole batches client 1 completed (HTTP 200)
+PASS X03 serialize whole batches records all ready events (events=2)
+PASS X03 serialize whole batches records all start events (events=2)
+PASS X03 serialize whole batches records all end events (events=2)
+PASS X03 generation (expected=201 actual=201)
+PASS X03 generation empty body ()
+PASS X03 closure (expected=200 actual=200)
+PASS X03 closure empty body ()
+PASS X03 exact new inspection count (inserted=3)
+PASS X03 exact state equals one of the two complete serial orders (allOpen=BoundedProblemState[tables={user=[Row[cells={id=1, name=alice}], Row[cells={id=2, name=bob}], Row[cells={id=3, name=carol}], Row[cells={id=4, name=dave}]], facility=[Row[cells={id=10, name=Boiler, manager_id=1}], Row[cells={id=11, name=Lift, manager_id=2}], Row[cells={id=12, name=Empty, manager_id=1}]], access_token=[Row[cells={id=40000000-0000-4000-8000-000000000001, owner_id=1, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=40000000-0000-4000-8000-000000000002, owner_id=2, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=40000000-0000-4000-8000-000000000003, owner_id=3, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=40000000-0000-4000-8000-000000000004, owner_id=4, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=40000000-0000-4000-8000-000000000099, owner_id=1, expires_at=2000-01-01T00:00:00Z}]], work_order=[Row[cells={id=101, facility_id=10, reporter_id=4, title=Leak, assignee=null, note=null, removed=0, version=0}], Row[cells={id=102, facility_id=10, reporter_id=4, title=Valve, assignee=3, note=checked, removed=0, version=2}], Row[cells={id=103, facility_id=10, reporter_id=2, title=Archived, assignee=3, note=old, removed=1, version=5}], Row[cells={id=104, facility_id=11, reporter_id=1, title=Button, assignee=2, note=null, removed=0, version=0}], Row[cells={id=105, facility_id=10, reporter_id=4, title=Race, assignee=3, note=race, removed=0, version=0}], Row[cells={id=106, facility_id=10, reporter_id=4, title=Gauge, assignee=2, note=null, removed=0, version=0}]], inspection_order=[Row[cells={id=201, facility_id=10, title=Inspect A, due_at=2000-01-01T00:00:00Z, closed=1}], Row[cells={id=202, facility_id=10, title=Inspect B, due_at=2000-01-01T00:00:00Z, closed=1}], Row[cells={id=203, facility_id=10, title=At cutoff, due_at=2000-01-02T00:00:00Z, closed=1}], Row[cells={id=204, facility_id=10, title=Already done, due_at=2000-01-01T00:00:00Z, closed=1}], Row[cells={id=205, facility_id=11, title=Other site, due_at=2000-01-01T00:00:00Z, closed=0}], Row[cells={id=206, facility_id=10, title=Future, due_at=2099-01-01T00:00:00Z, closed=0}], Row[cells={id=1052, facility_id=10, title=Routine, due_at=2000-01-01T00:00:00Z, closed=0}], Row[cells={id=1053, facility_id=10, title=Routine, due_at=2000-01-02T00:00:00Z, closed=0}], Row[cells={id=1054, facility_id=10, title=Routine, due_at=2000-01-03T00:00:00Z, closed=0}]]}]; allClosed=BoundedProblemState[tables={user=[Row[cells={id=1, name=alice}], Row[cells={id=2, name=bob}], Row[cells={id=3, name=carol}], Row[cells={id=4, name=dave}]], facility=[Row[cells={id=10, name=Boiler, manager_id=1}], Row[cells={id=11, name=Lift, manager_id=2}], Row[cells={id=12, name=Empty, manager_id=1}]], access_token=[Row[cells={id=40000000-0000-4000-8000-000000000001, owner_id=1, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=40000000-0000-4000-8000-000000000002, owner_id=2, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=40000000-0000-4000-8000-000000000003, owner_id=3, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=40000000-0000-4000-8000-000000000004, owner_id=4, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=40000000-0000-4000-8000-000000000099, owner_id=1, expires_at=2000-01-01T00:00:00Z}]], work_order=[Row[cells={id=101, facility_id=10, reporter_id=4, title=Leak, assignee=null, note=null, removed=0, version=0}], Row[cells={id=102, facility_id=10, reporter_id=4, title=Valve, assignee=3, note=checked, removed=0, version=2}], Row[cells={id=103, facility_id=10, reporter_id=2, title=Archived, assignee=3, note=old, removed=1, version=5}], Row[cells={id=104, facility_id=11, reporter_id=1, title=Button, assignee=2, note=null, removed=0, version=0}], Row[cells={id=105, facility_id=10, reporter_id=4, title=Race, assignee=3, note=race, removed=0, version=0}], Row[cells={id=106, facility_id=10, reporter_id=4, title=Gauge, assignee=2, note=null, removed=0, version=0}]], inspection_order=[Row[cells={id=201, facility_id=10, title=Inspect A, due_at=2000-01-01T00:00:00Z, closed=1}], Row[cells={id=202, facility_id=10, title=Inspect B, due_at=2000-01-01T00:00:00Z, closed=1}], Row[cells={id=203, facility_id=10, title=At cutoff, due_at=2000-01-02T00:00:00Z, closed=1}], Row[cells={id=204, facility_id=10, title=Already done, due_at=2000-01-01T00:00:00Z, closed=1}], Row[cells={id=205, facility_id=11, title=Other site, due_at=2000-01-01T00:00:00Z, closed=0}], Row[cells={id=206, facility_id=10, title=Future, due_at=2099-01-01T00:00:00Z, closed=0}], Row[cells={id=1052, facility_id=10, title=Routine, due_at=2000-01-01T00:00:00Z, closed=1}], Row[cells={id=1053, facility_id=10, title=Routine, due_at=2000-01-02T00:00:00Z, closed=1}], Row[cells={id=1054, facility_id=10, title=Routine, due_at=2000-01-03T00:00:00Z, closed=1}]]}]; actual=BoundedProblemState[tables={user=[Row[cells={id=1, name=alice}], Row[cells={id=2, name=bob}], Row[cells={id=3, name=carol}], Row[cells={id=4, name=dave}]], facility=[Row[cells={id=10, name=Boiler, manager_id=1}], Row[cells={id=11, name=Lift, manager_id=2}], Row[cells={id=12, name=Empty, manager_id=1}]], access_token=[Row[cells={id=40000000-0000-4000-8000-000000000001, owner_id=1, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=40000000-0000-4000-8000-000000000002, owner_id=2, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=40000000-0000-4000-8000-000000000003, owner_id=3, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=40000000-0000-4000-8000-000000000004, owner_id=4, expires_at=2099-01-01T00:00:00Z}], Row[cells={id=40000000-0000-4000-8000-000000000099, owner_id=1, expires_at=2000-01-01T00:00:00Z}]], work_order=[Row[cells={id=101, facility_id=10, reporter_id=4, title=Leak, assignee=null, note=null, removed=0, version=0}], Row[cells={id=102, facility_id=10, reporter_id=4, title=Valve, assignee=3, note=checked, removed=0, version=2}], Row[cells={id=103, facility_id=10, reporter_id=2, title=Archived, assignee=3, note=old, removed=1, version=5}], Row[cells={id=104, facility_id=11, reporter_id=1, title=Button, assignee=2, note=null, removed=0, version=0}], Row[cells={id=105, facility_id=10, reporter_id=4, title=Race, assignee=3, note=race, removed=0, version=0}], Row[cells={id=106, facility_id=10, reporter_id=4, title=Gauge, assignee=2, note=null, removed=0, version=0}]], inspection_order=[Row[cells={id=201, facility_id=10, title=Inspect A, due_at=2000-01-01T00:00:00Z, closed=1}], Row[cells={id=202, facility_id=10, title=Inspect B, due_at=2000-01-01T00:00:00Z, closed=1}], Row[cells={id=203, facility_id=10, title=At cutoff, due_at=2000-01-02T00:00:00Z, closed=1}], Row[cells={id=204, facility_id=10, title=Already done, due_at=2000-01-01T00:00:00Z, closed=1}], Row[cells={id=205, facility_id=11, title=Other site, due_at=2000-01-01T00:00:00Z, closed=0}], Row[cells={id=206, facility_id=10, title=Future, due_at=2099-01-01T00:00:00Z, closed=0}], Row[cells={id=1052, facility_id=10, title=Routine, due_at=2000-01-01T00:00:00Z, closed=0}], Row[cells={id=1053, facility_id=10, title=Routine, due_at=2000-01-02T00:00:00Z, closed=0}], Row[cells={id=1054, facility_id=10, title=Routine, due_at=2000-01-03T00:00:00Z, closed=0}]]}])
+PASS the generated application process exited (stopped=true)
+PASS the owned schema was dropped and its absence proved (schema=kcg_conf_run)
+PASS the advisory lock for the owned schema was released (released=true)
+FAIL X02 concurrent closures all 6 distinct runtime connections/transactions wait on facility/10 (blockerConnection=27)
+FAIL X03 serialize whole batches all 2 distinct runtime connections/transactions wait on facility/10 (blockerConnection=28)
+
+B01 anonymous facilities: status=200 body={"total":3,"page":1,"size":20,"records":[{"id":10,"name":"Boiler"},{"id":12,"name":"Empty"},{"id":11,"name":"Lift"}]}
+B01 first page: status=200 body={"total":3,"page":1,"size":2,"records":[{"id":10,"name":"Boiler"},{"id":12,"name":"Empty"}]}
+B01 second page: status=200 body={"total":3,"page":2,"size":2,"records":[{"id":11,"name":"Lift"}]}
+B02 POST /api/work-orders: status=401 body=
+B02 POST /api/work-orders: status=401 body=
+B02 POST /api/work-orders: status=401 body=
+B02 POST /api/work-orders: status=401 body=
+B02 PATCH /api/work-orders/102: status=401 body=
+B02 PATCH /api/work-orders/102: status=401 body=
+B02 PATCH /api/work-orders/102: status=401 body=
+B02 PATCH /api/work-orders/102: status=401 body=
+B02 GET /api/work-orders/102: status=401 body=
+B02 GET /api/work-orders/102: status=401 body=
+B02 GET /api/work-orders/102: status=401 body=
+B02 GET /api/work-orders/102: status=401 body=
+B02 GET /api/facilities/10/work-orders: status=401 body=
+B02 GET /api/facilities/10/work-orders: status=401 body=
+B02 GET /api/facilities/10/work-orders: status=401 body=
+B02 GET /api/facilities/10/work-orders: status=401 body=
+B02 GET /api/facilities/10/inspections: status=401 body=
+B02 GET /api/facilities/10/inspections: status=401 body=
+B02 GET /api/facilities/10/inspections: status=401 body=
+B02 GET /api/facilities/10/inspections: status=401 body=
+B02 POST /api/facilities/10/inspection-series: status=401 body=
+B02 POST /api/facilities/10/inspection-series: status=401 body=
+B02 POST /api/facilities/10/inspection-series: status=401 body=
+B02 POST /api/facilities/10/inspection-series: status=401 body=
+B02 POST /api/facilities/10/close-overdue-inspections: status=401 body=
+B02 POST /api/facilities/10/close-overdue-inspections: status=401 body=
+B02 POST /api/facilities/10/close-overdue-inspections: status=401 body=
+B02 POST /api/facilities/10/close-overdue-inspections: status=401 body=
+W01 reporter dave: status=201 body={"id":107,"facility":10,"reporter":4,"title":"Pipe","assignee":null,"note":null,"removed":false,"version":0}
+W01 reporter bob is not manager: status=201 body={"id":108,"facility":10,"reporter":2,"title":"Pipe B","assignee":null,"note":null,"removed":false,"version":0}
+W03 maximum title: status=201 body={"id":109,"facility":10,"reporter":1,"title":"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx","assignee":null,"note":null,"removed":false,"version":0}
+W02 invalid title 4: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"title","code":"NotBlank","message":"must not be blank"}]}
+W02 invalid title 2: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"title","code":"Size","message":"size must be between 1 and 100"},{"path":"title","code":"NotBlank","message":"must not be blank"}]}
+W02 invalid title 5: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"title","code":"NotBlank","message":"must not be blank"}]}
+W02 invalid title 103: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"title","code":"Size","message":"size must be between 1 and 100"}]}
+W02 omitted title: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"title","code":"NotBlank","message":"must not be blank"}]}
+W02 omitted facility: status=400 body={"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"facilityId","code":"NotNull","message":"must not be null"}]}
+W02 null facility: status=400 body={"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"facilityId","code":"NotNull","message":"must not be null"}]}
+W02 unknown facility: status=404 body={"code":"FacilityNotFound","message":"FacilityNotFound","fields":[]}
+W03 forged reporter: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"reporter","code":"INVALID_REQUEST","message":"must be a well-formed value"}]}
+W03 forged version: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"version","code":"INVALID_REQUEST","message":"must be a well-formed value"}]}
+D01 manager reads: status=200 body={"id":102,"facility":10,"reporter":4,"title":"Valve","assignee":3,"note":"checked","removed":false,"version":2}
+D01 reporter cannot read: status=403 body={"code":"Forbidden","message":"Forbidden","fields":[]}
+D01 hidden or absent 103: status=404 body={"code":"WorkOrderNotFound","message":"WorkOrderNotFound","fields":[]}
+D01 hidden or absent 999999: status=404 body={"code":"WorkOrderNotFound","message":"WorkOrderNotFound","fields":[]}
+P01 note only: status=200 body={"id":102,"facility":10,"reporter":4,"title":"Valve","assignee":3,"note":"fixed","removed":false,"version":3}
+P01 read-back: status=200 body={"id":102,"facility":10,"reporter":4,"title":"Valve","assignee":3,"note":"fixed","removed":false,"version":3}
+P02 clear nullable fields: status=200 body={"id":102,"facility":10,"reporter":4,"title":"Valve","assignee":null,"note":null,"removed":false,"version":4}
+P02 clear read-back: status=200 body={"id":102,"facility":10,"reporter":4,"title":"Valve","assignee":null,"note":null,"removed":false,"version":4}
+P03 assign and rename: status=200 body={"id":102,"facility":10,"reporter":4,"title":"Renamed","assignee":2,"note":null,"removed":false,"version":5}
+P03 same-value change increments version: status=200 body={"id":102,"facility":10,"reporter":4,"title":"Renamed","assignee":2,"note":null,"removed":false,"version":6}
+P04 stale: status=409 body={"code":"StaleVersion","message":"StaleVersion","fields":[]}
+P04 permission before stale: status=403 body={"code":"Forbidden","message":"Forbidden","fields":[]}
+P04 empty changes: status=400 body={"code":"EmptyChange","message":"EmptyChange","fields":[]}
+P04 absent row: status=404 body={"code":"WorkOrderNotFound","message":"WorkOrderNotFound","fields":[]}
+P05 title: status=400 body={"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"changes.title","code":"notBlank","message":"must not be blank"}]}
+P05 title: status=400 body={"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"changes.title","code":"notBlank","message":"must not be blank"}]}
+P05 title: status=400 body={"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"changes.title","code":"length","message":"size must be between 1 and 100"}]}
+P05 long note: status=400 body={"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"changes.note","code":"length","message":"size must be between 0 and 500"}]}
+P05 omitted version: status=400 body={"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"expectedVersion","code":"NotNull","message":"must not be null"}]}
+P05 null version: status=400 body={"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"expectedVersion","code":"NotNull","message":"must not be null"}]}
+P06 path identity wins: status=200 body={"id":102,"facility":10,"reporter":4,"title":"Renamed","assignee":2,"note":"path wins","removed":false,"version":7}
+P07 soft delete: status=200 body={"id":101,"facility":10,"reporter":4,"title":"Leak","assignee":null,"note":null,"removed":true,"version":1}
+P07 removed detail: status=404 body={"code":"WorkOrderNotFound","message":"WorkOrderNotFound","fields":[]}
+P07 removed cannot restore: status=404 body={"code":"WorkOrderNotFound","message":"WorkOrderNotFound","fields":[]}
+P07 scope also hides list row: status=200 body={"total":3,"page":1,"size":20,"records":[{"id":102,"facility":10,"reporter":4,"title":"Renamed","assignee":2,"note":"path wins","removed":false,"version":7},{"id":105,"facility":10,"reporter":4,"title":"Race","assignee":3,"note":"race","removed":false,"version":0},{"id":106,"facility":10,"reporter":4,"title":"Gauge","assignee":2,"note":null,"removed":false,"version":0}]}
+P08 empty note: status=200 body={"id":102,"facility":10,"reporter":4,"title":"Renamed","assignee":2,"note":"","removed":false,"version":8}
+P08 500-character note: status=200 body={"id":102,"facility":10,"reporter":4,"title":"Renamed","assignee":2,"note":"nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn","removed":false,"version":9}
+P08 forbidden change facility: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"changes.facility","code":"INVALID_REQUEST","message":"must be a well-formed value"}]}
+P08 forbidden change reporter: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"changes.reporter","code":"INVALID_REQUEST","message":"must be a well-formed value"}]}
+P08 forbidden change version: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"changes.version","code":"INVALID_REQUEST","message":"must be a well-formed value"}]}
+L01 all including unassigned: status=200 body={"total":4,"page":1,"size":20,"records":[{"id":101,"facility":10,"reporter":4,"title":"Leak","assignee":null,"note":null,"removed":false,"version":0},{"id":102,"facility":10,"reporter":4,"title":"Valve","assignee":3,"note":"checked","removed":false,"version":2},{"id":105,"facility":10,"reporter":4,"title":"Race","assignee":3,"note":"race","removed":false,"version":0},{"id":106,"facility":10,"reporter":4,"title":"Gauge","assignee":2,"note":null,"removed":false,"version":0}]}
+L01 assignee 3: status=200 body={"total":2,"page":1,"size":20,"records":[{"id":102,"facility":10,"reporter":4,"title":"Valve","assignee":3,"note":"checked","removed":false,"version":2},{"id":105,"facility":10,"reporter":4,"title":"Race","assignee":3,"note":"race","removed":false,"version":0}]}
+L01 assignee 2: status=200 body={"total":1,"page":1,"size":20,"records":[{"id":106,"facility":10,"reporter":4,"title":"Gauge","assignee":2,"note":null,"removed":false,"version":0}]}
+L01 unknown assignee is empty: status=200 body={"total":0,"page":1,"size":20,"records":[]}
+L02 page 1: status=200 body={"total":4,"page":1,"size":2,"records":[{"id":101,"facility":10,"reporter":4,"title":"Leak","assignee":null,"note":null,"removed":false,"version":0},{"id":102,"facility":10,"reporter":4,"title":"Valve","assignee":3,"note":"checked","removed":false,"version":2}]}
+L02 page 2: status=200 body={"total":4,"page":2,"size":2,"records":[{"id":105,"facility":10,"reporter":4,"title":"Race","assignee":3,"note":"race","removed":false,"version":0},{"id":106,"facility":10,"reporter":4,"title":"Gauge","assignee":2,"note":null,"removed":false,"version":0}]}
+L02 page 3: status=200 body={"total":4,"page":3,"size":2,"records":[]}
+L03 forbidden: status=403 body={"code":"Forbidden","message":"Forbidden","fields":[]}
+L03 unknown facility: status=404 body={"code":"FacilityNotFound","message":"FacilityNotFound","fields":[]}
+L03 empty facility: status=200 body={"total":0,"page":1,"size":20,"records":[]}
+L04 /api/facilities page=0: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+L04 /api/facilities page=-1: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+L04 /api/facilities page=10001: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+L04 /api/facilities size=0: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+L04 /api/facilities size=-1: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+L04 /api/facilities size=101: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+L04 defaults /api/facilities: status=200 body={"total":3,"page":1,"size":20,"records":[{"id":10,"name":"Boiler"},{"id":12,"name":"Empty"},{"id":11,"name":"Lift"}]}
+L04 default page /api/facilities: status=200 body={"total":3,"page":1,"size":1,"records":[{"id":10,"name":"Boiler"}]}
+L04 default size /api/facilities: status=200 body={"total":3,"page":2,"size":20,"records":[]}
+L04 maximum /api/facilities: status=200 body={"total":3,"page":10000,"size":100,"records":[]}
+L04 /api/facilities/10/work-orders page=0: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+L04 /api/facilities/10/work-orders page=-1: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+L04 /api/facilities/10/work-orders page=10001: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+L04 /api/facilities/10/work-orders size=0: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+L04 /api/facilities/10/work-orders size=-1: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+L04 /api/facilities/10/work-orders size=101: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+L04 defaults /api/facilities/10/work-orders: status=200 body={"total":4,"page":1,"size":20,"records":[{"id":101,"facility":10,"reporter":4,"title":"Leak","assignee":null,"note":null,"removed":false,"version":0},{"id":102,"facility":10,"reporter":4,"title":"Valve","assignee":3,"note":"checked","removed":false,"version":2},{"id":105,"facility":10,"reporter":4,"title":"Race","assignee":3,"note":"race","removed":false,"version":0},{"id":106,"facility":10,"reporter":4,"title":"Gauge","assignee":2,"note":null,"removed":false,"version":0}]}
+L04 default page /api/facilities/10/work-orders: status=200 body={"total":4,"page":1,"size":1,"records":[{"id":101,"facility":10,"reporter":4,"title":"Leak","assignee":null,"note":null,"removed":false,"version":0}]}
+L04 default size /api/facilities/10/work-orders: status=200 body={"total":4,"page":2,"size":20,"records":[]}
+L04 maximum /api/facilities/10/work-orders: status=200 body={"total":4,"page":10000,"size":100,"records":[]}
+L04 /api/facilities/10/inspections page=0: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+L04 /api/facilities/10/inspections page=-1: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+L04 /api/facilities/10/inspections page=10001: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+L04 /api/facilities/10/inspections size=0: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+L04 /api/facilities/10/inspections size=-1: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+L04 /api/facilities/10/inspections size=101: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+L04 defaults /api/facilities/10/inspections: status=200 body={"total":5,"page":1,"size":20,"records":[{"id":201,"facility":10,"title":"Inspect A","dueAt":"2000-01-01T00:00:00Z","closed":false},{"id":202,"facility":10,"title":"Inspect B","dueAt":"2000-01-01T00:00:00Z","closed":false},{"id":204,"facility":10,"title":"Already done","dueAt":"2000-01-01T00:00:00Z","closed":true},{"id":203,"facility":10,"title":"At cutoff","dueAt":"2000-01-02T00:00:00Z","closed":false},{"id":206,"facility":10,"title":"Future","dueAt":"2099-01-01T00:00:00Z","closed":false}]}
+L04 default page /api/facilities/10/inspections: status=200 body={"total":5,"page":1,"size":1,"records":[{"id":201,"facility":10,"title":"Inspect A","dueAt":"2000-01-01T00:00:00Z","closed":false}]}
+L04 default size /api/facilities/10/inspections: status=200 body={"total":5,"page":2,"size":20,"records":[]}
+L04 maximum /api/facilities/10/inspections: status=200 body={"total":5,"page":10000,"size":100,"records":[]}
+L04 /api/facilities/12/work-orders page=0: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+L04 /api/facilities/12/work-orders page=-1: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+L04 /api/facilities/12/work-orders page=10001: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+L04 /api/facilities/12/work-orders size=0: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+L04 /api/facilities/12/work-orders size=-1: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+L04 /api/facilities/12/work-orders size=101: status=400 body={"code":"BadPage","message":"BadPage","fields":[]}
+L04 defaults /api/facilities/12/work-orders: status=200 body={"total":0,"page":1,"size":20,"records":[]}
+L04 default page /api/facilities/12/work-orders: status=200 body={"total":0,"page":1,"size":1,"records":[]}
+L04 default size /api/facilities/12/work-orders: status=200 body={"total":0,"page":2,"size":20,"records":[]}
+L04 maximum /api/facilities/12/work-orders: status=200 body={"total":0,"page":10000,"size":100,"records":[]}
+L05 inspection page 1: status=200 body={"total":5,"page":1,"size":2,"records":[{"id":201,"facility":10,"title":"Inspect A","dueAt":"2000-01-01T00:00:00Z","closed":false},{"id":202,"facility":10,"title":"Inspect B","dueAt":"2000-01-01T00:00:00Z","closed":false}]}
+L05 inspection page 2: status=200 body={"total":5,"page":2,"size":2,"records":[{"id":204,"facility":10,"title":"Already done","dueAt":"2000-01-01T00:00:00Z","closed":true},{"id":203,"facility":10,"title":"At cutoff","dueAt":"2000-01-02T00:00:00Z","closed":false}]}
+L05 inspection page 3: status=200 body={"total":5,"page":3,"size":2,"records":[{"id":206,"facility":10,"title":"Future","dueAt":"2099-01-01T00:00:00Z","closed":false}]}
+L05 inspection page 4: status=200 body={"total":5,"page":4,"size":2,"records":[]}
+L05 other manager: status=200 body={"total":1,"page":1,"size":20,"records":[{"id":205,"facility":11,"title":"Other site","dueAt":"2000-01-01T00:00:00Z","closed":false}]}
+L05 empty: status=200 body={"total":0,"page":1,"size":20,"records":[]}
+R01 three inspections: status=201 body=
+R01 three inspections read-back: status=200 body={"total":3,"page":1,"size":100,"records":[{"id":207,"facility":12,"title":"Routine","dueAt":"2000-01-01T06:00:00Z","closed":false},{"id":208,"facility":12,"title":"Routine","dueAt":"2000-01-04T06:00:00Z","closed":false},{"id":209,"facility":12,"title":"Routine","dueAt":"2000-01-07T06:00:00Z","closed":false}]}
+R02 identical plan allowed: status=201 body=
+R02 identical plan allowed read-back: status=200 body={"total":6,"page":1,"size":100,"records":[{"id":207,"facility":12,"title":"Routine","dueAt":"2000-01-01T06:00:00Z","closed":false},{"id":210,"facility":12,"title":"Routine","dueAt":"2000-01-01T06:00:00Z","closed":false},{"id":208,"facility":12,"title":"Routine","dueAt":"2000-01-04T06:00:00Z","closed":false},{"id":211,"facility":12,"title":"Routine","dueAt":"2000-01-04T06:00:00Z","closed":false},{"id":209,"facility":12,"title":"Routine","dueAt":"2000-01-07T06:00:00Z","closed":false},{"id":212,"facility":12,"title":"Routine","dueAt":"2000-01-07T06:00:00Z","closed":false}]}
+R02 limit 24 and interval 30: status=201 body=
+R02 limit 24 and interval 30 read-back: status=200 body={"total":30,"page":1,"size":100,"records":[{"id":207,"facility":12,"title":"Routine","dueAt":"2000-01-01T06:00:00Z","closed":false},{"id":210,"facility":12,"title":"Routine","dueAt":"2000-01-01T06:00:00Z","closed":false},{"id":213,"facility":12,"title":"Boundary","dueAt":"2000-01-01T06:00:00Z","closed":false},{"id":208,"facility":12,"title":"Routine","dueAt":"2000-01-04T06:00:00Z","closed":false},{"id":211,"facility":12,"title":"Routine","dueAt":"2000-01-04T06:00:00Z","closed":false},{"id":209,"facility":12,"title":"Routine","dueAt":"2000-01-07T06:00:00Z","closed":false},{"id":212,"facility":12,"title":"Routine","dueAt":"2000-01-07T06:00:00Z","closed":false},{"id":214,"facility":12,"title":"Boundary","dueAt":"2000-01-31T06:00:00Z","closed":false},{"id":215,"facility":12,"title":"Boundary","dueAt":"2000-03-01T06:00:00Z","closed":false},{"id":216,"facility":12,"title":"Boundary","dueAt":"2000-03-31T06:00:00Z","closed":false},{"id":217,"facility":12,"title":"Boundary","dueAt":"2000-04-30T06:00:00Z","closed":false},{"id":218,"facility":12,"title":"Boundary","dueAt":"2000-05-30T06:00:00Z","closed":false},{"id":219,"facility":12,"title":"Boundary","dueAt":"2000-06-29T06:00:00Z","closed":false},{"id":220,"facility":12,"title":"Boundary","dueAt":"2000-07-29T06:00:00Z","closed":false},{"id":221,"facility":12,"title":"Boundary","dueAt":"2000-08-28T06:00:00Z","closed":false},{"id":222,"facility":12,"title":"Boundary","dueAt":"2000-09-27T06:00:00Z","closed":false},{"id":223,"facility":12,"title":"Boundary","dueAt":"2000-10-27T06:00:00Z","closed":false},{"id":224,"facility":12,"title":"Boundary","dueAt":"2000-11-26T06:00:00Z","closed":false},{"id":225,"facility":12,"title":"Boundary","dueAt":"2000-12-26T06:00:00Z","closed":false},{"id":226,"facility":12,"title":"Boundary","dueAt":"2001-01-25T06:00:00Z","closed":false},{"id":227,"facility":12,"title":"Boundary","dueAt":"2001-02-24T06:00:00Z","closed":false},{"id":228,"facility":12,"title":"Boundary","dueAt":"2001-03-26T06:00:00Z","closed":false},{"id":229,"facility":12,"title":"Boundary","dueAt":"2001-04-25T06:00:00Z","closed":false},{"id":230,"facility":12,"title":"Boundary","dueAt":"2001-05-25T06:00:00Z","closed":false},{"id":231,"facility":12,"title":"Boundary","dueAt":"2001-06-24T06:00:00Z","closed":false},{"id":232,"facility":12,"title":"Boundary","dueAt":"2001-07-24T06:00:00Z","closed":false},{"id":233,"facility":12,"title":"Boundary","dueAt":"2001-08-23T06:00:00Z","closed":false},{"id":234,"facility":12,"title":"Boundary","dueAt":"2001-09-22T06:00:00Z","closed":false},{"id":235,"facility":12,"title":"Boundary","dueAt":"2001-10-22T06:00:00Z","closed":false},{"id":236,"facility":12,"title":"Boundary","dueAt":"2001-11-21T06:00:00Z","closed":false}]}
+R03 occurrences=25: status=409 body={"code":"TooManyOccurrences","message":"TooManyOccurrences","fields":[]}
+R03 occurrences=2147483647: status=409 body={"code":"TooManyOccurrences","message":"TooManyOccurrences","fields":[]}
+R04 omitted occurrences: status=400 body={"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"occurrences","code":"NotNull","message":"must not be null"}]}
+R04 null occurrences: status=400 body={"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"occurrences","code":"NotNull","message":"must not be null"}]}
+R04 omitted intervalDays: status=400 body={"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"intervalDays","code":"NotNull","message":"must not be null"}]}
+R04 null intervalDays: status=400 body={"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"intervalDays","code":"NotNull","message":"must not be null"}]}
+R04 omitted firstDueAt: status=400 body={"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"firstDueAt","code":"NotNull","message":"must not be null"}]}
+R04 null firstDueAt: status=400 body={"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"firstDueAt","code":"NotNull","message":"must not be null"}]}
+R04 omitted title: status=400 body={"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"title","code":"NotBlank","message":"must not be blank"}]}
+R04 null title: status=400 body={"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"title","code":"NotBlank","message":"must not be blank"}]}
+R04 count 0: status=400 body={"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"occurrences","code":"DecimalMin","message":"must be greater than or equal to 1"}]}
+R04 count -1: status=400 body={"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"occurrences","code":"DecimalMin","message":"must be greater than or equal to 1"}]}
+R04 interval 0: status=400 body={"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"intervalDays","code":"DecimalMin","message":"must be greater than or equal to 1"}]}
+R04 interval 31: status=400 body={"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"intervalDays","code":"DecimalMax","message":"must be less than or equal to 30"}]}
+R04 blank title: status=400 body={"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"title","code":"NotBlank","message":"must not be blank"}]}
+R04 long title: status=400 body={"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"title","code":"Size","message":"size must be between 1 and 100"}]}
+R05 unauthorized generation: status=403 body={"code":"Forbidden","message":"Forbidden","fields":[]}
+R05 unknown generation facility: status=404 body={"code":"FacilityNotFound","message":"FacilityNotFound","fields":[]}
+R05 unauthorized closure: status=403 body={"code":"Forbidden","message":"Forbidden","fields":[]}
+R05 unknown closure facility: status=404 body={"code":"FacilityNotFound","message":"FacilityNotFound","fields":[]}
+E01 exact strict-before set: status=200 body=
+E01 repeat is empty success: status=200 body=
+E02 empty facility: status=200 body=
+E02 omitted cutoff: status=400 body={"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"cutoff","code":"NotNull","message":"must not be null"}]}
+E02 null cutoff: status=400 body={"code":"INVALID_REQUEST","message":"INVALID_REQUEST","fields":[{"path":"cutoff","code":"NotNull","message":"must not be null"}]}
+E04 closed inspections remain listed: status=200 body={"total":5,"page":1,"size":20,"records":[{"id":201,"facility":10,"title":"Inspect A","dueAt":"2000-01-01T00:00:00Z","closed":true},{"id":202,"facility":10,"title":"Inspect B","dueAt":"2000-01-01T00:00:00Z","closed":true},{"id":204,"facility":10,"title":"Already done","dueAt":"2000-01-01T00:00:00Z","closed":true},{"id":203,"facility":10,"title":"At cutoff","dueAt":"2000-01-02T00:00:00Z","closed":false},{"id":206,"facility":10,"title":"Future","dueAt":"2099-01-01T00:00:00Z","closed":false}]}
+E04 work order unchanged: status=200 body={"id":102,"facility":10,"reporter":4,"title":"Valve","assignee":3,"note":"checked","removed":false,"version":2}
+E04 work scope unchanged: status=200 body={"total":4,"page":1,"size":20,"records":[{"id":101,"facility":10,"reporter":4,"title":"Leak","assignee":null,"note":null,"removed":false,"version":0},{"id":102,"facility":10,"reporter":4,"title":"Valve","assignee":3,"note":"checked","removed":false,"version":2},{"id":105,"facility":10,"reporter":4,"title":"Race","assignee":3,"note":"race","removed":false,"version":0},{"id":106,"facility":10,"reporter":4,"title":"Gauge","assignee":2,"note":null,"removed":false,"version":0}]}
+E03 exactly 1 closed: status=200 body=
+E03 exactly 50 closed: status=200 body=
+E03 51 rejects whole batch: status=409 body={"code":"TooManyInspections","message":"TooManyInspections","fields":[]}
+X01 same version client 0: status=409 body={"code":"StaleVersion","message":"StaleVersion","fields":[]}
+X01 same version client 1: status=409 body={"code":"StaleVersion","message":"StaleVersion","fields":[]}
+X01 same version client 2: status=409 body={"code":"StaleVersion","message":"StaleVersion","fields":[]}
+X01 same version client 3: status=200 body={"id":105,"facility":10,"reporter":4,"title":"Race","assignee":3,"note":"race-4","removed":false,"version":1}
+X01 same version client 4: status=409 body={"code":"StaleVersion","message":"StaleVersion","fields":[]}
+X01 same version client 5: status=409 body={"code":"StaleVersion","message":"StaleVersion","fields":[]}
+X01 read-back: status=200 body={"id":105,"facility":10,"reporter":4,"title":"Race","assignee":3,"note":"race-4","removed":false,"version":1}
+X02 concurrent closures client 0: status=200 body=
+X02 concurrent closures client 1: status=200 body=
+X02 concurrent closures client 2: status=200 body=
+X02 concurrent closures client 3: status=200 body=
+X02 concurrent closures client 4: status=200 body=
+X02 concurrent closures client 5: status=200 body=
+X03 serialize whole batches client 0: status=201 body=
+X03 serialize whole batches client 1: status=200 body=
+ ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:42)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:191)
+	at io.kcg.sir.application.conformance.BoundedProblemConformance.verify(BoundedProblemConformance.java:36)
+	at io.kcg.sir.application.conformance.MaintenanceWorkOrderBusinessConformanceIT.workOrdersAndInspectionBatchesMatchHttpAndIndependentDatabaseState(MaintenanceWorkOrderBusinessConformanceIT.java:18)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+

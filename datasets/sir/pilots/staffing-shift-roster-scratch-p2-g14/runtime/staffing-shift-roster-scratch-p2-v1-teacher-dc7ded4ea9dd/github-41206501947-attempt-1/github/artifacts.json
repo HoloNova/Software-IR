@@ -1,0 +1,44 @@
+{
+  "artifacts": [
+    {
+      "archive_download_url": "https://api.github.com/repos/HoloNova/Software-IR/actions/artifacts/13044960169/zip",
+      "created_at": "2026-10-31T13:40:07Z",
+      "digest": "sha256:b3748ecc8d15452fc69111dc6d66bbfdf2058c842892faa478ab079e34628692",
+      "expired": false,
+      "expires_at": "2027-01-29T13:38:46Z",
+      "id": 13044960169,
+      "name": "slm-gate-staffing-shift-roster-scratch-p2-v1-teacher-dc7ded4ea9dd",
+      "node_id": "MDg6QXJ0aWZhY3QxMzA0NDk2MDE2OQ==",
+      "size_in_bytes": 14429,
+      "updated_at": "2026-10-31T13:40:07Z",
+      "url": "https://api.github.com/repos/HoloNova/Software-IR/actions/artifacts/13044960169",
+      "workflow_run": {
+        "head_branch": "main",
+        "head_repository_id": 1299024893,
+        "head_sha": "c2c7324deb93e60fef3b2043f190a23ef2e4881f",
+        "id": 41206501947,
+        "repository_id": 1299024893
+      }
+    },
+    {
+      "archive_download_url": "https://api.github.com/repos/HoloNova/Software-IR/actions/artifacts/13044538632/zip",
+      "created_at": "2026-10-31T13:40:10Z",
+      "digest": "sha256:d0f012c68211a74520364a6e8d9884e3ae38d3d5aa5906384e1be9dd59ba7de8",
+      "expired": false,
+      "expires_at": "2027-01-29T13:38:46Z",
+      "id": 13044538632,
+      "name": "slm-gate-surefire-staffing-shift-roster-scratch-p2-v1-teacher-dc7ded4ea9dd",
+      "node_id": "MDg6QXJ0aWZhY3QxMzA0NDUzODYzMg==",
+      "size_in_bytes": 1441633,
+      "updated_at": "2026-10-31T13:40:10Z",
+      "url": "https://api.github.com/repos/HoloNova/Software-IR/actions/artifacts/13044538632",
+      "workflow_run": {
+        "head_branch": "main",
+        "head_repository_id": 1299024893,
+        "head_sha": "c2c7324deb93e60fef3b2043f190a23ef2e4881f",
+        "id": 41206501947,
+        "repository_id": 1299024893
+      }
+    }
+  ]
+}
