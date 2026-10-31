@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "sir 0.3\nsoftware DualTokenDesk {\n  metadata {\n    displayName \"Dual Token Desk\";\n    namespace \"example.dualtoken\";\n  }\n  target {\n    language java 21;\n    framework spring_boot;\n    persistence mybatis_plus;\n    database mysql;\n    build maven;\n    interface rest;\n  }\n  sources { }\n  imports { }\n  declarations {\n    entity User persistent {\n      identity id: Id generated auto;\n      field name: Name unique;\n      field passwordHash: Secret;\n    }\n    entity Note persistent {\n      identity id: Id generated auto;\n      field author: Ref<User>;\n      field text: Text;\n    }\n    entity AccessToken persistent {\n      identity id: Token generated uuid;\n      field owner: Ref<User>;\n      field expiresAt: Moment;\n      credential subject owner expires expiresAt;\n    }\n    entity RefreshToken persistent {\n      identity id: Token generated uuid;\n      field owner: Ref<User>;\n      field expiresAt: Moment;\n      field revoked: Flag default false;\n    }\n    entity TokenPair persistent {\n      identity id: Id generated auto;\n      field owner: Ref<User>;\n      field accessToken: Token;\n      field accessExpiresAt: Moment;\n      field refreshToken: Token;\n      field refreshExpiresAt: Moment;\n    }\n    view NoteView from Note {\n      field id: Id;\n      field text: Text;\n    }\n    input NoteInput {\n      field text: Text where notBlank;\n    }\n    view UserView from User {\n      field id: Id;\n      field name: Text;\n    }\n    input UserRef {\n      field id: Id;\n    }\n    view TokenPairView from TokenPair {\n      field accessToken: Token;\n      field accessExpiresAt: Moment;\n      field refreshToken: Token;\n      field refreshExpiresAt: Moment;\n    }\n    input LoginInput {\n      field name: Text where notBlank;\n      field password: Text where notBlank;\n    }\n    input RefreshInput {\n      field refreshToken: Token;\n    }\n    input LogoutInput {\n      field refreshToken: Token;\n    }\n    error UserNotFound http 404;\n    error BadLogin http 401;\n    error InvalidRefresh http 401;\n    capability GetUser {\n      input UserRef;\n      output UserView;\n      fails UserNotFound;\n      requires readonly;\n      expose query;\n      workflow {\n        load User by input.id as user else UserNotFound;\n        return user;\n      }\n    }\n    capability Register {\n      input RegisterInput;\n      output UserView;\n      requires atomic;\n      expose command;\n      workflow {\n        create User as user {\n          name: input.name;\n          passwordHash: input.password;\n        }\n        persist user;\n        return user;\n      }\n    }\n    capability PostNote {\n      actor Ref<User>;\n      input NoteInput;\n      output NoteView;\n      requires authenticated;\n      requires atomic;\n      expose command;\n      workflow {\n        create Note as note {\n          author: actor;\n          text: input.text;\n        }\n        persist note;\n        return note;\n      }\n    }\n    capability Login {\n      input LoginInput;\n      output TokenPairView;\n      fails BadLogin;\n      requires atomic;\n      expose command;\n      workflow {\n        load User by name: input.name as account else BadLogin;\n        validate account.passwordHash matches input.password else BadLogin;\n        create AccessToken as access {\n          owner: account;\n          expiresAt: now() + 15 minutes;\n        }\n        create RefreshToken as refresh {\n          owner: account;\n          expiresAt: now() + 7 days;\n        }\n        persist access;\n        persist refresh;\n        create TokenPair as pair {\n          owner: account;\n          accessToken: access.id;\n          accessExpiresAt: access.expiresAt;\n          refreshToken: refresh.id;\n          refreshExpiresAt: refresh.expiresAt;\n        }\n        persist pair;\n        return pair;\n      }\n    }\n    capability Refresh {\n      input RefreshInput;\n      output TokenPairView;\n      fails InvalidRefresh;\n      requires atomic;\n      expose command;\n      workflow {\n        load RefreshToken by input.refreshToken as current else InvalidRefresh;\n        update current when current.revoked == false and current.expiresAt > now() else InvalidRefresh {\n          revoked: true;\n        }\n        persist current;\n        create AccessToken as access {\n          owner: current.owner;\n          expiresAt: now() + 15 minutes;\n        }\n        create RefreshToken as refresh {\n          owner: current.owner;\n          expiresAt: now() + 7 days;\n        }\n        persist access;\n        persist refresh;\n        create TokenPair as pair {\n          owner: current.owner;\n          accessToken: access.id;\n          accessExpiresAt: access.expiresAt;\n          refreshToken: refresh.id;\n          refreshExpiresAt: refresh.expiresAt;\n        }\n        persist pair;\n        return pair;\n      }\n    }\n    capability Logout {\n      input LogoutInput;\n      output Unit;\n      fails InvalidRefresh;\n      requires atomic;\n      expose command;\n      workflow {\n        load RefreshToken by input.refreshToken as current else InvalidRefresh;\n        update current when current.revoked == false else InvalidRefresh {\n          revoked: true;\n        }\n        persist current;\n        return unit;\n      }\n    }\n  }\n}",
+        "function_call": null,
+        "refusal": null,
+        "role": "assistant",
+        "tool_calls": null
+      }
+    }
+  ],
+  "created": 1793413687,
+  "id": "7751d2bc-4ee8-4047-aefc-4b294b9902b7",
+  "model": "deepseek-flash",
+  "object": "chat.completion",
+  "service_tier": null,
+  "system_fingerprint": "bc19ba97cbe016479903222bb1578db6",
+  "usage": {
+    "completion_tokens": 1103,
+    "completion_tokens_details": null,
+    "prompt_cache_hit_tokens": 4224,
+    "prompt_cache_miss_tokens": 953,
+    "prompt_tokens": 5177,
+    "prompt_tokens_details": {
+      "audio_tokens": null,
+      "cached_tokens": 4224
+    },
+    "total_tokens": 6280
+  }
+}

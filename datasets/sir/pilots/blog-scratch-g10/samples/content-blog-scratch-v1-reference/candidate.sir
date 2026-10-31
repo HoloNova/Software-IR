@@ -1,0 +1,217 @@
+sir 0.3
+
+software CampusBlog {
+  metadata {
+    displayName "Campus Blog";
+    namespace "example.blog";
+  }
+  target {
+    language java 21;
+    framework spring_boot;
+    persistence mybatis_plus;
+    database mysql;
+    build maven;
+    interface rest;
+  }
+  sources { }
+  imports { }
+  declarations {
+    enum PostState { DRAFT, PUBLISHED }
+    entity User persistent {
+      identity id: Id generated auto;
+      field name: Name unique;
+    }
+    entity AccessToken persistent {
+      identity id: Token generated uuid;
+      field owner: Ref<User>;
+      field expiresAt: Moment;
+      credential subject owner expires expiresAt;
+    }
+    entity Category persistent {
+      identity id: Id generated auto;
+      field name: Code unique;
+    }
+    entity Post persistent {
+      identity id: Id generated auto;
+      field author: Ref<User>;
+      field category: Ref<Category>;
+      field title: Name;
+      field content: Text;
+      field state: PostState default PostState.DRAFT;
+      field likes: Count default 0;
+      field createdAt: Moment default now();
+    }
+    entity Tag persistent {
+      identity id: Id generated auto;
+      field name: Code unique;
+    }
+    entity PostTag persistent {
+      identity id: Id generated auto;
+      field post: Ref<Post>;
+      field tag: Ref<Tag>;
+      unique (post, tag);
+    }
+    entity Like persistent {
+      identity id: Id generated auto;
+      field post: Ref<Post>;
+      field user: Ref<User>;
+      unique (post, user);
+    }
+    view UserView from User { field id: Id; field name: Name; }
+    view CategoryView from Category { field id: Id; field name: Code; }
+    view PostView from Post {
+      field id: Id;
+      field author: Ref<User>;
+      field category: Ref<Category>;
+      field title: Name;
+      field content: Text;
+      field state: PostState;
+      field likes: Count;
+      field createdAt: Moment;
+    }
+    view PublicPost from Post {
+      field id: Id;
+      field author: UserView;
+      field category: CategoryView;
+      field title: Name;
+      field content: Text;
+      field likes: Count;
+      field createdAt: Moment;
+    }
+    input CreatePostInput {
+      field category: Ref<Category>;
+      field title: Name;
+      field content: Text;
+    }
+    input PostRef { field id: Id; }
+    input FeedQuery { field keyword: Text; field page: PageNo; field size: PageSize; }
+    input AttachTagInput { field postId: Id; field tagId: Id; }
+    input TagQuery { field tagId: Id; field page: PageNo; field size: PageSize; }
+    error BadPage http 400;
+    error Forbidden http 403;
+    error PostNotFound http 404;
+    error TagNotFound http 404;
+    error NotPublishable http 409;
+    error TagAttached http 409;
+    error AlreadyLiked http 409;
+
+    capability CreatePost {
+      actor Ref<User>;
+      input CreatePostInput;
+      output PostView;
+      requires authenticated;
+      requires atomic;
+      expose command at "/myposts";
+      workflow {
+        create Post as made {
+          author: actor;
+          category: input.category;
+          title: input.title;
+          content: input.content;
+        }
+        persist made;
+        return made;
+      }
+    }
+    capability Publish {
+      actor Ref<User>;
+      input PostRef;
+      output PostView;
+      fails Forbidden;
+      fails NotPublishable;
+      fails PostNotFound;
+      requires authenticated;
+      requires atomic;
+      expose command at "/my/posts/{id}/publish";
+      workflow {
+        load Post by input.id as post else PostNotFound;
+        validate post.author == actor else Forbidden;
+        update post when post.state == PostState.DRAFT else NotPublishable {
+          state: PostState.PUBLISHED;
+        }
+        persist post;
+        return post;
+      }
+    }
+    capability Feed {
+      input FeedQuery;
+      output Page<PublicPost>;
+      fails BadPage;
+      requires readonly;
+      expose query at "/posts";
+      workflow {
+        find Post
+          where item.state == PostState.PUBLISHED and (item.title containsLiteral input.keyword or item.content containsLiteral input.keyword)
+          order by createdAt descending, id descending
+          Page input.page, input.size else BadPage as rows;
+        return rows;
+      }
+    }
+    capability ViewPost {
+      input PostRef;
+      output PublicPost;
+      fails PostNotFound;
+      requires readonly;
+      expose query at "/posts/{id}";
+      workflow {
+        load Post by input.id as post else PostNotFound;
+        validate post.state == PostState.PUBLISHED else PostNotFound;
+        return post;
+      }
+    }
+    capability AttachTag {
+      actor Ref<User>;
+      input AttachTagInput;
+      output Unit;
+      fails Forbidden;
+      fails PostNotFound;
+      fails TagAttached;
+      fails TagNotFound;
+      requires authenticated;
+      requires atomic;
+      expose command at "/posts/{postId}/tags";
+      workflow {
+        load Post by input.postId as post else PostNotFound;
+        validate post.author == actor else Forbidden;
+        load Tag by input.tagId as tag else TagNotFound;
+        create PostTag as link { post: post; tag: tag; }
+        persist link else TagAttached;
+        return unit;
+      }
+    }
+    capability PostsByTag {
+      input TagQuery;
+      output Page<PublicPost>;
+      fails BadPage;
+      fails TagNotFound;
+      requires readonly;
+      expose query at "/tags/{tagId}/posts";
+      workflow {
+        load Tag by input.tagId as wanted else TagNotFound;
+        find Post where item.state == PostState.PUBLISHED and any(PostTag, post == item and tag == wanted)
+          order by createdAt descending, id descending
+          Page input.page, input.size else BadPage as rows;
+        return rows;
+      }
+    }
+    capability LikePost {
+      actor Ref<User>;
+      input PostRef;
+      output PublicPost;
+      fails AlreadyLiked;
+      fails PostNotFound;
+      requires authenticated;
+      requires atomic;
+      expose command at "/posts/{id}/like";
+      workflow {
+        load Post by input.id as post else PostNotFound;
+        validate post.state == PostState.PUBLISHED else PostNotFound;
+        create Like as made { post: post; user: actor; }
+        update post { likes: post.likes + 1; }
+        persist post;
+        persist made else AlreadyLiked;
+        return post;
+      }
+    }
+  }
+}

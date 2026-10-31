@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "sir 0.3\nsoftware CourseEnrollment {\n  metadata { displayName \"Course Enrollment\"; namespace \"com.example.courseenrollment\"; }\n  target { language java 21; framework spring_boot; persistence mybatis_plus; database mysql; build maven; interface rest; }\n  sources { }\n  imports { }\n  declarations {\n    enum EnrollmentStatus { ACTIVE, CANCELLED }\n\n    entity Student persistent {\n      identity id: Id generated auto;\n      field studentNo: Code where length(1, 16) unique;\n      field name: Name where length(1, 100);\n    }\n\n    entity Course persistent {\n      identity id: Id generated auto;\n      field code: Code where length(1, 32) unique;\n      field name: Name where length(1, 100);\n      field capacity: Quantity;\n    }\n\n    entity Enrollment persistent {\n      identity id: Id generated auto;\n      field course: Ref<Course>;\n      field student: Ref<Student>;\n      field status: EnrollmentStatus;\n    }\n\n    error InvalidPage http 400;\n\n    view StudentSummary from Student {\n      field id: Id;\n      field studentNo: Code;\n      field name: Name;\n      field label: Name = item.name;\n    }\n\n    view EnrollmentView from Enrollment {\n      field id: Id;\n      field status: EnrollmentStatus;\n      field active: Flag = item.status == EnrollmentStatus.ACTIVE;\n      field student: StudentSummary;\n    }\n\n    view CourseSearchView from Course {\n      field id: Id;\n      field code: Code;\n      field name: Name;\n      field capacity: Quantity;\n      field doubledCapacity: Count = item.capacity * 2;\n      field enrollments: List<EnrollmentView>;\n    }\n\n    input SearchCourseEnrollmentsInput {\n      field page: PageNo;\n      field size: PageSize;\n    }\n\n    capability SearchCourseEnrollments {\n      input SearchCourseEnrollmentsInput;\n      output Page<CourseSearchView>;\n      fails InvalidPage;\n      requires readonly;\n      expose query at \"/search-course-enrollments\";\n      workflow {\n        find Course where any(Enrollment, course == item and status == EnrollmentStatus.ACTIVE) order by code ascending, id ascending Page input.page, input.size else InvalidPage as courses;\n        return courses;\n      }\n    }\n  }\n}",
+        "function_call": null,
+        "refusal": null,
+        "role": "assistant",
+        "tool_calls": null
+      }
+    }
+  ],
+  "created": 1793413696,
+  "id": "e0acbc20-c3c9-4d77-82c5-eb90bc083354",
+  "model": "deepseek-flash",
+  "object": "chat.completion",
+  "service_tier": null,
+  "system_fingerprint": "bc19ba97cbe016479903222bb1578db6",
+  "usage": {
+    "completion_tokens": 488,
+    "completion_tokens_details": null,
+    "prompt_cache_hit_tokens": 4224,
+    "prompt_cache_miss_tokens": 1752,
+    "prompt_tokens": 5976,
+    "prompt_tokens_details": {
+      "audio_tokens": null,
+      "cached_tokens": 4224
+    },
+    "total_tokens": 6464
+  }
+}
