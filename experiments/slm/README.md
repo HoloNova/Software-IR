@@ -103,6 +103,8 @@ v2（2026-10-25）补的是首批暴露的两处提示不足：实体成员的�
 
 `sir-0.3-general-v8.md`（2026-10-29，已批准并完成博客首轮试采）在 v7 上澄清多约束逗号、Ref 与 HTTP 主键/字段名映射、普通查询与 any 的不同作用域、containsLiteral 的非 Optional 右值，并强化声明闭合自查；不改变语言规则。已用原 CI 检查器核对 3 个正例完整生成、8 个反例按预期拒绝；该例证核对未调用模型，不能据此声称通过率提升。逐项依据与边界见 [v8 改动说明](drafts/prompt-v8/changes.md)，编译器四处文案随后已获确认并本机实施，7 类 125 项定向通过、14 条 CLI 边界对照及 189 个生成文件逐字节一致，详见[实施记录](drafts/design/query-diagnostics-design.md#local-verification)；随后 `2e4fa74b` 的 [verify #202](https://github.com/HoloNova/Software-IR/actions/runs/40877385610) 已通过，上传 Surefire 为 293 XML／2031 项、零失败／错误／跳过，其中新增诊断回归 22 项，博客参考业务 425/0；原始证据见 `datasets/sir/research/2026-10-29/blog-v8-ci202/`。旧版本和冻结批次不改；使用时仍须显式 `prepare --system-prompt experiments/slm/prompts/sir-0.3-general-v8.md` 新建批次，采样预算另批。
 
+`sir-0.3-general-v9.md`（2026-10-31）在 v8 上只同步 v8 之后实施的三条规则：any 内同一字段自比较被拒、查重后新建唯一行的 persist 必须写 else（`47bf67c`）、containsLiteral 两侧接受可选文本（`e6f3b1d`），删去 v8 第 95 行的旧限制。本机编译的检查器核对 3 个正例完整生成、2 个反例按预期拒绝；未调用模型。逐项依据见 [v9 改动说明](drafts/prompt-v9/changes.md)。旧版本和冻结批次不改；使用时须显式 `prepare --system-prompt experiments/slm/prompts/sir-0.3-general-v9.md`。
+
 ```bash
 python -m experiments.slm.data prepare --bundle datasets/sir/pilots/dual-token-v2 \
   --system-prompt experiments/slm/prompts/sir-0.3-auth-v2.md
