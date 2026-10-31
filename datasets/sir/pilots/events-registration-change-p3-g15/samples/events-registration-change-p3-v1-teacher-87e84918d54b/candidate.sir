@@ -1,0 +1,188 @@
+sir 0.3
+software EventSignup {
+  metadata {
+    displayName "Event Signup";
+    namespace "example.events";
+  }
+  target {
+    language java 21;
+    framework spring_boot;
+    persistence mybatis_plus;
+    database mysql;
+    build maven;
+    interface rest;
+  }
+  sources { }
+  imports { }
+  declarations {
+    type Fee = Money where precision(10, 2), min(0);
+    entity User persistent {
+      identity id: Id generated auto;
+      field name: Name unique;
+    }
+    entity AccessToken persistent {
+      identity id: Token generated uuid;
+      field owner: Ref<User>;
+      field expiresAt: Moment;
+      credential subject owner expires expiresAt;
+    }
+    entity Event persistent {
+      identity id: Id generated auto;
+      field organizer: Ref<User>;
+      field title: Name;
+      field startsAt: Moment;
+      field capacity: Quantity;
+      field registered: Count default 0;
+      field fee: Fee;
+    }
+    entity Registration persistent {
+      identity id: Id generated auto;
+      field event: Ref<Event>;
+      field attendee: Ref<User>;
+      field fee: Fee;
+      field registeredAt: Moment default now();
+      unique (event, attendee);
+    }
+    view EventView from Event {
+      field id: Id;
+      field organizer: Ref<User>;
+      field title: Name;
+      field startsAt: Moment;
+      field capacity: Quantity;
+      field registered: Count;
+      field remaining: Count = item.capacity - item.registered;
+      field fee: Fee;
+    }
+    view RegistrationView from Registration {
+      field id: Id;
+      field event: Ref<Event>;
+      field attendee: Ref<User>;
+      field fee: Fee;
+      field registeredAt: Moment;
+    }
+    input NewEvent {
+      field title: Name;
+      field startsAt: Moment;
+      field capacity: Quantity;
+      field fee: Fee;
+    }
+    input EventRef { field id: Id; }
+    input PageQuery { field page: PageNo; field size: PageSize; }
+    error BadPage http 400;
+    error Forbidden http 403;
+    error EventNotFound http 404;
+    error AlreadyRegistered http 409;
+    error EventFull http 409;
+    error RegistrationClosed http 409;
+
+    capability CreateEvent {
+      actor Ref<User>;
+      input NewEvent;
+      output EventView;
+      requires authenticated;
+      requires atomic;
+      expose command at "/events";
+      workflow {
+        create Event as made {
+          organizer: actor;
+          title: input.title;
+          startsAt: input.startsAt;
+          capacity: input.capacity;
+          fee: input.fee;
+        }
+        persist made;
+        return made;
+      }
+    }
+    capability ListEvents {
+      input PageQuery;
+      output Page<EventView>;
+      fails BadPage;
+      requires readonly;
+      expose query at "/events";
+      workflow {
+        find Event where item.startsAt > now()
+          order by startsAt ascending, id ascending
+          Page input.page, input.size else BadPage as rows;
+        return rows;
+      }
+    }
+    capability MyRegistrations {
+      actor Ref<User>;
+      input PageQuery;
+      output Page<RegistrationView>;
+      fails BadPage;
+      requires authenticated;
+      requires readonly;
+      expose query at "/my/registrations";
+      workflow {
+        find Registration where item.attendee == actor
+          order by registeredAt descending, id descending
+          Page input.page, input.size else BadPage as rows;
+        return rows;
+      }
+    }
+    capability Register {
+      actor Ref<User>;
+      input EventRef;
+      output RegistrationView;
+      fails AlreadyRegistered;
+      fails EventFull;
+      fails EventNotFound;
+      fails RegistrationClosed;
+      requires authenticated;
+      requires atomic;
+      expose command at "/events/{id}/registrations";
+      workflow {
+        load Event by input.id as event for update else EventNotFound;
+        validate event.startsAt > now() else RegistrationClosed;
+        exists Registration where item.event == event and item.attendee == actor as found;
+        validate not found else AlreadyRegistered;
+        update event when event.registered < event.capacity else EventFull {
+          registered: event.registered + 1;
+        }
+        persist event;
+        create Registration as made {
+          event: event;
+          attendee: actor;
+          fee: event.fee;
+          registeredAt: now();
+        }
+        persist made else AlreadyRegistered;
+        return made;
+      }
+    }
+    capability EventRevenue {
+      actor Ref<User>;
+      input EventRef;
+      output Fee;
+      fails EventNotFound;
+      fails Forbidden;
+      requires authenticated;
+      requires readonly;
+      expose query at "/events/{id}/revenue";
+      workflow {
+        load Event by input.id as event else EventNotFound;
+        validate event.organizer == actor else Forbidden;
+        sum Registration.fee where item.event == event as total;
+        return total;
+      }
+    }
+    capability EventRegistrationCount {
+      actor Ref<User>;
+      input EventRef;
+      output Serial;
+      fails EventNotFound;
+      fails Forbidden;
+      requires authenticated;
+      requires readonly;
+      expose query at "/events/{id}/registration-count";
+      workflow {
+        load Event by input.id as event else EventNotFound;
+        validate event.organizer == actor else Forbidden;
+        count Registration where item.event == event as total;
+        return total;
+      }
+    }
+  }
+}
