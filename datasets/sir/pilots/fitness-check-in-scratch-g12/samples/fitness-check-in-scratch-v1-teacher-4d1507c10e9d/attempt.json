@@ -1,0 +1,21 @@
+{
+  "actual_model": "deepseek-flash",
+  "created_at": "2026-10-31T06:23:15.955682+00:00",
+  "id": "fitness-check-in-scratch-v1-teacher-4d1507c10e9d",
+  "raw_response_sha256": "cd99cd925eec770c3faf3c51113fd2022d27adc97a436bb5bc8c11330f5b5eb6",
+  "requested_model": "deepseek-flash",
+  "status": "CANDIDATE_NOT_YET_QUALIFIED",
+  "system_fingerprint": "bc19ba97cbe016479903222bb1578db6",
+  "usage": {
+    "completion_tokens": 1245,
+    "completion_tokens_details": null,
+    "prompt_cache_hit_tokens": 7936,
+    "prompt_cache_miss_tokens": 9167,
+    "prompt_tokens": 17103,
+    "prompt_tokens_details": {
+      "audio_tokens": null,
+      "cached_tokens": 7936
+    },
+    "total_tokens": 18348
+  }
+}
