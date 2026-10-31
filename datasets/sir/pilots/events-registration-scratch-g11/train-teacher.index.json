@@ -1,0 +1,21 @@
+{
+  "all_four_gates_required": true,
+  "corpus_sha256": "50dcaae8c02f2255a67b334360ce797f505adfdf245efa1c9b54e9d6e0732d24",
+  "count": 2,
+  "rows": [
+    {
+      "id": "events-registration-scratch-v1-teacher-3e1de05e7979",
+      "oracle_sha256": "9bac323ea10b86acdc36f16c072546b01bf5b2fc6cfbde6f85eaf245c54ccfe8",
+      "runtime_run_id": "events-slice-1a190972c3f-40861",
+      "source_sha256": "8299a5f52b7c6b7896e8e5f317c6032fd7ca5d55f9a26d2b64cc0a9a0cdbb1a2",
+      "task_sha256": "ae696623aa1949e7592225f55e75bfd0ce7cd1ffaee4a6c63b97836d7df9337d"
+    },
+    {
+      "id": "events-registration-scratch-v1-teacher-f16cf36e7541",
+      "oracle_sha256": "9bac323ea10b86acdc36f16c072546b01bf5b2fc6cfbde6f85eaf245c54ccfe8",
+      "runtime_run_id": "events-slice-1a190974a5e-18778",
+      "source_sha256": "067c4294c909d50fd66b7ed392db0a999752efa2d6c0d6c9a263410028a87c15",
+      "task_sha256": "ae696623aa1949e7592225f55e75bfd0ce7cd1ffaee4a6c63b97836d7df9337d"
+    }
+  ]
+}

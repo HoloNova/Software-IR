@@ -1,0 +1,21 @@
+{
+  "all_four_gates_required": true,
+  "corpus_sha256": "4fb074099deb722be23cad25fe8a08f134df11979e4d6b531856bdecdfdc6574",
+  "count": 2,
+  "rows": [
+    {
+      "id": "fitness-check-in-change-v1-teacher-8aecf5f2f887",
+      "oracle_sha256": "853d94eb3291378cdfea2fa4b76f0f2f7d896c47bd26e8574d5413427320fa31",
+      "runtime_run_id": "fitness-slice-1a1909726eb-61708",
+      "source_sha256": "ae7ed84cedb5d2c22816b81461d556d2b9bc0b5a578dae36b508e087f8296497",
+      "task_sha256": "c40e25893f8947a7ac3302c00a82b5218779642537d921332749bfa01d8d2221"
+    },
+    {
+      "id": "fitness-check-in-change-v1-teacher-f5b5a9f347b0",
+      "oracle_sha256": "853d94eb3291378cdfea2fa4b76f0f2f7d896c47bd26e8574d5413427320fa31",
+      "runtime_run_id": "fitness-slice-1a190972a5b-25533",
+      "source_sha256": "8f4ee3dcab37f75898fad9c929ccd1ea9c305f177bcda0529e4a4e958fe95044",
+      "task_sha256": "c40e25893f8947a7ac3302c00a82b5218779642537d921332749bfa01d8d2221"
+    }
+  ]
+}

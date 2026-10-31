@@ -1,0 +1,21 @@
+{
+  "all_four_gates_required": true,
+  "corpus_sha256": "74b883f0ae79fc8167ac3cedd0a68e095b4ed7cc89c66a3a1b5208809253051c",
+  "count": 2,
+  "rows": [
+    {
+      "id": "events-registration-change-v1-teacher-0fde14411f9d",
+      "oracle_sha256": "9bac323ea10b86acdc36f16c072546b01bf5b2fc6cfbde6f85eaf245c54ccfe8",
+      "runtime_run_id": "events-slice-1a1909730ec-19452",
+      "source_sha256": "9fd96841b922eda04f9676077fcb77d192dea585472a0ffc8b2d459ee4203d7c",
+      "task_sha256": "71b487d2cf25ae9532e3b59ed6e5cb6d40e8fca425a36b260798117601a31fc5"
+    },
+    {
+      "id": "events-registration-change-v1-teacher-0acacc5fa8e6",
+      "oracle_sha256": "9bac323ea10b86acdc36f16c072546b01bf5b2fc6cfbde6f85eaf245c54ccfe8",
+      "runtime_run_id": "events-slice-1a190973140-48985",
+      "source_sha256": "ab1a07031a04a344e106a321aec7416a68f581b09250198d043b35299503dd26",
+      "task_sha256": "71b487d2cf25ae9532e3b59ed6e5cb6d40e8fca425a36b260798117601a31fc5"
+    }
+  ]
+}
