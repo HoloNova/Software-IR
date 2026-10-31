@@ -1,0 +1,283 @@
+{
+  "base_source": "experiments/slm/drafts/events-registration/base.sir",
+  "contract": {
+    "capabilities": [
+      "CreateEvent",
+      "ListEvents",
+      "Register",
+      "MyRegistrations",
+      "EventRevenue",
+      "EventRegistrationCount"
+    ],
+    "capacity": {
+      "min": 1,
+      "type": "integer"
+    },
+    "check_order": [
+      "EventNotFound",
+      "RegistrationClosed",
+      "AlreadyRegistered",
+      "EventFull"
+    ],
+    "declared_errors": {
+      "AlreadyRegistered": 409,
+      "BadPage": 400,
+      "EventFull": 409,
+      "EventNotFound": 404,
+      "Forbidden": 403,
+      "RegistrationClosed": 409
+    },
+    "entities": [
+      "User",
+      "AccessToken",
+      "Event",
+      "Registration"
+    ],
+    "family": "events.registration",
+    "fee": {
+      "min": "0",
+      "precision": 10,
+      "scale": 2,
+      "type": "decimal"
+    },
+    "fixtures": {
+      "provided_by_oracle": true
+    },
+    "interfaces": {
+      "CreateEvent": {
+        "authentication": "Bearer",
+        "body_kind": "EventView",
+        "errors": {
+          "INVALID_REQUEST": 400,
+          "unauthenticated": 401
+        },
+        "request_fields": [
+          "title",
+          "startsAt",
+          "capacity",
+          "fee"
+        ],
+        "response_fields": [
+          "id",
+          "organizer",
+          "title",
+          "startsAt",
+          "capacity",
+          "registered",
+          "remaining",
+          "fee"
+        ],
+        "route": "POST /api/events",
+        "success_status": 201
+      },
+      "EventRegistrationCount": {
+        "authentication": "Bearer",
+        "body_kind": "integer",
+        "errors": {
+          "EventNotFound": 404,
+          "Forbidden": 403,
+          "unauthenticated": 401
+        },
+        "path_fields": [
+          "id"
+        ],
+        "request_fields": [],
+        "response_fields": [],
+        "route": "GET /api/events/{id}/registration-count",
+        "success_status": 200
+      },
+      "EventRevenue": {
+        "authentication": "Bearer",
+        "body_kind": "decimal",
+        "errors": {
+          "EventNotFound": 404,
+          "Forbidden": 403,
+          "unauthenticated": 401
+        },
+        "path_fields": [
+          "id"
+        ],
+        "request_fields": [],
+        "response_fields": [],
+        "route": "GET /api/events/{id}/revenue",
+        "success_status": 200
+      },
+      "ListEvents": {
+        "authentication": "none",
+        "body_kind": "Page<EventView>",
+        "errors": {
+          "BadPage": 400
+        },
+        "request_fields": [
+          "page",
+          "size"
+        ],
+        "response_fields": [
+          "total",
+          "page",
+          "size",
+          "records"
+        ],
+        "route": "GET /api/events",
+        "success_status": 200
+      },
+      "MyRegistrations": {
+        "authentication": "Bearer",
+        "body_kind": "Page<RegistrationView>",
+        "errors": {
+          "BadPage": 400,
+          "unauthenticated": 401
+        },
+        "request_fields": [
+          "page",
+          "size"
+        ],
+        "response_fields": [
+          "total",
+          "page",
+          "size",
+          "records"
+        ],
+        "route": "GET /api/my/registrations",
+        "success_status": 200
+      },
+      "Register": {
+        "authentication": "Bearer",
+        "body_kind": "RegistrationView",
+        "errors": {
+          "AlreadyRegistered": 409,
+          "EventFull": 409,
+          "EventNotFound": 404,
+          "RegistrationClosed": 409,
+          "unauthenticated": 401
+        },
+        "path_fields": [
+          "id"
+        ],
+        "request_fields": [],
+        "response_fields": [
+          "id",
+          "event",
+          "attendee",
+          "fee",
+          "registeredAt"
+        ],
+        "route": "POST /api/events/{id}/registrations",
+        "success_status": 201
+      }
+    },
+    "namespace": "example.events",
+    "pagination": {
+      "default_page": 1,
+      "default_size": 20,
+      "max_page": 10000,
+      "max_size": 100
+    },
+    "readiness": "GET /api/events?page=1&size=10",
+    "scalar_bodies": {
+      "decimal": "bare JSON number, compared by numeric value",
+      "integer": "bare JSON integer"
+    },
+    "split": "train",
+    "storage": {
+      "access_token": [
+        "id",
+        "owner_id",
+        "expires_at"
+      ],
+      "event": [
+        "id",
+        "organizer_id",
+        "title",
+        "starts_at",
+        "capacity",
+        "registered",
+        "fee"
+      ],
+      "registration": [
+        "id",
+        "event_id",
+        "attendee_id",
+        "fee",
+        "registered_at"
+      ],
+      "user": [
+        "id",
+        "name"
+      ]
+    },
+    "view_fields": {
+      "EventView": [
+        "id",
+        "organizer",
+        "title",
+        "startsAt",
+        "capacity",
+        "registered",
+        "remaining",
+        "fee"
+      ],
+      "RegistrationView": [
+        "id",
+        "event",
+        "attendee",
+        "fee",
+        "registeredAt"
+      ]
+    }
+  },
+  "ddl_source": "sir-toolchain-application/src/test/resources/conformance/mysql/events-registration-ddl.sql",
+  "family": "events.registration",
+  "id": "events-registration-change-p1-v1",
+  "oracle": {
+    "files": [
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/AdvisoryLockKey.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BlogLockWaits.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BusinessEndpointReadiness.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/BusinessSliceHarness.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/ChildEnvironmentBuilder.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/ConformanceFixtures.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/ConformanceJvmLimits.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/DiskTree.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EventsAssertions.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EventsChecks.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EventsConcurrentRequests.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EventsFixture.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EventsRegistrationBusinessConformanceIT.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceDirectory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceOwnershipInventory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceRootProof.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/EvidenceSecretScanner.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/HttpAssertionClient.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MavenProjectRunner.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MysqlObserver.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MysqlRuntimeJdbcUrl.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/MysqlRuntimeTrace.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/OwnedPathEntry.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/OwnedPathInventory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/OwnedRunDirectory.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SchemaName.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SchemaSqlRenderer.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SecretCatalog.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SlmCandidateSupport.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/SpringApplicationProcess.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/StreamingSecretRedactor.java",
+      "sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/StrongFileIdentity.java",
+      "sir-toolchain-application/src/test/resources/conformance/mysql/events-registration-ddl.sql",
+      "sir-toolchain-application/src/test/resources/conformance/mysql/events-registration-seed.sql",
+      "sir-toolchain-application/src/test/resources/valid/events-registration.sir"
+    ],
+    "id": "events-http-mysql-v1"
+  },
+  "reference_evidence": {
+    "commit": "46267c046967e2ffc2f26af6631048cf4321c6db",
+    "kind": "existing-reference-only-not-candidate-qualification",
+    "run_url": "https://github.com/HoloNova/Software-IR/actions/runs/41172150547"
+  },
+  "reference_source": "sir-toolchain-application/src/test/resources/valid/events-registration.sir",
+  "requirement": "在给定软件上把 Register、EventRevenue、EventRegistrationCount 补回来。CreateEvent、ListEvents、MyRegistrations 的现有行为保持不变。\nListEvents 不用登录就能访问。其他接口都靠 Authorization: Bearer 访问令牌认出当前用户，令牌没带、格式不对、查不到或已过期，一律返回空体 401。\nRegister 按路径里的 id 给当前用户报名，成功返回 201 和接口合同中的 RegistrationView。它保存当前用户对这个活动的唯一一条报名记录，记录的 fee 取报名那一刻活动的 fee，registeredAt 是服务器处理请求的时刻，同时活动的 registered 加一。活动不存在返回 404 EventNotFound；活动已经开始（startsAt 不晚于当前时刻）返回 409 RegistrationClosed；同一用户已经报过这个活动返回 409 AlreadyRegistered；名额满了（registered 不小于 capacity）返回 409 EventFull。几个条件同时满足时，按这个顺序返回。组织者也可以报名自己的活动。\n多个用户同时报名同一个活动时，成功的次数不能超过名额，活动的 registered 要一直等于这个活动的报名记录数。同一个用户同时重复报名同一个活动时，只能成功一次，其他请求返回 409 AlreadyRegistered，registered 也只加一次。\nEventRevenue 只有这个活动的组织者能用，不是组织者返回 403 Forbidden；活动不存在返回 404 EventNotFound（先判断活动在不在）。它返回这个活动所有报名记录的 fee 之和，按报名记录上存的 fee 算，不用活动现在的 fee。没有报名记录时是 0。结果是 JSON 数字，不能有浮点误差。\nEventRegistrationCount 的权限和错误跟 EventRevenue 一样，返回这个活动的报名记录条数，是 JSON 整数，没有报名记录时是 0。\n被拒绝的请求不能改动已有的行，也不能新增业务记录；成功时只改动这个操作该改的行。声明的错误按接口合同返回 code、message、fields。所有路由、请求字段和响应字段都按接口合同来。路径里的字段值以 URL 为准，不能被请求体里的同名字段替换。\n返回完整的 sir 0.3 文档，不要 Java、SQL 或解释。",
+  "revision": "1",
+  "schema_version": "sir-task/1",
+  "sir_version": "0.3",
+  "split": "train"
+}

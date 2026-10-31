@@ -1,0 +1,11 @@
+健身房的会员和教练都通过这套接口使用系统。除了任何人都能匿名访问的 ListPrograms，其他接口都用 Authorization: Bearer 访问令牌确认当前用户，令牌缺少、格式错误、未知或已过期时返回空体 401；每个用户的角色记在 user 表的 role 列，会员是 MEMBER，教练是 COACH。
+浏览项目时，ListPrograms 分页返回项目的 id 和 name，按 name、id 都升序排列。
+翻页时，page 和 size 都可以单独省略，默认分别是 1 和 20；page 只能在 1 到 10000 之间，size 只能在 1 到 100 之间，超出就返回 400 BadPage。每页响应都带 total、page、size、records，其中 total 是全部匹配记录数，即使请求的页已经越界，total 也要正确。
+用户练完后用 LogWorkout 提交 programId 和 hours，系统为当前用户记一次打卡，成功时返回 201 和接口合同中的 CheckInView，打卡时间取服务器处理请求的时刻。hours 必须是 0.25 到 12 小时之间、最多两位小数的数，缺少、为 null、超出范围或超过两位小数都返回 400 INVALID_REQUEST 和 hours 字段错误；programId 缺少或为 null 时返回 400 INVALID_REQUEST 和 programId 字段错误；项目不存在则返回 404 ProgramNotFound。
+用户想了解自己某个月的锻炼情况时，调用 MyMonthVisits、MyMonthHours、MyMonthAverage，分别得到 month 指定自然月内的打卡次数、总时长和平均时长。month 按 YYYY-MM 填写，自然月以 Asia/Shanghai 时区为准，从当月 1 日 00:00 起（含）到下月 1 日 00:00 止（不含）；如果 month 缺少、格式不对或超出可表示范围，都会收到 400 BadPeriod。次数是 JSON 整数，总时长和平均时长是不能有浮点误差的 JSON 数字，平均时长按两位小数四舍五入（0.5 进位），当月没有任何记录时三个值都为 0。
+教练查看打卡记录时使用 CoachCheckIns，其他角色调用会得到 403 Forbidden。教练可以按 member（会员 id）和 program（项目 id）筛选，也可以都不填，不填就不限制；填了不存在的 id 只会得到空页，而不是 404。记录按 checkedInAt、id 都降序分页返回 CheckInView。
+教练统计某个月的打卡次数时调用 CoachMonthVisits，非教练会得到 403 Forbidden。它返回所有会员在 month 指定自然月内的打卡次数，可以按 program 筛选，不填就不限制，month 的规则和错误与 MyMonthVisits 相同。
+返回的打卡记录 CheckInView 只含 id、member、program、hours、checkedInAt，其中 member、program 是数值主键；项目 ProgramView 只含 id、name。
+无论请求因为什么被拒绝，都不能改动已有行或新增业务记录；请求成功时，也只有 LogWorkout 会新增一行。声明的错误按接口合同返回 code、message、fields。
+所有路由、请求字段和响应字段都以接口合同为准；当前用户只看令牌，任何人都不能靠请求字段冒充其他用户。
+返回完整的 sir 0.3 文档，不要 Java、SQL 或解释。
