@@ -1,6 +1,6 @@
 # KCG-Code 当前项目状态
 
-> 更新：2026-10-25。状态：正常开发中的工程，不宣称生产就绪。本文说明**现在能做什么**；验证口径与证据在[验证说明](qualification/README.md)；已完成或退役的材料在 [history](history/README.md)。
+> 更新：2026-10-31。状态：正常开发中的工程，不宣称生产就绪。本文说明**现在能做什么**；验证口径与证据在[验证说明](qualification/README.md)；已完成或退役的材料在 [history](history/README.md)。SLM 当前数据、交接收尾及待决策事项见第 7 节，早期实施记录只代表写作当时。
 
 ## 1. 定位
 
@@ -73,7 +73,7 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 
 ## 4. 验证状态
 
-- **当前完整验收基线：**`5972072eb920e5c21ea8d2ac5c4f88ecd98ef66c` 的 [CI #184](https://github.com/HoloNova/Software-IR/actions/runs/40155600764)，Frozen、业务IT、独立验证、CLI、冷部署全部success。284份上传XML共1970项，0失败／错误／跳过（包括随后IT，不冒称单次Frozen计数）；13份业务报告全PASSED，SIR／DDL／seed摘要与当前源码吻合。部署同SHA的98个HTTP请求符合预期，持久化、权限、合同、更新链和清理均通过。证据与有意未测边界见[验证50](qualification/README.md#ci-184-accepted)；历史#154是显式锁／预约屏障首次验收，#155部署取消仍不计全绿。
+- **已完整归档的历史全链验收基线：**`5972072eb920e5c21ea8d2ac5c4f88ecd98ef66c` 的 [CI #184](https://github.com/HoloNova/Software-IR/actions/runs/40155600764)，Frozen、业务IT、独立验证、CLI、冷部署全部success。284份上传XML共1970项，0失败／错误／跳过（包括随后IT，不冒称单次Frozen计数）；13份业务报告全PASSED，SIR／DDL／seed摘要与当时受测源码吻合。部署同SHA的98个HTTP请求符合预期，持久化、权限、合同、更新链和清理均通过。证据与有意未测边界见[验证50](qualification/README.md#ci-184-accepted)；历史#154是显式锁／预约屏障首次验收，#155部署取消仍不计全绿。
 - G10：Money 的精度、PATCH、原子金额与实际事务连接严格模式已验收；同 SHA 金额真库57项、独立部署精度／scale漂移拒绝、恢复和新实例迁移链均通过。不自动迁移旧整数分或已有金额精度。
 - G6：精确乘法与能力级必需值计划已验收，乘法真库 37 项（#147）、后扩展至 56 项（#150）通过，包含并发数量扣库、计算后精度拒写回滚和明细一致性；八题生成工程离线编译通过。需求账本已由后续 #150 更新为 66／5／13（金额一条与剩余名额一条转完整）。
 
@@ -93,7 +93,7 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 4. **Git 钩子照常生效。** 提交钩子拒绝时，保存当前版本失败则应用在改动前停止；保存新版本失败只给警告。
 5. **SIR 目录与生成目录必须是仓库内互不包含的两个目录，且在同一文件系统**（原子移动需要）。
 6. 编译与生成是完整的，不是局部增量编译。
-7. 证据范围：已有首批真实教师候选，但没有新增业务合格训练答案或真实小模型评测集（见[数据首批报告](qualification/SLM_DATA_PILOT_REPORT.md)）；进程树终止与日志脱敏有边界（见 [R5 报告](history/roadmap/R5-independent-verification-report.md) 第 4–5 节）。
+7. 证据范围：已有 49 条四门合格教师答案，但尚未开始学生模型训练或评测；数据准备不等于模型成绩，详见[数据报告第二十七阶段](qualification/SLM_DATA_PILOT_REPORT.md#slm-blog-g9-qualified)。历史全链基线不替代后续改动的同 SHA CI，第 7 节单列其状态；进程树终止与日志脱敏的既有边界见 [R5 报告](history/roadmap/R5-independent-verification-report.md) 第 4–5 节。
 
 ## 6. 尚未作为产品能力发布
 
@@ -103,7 +103,51 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 - SLM 评测/训练尚未启动；已按负责人确认开始数据准备，首批教师采样与静态筛选见[数据报告](qualification/SLM_DATA_PILOT_REPORT.md)，基座与云GPU建议见[模型调研](qualification/SLM_MODEL_SELECTION.md)。[评测总设计](qualification/SLM_GENERATED_PROJECT_EVALUATION_PLAN.md)保留四门口径，不把数据试跑称为小模型成绩。
 - Windows 平台证据；生产、安全认证、性能、高可用资格均未声明。
 
-## 7. 当前阶段（2026-10-25）
+## 7. 当前阶段（2026-10-31）
+
+### 数据与实验状态
+
+合格教师答案 **49 条**（鉴权 26、课程 22、博客 1），学生文件为 [train-student-v4.jsonl](../datasets/sir/student/train-student-v4.jsonl)，[索引](../datasets/sir/student/train-student-v4.index.json)记录原始来源；未训练、未产生学生模型评测结果。只有四门通过的最终答案作为 SFT completion，失败答案和报错仅保留为研究/教师反馈记录。v4 保留 v3 的 48 条原字节，历史资格、冻结输入、日志和采集器副本不重写。
+
+按现有题目定义与 v4 索引复核：**73 道题**（train 67、development 2、test 4），49 条答案覆盖 **48 道题**，另 **25 道尚无合格答案**（train 19、development 2、test 4）。这是数据覆盖数，不是模型通过率；不会据此自动补采。首条博客答案已在[候选业务门 #66](https://github.com/HoloNova/Software-IR/actions/runs/41031591392)独立四门通过、业务 426/0；没有等待判卷的教师候选，失败分支保持封存。完整来源与边界见[数据说明](../datasets/sir/README.md)及[第二十七阶段](qualification/SLM_DATA_PILOT_REPORT.md#slm-blog-g9-qualified)。
+
+### 本轮交接任务的落实情况
+
+| 原任务 | 当前状态与正式入口 |
+| --- | --- |
+| 4.1 两条静态安全检查 | `47bf67c8` 实施，verify #204 已核验；只拒绝获批的 any 字段自比较和先查重后缺冲突处理的唯一新行，不扩大名称解析或所有唯一写入规则。见[设计与实施记录](../experiments/slm/drafts/design/static-query-safety-design.md)。 |
+| 4.2 新工具链重查与反馈 | g9 已重查、按另批预算反馈并封存失败者；合格改写答案经 #66 导出，学生 v4 已更新，记录见[第二十五至二十七阶段](qualification/SLM_DATA_PILOT_REPORT.md#slm-blog-g9-recheck)。 |
+| 4.3 Parser 提示 | `2282ad2e` 实施三类消息细化，语法与恢复行为不变；负责人已通知 verify #205 通过，已核对同 SHA 及两个作业成功，不另报未下载的 XML 数量。见[设计与实施记录](../experiments/slm/drafts/design/parser-diagnostics-design.md)。 |
+| 4.4 归档与采集器来源 | `8849eb88` 的正式 archive-gate 和 Git 来源引用已由 verify #206 验收，两个作业均 success，Linux Python 合同 139 项零失败/错误/跳过。见[使用说明](../experiments/slm/README.md#业务门归档archive-gate)及[第三十阶段的本机记录](qualification/SLM_DATA_PILOT_REPORT.md#slm-archive-gate-local)；正式 CI 证据见下段。 |
+
+**正式 CI 证据：**负责人随后通知 [verify #206](https://github.com/HoloNova/Software-IR/actions/runs/41155749608)通过，已一次性核对受测 SHA=`8849eb887a714fb838344b9cec5aaee9152ae52b`、`gates-and-business-it`/`standalone-deployment` 两项作业均 success。下载并核对 [slm-python-contracts 原产物](https://github.com/HoloNova/Software-IR/actions/runs/41155749608/artifacts/13024948408)（artifact ID `13024948408`，ZIP SHA256=`cd49f6bba7d29887b1917696efabbc02277a8da1eb62a29a75b2305841aa9b03`），其中 summary.json 为 **139 项、0 失败/错误/跳过**，原始 unittest.log 一并核对。只下载 Python 报告，不据此编造 Maven 测试总数；本机记录的行覆盖率也不冒称 CI 覆盖率。这是对 #206 的正式核验，不再只是按默认通过安排工作，也不用 #205 替代。原 ZIP 与元数据的本机核验记录在 `target/handoff-cleanup/ci206/`，未当作已进入 Git 的候选证据；本次清理不触发额外 CI。
+
+### 待负责人决定（不自行开始）
+
+| 事项 | 当前边界 |
+| --- | --- |
+| 学生训练与评测 | 模型、样本规模、评分和预算尚未确定；49 条/v4 就绪不自动授权下载权重、租 GPU 或开训。 |
+| test 集采样 | finance、library 共 4 道尚未采样；何时采样及最终评估安排另定，不用于训练和调参。 |
+| 新任务板训练题 | `experiments/slm/drafts/task-board/spec.md` 尚未到位；是否继续及规格由负责人决定，不将已有主题样例冒充新题。 |
+| 扩大唯一冲突处理规则 | 是否要求所有唯一新行 persist 都写 else 尚未批准；当前仅执行 4.1 已确认的窄规则。 |
+| PATCH 显式 null 写非可选目标 | 作为独立规则/实现问题待设计；不在本轮顺带修复或宣称已收口。 |
+| Name/Code 缺值错误统一 | 现有带 notBlank 的文本缺值行为保持，不自行改成统一 NotNull。 |
+
+后续任务与审批从本节接续；扩大数据采集仍须另定策略和调用预算，历史失败候选的修复额度不会因清理文档而重置。
+
+### 临时材料删除边界（原 4.5）
+
+本次只移除以下临时材料，保留 Git 历史以供追溯，不复制一份过期交接到新的入口：
+
+| 删除路径 | 原因及替代 |
+| --- | --- |
+| `docs/tmp/HANDOFF.md` | 4.1～4.4 的实现已有正式文档，当前状态和六项待决策事项已保留在本节。 |
+| `docs/tmp/archive_gate_runs.py` | 由正式 `python -m experiments.slm.data archive-gate --bundle BUNDLE --checked CHECKED RUN_ID...` 取代；归档与 export 分开，不恢复旧脚本的自动导出。 |
+| `docs/tmp/rule_impact_scan.py` | 临时正则近似扫描已完成历史用途，不是语义检查器；判定以正式 ValidatePass、回归测试和已登记的新旧对照为准。 |
+
+历史报告/元数据提到这些旧路径时仍按当时事实保留；它们不是当前操作入口。`datasets/sir/` 的原件、冻结副本、学生文件及全部生产/测试源码不随本次清理删除或改写。删除材料可从 `8849eb88` 及更早 Git 提交查看；未经新的明确安排，不重建临时入口。清理不触发额外 CI、模型调用或训练。
+
+## 7.1 历史阶段记录（2026-10-25）
 
 本轮选定的缺口已实现并由#184完整验收，账本83／1／0；G14文件导出等排除项不补做。下面较早的实施记录保留当时的失败／NOT_RUN状态，不作为当前待办；当前验收以第4节和[验证50](qualification/README.md#ci-184-accepted)为准。
 
@@ -173,7 +217,7 @@ KCG-Code 是面向 Coding Agent 的 Software IR 编译、确定性代码生成�
 
 **上一阶段验收：**#154 已使 G2 显式锁／半开区间预约闭环，乘法与预约报告 72 项通过，包含先读后等锁、等待后重新检查；G10／G6／G11 与完整部署回归通过。账本仅将已验收的预约重叠转✓，新借阅上限暂记待验收△，该次验收后的账本为 **67／5／12**；本批两项待真库表达见上文，不提前宣称新业务真库通过。不扩大到循环、聚合或日期差。
 
-## 7.1 上一阶段（2026-10-17）
+## 7.2 更早阶段记录（2026-10-17）
 
 公开CLI流程已验收，不重开已完成R1–R5，不改变Git版本合同。
 
