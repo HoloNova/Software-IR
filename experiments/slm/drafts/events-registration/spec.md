@@ -288,7 +288,7 @@ EventView 仅包含 id、organizer、title、startsAt、capacity、registered、
 | B02 非法身份矩阵 | 五个需认证接口：`POST /api/events` 体 `{"title":"auth","startsAt":"2099-08-01T09:00:00Z","capacity":5,"fee":1}`、`POST /api/events/10/registrations` 体 `{}`、`GET /api/my/registrations?page=1&size=10`、`GET /api/events/16/revenue`、`GET /api/events/16/registration-count`，各用无头、`Bearer not-a-uuid`、未知 UUID、E，共 20 请求 | 每次 AUTH401 | 逐次 UNCHANGED | S01/S11；C02/C07 |
 | C01 创建 | A(1)，`POST /api/events`，`{"title":"New Fest","startsAt":"2099-08-01T09:00:00Z","capacity":50,"fee":12.50}` | 201 EV：organizer=1、registered=0、remaining=50、fee=12.50、startsAt 同一时刻 | 只新增该行（organizer_id=1，registered=0，fee=12.50）；其他不变 | S02/S10/S11 |
 | C02 边界值与身份 | A(2)，`{"title":"Free Fest","startsAt":"2000-01-01T00:00:00Z","capacity":1,"fee":0}`；A(1)，fee=99999999.99；A(1)，fee=12.3400；A(1)，title 为 100 个 ASCII 字符 | 都是 201；organizer 分别 2、1、1、1；`12.3400` 存为 12.34；过去的 startsAt 被接受 | 各只新增一行；organizer 来自令牌 | S02；C07 |
-| C03 非法输入 | A(1)：fee 取 100000000.00、12.345、-0.01、省略、null；capacity 取 0、-1、1.5、省略、null；title 取省略、null、空串、三个空格、101 个字符；startsAt 取省略、null、`"tomorrow"` | 每次 400 INVALID_REQUEST；`fields` 含对应 `path`（fee/capacity/title/startsAt）；省略/null 的 code 为 NotNull（title 为 NotBlank）；其余 code 与 `1.5`、`"tomorrow"` 的 path 不固定，只检查状态与 code=INVALID_REQUEST，实际值记入报告（§7 第 7 行） | 每次 UNCHANGED | S02/S11 |
+| C03 非法输入 | A(1)：fee 取 100000000.00、12.345、-0.01、省略、null；capacity 取 0、-1、省略、null；title 取省略、null、空串、三个空格、101 个字符；startsAt 取省略、null、`"tomorrow"` | 每次 400 INVALID_REQUEST；`fields` 含对应 `path`（fee/capacity/title/startsAt）；省略/null 的 code 为 NotNull（title 为 NotBlank）；其余 code 与 `"tomorrow"` 的 path 不固定，只检查状态与 code=INVALID_REQUEST，实际值记入报告（§7 第 7 行） | 每次 UNCHANGED | S02/S11 |
 | C04 不能自设组织者或计数 | A(1)，合法体外加 `"organizer":2`；另一次加 `"registered":5` | 400（未知字段被拒；只检查状态） | UNCHANGED | S12 |
 
 ### 6.3 列表与本人报名
@@ -380,7 +380,7 @@ I02：上述所有 EV/RV/PAGE 响应键集合精确，标量不是对象或带�
 | 4 | 联合唯一键是“一人一场只一次”的最后防线 | R:261、R:1376–1378 | DDL 必须真实建立 `(event_id, attendee_id)` 唯一键；`G/WorkflowRenderer.java`:821 把 `DuplicateKeyException` 转成声明错误 |
 | 5 | 先 `exists` 再 create 时 `persist … else` 由编译器强制；先 persist 被计数的行 | R:1376–1378、R:1532 | §0.2 负例：`SIR-VALID-004`、`SIR-VALID-015`；参考里 `persist event;` 在 `persist made else AlreadyRegistered;` 之前 |
 | 6 | 守卫计数不保证“唯一赢家”，容量 N 就是 N 个赢家；无守卫版本也能编译 | R:1488–1530 | §0.2 第三条负例；X01 判据为 4 胜 2 败，且 registered 必须等于行数 |
-| 7 | 校验错误 code 字符串（`NotNull`、`NotBlank` 之外，如 DecimalMin、ExactDecimal）未实测；`capacity=1.5`、`startsAt="tomorrow"` 属于“不可读请求体”路径，`fields` 可能为空 | R:402 | `G/ApiExceptionAdviceRenderer.java`:46–57（code 取 Spring 约束名）；未运行，故 C03 对这些情形只固定状态与 `INVALID_REQUEST`，实际值首次 CI 写入报告 |
+| 7 | 校验错误 code 字符串（`NotNull`、`NotBlank` 之外，如 DecimalMin、ExactDecimal）未实测；`startsAt="tomorrow"` 属于“不可读请求体”路径，`fields` 可能为空；`capacity=1.5` 不作为非法样例（Jackson 默认可能把 1.5 截断为整数，未验证） | R:402 | `G/ApiExceptionAdviceRenderer.java`:46–57（code 取 Spring 约束名）；未运行，故 C03 对这些情形只固定状态与 `INVALID_REQUEST`，实际值首次 CI 写入报告 |
 | 8 | 视图计算字段 `remaining = capacity − registered` | R:454–472 | `Quantity − Count` 同为 32 位整数，生成通过；B01/L01 逐项检查 |
 | 9 | 查询里的 `item.startsAt > now()`；`Register` 里的 `validate event.startsAt > now()` | R:1153（查询里的 `now()`）、R:1997 | 种子用 2099/2000 的固定时刻，不依赖真实等待 |
 | 10 | 事务与隔离：普通 command 为 `@Transactional`（MySQL 默认可重复读）；锁住活动行后六个请求在守卫 UPDATE 处等待 | R:1488–1530 | `G/ServiceRenderer.java`:87–91；生成的 `RegisterService`；X02 的失败者先通过 `exists`，后在 INSERT 撞唯一键，`AlreadyRegistered` 抛出后整个事务回滚、计数随之回滚（最终 registered=1 验证） |
