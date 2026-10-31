@@ -1,0 +1,21 @@
+{
+  "actual_model": "deepseek-flash",
+  "created_at": "2026-10-31T13:53:33.398281+00:00",
+  "id": "fitness-check-in-change-p3-v1-teacher-42b83fa3affb",
+  "raw_response_sha256": "dbaac02dd11a39d88ee610ee77d1676129dbb01bfd4c4c018a95411626ed5d09",
+  "requested_model": "deepseek-flash",
+  "status": "CANDIDATE_NOT_YET_QUALIFIED",
+  "system_fingerprint": "bc19ba97cbe016479903222bb1578db6",
+  "usage": {
+    "completion_tokens": 1273,
+    "completion_tokens_details": null,
+    "prompt_cache_hit_tokens": 8832,
+    "prompt_cache_miss_tokens": 8970,
+    "prompt_tokens": 17802,
+    "prompt_tokens_details": {
+      "audio_tokens": null,
+      "cached_tokens": 8832
+    },
+    "total_tokens": 19075
+  }
+}

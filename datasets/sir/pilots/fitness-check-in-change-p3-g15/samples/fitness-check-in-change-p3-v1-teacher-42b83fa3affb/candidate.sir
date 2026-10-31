@@ -1,0 +1,176 @@
+sir 0.3
+
+software GymCheckIn {
+  metadata {
+    displayName "Gym Check-In";
+    namespace "example.gym";
+  }
+  target {
+    language java 21;
+    framework spring_boot;
+    persistence mybatis_plus;
+    database mysql;
+    build maven;
+    interface rest;
+  }
+  sources { }
+  imports { }
+  declarations {
+    enum Role { MEMBER, COACH }
+    type Hours = Money where precision(4, 2), min(0.25), max(12);
+    entity User persistent {
+      identity id: Id generated auto;
+      field name: Name unique;
+      field role: Role default Role.MEMBER;
+    }
+    entity AccessToken persistent {
+      identity id: Token generated uuid;
+      field owner: Ref<User>;
+      field expiresAt: Moment;
+      credential subject owner expires expiresAt;
+    }
+    entity Program persistent {
+      identity id: Id generated auto;
+      field name: Code unique;
+    }
+    entity CheckIn persistent {
+      identity id: Id generated auto;
+      field member: Ref<User>;
+      field program: Ref<Program>;
+      field hours: Hours;
+      field checkedInAt: Moment default now();
+    }
+    view CheckInView from CheckIn {
+      field id: Id;
+      field member: Ref<User>;
+      field program: Ref<Program>;
+      field hours: Hours;
+      field checkedInAt: Moment;
+    }
+    view ProgramView from Program { field id: Id; field name: Code; }
+    input PageQuery { field page: PageNo; field size: PageSize; }
+    input LogInput { field programId: Id; field hours: Hours; }
+    input MonthQuery { field month: Optional<Text>; }
+    input CoachMonthQuery { field month: Optional<Text>; field program: Optional<Ref<Program>>; }
+    input CoachQuery {
+      field member: Optional<Ref<User>>;
+      field program: Optional<Ref<Program>>;
+      field page: PageNo;
+      field size: PageSize;
+    }
+    error BadPage http 400;
+    error BadPeriod http 400;
+    error Forbidden http 403;
+    error ProgramNotFound http 404;
+
+    capability ListPrograms {
+      input PageQuery;
+      output Page<ProgramView>;
+      fails BadPage;
+      requires readonly;
+      expose query at "/programs";
+      workflow {
+        find Program where true
+          order by name ascending, id ascending
+          Page input.page, input.size else BadPage as rows;
+        return rows;
+      }
+    }
+    capability LogWorkout {
+      actor Ref<User>;
+      input LogInput;
+      output CheckInView;
+      fails ProgramNotFound;
+      requires authenticated;
+      requires atomic;
+      expose command at "/check-ins";
+      workflow {
+        load Program by input.programId as program else ProgramNotFound;
+        create CheckIn as made {
+          member: actor;
+          program: program;
+          hours: input.hours;
+        }
+        persist made;
+        return made;
+      }
+    }
+    capability MyMonthVisits {
+      actor Ref<User>;
+      input MonthQuery;
+      output Serial;
+      fails BadPeriod;
+      requires authenticated;
+      requires readonly;
+      expose query at "/my/month/visits";
+      workflow {
+        month input.month in "Asia/Shanghai" as since, until else BadPeriod;
+        count CheckIn where item.member == actor and item.checkedInAt >= since and item.checkedInAt < until as visits;
+        return visits;
+      }
+    }
+    capability MyMonthHours {
+      actor Ref<User>;
+      input MonthQuery;
+      output Money;
+      fails BadPeriod;
+      requires authenticated;
+      requires readonly;
+      expose query at "/my/month/hours";
+      workflow {
+        month input.month in "Asia/Shanghai" as since, until else BadPeriod;
+        sum CheckIn.hours where item.member == actor and item.checkedInAt >= since and item.checkedInAt < until as total;
+        return total;
+      }
+    }
+    capability MyMonthAverage {
+      actor Ref<User>;
+      input MonthQuery;
+      output Money;
+      fails BadPeriod;
+      requires authenticated;
+      requires readonly;
+      expose query at "/my/month/average";
+      workflow {
+        month input.month in "Asia/Shanghai" as since, until else BadPeriod;
+        count CheckIn where item.member == actor and item.checkedInAt >= since and item.checkedInAt < until as visits;
+        sum CheckIn.hours where item.member == actor and item.checkedInAt >= since and item.checkedInAt < until as total;
+        validate visits == 0 or total == 0.00 else BadPeriod;
+        return total;
+      }
+    }
+    capability CoachCheckIns {
+      actor Ref<User>;
+      input CoachQuery;
+      output Page<CheckInView>;
+      fails BadPage;
+      fails Forbidden;
+      requires authenticated;
+      requires readonly;
+      expose query at "/coach/check-ins";
+      workflow {
+        validate actor.role == Role.COACH else Forbidden;
+        find CheckIn where (input.member is none or item.member == input.member) and (input.program is none or item.program == input.program)
+          order by checkedInAt descending, id descending
+          Page input.page, input.size else BadPage as rows;
+        return rows;
+      }
+    }
+    capability CoachMonthVisits {
+      actor Ref<User>;
+      input CoachMonthQuery;
+      output Serial;
+      fails BadPeriod;
+      fails Forbidden;
+      requires authenticated;
+      requires readonly;
+      expose query at "/coach/month/visits";
+      workflow {
+        validate actor.role == Role.COACH else Forbidden;
+        month input.month in "Asia/Shanghai" as since, until else BadPeriod;
+        count CheckIn where item.checkedInAt >= since and item.checkedInAt < until and (input.program is none or item.program == input.program) as visits;
+        return visits;
+      }
+    }
+  }
+}
