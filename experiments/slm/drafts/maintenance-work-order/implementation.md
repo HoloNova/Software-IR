@@ -51,3 +51,71 @@ mvn -B -o -q -pl sir-toolchain-application -am `
 生成工程构建、readiness、真实 MySQL/HTTP、三轮并发、base 的 HTTP 负例、参考/候选四门：全部 **NOT_RUN**。CI commit SHA/run URL/artifact：无；当前代码未提交，没有覆盖它的同 SHA CI 证据。未创建 task、冻结批次、采样、调用模型或学生训练。
 
 本轮提交、推送与 CI 已另获负责人明确授权；不改写历史、不重复本机测试。参考门通过后，题目冻结和候选流程仍须另行安排；候选须先静态检查，失败只修一轮，再送业务门。在这条链路完成前不合入工具链变更；Windows 送门继续使用 LF 隔离快照核对冻结输入，不改 manifest 迁就 CI。无 UI 改动，无浏览器验收或 UI 单测。
+
+## 5. 已执行的同 SHA CI：FAILED（不是 NOT_RUN，也不合格）
+
+- 实现提交：`d31af6af8b6f140280f24ee6a2a4992c7b5da585`，已普通推送，Author 为 HoloNova，协助者署名 ChatGPT。
+- [verify run 41187721552](https://github.com/HoloNova/Software-IR/actions/runs/41187721552)，受测SHA与提交一致；冻结全量门 **PASSED**，Business conformance ITs **FAILED**，后续资格摘要/独立验证/CLI/部署均跳过，不算通过。
+- 原始 [conformance-evidence artifact 13037518243](https://github.com/HoloNova/Software-IR/actions/runs/41187721552/artifacts/13037518243)，ZIP SHA256=`e66f8704868d215115dc8c449468df198d9fedc456712af9f8cde85c3294fe16`。
+- 原始 [surefire-reports artifact 13037457080](https://github.com/HoloNova/Software-IR/actions/runs/41187721552/artifacts/13037457080)，ZIP SHA256=`3ad3441501791bc4e437dab9bcaa90b49829d80812ee9eda2c3ae4fa3f0e109a`。
+- 本题原报告：`maintenance-slice-1a1914369c1-62214/maintenance-slice-report.txt`，固定第二行 `verdict=FAILED`；**597检查通过、2失败**，JUnit本题1项失败。20项轻量测试在本次CI仍全部通过，但不抵消业务失败。
+
+### 5.1 实际结果与根因
+
+生成文件55个，生成工程构建退出0，就绪200，实际MySQL/HTTP、三个并发轮次和清理均已执行。X01/X02/X03分别观测到6/6/2个不同连接与事务全部到达屏障；三个并发业务结果均符合预期。应用进程停止、schema删除与advisory lock释放均通过。
+
+仅有两个失败断言都来自同一个请求：P04使用bob身份、对版本已为6的102号工单提交旧版本2。规格要求先403 Forbidden，实际为409 StaleVersion，错误信封也相应不同。JDBC未写入检查通过；不是越权写成功，也不是并发屏障失败。
+
+根因可从既有 `sir-generator-spring-boot/.../internal/WorkflowRenderer.java:233–268,331–370` 确认：`renderLoad` 在非空检查后立即 `renderVersionGuard`；后者根据PATCH expectedVersion抛出persist声明的冲突错误。reference.sir第152行load WorkOrder因此在第153–154行读取Facility并校验manager之前就返回冲突。这与题面S06/C04和spec §4、§6 P04所要求的顺序不一致。规格阶段的内存生成无法证明这个顺序可实现。
+
+### 5.2 证据绑定与停点
+
+从受测提交的Git blob逐项核对原报告：SIR SHA256=`bfe04bc9b91f970f4de151d54e686a38b68872b71a7da535dd4df362dd39be32`，DDL=`074a6d4bf175e671303d61e26e1ddc4857c26bf6944c9742dccb6d19ed688029`，seed=`f40a24b7f8caa86e1460744a43633808d893b67eafe342a925140c1ccf4d27b7`，全部一致。原ZIP、API元数据、失败步骤日志和核验摘要保留于根 `target/bounded-problems-ci/41187721552/`，未加入Git。
+
+上传的Surefire ZIP还包含 `datasets/**/target/surefire-reports` 下三个历史失败报告，不属于本次新失败；不能不区分路径就求和当作本次冻结门计数。本次Business步骤实际为17个IT、2失败，正是报修/排班；不报告混入历史附件的全局测试总数。
+
+本轮没有调整期望、参考、题面或生成器来掩盖失败，也未重跑同源码CI。要么由负责人确认修订规格的错误优先级，要么保持已确认题面，另行评审工具链语义；按当前约束，在候选判卷链路结束前不合入工具链修改。本题尚不能冻结任务或开始教师采样。本节记录初次归因时的停点；后续修复与提交授权见§6。
+
+## 6. CI 根因修复与定向回归（新 CI 尚未运行）
+
+负责人先授权“准备本地修复，暂不提交”，完成定向验证后又明确要求直接提交。本节随对应修复本地提交，未授权推送或重跑CI。本节保留已批准题面、reference/base、DDL、种子和 HTTP/JDBC oracle；不放宽 P04，不修改工作流或候选冻结输入。第5节仍是已执行 CI 的真实 FAILED 结果，本节不能覆盖它。
+
+`WorkflowRenderer` 将版本预检查从 `renderLoad` 移至显式 `renderUpdate` 的合并之前。这样 load 后的 scope、关联存在性及权限检查按 SIR 顺序执行；获授权的旧版本仍在修改对象和候选字段校验之前返回冲突。行锁、`updateIfVersionMatches` 的 identity/version 条件、零行冲突和提交后版本递增均保留。守卫直接采用当前 update 的 ConditionalUpdate，不再跨能力扫描同实体的第一个冲突分支。另一个根因的内部属性映射见排班记录§6。
+
+### 6.1 RED/GREEN 与保证范围
+
+新增 `PatchAuthorizationRuntimeTest` 实际编译并调用本题参考服务，不启动 Spring 或数据库：无权限且旧版本、已软删且旧版本、关联缺失且旧版本均先报前置错误；有权限的旧版本不合并/不写；CAS 零行仍冲突；合法 PATCH 仅改到场字段并报告提交版本。
+
+有效 RED 是两组新增测试共12项，4 assertion failures、4 OGNL errors；getter 读取方式的测试设置错误已先修正，不混算为根因证据。最终按实际报告汇总为 **59项通过、0失败/错误/跳过**：
+
+| 测试类 | 通过项数 |
+|---|---:|
+| PatchAuthorizationRuntimeTest | 6 |
+| OgnlPropertyRuntimeTest | 8 |
+| GeneratorWriteSliceContractTest | 17 |
+| GeneratorEntityArtifactInvarianceTest | 4 |
+| ReservedIdentifierRuntimeTest | 3 |
+| WriteSliceLoweringTest | 21 |
+
+这不是同一轮59项全绿的宣称：广义定向轮次中其余51项已通过；最后仅改 OGNL 测试的 JSON 比较方式（将响应真实序列化，避免 LongNode/IntNode 的内存类型差异），再单独复跑8项并通过，生产逻辑未变。随后仅校正 WorkflowRenderer 的缩进/空行，未重复运行已有效的测试。
+
+### 6.2 实际命令、资源与证据
+
+实测 Windows 11、18逻辑处理器、可用内存4575 MiB；只用两个核的进程亲和性，单构建、单fork，无 `-T`。Maven堆384 MiB/元空间192 MiB，测试fork堆512 MiB/元空间256 MiB。当前不是 Linux，未照抄不可用的 systemd-run。实际 RED 用同一命令的前两个新增类；最后复跑将 test 选择器收窄为 OgnlPropertyRuntimeTest。
+
+```powershell
+$env:JAVA_HOME='C:/Program Files/Eclipse Adoptium/jdk-21.0.11.10-hotspot'
+$env:PATH="$env:JAVA_HOME/bin;$env:PATH"
+$env:MAVEN_OPTS='-Xmx384m -XX:MaxMetaspaceSize=192m -XX:ActiveProcessorCount=2 -Duser.language=en -Duser.country=US'
+[System.Diagnostics.Process]::GetCurrentProcess().ProcessorAffinity=[IntPtr]3
+& 'D:/environment/apache-maven-3.9.14/bin/mvn.cmd' -B -o '-Dmaven.repo.local=D:/maven-repo' `
+  -pl sir-generator-spring-boot -am `
+  '-Dtest=PatchAuthorizationRuntimeTest,OgnlPropertyRuntimeTest,GeneratorWriteSliceContractTest,GeneratorEntityArtifactInvarianceTest,ReservedIdentifierRuntimeTest,WriteSliceLoweringTest' `
+  '-Dsurefire.failIfNoSpecifiedTests=false' `
+  '-DargLine=-Xmx512m -XX:MaxMetaspaceSize=256m -XX:ActiveProcessorCount=2 -Duser.language=en -Duser.country=US' `
+  '-DforkCount=1' '-DreuseForks=true' test
+```
+
+本机原始JUnit副本在根 `target/bounded-problems-ci/41187721552/repro/red/` 与 `repro/green/`；最小复现和 observations.json 也在 repro 下。这些是本机诊断/回归证据，未加入Git，不是 CI artifact。AFT inspect两次桥接超时，诊断不可用；实际 javac/Maven 编译已通过。未量化覆盖率，不声称80%；未运行全量门、真实 MySQL/HTTP、并发或新 CI，无 UI 改动。
+
+本地补丁会改变工具链身份，不能用当前工作区冒充旧候选冻结快照，亦不得重写 manifest 或继承 d31af6af 的冻结门资格。候选仍先静态、失败只修一轮、再送业务门；该链路结束前不合入工具链改动。本次按后续明确指令本地提交；未推送、触发 CI、冻结题目、采样或调用模型，未切换远端候选判卷工具链。

@@ -2,7 +2,7 @@
   "namespace": "example.maintenance",
   "family": "maintenance.work-order",
   "split": "train",
-  "status": "owner-approved specification; oracle implemented; runtime NOT_RUN",
+  "status": "owner-approved specification; oracle implemented; reference CI FAILED (d31af6af / 41187721552)",
   "capabilities": ["ListFacilities", "OpenWorkOrder", "EditWorkOrder", "GetWorkOrder", "ListWorkOrders", "GenerateInspections", "CloseOverdueInspections", "ListInspections"],
   "entities": ["User", "AccessToken", "Facility", "WorkOrder", "InspectionOrder"],
   "interfaces": {

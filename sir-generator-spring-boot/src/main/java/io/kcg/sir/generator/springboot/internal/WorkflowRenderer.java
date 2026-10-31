@@ -97,7 +97,7 @@ final class WorkflowRenderer {
             renderValidate(ctx, capability, validate, variableNames, imports, currentPackage, lines);
             break;
          case LoadStep load:
-            renderLoad(ctx, capability, load, variableNames, imports, currentPackage, lines, mappers);
+            renderLoad(ctx, load, variableNames, imports, currentPackage, lines, mappers);
             break;
          case SpringBootWorkflow.LoadActorStep load:
             renderLoadActor(ctx, load, variableNames, imports, currentPackage, lines, mappers);
@@ -232,7 +232,6 @@ final class WorkflowRenderer {
 
    private static void renderLoad(
       GenerationContext ctx,
-      CapabilityDeclaration capability,
       LoadStep step,
       Map<SymbolId, String> variableNames,
       ImportSorter imports,
@@ -264,7 +263,6 @@ final class WorkflowRenderer {
       lines.add("        if (" + resultName + " == null) {");
       lines.add("            throw new " + errorName + "();");
       lines.add("        }");
-      renderVersionGuard(ctx, capability, step, entity, resultName, imports, currentPackage, lines);
    }
 
    /** The authenticated actor's row; when it is gone the request is not authenticated any more. */
@@ -331,26 +329,25 @@ final class WorkflowRenderer {
    /**
    * Fails fast when the request's expected version is already stale.
    *
-   * <p>The conditional update would catch this on its own, but answering before any merge or
-   * validation keeps a stale request from being told about the candidate it never got to change.
+   * <p>Emit at the explicit update, not at load: preceding workflow checks (including permission
+   * and scope) keep their declared order, while stale input still fails before merge and candidate
+   * validation. The conditional persist remains the final database-level conflict check.
    */
    private static void renderVersionGuard(
       GenerationContext ctx,
       CapabilityDeclaration capability,
-      LoadStep step,
-      EntityDeclaration entity,
+      SpringBootWorkflow.ConditionalUpdate conditional,
       String loadedName,
       ImportSorter imports,
       String currentPackage,
       List<String> lines
    ) {
-      if (!step.forUpdate() || entity.version().isEmpty()) {
+      if (conditional == null) {
          return;
       }
-
+      EntityDeclaration entity = ctx.entity(conditional.entitySymbol());
       SpringBootDeclaration.PatchSpec patch = ctx.patchSpecOf(capability).orElse(null);
-      SpringBootWorkflow.ConditionalUpdate conditional = conditionalUpdateOf(ctx, step.entitySymbol());
-      if (patch == null || conditional == null) {
+      if (patch == null || entity.version().isEmpty()) {
          return;
       }
 
@@ -692,6 +689,7 @@ final class WorkflowRenderer {
       String targetName = variableName(target, variableNames);
       SpringBootWorkflow.ConditionalUpdate conditional = step.conditional().orElse(null);
       String inputName = capability.input().map(Variable::targetName).orElse(null);
+      renderVersionGuard(ctx, capability, conditional, targetName, imports, currentPackage, lines);
       for (Binding binding : step.bindings()) {
          if (conditional == null || inputName == null) {
             String value = unwrapToEntityProperty(
@@ -742,27 +740,6 @@ final class WorkflowRenderer {
       return ctx.patchSpecOf(capability)
          .map(SpringBootDeclaration.PatchSpec::changesPropertyName)
          .orElseThrow(() -> new IllegalStateException("a conditional update requires a patch payload: " + capability.javaName()));
-   }
-
-   private static SpringBootWorkflow.ConditionalUpdate conditionalUpdateOf(GenerationContext ctx, SymbolId entitySymbol) {
-      for (SpringBootDeclaration declaration : ctx.model().declarations()) {
-         if (!(declaration instanceof CapabilityDeclaration candidate)) {
-            continue;
-         }
-
-         for (Step step : SpringBootWorkflow.walk(candidate.workflow().steps()).toList()) {
-            Optional<SpringBootWorkflow.ConditionalUpdate> conditional = switch (step) {
-               case PersistStep persist -> persist.conditional();
-               case UpdateStep update -> update.conditional();
-               default -> Optional.empty();
-            };
-            if (conditional.isPresent() && conditional.get().entitySymbol().equals(entitySymbol)) {
-               return conditional.get();
-            }
-         }
-      }
-
-      return null;
    }
 
    private static void renderPersist(

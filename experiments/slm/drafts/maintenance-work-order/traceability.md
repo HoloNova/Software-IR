@@ -1,4 +1,4 @@
-# 设施报修与巡检工单题追溯（判卷源码已落地，业务门 NOT_RUN）
+# 设施报修与巡检工单题追溯（判卷源码已落地，参考业务 CI FAILED）
 
 family `maintenance.work-order` / train；基线 `e81200e0e039c5d178c95bbab2f12195ac13f0dd`。规格已获确认；现已另获授权并落地业务IT、DDL/seed和两个workflow，但没有task或CI资格。spec §6检查对应本文件§6中的实现入口；验证状态见 [implementation.md](implementation.md)。静态实测：reference/base均GENERATION、diagnostics=[]、55/47文件，原输出和摘要在spec §0.3。
 
@@ -52,7 +52,7 @@ C01的“保留”意味着W01–W03、D01、ListFacilities/ListInspections仍�
 
 X01目标work_order105：六个同版本编辑，1胜5冲突，最终版本1/赢家note；X02目标facility10：六个批关闭全200，最终只关闭201/202；X03目标facility10：生成/关闭两个请求，三张新行必须全开或全闭，对应两种合法串行次序。所有请求都必须由独立HTTP客户端实际发出；数据库控制锁+真实等待图确保N个不同连接/事务全部到达屏障；超时、权限不足及失败处理按spec §6.6，不拿顺序请求代替并发。
 
-夹具自检、external配置、readiness、进程清理/报告不是候选业务需求，但失败会阻断有效证据；构建/启动/业务/并发均NOT_RUN。不继承博客或fitness/events的资格，更不给未来教师候选继承本参考静态通过。
+夹具自检、external配置、readiness、进程清理/报告不是候选业务需求，但失败会阻断有效证据；同SHA CI构建/启动通过，本题597项检查通过、2失败；X01–X03业务与真实屏障通过，但P04优先级冲突使参考整体FAILED，见implementation §5。不继承博客或fitness/events的资格，更不给未来教师候选继承本参考静态通过。
 
 ## 5. 负责人已确认的边界
 
@@ -61,7 +61,7 @@ X01目标work_order105：六个同版本编辑，1胜5冲突，最终版本1/赢
 - M3：removed=null沿用上游未决边界，本题暂不评分；title=null仍按目标非空白规则检查，PATCH错误路径changes.title、模板码notBlank，不与普通新建DTO的NotBlank混同。
 - 接受spec §0.1的dev/test隔离结论，保留maintenance.work-order作为train；不启用质检批次备选。
 
-以上边界已获负责人确认。规格阶段文档已单独提交；本阶段是在另行授权后落地判卷，并已获负责人一次提交、普通推送与同SHA CI的授权；不改工具链。四门资格待真实CI证据，任务冻结仍未办理。
+以上边界已获负责人确认。规格阶段文档已单独提交；本阶段是在另行授权后落地判卷，并已获负责人一次提交、普通推送与同SHA CI的授权；判卷实现提交未改工具链；CI失败后的根因修复另获本地提交授权，未推送或运行新CI。已有失败CI证据，尚无四门资格，任务冻结仍未办理。
 
 ## 6. 本阶段源码入口（尚无业务资格）
 
@@ -79,4 +79,4 @@ X01目标work_order105：六个同版本编辑，1胜5冲突，最终版本1/赢
 | 真实N客户端/锁等待/收齐与释放 | `BoundedProblemRace`，复用已有 `BlogLockWaits` 的间接链证明 |
 | 夹具、自检、external、构建/清理/证据 | `MaintenanceWorkOrderBusinessConformanceIT` → `BoundedProblemConformance` / `BoundedProblemFixture` → 已有 `BusinessSliceHarness` |
 
-参考/DDL/seed分别为test resources的 `valid/maintenance-work-order.sir` 和 `conformance/mysql/maintenance-work-order-{ddl,seed}.sql`，均与批准规格的内容对应。两个workflow同时接入参考和候选；同一个IT仅由既有Harness切换SIR输入，不另写候选专用断言。定向测试结果不构成四门验收，完整记录见 [implementation.md](implementation.md)。
+参考/DDL/seed分别为test resources的 `valid/maintenance-work-order.sir` 和 `conformance/mysql/maintenance-work-order-{ddl,seed}.sql`，均与批准规格的内容对应。两个workflow同时接入参考和候选；同一个IT仅由既有Harness切换SIR输入，不另写候选专用断言。定向测试结果不构成四门验收，完整记录见 [implementation.md](implementation.md)，其中§5为已执行的失败CI证据。
