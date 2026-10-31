@@ -1,0 +1,40 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ----------------------< example.gym:gym-check-in >----------------------
+[INFO] Building gym-check-in 0.1.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- clean:3.4.1:clean (default-clean) @ gym-check-in ---
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ gym-check-in ---
+[INFO] Copying 1 resource from src/main/resources to target/classes
+[INFO] Copying 0 resource from src/main/resources to target/classes
+[INFO] 
+[INFO] --- compiler:3.14.0:compile (default-compile) @ gym-check-in ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 43 source files with javac [debug parameters release 21] to target/classes
+[INFO] /home/runner/work/Software-IR/Software-IR/ci-work/fitness-slice-1a190a1d3a3-10627/generated-project/src/main/java/example/gym/api/ValidationSupport.java: /home/runner/work/Software-IR/Software-IR/ci-work/fitness-slice-1a190a1d3a3-10627/generated-project/src/main/java/example/gym/api/ValidationSupport.java uses or overrides a deprecated API.
+[INFO] /home/runner/work/Software-IR/Software-IR/ci-work/fitness-slice-1a190a1d3a3-10627/generated-project/src/main/java/example/gym/api/ValidationSupport.java: Recompile with -Xlint:deprecation for details.
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ gym-check-in ---
+[INFO] skip non existing resourceDirectory /home/runner/work/Software-IR/Software-IR/ci-work/fitness-slice-1a190a1d3a3-10627/generated-project/src/test/resources
+[INFO] 
+[INFO] --- compiler:3.14.0:testCompile (default-testCompile) @ gym-check-in ---
+[INFO] No sources to compile
+[INFO] 
+[INFO] --- surefire:3.5.3:test (default-test) @ gym-check-in ---
+[INFO] No tests to run.
+[INFO] 
+[INFO] --- jar:3.4.2:jar (default-jar) @ gym-check-in ---
+[INFO] Building jar: /home/runner/work/Software-IR/Software-IR/ci-work/fitness-slice-1a190a1d3a3-10627/generated-project/target/gym-check-in-0.1.0-SNAPSHOT.jar
+[INFO] 
+[INFO] --- spring-boot:3.5.3:repackage (repackage) @ gym-check-in ---
+[INFO] Replacing main artifact /home/runner/work/Software-IR/Software-IR/ci-work/fitness-slice-1a190a1d3a3-10627/generated-project/target/gym-check-in-0.1.0-SNAPSHOT.jar with repackaged archive, adding nested dependencies in BOOT-INF/.
+[INFO] The original artifact has been renamed to /home/runner/work/Software-IR/Software-IR/ci-work/fitness-slice-1a190a1d3a3-10627/generated-project/target/gym-check-in-0.1.0-SNAPSHOT.jar.original
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  3.742 s
+[INFO] Finished at: 2026-10-31T06:24:53Z
+[INFO] ------------------------------------------------------------------------

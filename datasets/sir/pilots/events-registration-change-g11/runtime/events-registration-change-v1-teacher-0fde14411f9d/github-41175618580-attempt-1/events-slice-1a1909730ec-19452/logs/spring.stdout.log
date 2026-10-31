@@ -1,0 +1,30 @@
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.5.3)
+
+2026-10-31T06:13:17.744Z  INFO 3200 --- [event-signup] [           main] example.events.Application               : Starting Application v0.1.0-SNAPSHOT using Java 21.0.13 with PID 3200 (/home/runner/work/Software-IR/Software-IR/ci-work/events-slice-1a1909730ec-19452/generated-project/target/event-signup-0.1.0-SNAPSHOT.jar started by runner in /home/runner/work/Software-IR/Software-IR/sir-toolchain-application)
+2026-10-31T06:13:17.747Z  INFO 3200 --- [event-signup] [           main] example.events.Application               : No active profile set, falling back to 1 default profile: "default"
+2026-10-31T06:13:19.270Z  INFO 3200 --- [event-signup] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 18080 (http)
+2026-10-31T06:13:19.292Z  INFO 3200 --- [event-signup] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-10-31T06:13:19.292Z  INFO 3200 --- [event-signup] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.42]
+2026-10-31T06:13:19.317Z  INFO 3200 --- [event-signup] [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-10-31T06:13:19.318Z  INFO 3200 --- [event-signup] [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1505 ms
+ _ _   |_  _ _|_. ___ _ |    _ 
+| | |\/|_)(_| | |_\  |_)||_|_\ 
+     /               |         
+                        3.5.12 
+2026-10-31T06:13:20.516Z  INFO 3200 --- [event-signup] [           main] m.e.s.MybatisPlusApplicationContextAware : Register ApplicationContext instances org.springframework.boot.web.servlet.context.AnnotationConfigServletWebServerApplicationContext@42bc14c1
+2026-10-31T06:13:20.625Z  INFO 3200 --- [event-signup] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 18080 (http) with context path '/'
+2026-10-31T06:13:20.635Z  INFO 3200 --- [event-signup] [           main] example.events.Application               : Started Application in 3.496 seconds (process running for 4.042)
+2026-10-31T06:13:20.871Z  INFO 3200 --- [event-signup] [.1-18080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-10-31T06:13:20.871Z  INFO 3200 --- [event-signup] [.1-18080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-10-31T06:13:20.872Z  INFO 3200 --- [event-signup] [.1-18080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2026-10-31T06:13:20.922Z  INFO 3200 --- [event-signup] [.1-18080-exec-1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-10-31T06:13:21.302Z  INFO 3200 --- [event-signup] [.1-18080-exec-1] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@27d1239d
+2026-10-31T06:13:21.303Z  INFO 3200 --- [event-signup] [.1-18080-exec-1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
