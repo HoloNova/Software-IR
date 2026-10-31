@@ -66,7 +66,7 @@ bc5d2dced531ccc608e522a1020c43a54f3dded5d9ea3073213acb1621560706  pilots/dual-to
 c28be9c606ac0d917210bbbf6123497ec2a7ec21b3ced2dd2128588a01b3e44d  pilots/dual-token-v1/verification/python-summary.json
 ef0e6d18e35906b57b973c5ac3fe0cb7f9c441e24fe6aa521b932c86f9e63056  pilots/dual-token-v1/verification/python-versions.json
 7595bba04230e35e2f7c559ba4d3d6c778cb28a94b352077942d0462c5952d98  pilots/dual-token-v1/verification/source-manifest.json
-73da7e3456147542feb2fbd6cc7e2362db84d3b51572f78daa73d7a20b1d88a7  README.md
+4757362e16d7a873cd671e82f34ba892914a5c89cea038940d6b8a7e32170b8e  README.md
 5e81a9fd94e640b412725ff4c6eef90b8862e526c93ca4f4c5179244bcf20550  research/2026-10-25/deepseek-ai--deepseek-coder-1.3b-instruct--config.json
 a19efa77bbdf803f6fb4b08ab4ab09c98c3811290b60c1628ff8f0f1ea37d6e3  research/2026-10-25/deepseek-ai--deepseek-coder-1.3b-instruct--model-api.json
 b1739d38e8fe147611ccacb8f8b27ebedcde1acbe25002fbd67ee79c5dac1a17  research/2026-10-25/deepseek-ai--deepseek-coder-1.3b-instruct--README.md
@@ -730,7 +730,7 @@ b8e6770ec019512f8f80f35409bbf80daac57859debd8df8b4b9f3b65d7ba391  pilots/mainten
 bfe04bc9b91f970f4de151d54e686a38b68872b71a7da535dd4df362dd39be32  pilots/maintenance-work-order-scratch-p3-g13/samples/maintenance-work-order-scratch-p3-v1-reference/candidate.sir
 5f40588ce689cf200ebd266d0fe8d3b570dbe11f017b376ccf04102d767fb665  pilots/maintenance-work-order-scratch-p3-g13/system.md
 3a11190e3d70b71561adb3ea12f2ad904ccc63c2a493ea8287868baeac25a4d2  pilots/maintenance-work-order-scratch-p3-g13/task.json
-7cc3bb11c73a146c69dea05572749af8cf63123f9f1d9d892ad68f9d27ee580d  pilots/staffing-shift-roster-change-g13/MANIFEST.sha256
+db14f860d108263386bc8022c2f3f94af5a68a3753be2a61940cf92450c9fea5  pilots/staffing-shift-roster-change-g13/MANIFEST.sha256
 ea9225ba705e3982732ec62c9f00e87b1eea67cd55f31f167f163c9d617473d8  pilots/staffing-shift-roster-change-g13/base.sir
 f4d8f1752fb544b4851c46e9d1b482bb5dde49e63e8a35814e4ae6eb8fe94ba0  pilots/staffing-shift-roster-change-g13/candidates.jsonl
 f51452a1671a2351e6102f9046e8ce8ae1c7aebb1ef917a1cf328d4a880c948d  pilots/staffing-shift-roster-change-g13/checked.jsonl
@@ -786,7 +786,7 @@ f85843ee95120450d12a28285bff1b45f0977aa02ee794d7428b297952d296cc  pilots/staffin
 5d1cf02d377906ab75004fab1f5ae8f92a7f027da16b5c7617c87e877974c2d0  pilots/staffing-shift-roster-change-p3-g13/samples/staffing-shift-roster-change-p3-v1-reference/candidate.sir
 5f40588ce689cf200ebd266d0fe8d3b570dbe11f017b376ccf04102d767fb665  pilots/staffing-shift-roster-change-p3-g13/system.md
 833ab08a4ef1536e9f151ee635b8d9455464aa8894ed13a42f3730c3ec88189a  pilots/staffing-shift-roster-change-p3-g13/task.json
-1e03b3b6f8d8f9aeb5b7aae0d6c5bd6f7069ffb15916c0fada1d9cc37f21d33a  pilots/staffing-shift-roster-scratch-g13/MANIFEST.sha256
+8beae99f0c738d5f323f868db20fa914189027933df509f3054b755a29580ef2  pilots/staffing-shift-roster-scratch-g13/MANIFEST.sha256
 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  pilots/staffing-shift-roster-scratch-g13/base.sir
 c92b7313b976988931839168b344becf2a98ae496c78543cf3781d90da72d4a6  pilots/staffing-shift-roster-scratch-g13/candidates.jsonl
 642addef74ac92a94931de01010cf3000ba0d521b32e435c52a11ab7f98b236f  pilots/staffing-shift-roster-scratch-g13/checked.jsonl
@@ -1040,3 +1040,7 @@ cf1ad798d84b9d5d66bbd6f6be189cbe6f62b8e2e7b1d7616770a9d0f499fdb2  research/2026-
 a8263e0cb4f1762dbd5fdde6863b449090aab8c5b994f52d66f5e0550724e29f  research/2026-10-31/bounded-g13-gate/run-41203150293.json
 df98a4fd1530cd3e5a097340716315850984ce2526816a97ccc6f35cbcd961c7  research/2026-10-31/bounded-g13-gate/run-41203161844.json
 5ff66885d9c6462f569ddede67de48c5cfa075858b69bdefed13f84e4d3da7f7  research/2026-10-31/bounded-g13-gate/verification.json
+a37b1eea667dd37544c172cc77cc9156c98c8da2016ad048df851118a5035c41  pilots/staffing-shift-roster-change-g13/train-teacher.index.json
+f339206761e24fd41549fff633d564c96e5bcc7e1c511af8cb5b849f68b78fd9  pilots/staffing-shift-roster-change-g13/train-teacher.jsonl
+7087ab7dfa1eed9fe1a1b0e12c40d2f7de8fb5b7179ffc087fe21ddab740b13c  pilots/staffing-shift-roster-scratch-g13/train-teacher.index.json
+4e05860f1c371d739bc1250b6c583b26cc7c902ba8385dafd5c2a0604a0c145b  pilots/staffing-shift-roster-scratch-g13/train-teacher.jsonl

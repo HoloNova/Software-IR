@@ -54,3 +54,5 @@ e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  runtime/staffi
 55cc322947f51f28d522d821f23e2ec77a91779f8ed666d3cdfa7fc2ebc4c1b8  runtime/staffing-shift-roster-scratch-v1-teacher-2027a6702825/github-41203161844-attempt-1/staffing-slice-1a192076d8f-33929/logs/spring.stdout.log
 de0288db35a6ca68ce124496a723081aacb776d021e2a3ddae7c593b13596fe5  runtime/staffing-shift-roster-scratch-v1-teacher-2027a6702825/github-41203161844-attempt-1/staffing-slice-1a192076d8f-33929/slm-runtime.json
 8e41bed9aef478684af7994b659194576949f5d8de44dba33fe8d6b58b9b9ff0  runtime/staffing-shift-roster-scratch-v1-teacher-2027a6702825/github-41203161844-attempt-1/staffing-slice-1a192076d8f-33929/staffing-slice-report.txt
+7087ab7dfa1eed9fe1a1b0e12c40d2f7de8fb5b7179ffc087fe21ddab740b13c  train-teacher.index.json
+4e05860f1c371d739bc1250b6c583b26cc7c902ba8385dafd5c2a0604a0c145b  train-teacher.jsonl

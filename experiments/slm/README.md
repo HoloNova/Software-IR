@@ -171,7 +171,7 @@ python -m experiments.slm.data student \
 
 `student` 仍会通过 `read_bundle` 校验当前源码与每批的工具链／oracle；不同工具链的历史合格批次不能直接混跑，也不能改 manifest 或跳过校验。跨版本追加时，保留已有学生封存文件的原始字节，用原命令只包装与当前源码一致的新合格批次，再合并记录和索引；合并必须核对新旧导出索引／候选源码／题目／运行绑定、同题源码去重、family/split 隔离和完整来源覆盖。v3 实例见[数据报告第十六阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-prompt-v7-qualified)，其 index 的 `assembly` 保存基座及增量来源哈希。不得借包装重算或改写历史资格。
 
-每版学生数据都须重新测完整序列长度，不能沿用旧版本上限；只用冻结 revision 的分词器，不下载或运行权重，不截断。当前v5共57条，v4的49条原字节保留（重测与v4记录逐条一致）；三分词器实测最长9,340／7,141，详见 `datasets/sir/student/train-student-v5.tokens.json`。
+每版学生数据都须重新测完整序列长度，不能沿用旧版本上限；只用冻结 revision 的分词器，不下载或运行权重，不截断。当前v6共65条，v5的57条原字节保留（重测与v5记录逐条一致）；三分词器实测最长仍9,340／7,141，详见 `datasets/sir/student/train-student-v6.tokens.json`。
 
 ## 跨环境导入
 

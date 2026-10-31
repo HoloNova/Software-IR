@@ -1,0 +1,820 @@
+{
+  "corpus_sha256": "07d0240682f6d630c82174083b51245f5f332932603d4e2251c15836addeed08",
+  "count": 65,
+  "models": {
+    "Qwen/Qwen2.5-Coder-3B-Instruct": {
+      "chat_config_sha256": "959e7f1d9a1b7641a6d6ce05ca97b75c7894fcb66cbe5a040406458fb1128ee4",
+      "max_training_sequence_tokens": 7141,
+      "mean_training_sequence_tokens": 2649,
+      "resolved_revision": "488639f1ff808d1d3d0ba301aef8c11461451ec5",
+      "samples": {
+        "auth-bearer-credential-change-p1-v1-teacher-5077aa8e0d9c": {
+          "prompt_tokens": 1448,
+          "training_sequence_tokens": 2098
+        },
+        "auth-bearer-credential-change-p2-v1-teacher-f2c07904dfbc": {
+          "prompt_tokens": 1469,
+          "training_sequence_tokens": 2119
+        },
+        "auth-bearer-credential-change-p3-v1-teacher-d5472e497f7d": {
+          "prompt_tokens": 1492,
+          "training_sequence_tokens": 2142
+        },
+        "auth-bearer-credential-change-v1-teacher-07b9ea18ef67": {
+          "prompt_tokens": 1437,
+          "training_sequence_tokens": 2087
+        },
+        "auth-bearer-credential-scratch-p1-v1-teacher-ff0e5db40313": {
+          "prompt_tokens": 1067,
+          "training_sequence_tokens": 1797
+        },
+        "auth-bearer-credential-scratch-p2-v1-teacher-b0ee056ea852": {
+          "prompt_tokens": 1091,
+          "training_sequence_tokens": 1805
+        },
+        "auth-bearer-credential-scratch-p3-v1-teacher-650bdfd6286f": {
+          "prompt_tokens": 1128,
+          "training_sequence_tokens": 1863
+        },
+        "auth-bearer-credential-scratch-v1-teacher-efbdfe58ef70": {
+          "prompt_tokens": 1056,
+          "training_sequence_tokens": 1753
+        },
+        "auth-crud-access-change-p1-v1-teacher-560b72a650de": {
+          "prompt_tokens": 1761,
+          "training_sequence_tokens": 2586
+        },
+        "auth-crud-access-change-v1-teacher-d6b3dce267c8": {
+          "prompt_tokens": 1751,
+          "training_sequence_tokens": 2564
+        },
+        "auth-crud-access-scratch-p2-v1-teacher-976fd70bd19f": {
+          "prompt_tokens": 1725,
+          "training_sequence_tokens": 3095
+        },
+        "auth-crud-access-scratch-p3-v1-teacher-3a97ea60acea": {
+          "prompt_tokens": 1749,
+          "training_sequence_tokens": 3115
+        },
+        "auth-crud-access-scratch-v1-teacher-3062e8f8e07b": {
+          "prompt_tokens": 1665,
+          "training_sequence_tokens": 3042
+        },
+        "auth-crud-access-scratch-v1-teacher-4a6b10922574": {
+          "prompt_tokens": 1665,
+          "training_sequence_tokens": 3096
+        },
+        "auth-dual-token-v1-teacher-d77f23d76937": {
+          "prompt_tokens": 935,
+          "training_sequence_tokens": 2005
+        },
+        "auth-guarded-transition-change-p1-v1-teacher-e8231edaefdf": {
+          "prompt_tokens": 1001,
+          "training_sequence_tokens": 1395
+        },
+        "auth-guarded-transition-change-p2-v1-teacher-92d7f4c118ac": {
+          "prompt_tokens": 1036,
+          "training_sequence_tokens": 1431
+        },
+        "auth-guarded-transition-change-p3-v1-teacher-b000648105c3": {
+          "prompt_tokens": 1078,
+          "training_sequence_tokens": 1473
+        },
+        "auth-guarded-transition-change-v1-teacher-857fcfe57b22": {
+          "prompt_tokens": 1001,
+          "training_sequence_tokens": 1401
+        },
+        "auth-guarded-transition-scratch-p1-v1-teacher-cf4580ad32c3": {
+          "prompt_tokens": 777,
+          "training_sequence_tokens": 1170
+        },
+        "auth-guarded-transition-scratch-p2-v1-teacher-3140000df67a": {
+          "prompt_tokens": 808,
+          "training_sequence_tokens": 1195
+        },
+        "auth-guarded-transition-scratch-p3-v1-teacher-c4bf135d4fc6": {
+          "prompt_tokens": 855,
+          "training_sequence_tokens": 1248
+        },
+        "auth-guarded-transition-scratch-v1-teacher-1dff8d4a8a1c": {
+          "prompt_tokens": 773,
+          "training_sequence_tokens": 1160
+        },
+        "auth-token-desk-change-p1-v1-teacher-92b4381319c7": {
+          "prompt_tokens": 1688,
+          "training_sequence_tokens": 2441
+        },
+        "auth-token-desk-change-p2-v1-teacher-a8f4a728ead5": {
+          "prompt_tokens": 1714,
+          "training_sequence_tokens": 2466
+        },
+        "auth-token-desk-change-p3-v1-teacher-3560e49d8021": {
+          "prompt_tokens": 1747,
+          "training_sequence_tokens": 2505
+        },
+        "auth-token-desk-change-v1-teacher-b38e01722cc0": {
+          "prompt_tokens": 1689,
+          "training_sequence_tokens": 2442
+        },
+        "auth-token-desk-scratch-p3-v1-teacher-54bccb4ce21d": {
+          "prompt_tokens": 1436,
+          "training_sequence_tokens": 2221
+        },
+        "auth-token-desk-scratch-v1-teacher-bd4698114bcb": {
+          "prompt_tokens": 1323,
+          "training_sequence_tokens": 2124
+        },
+        "content-blog-change-v1-teacher-bba0b5b48fc4": {
+          "prompt_tokens": 3665,
+          "training_sequence_tokens": 5144
+        },
+        "content-blog-scratch-v1-teacher-6cf0eae071cc": {
+          "prompt_tokens": 2969,
+          "training_sequence_tokens": 4511
+        },
+        "course-course-selection-change-p1-v1-teacher-e61b238d030f": {
+          "prompt_tokens": 4475,
+          "training_sequence_tokens": 7102
+        },
+        "course-course-selection-change-p3-v1-teacher-8a4fcc1387cd": {
+          "prompt_tokens": 4526,
+          "training_sequence_tokens": 7141
+        },
+        "course-course-selection-change-v1-teacher-15fbf5553540": {
+          "prompt_tokens": 4456,
+          "training_sequence_tokens": 7056
+        },
+        "course-query-slice-change-p1-v1-teacher-5bb1732e6b38": {
+          "prompt_tokens": 1362,
+          "training_sequence_tokens": 1632
+        },
+        "course-query-slice-change-p2-v1-teacher-e11df419c6e3": {
+          "prompt_tokens": 1379,
+          "training_sequence_tokens": 1649
+        },
+        "course-query-slice-change-p3-v1-teacher-e9abc4b17d92": {
+          "prompt_tokens": 1415,
+          "training_sequence_tokens": 1685
+        },
+        "course-query-slice-change-v1-teacher-905d204a57e4": {
+          "prompt_tokens": 1340,
+          "training_sequence_tokens": 1605
+        },
+        "course-query-slice-scratch-p1-v1-teacher-0858ac822e7d": {
+          "prompt_tokens": 1136,
+          "training_sequence_tokens": 1422
+        },
+        "course-query-slice-scratch-p2-v1-teacher-85ff866e415a": {
+          "prompt_tokens": 1151,
+          "training_sequence_tokens": 1437
+        },
+        "course-query-slice-scratch-p3-v1-teacher-3a3ccfe3ae82": {
+          "prompt_tokens": 1194,
+          "training_sequence_tokens": 1463
+        },
+        "course-query-slice-scratch-v1-teacher-cadd5a148bb8": {
+          "prompt_tokens": 1115,
+          "training_sequence_tokens": 1380
+        },
+        "course-relation-slice-change-p1-v1-teacher-49f7d2232521": {
+          "prompt_tokens": 2127,
+          "training_sequence_tokens": 2627
+        },
+        "course-relation-slice-change-p2-v1-teacher-04fdd8df7da7": {
+          "prompt_tokens": 2203,
+          "training_sequence_tokens": 2720
+        },
+        "course-relation-slice-change-p3-v1-teacher-c86f231f82b0": {
+          "prompt_tokens": 2215,
+          "training_sequence_tokens": 2682
+        },
+        "course-relation-slice-change-v1-teacher-d3c1df26ed80": {
+          "prompt_tokens": 2092,
+          "training_sequence_tokens": 2552
+        },
+        "course-relation-slice-scratch-p1-v1-teacher-1ca2b9285e89": {
+          "prompt_tokens": 1721,
+          "training_sequence_tokens": 2170
+        },
+        "course-relation-slice-scratch-p2-v1-teacher-f932cf526f9c": {
+          "prompt_tokens": 1795,
+          "training_sequence_tokens": 2281
+        },
+        "course-relation-slice-scratch-p3-v1-teacher-b88e0c7b9a85": {
+          "prompt_tokens": 1810,
+          "training_sequence_tokens": 2265
+        },
+        "course-relation-slice-scratch-v1-teacher-561bdfe9ead2": {
+          "prompt_tokens": 1687,
+          "training_sequence_tokens": 2167
+        },
+        "course-write-slice-change-p1-v1-teacher-89312c48ead8": {
+          "prompt_tokens": 1479,
+          "training_sequence_tokens": 2004
+        },
+        "course-write-slice-change-p2-v1-teacher-382f97717bf9": {
+          "prompt_tokens": 1529,
+          "training_sequence_tokens": 2058
+        },
+        "course-write-slice-change-p3-v1-teacher-82a766e7e9e3": {
+          "prompt_tokens": 1546,
+          "training_sequence_tokens": 2075
+        },
+        "course-write-slice-change-v1-teacher-51ab2996a20e": {
+          "prompt_tokens": 1457,
+          "training_sequence_tokens": 1982
+        },
+        "course-write-slice-scratch-p2-v1-teacher-c2fcf2d091cf": {
+          "prompt_tokens": 1246,
+          "training_sequence_tokens": 1814
+        },
+        "course-write-slice-scratch-p3-v1-teacher-e52924e6d4a2": {
+          "prompt_tokens": 1275,
+          "training_sequence_tokens": 1841
+        },
+        "course-write-slice-scratch-v1-teacher-be9817697402": {
+          "prompt_tokens": 1165,
+          "training_sequence_tokens": 1728
+        },
+        "events-registration-change-v1-teacher-0acacc5fa8e6": {
+          "prompt_tokens": 3064,
+          "training_sequence_tokens": 4206
+        },
+        "events-registration-change-v1-teacher-0fde14411f9d": {
+          "prompt_tokens": 3064,
+          "training_sequence_tokens": 4208
+        },
+        "events-registration-scratch-v1-teacher-3e1de05e7979": {
+          "prompt_tokens": 2655,
+          "training_sequence_tokens": 3857
+        },
+        "events-registration-scratch-v1-teacher-f16cf36e7541": {
+          "prompt_tokens": 2655,
+          "training_sequence_tokens": 3863
+        },
+        "fitness-check-in-change-v1-teacher-8aecf5f2f887": {
+          "prompt_tokens": 3108,
+          "training_sequence_tokens": 4289
+        },
+        "fitness-check-in-change-v1-teacher-f5b5a9f347b0": {
+          "prompt_tokens": 3108,
+          "training_sequence_tokens": 4289
+        },
+        "staffing-shift-roster-change-v1-teacher-23ed7f759fcd": {
+          "prompt_tokens": 4568,
+          "training_sequence_tokens": 6106
+        },
+        "staffing-shift-roster-scratch-v1-teacher-2027a6702825": {
+          "prompt_tokens": 3763,
+          "training_sequence_tokens": 5354
+        }
+      },
+      "tokenizer_sha256": "c0382117ea329cdf097041132f6d735924b697924d6f6fc3945713e96ce87539",
+      "truncation": "DISABLED",
+      "weight_execution": "NOT_RUN"
+    },
+    "Qwen/Qwen3-4B-Instruct-2507": {
+      "chat_config_sha256": "a62ff0a2472a0fa1b8eaabcb57c59b58afa42a22831dc141400b6e0cf2b65ce3",
+      "max_training_sequence_tokens": 7141,
+      "mean_training_sequence_tokens": 2649,
+      "resolved_revision": "cdbee75f17c01a7cc42f958dc650907174af0554",
+      "samples": {
+        "auth-bearer-credential-change-p1-v1-teacher-5077aa8e0d9c": {
+          "prompt_tokens": 1448,
+          "training_sequence_tokens": 2098
+        },
+        "auth-bearer-credential-change-p2-v1-teacher-f2c07904dfbc": {
+          "prompt_tokens": 1469,
+          "training_sequence_tokens": 2119
+        },
+        "auth-bearer-credential-change-p3-v1-teacher-d5472e497f7d": {
+          "prompt_tokens": 1492,
+          "training_sequence_tokens": 2142
+        },
+        "auth-bearer-credential-change-v1-teacher-07b9ea18ef67": {
+          "prompt_tokens": 1437,
+          "training_sequence_tokens": 2087
+        },
+        "auth-bearer-credential-scratch-p1-v1-teacher-ff0e5db40313": {
+          "prompt_tokens": 1067,
+          "training_sequence_tokens": 1797
+        },
+        "auth-bearer-credential-scratch-p2-v1-teacher-b0ee056ea852": {
+          "prompt_tokens": 1091,
+          "training_sequence_tokens": 1805
+        },
+        "auth-bearer-credential-scratch-p3-v1-teacher-650bdfd6286f": {
+          "prompt_tokens": 1128,
+          "training_sequence_tokens": 1863
+        },
+        "auth-bearer-credential-scratch-v1-teacher-efbdfe58ef70": {
+          "prompt_tokens": 1056,
+          "training_sequence_tokens": 1753
+        },
+        "auth-crud-access-change-p1-v1-teacher-560b72a650de": {
+          "prompt_tokens": 1761,
+          "training_sequence_tokens": 2586
+        },
+        "auth-crud-access-change-v1-teacher-d6b3dce267c8": {
+          "prompt_tokens": 1751,
+          "training_sequence_tokens": 2564
+        },
+        "auth-crud-access-scratch-p2-v1-teacher-976fd70bd19f": {
+          "prompt_tokens": 1725,
+          "training_sequence_tokens": 3095
+        },
+        "auth-crud-access-scratch-p3-v1-teacher-3a97ea60acea": {
+          "prompt_tokens": 1749,
+          "training_sequence_tokens": 3115
+        },
+        "auth-crud-access-scratch-v1-teacher-3062e8f8e07b": {
+          "prompt_tokens": 1665,
+          "training_sequence_tokens": 3042
+        },
+        "auth-crud-access-scratch-v1-teacher-4a6b10922574": {
+          "prompt_tokens": 1665,
+          "training_sequence_tokens": 3096
+        },
+        "auth-dual-token-v1-teacher-d77f23d76937": {
+          "prompt_tokens": 935,
+          "training_sequence_tokens": 2005
+        },
+        "auth-guarded-transition-change-p1-v1-teacher-e8231edaefdf": {
+          "prompt_tokens": 1001,
+          "training_sequence_tokens": 1395
+        },
+        "auth-guarded-transition-change-p2-v1-teacher-92d7f4c118ac": {
+          "prompt_tokens": 1036,
+          "training_sequence_tokens": 1431
+        },
+        "auth-guarded-transition-change-p3-v1-teacher-b000648105c3": {
+          "prompt_tokens": 1078,
+          "training_sequence_tokens": 1473
+        },
+        "auth-guarded-transition-change-v1-teacher-857fcfe57b22": {
+          "prompt_tokens": 1001,
+          "training_sequence_tokens": 1401
+        },
+        "auth-guarded-transition-scratch-p1-v1-teacher-cf4580ad32c3": {
+          "prompt_tokens": 777,
+          "training_sequence_tokens": 1170
+        },
+        "auth-guarded-transition-scratch-p2-v1-teacher-3140000df67a": {
+          "prompt_tokens": 808,
+          "training_sequence_tokens": 1195
+        },
+        "auth-guarded-transition-scratch-p3-v1-teacher-c4bf135d4fc6": {
+          "prompt_tokens": 855,
+          "training_sequence_tokens": 1248
+        },
+        "auth-guarded-transition-scratch-v1-teacher-1dff8d4a8a1c": {
+          "prompt_tokens": 773,
+          "training_sequence_tokens": 1160
+        },
+        "auth-token-desk-change-p1-v1-teacher-92b4381319c7": {
+          "prompt_tokens": 1688,
+          "training_sequence_tokens": 2441
+        },
+        "auth-token-desk-change-p2-v1-teacher-a8f4a728ead5": {
+          "prompt_tokens": 1714,
+          "training_sequence_tokens": 2466
+        },
+        "auth-token-desk-change-p3-v1-teacher-3560e49d8021": {
+          "prompt_tokens": 1747,
+          "training_sequence_tokens": 2505
+        },
+        "auth-token-desk-change-v1-teacher-b38e01722cc0": {
+          "prompt_tokens": 1689,
+          "training_sequence_tokens": 2442
+        },
+        "auth-token-desk-scratch-p3-v1-teacher-54bccb4ce21d": {
+          "prompt_tokens": 1436,
+          "training_sequence_tokens": 2221
+        },
+        "auth-token-desk-scratch-v1-teacher-bd4698114bcb": {
+          "prompt_tokens": 1323,
+          "training_sequence_tokens": 2124
+        },
+        "content-blog-change-v1-teacher-bba0b5b48fc4": {
+          "prompt_tokens": 3665,
+          "training_sequence_tokens": 5144
+        },
+        "content-blog-scratch-v1-teacher-6cf0eae071cc": {
+          "prompt_tokens": 2969,
+          "training_sequence_tokens": 4511
+        },
+        "course-course-selection-change-p1-v1-teacher-e61b238d030f": {
+          "prompt_tokens": 4475,
+          "training_sequence_tokens": 7102
+        },
+        "course-course-selection-change-p3-v1-teacher-8a4fcc1387cd": {
+          "prompt_tokens": 4526,
+          "training_sequence_tokens": 7141
+        },
+        "course-course-selection-change-v1-teacher-15fbf5553540": {
+          "prompt_tokens": 4456,
+          "training_sequence_tokens": 7056
+        },
+        "course-query-slice-change-p1-v1-teacher-5bb1732e6b38": {
+          "prompt_tokens": 1362,
+          "training_sequence_tokens": 1632
+        },
+        "course-query-slice-change-p2-v1-teacher-e11df419c6e3": {
+          "prompt_tokens": 1379,
+          "training_sequence_tokens": 1649
+        },
+        "course-query-slice-change-p3-v1-teacher-e9abc4b17d92": {
+          "prompt_tokens": 1415,
+          "training_sequence_tokens": 1685
+        },
+        "course-query-slice-change-v1-teacher-905d204a57e4": {
+          "prompt_tokens": 1340,
+          "training_sequence_tokens": 1605
+        },
+        "course-query-slice-scratch-p1-v1-teacher-0858ac822e7d": {
+          "prompt_tokens": 1136,
+          "training_sequence_tokens": 1422
+        },
+        "course-query-slice-scratch-p2-v1-teacher-85ff866e415a": {
+          "prompt_tokens": 1151,
+          "training_sequence_tokens": 1437
+        },
+        "course-query-slice-scratch-p3-v1-teacher-3a3ccfe3ae82": {
+          "prompt_tokens": 1194,
+          "training_sequence_tokens": 1463
+        },
+        "course-query-slice-scratch-v1-teacher-cadd5a148bb8": {
+          "prompt_tokens": 1115,
+          "training_sequence_tokens": 1380
+        },
+        "course-relation-slice-change-p1-v1-teacher-49f7d2232521": {
+          "prompt_tokens": 2127,
+          "training_sequence_tokens": 2627
+        },
+        "course-relation-slice-change-p2-v1-teacher-04fdd8df7da7": {
+          "prompt_tokens": 2203,
+          "training_sequence_tokens": 2720
+        },
+        "course-relation-slice-change-p3-v1-teacher-c86f231f82b0": {
+          "prompt_tokens": 2215,
+          "training_sequence_tokens": 2682
+        },
+        "course-relation-slice-change-v1-teacher-d3c1df26ed80": {
+          "prompt_tokens": 2092,
+          "training_sequence_tokens": 2552
+        },
+        "course-relation-slice-scratch-p1-v1-teacher-1ca2b9285e89": {
+          "prompt_tokens": 1721,
+          "training_sequence_tokens": 2170
+        },
+        "course-relation-slice-scratch-p2-v1-teacher-f932cf526f9c": {
+          "prompt_tokens": 1795,
+          "training_sequence_tokens": 2281
+        },
+        "course-relation-slice-scratch-p3-v1-teacher-b88e0c7b9a85": {
+          "prompt_tokens": 1810,
+          "training_sequence_tokens": 2265
+        },
+        "course-relation-slice-scratch-v1-teacher-561bdfe9ead2": {
+          "prompt_tokens": 1687,
+          "training_sequence_tokens": 2167
+        },
+        "course-write-slice-change-p1-v1-teacher-89312c48ead8": {
+          "prompt_tokens": 1479,
+          "training_sequence_tokens": 2004
+        },
+        "course-write-slice-change-p2-v1-teacher-382f97717bf9": {
+          "prompt_tokens": 1529,
+          "training_sequence_tokens": 2058
+        },
+        "course-write-slice-change-p3-v1-teacher-82a766e7e9e3": {
+          "prompt_tokens": 1546,
+          "training_sequence_tokens": 2075
+        },
+        "course-write-slice-change-v1-teacher-51ab2996a20e": {
+          "prompt_tokens": 1457,
+          "training_sequence_tokens": 1982
+        },
+        "course-write-slice-scratch-p2-v1-teacher-c2fcf2d091cf": {
+          "prompt_tokens": 1246,
+          "training_sequence_tokens": 1814
+        },
+        "course-write-slice-scratch-p3-v1-teacher-e52924e6d4a2": {
+          "prompt_tokens": 1275,
+          "training_sequence_tokens": 1841
+        },
+        "course-write-slice-scratch-v1-teacher-be9817697402": {
+          "prompt_tokens": 1165,
+          "training_sequence_tokens": 1728
+        },
+        "events-registration-change-v1-teacher-0acacc5fa8e6": {
+          "prompt_tokens": 3064,
+          "training_sequence_tokens": 4206
+        },
+        "events-registration-change-v1-teacher-0fde14411f9d": {
+          "prompt_tokens": 3064,
+          "training_sequence_tokens": 4208
+        },
+        "events-registration-scratch-v1-teacher-3e1de05e7979": {
+          "prompt_tokens": 2655,
+          "training_sequence_tokens": 3857
+        },
+        "events-registration-scratch-v1-teacher-f16cf36e7541": {
+          "prompt_tokens": 2655,
+          "training_sequence_tokens": 3863
+        },
+        "fitness-check-in-change-v1-teacher-8aecf5f2f887": {
+          "prompt_tokens": 3108,
+          "training_sequence_tokens": 4289
+        },
+        "fitness-check-in-change-v1-teacher-f5b5a9f347b0": {
+          "prompt_tokens": 3108,
+          "training_sequence_tokens": 4289
+        },
+        "staffing-shift-roster-change-v1-teacher-23ed7f759fcd": {
+          "prompt_tokens": 4568,
+          "training_sequence_tokens": 6106
+        },
+        "staffing-shift-roster-scratch-v1-teacher-2027a6702825": {
+          "prompt_tokens": 3763,
+          "training_sequence_tokens": 5354
+        }
+      },
+      "tokenizer_sha256": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4",
+      "truncation": "DISABLED",
+      "weight_execution": "NOT_RUN"
+    },
+    "deepseek-ai/deepseek-coder-1.3b-instruct": {
+      "chat_config_sha256": "775f116ff1130a5b5bfc3cfdb594f9fcb5a5dc61d5a11ba92b2a7c078d66b7b7",
+      "max_training_sequence_tokens": 9340,
+      "mean_training_sequence_tokens": 3392,
+      "resolved_revision": "e063262dac8366fc1f28a4da0ff3c50ea66259ca",
+      "samples": {
+        "auth-bearer-credential-change-p1-v1-teacher-5077aa8e0d9c": {
+          "prompt_tokens": 1863,
+          "training_sequence_tokens": 2695
+        },
+        "auth-bearer-credential-change-p2-v1-teacher-f2c07904dfbc": {
+          "prompt_tokens": 1906,
+          "training_sequence_tokens": 2737
+        },
+        "auth-bearer-credential-change-p3-v1-teacher-d5472e497f7d": {
+          "prompt_tokens": 1919,
+          "training_sequence_tokens": 2750
+        },
+        "auth-bearer-credential-change-v1-teacher-07b9ea18ef67": {
+          "prompt_tokens": 1839,
+          "training_sequence_tokens": 2671
+        },
+        "auth-bearer-credential-scratch-p1-v1-teacher-ff0e5db40313": {
+          "prompt_tokens": 1372,
+          "training_sequence_tokens": 2298
+        },
+        "auth-bearer-credential-scratch-p2-v1-teacher-b0ee056ea852": {
+          "prompt_tokens": 1425,
+          "training_sequence_tokens": 2336
+        },
+        "auth-bearer-credential-scratch-p3-v1-teacher-650bdfd6286f": {
+          "prompt_tokens": 1448,
+          "training_sequence_tokens": 2380
+        },
+        "auth-bearer-credential-scratch-v1-teacher-efbdfe58ef70": {
+          "prompt_tokens": 1345,
+          "training_sequence_tokens": 2230
+        },
+        "auth-crud-access-change-p1-v1-teacher-560b72a650de": {
+          "prompt_tokens": 2244,
+          "training_sequence_tokens": 3306
+        },
+        "auth-crud-access-change-v1-teacher-d6b3dce267c8": {
+          "prompt_tokens": 2227,
+          "training_sequence_tokens": 3267
+        },
+        "auth-crud-access-scratch-p2-v1-teacher-976fd70bd19f": {
+          "prompt_tokens": 2203,
+          "training_sequence_tokens": 3990
+        },
+        "auth-crud-access-scratch-p3-v1-teacher-3a97ea60acea": {
+          "prompt_tokens": 2213,
+          "training_sequence_tokens": 3973
+        },
+        "auth-crud-access-scratch-v1-teacher-3062e8f8e07b": {
+          "prompt_tokens": 2090,
+          "training_sequence_tokens": 3874
+        },
+        "auth-crud-access-scratch-v1-teacher-4a6b10922574": {
+          "prompt_tokens": 2090,
+          "training_sequence_tokens": 3913
+        },
+        "auth-dual-token-v1-teacher-d77f23d76937": {
+          "prompt_tokens": 1197,
+          "training_sequence_tokens": 2591
+        },
+        "auth-guarded-transition-change-p1-v1-teacher-e8231edaefdf": {
+          "prompt_tokens": 1303,
+          "training_sequence_tokens": 1842
+        },
+        "auth-guarded-transition-change-p2-v1-teacher-92d7f4c118ac": {
+          "prompt_tokens": 1353,
+          "training_sequence_tokens": 1893
+        },
+        "auth-guarded-transition-change-p3-v1-teacher-b000648105c3": {
+          "prompt_tokens": 1394,
+          "training_sequence_tokens": 1934
+        },
+        "auth-guarded-transition-change-v1-teacher-857fcfe57b22": {
+          "prompt_tokens": 1291,
+          "training_sequence_tokens": 1840
+        },
+        "auth-guarded-transition-scratch-p1-v1-teacher-cf4580ad32c3": {
+          "prompt_tokens": 983,
+          "training_sequence_tokens": 1510
+        },
+        "auth-guarded-transition-scratch-p2-v1-teacher-3140000df67a": {
+          "prompt_tokens": 1031,
+          "training_sequence_tokens": 1550
+        },
+        "auth-guarded-transition-scratch-p3-v1-teacher-c4bf135d4fc6": {
+          "prompt_tokens": 1073,
+          "training_sequence_tokens": 1609
+        },
+        "auth-guarded-transition-scratch-v1-teacher-1dff8d4a8a1c": {
+          "prompt_tokens": 968,
+          "training_sequence_tokens": 1492
+        },
+        "auth-token-desk-change-p1-v1-teacher-92b4381319c7": {
+          "prompt_tokens": 2163,
+          "training_sequence_tokens": 3137
+        },
+        "auth-token-desk-change-p2-v1-teacher-a8f4a728ead5": {
+          "prompt_tokens": 2202,
+          "training_sequence_tokens": 3172
+        },
+        "auth-token-desk-change-p3-v1-teacher-3560e49d8021": {
+          "prompt_tokens": 2231,
+          "training_sequence_tokens": 3208
+        },
+        "auth-token-desk-change-v1-teacher-b38e01722cc0": {
+          "prompt_tokens": 2150,
+          "training_sequence_tokens": 3125
+        },
+        "auth-token-desk-scratch-p3-v1-teacher-54bccb4ce21d": {
+          "prompt_tokens": 1783,
+          "training_sequence_tokens": 2794
+        },
+        "auth-token-desk-scratch-v1-teacher-bd4698114bcb": {
+          "prompt_tokens": 1627,
+          "training_sequence_tokens": 2663
+        },
+        "content-blog-change-v1-teacher-bba0b5b48fc4": {
+          "prompt_tokens": 4721,
+          "training_sequence_tokens": 6581
+        },
+        "content-blog-scratch-v1-teacher-6cf0eae071cc": {
+          "prompt_tokens": 3821,
+          "training_sequence_tokens": 5791
+        },
+        "course-course-selection-change-p1-v1-teacher-e61b238d030f": {
+          "prompt_tokens": 5858,
+          "training_sequence_tokens": 9311
+        },
+        "course-course-selection-change-p3-v1-teacher-8a4fcc1387cd": {
+          "prompt_tokens": 5914,
+          "training_sequence_tokens": 9340
+        },
+        "course-course-selection-change-v1-teacher-15fbf5553540": {
+          "prompt_tokens": 5817,
+          "training_sequence_tokens": 9232
+        },
+        "course-query-slice-change-p1-v1-teacher-5bb1732e6b38": {
+          "prompt_tokens": 1672,
+          "training_sequence_tokens": 2026
+        },
+        "course-query-slice-change-p2-v1-teacher-e11df419c6e3": {
+          "prompt_tokens": 1711,
+          "training_sequence_tokens": 2065
+        },
+        "course-query-slice-change-p3-v1-teacher-e9abc4b17d92": {
+          "prompt_tokens": 1735,
+          "training_sequence_tokens": 2088
+        },
+        "course-query-slice-change-v1-teacher-905d204a57e4": {
+          "prompt_tokens": 1640,
+          "training_sequence_tokens": 1987
+        },
+        "course-query-slice-scratch-p1-v1-teacher-0858ac822e7d": {
+          "prompt_tokens": 1373,
+          "training_sequence_tokens": 1735
+        },
+        "course-query-slice-scratch-p2-v1-teacher-85ff866e415a": {
+          "prompt_tokens": 1407,
+          "training_sequence_tokens": 1769
+        },
+        "course-query-slice-scratch-p3-v1-teacher-3a3ccfe3ae82": {
+          "prompt_tokens": 1441,
+          "training_sequence_tokens": 1786
+        },
+        "course-query-slice-scratch-v1-teacher-cadd5a148bb8": {
+          "prompt_tokens": 1344,
+          "training_sequence_tokens": 1683
+        },
+        "course-relation-slice-change-p1-v1-teacher-49f7d2232521": {
+          "prompt_tokens": 2707,
+          "training_sequence_tokens": 3360
+        },
+        "course-relation-slice-change-p2-v1-teacher-04fdd8df7da7": {
+          "prompt_tokens": 2825,
+          "training_sequence_tokens": 3499
+        },
+        "course-relation-slice-change-p3-v1-teacher-c86f231f82b0": {
+          "prompt_tokens": 2816,
+          "training_sequence_tokens": 3435
+        },
+        "course-relation-slice-change-v1-teacher-d3c1df26ed80": {
+          "prompt_tokens": 2651,
+          "training_sequence_tokens": 3262
+        },
+        "course-relation-slice-scratch-p1-v1-teacher-1ca2b9285e89": {
+          "prompt_tokens": 2158,
+          "training_sequence_tokens": 2743
+        },
+        "course-relation-slice-scratch-p2-v1-teacher-f932cf526f9c": {
+          "prompt_tokens": 2271,
+          "training_sequence_tokens": 2894
+        },
+        "course-relation-slice-scratch-p3-v1-teacher-b88e0c7b9a85": {
+          "prompt_tokens": 2266,
+          "training_sequence_tokens": 2857
+        },
+        "course-relation-slice-scratch-v1-teacher-561bdfe9ead2": {
+          "prompt_tokens": 2105,
+          "training_sequence_tokens": 2721
+        },
+        "course-write-slice-change-p1-v1-teacher-89312c48ead8": {
+          "prompt_tokens": 1881,
+          "training_sequence_tokens": 2559
+        },
+        "course-write-slice-change-p2-v1-teacher-382f97717bf9": {
+          "prompt_tokens": 1961,
+          "training_sequence_tokens": 2644
+        },
+        "course-write-slice-change-p3-v1-teacher-82a766e7e9e3": {
+          "prompt_tokens": 1965,
+          "training_sequence_tokens": 2648
+        },
+        "course-write-slice-change-v1-teacher-51ab2996a20e": {
+          "prompt_tokens": 1842,
+          "training_sequence_tokens": 2521
+        },
+        "course-write-slice-scratch-p2-v1-teacher-c2fcf2d091cf": {
+          "prompt_tokens": 1587,
+          "training_sequence_tokens": 2305
+        },
+        "course-write-slice-scratch-p3-v1-teacher-e52924e6d4a2": {
+          "prompt_tokens": 1593,
+          "training_sequence_tokens": 2309
+        },
+        "course-write-slice-scratch-v1-teacher-be9817697402": {
+          "prompt_tokens": 1448,
+          "training_sequence_tokens": 2162
+        },
+        "events-registration-change-v1-teacher-0acacc5fa8e6": {
+          "prompt_tokens": 3960,
+          "training_sequence_tokens": 5433
+        },
+        "events-registration-change-v1-teacher-0fde14411f9d": {
+          "prompt_tokens": 3960,
+          "training_sequence_tokens": 5436
+        },
+        "events-registration-scratch-v1-teacher-3e1de05e7979": {
+          "prompt_tokens": 3391,
+          "training_sequence_tokens": 4955
+        },
+        "events-registration-scratch-v1-teacher-f16cf36e7541": {
+          "prompt_tokens": 3391,
+          "training_sequence_tokens": 4960
+        },
+        "fitness-check-in-change-v1-teacher-8aecf5f2f887": {
+          "prompt_tokens": 3920,
+          "training_sequence_tokens": 5431
+        },
+        "fitness-check-in-change-v1-teacher-f5b5a9f347b0": {
+          "prompt_tokens": 3920,
+          "training_sequence_tokens": 5431
+        },
+        "staffing-shift-roster-change-v1-teacher-23ed7f759fcd": {
+          "prompt_tokens": 5870,
+          "training_sequence_tokens": 7863
+        },
+        "staffing-shift-roster-scratch-v1-teacher-2027a6702825": {
+          "prompt_tokens": 4809,
+          "training_sequence_tokens": 6908
+        }
+      },
+      "tokenizer_sha256": "ef48ebdc8546c2d8092349d321f1d162de804a1c8900df2b615c7dc8b02ce141",
+      "truncation": "DISABLED",
+      "weight_execution": "NOT_RUN"
+    }
+  },
+  "scope": "Observed pinned tokenizer lengths only; no model weights or training."
+}

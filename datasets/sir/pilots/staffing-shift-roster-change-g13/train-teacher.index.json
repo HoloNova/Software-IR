@@ -1,0 +1,14 @@
+{
+  "all_four_gates_required": true,
+  "corpus_sha256": "f339206761e24fd41549fff633d564c96e5bcc7e1c511af8cb5b849f68b78fd9",
+  "count": 1,
+  "rows": [
+    {
+      "id": "staffing-shift-roster-change-v1-teacher-23ed7f759fcd",
+      "oracle_sha256": "b95c7e56722148eb2b60549c6a091a7a7e260d01211b10afded1defd81d70035",
+      "runtime_run_id": "staffing-slice-1a192073747-57790",
+      "source_sha256": "35ffdf7ddb5d030331fcdeb084147bded3b103d4b03b5613ee97c5acc24b65e0",
+      "task_sha256": "f7b18b05fbb667b7628e09a5cf24fba08b00280620df5eac8961c39ad4ec8783"
+    }
+  ]
+}

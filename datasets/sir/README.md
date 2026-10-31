@@ -153,3 +153,7 @@
 受测46671b9a的候选CI [#94](https://github.com/HoloNova/Software-IR/actions/runs/41203150293) / [#95](https://github.com/HoloNova/Software-IR/actions/runs/41203161844) 均871/0，各三轮真实竞争屏障6/3/6，独立四门全过。原archive-gate已核验run、Git blob、生成摘要、ZIP/附件/JUnit并归档两批runtime；[原件与对账](research/2026-10-31/bounded-g13-gate/README.md)。新增2份合格教师尚未export/student包装，学生v5仍57条不变；报修一修失败封存，不追加采样。
 
 全库清单中另一工作线300份缺失原件曾阻断归档；本轮只在隔离快照依据20个原ZIP恢复并逐项验原哈希后跑原归档器，仅回写新排班证据/清单。fitness/events主目录不动，旧缺项仍应由原工作线补全，不删除其清单或继承资格。
+
+## 学生 v6（65 条，13 个 family）
+
+`student/train-student-v6.jsonl` 保留 v5 的 57 条原字节，追加 fitness/events g11 的 6 条与排班 g13 的 2 条；两部分分别在其受测工具链对应的检出（`22a4c65`、`918c1fb`）中由 `student` 包装，来源记在索引的 `assembly.new_parts`。g11/g12 业务门漏提交的 300 份原件已从原 artifact 补回。详见[第三十五阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-student-v6)。

@@ -54,3 +54,5 @@ e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  runtime/staffi
 ffaffb82910aaeb09cfc16d2b4770b86d06acff70f34e45891b61dea4c9dd81e  runtime/staffing-shift-roster-change-v1-teacher-23ed7f759fcd/github-41203150293-attempt-1/staffing-slice-1a192073747-57790/logs/spring.stdout.log
 fb037e5579e53ff33d855e5d0118fd0dd86ac055c8e5b8f807c36c5a62e5bb92  runtime/staffing-shift-roster-change-v1-teacher-23ed7f759fcd/github-41203150293-attempt-1/staffing-slice-1a192073747-57790/slm-runtime.json
 9bcc71feaee6987a424bc2fb38fc9f1bf6dbe0c5b19d49ae44b2664b89eb6f20  runtime/staffing-shift-roster-change-v1-teacher-23ed7f759fcd/github-41203150293-attempt-1/staffing-slice-1a192073747-57790/staffing-slice-report.txt
+a37b1eea667dd37544c172cc77cc9156c98c8da2016ad048df851118a5035c41  train-teacher.index.json
+f339206761e24fd41549fff633d564c96e5bcc7e1c511af8cb5b849f68b78fd9  train-teacher.jsonl
