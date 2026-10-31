@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "sir 0.3\nsoftware GymCheckIn {\n  metadata { displayName \"GymCheckIn\"; namespace \"example.gym\"; }\n  target { language java 21; framework spring_boot; persistence mybatis_plus; database mysql; build maven; interface rest; }\n  sources { }\n  imports { }\n  declarations {\n    enum Role { MEMBER, COACH }\n\n    type Hours = Money where precision(4, 2), min(0.25), max(12);\n\n    entity User persistent {\n      identity id: Id generated auto;\n      field name: Name where length(1, 100) unique;\n      field role: Role default Role.MEMBER;\n    }\n\n    entity AccessToken persistent {\n      identity id: Token generated uuid;\n      field owner: Ref<User>;\n      field expiresAt: Moment;\n      credential subject owner expires expiresAt;\n    }\n\n    entity Program persistent {\n      identity id: Id generated auto;\n      field name: Code where length(1, 32) unique;\n    }\n\n    entity CheckIn persistent {\n      identity id: Id generated auto;\n      field member: Ref<User>;\n      field program: Ref<Program>;\n      field hours: Hours;\n      field checkedInAt: Moment;\n    }\n\n    view ProgramView from Program {\n      field id: Id;\n      field name: Code;\n    }\n\n    view CheckInView from CheckIn {\n      field id: Id;\n      field member: Ref<User>;\n      field program: Ref<Program>;\n      field hours: Hours;\n      field checkedInAt: Moment;\n    }\n\n    input ListProgramsInput {\n      field page: PageNo;\n      field size: PageSize;\n    }\n\n    input LogWorkoutInput {\n      field programId: Id;\n      field hours: Hours;\n    }\n\n    input MyMonthInput {\n      field month: Text where notBlank;\n    }\n\n    input CoachCheckInsInput {\n      field member: Optional<Id>;\n      field program: Optional<Id>;\n      field page: PageNo;\n      field size: PageSize;\n    }\n\n    input CoachMonthVisitsInput {\n      field month: Text where notBlank;\n      field program: Optional<Id>;\n    }\n\n    error BadPage http 400;\n    error BadPeriod http 400;\n    error Forbidden http 403;\n    error ProgramNotFound http 404;\n\n    capability ListPrograms {\n      input ListProgramsInput;\n      output Page<ProgramView>;\n      fails BadPage;\n      requires readonly;\n      expose query at \"/programs\";\n      workflow {\n        find Program where true order by name ascending, id ascending Page input.page, input.size else BadPage as programs;\n        return programs;\n      }\n    }\n\n    capability LogWorkout {\n      actor Ref<User>;\n      input LogWorkoutInput;\n      output CheckInView;\n      fails ProgramNotFound;\n      requires authenticated;\n      requires atomic;\n      expose command at \"/check-ins\";\n      workflow {\n        load Program by input.programId as program else ProgramNotFound;\n        create CheckIn as made {\n          member: actor;\n          program: program;\n          hours: input.hours;\n          checkedInAt: now();\n        }\n        persist made;\n        return made;\n      }\n    }\n\n    capability MyMonthVisits {\n      actor Ref<User>;\n      input MyMonthInput;\n      output Serial;\n      fails BadPeriod;\n      requires authenticated;\n      requires readonly;\n      expose query at \"/my/month/visits\";\n      workflow {\n        month input.month in \"Asia/Shanghai\" as since, until else BadPeriod;\n        count CheckIn where item.member == actor and item.checkedInAt >= since and item.checkedInAt < until as visits;\n        return visits;\n      }\n    }\n\n    capability MyMonthHours {\n      actor Ref<User>;\n      input MyMonthInput;\n      output Hours;\n      fails BadPeriod;\n      requires authenticated;\n      requires readonly;\n      expose query at \"/my/month/hours\";\n      workflow {\n        month input.month in \"Asia/Shanghai\" as since, until else BadPeriod;\n        sum CheckIn.hours where item.member == actor and item.checkedInAt >= since and item.checkedInAt < until as total;\n        return total;\n      }\n    }\n\n    capability MyMonthAverage {\n      actor Ref<User>;\n      input MyMonthInput;\n      output Hours;\n      fails BadPeriod;\n      requires authenticated;\n      requires readonly;\n      expose query at \"/my/month/average\";\n      workflow {\n        month input.month in \"Asia/Shanghai\" as since, until else BadPeriod;\n        count CheckIn where item.member == actor and item.checkedInAt >= since and item.checkedInAt < until as visits;\n        sum CheckIn.hours where item.member == actor and item.checkedInAt >= since and item.checkedInAt < until as total;\n        return total;\n      }\n    }\n\n    capability CoachCheckIns {\n      actor Ref<User>;\n      input CoachCheckInsInput;\n      output Page<CheckInView>;\n      fails BadPage;\n      fails Forbidden;\n      requires authenticated;\n      requires readonly;\n      expose query at \"/coach/check-ins\";\n      workflow {\n        validate actor.role == Role.COACH else Forbidden;\n        find CheckIn where (input.member is none or item.member == input.member) and (input.program is none or item.program == input.program) order by checkedInAt descending, id descending Page input.page, input.size else BadPage as rows;\n        return rows;\n      }\n    }\n\n    capability CoachMonthVisits {\n      actor Ref<User>;\n      input CoachMonthVisitsInput;\n      output Serial;\n      fails BadPeriod;\n      fails Forbidden;\n      requires authenticated;\n      requires readonly;\n      expose query at \"/coach/month/visits\";\n      workflow {\n        validate actor.role == Role.COACH else Forbidden;\n        month input.month in \"Asia/Shanghai\" as since, until else BadPeriod;\n        count CheckIn where item.checkedInAt >= since and item.checkedInAt < until and (input.program is none or item.program == input.program) as visits;\n        return visits;\n      }\n    }\n  }\n}",
+        "function_call": null,
+        "refusal": null,
+        "role": "assistant",
+        "tool_calls": null
+      }
+    }
+  ],
+  "created": 1793426947,
+  "id": "1b4f5f41-3e43-4b76-b29c-8507e13d5400",
+  "model": "deepseek-flash",
+  "object": "chat.completion",
+  "service_tier": null,
+  "system_fingerprint": "bc19ba97cbe016479903222bb1578db6",
+  "usage": {
+    "completion_tokens": 1286,
+    "completion_tokens_details": null,
+    "prompt_cache_hit_tokens": 7936,
+    "prompt_cache_miss_tokens": 1434,
+    "prompt_tokens": 9370,
+    "prompt_tokens_details": {
+      "audio_tokens": null,
+      "cached_tokens": 7936
+    },
+    "total_tokens": 10656
+  }
+}
