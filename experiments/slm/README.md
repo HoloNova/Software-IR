@@ -24,6 +24,37 @@ python -m experiments.slm.data check --bundle datasets/sir/pilots/next-run --mav
 
 本机 Maven 仓库实际是 `D:/maven-repo`，Windows 检查时显式传入该值。命令参数是 argv，不拼接 shell。CLI 的进程退出码 0 不等于每个样本通过，必须核对每行 `ok`、`stage` 和诊断。
 
+## 业务门归档（archive-gate）
+
+归档只需要 Python 3.11+、Git 和已认证的 `gh`，不需要 Java/Maven，不构建或启动应用。显式选择批次与本轮检查文件，不能靠候选 ID 扫库或猜最新轮次：
+
+```bash
+python -m experiments.slm.data archive-gate \
+  --bundle BUNDLE --checked CHECKED --dry-run RUN_ID
+python -m experiments.slm.data archive-gate \
+  --bundle BUNDLE --checked CHECKED RUN_ID
+```
+
+`BUNDLE` 必须在本仓库 `datasets/sir/`，`CHECKED` 必须在该批次；两者对应输入和候选须已进入受测提交。命令只读一次已完成的 `slm-business-gate.yml` 运行，不轮询、不自动 fetch/重试，固定通过 `gh api --hostname github.com` 访问本项目。先核对 GitHub ZIP 摘要、受测 SHA 的 Git blob、冻结输入/候选/生成绑定、原附件、业务报告及 JUnit；`environment.test_revision` 对题目版本，不当 Git SHA。当前 Java 可以比受测提交更新，但不能据此重写旧资格。
+
+新目录为 `BUNDLE/runtime/SAMPLE/github-RUN_ID-attempt-ATTEMPT/`：原 ZIP、报告、日志、JUnit 保持原字节；自有 `MANIFEST.sha256` 和增量外层清单记录实际文件。相同归档精确重复不覆盖，内容冲突拒绝，不同 attempt 分开。清单中断报 `ARCHIVE_WRITTEN_INDEX_PENDING`，原件保留，重跑同一命令核验后补完；不会通过全目录重算将损坏旧数据合法化。`--dry-run` 也完整下载/校验，但仅在系统临时目录写文件，不改变数据、清单或 Git 暂存区。
+
+归档成功不等于四门通过，更不等于已进入 Git/训练集。失败结果也如实保存，**命令不自动 export**；成功者仍显式运行本页原 `export` 命令，选定原 runtime JSON 和尚不存在的输出。历史批次的 export/student 仍要求匹配冻结工具链，应在对应的已提交 LF 快照运行，不放宽 `read_bundle`。stdout 每 run 一行 JSON，含完整文件列表和被忽略的附件；提交前必须按明确路径显式加入必要的日志/ZIP，并按暂存 Git Blob 核对哈希，不能只证明本机存在。本工具不执行 git add/commit/push。
+
+### 采集器来源
+
+新生成/修复行保留 `collector_sha256`，另用 `collector_reference` 记录完整 Git commit 和首方 Python 源依赖闭包的路径/原字节哈希，不再向每个批次复制三份程序。**写请求及付费调用之前**核对当前源与已提交 blob，未提交源或 CRLF/LF 不同均拒绝，应使用已提交 LF 快照；无关文档/输出目录不阻断。不会自动提交，也不会执行引用指向的历史程序。
+
+旧 collectors 副本保留原样并按旧格式验证。旧导新在源批次副本已经提交且原哈希一致时，记录它们的 Git 引用、不再复制；新导新携带已验证引用。缺对象/错哈希在创建目的批次前拒绝；import 仍重冻当前工具链/oracle、四门重置 NOT_RUN，原始请求/响应/源码/父子关系和旧资格不改。旧无来源字段的受支持行继续兼容。详见[设计与实施记录](drafts/design/archive-gate-design.md)。
+
+离线 Python 合同可统一执行并保存原日志/计数，不访问 GitHub/教师或运行 Java：
+
+```bash
+python -m experiments.slm.tests.run_suite --evidence target/slm-python-tests-local
+```
+
+证据目录必须不存在；CI 的 verify 已接入同一入口并上传 `slm-python-contracts`，以对应受测 SHA 的结果验收。
+
 ## 反馈修复
 
 先从 `checked.jsonl` 选择一个 `static=FAILED` 的样本 ID，再显式调用一次修复。下面使用本轮实际 ID；新一批应改为那一批的 ID。
@@ -149,7 +180,7 @@ python -m experiments.slm.data check \
   --maven-repo "$HOME/.m2/repository"
 ```
 
-import验证原冻结文件、响应/请求/源码及metadata，保持原批次不变，重新冻结本环境工具链/oracle；`imported_from`保留原指纹。只复制教师原始响应与校验过的收集器，不调用API，不迁移任何PASSED或生成摘要。当前参考另作为种子重新加入。必须在新批次重做静态和实际业务门，再导出；不要把`from-bundle`当运行批次。
+import验证原冻结文件、响应/请求/源码及metadata，保持原批次不变，重新冻结本环境工具链/oracle；`imported_from`保留原指纹。只保留教师原始响应与校验过的采集器来源；新导入记录使用Git引用、不再复制程序，旧副本不改。不调用API，不迁移任何PASSED或生成摘要。当前参考另作为种子重新加入。必须在新批次重做静态和实际业务门，再导出；不要把`from-bundle`当运行批次。
 
 判卷文件改名或增删后，旧批次 `task.json` 里的 `oracle.files` 会指向不存在的文件，普通 import 冻结不了。这时加 `--task experiments/slm/tasks/<题目>.json` 用当前定义导入：除 `oracle.files` 外必须与来源批次的题目完全相同，base 与参考答案的字节也必须与来源批次冻结的一致，否则拒绝（那已是另一道题，教师答的不是它）。`import.json` 的 `task_replaced` 记录新旧题目哈希。
 

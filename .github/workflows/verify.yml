@@ -70,6 +70,24 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Set up Python for offline collection contracts
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run offline collection and archive contracts
+        run: |
+          python -m pip install -r experiments/slm/requirements.txt
+          python -m experiments.slm.tests.run_suite --evidence target/slm-python-tests
+
+      - name: Upload Python contract evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: slm-python-contracts
+          path: target/slm-python-tests/
+          if-no-files-found: warn
+
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:

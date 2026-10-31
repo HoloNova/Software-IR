@@ -693,3 +693,16 @@ v8 累计 **4 次 API**，输入 **47722**（缓存 **21888**）、输出 **6055
 实际仍为 Windows/Java 21.0.11/Maven 3.9.14，18 CPU、24093 MiB、开跑前可用 3860 MiB；1444 个基线文件在独立 LF 快照逐项核对 Git Blob。Maven heap 384 MiB/metaspace 192 MiB、测试 fork及辅助 JVM heap 256 MiB/metaspace 128 MiB，全部 ActiveProcessorCount=2，串行无 `-T`；未跑全量、数据库或应用。两次 AFT 检查超时，fresh 诊断缺失，不冒称通过。命令、原始本机日志/XML、受测哈希、对照来源和已知缺口详见[实施记录](../../experiments/slm/drafts/design/parser-diagnostics-design.md#local-verification)及 `target/parser-diagnostics-implementation/`；它们不是同 SHA CI 证据。
 
 本轮模型调用 **0 次**，合格仍 **49 条**、学生 v4、未训练。语言参考未改，不额外运行其专用测试；新 SHA CI/真实业务 **NOT_RUN**。尚未提交或推送，交接 4.4 尚未开始。
+
+
+<a id="slm-archive-gate-local"></a>
+
+## 第三十阶段：统一归档工具与采集器来源（2026-10-31，本机完成、待新源码CI）
+
+负责人确认4.4设计并通知上轮CI通过后，单次核对`2282ad2e`的[verify #205](https://github.com/HoloNova/Software-IR/actions/runs/41061629787)：受测SHA正确、两个job均success。仅保存元数据，不虚报未下载的XML数量；旧CI不代替本次Python改动的验收。
+
+实现`data.py archive-gate --bundle BUNDLE --checked CHECKED [--dry-run] RUN...`，显式批次/轮次，按受测Git blob、原ZIP摘要、候选/生成绑定、附件、报告及JUnit核验，原字节归档、精确重复不覆盖、清单中断可续完。不借参考答案/其他批次成功，不把题目test_revision当Git SHA；归档不隐式export，不改原四门资格规则。新采集/修复在写请求及付费调用前冻结已提交的采集器Git引用，保留collector_sha256与完整首方源依赖哈希；新导入不再复制程序，旧副本原样保留并验证。不新增Python依赖，CLI/测试用法见实验README，细节见[设计与实施记录](../../experiments/slm/drafts/design/archive-gate-design.md#local-verification)。
+
+本机离线TDD已完成，最终与CI相同入口执行 **139项，零失败/错误/跳过**；标准库trace统计九个文件可执行行总覆盖 **86.66%**，各自均超过80%，不冒充分支覆盖。真实旧材料仅dry-run：#65仍为 **401/25失败**、#66为 **426/0通过**；3963个Git跟踪数据文件及暂存区前后未变。这不是新业务验收或新资格。测试只在临时Git仓库/ZIP执行，外部GH/付费API被替换，指纹/附件/收录检查走真实实现。
+
+verify已接入轻量Python套件并上传`slm-python-contracts`，等待提交后的同SHA结果；本轮 **CI NOT_RUN**，没有本机Maven、应用/数据库、模型调用或训练。AFT诊断超时无fresh快照、独立类型检查未运行，未声称全量检查全绿。合格仍 **49条**、学生 **v4**。尚未提交推送，也未执行4.5临时目录清理。

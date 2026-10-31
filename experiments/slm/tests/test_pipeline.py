@@ -21,6 +21,13 @@ class PipelineTests(unittest.TestCase):
         with contextlib.redirect_stdout(io.StringIO()):
             data.prepare(argparse.Namespace(bundle=self.root, task=data.HERE / "tasks/dual-token-v1.json"))
         self.manifest, self.task = data.read_bundle(self.root)
+        # Real committed collector fixture; only external paid calls are mocked.
+        from archive_fixture import commit, init_repo
+        self.collector_repo = init_repo(Path(self.temp.name) / "collector-repo")
+        commit(self.collector_repo)
+        collector_patch = patch("experiments.slm.collector_provenance.REPO", self.collector_repo)
+        collector_patch.start()
+        self.addCleanup(collector_patch.stop)
 
     def test_reference_is_not_silently_exported_using_its_historical_ci_result(self):
         row = load_jsonl(self.root / "candidates.jsonl")[0]

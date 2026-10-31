@@ -30,11 +30,16 @@ def _invalid_number(value):
     raise DataError("non-finite JSON number: " + value)
 
 
+def decode_json(raw: bytes) -> Any:
+    if len(raw) > MAX_JSON_BYTES:
+        raise DataError("JSON input exceeds 16 MiB")
+    return json.loads(raw.decode("utf-8"), object_pairs_hook=_unique_keys, parse_constant=_invalid_number)
+
+
 def load_json(path: Path) -> Any:
     if path.stat().st_size > MAX_JSON_BYTES:
         raise DataError("JSON input exceeds 16 MiB")
-    return json.loads(path.read_text(encoding="utf-8"), object_pairs_hook=_unique_keys,
-                      parse_constant=_invalid_number)
+    return decode_json(path.read_bytes())
 
 
 def write_new_json(path: Path, value: Any) -> None:
@@ -84,12 +89,21 @@ def fingerprint(inputs: dict[str, str]) -> str:
     return hashlib.sha256(value.encode("utf-8")).hexdigest()
 
 
+def core_input_paths(names) -> tuple[str, ...]:
+    """One selection rule for working-tree and committed input sets."""
+    files = frozenset(names)
+    modules = {p.split("/")[0] for p in files if p.count("/") == 1 and p.endswith("/pom.xml")}
+    return tuple(sorted(p for p in files if p == "pom.xml" or any(
+        p == module + "/pom.xml" or p.startswith(module + "/src/main/") for module in modules)))
+
+
 def core_inputs() -> dict[str, str]:
     paths = [REPO / "pom.xml"]
     for module in sorted(REPO.glob("*/pom.xml")):
         paths.append(module)
         paths.extend(p for p in (module.parent / "src/main").rglob("*") if p.is_file())
-    return {p.relative_to(REPO).as_posix(): digest_file(p) for p in sorted(paths)}
+    names = [p.relative_to(REPO).as_posix() for p in paths]
+    return {name: digest_file(REPO / name) for name in core_input_paths(names)}
 
 
 def verify_inputs(manifest: dict[str, Any]) -> None:

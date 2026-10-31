@@ -57,7 +57,7 @@ def read_bundle(root: Path):
     return manifest, load_json(root / "task.json")
 
 
-def validate_candidates(root: Path, manifest: dict, task: dict, rows: list) -> None:
+def validate_candidates(root: Path, manifest: dict, task: dict, rows: list, *, collector_repo: Path | None = None) -> None:
     enforce_split_disjoint(rows)
     for row in rows:
         if not re.fullmatch(r"[a-zA-Z0-9][a-zA-Z0-9._-]{0,159}", str(row.get("id", ""))):
@@ -80,6 +80,8 @@ def validate_candidates(root: Path, manifest: dict, task: dict, rows: list) -> N
                 raise DataError("teacher request changed after collection")
             if decode_response(load_json(directory / "response.json")) != row["sir"]:
                 raise DataError("candidate no longer matches the raw teacher response")
+            from experiments.slm.collector_provenance import validate
+            validate(root, row, repo=collector_repo)
 
 
 def task_message(root: Path, task: dict) -> str:
@@ -181,6 +183,8 @@ def import_candidates(args) -> None:
     task_file, replaced = origin / "task.json", None
     if getattr(args, "task", None) is not None:
         task_file, replaced = args.task, same_question(manifest, task, args.task)
+    from experiments.slm.collector_provenance import for_import
+    collectors = for_import(origin, rows)
     # Old host source bytes need not exist here. Responses/inputs remain verified above;
     # prepare freezes the actual destination toolchain/oracle instead of trusting old gates.
     prepare(argparse.Namespace(task=task_file, bundle=args.bundle, frozen_system=origin / "system.md"))
@@ -201,11 +205,11 @@ def import_candidates(args) -> None:
             shutil.copyfile(origin / "samples" / row["id"] / name, directory / name)
         rebound = {**row, **{key: current[key] for key in ("task_sha256", "oracle_sha256", "toolchain_core_sha256")},
                    "gates": {name: "NOT_RUN" for name in GATES}, "created_at": utc_now(),
-                   "imported_from": provenance}
+                   "imported_from": provenance, **collectors.get(row["id"], {})}
         rebound = {key: value for key, value in rebound.items() if key not in ("static_result", "runtime_result")}
         store_candidate(args.bundle, rebound)
         copied += 1
-    copy_collectors(origin, args.bundle, rows)
+
     write_new_json(args.bundle / "import.json", {**provenance, "teacher_responses": copied, "new_api_calls": 0})
     print(json_text({"imported_teacher_candidates": copied, "all_gates": "NOT_RUN", "new_api_calls": 0}), end="")
 
@@ -223,22 +227,6 @@ def same_question(manifest: dict, task: dict, task_file: Path) -> dict:
             raise DataError("--task " + key + " no longer has the bytes the teacher was shown or judged against")
     return {"from_task_sha256": manifest["task_sha256"], "task_sha256": digest_file(task_file), "changed": "oracle.files"}
 
-
-def copy_collectors(origin: Path, destination: Path, rows: list[dict]) -> None:
-    import shutil
-    for digest in sorted({row["collector_sha256"] for row in rows if row.get("collector_sha256")}):
-        if not re.fullmatch(r"[0-9a-f]{64}", digest):
-            raise DataError("invalid collector snapshot identifier")
-        source = origin / "collectors" / digest
-        inputs = load_json(source / "inputs.json")
-        if set(inputs) != {"data.py", "corpus.py", "dataset_io.py"} or fingerprint(inputs) != digest:
-            raise DataError("invalid collector snapshot inputs")
-        if any(digest_file(source / name) != expected for name, expected in inputs.items()):
-            raise DataError("collector snapshot changed after collection")
-        target = destination / "collectors" / digest
-        target.mkdir(parents=True, exist_ok=False)
-        for name in (*inputs, "inputs.json"):
-            shutil.copyfile(source / name, target / name)
 
 
 def request_payload(model: str, messages: list, max_tokens: int) -> dict:
@@ -268,6 +256,8 @@ def call_teacher(payload: dict) -> dict:
 
 def generate_one(root: Path, manifest: dict, task: dict, payload: dict, parent_id: str | None = None,
                  lineage: dict | None = None) -> dict:
+    from experiments.slm.collector_provenance import capture
+    collector = capture()
     sample_id = task["id"] + "-teacher-" + uuid.uuid4().hex[:12]
     directory = root / "samples" / sample_id
     directory.mkdir(parents=True, exist_ok=False)
@@ -289,25 +279,13 @@ def generate_one(root: Path, manifest: dict, task: dict, payload: dict, parent_i
            **attempt, "request_sha256": digest_file(directory / "request.json"),
            "sdk": "openai-python/" + importlib.metadata.version("openai"), "extraction": "strip-one-fence-and-final-newline",
            "generation_mode": "feedback-repair" if parent_id else "initial", "parent_id": parent_id,
-           "collector_sha256": snapshot_collector(root), **(lineage or {})}
+            **collector, **(lineage or {})}
     store_candidate(root, row)
     accepted = {**attempt, "status": "CANDIDATE_NOT_YET_QUALIFIED"}
     write_new_json(directory / "attempt.json", accepted)
     write_jsonl(root / "attempts.jsonl", [accepted], append=True)
     return accepted
 
-
-def snapshot_collector(root: Path) -> str:
-    import shutil
-    inputs = {name: digest_file(HERE / name) for name in ("data.py", "corpus.py", "dataset_io.py")}
-    digest = fingerprint(inputs)
-    directory = root / "collectors" / digest
-    if not directory.exists():
-        directory.mkdir(parents=True, exist_ok=False)
-        for name in inputs:
-            shutil.copyfile(HERE / name, directory / name)
-        write_new_json(directory / "inputs.json", inputs)
-    return digest
 
 
 def repair(args) -> None:
@@ -531,6 +509,13 @@ def parser() -> argparse.ArgumentParser:
     student_args.add_argument("--system-prompt", type=Path, help="file in prompts/; default student-v1.md")
     student_args.add_argument("--output", type=Path, required=True)
     student_args.set_defaults(run=student)
+    archive_args = commands.add_parser("archive-gate", help="verify and archive explicit candidate runs; never export")
+    archive_args.add_argument("--bundle", type=Path, required=True)
+    archive_args.add_argument("--checked", type=Path, required=True)
+    archive_args.add_argument("--dry-run", action="store_true")
+    archive_args.add_argument("runs", type=int, nargs="+")
+    from experiments.slm.gate_archive import archive_runs
+    archive_args.set_defaults(run=archive_runs)
     return result
 
 
