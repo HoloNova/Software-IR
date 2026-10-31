@@ -51,6 +51,11 @@ final class SourceText {
         return codePoints.length;
     }
 
+    /** The code point at an offset, or -1 past the end. */
+    int codePointAt(int codePointOffset) {
+        return codePointOffset >= 0 && codePointOffset < codePoints.length ? codePoints[codePointOffset] : -1;
+    }
+
     SourcePosition position(int codePointOffset) {
         int offset = Math.max(0, Math.min(codePointOffset, codePoints.length));
         return new SourcePosition(offset, lines[offset], columns[offset]);

@@ -240,6 +240,71 @@ class TargetedSyntaxDiagnosticTest {
         return parser.parseProject(new SirSource(SourceId.of("tests/messages.sir"), text));
     }
 
+    private static final String SHIFT = "时间平移的数量只能是整数字面量，例如 + 7 days；按变量天数平移请用 addDays(时间, 天数)。";
+
+    @Test
+    void questionMarkIsNamedAndExplainedAsAMissingConditionalExpression() {
+        String source = document(workflow("load Thing by 1 as row else Missing; update row { label: row.label == \"a\" ? \"b\" : \"c\"; } persist row;"));
+        var result = parse(source);
+        assertRejected(result);
+        assertEquals("SIR-LEX-001", first(result).code().value());
+        assertEquals("存在 SIR 不允许的字符“?”：SIR 没有 ? : 条件表达式；局部更新的字段直接写 字段: input.字段;，没传会自动保留原值",
+                first(result).message());
+        assertEquals(offset(source, source.indexOf('?')), first(result).primarySpan().start().codePointOffset());
+    }
+
+    @ParameterizedTest
+    @MethodSource("otherCharacters")
+    void otherRejectedCharactersAreNamedWithoutAGuessedReason(String character, String shown) {
+        String source = document(workflow("validate 1 " + character + " 1 else Missing;"));
+        var result = parse(source);
+        assertRejected(result);
+        assertEquals("SIR-LEX-001", first(result).code().value());
+        assertEquals("存在 SIR 不允许的字符“" + shown + "”", first(result).message());
+        assertEquals(offset(source, source.indexOf(character)), first(result).primarySpan().start().codePointOffset());
+    }
+
+    private static Stream<org.junit.jupiter.params.provider.Arguments> otherCharacters() {
+        return Stream.of(
+                org.junit.jupiter.params.provider.Arguments.of("#", "#"),
+                org.junit.jupiter.params.provider.Arguments.of("≥", "≥"),
+                org.junit.jupiter.params.provider.Arguments.of("\u200B", "U+200B"),
+                org.junit.jupiter.params.provider.Arguments.of("\u00A0", "U+00A0"));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"row.at + row.n days", "row.at + 2 * row.n days", "row.at + (row.n) days", "row.at - row.n hours",
+            "row.at + row.n minutes"})
+    void aUnitAfterAVariableAmountPointsToAddDays(String value) {
+        String source = document(shift(value));
+        var result = parse(source);
+        assertRejected(result);
+        assertEquals("SIR-PARSE-001", first(result).code().value());
+        assertEquals(SHIFT, first(result).message());
+        String unit = value.substring(value.lastIndexOf(' ') + 1);
+        assertEquals(offset(source, source.lastIndexOf(unit)), first(result).primarySpan().start().codePointOffset());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"row.at + 7 days", "now() + 15 minutes", "addDays(row.at, row.n)"})
+    void legalShiftsAndAddDaysStillParse(String value) {
+        var result = parse(document(shift(value)));
+        assertTrue(result.diagnostics().isEmpty(), () -> result.diagnostics().toString());
+    }
+
+    @Test
+    void aUnitWordThatStartsTheNextBindingKeepsTheOriginalMessage() {
+        var result = parse(document(shift("row.at + row.n\n minutes")).replace("minutes;", "minutes: 1;"));
+        assertRejected(result);
+        assertFalse(result.diagnostics().stream().anyMatch(d -> d.message().equals(SHIFT)), () -> result.diagnostics().toString());
+    }
+
+    private static String shift(String value) {
+        return "entity Slot persistent { identity id: Id generated auto; field at: Moment; field n: Count; }\n"
+                + "error Missing; capability Move { output Unit; fails Missing; requires atomic; expose command; workflow { "
+                + "load Slot by 1 as row else Missing; update row { at: " + value + "; } persist row; return unit; } }";
+    }
+
     private static Diagnostic first(SourceUnitParseResult result) {
         return result.diagnostics().getFirst();
     }
