@@ -1,0 +1,72 @@
+{
+  "namespace": "example.staffing",
+  "family": "staffing.shift-roster",
+  "split": "train",
+  "status": "specification approved by owner; static generation only; runtime NOT_RUN",
+  "capabilities": ["ListStores", "GenerateWeeklyShifts", "StoreShifts", "StoreEmployees", "AssignEmployee", "ShiftHeadcount", "EmployeeRoster"],
+  "entities": ["User", "AccessToken", "Store", "Employee", "Shift", "Assignment"],
+  "interfaces": {
+    "ListStores": {
+      "route": "GET /api/stores", "authentication": "none", "request_fields": ["page", "size"],
+      "response_fields": ["total", "page", "size", "records"], "body_kind": "Page<StoreView>", "success_status": 200,
+      "errors": {"BadPage": 400}, "order": ["name ASC", "id ASC"]
+    },
+    "GenerateWeeklyShifts": {
+      "route": "POST /api/stores/{storeId}/weekly-shifts", "authentication": "Bearer", "path_fields": ["storeId"],
+      "request_fields": ["firstDay", "band", "weeks"], "response_fields": [], "body_kind": "empty", "success_status": 201,
+      "errors": {"unauthenticated": 401, "INVALID_REQUEST": 400, "Forbidden": 403, "ShiftExists": 409, "StoreNotFound": 404, "TooManyWeeks": 409},
+      "check_order": ["request validation", "StoreNotFound", "Forbidden", "TooManyWeeks", "ShiftExists"]
+    },
+    "StoreShifts": {
+      "route": "GET /api/stores/{storeId}/shifts", "authentication": "Bearer", "path_fields": ["storeId"],
+      "request_fields": ["page", "size"], "response_fields": ["total", "page", "size", "records"],
+      "body_kind": "Page<ShiftView>", "success_status": 200,
+      "errors": {"unauthenticated": 401, "BadPage": 400, "Forbidden": 403, "StoreNotFound": 404}, "order": ["day ASC", "id ASC"]
+    },
+    "StoreEmployees": {
+      "route": "GET /api/stores/{storeId}/employees", "authentication": "Bearer", "path_fields": ["storeId"],
+      "request_fields": ["page", "size"], "response_fields": ["total", "page", "size", "records"],
+      "body_kind": "Page<EmployeeView>", "success_status": 200,
+      "errors": {"unauthenticated": 401, "BadPage": 400, "Forbidden": 403, "StoreNotFound": 404}, "order": ["name ASC", "id ASC"]
+    },
+    "AssignEmployee": {
+      "route": "POST /api/shifts/{shiftId}/assignments", "authentication": "Bearer", "path_fields": ["shiftId"],
+      "request_fields": ["employeeId"], "response_fields": ["id", "employee", "shift"],
+      "body_kind": "AssignmentView", "success_status": 201,
+      "errors": {"unauthenticated": 401, "INVALID_REQUEST": 400, "AlreadyAssigned": 409, "EmployeeNotFound": 404, "Forbidden": 403, "ShiftNotFound": 404, "StoreNotFound": 404, "WrongStore": 409},
+      "check_order": ["request validation", "ShiftNotFound", "StoreNotFound", "Forbidden", "EmployeeNotFound", "WrongStore", "AlreadyAssigned"]
+    },
+    "ShiftHeadcount": {
+      "route": "GET /api/shifts/{shiftId}/headcount", "authentication": "Bearer", "path_fields": ["shiftId"],
+      "request_fields": [], "response_fields": [], "body_kind": "integer", "success_status": 200,
+      "errors": {"unauthenticated": 401, "Forbidden": 403, "ShiftNotFound": 404, "StoreNotFound": 404}
+    },
+    "EmployeeRoster": {
+      "route": "GET /api/employees/{employeeId}/roster", "authentication": "Bearer", "path_fields": ["employeeId"],
+      "request_fields": ["page", "size"], "response_fields": ["total", "page", "size", "records"],
+      "body_kind": "Page<AssignmentView>", "success_status": 200,
+      "errors": {"unauthenticated": 401, "BadPage": 400, "EmployeeNotFound": 404, "Forbidden": 403, "StoreNotFound": 404}, "order": ["id ASC"]
+    }
+  },
+  "view_fields": {
+    "StoreView": ["id", "name"], "EmployeeView": ["id", "store", "name"],
+    "ShiftView": ["id", "store", "day", "band"], "AssignmentView": ["id", "employee", "shift"]
+  },
+  "field_types": {"id": "JSON integer (int64)", "store": "JSON integer (int64)", "employee": "JSON integer (int64)", "shift": "JSON integer (int64)", "day": "YYYY-MM-DD date", "firstDay": "YYYY-MM-DD date", "band": "OPENING or CLOSING", "weeks": "int32, at least 1", "name": "nonblank string, 1..100 characters", "headcount": "bare JSON integer (int64)"},
+  "weekly_plan": {"limit": 8, "index_origin": 0, "step_calendar_days": 7, "over_limit": "reject entire batch before body", "late_conflict": "rollback all earlier weeks", "no_implicit_assignments": true},
+  "uniqueness": {"Shift": ["store", "day", "band"], "Assignment": ["employee", "shift"]},
+  "business_boundaries": {"slot_identity": "store + calendar day + opening/closing band", "interval_overlap_check": false, "same_employee_two_bands_same_day": "allowed", "capacity": "none", "payment_or_wage": false, "delete_or_cancel": false},
+  "locking": {"GenerateWeeklyShifts": "Store primary-key lock before duplicate checks, until transaction ends", "AssignEmployee": "Shift primary-key lock before duplicate checks, until transaction ends", "isolation_for_explicit_locks": "READ_COMMITTED"},
+  "required_input_errors": {"missing_or_null": "400 INVALID_REQUEST; fields path=<HTTP field name>, code=NotNull", "weeks_zero_or_negative": "400 INVALID_REQUEST", "pagination_exception": true},
+  "pagination": {"default_page": 1, "default_size": 20, "min_page": 1, "min_size": 1, "max_page": 10000, "max_size": 100, "beyond_last_page": "empty records with full matching total"},
+  "enums": {"ShiftBand": ["OPENING", "CLOSING"]},
+  "declared_errors": {"AlreadyAssigned": 409, "BadPage": 400, "EmployeeNotFound": 404, "Forbidden": 403, "ShiftExists": 409, "ShiftNotFound": 404, "StoreNotFound": 404, "TooManyWeeks": 409, "WrongStore": 409},
+  "error_envelope": {"declared": {"code": "error name", "message": "error name", "fields": []}, "validation": "code=INVALID_REQUEST; fields entries have path/code/message", "unauthenticated": "401 with empty body"},
+  "storage": {
+    "user": ["id", "name"], "access_token": ["id", "owner_id", "expires_at"], "store": ["id", "name", "manager_id"],
+    "employee": ["id", "store_id", "name"], "shift": ["id", "store_id", "day", "band"], "assignment": ["id", "employee_id", "shift_id"]
+  },
+  "readiness": "GET /api/stores?page=1&size=10",
+  "fixtures": {"provided_by_oracle": true, "actor_mode": "external", "credentials": "synthetic database Bearer rows"},
+  "runtime_evidence": "NOT_RUN"
+}
