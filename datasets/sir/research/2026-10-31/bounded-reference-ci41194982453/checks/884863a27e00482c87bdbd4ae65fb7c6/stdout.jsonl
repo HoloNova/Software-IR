@@ -1,0 +1,2 @@
+{"id":"maintenance-work-order-base-static-only","ok":true,"stage":"GENERATION","diagnostics":[],"fileCount":47,"digest":"859082d49123a8a9cb652b513612ce0eb259568a2f7078e0f32f6f02d7757308","sourceSha256":"3ffa5ff966f5159e792230e53637acfae18a268608207d311cd0a99c863d19f7"}
+{"id":"staffing-shift-roster-base-static-only","ok":true,"stage":"GENERATION","diagnostics":[],"fileCount":50,"digest":"e997af407f9953520e05ee5339b29cb60626be576582afa2d8e64bfb32f4a2ea","sourceSha256":"ea9225ba705e3982732ec62c9f00e87b1eea67cd55f31f167f163c9d617473d8"}

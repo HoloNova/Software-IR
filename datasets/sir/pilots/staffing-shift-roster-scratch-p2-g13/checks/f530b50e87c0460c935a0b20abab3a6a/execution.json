@@ -1,0 +1,14 @@
+{
+  "command": [
+    "java",
+    "-XX:-UsePerfData",
+    "-XX:ActiveProcessorCount=2",
+    "-Xmx256m",
+    "-XX:MaxMetaspaceSize=128m",
+    "-jar",
+    "C:\\Users\\zdw00\\Desktop\\Software IR\\target\\msf\\kcg.jar",
+    "check"
+  ],
+  "input_sha256": "b4f6282cf3c4a4ff34bf6fc50a9a3d54225db84428425e75ed2388f7322ffdc9",
+  "returncode": 0
+}

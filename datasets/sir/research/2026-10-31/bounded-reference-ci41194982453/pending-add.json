@@ -1,0 +1,17 @@
+{
+  "paths_requiring_explicit_force_add_when_authorized": [
+    "datasets/sir/research/2026-10-31/bounded-reference-ci41194982453/evidence/maintenance-slice-1a191a5b3f7-31647/logs/maven.stderr.log",
+    "datasets/sir/research/2026-10-31/bounded-reference-ci41194982453/evidence/maintenance-slice-1a191a5b3f7-31647/logs/maven.stdout.log",
+    "datasets/sir/research/2026-10-31/bounded-reference-ci41194982453/evidence/maintenance-slice-1a191a5b3f7-31647/logs/spring.stderr.log",
+    "datasets/sir/research/2026-10-31/bounded-reference-ci41194982453/evidence/maintenance-slice-1a191a5b3f7-31647/logs/spring.stdout.log",
+    "datasets/sir/research/2026-10-31/bounded-reference-ci41194982453/evidence/staffing-slice-1a191a50f1e-5952/logs/maven.stderr.log",
+    "datasets/sir/research/2026-10-31/bounded-reference-ci41194982453/evidence/staffing-slice-1a191a50f1e-5952/logs/maven.stdout.log",
+    "datasets/sir/research/2026-10-31/bounded-reference-ci41194982453/evidence/staffing-slice-1a191a50f1e-5952/logs/spring.stderr.log",
+    "datasets/sir/research/2026-10-31/bounded-reference-ci41194982453/evidence/staffing-slice-1a191a50f1e-5952/logs/spring.stdout.log",
+    "datasets/sir/research/2026-10-31/bounded-reference-ci41194982453/original-zips/conformance-evidence.zip",
+    "datasets/sir/research/2026-10-31/bounded-reference-ci41194982453/original-zips/standalone-cli.zip",
+    "datasets/sir/research/2026-10-31/bounded-reference-ci41194982453/original-zips/surefire-reports.zip"
+  ],
+  "reason": "Owner authorized commit and normal push; include these exact ignored raw logs/ZIPs and verify staged Git blobs",
+  "status": "PRECOMMIT_RAW_PATH_INVENTORY_OWNER_AUTHORIZED"
+}

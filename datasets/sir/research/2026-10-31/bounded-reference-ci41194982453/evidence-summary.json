@@ -1,0 +1,91 @@
+{
+  "headSha": "5fe4c8339a927fb526c004c276beb4c1c8892996",
+  "runUrl": "https://github.com/HoloNova/Software-IR/actions/runs/41194982453",
+  "verdict": "PASSED",
+  "references": [
+    {
+      "name": "maintenance",
+      "checksPassed": 599,
+      "checksFailed": 0,
+      "blobBindings": [
+        {
+          "kind": "sirResource",
+          "gitPath": "sir-toolchain-application/src/test/resources/valid/maintenance-work-order.sir",
+          "sha256": "bfe04bc9b91f970f4de151d54e686a38b68872b71a7da535dd4df362dd39be32"
+        },
+        {
+          "kind": "fixtureDdl",
+          "gitPath": "sir-toolchain-application/src/test/resources/conformance/mysql/maintenance-work-order-ddl.sql",
+          "sha256": "074a6d4bf175e671303d61e26e1ddc4857c26bf6944c9742dccb6d19ed688029"
+        },
+        {
+          "kind": "fixtureSeed",
+          "gitPath": "sir-toolchain-application/src/test/resources/conformance/mysql/maintenance-work-order-seed.sql",
+          "sha256": "f40a24b7f8caa86e1460744a43633808d893b67eafe342a925140c1ccf4d27b7"
+        }
+      ],
+      "rounds": [
+        {
+          "round": "X01",
+          "connections": 6,
+          "transactions": 6,
+          "observed": true
+        },
+        {
+          "round": "X02",
+          "connections": 6,
+          "transactions": 6,
+          "observed": true
+        },
+        {
+          "round": "X03",
+          "connections": 2,
+          "transactions": 2,
+          "observed": true
+        }
+      ]
+    },
+    {
+      "name": "staffing",
+      "checksPassed": 870,
+      "checksFailed": 0,
+      "blobBindings": [
+        {
+          "kind": "sirResource",
+          "gitPath": "sir-toolchain-application/src/test/resources/valid/staffing-shift-roster.sir",
+          "sha256": "5d1cf02d377906ab75004fab1f5ae8f92a7f027da16b5c7617c87e877974c2d0"
+        },
+        {
+          "kind": "fixtureDdl",
+          "gitPath": "sir-toolchain-application/src/test/resources/conformance/mysql/staffing-shift-roster-ddl.sql",
+          "sha256": "5b21a1165d021269d3d197c2e6da5216e2201c0816e2712dd2d7d2159d9307af"
+        },
+        {
+          "kind": "fixtureSeed",
+          "gitPath": "sir-toolchain-application/src/test/resources/conformance/mysql/staffing-shift-roster-seed.sql",
+          "sha256": "d9972e5984ead0e773adcd985c6f1bc916bd07cee8e453bc4836b4fbbfd6f8b8"
+        }
+      ],
+      "rounds": [
+        {
+          "round": "X01",
+          "connections": 6,
+          "transactions": 6,
+          "observed": true
+        },
+        {
+          "round": "X02",
+          "connections": 3,
+          "transactions": 3,
+          "observed": true
+        },
+        {
+          "round": "X03",
+          "connections": 6,
+          "transactions": 6,
+          "observed": true
+        }
+      ]
+    }
+  ]
+}

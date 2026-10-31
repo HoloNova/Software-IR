@@ -2,7 +2,7 @@
   "namespace": "example.maintenance",
   "family": "maintenance.work-order",
   "split": "train",
-  "status": "owner-approved specification; oracle implemented; reference CI FAILED (d31af6af / 41187721552)",
+  "status": "owner-approved specification; reference CI PASSED (5fe4c833 / 41194982453); candidate qualification remains independent",
   "capabilities": ["ListFacilities", "OpenWorkOrder", "EditWorkOrder", "GetWorkOrder", "ListWorkOrders", "GenerateInspections", "CloseOverdueInspections", "ListInspections"],
   "entities": ["User", "AccessToken", "Facility", "WorkOrder", "InspectionOrder"],
   "interfaces": {
@@ -26,7 +26,7 @@
       "response_fields": ["id", "facility", "reporter", "title", "assignee", "note", "removed", "version"],
       "body_kind": "WorkOrderView", "success_status": 200,
       "errors": {"unauthenticated": 401, "INVALID_REQUEST": 400, "EmptyChange": 400, "FacilityNotFound": 404, "Forbidden": 403, "StaleVersion": 409, "WorkOrderNotFound": 404},
-      "check_order": ["request validation", "EmptyChange", "WorkOrderNotFound", "FacilityNotFound", "Forbidden", "merged-field validation", "StaleVersion"]
+      "check_order": ["request validation", "EmptyChange", "WorkOrderNotFound", "FacilityNotFound", "Forbidden", "StaleVersion expectedVersion precheck", "merged-field validation", "StaleVersion conditional persist"]
     },
     "GetWorkOrder": {
       "route": "GET /api/work-orders/{id}", "authentication": "Bearer", "path_fields": ["id"], "request_fields": [],
@@ -91,5 +91,5 @@
   "readiness": "GET /api/facilities?page=1&size=10",
   "fixtures": {"provided_by_oracle": true, "actor_mode": "external", "credentials": "synthetic database Bearer rows"},
   "scoring_exclusions_approved_by_owner": ["PATCH assignee set to a nonexistent User", "PATCH removed=null; nonnullable PATCH null policy is unresolved upstream"],
-  "runtime_evidence": "NOT_RUN"
+  "runtime_evidence": "PASSED existing reference only: 5fe4c8339a927fb526c004c276beb4c1c8892996 / verify 41194982453; no candidate qualification inherited"
 }

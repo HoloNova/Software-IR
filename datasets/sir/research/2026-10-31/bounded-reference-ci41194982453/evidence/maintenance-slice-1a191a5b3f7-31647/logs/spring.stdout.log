@@ -1,0 +1,30 @@
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.5.3)
+
+2026-10-31T11:08:43.908Z  INFO 12832 --- [facility-maintenance] [           main] example.maintenance.Application          : Starting Application v0.1.0-SNAPSHOT using Java 21.0.13 with PID 12832 (/home/runner/work/Software-IR/Software-IR/ci-work/maintenance-slice-1a191a5b3f7-31647/generated-project/target/facility-maintenance-0.1.0-SNAPSHOT.jar started by runner in /home/runner/work/Software-IR/Software-IR/sir-toolchain-application)
+2026-10-31T11:08:43.911Z  INFO 12832 --- [facility-maintenance] [           main] example.maintenance.Application          : No active profile set, falling back to 1 default profile: "default"
+2026-10-31T11:08:45.207Z  INFO 12832 --- [facility-maintenance] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 18080 (http)
+2026-10-31T11:08:45.219Z  INFO 12832 --- [facility-maintenance] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-10-31T11:08:45.219Z  INFO 12832 --- [facility-maintenance] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.42]
+2026-10-31T11:08:45.244Z  INFO 12832 --- [facility-maintenance] [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-10-31T11:08:45.245Z  INFO 12832 --- [facility-maintenance] [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1266 ms
+ _ _   |_  _ _|_. ___ _ |    _ 
+| | |\/|_)(_| | |_\  |_)||_|_\ 
+     /               |         
+                        3.5.12 
+2026-10-31T11:08:46.104Z  INFO 12832 --- [facility-maintenance] [           main] m.e.s.MybatisPlusApplicationContextAware : Register ApplicationContext instances org.springframework.boot.web.servlet.context.AnnotationConfigServletWebServerApplicationContext@42bc14c1
+2026-10-31T11:08:46.246Z  INFO 12832 --- [facility-maintenance] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 18080 (http) with context path '/'
+2026-10-31T11:08:46.264Z  INFO 12832 --- [facility-maintenance] [           main] example.maintenance.Application          : Started Application in 2.923 seconds (process running for 3.398)
+2026-10-31T11:08:46.454Z  INFO 12832 --- [facility-maintenance] [.1-18080-exec-2] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-10-31T11:08:46.455Z  INFO 12832 --- [facility-maintenance] [.1-18080-exec-2] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-10-31T11:08:46.456Z  INFO 12832 --- [facility-maintenance] [.1-18080-exec-2] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2026-10-31T11:08:46.512Z  INFO 12832 --- [facility-maintenance] [.1-18080-exec-2] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-10-31T11:08:46.944Z  INFO 12832 --- [facility-maintenance] [.1-18080-exec-2] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@124c2263
+2026-10-31T11:08:46.947Z  INFO 12832 --- [facility-maintenance] [.1-18080-exec-2] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.

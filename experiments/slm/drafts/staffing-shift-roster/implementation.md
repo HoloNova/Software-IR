@@ -7,7 +7,7 @@
 - 批准参考已落为 `sir-toolchain-application/src/test/resources/valid/staffing-shift-roster.sir`。
 - spec §2/§3 SQL 原样落为同模块 `src/test/resources/conformance/mysql/staffing-shift-roster-ddl.sql` 和 `staffing-shift-roster-seed.sql`。保留全外键、真实合成 Bearer 凭据，以及 `UNIQUE(store_id,day,band)`、`UNIQUE(employee_id,shift_id)`；没有CHECK/触发器替候选完成业务。
 - IT入口：`src/test/java/io/kcg/sir/application/conformance/StaffingShiftRosterBusinessConformanceIT.java`。
-- B/Q与独立重算在 `StaffingRosterChecks`；G01–G07在 `StaffingWeeklyChecks`；A01–A08在 `StaffingAssignmentChecks`；X01–X03在 `StaffingConcurrencyChecks`。方法对应见 [traceability.md §6](traceability.md#6-本阶段源码入口尚无业务资格)。
+- B/Q与独立重算在 `StaffingRosterChecks`；G01–G07在 `StaffingWeeklyChecks`；A01–A08在 `StaffingAssignmentChecks`；X01–X03在 `StaffingConcurrencyChecks`。方法对应见 [traceability.md §6](traceability.md#6-判卷源码入口)。
 
 周生成只新增空 Shift，日期由 LocalDate 按周独立重算，检查8周边界、极大次数先拒、第三周冲突全回滚、同日双band和闰年跨月。Assign只新增独立关系；同班允许多人，同员工允许同日双band。人数从JDBC全部Assignment独立计数，不从201次数推导；员工编排按关系id而非班次日期排序，A08专门反转日期顺序作为负控制。
 
@@ -75,3 +75,28 @@ lowering 的实体声明、版本元数据、成员绑定、引用主键和 CAS 
 首版使用前置 `$` 的内部名虽能编译，但被 MyBatis 反射拒绝；已改为字母开头的 `kcg$` 并通过上述实际Mapper测试。JSON对照最后按真实序列化后比较，避免同值 LongNode/IntNode 的内存类型差异，未放宽字段、值或额外字段检查。新增测试及原生产文件已在主会话审阅；既有大文件只作根因所需的小范围修改，没有顺便重构。
 
 第5节原CI报告继续保留 FAILED，修复版真实 MySQL/HTTP、并发、参考四门和同SHA CI为 **NOT_RUN**。按后续明确指令本地提交，未推送或切换远端候选判卷工具链；未改候选冻结输入、未冻结/采样，未调用模型。
+
+## 7. 修复版同 SHA CI 验收：PASSED（当前参考状态）
+
+负责人随后明确要求推送并触发CI；受测SHA=`5fe4c8339a927fb526c004c276beb4c1c8892996`，[verify 41194982453](https://github.com/HoloNova/Software-IR/actions/runs/41194982453) 两个job均success。本题 **870/0**，生成56文件、构建退出0、就绪200，X01/X02/X03业务全部通过，分别观测 **6/3/6** 个不同连接和事务完整到达锁屏障。周生成、晚冲突整批回滚、同班多人、人数与编排顺序均已真实验收；不再受band的OGNL解析错误阻断。
+
+§5失败、§6新CI尚未运行/未推送是各自写作时的历史现场；本节为当前参考验收结果。原件、两项JUnit、输入Git blob绑定和artifact哈希见[共享参考证据](../../../../datasets/sir/research/2026-10-31/bounded-reference-ci41194982453/README.md)，不重复维护一份摘要。保留band的SIR/API/SQL名，不改题面/判卷，不借用其他family资格，base HTTP负例仍NOT_RUN。
+
+负责人要求继续下一步，进入task定义/冻结；未调用模型、未产生教师答案或训练数据。新的任务/批次与实际静态结果由共享证据目录登记，不继承参考运行门资格。
+
+## 8. 八题及仅参考批次冻结（未采样）
+
+按负责人继续下一步的要求，已用原prepare在LF隔离快照冻结以下八题，全部由verify 41194982453的原CLI静态生成通过、无诊断；每批只有1份existing_reference，build/start/business均NOT_RUN。原题requirement原文不动，p1/p2/p3仅作等义表述，合同、base、参考与oracle完全共用。
+
+| task | 批次 | 静态生成文件 |
+|---|---|---:|
+| `staffing-shift-roster-change-v1` | `staffing-shift-roster-change-g13` | 56 |
+| `staffing-shift-roster-change-p1-v1` | `staffing-shift-roster-change-p1-g13` | 56 |
+| `staffing-shift-roster-change-p2-v1` | `staffing-shift-roster-change-p2-g13` | 56 |
+| `staffing-shift-roster-change-p3-v1` | `staffing-shift-roster-change-p3-g13` | 56 |
+| `staffing-shift-roster-scratch-v1` | `staffing-shift-roster-scratch-g13` | 56 |
+| `staffing-shift-roster-scratch-p1-v1` | `staffing-shift-roster-scratch-p1-g13` | 56 |
+| `staffing-shift-roster-scratch-p2-v1` | `staffing-shift-roster-scratch-p2-g13` | 56 |
+| `staffing-shift-roster-scratch-p3-v1` | `staffing-shift-roster-scratch-p3-g13` | 56 |
+
+冻结明细、输入指纹、逐句等义追溯、原始检查器输入/输出和MANIFEST在[共享证据目录](../../../../datasets/sir/research/2026-10-31/bounded-reference-ci41194982453/README.md)及各批次。工具链450份输入和oracle原字节与受测Git blob一致；scratch base为空，change base不变，两份base仅静态检查通过。未调用模型、未导出训练数据、未改学生v5；本阶段没有提交、推送或重新触发CI。负责人现已确认先提交/普通推送，再按18万tokens保守预算对四道原题各初采1次；每次最大8192输出，不含失败修复，不自动重试。

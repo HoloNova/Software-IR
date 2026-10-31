@@ -1,12 +1,12 @@
-# 设施报修与巡检工单题追溯（判卷源码已落地，参考业务 CI FAILED）
+# 设施报修与巡检工单题追溯（参考 CI PASSED；八题已冻结）
 
-family `maintenance.work-order` / train；基线 `e81200e0e039c5d178c95bbab2f12195ac13f0dd`。规格已获确认；现已另获授权并落地业务IT、DDL/seed和两个workflow，但没有task或CI资格。spec §6检查对应本文件§6中的实现入口；验证状态见 [implementation.md](implementation.md)。静态实测：reference/base均GENERATION、diagnostics=[]、55/47文件，原输出和摘要在spec §0.3。
+family `maintenance.work-order` / train；基线 `e81200e0e039c5d178c95bbab2f12195ac13f0dd`。规格已获确认；现已另获授权并落地业务IT、DDL/seed和两个workflow，参考已在5fe4c833的同SHA CI验收，并已定义/冻结本family八题；这不授予候选资格。spec §6检查对应本文件§6中的实现入口；验证状态见 [implementation.md](implementation.md)。静态实测：reference/base均GENERATION、diagnostics=[]、55/47文件，原输出和摘要在spec §0.3。
 
 ## 1. 输入、参考与base
 
 - [reference.sir](reference.sir)：5实体、8能力；版本化人工报修与非版本化批处理巡检分开，理由及已确认的M1边界见spec §0.2/§7。
 - [base.sir](base.sir)：仅删除EditWorkOrder、ListWorkOrders、GenerateInspections、CloseOverdueInspections四个完整能力块，其余字节不变；55→47生成文件，不冒称base已启动并得到HTTP失败。
-- [contract.json](contract.json)：固定接口、类型、排序、错误和评分排除项；assignee的HTTP名及物理列均不加Id/_id；spec §2/§3的DDL/seed已原样提取到test resources，尚未执行。
+- [contract.json](contract.json)：固定接口、类型、排序、错误和评分排除项；assignee的HTTP名及物理列均不加Id/_id；spec §2/§3的DDL/seed已原样提取到test resources，并在同SHA CI真实执行。
 - 自然语言题面：[requirement-scratch.md](requirement-scratch.md)与[requirement-change.md](requirement-change.md)。S/C编号是非空行顺序；最后一行是输出约定，不算业务HTTP断言。spec §5保留同一原文。
 
 ## 2. 逐句追溯
@@ -52,7 +52,7 @@ C01的“保留”意味着W01–W03、D01、ListFacilities/ListInspections仍�
 
 X01目标work_order105：六个同版本编辑，1胜5冲突，最终版本1/赢家note；X02目标facility10：六个批关闭全200，最终只关闭201/202；X03目标facility10：生成/关闭两个请求，三张新行必须全开或全闭，对应两种合法串行次序。所有请求都必须由独立HTTP客户端实际发出；数据库控制锁+真实等待图确保N个不同连接/事务全部到达屏障；超时、权限不足及失败处理按spec §6.6，不拿顺序请求代替并发。
 
-夹具自检、external配置、readiness、进程清理/报告不是候选业务需求，但失败会阻断有效证据；同SHA CI构建/启动通过，本题597项检查通过、2失败；X01–X03业务与真实屏障通过，但P04优先级冲突使参考整体FAILED，见implementation §5。不继承博客或fitness/events的资格，更不给未来教师候选继承本参考静态通过。
+夹具自检、external配置、readiness、进程清理/报告不是候选业务需求，但失败会阻断有效证据；修复版同SHA CI构建/启动通过，本题599项检查通过、0失败；X01–X03业务与真实屏障全部通过，当前证据见implementation §7，原P04失败保留于§5。不继承博客或fitness/events的资格，更不给未来教师候选继承本参考静态通过。
 
 ## 5. 负责人已确认的边界
 
@@ -61,9 +61,9 @@ X01目标work_order105：六个同版本编辑，1胜5冲突，最终版本1/赢
 - M3：removed=null沿用上游未决边界，本题暂不评分；title=null仍按目标非空白规则检查，PATCH错误路径changes.title、模板码notBlank，不与普通新建DTO的NotBlank混同。
 - 接受spec §0.1的dev/test隔离结论，保留maintenance.work-order作为train；不启用质检批次备选。
 
-以上边界已获负责人确认。规格阶段文档已单独提交；本阶段是在另行授权后落地判卷，并已获负责人一次提交、普通推送与同SHA CI的授权；判卷实现提交未改工具链；CI失败后的根因修复另获本地提交授权，未推送或运行新CI。已有失败CI证据，尚无四门资格，任务冻结仍未办理。
+以上边界已获负责人确认。规格阶段文档已单独提交；本阶段是在另行授权后落地判卷，并已获负责人一次提交、普通推送与同SHA CI的授权；判卷实现之后，两处工具链根因修复另获提交、推送与CI授权，5fe4c833验收通过；当前已完成八题定义/冻结，不触发新CI或调用模型。
 
-## 6. 本阶段源码入口（尚无业务资格）
+## 6. 判卷源码入口
 
 源码目录为 `sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/`。
 
@@ -79,4 +79,10 @@ X01目标work_order105：六个同版本编辑，1胜5冲突，最终版本1/赢
 | 真实N客户端/锁等待/收齐与释放 | `BoundedProblemRace`，复用已有 `BlogLockWaits` 的间接链证明 |
 | 夹具、自检、external、构建/清理/证据 | `MaintenanceWorkOrderBusinessConformanceIT` → `BoundedProblemConformance` / `BoundedProblemFixture` → 已有 `BusinessSliceHarness` |
 
-参考/DDL/seed分别为test resources的 `valid/maintenance-work-order.sir` 和 `conformance/mysql/maintenance-work-order-{ddl,seed}.sql`，均与批准规格的内容对应。两个workflow同时接入参考和候选；同一个IT仅由既有Harness切换SIR输入，不另写候选专用断言。定向测试结果不构成四门验收，完整记录见 [implementation.md](implementation.md)，其中§5为已执行的失败CI证据。
+参考/DDL/seed分别为test resources的 `valid/maintenance-work-order.sir` 和 `conformance/mysql/maintenance-work-order-{ddl,seed}.sql`，均与批准规格的内容对应。两个workflow同时接入参考和候选；同一个IT仅由既有Harness切换SIR输入，不另写候选专用断言。定向测试结果不构成四门验收，完整记录见 [implementation.md](implementation.md)，其中§5保留失败CI，§7为当前已通过的参考CI证据。
+
+## 7. 原题与等义变体的冻结追溯
+
+本family的change/scratch原题各1份，以及各3份p1/p2/p3，共8份任务均在 `experiments/slm/tasks/`；相应 `*-g13` 批次在 `datasets/sir/pilots/`。所有原S/C条款在每个变体恰出现一次，标识符和数字不变，顺序变化仅用于彼此独立的条款。具体映射见共享证据目录 `requirements-equivalence.json`；不能把字符串核对冒充自然语言等义的自动证明。
+
+变体与原题共用接口合同、参考、base和判卷，不引入额外业务。冻结及静态结果见implementation §8，原始业务资格仍绑定5fe4c833/41194982453，批次中的参考运行门保持NOT_RUN，未来教师独立判卷；没有新合格答案或训练数据。

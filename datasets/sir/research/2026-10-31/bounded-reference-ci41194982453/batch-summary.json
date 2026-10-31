@@ -1,0 +1,491 @@
+{
+  "api_calls": 0,
+  "batches": [
+    {
+      "base_sha256": "3ffa5ff966f5159e792230e53637acfae18a268608207d311cd0a99c863d19f7",
+      "bundle": "datasets/sir/pilots/maintenance-work-order-change-g13",
+      "execution": {
+        "directory": "C:\\Users\\zdw00\\Desktop\\Software IR\\target\\msf\\s\\datasets\\sir\\pilots\\maintenance-work-order-change-g13\\checks\\5ed8a5febc6d4386bbc614065b26cef3",
+        "stdout_sha256": "ab795ed59b5921a6e6835e54a392d2bff8e830b699e758574ba4f9d19df3cf06"
+      },
+      "gates": {
+        "build": "NOT_RUN",
+        "business": "NOT_RUN",
+        "start": "NOT_RUN",
+        "static": "PASSED"
+      },
+      "oracle_sha256": "bdfa48e02daf706b922d1c9011d6632eb276aeba1597bee42738341741ce6b44",
+      "origin": "existing_reference",
+      "reference_sha256": "bfe04bc9b91f970f4de151d54e686a38b68872b71a7da535dd4df362dd39be32",
+      "static_result": {
+        "diagnostics": [],
+        "digest": "e8611722bafd41f5ba6bdc6f5c81d64e77870b9da01191376c42adf2fb622b3b",
+        "fileCount": 55,
+        "id": "maintenance-work-order-change-v1-reference",
+        "ok": true,
+        "sourceSha256": "bfe04bc9b91f970f4de151d54e686a38b68872b71a7da535dd4df362dd39be32",
+        "stage": "GENERATION"
+      },
+      "system_sha256": "5f40588ce689cf200ebd266d0fe8d3b570dbe11f017b376ccf04102d767fb665",
+      "task_id": "maintenance-work-order-change-v1",
+      "task_sha256": "4100129cdbd906fcd849a8a49900bb01444a4ab861afe9ffb066b8e804a2d56c",
+      "toolchain_core_sha256": "023ee2c7b9e6988b90b0516bdb3e4b252afb6133e8782ebf6f2fe8be73dbb48a"
+    },
+    {
+      "base_sha256": "3ffa5ff966f5159e792230e53637acfae18a268608207d311cd0a99c863d19f7",
+      "bundle": "datasets/sir/pilots/maintenance-work-order-change-p1-g13",
+      "execution": {
+        "directory": "C:\\Users\\zdw00\\Desktop\\Software IR\\target\\msf\\s\\datasets\\sir\\pilots\\maintenance-work-order-change-p1-g13\\checks\\637693d6983449dabbd953a0681bf789",
+        "stdout_sha256": "a426d835fc1c679638c30c3633cd2c0949be3be462ce5f8939b73ef4eea3f9eb"
+      },
+      "gates": {
+        "build": "NOT_RUN",
+        "business": "NOT_RUN",
+        "start": "NOT_RUN",
+        "static": "PASSED"
+      },
+      "oracle_sha256": "bdfa48e02daf706b922d1c9011d6632eb276aeba1597bee42738341741ce6b44",
+      "origin": "existing_reference",
+      "reference_sha256": "bfe04bc9b91f970f4de151d54e686a38b68872b71a7da535dd4df362dd39be32",
+      "static_result": {
+        "diagnostics": [],
+        "digest": "e8611722bafd41f5ba6bdc6f5c81d64e77870b9da01191376c42adf2fb622b3b",
+        "fileCount": 55,
+        "id": "maintenance-work-order-change-p1-v1-reference",
+        "ok": true,
+        "sourceSha256": "bfe04bc9b91f970f4de151d54e686a38b68872b71a7da535dd4df362dd39be32",
+        "stage": "GENERATION"
+      },
+      "system_sha256": "5f40588ce689cf200ebd266d0fe8d3b570dbe11f017b376ccf04102d767fb665",
+      "task_id": "maintenance-work-order-change-p1-v1",
+      "task_sha256": "61807f982a1e3a8247344bd91cd0d4036251c4cf866dd0a3c49a1e5a1102f3da",
+      "toolchain_core_sha256": "023ee2c7b9e6988b90b0516bdb3e4b252afb6133e8782ebf6f2fe8be73dbb48a"
+    },
+    {
+      "base_sha256": "3ffa5ff966f5159e792230e53637acfae18a268608207d311cd0a99c863d19f7",
+      "bundle": "datasets/sir/pilots/maintenance-work-order-change-p2-g13",
+      "execution": {
+        "directory": "C:\\Users\\zdw00\\Desktop\\Software IR\\target\\msf\\s\\datasets\\sir\\pilots\\maintenance-work-order-change-p2-g13\\checks\\78f8fd29254645cb9e9519fffe7f63fb",
+        "stdout_sha256": "430871a25863ba25955ce48e99dcaab4c4b9747d0d80f07734619b3189ec47fa"
+      },
+      "gates": {
+        "build": "NOT_RUN",
+        "business": "NOT_RUN",
+        "start": "NOT_RUN",
+        "static": "PASSED"
+      },
+      "oracle_sha256": "bdfa48e02daf706b922d1c9011d6632eb276aeba1597bee42738341741ce6b44",
+      "origin": "existing_reference",
+      "reference_sha256": "bfe04bc9b91f970f4de151d54e686a38b68872b71a7da535dd4df362dd39be32",
+      "static_result": {
+        "diagnostics": [],
+        "digest": "e8611722bafd41f5ba6bdc6f5c81d64e77870b9da01191376c42adf2fb622b3b",
+        "fileCount": 55,
+        "id": "maintenance-work-order-change-p2-v1-reference",
+        "ok": true,
+        "sourceSha256": "bfe04bc9b91f970f4de151d54e686a38b68872b71a7da535dd4df362dd39be32",
+        "stage": "GENERATION"
+      },
+      "system_sha256": "5f40588ce689cf200ebd266d0fe8d3b570dbe11f017b376ccf04102d767fb665",
+      "task_id": "maintenance-work-order-change-p2-v1",
+      "task_sha256": "089f6eff14239236b016d49f194ef918b282c4f47630e32615a6801a5974c5b3",
+      "toolchain_core_sha256": "023ee2c7b9e6988b90b0516bdb3e4b252afb6133e8782ebf6f2fe8be73dbb48a"
+    },
+    {
+      "base_sha256": "3ffa5ff966f5159e792230e53637acfae18a268608207d311cd0a99c863d19f7",
+      "bundle": "datasets/sir/pilots/maintenance-work-order-change-p3-g13",
+      "execution": {
+        "directory": "C:\\Users\\zdw00\\Desktop\\Software IR\\target\\msf\\s\\datasets\\sir\\pilots\\maintenance-work-order-change-p3-g13\\checks\\4955b5b875fb41678d73ac0843c80bb4",
+        "stdout_sha256": "7c6f464c40b24a709546595785e565105f302fae4abb608c22a637246f1f9058"
+      },
+      "gates": {
+        "build": "NOT_RUN",
+        "business": "NOT_RUN",
+        "start": "NOT_RUN",
+        "static": "PASSED"
+      },
+      "oracle_sha256": "bdfa48e02daf706b922d1c9011d6632eb276aeba1597bee42738341741ce6b44",
+      "origin": "existing_reference",
+      "reference_sha256": "bfe04bc9b91f970f4de151d54e686a38b68872b71a7da535dd4df362dd39be32",
+      "static_result": {
+        "diagnostics": [],
+        "digest": "e8611722bafd41f5ba6bdc6f5c81d64e77870b9da01191376c42adf2fb622b3b",
+        "fileCount": 55,
+        "id": "maintenance-work-order-change-p3-v1-reference",
+        "ok": true,
+        "sourceSha256": "bfe04bc9b91f970f4de151d54e686a38b68872b71a7da535dd4df362dd39be32",
+        "stage": "GENERATION"
+      },
+      "system_sha256": "5f40588ce689cf200ebd266d0fe8d3b570dbe11f017b376ccf04102d767fb665",
+      "task_id": "maintenance-work-order-change-p3-v1",
+      "task_sha256": "cfbfbcb1fa733703a38a833fcce605ff96f0e10ebe0606a5f118439bc6053975",
+      "toolchain_core_sha256": "023ee2c7b9e6988b90b0516bdb3e4b252afb6133e8782ebf6f2fe8be73dbb48a"
+    },
+    {
+      "base_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bundle": "datasets/sir/pilots/maintenance-work-order-scratch-g13",
+      "execution": {
+        "directory": "C:\\Users\\zdw00\\Desktop\\Software IR\\target\\msf\\s\\datasets\\sir\\pilots\\maintenance-work-order-scratch-g13\\checks\\829a3a34f6f744b3994bfb31de38ba5e",
+        "stdout_sha256": "6f169d24f0601b0e7cce0b7d83da8ba14689937e9d83bf834b3988659a763d12"
+      },
+      "gates": {
+        "build": "NOT_RUN",
+        "business": "NOT_RUN",
+        "start": "NOT_RUN",
+        "static": "PASSED"
+      },
+      "oracle_sha256": "bdfa48e02daf706b922d1c9011d6632eb276aeba1597bee42738341741ce6b44",
+      "origin": "existing_reference",
+      "reference_sha256": "bfe04bc9b91f970f4de151d54e686a38b68872b71a7da535dd4df362dd39be32",
+      "static_result": {
+        "diagnostics": [],
+        "digest": "e8611722bafd41f5ba6bdc6f5c81d64e77870b9da01191376c42adf2fb622b3b",
+        "fileCount": 55,
+        "id": "maintenance-work-order-scratch-v1-reference",
+        "ok": true,
+        "sourceSha256": "bfe04bc9b91f970f4de151d54e686a38b68872b71a7da535dd4df362dd39be32",
+        "stage": "GENERATION"
+      },
+      "system_sha256": "5f40588ce689cf200ebd266d0fe8d3b570dbe11f017b376ccf04102d767fb665",
+      "task_id": "maintenance-work-order-scratch-v1",
+      "task_sha256": "5b775f0f0c59c87e2f3c0984de439afc9d598f9d54242966dc23789a3ba37ac6",
+      "toolchain_core_sha256": "023ee2c7b9e6988b90b0516bdb3e4b252afb6133e8782ebf6f2fe8be73dbb48a"
+    },
+    {
+      "base_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bundle": "datasets/sir/pilots/maintenance-work-order-scratch-p1-g13",
+      "execution": {
+        "directory": "C:\\Users\\zdw00\\Desktop\\Software IR\\target\\msf\\s\\datasets\\sir\\pilots\\maintenance-work-order-scratch-p1-g13\\checks\\bd1b4828a91c4692862a062cd3b640f0",
+        "stdout_sha256": "57b9dd879d5e644da732d7b82f25087499aa99ef28b6a75b68ebb29b7d7d0935"
+      },
+      "gates": {
+        "build": "NOT_RUN",
+        "business": "NOT_RUN",
+        "start": "NOT_RUN",
+        "static": "PASSED"
+      },
+      "oracle_sha256": "bdfa48e02daf706b922d1c9011d6632eb276aeba1597bee42738341741ce6b44",
+      "origin": "existing_reference",
+      "reference_sha256": "bfe04bc9b91f970f4de151d54e686a38b68872b71a7da535dd4df362dd39be32",
+      "static_result": {
+        "diagnostics": [],
+        "digest": "e8611722bafd41f5ba6bdc6f5c81d64e77870b9da01191376c42adf2fb622b3b",
+        "fileCount": 55,
+        "id": "maintenance-work-order-scratch-p1-v1-reference",
+        "ok": true,
+        "sourceSha256": "bfe04bc9b91f970f4de151d54e686a38b68872b71a7da535dd4df362dd39be32",
+        "stage": "GENERATION"
+      },
+      "system_sha256": "5f40588ce689cf200ebd266d0fe8d3b570dbe11f017b376ccf04102d767fb665",
+      "task_id": "maintenance-work-order-scratch-p1-v1",
+      "task_sha256": "57f07e036f33f90eee9a43efb22c13fa214f532ec0f90bdaaf6d1bed101bce97",
+      "toolchain_core_sha256": "023ee2c7b9e6988b90b0516bdb3e4b252afb6133e8782ebf6f2fe8be73dbb48a"
+    },
+    {
+      "base_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bundle": "datasets/sir/pilots/maintenance-work-order-scratch-p2-g13",
+      "execution": {
+        "directory": "C:\\Users\\zdw00\\Desktop\\Software IR\\target\\msf\\s\\datasets\\sir\\pilots\\maintenance-work-order-scratch-p2-g13\\checks\\2a58e20fc62746c8a494ac91b40fc56c",
+        "stdout_sha256": "48c058535f62c9a19650349dd4eb021d2a2e247f86468f3c7d5218f87b212fba"
+      },
+      "gates": {
+        "build": "NOT_RUN",
+        "business": "NOT_RUN",
+        "start": "NOT_RUN",
+        "static": "PASSED"
+      },
+      "oracle_sha256": "bdfa48e02daf706b922d1c9011d6632eb276aeba1597bee42738341741ce6b44",
+      "origin": "existing_reference",
+      "reference_sha256": "bfe04bc9b91f970f4de151d54e686a38b68872b71a7da535dd4df362dd39be32",
+      "static_result": {
+        "diagnostics": [],
+        "digest": "e8611722bafd41f5ba6bdc6f5c81d64e77870b9da01191376c42adf2fb622b3b",
+        "fileCount": 55,
+        "id": "maintenance-work-order-scratch-p2-v1-reference",
+        "ok": true,
+        "sourceSha256": "bfe04bc9b91f970f4de151d54e686a38b68872b71a7da535dd4df362dd39be32",
+        "stage": "GENERATION"
+      },
+      "system_sha256": "5f40588ce689cf200ebd266d0fe8d3b570dbe11f017b376ccf04102d767fb665",
+      "task_id": "maintenance-work-order-scratch-p2-v1",
+      "task_sha256": "e116ac4657a8dc4adcdad30629c2ecab292dd396caa341e0df0b5a6b059eb00d",
+      "toolchain_core_sha256": "023ee2c7b9e6988b90b0516bdb3e4b252afb6133e8782ebf6f2fe8be73dbb48a"
+    },
+    {
+      "base_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bundle": "datasets/sir/pilots/maintenance-work-order-scratch-p3-g13",
+      "execution": {
+        "directory": "C:\\Users\\zdw00\\Desktop\\Software IR\\target\\msf\\s\\datasets\\sir\\pilots\\maintenance-work-order-scratch-p3-g13\\checks\\f150831a71934d8987c1b6a6a9abadff",
+        "stdout_sha256": "df0ba2f0b10f1ec3e6f33597592824ff99d2537052106f3eff1237175fb40f7d"
+      },
+      "gates": {
+        "build": "NOT_RUN",
+        "business": "NOT_RUN",
+        "start": "NOT_RUN",
+        "static": "PASSED"
+      },
+      "oracle_sha256": "bdfa48e02daf706b922d1c9011d6632eb276aeba1597bee42738341741ce6b44",
+      "origin": "existing_reference",
+      "reference_sha256": "bfe04bc9b91f970f4de151d54e686a38b68872b71a7da535dd4df362dd39be32",
+      "static_result": {
+        "diagnostics": [],
+        "digest": "e8611722bafd41f5ba6bdc6f5c81d64e77870b9da01191376c42adf2fb622b3b",
+        "fileCount": 55,
+        "id": "maintenance-work-order-scratch-p3-v1-reference",
+        "ok": true,
+        "sourceSha256": "bfe04bc9b91f970f4de151d54e686a38b68872b71a7da535dd4df362dd39be32",
+        "stage": "GENERATION"
+      },
+      "system_sha256": "5f40588ce689cf200ebd266d0fe8d3b570dbe11f017b376ccf04102d767fb665",
+      "task_id": "maintenance-work-order-scratch-p3-v1",
+      "task_sha256": "3a11190e3d70b71561adb3ea12f2ad904ccc63c2a493ea8287868baeac25a4d2",
+      "toolchain_core_sha256": "023ee2c7b9e6988b90b0516bdb3e4b252afb6133e8782ebf6f2fe8be73dbb48a"
+    },
+    {
+      "base_sha256": "ea9225ba705e3982732ec62c9f00e87b1eea67cd55f31f167f163c9d617473d8",
+      "bundle": "datasets/sir/pilots/staffing-shift-roster-change-g13",
+      "execution": {
+        "directory": "C:\\Users\\zdw00\\Desktop\\Software IR\\target\\msf\\s\\datasets\\sir\\pilots\\staffing-shift-roster-change-g13\\checks\\a6069a159be14d41b57d73c605b72633",
+        "stdout_sha256": "82709c7e6956e0ccbb76331005ad48c6b0a9fb38a1db38885543028208478d42"
+      },
+      "gates": {
+        "build": "NOT_RUN",
+        "business": "NOT_RUN",
+        "start": "NOT_RUN",
+        "static": "PASSED"
+      },
+      "oracle_sha256": "b95c7e56722148eb2b60549c6a091a7a7e260d01211b10afded1defd81d70035",
+      "origin": "existing_reference",
+      "reference_sha256": "5d1cf02d377906ab75004fab1f5ae8f92a7f027da16b5c7617c87e877974c2d0",
+      "static_result": {
+        "diagnostics": [],
+        "digest": "56afec0a25fe86c04e8076e16f8845f31a61770f16dfd2c7b8ecc323e617eea3",
+        "fileCount": 56,
+        "id": "staffing-shift-roster-change-v1-reference",
+        "ok": true,
+        "sourceSha256": "5d1cf02d377906ab75004fab1f5ae8f92a7f027da16b5c7617c87e877974c2d0",
+        "stage": "GENERATION"
+      },
+      "system_sha256": "5f40588ce689cf200ebd266d0fe8d3b570dbe11f017b376ccf04102d767fb665",
+      "task_id": "staffing-shift-roster-change-v1",
+      "task_sha256": "f7b18b05fbb667b7628e09a5cf24fba08b00280620df5eac8961c39ad4ec8783",
+      "toolchain_core_sha256": "023ee2c7b9e6988b90b0516bdb3e4b252afb6133e8782ebf6f2fe8be73dbb48a"
+    },
+    {
+      "base_sha256": "ea9225ba705e3982732ec62c9f00e87b1eea67cd55f31f167f163c9d617473d8",
+      "bundle": "datasets/sir/pilots/staffing-shift-roster-change-p1-g13",
+      "execution": {
+        "directory": "C:\\Users\\zdw00\\Desktop\\Software IR\\target\\msf\\s\\datasets\\sir\\pilots\\staffing-shift-roster-change-p1-g13\\checks\\d58d9b646c7c4322b832e8cdf0e29342",
+        "stdout_sha256": "8bf150de5276dedad84d5f9d1ebe801932d487dfdbd67a38c3ec910312825f45"
+      },
+      "gates": {
+        "build": "NOT_RUN",
+        "business": "NOT_RUN",
+        "start": "NOT_RUN",
+        "static": "PASSED"
+      },
+      "oracle_sha256": "b95c7e56722148eb2b60549c6a091a7a7e260d01211b10afded1defd81d70035",
+      "origin": "existing_reference",
+      "reference_sha256": "5d1cf02d377906ab75004fab1f5ae8f92a7f027da16b5c7617c87e877974c2d0",
+      "static_result": {
+        "diagnostics": [],
+        "digest": "56afec0a25fe86c04e8076e16f8845f31a61770f16dfd2c7b8ecc323e617eea3",
+        "fileCount": 56,
+        "id": "staffing-shift-roster-change-p1-v1-reference",
+        "ok": true,
+        "sourceSha256": "5d1cf02d377906ab75004fab1f5ae8f92a7f027da16b5c7617c87e877974c2d0",
+        "stage": "GENERATION"
+      },
+      "system_sha256": "5f40588ce689cf200ebd266d0fe8d3b570dbe11f017b376ccf04102d767fb665",
+      "task_id": "staffing-shift-roster-change-p1-v1",
+      "task_sha256": "df618cfe05389cec9d80f08061970a94af3862515226d585fcb31f94796159ea",
+      "toolchain_core_sha256": "023ee2c7b9e6988b90b0516bdb3e4b252afb6133e8782ebf6f2fe8be73dbb48a"
+    },
+    {
+      "base_sha256": "ea9225ba705e3982732ec62c9f00e87b1eea67cd55f31f167f163c9d617473d8",
+      "bundle": "datasets/sir/pilots/staffing-shift-roster-change-p2-g13",
+      "execution": {
+        "directory": "C:\\Users\\zdw00\\Desktop\\Software IR\\target\\msf\\s\\datasets\\sir\\pilots\\staffing-shift-roster-change-p2-g13\\checks\\cb81492b366f4071ae93573432b4b636",
+        "stdout_sha256": "148d6eb8ee06914d61b563044a95e32680f343ed624a0de47d7b8d0617be44a6"
+      },
+      "gates": {
+        "build": "NOT_RUN",
+        "business": "NOT_RUN",
+        "start": "NOT_RUN",
+        "static": "PASSED"
+      },
+      "oracle_sha256": "b95c7e56722148eb2b60549c6a091a7a7e260d01211b10afded1defd81d70035",
+      "origin": "existing_reference",
+      "reference_sha256": "5d1cf02d377906ab75004fab1f5ae8f92a7f027da16b5c7617c87e877974c2d0",
+      "static_result": {
+        "diagnostics": [],
+        "digest": "56afec0a25fe86c04e8076e16f8845f31a61770f16dfd2c7b8ecc323e617eea3",
+        "fileCount": 56,
+        "id": "staffing-shift-roster-change-p2-v1-reference",
+        "ok": true,
+        "sourceSha256": "5d1cf02d377906ab75004fab1f5ae8f92a7f027da16b5c7617c87e877974c2d0",
+        "stage": "GENERATION"
+      },
+      "system_sha256": "5f40588ce689cf200ebd266d0fe8d3b570dbe11f017b376ccf04102d767fb665",
+      "task_id": "staffing-shift-roster-change-p2-v1",
+      "task_sha256": "88973e8e48e187079e9233f4d2b00b2e55cd7729ecd43eee7fb97de76b1215b9",
+      "toolchain_core_sha256": "023ee2c7b9e6988b90b0516bdb3e4b252afb6133e8782ebf6f2fe8be73dbb48a"
+    },
+    {
+      "base_sha256": "ea9225ba705e3982732ec62c9f00e87b1eea67cd55f31f167f163c9d617473d8",
+      "bundle": "datasets/sir/pilots/staffing-shift-roster-change-p3-g13",
+      "execution": {
+        "directory": "C:\\Users\\zdw00\\Desktop\\Software IR\\target\\msf\\s\\datasets\\sir\\pilots\\staffing-shift-roster-change-p3-g13\\checks\\f5311c21681246169f8fd5a609c6b097",
+        "stdout_sha256": "2afc441b88cb7ecc129773a1f34d5cabdd434eb4559d256c5c662c1584b1950a"
+      },
+      "gates": {
+        "build": "NOT_RUN",
+        "business": "NOT_RUN",
+        "start": "NOT_RUN",
+        "static": "PASSED"
+      },
+      "oracle_sha256": "b95c7e56722148eb2b60549c6a091a7a7e260d01211b10afded1defd81d70035",
+      "origin": "existing_reference",
+      "reference_sha256": "5d1cf02d377906ab75004fab1f5ae8f92a7f027da16b5c7617c87e877974c2d0",
+      "static_result": {
+        "diagnostics": [],
+        "digest": "56afec0a25fe86c04e8076e16f8845f31a61770f16dfd2c7b8ecc323e617eea3",
+        "fileCount": 56,
+        "id": "staffing-shift-roster-change-p3-v1-reference",
+        "ok": true,
+        "sourceSha256": "5d1cf02d377906ab75004fab1f5ae8f92a7f027da16b5c7617c87e877974c2d0",
+        "stage": "GENERATION"
+      },
+      "system_sha256": "5f40588ce689cf200ebd266d0fe8d3b570dbe11f017b376ccf04102d767fb665",
+      "task_id": "staffing-shift-roster-change-p3-v1",
+      "task_sha256": "833ab08a4ef1536e9f151ee635b8d9455464aa8894ed13a42f3730c3ec88189a",
+      "toolchain_core_sha256": "023ee2c7b9e6988b90b0516bdb3e4b252afb6133e8782ebf6f2fe8be73dbb48a"
+    },
+    {
+      "base_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bundle": "datasets/sir/pilots/staffing-shift-roster-scratch-g13",
+      "execution": {
+        "directory": "C:\\Users\\zdw00\\Desktop\\Software IR\\target\\msf\\s\\datasets\\sir\\pilots\\staffing-shift-roster-scratch-g13\\checks\\d2f337e0cc2e40e3a6a4330b2d4a52df",
+        "stdout_sha256": "0242506dac9e1dca946fce39d2c77cec40556ebf3ea2edacbde288d395d164dc"
+      },
+      "gates": {
+        "build": "NOT_RUN",
+        "business": "NOT_RUN",
+        "start": "NOT_RUN",
+        "static": "PASSED"
+      },
+      "oracle_sha256": "b95c7e56722148eb2b60549c6a091a7a7e260d01211b10afded1defd81d70035",
+      "origin": "existing_reference",
+      "reference_sha256": "5d1cf02d377906ab75004fab1f5ae8f92a7f027da16b5c7617c87e877974c2d0",
+      "static_result": {
+        "diagnostics": [],
+        "digest": "56afec0a25fe86c04e8076e16f8845f31a61770f16dfd2c7b8ecc323e617eea3",
+        "fileCount": 56,
+        "id": "staffing-shift-roster-scratch-v1-reference",
+        "ok": true,
+        "sourceSha256": "5d1cf02d377906ab75004fab1f5ae8f92a7f027da16b5c7617c87e877974c2d0",
+        "stage": "GENERATION"
+      },
+      "system_sha256": "5f40588ce689cf200ebd266d0fe8d3b570dbe11f017b376ccf04102d767fb665",
+      "task_id": "staffing-shift-roster-scratch-v1",
+      "task_sha256": "005aeba62642a9f8bb39630ab91a677760f3d90d8a5a5135f231dbd195df951b",
+      "toolchain_core_sha256": "023ee2c7b9e6988b90b0516bdb3e4b252afb6133e8782ebf6f2fe8be73dbb48a"
+    },
+    {
+      "base_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bundle": "datasets/sir/pilots/staffing-shift-roster-scratch-p1-g13",
+      "execution": {
+        "directory": "C:\\Users\\zdw00\\Desktop\\Software IR\\target\\msf\\s\\datasets\\sir\\pilots\\staffing-shift-roster-scratch-p1-g13\\checks\\bcb67c9a75df4756819cb9f78be3c442",
+        "stdout_sha256": "6c58dbb6586756b146d3b85ac1a4a74188c76872fa6b5c3f47971af4a7ace84f"
+      },
+      "gates": {
+        "build": "NOT_RUN",
+        "business": "NOT_RUN",
+        "start": "NOT_RUN",
+        "static": "PASSED"
+      },
+      "oracle_sha256": "b95c7e56722148eb2b60549c6a091a7a7e260d01211b10afded1defd81d70035",
+      "origin": "existing_reference",
+      "reference_sha256": "5d1cf02d377906ab75004fab1f5ae8f92a7f027da16b5c7617c87e877974c2d0",
+      "static_result": {
+        "diagnostics": [],
+        "digest": "56afec0a25fe86c04e8076e16f8845f31a61770f16dfd2c7b8ecc323e617eea3",
+        "fileCount": 56,
+        "id": "staffing-shift-roster-scratch-p1-v1-reference",
+        "ok": true,
+        "sourceSha256": "5d1cf02d377906ab75004fab1f5ae8f92a7f027da16b5c7617c87e877974c2d0",
+        "stage": "GENERATION"
+      },
+      "system_sha256": "5f40588ce689cf200ebd266d0fe8d3b570dbe11f017b376ccf04102d767fb665",
+      "task_id": "staffing-shift-roster-scratch-p1-v1",
+      "task_sha256": "9512ec986b0aebd301225694ee5a1325c6c2f01060cb8692d870e0271c304dfb",
+      "toolchain_core_sha256": "023ee2c7b9e6988b90b0516bdb3e4b252afb6133e8782ebf6f2fe8be73dbb48a"
+    },
+    {
+      "base_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bundle": "datasets/sir/pilots/staffing-shift-roster-scratch-p2-g13",
+      "execution": {
+        "directory": "C:\\Users\\zdw00\\Desktop\\Software IR\\target\\msf\\s\\datasets\\sir\\pilots\\staffing-shift-roster-scratch-p2-g13\\checks\\f530b50e87c0460c935a0b20abab3a6a",
+        "stdout_sha256": "1914d11d11fde74efd92c6fb4297256c7f001393f58894c6b51fb8b371550bc3"
+      },
+      "gates": {
+        "build": "NOT_RUN",
+        "business": "NOT_RUN",
+        "start": "NOT_RUN",
+        "static": "PASSED"
+      },
+      "oracle_sha256": "b95c7e56722148eb2b60549c6a091a7a7e260d01211b10afded1defd81d70035",
+      "origin": "existing_reference",
+      "reference_sha256": "5d1cf02d377906ab75004fab1f5ae8f92a7f027da16b5c7617c87e877974c2d0",
+      "static_result": {
+        "diagnostics": [],
+        "digest": "56afec0a25fe86c04e8076e16f8845f31a61770f16dfd2c7b8ecc323e617eea3",
+        "fileCount": 56,
+        "id": "staffing-shift-roster-scratch-p2-v1-reference",
+        "ok": true,
+        "sourceSha256": "5d1cf02d377906ab75004fab1f5ae8f92a7f027da16b5c7617c87e877974c2d0",
+        "stage": "GENERATION"
+      },
+      "system_sha256": "5f40588ce689cf200ebd266d0fe8d3b570dbe11f017b376ccf04102d767fb665",
+      "task_id": "staffing-shift-roster-scratch-p2-v1",
+      "task_sha256": "d5f45574c6fbb9088f4bc5770c2bce9ce575579a5e11cf1d60349eab3d09b05b",
+      "toolchain_core_sha256": "023ee2c7b9e6988b90b0516bdb3e4b252afb6133e8782ebf6f2fe8be73dbb48a"
+    },
+    {
+      "base_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bundle": "datasets/sir/pilots/staffing-shift-roster-scratch-p3-g13",
+      "execution": {
+        "directory": "C:\\Users\\zdw00\\Desktop\\Software IR\\target\\msf\\s\\datasets\\sir\\pilots\\staffing-shift-roster-scratch-p3-g13\\checks\\543e9618ceb44d6ab76f490c18a4d6ec",
+        "stdout_sha256": "a1b8373d405da335b4e8c04b1b610f866cdffcc3eb6f0c4fe9cde19471ad7be5"
+      },
+      "gates": {
+        "build": "NOT_RUN",
+        "business": "NOT_RUN",
+        "start": "NOT_RUN",
+        "static": "PASSED"
+      },
+      "oracle_sha256": "b95c7e56722148eb2b60549c6a091a7a7e260d01211b10afded1defd81d70035",
+      "origin": "existing_reference",
+      "reference_sha256": "5d1cf02d377906ab75004fab1f5ae8f92a7f027da16b5c7617c87e877974c2d0",
+      "static_result": {
+        "diagnostics": [],
+        "digest": "56afec0a25fe86c04e8076e16f8845f31a61770f16dfd2c7b8ecc323e617eea3",
+        "fileCount": 56,
+        "id": "staffing-shift-roster-scratch-p3-v1-reference",
+        "ok": true,
+        "sourceSha256": "5d1cf02d377906ab75004fab1f5ae8f92a7f027da16b5c7617c87e877974c2d0",
+        "stage": "GENERATION"
+      },
+      "system_sha256": "5f40588ce689cf200ebd266d0fe8d3b570dbe11f017b376ccf04102d767fb665",
+      "task_id": "staffing-shift-roster-scratch-p3-v1",
+      "task_sha256": "56780517368822afc740ccf8ec5f253a974bb9542b12ae18f9ded6790abfb02f",
+      "toolchain_core_sha256": "023ee2c7b9e6988b90b0516bdb3e4b252afb6133e8782ebf6f2fe8be73dbb48a"
+    }
+  ],
+  "business_qualified_answers_added": 0,
+  "new_teacher_candidates": 0,
+  "prompt": "sir-0.3-general-v10.md",
+  "reference_commit": "5fe4c8339a927fb526c004c276beb4c1c8892996",
+  "reference_runtime_not_inherited": true,
+  "student_data_changed": false
+}

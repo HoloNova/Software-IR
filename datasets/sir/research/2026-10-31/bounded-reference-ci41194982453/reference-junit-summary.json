@@ -1,0 +1,18 @@
+[
+  {
+    "class": "MaintenanceWorkOrderBusinessConformanceIT",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "zipEntry": "sir-toolchain-application/target/surefire-reports/TEST-io.kcg.sir.application.conformance.MaintenanceWorkOrderBusinessConformanceIT.xml"
+  },
+  {
+    "class": "StaffingShiftRosterBusinessConformanceIT",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "zipEntry": "sir-toolchain-application/target/surefire-reports/TEST-io.kcg.sir.application.conformance.StaffingShiftRosterBusinessConformanceIT.xml"
+  }
+]

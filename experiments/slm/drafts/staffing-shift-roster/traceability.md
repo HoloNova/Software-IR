@@ -1,6 +1,6 @@
-# 门店排班题追溯（判卷源码已落地，参考业务 CI FAILED）
+# 门店排班题追溯（参考 CI PASSED；八题已冻结）
 
-family `staffing.shift-roster` / train，基线 `e81200e0e039c5d178c95bbab2f12195ac13f0dd`。规格已确认；现已另获授权并落地Java/IT、DDL/seed和两个workflow；尚无task或合格CI资格，已有失败CI证据见implementation §5。实现入口见§6，验证状态见 [implementation.md](implementation.md)。reference/base最终均GENERATION、diagnostics=[]、56/50文件，真实stdout见spec §0.3；首轮引用排序失败也已登记，不隐去失败。
+family `staffing.shift-roster` / train，基线 `e81200e0e039c5d178c95bbab2f12195ac13f0dd`。规格已确认；现已另获授权并落地Java/IT、DDL/seed和两个workflow；5fe4c833参考CI已通过，本family八题已定义/冻结；当前证据见implementation §7，原失败保留于§5。实现入口见§6，验证状态见 [implementation.md](implementation.md)。reference/base最终均GENERATION、diagnostics=[]、56/50文件，真实stdout见spec §0.3；首轮引用排序失败也已登记，不隐去失败。
 
 ## 1. 参考、base与输入
 
@@ -8,7 +8,7 @@ family `staffing.shift-roster` / train，基线 `e81200e0e039c5d178c95bbab2f1219
 - [base.sir](base.sir)：仅删除GenerateWeeklyShifts、AssignEmployee、ShiftHeadcount三能力，其余字节不动，少三个Controller/Service。base仍有门店/班次/员工/员工编排列表，种子使其可观察；没有运行base HTTP。
 - [contract.json](contract.json)：路由、字段、类型、错误、排序、唯一键、limit及不考容量/区间排他的边界。
 - 两份自然语言全文：[requirement-scratch.md](requirement-scratch.md)（S01–S13）、[requirement-change.md](requirement-change.md)（C01–C08）；编号为非空行次序，最后一行静态输出约定不当作HTTP业务项。spec §5保留同一原文。
-- spec §2/§3的SQL已原样提取到test resources，未执行；保留两个真实联合唯一键和完整外键，但不声称并发去重已验收。
+- spec §2/§3的SQL已原样提取到test resources，并由同SHA CI真实执行；两个联合唯一键、完整外键及三轮并发均已验收。
 
 ## 2. 逐句追溯
 
@@ -55,7 +55,7 @@ X01六请求编同一(103,203)，1×201/5×AlreadyAssigned，只增一关系；X
 
 每轮先重置；目标Shift或Store由控制连接持锁；ready/start同时放行N个独立HTTP客户端；必须看到N个不同运行时连接/事务均进入该目标等待图后释放。观察5秒、请求30秒、整轮35秒；缺锁观测权限NOT_RUN，死锁/500/超时均失败，不能拿顺序执行替代。最终读取六表完整差异，并独立从JDBC重算各班人数与每个唯一键、归属不变量，不从成功请求数推导正确性。实现细则见spec §6.5。
 
-同SHA CI构建/启动通过，业务752项通过、22失败；X01/X02业务通过，X03因band的OGNL错误失败，三轮真实锁屏障均已观测，见implementation §5；就绪/种子/环境/清理是执行器前置，不要求教师实现判卷器。任何未来候选都要独立过四门，不继承参考或其他题资格。
+修复版同SHA CI构建/启动通过，业务870项通过、0失败；X01–X03业务与真实锁屏障全部通过，当前见implementation §7，原OGNL失败保留于§5；就绪/种子/环境/清理是执行器前置，不要求教师实现判卷器。任何未来候选都要独立过四门，不继承参考或其他题资格。
 
 ## 5. 发现与负责人已确认的裁决
 
@@ -63,9 +63,9 @@ X01六请求编同一(103,203)，1×201/5×AlreadyAssigned，只增一关系；X
 - S2：与booking的repeat机制重合，但“空班次→多员工编排、无起止区间/排他”的业务形状不同；负责人已确认接受train隔离结论。若要改成逐周直接为员工占用区间，则过近，应换题或归dev。
 - 负责人已确认S1的关系id排序及不设容量、工资和跨店调动的边界；下一阶段不得自行补业务。保留本题，不启用spec §0.1的production.checklist备选。
 
-规格阶段文档已单独提交；本阶段是在另行授权后落地判卷，并已获负责人一次提交、普通推送与同SHA CI的授权；判卷实现提交未改工具链；CI失败后的根因修复另获本地提交授权，未推送或运行新CI。已有失败CI证据，尚无四门资格，task冻结仍未办理。
+规格阶段文档已单独提交；本阶段是在另行授权后落地判卷，并已获负责人一次提交、普通推送与同SHA CI的授权；判卷实现之后，两处工具链根因修复另获提交、推送与CI授权，5fe4c833验收通过；当前已完成八题定义/冻结，不触发新CI或调用模型。
 
-## 6. 本阶段源码入口（尚无业务资格）
+## 6. 判卷源码入口
 
 源码目录为 `sir-toolchain-application/src/test/java/io/kcg/sir/application/conformance/`。
 
@@ -81,4 +81,10 @@ X01六请求编同一(103,203)，1×201/5×AlreadyAssigned，只增一关系；X
 | 真实N客户端/锁等待/收齐与释放 | `BoundedProblemRace`，复用既有 `BlogLockWaits` |
 | 六表种子/夹具/external/执行器 | `StaffingShiftRosterBusinessConformanceIT` → `BoundedProblemConformance` / `BoundedProblemFixture` → 既有 `BusinessSliceHarness` |
 
-运行资源为 `valid/staffing-shift-roster.sir` 和 `conformance/mysql/staffing-shift-roster-{ddl,seed}.sql`。两个workflow接入同一IT；既有Harness切换参考或候选，不改变oracle。真实业务与并发已执行且参考整体FAILED，证据与原因见 [implementation.md §5](implementation.md#5-已执行的同-sha-cifailed)。
+运行资源为 `valid/staffing-shift-roster.sir` 和 `conformance/mysql/staffing-shift-roster-{ddl,seed}.sql`。两个workflow接入同一IT；既有Harness切换参考或候选，不改变oracle。真实业务与并发已执行且参考整体PASSED，当前证据见 [implementation.md §7](implementation.md#7-修复版同-sha-ci-验收passed当前参考状态)；原失败证据及原因保留在§5。
+
+## 7. 原题与等义变体的冻结追溯
+
+本family的change/scratch原题各1份，以及各3份p1/p2/p3，共8份任务均在 `experiments/slm/tasks/`；相应 `*-g13` 批次在 `datasets/sir/pilots/`。所有原S/C条款在每个变体恰出现一次，标识符和数字不变，顺序变化仅用于彼此独立的条款。具体映射见共享证据目录 `requirements-equivalence.json`；不能把字符串核对冒充自然语言等义的自动证明。
+
+变体与原题共用接口合同、参考、base和判卷，不引入额外业务。冻结及静态结果见implementation §8，原始业务资格仍绑定5fe4c833/41194982453，批次中的参考运行门保持NOT_RUN，未来教师独立判卷；没有新合格答案或训练数据。

@@ -1,0 +1,231 @@
+sir 0.3
+
+software StoreRoster {
+  metadata {
+    displayName "Store Shift Roster";
+    namespace "example.staffing";
+  }
+  target {
+    language java 21;
+    framework spring_boot;
+    persistence mybatis_plus;
+    database mysql;
+    build maven;
+    interface rest;
+  }
+  sources { }
+  imports { }
+  declarations {
+    enum ShiftBand { OPENING, CLOSING }
+    entity User persistent {
+      identity id: Id generated auto;
+      field name: Name unique;
+    }
+    entity AccessToken persistent {
+      identity id: Token generated uuid;
+      field owner: Ref<User>;
+      field expiresAt: Moment;
+      credential subject owner expires expiresAt;
+    }
+    entity Store persistent {
+      identity id: Id generated auto;
+      field name: Name;
+      field manager: Ref<User>;
+    }
+    entity Employee persistent {
+      identity id: Id generated auto;
+      field store: Ref<Store>;
+      field name: Name;
+    }
+    entity Shift persistent {
+      identity id: Id generated auto;
+      field store: Ref<Store>;
+      field day: Day;
+      field band: ShiftBand;
+      unique (store, day, band);
+    }
+    entity Assignment persistent {
+      identity id: Id generated auto;
+      field employee: Ref<Employee>;
+      field shift: Ref<Shift>;
+      unique (employee, shift);
+    }
+    view StoreView from Store { field id: Id; field name: Name; }
+    view EmployeeView from Employee {
+      field id: Id;
+      field store: Ref<Store>;
+      field name: Name;
+    }
+    view ShiftView from Shift {
+      field id: Id;
+      field store: Ref<Store>;
+      field day: Day;
+      field band: ShiftBand;
+    }
+    view AssignmentView from Assignment {
+      field id: Id;
+      field employee: Ref<Employee>;
+      field shift: Ref<Shift>;
+    }
+    input PageQuery { field page: PageNo; field size: PageSize; }
+    input StorePage { field storeId: Id; field page: PageNo; field size: PageSize; }
+    input WeeklyShifts {
+      field storeId: Id;
+      field firstDay: Day;
+      field band: ShiftBand;
+      field weeks: Quantity;
+    }
+    input AssignInput { field shiftId: Id; field employeeId: Id; }
+    input ShiftRef { field shiftId: Id; }
+    input EmployeePage { field employeeId: Id; field page: PageNo; field size: PageSize; }
+    error AlreadyAssigned http 409;
+    error BadPage http 400;
+    error EmployeeNotFound http 404;
+    error Forbidden http 403;
+    error ShiftExists http 409;
+    error ShiftNotFound http 404;
+    error StoreNotFound http 404;
+    error TooManyWeeks http 409;
+    error WrongStore http 409;
+
+    capability ListStores {
+      input PageQuery;
+      output Page<StoreView>;
+      fails BadPage;
+      requires readonly;
+      expose query at "/stores";
+      workflow {
+        find Store where true order by name ascending, id ascending
+          Page input.page, input.size else BadPage as rows;
+        return rows;
+      }
+    }
+    capability GenerateWeeklyShifts {
+      actor Ref<User>;
+      input WeeklyShifts;
+      output Unit;
+      fails Forbidden;
+      fails ShiftExists;
+      fails StoreNotFound;
+      fails TooManyWeeks;
+      requires authenticated;
+      requires atomic;
+      expose command at "/stores/{storeId}/weekly-shifts";
+      workflow {
+        load Store by input.storeId as store for update else StoreNotFound;
+        validate store.manager == actor else Forbidden;
+        repeat input.weeks times limit 8 else TooManyWeeks as week {
+          exists Shift where item.store == store and item.day == addDays(input.firstDay, week * 7) and item.band == input.band as found;
+          validate not found else ShiftExists;
+          create Shift as made {
+            store: store;
+            day: addDays(input.firstDay, week * 7);
+            band: input.band;
+          }
+          persist made else ShiftExists;
+        }
+        return unit;
+      }
+    }
+    capability StoreShifts {
+      actor Ref<User>;
+      input StorePage;
+      output Page<ShiftView>;
+      fails BadPage;
+      fails Forbidden;
+      fails StoreNotFound;
+      requires authenticated;
+      requires readonly;
+      expose query at "/stores/{storeId}/shifts";
+      workflow {
+        load Store by input.storeId as store else StoreNotFound;
+        validate store.manager == actor else Forbidden;
+        find Shift where item.store == store order by day ascending, id ascending
+          Page input.page, input.size else BadPage as rows;
+        return rows;
+      }
+    }
+    capability StoreEmployees {
+      actor Ref<User>;
+      input StorePage;
+      output Page<EmployeeView>;
+      fails BadPage;
+      fails Forbidden;
+      fails StoreNotFound;
+      requires authenticated;
+      requires readonly;
+      expose query at "/stores/{storeId}/employees";
+      workflow {
+        load Store by input.storeId as store else StoreNotFound;
+        validate store.manager == actor else Forbidden;
+        find Employee where item.store == store order by name ascending, id ascending
+          Page input.page, input.size else BadPage as rows;
+        return rows;
+      }
+    }
+    capability AssignEmployee {
+      actor Ref<User>;
+      input AssignInput;
+      output AssignmentView;
+      fails AlreadyAssigned;
+      fails EmployeeNotFound;
+      fails Forbidden;
+      fails ShiftNotFound;
+      fails StoreNotFound;
+      fails WrongStore;
+      requires authenticated;
+      requires atomic;
+      expose command at "/shifts/{shiftId}/assignments";
+      workflow {
+        load Shift by input.shiftId as shift for update else ShiftNotFound;
+        load Store by shift.store as store else StoreNotFound;
+        validate store.manager == actor else Forbidden;
+        load Employee by input.employeeId as employee else EmployeeNotFound;
+        validate employee.store == store else WrongStore;
+        exists Assignment where item.employee == employee and item.shift == shift as found;
+        validate not found else AlreadyAssigned;
+        create Assignment as made { employee: employee; shift: shift; }
+        persist made else AlreadyAssigned;
+        return made;
+      }
+    }
+    capability ShiftHeadcount {
+      actor Ref<User>;
+      input ShiftRef;
+      output Serial;
+      fails Forbidden;
+      fails ShiftNotFound;
+      fails StoreNotFound;
+      requires authenticated;
+      requires readonly;
+      expose query at "/shifts/{shiftId}/headcount";
+      workflow {
+        load Shift by input.shiftId as shift else ShiftNotFound;
+        load Store by shift.store as store else StoreNotFound;
+        validate store.manager == actor else Forbidden;
+        count Assignment where item.shift == shift as headcount;
+        return headcount;
+      }
+    }
+    capability EmployeeRoster {
+      actor Ref<User>;
+      input EmployeePage;
+      output Page<AssignmentView>;
+      fails BadPage;
+      fails EmployeeNotFound;
+      fails Forbidden;
+      fails StoreNotFound;
+      requires authenticated;
+      requires readonly;
+      expose query at "/employees/{employeeId}/roster";
+      workflow {
+        load Employee by input.employeeId as employee else EmployeeNotFound;
+        load Store by employee.store as store else StoreNotFound;
+        validate store.manager == actor else Forbidden;
+        find Assignment where item.employee == employee order by id ascending
+          Page input.page, input.size else BadPage as rows;
+        return rows;
+      }
+    }
+  }
+}

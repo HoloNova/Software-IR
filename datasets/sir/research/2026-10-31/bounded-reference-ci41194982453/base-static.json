@@ -1,0 +1,27 @@
+{
+  "execution": {
+    "directory": "C:\\Users\\zdw00\\Desktop\\Software IR\\datasets\\sir\\research\\2026-10-31\\bounded-reference-ci41194982453\\checks\\884863a27e00482c87bdbd4ae65fb7c6",
+    "stdout_sha256": "d6334093c2b708a9d9536bac8e8b2d05f928ec8ea5a11bbffa672d915caf3014"
+  },
+  "results": [
+    {
+      "diagnostics": [],
+      "digest": "859082d49123a8a9cb652b513612ce0eb259568a2f7078e0f32f6f02d7757308",
+      "fileCount": 47,
+      "id": "maintenance-work-order-base-static-only",
+      "ok": true,
+      "sourceSha256": "3ffa5ff966f5159e792230e53637acfae18a268608207d311cd0a99c863d19f7",
+      "stage": "GENERATION"
+    },
+    {
+      "diagnostics": [],
+      "digest": "e997af407f9953520e05ee5339b29cb60626be576582afa2d8e64bfb32f4a2ea",
+      "fileCount": 50,
+      "id": "staffing-shift-roster-base-static-only",
+      "ok": true,
+      "sourceSha256": "ea9225ba705e3982732ec62c9f00e87b1eea67cd55f31f167f163c9d617473d8",
+      "stage": "GENERATION"
+    }
+  ],
+  "scope": "static generation only; base HTTP negative NOT_RUN"
+}

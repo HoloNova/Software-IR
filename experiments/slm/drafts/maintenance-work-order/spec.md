@@ -1,10 +1,10 @@
-# 设施报修与例行巡检工单题出题规格（已确认；判卷源码已落地，参考业务 CI FAILED）
+# 设施报修与例行巡检工单题出题规格（已确认；参考 CI PASSED）
 
 ## 0. 定位、基线与交付边界
 
-family=`maintenance.work-order`，split=`train`；建议题号 `maintenance-work-order-change-v1` / `maintenance-work-order-scratch-v1`（未创建 task）。基线为 main `e81200e0e039c5d178c95bbab2f12195ac13f0dd`。负责人已确认本规格、M1/M2/M3边界及train隔离结论；本目录仅为出题设计，不是已验收业务。
+family=`maintenance.work-order`，split=`train`；正式原题 `maintenance-work-order-change-v1` / `maintenance-work-order-scratch-v1`，另有各3份p1/p2/p3等义表述。基线为 main `e81200e0e039c5d178c95bbab2f12195ac13f0dd`。负责人已确认本规格、M1/M2/M3边界及train隔离结论；需求边界保持；参考已由同SHA CI真实验收，任务与批次进展见implementation §7及共享冻结记录。
 
-规格阶段仅交付本目录七份设计文件。负责人随后明确授权判卷落地：现已有参考资源、DDL/seed、Java业务IT及两个workflow接入；实现和定向检查见 [implementation.md](implementation.md)。未改工具链、参考/base或题面，不修改另一会话的fitness/events；不冻结任务、不调用模型；负责人已另行授权一次提交、普通推送并运行同SHA CI。本机阶段的生成工程构建、应用启动、MySQL/HTTP、并发均 **NOT_RUN**，正式资格以CI原始证据为准。
+规格、DDL/seed、业务IT及两个workflow已完成，CI暴露的工具链根因修复亦获批准并通过验收，见 [implementation.md §7](implementation.md#7-修复版同-sha-ci-验收passed当前参考状态)。当前按负责人“继续下一步”进入task定义/冻结，不改原需求、reference/base、DDL/seed、判卷或工具链，不修改fitness/events，也不调用模型。本机不运行业务IT；参考资格以5fe4c833及verify 41194982453的原始证据为准，新候选不继承资格。
 
 ### 0.1 与 dev/test 的边界核对（独立审查）
 
@@ -219,7 +219,7 @@ ListInspections 只允许路径 facilityId 对应设施的 manager 使用，设�
 只返回完整的软件描述文档，不要 Java、SQL 或解释。
 ```
 
-## 6. 判卷检查清单与逐句追溯（源码已落地，参考业务 CI FAILED）
+## 6. 判卷检查清单与逐句追溯（参考已由同 SHA CI 验收）
 
 ### 6.1 执行与比较规则
 
@@ -295,7 +295,7 @@ WV/IV/FV：分别按合同精确比较 WorkOrderView/InspectionView/FacilityView
 
 完整对应见 [traceability.md](traceability.md)。I01：每次响应投影和完整行相符；I02：scope外报修仍在数据库但详情/列表/编辑全不可见；I03：每个成功编辑版本恰加1、拒绝不增；I04：生成序列的设施/标题/逐日间隔完全一致；I05：关闭集合严格等于独立JDBC读行后计算的谓词集合，不能仅用成功条数推导。所有GET后再做UNCHANGED。
 
-S14/C09输出格式由静态门检查，不算业务HTTP断言。构建、readiness、种子自检、清理、报告是夹具前置/收尾，不是教师要实现的业务能力。以上已由同SHA CI真实执行，本题597项检查通过、2失败；P04错误优先级冲突见 [implementation.md §5](implementation.md)。20项轻量单测通过不抵消业务失败。
+S14/C09输出格式由静态门检查，不算业务HTTP断言。构建、readiness、种子自检、清理、报告是夹具前置/收尾，不是教师要实现的业务能力。以上已由修复版同SHA CI真实执行，本题599项检查通过、0失败；当前验收见 [implementation.md §7](implementation.md#7-修复版同-sha-ci-验收passed当前参考状态)。原CI的P04错误优先级失败保留于该文件§5，不覆盖历史，也不拿轻量单测替代真实业务。
 
 ## 7. 依赖生成器的风险、依据与发现
 
@@ -317,4 +317,4 @@ S14/C09输出格式由静态门检查，不算业务HTTP断言。构建、readin
 
 **发现 M3（既有未决规则）：**项目状态§7列出“PATCH显式null写非可选目标”待设计；因此removed只提交布尔值，本版不评分removed=null。title=null已有非空白目标规则，P05仍检验（PATCH模板的字段错误码为小写notBlank）。若要统一null错误，另立项，不在规格里虚称已解决。
 
-负责人已确认结构覆盖、M1/M2/M3及dev/test隔离；其中未知用户指派和removed=null的评分排除项保留，不等于相应语言缺口已修复。规格文档此前已单独提交并推送。负责人现已另行授权 DDL/种子/业务IT 和两个 workflow 的接入，落地状态见 [implementation.md](implementation.md)；判卷实现提交d31af6af未改工具链，其同SHA CI业务失败；两处根因修复随后另获本地修复及提交授权，未推送或运行新CI，尚无四门资格，task冻结仍未办理。
+负责人已确认结构覆盖、M1/M2/M3及dev/test隔离；其中未知用户指派和removed=null的评分排除项保留，不等于相应语言缺口已修复。规格文档此前已单独提交并推送。负责人现已另行授权 DDL/种子/业务IT 和两个 workflow 的接入，落地状态见 [implementation.md](implementation.md)；d31af6af的失败与修复过程保留；随后5fe4c833同SHA CI已通过，当前进入task定义/冻结。参考验收不代表已有教师合格答案，采样、候选判卷、导出与训练均未开始。

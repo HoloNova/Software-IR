@@ -6,7 +6,7 @@
 
 - 运行参考：`sir-toolchain-application/src/test/resources/valid/maintenance-work-order.sir`，与批准的 `reference.sir` 内容一致。
 - 夹具：同模块 `src/test/resources/conformance/mysql/maintenance-work-order-ddl.sql`、`maintenance-work-order-seed.sql`，原样提取 spec §2/§3 的两个 SQL 块，保留 Optional 引用的物理列 `assignee`、外键与真实凭据。
-- 入口：`src/test/java/io/kcg/sir/application/conformance/MaintenanceWorkOrderBusinessConformanceIT.java`。B/W/D/P/L、R/E、X 检查分别在 `MaintenanceWorkOrderChecks`、`MaintenanceInspectionChecks`、`MaintenanceConcurrencyChecks`；逐项索引见 [traceability.md §6](traceability.md#6-本阶段源码入口尚无业务资格)。
+- 入口：`src/test/java/io/kcg/sir/application/conformance/MaintenanceWorkOrderBusinessConformanceIT.java`。B/W/D/P/L、R/E、X 检查分别在 `MaintenanceWorkOrderChecks`、`MaintenanceInspectionChecks`、`MaintenanceConcurrencyChecks`；逐项索引见 [traceability.md §6](traceability.md#6-判卷源码入口)。
 - 两题复用新增的 `BoundedProblemConformance/Fixture/Http/State/Race`，并继续组合已有 `BusinessSliceHarness`、`HttpAssertionClient`、`BlogLockWaits` 和候选输入/证据底座。共享的是连接、完整比较和屏障机制，不是业务判断；设施权限、版本、可选值和巡检谓词仍由本题提供。
 
 版本化报修仅走单行 PATCH；生成/批关闭只操作非版本化巡检。每次 GET/拒绝比较独立 JDBC 连接读取的五表全部行列；成功写只允许由原始请求、夹具常量和新 ID 构造的精确差异。日期用 Instant 加完整 24 小时，不把响应和候选自己返回的计数互相比对当作正确性证明。
@@ -119,3 +119,28 @@ $env:MAVEN_OPTS='-Xmx384m -XX:MaxMetaspaceSize=192m -XX:ActiveProcessorCount=2 -
 本机原始JUnit副本在根 `target/bounded-problems-ci/41187721552/repro/red/` 与 `repro/green/`；最小复现和 observations.json 也在 repro 下。这些是本机诊断/回归证据，未加入Git，不是 CI artifact。AFT inspect两次桥接超时，诊断不可用；实际 javac/Maven 编译已通过。未量化覆盖率，不声称80%；未运行全量门、真实 MySQL/HTTP、并发或新 CI，无 UI 改动。
 
 本地补丁会改变工具链身份，不能用当前工作区冒充旧候选冻结快照，亦不得重写 manifest 或继承 d31af6af 的冻结门资格。候选仍先静态、失败只修一轮、再送业务门；该链路结束前不合入工具链改动。本次按后续明确指令本地提交；未推送、触发 CI、冻结题目、采样或调用模型，未切换远端候选判卷工具链。
+
+## 7. 修复版同 SHA CI 验收：PASSED（当前参考状态）
+
+负责人随后明确要求推送并触发 CI。两处修复 `e47cbec8` / `5fe4c833` 已普通推送；受测完整 SHA=`5fe4c8339a927fb526c004c276beb4c1c8892996`，[verify 41194982453](https://github.com/HoloNova/Software-IR/actions/runs/41194982453) 两个 job 均 success。本题 **599/0**，生成55文件、构建退出0、就绪200，三轮真实竞争的不同连接/事务人数 **6/6/2**；清理通过。原失败CI仍留在§5，§6的未推送/NOT_RUN是修复提交前的历史现场，不代表当前状态。
+
+原ZIP、报告/日志、JUnit及哈希绑定已整理到[参考证据与冻结记录](../../../../datasets/sir/research/2026-10-31/bounded-reference-ci41194982453/README.md)。六份SIR/DDL/seed与受测Git blob一致，Surefire历史附件不混算。未改题面或放宽判卷；base HTTP负例仍NOT_RUN。报修合同的检查顺序注记同步实际已验收的“权限→版本预检查→合并校验→条件持久化”，不把版本预检查错写在合并校验之后。
+
+负责人现要求继续下一步，进入task定义/冻结，仍不授权模型调用、提交、推送、额外CI或训练；过程与批次清单以上述证据目录为准。
+
+## 8. 八题及仅参考批次冻结（未采样）
+
+按负责人继续下一步的要求，已用原prepare在LF隔离快照冻结以下八题，全部由verify 41194982453的原CLI静态生成通过、无诊断；每批只有1份existing_reference，build/start/business均NOT_RUN。原题requirement原文不动，p1/p2/p3仅作等义表述，合同、base、参考与oracle完全共用。
+
+| task | 批次 | 静态生成文件 |
+|---|---|---:|
+| `maintenance-work-order-change-v1` | `maintenance-work-order-change-g13` | 55 |
+| `maintenance-work-order-change-p1-v1` | `maintenance-work-order-change-p1-g13` | 55 |
+| `maintenance-work-order-change-p2-v1` | `maintenance-work-order-change-p2-g13` | 55 |
+| `maintenance-work-order-change-p3-v1` | `maintenance-work-order-change-p3-g13` | 55 |
+| `maintenance-work-order-scratch-v1` | `maintenance-work-order-scratch-g13` | 55 |
+| `maintenance-work-order-scratch-p1-v1` | `maintenance-work-order-scratch-p1-g13` | 55 |
+| `maintenance-work-order-scratch-p2-v1` | `maintenance-work-order-scratch-p2-g13` | 55 |
+| `maintenance-work-order-scratch-p3-v1` | `maintenance-work-order-scratch-p3-g13` | 55 |
+
+冻结明细、输入指纹、逐句等义追溯、原始检查器输入/输出和MANIFEST在[共享证据目录](../../../../datasets/sir/research/2026-10-31/bounded-reference-ci41194982453/README.md)及各批次。工具链450份输入和oracle原字节与受测Git blob一致；scratch base为空，change base不变，两份base仅静态检查通过。未调用模型、未导出训练数据、未改学生v5；本阶段没有提交、推送或重新触发CI。负责人现已确认先提交/普通推送，再按18万tokens保守预算对四道原题各初采1次；每次最大8192输出，不含失败修复，不自动重试。

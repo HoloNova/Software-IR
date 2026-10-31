@@ -1,0 +1,19 @@
+{
+  "run": "https://github.com/HoloNova/Software-IR/actions/runs/41194982453",
+  "headSha": "5fe4c8339a927fb526c004c276beb4c1c8892996",
+  "conclusion": "success",
+  "artifacts": [
+    {
+      "name": "conformance-evidence",
+      "id": 13040472036,
+      "sha256": "161d42ba60bf940b9467000e9c6cd48a82a9e12d37bb062e305702faced9c01d",
+      "path": "target/bounded-problems-ci/41194982453/conformance-evidence.zip"
+    },
+    {
+      "name": "surefire-reports",
+      "id": 13040317316,
+      "sha256": "e9afdd2a066b6db7510a084e5bc9d783f87fe4aa4a5889555ed53c6e2c7fad36",
+      "path": "target/bounded-problems-ci/41194982453/surefire-reports.zip"
+    }
+  ]
+}

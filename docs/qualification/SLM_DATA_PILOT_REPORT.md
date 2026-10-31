@@ -740,3 +740,20 @@ verify已接入轻量Python套件并上传`slm-python-contracts`，等待提交�
 **8 份四门通过并导出**，合格教师答案 **49 → 57 条**（鉴权 29、课程 26、博客 2）。博客从零写首次合格，使用的正是可选关键字写法 `input.keyword is none or ... containsLiteral input.keyword`，这也是 `e6f3b1d` 在真实 MySQL 上的第一份证据；选课改写原题与 p3 首次合格。失败三份：CRUD 改写 p2/p3 同样的 4 项（角色绕过归属、被拒修改仍写库、本人修改返回 409），token-desk 从零写 p1 启动报 `KCG-ACTOR-STARTUP-001`（给合同不要求登录的接口加了认证）。失败证据照样归档，不再追修。
 
 学生数据 **v5**：v4 的 49 条原字节保留，追加 8 条，共 57 条；固定 revision 的三个分词器重测，保留行与 v4 记录逐条相同，最长完整序列 **9,340／7,141 tokens**（v4 为 9,311／7,102）。73 道题中 56 道已有合格答案，**17 道仍无**（train 11、development 2、test 4）。未训练。
+
+<a id="slm-maintenance-staffing-frozen"></a>
+## 第三十二阶段：报修/排班参考验收与十六题冻结（2026-10-31）
+
+负责人要求在参考CI通过后继续下一步。本轮只新增两family的正式task定义、原题等义变体与仅参考冻结批次，归档已执行CI证据并同步状态；不再改Java/工具链、业务oracle、SIR、DDL、seed或原需求，不碰fitness/events，不调用模型，也不提交、推送或触发新CI。
+
+参考提交 `5fe4c8339a927fb526c004c276beb4c1c8892996` 的 [verify 41194982453](https://github.com/HoloNova/Software-IR/actions/runs/41194982453) 完整通过：maintenance 599/0（55生成文件，X01–X03屏障6/6/2），staffing 870/0（56文件，屏障6/3/6）；两项本次模块JUnit各1/0/0/0。冻结全量门、独立验证、CLI和独立部署均success，不混算Surefire ZIP里datasets的历史报告。
+
+原ZIP/元数据、报告/原日志、JUnit、六份SIR/DDL/seed Git blob绑定与artifact SHA256存于[参考证据目录](../../datasets/sir/research/2026-10-31/bounded-reference-ci41194982453/README.md)。39/40项oracle依赖分别独立编译通过，禁用隐式源码和test-classes；仅证明闭包完整，不把这次编译冒称重跑业务。旧d31af6af失败及后续59项本机回归在两题implementation §5/§6保留，最新参考状态为§7；PATCH合同的一处检查顺序旧注记按已验收行为纠正，不放宽判卷或改题面。
+
+两family各8题：change/scratch原题2份，另有各3份p1/p2/p3等义表述。所有原条款恰出现一次，ASCII标识符及数字不变；逐条映射在 `requirements-equivalence.json`，词组替换与独立条款重排只改善表述，不声称机械校验能证明自然语言等义。固定合同不包含状态、资格、种子或评分探针，依旧附原DDL。
+
+原prepare使用已提交v10手册与精确LF源码快照；450份工具链输入、39/40项oracle原字节均匹配上述受测Git blob。16个 `datasets/sir/pilots/{maintenance-work-order,staffing-shift-roster}-{change,scratch}[-p1|-p2|-p3]-g13/` 各只有1份existing_reference，全部用该CI的原standalone CLI静态生成通过、无诊断；报修55文件、排班56文件。两份base额外仅作静态生成47/50文件，base HTTP负例NOT_RUN。各批运行门保持NOT_RUN，不继承参考业务资格。
+
+本轮工作区共93题（train87/development2/test4；原已提交77题加本轮16题）；合格教师仍57条、覆盖56题，学生v5原字节不变，未训练。这里包含此前另一端已创建的4份fitness/events定义，但本轮不修改其文件或资格。新增16题及冻结证据尚未提交，不能以5fe4c833冒称这些新定义已进入该次CI。
+
+模型调用0、新教师候选0、新四门合格答案0、导出0。建议后续先对四道原题各初采1次deepseek-flash，每次最大8192输出tokens、无自动重试；按完整prompt的138267 UTF-8字节加最大输出32768及余量，提出18万tokens的保守预算，仅是估算，不是分词器实测或实际用量，不包含失败修复。`sampling-plan.json` 记录四份输入规模；冻结核对时预算/Git操作尚未授权；负责人随后已确认先提交/普通推送，再执行上述四次初采，不含失败修复，不自动采12份变体。

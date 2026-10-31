@@ -1,0 +1,47 @@
+{
+  "automatic_retries": 0,
+  "estimation_method": "Conservative content-UTF8-byte proxy plus max output and framing margin; not an API tokenizer count, usage, or charge. No repair calls included.",
+  "initial_calls": 4,
+  "max_output_tokens_per_call": 8192,
+  "message_content_utf8_bytes": 138267,
+  "model": "deepseek-flash",
+  "output_token_allowance": 32768,
+  "proposed_initial_total_token_budget": 180000,
+  "repairs_authorized": false,
+  "stage": "four original questions only; do not sample the 12 variants yet",
+  "status": "OWNER_APPROVED_INITIAL_FOUR_ONLY_NO_API_CALLS_YET",
+  "tasks": [
+    {
+      "bundle": "datasets/sir/pilots/maintenance-work-order-change-g13",
+      "initial_calls": 1,
+      "max_output_tokens": 8192,
+      "message_characters": 28719,
+      "message_content_utf8_bytes": 37588,
+      "task_id": "maintenance-work-order-change-v1"
+    },
+    {
+      "bundle": "datasets/sir/pilots/maintenance-work-order-scratch-g13",
+      "initial_calls": 1,
+      "max_output_tokens": 8192,
+      "message_characters": 24473,
+      "message_content_utf8_bytes": 34184,
+      "task_id": "maintenance-work-order-scratch-v1"
+    },
+    {
+      "bundle": "datasets/sir/pilots/staffing-shift-roster-change-g13",
+      "initial_calls": 1,
+      "max_output_tokens": 8192,
+      "message_characters": 26472,
+      "message_content_utf8_bytes": 35113,
+      "task_id": "staffing-shift-roster-change-v1"
+    },
+    {
+      "bundle": "datasets/sir/pilots/staffing-shift-roster-scratch-g13",
+      "initial_calls": 1,
+      "max_output_tokens": 8192,
+      "message_characters": 22113,
+      "message_content_utf8_bytes": 31382,
+      "task_id": "staffing-shift-roster-scratch-v1"
+    }
+  ]
+}

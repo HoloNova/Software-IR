@@ -2,7 +2,7 @@
   "namespace": "example.staffing",
   "family": "staffing.shift-roster",
   "split": "train",
-  "status": "owner-approved specification; oracle implemented; reference CI FAILED (d31af6af / 41187721552)",
+  "status": "owner-approved specification; reference CI PASSED (5fe4c833 / 41194982453); candidate qualification remains independent",
   "capabilities": ["ListStores", "GenerateWeeklyShifts", "StoreShifts", "StoreEmployees", "AssignEmployee", "ShiftHeadcount", "EmployeeRoster"],
   "entities": ["User", "AccessToken", "Store", "Employee", "Shift", "Assignment"],
   "interfaces": {
@@ -68,5 +68,5 @@
   },
   "readiness": "GET /api/stores?page=1&size=10",
   "fixtures": {"provided_by_oracle": true, "actor_mode": "external", "credentials": "synthetic database Bearer rows"},
-  "runtime_evidence": "NOT_RUN"
+  "runtime_evidence": "PASSED existing reference only: 5fe4c8339a927fb526c004c276beb4c1c8892996 / verify 41194982453; no candidate qualification inherited"
 }

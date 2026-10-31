@@ -1,0 +1,9 @@
+{
+  "ci_cli_sha256": "ab6d2c96ab9ec86e233df8c40849f1331a24d53d3568554d93a25fc3da0b3e33",
+  "core_and_oracle_git_blobs": "EXACT",
+  "core_input_count": 450,
+  "core_inputs_sha256": "023ee2c7b9e6988b90b0516bdb3e4b252afb6133e8782ebf6f2fe8be73dbb48a",
+  "line_endings": "LF exported using core.autocrlf=false and core.eol=lf",
+  "overlay": "16 newly authored task definitions only; not represented as committed task definitions",
+  "source_commit": "5fe4c8339a927fb526c004c276beb4c1c8892996"
+}

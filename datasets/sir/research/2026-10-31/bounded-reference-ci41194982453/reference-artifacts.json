@@ -1,0 +1,22 @@
+{
+  "artifacts": [
+    {
+      "id": 13040472036,
+      "name": "conformance-evidence",
+      "zip_sha256": "161d42ba60bf940b9467000e9c6cd48a82a9e12d37bb062e305702faced9c01d"
+    },
+    {
+      "id": 13040317316,
+      "name": "surefire-reports",
+      "zip_sha256": "e9afdd2a066b6db7510a084e5bc9d783f87fe4aa4a5889555ed53c6e2c7fad36"
+    },
+    {
+      "id": 13040212811,
+      "name": "standalone-cli",
+      "zip_sha256": "5a3021ca327d57cd7ed510b62217765506396a535a5741bbbd70160a92d7dd7f"
+    }
+  ],
+  "commit": "5fe4c8339a927fb526c004c276beb4c1c8892996",
+  "run_url": "https://github.com/HoloNova/Software-IR/actions/runs/41194982453",
+  "standalone_cli_jar_sha256": "ab6d2c96ab9ec86e233df8c40849f1331a24d53d3568554d93a25fc3da0b3e33"
+}

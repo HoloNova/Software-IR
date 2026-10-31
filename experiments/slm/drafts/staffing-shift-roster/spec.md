@@ -1,10 +1,10 @@
-# 门店排班题出题规格（已确认；判卷源码已落地，参考业务 CI FAILED）
+# 门店排班题出题规格（已确认；参考 CI PASSED）
 
 ## 0. 定位、基线与交付边界
 
-family=`staffing.shift-roster`，split=`train`；建议题号 `staffing-shift-roster-change-v1` / `staffing-shift-roster-scratch-v1`（未创建task）。基线 main `e81200e0e039c5d178c95bbab2f12195ac13f0dd`。负责人已确认本规格、train隔离、关系id排序及不设容量/工资/跨店调动的边界；本目录七个文件是出题设计，不是已实施的排班应用。
+family=`staffing.shift-roster`，split=`train`；正式原题 `staffing-shift-roster-change-v1` / `staffing-shift-roster-scratch-v1`，另有各3份p1/p2/p3等义表述。基线 main `e81200e0e039c5d178c95bbab2f12195ac13f0dd`。负责人已确认本规格、train隔离、关系id排序及不设容量/工资/跨店调动的边界；原需求边界保持；参考已由同SHA CI真实验收，任务与批次进展见implementation §7及共享冻结记录。
 
-规格阶段已办理七份文档的独立提交。负责人随后明确授权判卷落地：现已有参考资源、DDL/seed、Java业务IT和两个workflow接入，见 [implementation.md](implementation.md)。本轮不改工具链、参考/base、题面或task，不调用模型，也不修改另一会话的fitness/events；负责人已另行授权一次提交、普通推送并运行同SHA CI。定向合同/比较器检查已运行；本机阶段的生成工程构建、启动、真库业务和并发均 **NOT_RUN**，正式资格以CI证据为准。
+规格、DDL/seed、业务IT与两个workflow已完成，OGNL根因修复获批后已由5fe4c833及verify 41194982453验收，见 [implementation.md §7](implementation.md#7-修复版同-sha-ci-验收passed当前参考状态)。当前按负责人“继续下一步”进入task定义/冻结，不改原需求、reference/base、DDL/seed、判卷或工具链，不修改fitness/events，也不调用模型。本机不运行业务IT；新批次和未来候选不能继承参考运行门资格。
 
 ### 0.1 与 dev/test 的边界核对（独立审查）
 
@@ -213,7 +213,7 @@ EmployeeRoster 分页返回路径 employeeId 对应员工的编排关系，按�
 只返回完整的软件描述文档，不要 Java、SQL 或解释。
 ```
 
-## 6. 判卷检查清单与逐句追溯（源码已落地，参考业务 CI FAILED）
+## 6. 判卷检查清单与逐句追溯（参考已由同 SHA CI 验收）
 
 ### 6.1 执行与完整比较
 
@@ -283,7 +283,7 @@ A08先插晚日期班206、后插早日期班203，让“编排id顺序”和“
 
 I01：对每班次用JDBC全部assignment独立计数，与Headcount比较；不从201条数推导。I02：每关系employee.store=shift.store，unique(employee,shift)无重复。I03：unique(store,day,band)且周生成的完整日期/枚举集合精确匹配，不只是行数。I04：所有成功/拒绝的六表差异与投影精确符合合同。I05：生成不增编排；Assign不改已有班次/员工/身份。
 
-逐句索引见 [traceability.md](traceability.md)。S13/C08为输出静态格式，不算HTTP业务项；readiness、schema/种子自检、进程、清理、报告是执行器前置/收尾，不附加教师业务需求。所有表项已有对应 IT 源码，现已在同SHA CI执行：本题752项检查通过、22失败。band属性触发OGNL解析错误的证据见 [implementation.md §5](implementation.md)，不把轻量单测计作业务验收。
+逐句索引见 [traceability.md](traceability.md)。S13/C08为输出静态格式，不算HTTP业务项；readiness、schema/种子自检、进程、清理、报告是执行器前置/收尾，不附加教师业务需求。所有表项已有对应 IT 源码，现已在修复版同SHA CI执行：本题870项检查通过、0失败，含全部三轮并发；当前验收见 [implementation.md §7](implementation.md#7-修复版同-sha-ci-验收passed当前参考状态)。原band的OGNL失败保留于§5，不以轻量单测替代业务验收。
 
 ## 7. 风险、语言依据与发现
 
@@ -304,4 +304,4 @@ I01：对每班次用JDBC全部assignment独立计数，与Headcount比较；不
 
 **发现S2（负责人边界裁决）：**周生成与booking机制确实相同。当前用“生成空班次+员工与班次多对多关系、无区间排他、同班多员工”的三项硬边界区分，负责人已确认接受为train。若要员工区间排他/每周直接派人，这一形状就太接近booking，应换题或留在development，不顺带扩展。
 
-**已确认：**接受S2隔离结论、S1的关系id排序及本题不设容量/工资/跨店规则。指定结构全部可静态生成，无需工具链修改。规格文档此前已单独提交并推送。负责人现已另行授权 DDL/种子/IT 和两个 workflow 的接入，见 [implementation.md](implementation.md)；判卷实现提交d31af6af未改工具链，其同SHA CI业务失败；两处根因修复随后另获本地修复及提交授权，未推送或运行新CI，尚无四门资格，task冻结仍未办理。
+**已确认：**接受S2隔离结论、S1的关系id排序及本题不设容量/工资/跨店规则。指定结构全部可静态生成，无需工具链修改。规格文档此前已单独提交并推送。负责人现已另行授权 DDL/种子/IT 和两个 workflow 的接入，见 [implementation.md](implementation.md)；d31af6af的失败与修复过程保留；随后5fe4c833同SHA CI已通过，当前进入task定义/冻结。参考验收不代表已有教师合格答案，采样、候选判卷、导出与训练均未开始。

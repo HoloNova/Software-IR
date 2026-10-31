@@ -1,0 +1,1073 @@
+{
+  "scope": "curated whole-phrase rewrites and independent-clause reordering; token checks are not an automatic proof of natural-language equivalence",
+  "tasks": [
+    {
+      "all_original_clauses_present_once": true,
+      "clause_mapping": [
+        {
+          "source_line": 1
+        },
+        {
+          "source_line": 2
+        },
+        {
+          "source_line": 3
+        },
+        {
+          "source_line": 4
+        },
+        {
+          "source_line": 5
+        },
+        {
+          "source_line": 6
+        },
+        {
+          "source_line": 7
+        },
+        {
+          "source_line": 8
+        },
+        {
+          "source_line": 9
+        }
+      ],
+      "source": "experiments/slm/drafts/maintenance-work-order/requirement-change.md",
+      "source_sha256": "bee8c01daaaa582c1adf789897ce5974fe707e70615dd0a54d3782b8bb5fe6ac",
+      "task_id": "maintenance-work-order-change-v1",
+      "variant": 0
+    },
+    {
+      "all_original_clauses_present_once": true,
+      "clause_mapping": [
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 1,
+          "source_text_sha256": "8b0b143509dcc0c33985dbd69e8dbe0c3ed1502e0257e2f2fc1f4e289a6924a2",
+          "variant_text_sha256": "7f2b8449c7cfdc7ca6c764f952b16461da244e6257e5376c8de6a52e3e5d039b"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 2,
+          "source_text_sha256": "4c49e3499e6e3a8cfc2c41603ed7de832260ccdb3014a26a3c85a134fb068725",
+          "variant_text_sha256": "dde0d3154b5f44a7779c6fb9dd180309877a44eac8e223357e207dc743588bbe"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 3,
+          "source_text_sha256": "82da63d2f000ad2961b772beeb3b987a7a7e5018a8f4ec49f6018920fd65a789",
+          "variant_text_sha256": "c21adef52c1410516892c9766a68f5257680c3dd702e1007de54d2d7948898a3"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 4,
+          "source_text_sha256": "7a6d43ebbaf79470474c4d599b991a60427e22a22a94f089e6f285f257a4ebbd",
+          "variant_text_sha256": "dc9b03c20a0eb82b6fa4b9e087871e2c62ed09ba88cbef00aecd15f9d851d3c6"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 5,
+          "source_text_sha256": "a1edb2530f7956951205cb519564ae2b7627b4c7e59de532e547630ddb6ec43d",
+          "variant_text_sha256": "16c59f4ff779e336face2c42a13b7b70ee2feb5d7faaa8085415fa3a091b5f52"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 6,
+          "source_text_sha256": "a2fb18ee86c1d82140f5af688c40dd2a20d114090f0ba4205980860a48f8a8ba",
+          "variant_text_sha256": "ec6ff7853e65495c393aebd4424f8d4db644d000a39b05deab119d61bbc0f169"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 7,
+          "source_text_sha256": "5401a3344362c235468fc900ffb6e85e70fafba94a4dfaedfb3b8b3b413800ea",
+          "variant_text_sha256": "417a7d20cbe9f0c1c6cae0643516b0774eee1934d05e835abde3838f3b83db15"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 8,
+          "source_text_sha256": "ab7ad2ab699f4d243f4d81be17cc4d55468d26ff8660c704c5ab145077ca1448",
+          "variant_text_sha256": "63abb38f3d3fd7f630dc19d29a77830f97e7dc88312035abb2cf7af0c464d834"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 9,
+          "source_text_sha256": "44cb73eb3c865749f83a21ae6fdbb3620c7b0eb1f9dd390134c7d0d3428b992e",
+          "variant_text_sha256": "44cb73eb3c865749f83a21ae6fdbb3620c7b0eb1f9dd390134c7d0d3428b992e"
+        }
+      ],
+      "source": "experiments/slm/drafts/maintenance-work-order/requirement-change.md",
+      "source_sha256": "bee8c01daaaa582c1adf789897ce5974fe707e70615dd0a54d3782b8bb5fe6ac",
+      "task_id": "maintenance-work-order-change-p1-v1",
+      "variant": 1
+    },
+    {
+      "all_original_clauses_present_once": true,
+      "clause_mapping": [
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 1,
+          "source_text_sha256": "8b0b143509dcc0c33985dbd69e8dbe0c3ed1502e0257e2f2fc1f4e289a6924a2",
+          "variant_text_sha256": "06d2695033a8ff59217509ee9c1110abc0bc465385b6f9d1e4b7f45a88ad8e3c"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 2,
+          "source_text_sha256": "4c49e3499e6e3a8cfc2c41603ed7de832260ccdb3014a26a3c85a134fb068725",
+          "variant_text_sha256": "83ec267c032099434183c798cab3a056e532c4aa207e9552f7dbe375f2fd81e9"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 8,
+          "source_text_sha256": "ab7ad2ab699f4d243f4d81be17cc4d55468d26ff8660c704c5ab145077ca1448",
+          "variant_text_sha256": "3fa3d53986244dc20e03fb43dae8e09efcd97c527335b1fd6e7fc5d4d202e009"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 3,
+          "source_text_sha256": "82da63d2f000ad2961b772beeb3b987a7a7e5018a8f4ec49f6018920fd65a789",
+          "variant_text_sha256": "4892e571f230e824530a6b80bfb3ea1c04bb06348d3a786c9f085ea8069129b6"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 4,
+          "source_text_sha256": "7a6d43ebbaf79470474c4d599b991a60427e22a22a94f089e6f285f257a4ebbd",
+          "variant_text_sha256": "f77edddc25170598df01172f7bc45317bfe1e16f3896fe23068e7355f8c2ad2f"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 5,
+          "source_text_sha256": "a1edb2530f7956951205cb519564ae2b7627b4c7e59de532e547630ddb6ec43d",
+          "variant_text_sha256": "13b6c27cb31cdb339de3b25e8ffdf23c3b73b5824fb16b9dee17cac25395fd10"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 6,
+          "source_text_sha256": "a2fb18ee86c1d82140f5af688c40dd2a20d114090f0ba4205980860a48f8a8ba",
+          "variant_text_sha256": "79313fa54345762eecf54745201599df86269955813520424cb1bb9dce2e45c0"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 7,
+          "source_text_sha256": "5401a3344362c235468fc900ffb6e85e70fafba94a4dfaedfb3b8b3b413800ea",
+          "variant_text_sha256": "7c59c4b35e35d7f8927c4d7d35b16e1d2728549ad61b461a003f0f624f6d1a44"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 9,
+          "source_text_sha256": "44cb73eb3c865749f83a21ae6fdbb3620c7b0eb1f9dd390134c7d0d3428b992e",
+          "variant_text_sha256": "44cb73eb3c865749f83a21ae6fdbb3620c7b0eb1f9dd390134c7d0d3428b992e"
+        }
+      ],
+      "source": "experiments/slm/drafts/maintenance-work-order/requirement-change.md",
+      "source_sha256": "bee8c01daaaa582c1adf789897ce5974fe707e70615dd0a54d3782b8bb5fe6ac",
+      "task_id": "maintenance-work-order-change-p2-v1",
+      "variant": 2
+    },
+    {
+      "all_original_clauses_present_once": true,
+      "clause_mapping": [
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 1,
+          "source_text_sha256": "8b0b143509dcc0c33985dbd69e8dbe0c3ed1502e0257e2f2fc1f4e289a6924a2",
+          "variant_text_sha256": "56195242f66ed341ff7660fef7bd98ff70a52cc1b49bb05bcd8a9ea75fbf32ee"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 2,
+          "source_text_sha256": "4c49e3499e6e3a8cfc2c41603ed7de832260ccdb3014a26a3c85a134fb068725",
+          "variant_text_sha256": "f50ea9f84a0671bbcd47f4f87990acaaf84a4b9d736006d1618ce02e9681a501"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 6,
+          "source_text_sha256": "a2fb18ee86c1d82140f5af688c40dd2a20d114090f0ba4205980860a48f8a8ba",
+          "variant_text_sha256": "98c15895490b046daa346543e4798e810338be11a26f4099223098da6e450fb6"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 7,
+          "source_text_sha256": "5401a3344362c235468fc900ffb6e85e70fafba94a4dfaedfb3b8b3b413800ea",
+          "variant_text_sha256": "2ba420de96f006729aaf8fbc65489d0d19997807383b05e06dda0ca757b978c0"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 3,
+          "source_text_sha256": "82da63d2f000ad2961b772beeb3b987a7a7e5018a8f4ec49f6018920fd65a789",
+          "variant_text_sha256": "ac4294057c7fb4d8af2da0f0abfe691008534e5c0bb9875c7388b02268b7b015"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 4,
+          "source_text_sha256": "7a6d43ebbaf79470474c4d599b991a60427e22a22a94f089e6f285f257a4ebbd",
+          "variant_text_sha256": "2a544a40d5b186f4d17ae88067d7c114cc2d6ce7cc1ff2e6ebd7376645576618"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 5,
+          "source_text_sha256": "a1edb2530f7956951205cb519564ae2b7627b4c7e59de532e547630ddb6ec43d",
+          "variant_text_sha256": "a1edb2530f7956951205cb519564ae2b7627b4c7e59de532e547630ddb6ec43d"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 8,
+          "source_text_sha256": "ab7ad2ab699f4d243f4d81be17cc4d55468d26ff8660c704c5ab145077ca1448",
+          "variant_text_sha256": "1b8b57c4e8c169768167d13530b1cfc49397bb46cbe7c4ee78d5cb2d2414d496"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 9,
+          "source_text_sha256": "44cb73eb3c865749f83a21ae6fdbb3620c7b0eb1f9dd390134c7d0d3428b992e",
+          "variant_text_sha256": "daf5cb5405fad7c12541806b27dde25659fb02ae9d516415b3579bb2f1d7a653"
+        }
+      ],
+      "source": "experiments/slm/drafts/maintenance-work-order/requirement-change.md",
+      "source_sha256": "bee8c01daaaa582c1adf789897ce5974fe707e70615dd0a54d3782b8bb5fe6ac",
+      "task_id": "maintenance-work-order-change-p3-v1",
+      "variant": 3
+    },
+    {
+      "all_original_clauses_present_once": true,
+      "clause_mapping": [
+        {
+          "source_line": 1
+        },
+        {
+          "source_line": 2
+        },
+        {
+          "source_line": 3
+        },
+        {
+          "source_line": 4
+        },
+        {
+          "source_line": 5
+        },
+        {
+          "source_line": 6
+        },
+        {
+          "source_line": 7
+        },
+        {
+          "source_line": 8
+        },
+        {
+          "source_line": 9
+        },
+        {
+          "source_line": 10
+        },
+        {
+          "source_line": 11
+        },
+        {
+          "source_line": 12
+        },
+        {
+          "source_line": 13
+        },
+        {
+          "source_line": 14
+        }
+      ],
+      "source": "experiments/slm/drafts/maintenance-work-order/requirement-scratch.md",
+      "source_sha256": "746698068a808ddd25e35d8103cff86405d822f39b78d27650173aa91f8a9896",
+      "task_id": "maintenance-work-order-scratch-v1",
+      "variant": 0
+    },
+    {
+      "all_original_clauses_present_once": true,
+      "clause_mapping": [
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 1,
+          "source_text_sha256": "003f91a41f681b0a7aff11453b4934ba1250d2537ff1425152777fb96b9898d7",
+          "variant_text_sha256": "d44bda78056ae1e45e77655e16c0b4e0b1ab9da36433c341f78d55ab38efc2b3"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 2,
+          "source_text_sha256": "f2833ced31124bffae519842ce8828443cb13f8d668de1b2743e1341ba30350f",
+          "variant_text_sha256": "f2833ced31124bffae519842ce8828443cb13f8d668de1b2743e1341ba30350f"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 3,
+          "source_text_sha256": "deb42681e85073291ac7e24743da42ffae151e435551ab2ed5dbd6adf7e88dae",
+          "variant_text_sha256": "8590eee482aa2444de3b1a79873acff229410bdb88a9d2380e34546502f2af05"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 4,
+          "source_text_sha256": "f4bf51301cca38010a108f3a735e1146984f87855b1af43e7184365428b08953",
+          "variant_text_sha256": "f4bf51301cca38010a108f3a735e1146984f87855b1af43e7184365428b08953"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 5,
+          "source_text_sha256": "c4d57cbe059501653c45bb7dd1e15d86d8a059d875690f32e80217a855e88a88",
+          "variant_text_sha256": "1acb1c5333cc321d83ccd04bb5c916b07c262547eeca1548d3f4e4e655ed0f94"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 6,
+          "source_text_sha256": "30fe4a0869d143278345562fd5612b335adbb1a65579661aeac20342d8036301",
+          "variant_text_sha256": "30fe4a0869d143278345562fd5612b335adbb1a65579661aeac20342d8036301"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 7,
+          "source_text_sha256": "a3771f297fc3d5493edf759ffcc1d88d78694399df0f6f4114e1280ed83023c1",
+          "variant_text_sha256": "a3771f297fc3d5493edf759ffcc1d88d78694399df0f6f4114e1280ed83023c1"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 8,
+          "source_text_sha256": "b840ae6dff2ea5c59ee06ec55807d4adb15acbfcabb6cf1f7058fab04266a94b",
+          "variant_text_sha256": "bf9d01e1dfd382d5aa913933b0203fa8b13b1705e0f89c1c11f2dab805555250"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 9,
+          "source_text_sha256": "bf0d1abfc8f7a3f8685ca43e7f88ff9607c439d67d44ac04ebe13578a50ec3f9",
+          "variant_text_sha256": "8004b63bd8fabd39f872f46773171da0be9b12b6aaf21ad08b9c3f691d05ffbe"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 10,
+          "source_text_sha256": "38da2377ad0856f145edc36b29b0a5dd7ac8b30f267bb8f5a3ce0488b1275a96",
+          "variant_text_sha256": "aef27f56694378fc1cb81e08042d13d509b5fd99f35b7d44007d44f6640ec546"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 11,
+          "source_text_sha256": "89f19b23bfcb596650f49430fc7b7816f3ff5097ec2beee523695e52f3f0c8c7",
+          "variant_text_sha256": "d6a47d59c4e76806f07a878658f82e0853e4307a6bbbeec2baf2d69409fb5c4a"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 12,
+          "source_text_sha256": "98fd31b5458e29eadcc7a74dd6c962e32feb2563e110b45fb052424d7f5df49b",
+          "variant_text_sha256": "088e045a3fe907db6c061499cff4d2cf0ea3b4317abfe189906169e64313a781"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 13,
+          "source_text_sha256": "356a641fb59d3f92d6a21b0081980a6e408ced52a1166e3ac264ca3d135c66d1",
+          "variant_text_sha256": "356a641fb59d3f92d6a21b0081980a6e408ced52a1166e3ac264ca3d135c66d1"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 14,
+          "source_text_sha256": "44cb73eb3c865749f83a21ae6fdbb3620c7b0eb1f9dd390134c7d0d3428b992e",
+          "variant_text_sha256": "44cb73eb3c865749f83a21ae6fdbb3620c7b0eb1f9dd390134c7d0d3428b992e"
+        }
+      ],
+      "source": "experiments/slm/drafts/maintenance-work-order/requirement-scratch.md",
+      "source_sha256": "746698068a808ddd25e35d8103cff86405d822f39b78d27650173aa91f8a9896",
+      "task_id": "maintenance-work-order-scratch-p1-v1",
+      "variant": 1
+    },
+    {
+      "all_original_clauses_present_once": true,
+      "clause_mapping": [
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 1,
+          "source_text_sha256": "003f91a41f681b0a7aff11453b4934ba1250d2537ff1425152777fb96b9898d7",
+          "variant_text_sha256": "4eaa058777660fa92df2086b59b6dddc864acf4a8f71b475aba9aa65610cf6b5"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 12,
+          "source_text_sha256": "98fd31b5458e29eadcc7a74dd6c962e32feb2563e110b45fb052424d7f5df49b",
+          "variant_text_sha256": "98fd31b5458e29eadcc7a74dd6c962e32feb2563e110b45fb052424d7f5df49b"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 2,
+          "source_text_sha256": "f2833ced31124bffae519842ce8828443cb13f8d668de1b2743e1341ba30350f",
+          "variant_text_sha256": "f2833ced31124bffae519842ce8828443cb13f8d668de1b2743e1341ba30350f"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 3,
+          "source_text_sha256": "deb42681e85073291ac7e24743da42ffae151e435551ab2ed5dbd6adf7e88dae",
+          "variant_text_sha256": "dab01f95a9d1a4a1ceb929d3bc85f8d614a9ccda982cb3b4c5fbe61e7a4d9e48"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 4,
+          "source_text_sha256": "f4bf51301cca38010a108f3a735e1146984f87855b1af43e7184365428b08953",
+          "variant_text_sha256": "f4bf51301cca38010a108f3a735e1146984f87855b1af43e7184365428b08953"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 5,
+          "source_text_sha256": "c4d57cbe059501653c45bb7dd1e15d86d8a059d875690f32e80217a855e88a88",
+          "variant_text_sha256": "978ee8af6f2c3a4acea60ebc586896dc78b0d3781ca9b4816180e52f23cec4bf"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 6,
+          "source_text_sha256": "30fe4a0869d143278345562fd5612b335adbb1a65579661aeac20342d8036301",
+          "variant_text_sha256": "e7c6f2c4c57543241b708e56555603229c000e56746dbc9b3ba533d71b638cec"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 7,
+          "source_text_sha256": "a3771f297fc3d5493edf759ffcc1d88d78694399df0f6f4114e1280ed83023c1",
+          "variant_text_sha256": "a3771f297fc3d5493edf759ffcc1d88d78694399df0f6f4114e1280ed83023c1"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 8,
+          "source_text_sha256": "b840ae6dff2ea5c59ee06ec55807d4adb15acbfcabb6cf1f7058fab04266a94b",
+          "variant_text_sha256": "2b7b785db633c33c987d17b5e0a9052a7c4f9e166592dcd2d621675558d9917b"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 9,
+          "source_text_sha256": "bf0d1abfc8f7a3f8685ca43e7f88ff9607c439d67d44ac04ebe13578a50ec3f9",
+          "variant_text_sha256": "b0f4c0832d0dc6c00d6c899e21758827ee433b7d7c20ed4cd99ec23f2e9f2c7f"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 10,
+          "source_text_sha256": "38da2377ad0856f145edc36b29b0a5dd7ac8b30f267bb8f5a3ce0488b1275a96",
+          "variant_text_sha256": "9d16970ad6b8718f4bc208cedfd80de4eaed368adb91d3e6f8fba2222cf917f2"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 11,
+          "source_text_sha256": "89f19b23bfcb596650f49430fc7b7816f3ff5097ec2beee523695e52f3f0c8c7",
+          "variant_text_sha256": "3cbfa440ffd81835587e5d22c481ab7c3188127c5b1f25a0d6a5c34928c715ab"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 13,
+          "source_text_sha256": "356a641fb59d3f92d6a21b0081980a6e408ced52a1166e3ac264ca3d135c66d1",
+          "variant_text_sha256": "81d318c4e629bf9fa8d31d27f197f6e21f87e7803719705e16e3bfdb2e73acb5"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 14,
+          "source_text_sha256": "44cb73eb3c865749f83a21ae6fdbb3620c7b0eb1f9dd390134c7d0d3428b992e",
+          "variant_text_sha256": "44cb73eb3c865749f83a21ae6fdbb3620c7b0eb1f9dd390134c7d0d3428b992e"
+        }
+      ],
+      "source": "experiments/slm/drafts/maintenance-work-order/requirement-scratch.md",
+      "source_sha256": "746698068a808ddd25e35d8103cff86405d822f39b78d27650173aa91f8a9896",
+      "task_id": "maintenance-work-order-scratch-p2-v1",
+      "variant": 2
+    },
+    {
+      "all_original_clauses_present_once": true,
+      "clause_mapping": [
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 1,
+          "source_text_sha256": "003f91a41f681b0a7aff11453b4934ba1250d2537ff1425152777fb96b9898d7",
+          "variant_text_sha256": "2ca94718a64ff422472ab439aeb35af7b4f4416bd8807c0551cf6ab941e96dfd"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 9,
+          "source_text_sha256": "bf0d1abfc8f7a3f8685ca43e7f88ff9607c439d67d44ac04ebe13578a50ec3f9",
+          "variant_text_sha256": "f1df49d33fdf6a98c23d98cadc75b070b3651050188b818a9b7b0f2de95dfabe"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 10,
+          "source_text_sha256": "38da2377ad0856f145edc36b29b0a5dd7ac8b30f267bb8f5a3ce0488b1275a96",
+          "variant_text_sha256": "57f1c7943d5d51c589915240d9a409618ca924beff583eb89bbe74d42322988e"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 11,
+          "source_text_sha256": "89f19b23bfcb596650f49430fc7b7816f3ff5097ec2beee523695e52f3f0c8c7",
+          "variant_text_sha256": "0488c0e5f0b98e72810a73aaca4fdfb51db931a286e41152e12d57c97a260340"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 5,
+          "source_text_sha256": "c4d57cbe059501653c45bb7dd1e15d86d8a059d875690f32e80217a855e88a88",
+          "variant_text_sha256": "dedf75d10d64ceccaf911e12aeeb03a0e1909628a054bdd2c871155dbe768e8b"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 6,
+          "source_text_sha256": "30fe4a0869d143278345562fd5612b335adbb1a65579661aeac20342d8036301",
+          "variant_text_sha256": "30fe4a0869d143278345562fd5612b335adbb1a65579661aeac20342d8036301"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 7,
+          "source_text_sha256": "a3771f297fc3d5493edf759ffcc1d88d78694399df0f6f4114e1280ed83023c1",
+          "variant_text_sha256": "a3771f297fc3d5493edf759ffcc1d88d78694399df0f6f4114e1280ed83023c1"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 3,
+          "source_text_sha256": "deb42681e85073291ac7e24743da42ffae151e435551ab2ed5dbd6adf7e88dae",
+          "variant_text_sha256": "e93c1cc1025e643c4187787acb57a070f7b7b49175928a8f79b2aa54b7c8d526"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 4,
+          "source_text_sha256": "f4bf51301cca38010a108f3a735e1146984f87855b1af43e7184365428b08953",
+          "variant_text_sha256": "f4bf51301cca38010a108f3a735e1146984f87855b1af43e7184365428b08953"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 8,
+          "source_text_sha256": "b840ae6dff2ea5c59ee06ec55807d4adb15acbfcabb6cf1f7058fab04266a94b",
+          "variant_text_sha256": "410856cdf1ca5bb8ed857a3671e45f4947620f2c6788d6561c4d1e2041bf25f2"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 2,
+          "source_text_sha256": "f2833ced31124bffae519842ce8828443cb13f8d668de1b2743e1341ba30350f",
+          "variant_text_sha256": "f2833ced31124bffae519842ce8828443cb13f8d668de1b2743e1341ba30350f"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 12,
+          "source_text_sha256": "98fd31b5458e29eadcc7a74dd6c962e32feb2563e110b45fb052424d7f5df49b",
+          "variant_text_sha256": "98fd31b5458e29eadcc7a74dd6c962e32feb2563e110b45fb052424d7f5df49b"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 13,
+          "source_text_sha256": "356a641fb59d3f92d6a21b0081980a6e408ced52a1166e3ac264ca3d135c66d1",
+          "variant_text_sha256": "cc4e970924e6e796685b00557b2ee9a0adb08570dacc2bf68a0735c5000bd8bf"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 14,
+          "source_text_sha256": "44cb73eb3c865749f83a21ae6fdbb3620c7b0eb1f9dd390134c7d0d3428b992e",
+          "variant_text_sha256": "daf5cb5405fad7c12541806b27dde25659fb02ae9d516415b3579bb2f1d7a653"
+        }
+      ],
+      "source": "experiments/slm/drafts/maintenance-work-order/requirement-scratch.md",
+      "source_sha256": "746698068a808ddd25e35d8103cff86405d822f39b78d27650173aa91f8a9896",
+      "task_id": "maintenance-work-order-scratch-p3-v1",
+      "variant": 3
+    },
+    {
+      "all_original_clauses_present_once": true,
+      "clause_mapping": [
+        {
+          "source_line": 1
+        },
+        {
+          "source_line": 2
+        },
+        {
+          "source_line": 3
+        },
+        {
+          "source_line": 4
+        },
+        {
+          "source_line": 5
+        },
+        {
+          "source_line": 6
+        },
+        {
+          "source_line": 7
+        },
+        {
+          "source_line": 8
+        }
+      ],
+      "source": "experiments/slm/drafts/staffing-shift-roster/requirement-change.md",
+      "source_sha256": "7633acc244c0005adbebaf40cd5e5d021aa18878c3c0ff2a465cce1a6de0214a",
+      "task_id": "staffing-shift-roster-change-v1",
+      "variant": 0
+    },
+    {
+      "all_original_clauses_present_once": true,
+      "clause_mapping": [
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 1,
+          "source_text_sha256": "e3d8f33358d84100fe60ff1cf1996c0215d9a0fc02d953290576d7570117b1d9",
+          "variant_text_sha256": "433537398f7801f75295347894b9ed5d386303967a6233b945bbe0526bcbdc4e"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 2,
+          "source_text_sha256": "140d34e9932cf84a36c52aaf5e83680bcf3261bd029f8e6c6c25295913c4d13c",
+          "variant_text_sha256": "5b3a67b493ce18098f3213a05ffab3759cfced109b4888673bfd1ef718b054da"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 3,
+          "source_text_sha256": "3660c18f4d1cb3eeaa9d0b51120b1dadd8013a2ed64dadf14436e1c06c408185",
+          "variant_text_sha256": "58ba05092695683161942a944fb8cefc453b1d7167babf81ba67278cdeb73acf"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 4,
+          "source_text_sha256": "abdca6fa2b08c2058f7f1dfa70c3a451eed80d35f3718f03d5e6f5131c0f2b90",
+          "variant_text_sha256": "6a49d87bd3ed965fcfcf761aa192091de46d99a1a092d782152a8b9fff643556"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 5,
+          "source_text_sha256": "2c71c5f33dc04e760fd655a260edccee4b557737f69f195e5b721f8d9965bd73",
+          "variant_text_sha256": "2c71c5f33dc04e760fd655a260edccee4b557737f69f195e5b721f8d9965bd73"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 6,
+          "source_text_sha256": "c9b2946d77a0eaa4b3c901568ef8ceb97f6532673cc20469d0b1b45c7f7269c7",
+          "variant_text_sha256": "c9b2946d77a0eaa4b3c901568ef8ceb97f6532673cc20469d0b1b45c7f7269c7"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 7,
+          "source_text_sha256": "86c97f5e0584ccdd6f217892ee3e22af84e34e9d972fb96e200af1d65b7c6f3d",
+          "variant_text_sha256": "ce7522a8b1ececbd324b23dee0654e9a64f6ce0d226a83be29acbd1294c18e74"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 8,
+          "source_text_sha256": "44cb73eb3c865749f83a21ae6fdbb3620c7b0eb1f9dd390134c7d0d3428b992e",
+          "variant_text_sha256": "44cb73eb3c865749f83a21ae6fdbb3620c7b0eb1f9dd390134c7d0d3428b992e"
+        }
+      ],
+      "source": "experiments/slm/drafts/staffing-shift-roster/requirement-change.md",
+      "source_sha256": "7633acc244c0005adbebaf40cd5e5d021aa18878c3c0ff2a465cce1a6de0214a",
+      "task_id": "staffing-shift-roster-change-p1-v1",
+      "variant": 1
+    },
+    {
+      "all_original_clauses_present_once": true,
+      "clause_mapping": [
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 1,
+          "source_text_sha256": "e3d8f33358d84100fe60ff1cf1996c0215d9a0fc02d953290576d7570117b1d9",
+          "variant_text_sha256": "e275edcb9421fc3ab56d794aceb2a2aa1a3c537f6f1e710602206a154426765b"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 2,
+          "source_text_sha256": "140d34e9932cf84a36c52aaf5e83680bcf3261bd029f8e6c6c25295913c4d13c",
+          "variant_text_sha256": "2487a2e19e3b3be8fb423d22fe95a086e6bf0c60fbb8668734ee766137ea58d5"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 7,
+          "source_text_sha256": "86c97f5e0584ccdd6f217892ee3e22af84e34e9d972fb96e200af1d65b7c6f3d",
+          "variant_text_sha256": "86c97f5e0584ccdd6f217892ee3e22af84e34e9d972fb96e200af1d65b7c6f3d"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 3,
+          "source_text_sha256": "3660c18f4d1cb3eeaa9d0b51120b1dadd8013a2ed64dadf14436e1c06c408185",
+          "variant_text_sha256": "b33f932bae6c2d2a6f149009e2e08968cdfcba7e749a85fd118a4a03d3391ed6"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 4,
+          "source_text_sha256": "abdca6fa2b08c2058f7f1dfa70c3a451eed80d35f3718f03d5e6f5131c0f2b90",
+          "variant_text_sha256": "abdca6fa2b08c2058f7f1dfa70c3a451eed80d35f3718f03d5e6f5131c0f2b90"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 5,
+          "source_text_sha256": "2c71c5f33dc04e760fd655a260edccee4b557737f69f195e5b721f8d9965bd73",
+          "variant_text_sha256": "2c71c5f33dc04e760fd655a260edccee4b557737f69f195e5b721f8d9965bd73"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 6,
+          "source_text_sha256": "c9b2946d77a0eaa4b3c901568ef8ceb97f6532673cc20469d0b1b45c7f7269c7",
+          "variant_text_sha256": "256d872d8bc9d2e49cc4522ba1885cfa8de6e555deb8d5687f563adffe571a06"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 8,
+          "source_text_sha256": "44cb73eb3c865749f83a21ae6fdbb3620c7b0eb1f9dd390134c7d0d3428b992e",
+          "variant_text_sha256": "44cb73eb3c865749f83a21ae6fdbb3620c7b0eb1f9dd390134c7d0d3428b992e"
+        }
+      ],
+      "source": "experiments/slm/drafts/staffing-shift-roster/requirement-change.md",
+      "source_sha256": "7633acc244c0005adbebaf40cd5e5d021aa18878c3c0ff2a465cce1a6de0214a",
+      "task_id": "staffing-shift-roster-change-p2-v1",
+      "variant": 2
+    },
+    {
+      "all_original_clauses_present_once": true,
+      "clause_mapping": [
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 1,
+          "source_text_sha256": "e3d8f33358d84100fe60ff1cf1996c0215d9a0fc02d953290576d7570117b1d9",
+          "variant_text_sha256": "63435f2a49430651d083d83dc5d337a27fa4ee12a957d6281c2a998ce1ba29b3"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 2,
+          "source_text_sha256": "140d34e9932cf84a36c52aaf5e83680bcf3261bd029f8e6c6c25295913c4d13c",
+          "variant_text_sha256": "5b2c9109d3c166481974d84e88ff58e8c22ba53317f7c22dc7664ac1ef2e49be"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 4,
+          "source_text_sha256": "abdca6fa2b08c2058f7f1dfa70c3a451eed80d35f3718f03d5e6f5131c0f2b90",
+          "variant_text_sha256": "abdca6fa2b08c2058f7f1dfa70c3a451eed80d35f3718f03d5e6f5131c0f2b90"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 5,
+          "source_text_sha256": "2c71c5f33dc04e760fd655a260edccee4b557737f69f195e5b721f8d9965bd73",
+          "variant_text_sha256": "2c71c5f33dc04e760fd655a260edccee4b557737f69f195e5b721f8d9965bd73"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 3,
+          "source_text_sha256": "3660c18f4d1cb3eeaa9d0b51120b1dadd8013a2ed64dadf14436e1c06c408185",
+          "variant_text_sha256": "35ac40e53b0bbeaca4b27452ca8961c34736d398ca1baab8efc657fca93d31ed"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 6,
+          "source_text_sha256": "c9b2946d77a0eaa4b3c901568ef8ceb97f6532673cc20469d0b1b45c7f7269c7",
+          "variant_text_sha256": "a17b044578d7de85d7d3823c19ff0497be83b4a4acb8c48c7e1ed47a5a466c21"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 7,
+          "source_text_sha256": "86c97f5e0584ccdd6f217892ee3e22af84e34e9d972fb96e200af1d65b7c6f3d",
+          "variant_text_sha256": "86c97f5e0584ccdd6f217892ee3e22af84e34e9d972fb96e200af1d65b7c6f3d"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 8,
+          "source_text_sha256": "44cb73eb3c865749f83a21ae6fdbb3620c7b0eb1f9dd390134c7d0d3428b992e",
+          "variant_text_sha256": "daf5cb5405fad7c12541806b27dde25659fb02ae9d516415b3579bb2f1d7a653"
+        }
+      ],
+      "source": "experiments/slm/drafts/staffing-shift-roster/requirement-change.md",
+      "source_sha256": "7633acc244c0005adbebaf40cd5e5d021aa18878c3c0ff2a465cce1a6de0214a",
+      "task_id": "staffing-shift-roster-change-p3-v1",
+      "variant": 3
+    },
+    {
+      "all_original_clauses_present_once": true,
+      "clause_mapping": [
+        {
+          "source_line": 1
+        },
+        {
+          "source_line": 2
+        },
+        {
+          "source_line": 3
+        },
+        {
+          "source_line": 4
+        },
+        {
+          "source_line": 5
+        },
+        {
+          "source_line": 6
+        },
+        {
+          "source_line": 7
+        },
+        {
+          "source_line": 8
+        },
+        {
+          "source_line": 9
+        },
+        {
+          "source_line": 10
+        },
+        {
+          "source_line": 11
+        },
+        {
+          "source_line": 12
+        },
+        {
+          "source_line": 13
+        }
+      ],
+      "source": "experiments/slm/drafts/staffing-shift-roster/requirement-scratch.md",
+      "source_sha256": "82667d62b24f1ca04baae9265bfa00f9ec1da39973bf70b82391796c8150d1d4",
+      "task_id": "staffing-shift-roster-scratch-v1",
+      "variant": 0
+    },
+    {
+      "all_original_clauses_present_once": true,
+      "clause_mapping": [
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 1,
+          "source_text_sha256": "5fa6ff2ac9af64f218356df9f7a14c24d3f5b5401e010e96c25cd52d33d2f36a",
+          "variant_text_sha256": "aba368daa408d3836b5f55d38dc9a48ea471c2c9828ccf51f6beeb8a369516c0"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 2,
+          "source_text_sha256": "57a7159b2ee7a5371112af6fd1cf5a993ac75f6d7a37ac98894e91297395040c",
+          "variant_text_sha256": "57a7159b2ee7a5371112af6fd1cf5a993ac75f6d7a37ac98894e91297395040c"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 3,
+          "source_text_sha256": "3110bcf777d16d5eba91a0dd9b6ca5ee141896f68bcd8e90350c42aa527a93e8",
+          "variant_text_sha256": "35611f36013ed3eff63a378f0bee1ced022b35b15df2a6304facff73d87feaaa"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 4,
+          "source_text_sha256": "3b77d8e62d9c8f453af384086cb6af615bd21320918f24cebd9f5ba55113274b",
+          "variant_text_sha256": "3f9cce75c6848a325f22beb4089fa98255252dac9265ca183d4990f9fbadd5e5"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 5,
+          "source_text_sha256": "841c3e358388406c107c5bbf5fe26f51d39f3c1601662f23cf2b38e5ccf2b192",
+          "variant_text_sha256": "841c3e358388406c107c5bbf5fe26f51d39f3c1601662f23cf2b38e5ccf2b192"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 6,
+          "source_text_sha256": "f9b285eace44f4004d2e718181349aa7edeef65c59597cfc83c588481783e8c1",
+          "variant_text_sha256": "d669b133e1e411a96be53c7227c69b243f33f19cb3022ebe386d88c763032bb0"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 7,
+          "source_text_sha256": "07769d8739243cdd30c0d0d3183de0c8c58854720e3698b7c73b706dd7d9a65d",
+          "variant_text_sha256": "07769d8739243cdd30c0d0d3183de0c8c58854720e3698b7c73b706dd7d9a65d"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 8,
+          "source_text_sha256": "74c21b4e36cf87c73149722c35357e43e1c6f489f058541b61e1f005e57b72e4",
+          "variant_text_sha256": "74c21b4e36cf87c73149722c35357e43e1c6f489f058541b61e1f005e57b72e4"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 9,
+          "source_text_sha256": "fc7e2f9f44e854c3c830a88f276c6116961d5145201ee1a14fa260490638015c",
+          "variant_text_sha256": "fc7e2f9f44e854c3c830a88f276c6116961d5145201ee1a14fa260490638015c"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 10,
+          "source_text_sha256": "a58ab8aae0d86492a41393fccf3a7305874722d79348dbad4df0cde4a194ffb3",
+          "variant_text_sha256": "9bcafa8548ae9ac43cb7c02c667a594a38b29f8be91efd6e7232d4ec374973b9"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 11,
+          "source_text_sha256": "eef387d781dda30e4e31f11434eb7e37c4787d025a6445a18615990c33bb5a22",
+          "variant_text_sha256": "eef387d781dda30e4e31f11434eb7e37c4787d025a6445a18615990c33bb5a22"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 12,
+          "source_text_sha256": "968e0d9225a226924c8fa9a83e17174856dd84db85e6867b3981e14999949e2b",
+          "variant_text_sha256": "968e0d9225a226924c8fa9a83e17174856dd84db85e6867b3981e14999949e2b"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 13,
+          "source_text_sha256": "44cb73eb3c865749f83a21ae6fdbb3620c7b0eb1f9dd390134c7d0d3428b992e",
+          "variant_text_sha256": "44cb73eb3c865749f83a21ae6fdbb3620c7b0eb1f9dd390134c7d0d3428b992e"
+        }
+      ],
+      "source": "experiments/slm/drafts/staffing-shift-roster/requirement-scratch.md",
+      "source_sha256": "82667d62b24f1ca04baae9265bfa00f9ec1da39973bf70b82391796c8150d1d4",
+      "task_id": "staffing-shift-roster-scratch-p1-v1",
+      "variant": 1
+    },
+    {
+      "all_original_clauses_present_once": true,
+      "clause_mapping": [
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 1,
+          "source_text_sha256": "5fa6ff2ac9af64f218356df9f7a14c24d3f5b5401e010e96c25cd52d33d2f36a",
+          "variant_text_sha256": "c8c9e59c7cfaa4f84b301613606b86f500845e958fce851fc18d664067cd2555"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 2,
+          "source_text_sha256": "57a7159b2ee7a5371112af6fd1cf5a993ac75f6d7a37ac98894e91297395040c",
+          "variant_text_sha256": "57a7159b2ee7a5371112af6fd1cf5a993ac75f6d7a37ac98894e91297395040c"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 10,
+          "source_text_sha256": "a58ab8aae0d86492a41393fccf3a7305874722d79348dbad4df0cde4a194ffb3",
+          "variant_text_sha256": "a58ab8aae0d86492a41393fccf3a7305874722d79348dbad4df0cde4a194ffb3"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 3,
+          "source_text_sha256": "3110bcf777d16d5eba91a0dd9b6ca5ee141896f68bcd8e90350c42aa527a93e8",
+          "variant_text_sha256": "fc616e2ee721acca330fc6b42f19f5aaa0c8aa4792ccf76777957a6df0d5dc29"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 4,
+          "source_text_sha256": "3b77d8e62d9c8f453af384086cb6af615bd21320918f24cebd9f5ba55113274b",
+          "variant_text_sha256": "05274c6096e22bb76c2bb1c064d01b71296c061636ab0744724de98d9be1986e"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 6,
+          "source_text_sha256": "f9b285eace44f4004d2e718181349aa7edeef65c59597cfc83c588481783e8c1",
+          "variant_text_sha256": "89d4c34261089a683f0387b89f7eeec02359aefc573e7119b0d5d6dab6ae31ee"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 7,
+          "source_text_sha256": "07769d8739243cdd30c0d0d3183de0c8c58854720e3698b7c73b706dd7d9a65d",
+          "variant_text_sha256": "0a9ef41a4297a2b0d8c58dec9323c1e47dbb74a17ef949693df906ec3d5ccd72"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 11,
+          "source_text_sha256": "eef387d781dda30e4e31f11434eb7e37c4787d025a6445a18615990c33bb5a22",
+          "variant_text_sha256": "eef387d781dda30e4e31f11434eb7e37c4787d025a6445a18615990c33bb5a22"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 8,
+          "source_text_sha256": "74c21b4e36cf87c73149722c35357e43e1c6f489f058541b61e1f005e57b72e4",
+          "variant_text_sha256": "74c21b4e36cf87c73149722c35357e43e1c6f489f058541b61e1f005e57b72e4"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 5,
+          "source_text_sha256": "841c3e358388406c107c5bbf5fe26f51d39f3c1601662f23cf2b38e5ccf2b192",
+          "variant_text_sha256": "841c3e358388406c107c5bbf5fe26f51d39f3c1601662f23cf2b38e5ccf2b192"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 9,
+          "source_text_sha256": "fc7e2f9f44e854c3c830a88f276c6116961d5145201ee1a14fa260490638015c",
+          "variant_text_sha256": "12ff9bd367174a3e2dbf154bcd1ebb19762eb7ebb9d882450d36cc6037b1e8cc"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 12,
+          "source_text_sha256": "968e0d9225a226924c8fa9a83e17174856dd84db85e6867b3981e14999949e2b",
+          "variant_text_sha256": "e3acac07b5063d2b3b483de22c4c0b0a48ada58142d2e997faa3d2dde5429cd5"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 13,
+          "source_text_sha256": "44cb73eb3c865749f83a21ae6fdbb3620c7b0eb1f9dd390134c7d0d3428b992e",
+          "variant_text_sha256": "44cb73eb3c865749f83a21ae6fdbb3620c7b0eb1f9dd390134c7d0d3428b992e"
+        }
+      ],
+      "source": "experiments/slm/drafts/staffing-shift-roster/requirement-scratch.md",
+      "source_sha256": "82667d62b24f1ca04baae9265bfa00f9ec1da39973bf70b82391796c8150d1d4",
+      "task_id": "staffing-shift-roster-scratch-p2-v1",
+      "variant": 2
+    },
+    {
+      "all_original_clauses_present_once": true,
+      "clause_mapping": [
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 1,
+          "source_text_sha256": "5fa6ff2ac9af64f218356df9f7a14c24d3f5b5401e010e96c25cd52d33d2f36a",
+          "variant_text_sha256": "f7b26dc2b728c51915cd3050d33611e6632d03fec374ff2ac24cfb17cb67bd71"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 3,
+          "source_text_sha256": "3110bcf777d16d5eba91a0dd9b6ca5ee141896f68bcd8e90350c42aa527a93e8",
+          "variant_text_sha256": "ebc66c4bfca8490b0ff8af3c87d48a341ff469bd071716c4164f68287116897a"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 4,
+          "source_text_sha256": "3b77d8e62d9c8f453af384086cb6af615bd21320918f24cebd9f5ba55113274b",
+          "variant_text_sha256": "3b77d8e62d9c8f453af384086cb6af615bd21320918f24cebd9f5ba55113274b"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 11,
+          "source_text_sha256": "eef387d781dda30e4e31f11434eb7e37c4787d025a6445a18615990c33bb5a22",
+          "variant_text_sha256": "eef387d781dda30e4e31f11434eb7e37c4787d025a6445a18615990c33bb5a22"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 6,
+          "source_text_sha256": "f9b285eace44f4004d2e718181349aa7edeef65c59597cfc83c588481783e8c1",
+          "variant_text_sha256": "0f54f067297060f444083acc9b5c4ca4fedebaca9c7cd5bfba83369cf107c07a"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 7,
+          "source_text_sha256": "07769d8739243cdd30c0d0d3183de0c8c58854720e3698b7c73b706dd7d9a65d",
+          "variant_text_sha256": "8d27f34f48d5ca707136e73217b3a937034499090b79059092caf5e685dd0461"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 8,
+          "source_text_sha256": "74c21b4e36cf87c73149722c35357e43e1c6f489f058541b61e1f005e57b72e4",
+          "variant_text_sha256": "74c21b4e36cf87c73149722c35357e43e1c6f489f058541b61e1f005e57b72e4"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 9,
+          "source_text_sha256": "fc7e2f9f44e854c3c830a88f276c6116961d5145201ee1a14fa260490638015c",
+          "variant_text_sha256": "fc7e2f9f44e854c3c830a88f276c6116961d5145201ee1a14fa260490638015c"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 5,
+          "source_text_sha256": "841c3e358388406c107c5bbf5fe26f51d39f3c1601662f23cf2b38e5ccf2b192",
+          "variant_text_sha256": "841c3e358388406c107c5bbf5fe26f51d39f3c1601662f23cf2b38e5ccf2b192"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 2,
+          "source_text_sha256": "57a7159b2ee7a5371112af6fd1cf5a993ac75f6d7a37ac98894e91297395040c",
+          "variant_text_sha256": "23a31d83464ce0b4033ed2e12ebabd3a8f3be10afa2a05fc39d7f2419cbd5ba7"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 10,
+          "source_text_sha256": "a58ab8aae0d86492a41393fccf3a7305874722d79348dbad4df0cde4a194ffb3",
+          "variant_text_sha256": "a58ab8aae0d86492a41393fccf3a7305874722d79348dbad4df0cde4a194ffb3"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 12,
+          "source_text_sha256": "968e0d9225a226924c8fa9a83e17174856dd84db85e6867b3981e14999949e2b",
+          "variant_text_sha256": "85c7bc584e89ef4b270b79b63c645ad98f349d8ed19679752132b32c461cfc99"
+        },
+        {
+          "identifier_and_number_multiset": "UNCHANGED",
+          "source_line": 13,
+          "source_text_sha256": "44cb73eb3c865749f83a21ae6fdbb3620c7b0eb1f9dd390134c7d0d3428b992e",
+          "variant_text_sha256": "daf5cb5405fad7c12541806b27dde25659fb02ae9d516415b3579bb2f1d7a653"
+        }
+      ],
+      "source": "experiments/slm/drafts/staffing-shift-roster/requirement-scratch.md",
+      "source_sha256": "82667d62b24f1ca04baae9265bfa00f9ec1da39973bf70b82391796c8150d1d4",
+      "task_id": "staffing-shift-roster-scratch-p3-v1",
+      "variant": 3
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 # SIR 实验数据
 
-本目录同时保存研究轨迹与合格训练输出，**不是每条记录都可用于当前学生 SFT**。失败答案／报错会归档并可用于本轮教师反馈；只有四门通过的最终答案才导出为正确 completion，student 包装还会去掉修复历史。当前合格 **49 条（鉴权26、课程22、博客1）**，学生格式为 **v4**，没有开始模型训练；最新验收见[第二十七阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-blog-g9-qualified)。
+本目录同时保存研究轨迹与合格训练输出，**不是每条记录都可用于当前学生 SFT**。失败答案／报错会归档并可用于本轮教师反馈；只有四门通过的最终答案才导出为正确 completion，student 包装还会去掉修复历史。当前合格 **57 条（鉴权29、课程26、博客2）**，覆盖56题，学生格式为 **v5**，没有开始模型训练；验收与组装见[第三十一阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md)。本轮报修/排班只冻结题目与参考，不增加教师合格答案或改写学生原字节。
 
 ## 首批采样与后续运行
 
@@ -129,3 +129,11 @@
 ## v9 补采 g10（8 份新合格，累计 57 条）
 
 19 个 `pilots/*-g10` 批次各用 v9 采一次，失败的 15 份各修一轮，共 34 次调用、343,522 tokens；11 份静态通过并送业务门 #67–#77，8 份四门通过并导出。各批次 `MANIFEST.sha256` 覆盖批次内全部文件，业务门证据由 `archive-gate` 归档到 `runtime/<样本>/github-<run>-attempt-1/`。学生数据为 `student/train-student-v5.jsonl`（v4 的 49 条原字节加 8 条）。详见[第三十一阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-v9-g10)。
+
+## 报修/排班参考验收与十六题冻结（2026-10-31）
+
+[`research/2026-10-31/bounded-reference-ci41194982453/`](research/2026-10-31/bounded-reference-ci41194982453/) 保存受测 `5fe4c8339a927fb526c004c276beb4c1c8892996` 的 [verify 41194982453](https://github.com/HoloNova/Software-IR/actions/runs/41194982453) 原ZIP、两项实际模块JUnit、报告/原日志、六份输入Git blob绑定和完整哈希。报修599/0、排班870/0，六轮并发及独立部署通过；不是旧失败CI或仅静态资格。
+
+新增maintenance.work-order与staffing.shift-roster各8份train题定义，共16；每个family的change/scratch原题各有p1/p2/p3三种等义表述，同题共用base、参考、合同与oracle。相应 `pilots/maintenance-work-order-*-g13/`、`staffing-shift-roster-*-g13/` 在LF快照/v10下由原prepare冻结，每批仅1份existing_reference，原CI检查器静态全通过，运行门均NOT_RUN。base仅静态检查，不冒称HTTP负例已跑。
+
+这些参考种子不是新教师答案；新增四门合格答案0、模型调用0，学生v5不变。冻结核对时定义/批次和证据尚未入Git；负责人现已确认提交/普通推送及四道原题初采的18万tokens预算，不含修复。完整原件、MANIFEST及已批准的初采计划见上述证据目录。既有fitness/events、旧批次及学生文件不改。

@@ -87,3 +87,11 @@ A1 和 B1–B8 是 9 个新 family，A2、A3 并入已有 family 但各带一组
 1. 是否按 §6 的顺序，或另选；
 2. B 组 family 名称和业务是否合适，有没有想换的领域；
 3. 规格和实现由主会话做，还是规格交给 openai-codex 设计、实现由主会话完成（AGENTS.md 白名单）。
+
+## 7. B3/B4 实际进展（2026-10-31，原清单之后）
+
+本节更新B3报修和B4排班，不改其他工作线的安排。两题规格边界已由负责人确认，DDL/seed、业务IT与两个workflow已落地；CI揭示的两处通用实现问题获批修复后，在 `5fe4c8339a927fb526c004c276beb4c1c8892996` 的 [verify 41194982453](https://github.com/HoloNova/Software-IR/actions/runs/41194982453) 参考验收通过：报修599/0、排班870/0，六轮真实并发、冻结门和独立部署成功。
+
+已完成§5第3步：每family的change/scratch原题各1，以及各3份p1/p2/p3等义表述，共16份train task、16个仅参考g13批次；全部Schema/静态生成通过，原题、SIR/base、DDL/seed与业务oracle不改。变体共用同一合同/判卷，逐句保留业务条款，不从booking/shop或test搬运。定义与批次在冻结核对时尚未提交；负责人现已批准提交/普通推送，原件与输入哈希见[参考/冻结记录](../../../datasets/sir/research/2026-10-31/bounded-reference-ci41194982453/README.md)。
+
+第4步尚未开始：本轮模型调用0，新增教师/四门合格答案0，学生v5原字节不变，base HTTP负例NOT_RUN。下一步建议先对四道原题各初采1次deepseek-flash、每次最大8192输出tokens，四次初采保守预算18万tokens（按实际冻结内容字节估算，非实际用量，不含修复），负责人现已确认上述初采与提交/普通推送；不包含失败修复，不自动采12份变体或触发重复参考CI。

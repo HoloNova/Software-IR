@@ -245,3 +245,13 @@ python -m experiments.slm.data export \
 每批 JSON/JSONL 有16 MiB预算，批量静态接口另有10000行上限。本工具是小批试跑，不是大规模调度平台。训练/开发/盲测按业务家族隔离，不以改名视为新题；冲突检查覆盖传入批次，汇合多批数据时还须检查合并索引。当前没有冻结盲测集，也未开始小模型评估。
 
 本轮结果见 [首批报告](../../docs/qualification/SLM_DATA_PILOT_REPORT.md)，模型与云 GPU 建议见 [基座调研](../../docs/qualification/SLM_MODEL_SELECTION.md)。
+
+## 报修/排班新题：参考已验收，十六题已冻结
+
+`maintenance.work-order` / `staffing.shift-roster` 均为train，参考在 `5fe4c8339a927fb526c004c276beb4c1c8892996` 的 [verify 41194982453](https://github.com/HoloNova/Software-IR/actions/runs/41194982453) 通过：报修599/0、排班870/0，六组真实锁等待屏障全部观测到，完整流程含独立部署成功。原ZIP、两题日志/报告、JUnit与输入Git blob绑定见 [参考与冻结证据](../../datasets/sir/research/2026-10-31/bounded-reference-ci41194982453/README.md)；原失败和修复历史保留，不当当前阻塞。
+
+正式定义在 `tasks/maintenance-work-order-{change,scratch}[-p1|-p2|-p3]-v1.json`、`staffing-shift-roster-{change,scratch}[-p1|-p2|-p3]-v1.json`，各8题。固定公开合同、原题需求、SIR/DDL/seed及同一判卷闭包共用；变体逐条映射见 `requirements-equivalence.json`，没有增加业务、换名导入dev/test或给教师看种子/并发探针。
+
+原prepare在精确LF快照、v10手册下冻结16个 `pilots/<题号去掉-v1>-g13/`，每批只1份existing_reference，全部由该CI的原CLI完整静态生成通过、无诊断；报修55、排班56文件，两个base仅静态生成47/50文件，未运行base HTTP负例。原样保留16次检查输入/输出、冻结清单与MANIFEST；运行门全NOT_RUN，不移植参考资格。工具链450份输入及39/40项oracle闭包与受测Git blob原字节一致；没有重新编译工具链或启动业务应用。
+
+冻结检查时未提交、推送、触发CI、调用模型、采样、export或变更学生v5。负责人现已确认先提交/普通推送，再对四道原题各初采1次；12份变体不采。每次最大8192输出tokens、零自动重试，四次初采保守总预算18万tokens，实际输入大小与估算方法见 `sampling-plan.json`。失败修复不在本次费用授权内。将来采样/送门须在包含新定义与批次的已提交LF快照操作，不能直接使用Windows CRLF工作区或借参考资格。

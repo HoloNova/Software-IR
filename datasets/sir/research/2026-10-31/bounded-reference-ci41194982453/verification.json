@@ -1,0 +1,21 @@
+{
+  "aft_diagnostics": "UNAVAILABLE: bridge tool_call timed out after 150000ms; JSON Schema and original CLI are authoritative for this data-only change",
+  "api_calls": 0,
+  "base_http_negative": "NOT_RUN",
+  "diff_check": "PASSED",
+  "markdown_file_links_checked": 219,
+  "new_teacher_candidates": 0,
+  "oracle_subset_compiles": "2 PASSED",
+  "runtime_reference_commit": "5fe4c8339a927fb526c004c276beb4c1c8892996",
+  "schema_and_cli_freeze": "PASSED",
+  "staged_files": 0,
+  "static_bases": 2,
+  "static_references": 16,
+  "student_v5": "57 rows / 56 tasks, raw Git blobs unchanged",
+  "task_splits": {
+    "development": 2,
+    "test": 4,
+    "train": 87
+  },
+  "tracked_diff_scope": "task/data/docs only; no protected source changed"
+}
