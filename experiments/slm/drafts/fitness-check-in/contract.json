@@ -1,0 +1,88 @@
+{
+  "namespace": "example.gym",
+  "family": "fitness.check-in",
+  "split": "train",
+  "capabilities": ["ListPrograms", "LogWorkout", "MyMonthVisits", "MyMonthHours", "MyMonthAverage", "CoachCheckIns", "CoachMonthVisits"],
+  "entities": ["User", "AccessToken", "Program", "CheckIn"],
+  "interfaces": {
+    "ListPrograms": {
+      "route": "GET /api/programs",
+      "authentication": "none",
+      "request_fields": ["page", "size"],
+      "response_fields": ["total", "page", "size", "records"],
+      "body_kind": "Page<ProgramView>",
+      "success_status": 200,
+      "errors": {"BadPage": 400}
+    },
+    "LogWorkout": {
+      "route": "POST /api/check-ins",
+      "authentication": "Bearer",
+      "request_fields": ["programId", "hours"],
+      "response_fields": ["id", "member", "program", "hours", "checkedInAt"],
+      "body_kind": "CheckInView",
+      "success_status": 201,
+      "errors": {"unauthenticated": 401, "INVALID_REQUEST": 400, "ProgramNotFound": 404}
+    },
+    "MyMonthVisits": {
+      "route": "GET /api/my/month/visits",
+      "authentication": "Bearer",
+      "request_fields": ["month"],
+      "response_fields": [],
+      "body_kind": "integer",
+      "success_status": 200,
+      "errors": {"unauthenticated": 401, "BadPeriod": 400}
+    },
+    "MyMonthHours": {
+      "route": "GET /api/my/month/hours",
+      "authentication": "Bearer",
+      "request_fields": ["month"],
+      "response_fields": [],
+      "body_kind": "decimal",
+      "success_status": 200,
+      "errors": {"unauthenticated": 401, "BadPeriod": 400}
+    },
+    "MyMonthAverage": {
+      "route": "GET /api/my/month/average",
+      "authentication": "Bearer",
+      "request_fields": ["month"],
+      "response_fields": [],
+      "body_kind": "decimal",
+      "success_status": 200,
+      "errors": {"unauthenticated": 401, "BadPeriod": 400}
+    },
+    "CoachCheckIns": {
+      "route": "GET /api/coach/check-ins",
+      "authentication": "Bearer",
+      "request_fields": ["member", "program", "page", "size"],
+      "response_fields": ["total", "page", "size", "records"],
+      "body_kind": "Page<CheckInView>",
+      "success_status": 200,
+      "errors": {"unauthenticated": 401, "Forbidden": 403, "BadPage": 400}
+    },
+    "CoachMonthVisits": {
+      "route": "GET /api/coach/month/visits",
+      "authentication": "Bearer",
+      "request_fields": ["month", "program"],
+      "response_fields": [],
+      "body_kind": "integer",
+      "success_status": 200,
+      "errors": {"unauthenticated": 401, "Forbidden": 403, "BadPeriod": 400}
+    }
+  },
+  "scalar_bodies": {"integer": "bare JSON integer", "decimal": "bare JSON number, compared by numeric value"},
+  "hours": {"type": "decimal", "precision": 4, "scale": 2, "min": "0.25", "max": "12"},
+  "calendar": {"zone": "Asia/Shanghai", "month_format": "YYYY-MM", "interval": "[first day 00:00, next month first day 00:00)"},
+  "average": {"scale": 2, "rounding": "half up", "empty": 0},
+  "view_fields": {"CheckInView": ["id", "member", "program", "hours", "checkedInAt"], "ProgramView": ["id", "name"]},
+  "pagination": {"default_page": 1, "default_size": 20, "max_page": 10000, "max_size": 100},
+  "enums": {"Role": ["MEMBER", "COACH"]},
+  "declared_errors": {"BadPage": 400, "BadPeriod": 400, "Forbidden": 403, "ProgramNotFound": 404},
+  "storage": {
+    "user": ["id", "name", "role"],
+    "access_token": ["id", "owner_id", "expires_at"],
+    "program": ["id", "name"],
+    "check_in": ["id", "member_id", "program_id", "hours", "checked_in_at"]
+  },
+  "readiness": "GET /api/programs?page=1&size=10",
+  "fixtures": {"provided_by_oracle": true}
+}
