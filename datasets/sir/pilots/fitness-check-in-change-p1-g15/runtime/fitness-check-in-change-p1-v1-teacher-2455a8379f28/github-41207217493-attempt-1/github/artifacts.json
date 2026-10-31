@@ -1,0 +1,44 @@
+{
+  "artifacts": [
+    {
+      "archive_download_url": "https://api.github.com/repos/HoloNova/Software-IR/actions/artifacts/13044164304/zip",
+      "created_at": "2026-10-31T13:49:32Z",
+      "digest": "sha256:ee0968eb24e57cbf4df8e5f57924fe2669c06f32771ea82d97c1f9849e3a585a",
+      "expired": false,
+      "expires_at": "2027-01-29T13:48:20Z",
+      "id": 13044164304,
+      "name": "slm-gate-fitness-check-in-change-p1-v1-teacher-2455a8379f28",
+      "node_id": "MDg6QXJ0aWZhY3QxMzA0NDE2NDMwNA==",
+      "size_in_bytes": 13250,
+      "updated_at": "2026-10-31T13:49:32Z",
+      "url": "https://api.github.com/repos/HoloNova/Software-IR/actions/artifacts/13044164304",
+      "workflow_run": {
+        "head_branch": "main",
+        "head_repository_id": 1299024893,
+        "head_sha": "6b6d57d7296dd8b2701f0ee61461a44c36de2c0d",
+        "id": 41207217493,
+        "repository_id": 1299024893
+      }
+    },
+    {
+      "archive_download_url": "https://api.github.com/repos/HoloNova/Software-IR/actions/artifacts/13045305306/zip",
+      "created_at": "2026-10-31T13:49:35Z",
+      "digest": "sha256:df84de362ff9b82ea4a052e4177e4d2cdcdd742ee9daa0464eae5b001cc2526b",
+      "expired": false,
+      "expires_at": "2027-01-29T13:48:20Z",
+      "id": 13045305306,
+      "name": "slm-gate-surefire-fitness-check-in-change-p1-v1-teacher-2455a8379f28",
+      "node_id": "MDg6QXJ0aWZhY3QxMzA0NTMwNTMwNg==",
+      "size_in_bytes": 41208,
+      "updated_at": "2026-10-31T13:49:35Z",
+      "url": "https://api.github.com/repos/HoloNova/Software-IR/actions/artifacts/13045305306",
+      "workflow_run": {
+        "head_branch": "main",
+        "head_repository_id": 1299024893,
+        "head_sha": "6b6d57d7296dd8b2701f0ee61461a44c36de2c0d",
+        "id": 41207217493,
+        "repository_id": 1299024893
+      }
+    }
+  ]
+}

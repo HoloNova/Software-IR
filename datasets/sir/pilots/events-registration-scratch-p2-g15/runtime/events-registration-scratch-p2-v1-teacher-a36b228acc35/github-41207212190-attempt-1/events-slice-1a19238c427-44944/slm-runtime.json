@@ -1,0 +1,37 @@
+{
+  "schema_version" : "sir-runtime-evidence/1",
+  "id" : "events-registration-scratch-p2-v1-teacher-a36b228acc35",
+  "task_sha256" : "b81496a274df9d65390bfcc17a26a885fa8fe243de5d3f9f8ab63a15590e7e4d",
+  "oracle_sha256" : "9bac323ea10b86acdc36f16c072546b01bf5b2fc6cfbde6f85eaf245c54ccfe8",
+  "toolchain_core_sha256" : "806ff83b9e8213a6ef1877febfcfa7199ea625f7ca85976d62692b90575d35df",
+  "source_sha256" : "3ddb0b80eaf8c1fbe525ead8976654961b1a821e029fd993571120fb73448161",
+  "generated_digest" : "67c2184c0df41e2b61652b81c1f83689885dff4a52fdb4c512d9c3c878e4f79a",
+  "run_id" : "events-slice-1a19238c427-44944",
+  "gates" : {
+    "start" : "PASSED",
+    "static" : "PASSED",
+    "build" : "PASSED",
+    "business" : "PASSED"
+  },
+  "environment" : {
+    "mysql" : "8.4.13",
+    "test_revision" : "1",
+    "java" : "21.0.13"
+  },
+  "artifacts" : [ {
+    "path" : "events-slice-report.txt",
+    "sha256" : "9f766282784e65e988fa3bad11048024c86f0f7728ba404f6d82f86de853d6d8"
+  }, {
+    "path" : "logs/maven.stdout.log",
+    "sha256" : "469b759fe88eb140cd2349df80bb2c6bb298fd819a4e0fb003ef3d244aa6d807"
+  }, {
+    "path" : "logs/maven.stderr.log",
+    "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }, {
+    "path" : "logs/spring.stdout.log",
+    "sha256" : "4f4f1665670603ee7c5fb3771b01dd5baaaac5fcdf78ceec1ee74d54af070ecc"
+  }, {
+    "path" : "logs/spring.stderr.log",
+    "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  } ]
+}

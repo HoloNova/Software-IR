@@ -1,0 +1,46 @@
+{
+  "artifacts": {
+    "slm-gate-fitness-check-in-change-p1-v1-teacher-2455a8379f28": {
+      "id": 13044164304,
+      "zip_sha256": "ee0968eb24e57cbf4df8e5f57924fe2669c06f32771ea82d97c1f9849e3a585a"
+    },
+    "slm-gate-surefire-fitness-check-in-change-p1-v1-teacher-2455a8379f28": {
+      "id": 13045305306,
+      "zip_sha256": "df84de362ff9b82ea4a052e4177e4d2cdcdd742ee9daa0464eae5b001cc2526b"
+    }
+  },
+  "checked": "datasets/sir/pilots/fitness-check-in-change-p1-g15/checked.jsonl",
+  "checks_failed": 8,
+  "checks_passed": 770,
+  "failed_checks": [
+    "Q 1/2026-01 average is the bare JSON number 1.08 (3.25)",
+    "Q 1/2026-02 average is the bare JSON number 1.42 (4.25)",
+    "Q 2/2026-02 average is the bare JSON number 1.01 (2.01)",
+    "Q08 current month 2026-10 average is the bare JSON number 1.88 (3.75)",
+    "Q08 seeded February is untouched average is the bare JSON number 1.42 (4.25)",
+    "I01 user 1 2026-01 average is the bare JSON number 1.08 (3.25)",
+    "I01 user 1 2026-02 average is the bare JSON number 1.42 (4.25)",
+    "I01 user 2 2026-02 average is the bare JSON number 1.01 (2.01)"
+  ],
+  "gates": {
+    "build": "PASSED",
+    "business": "FAILED",
+    "start": "PASSED",
+    "static": "PASSED"
+  },
+  "head_sha": "6b6d57d7296dd8b2701f0ee61461a44c36de2c0d",
+  "index_before": {
+    "datasets/sir/MANIFEST.sha256": "f35d1d6479fb85ac5fc04ff4704b781dd3dcdbe2324deae76504cc750760fce5",
+    "datasets/sir/pilots/fitness-check-in-change-p1-g15/MANIFEST.sha256": "f6cf2b96858133746faa2eaaf169673e6592d22ff4091211057229cf65c84bba"
+  },
+  "inputs": {
+    "bundle": "datasets/sir/pilots/fitness-check-in-change-p1-g15",
+    "it": "FitnessCheckInBusinessConformanceIT",
+    "sample_id": "fitness-check-in-change-p1-v1-teacher-2455a8379f28"
+  },
+  "job_conclusion": "failure",
+  "run_attempt": 1,
+  "run_id": 41207217493,
+  "run_url": "https://github.com/HoloNova/Software-IR/actions/runs/41207217493",
+  "workflow": ".github/workflows/slm-business-gate.yml"
+}

@@ -1,0 +1,37 @@
+{
+  "artifacts": {
+    "slm-gate-events-registration-scratch-p2-v1-teacher-a36b228acc35": {
+      "id": 13044846796,
+      "zip_sha256": "133088caa43cc3bcf68fa9ef57e9b42c5af539d5c6c25a7c8cd3fd30bccf6706"
+    },
+    "slm-gate-surefire-events-registration-scratch-p2-v1-teacher-a36b228acc35": {
+      "id": 13044627601,
+      "zip_sha256": "834db3db471968165b68cca07ae69c5c2d3f85785971b1eee8c6eb5f0105a7fe"
+    }
+  },
+  "checked": "datasets/sir/pilots/events-registration-scratch-p2-g15/checked-r1.jsonl",
+  "checks_failed": 0,
+  "checks_passed": 626,
+  "failed_checks": [],
+  "gates": {
+    "build": "PASSED",
+    "business": "PASSED",
+    "start": "PASSED",
+    "static": "PASSED"
+  },
+  "head_sha": "6b6d57d7296dd8b2701f0ee61461a44c36de2c0d",
+  "index_before": {
+    "datasets/sir/MANIFEST.sha256": "1ea9dec1e38c3e1fd8c37be173d21a889f9ab9b458df303bb9fe08b93d4b683c",
+    "datasets/sir/pilots/events-registration-scratch-p2-g15/MANIFEST.sha256": "40c126984b0586a175684b90dc91ef0b30f449f3ac507ebe35a7e44f642c5137"
+  },
+  "inputs": {
+    "bundle": "datasets/sir/pilots/events-registration-scratch-p2-g15",
+    "it": "EventsRegistrationBusinessConformanceIT",
+    "sample_id": "events-registration-scratch-p2-v1-teacher-a36b228acc35"
+  },
+  "job_conclusion": "success",
+  "run_attempt": 1,
+  "run_id": 41207212190,
+  "run_url": "https://github.com/HoloNova/Software-IR/actions/runs/41207212190",
+  "workflow": ".github/workflows/slm-business-gate.yml"
+}

@@ -1,0 +1,14 @@
+{
+  "all_four_gates_required": true,
+  "corpus_sha256": "aa73c81662a29fdd8274f02d7c2e16240aeac3fa79bbc372668fef96beadf052",
+  "count": 1,
+  "rows": [
+    {
+      "id": "events-registration-change-p3-v1-teacher-87e84918d54b",
+      "oracle_sha256": "9bac323ea10b86acdc36f16c072546b01bf5b2fc6cfbde6f85eaf245c54ccfe8",
+      "runtime_run_id": "events-slice-1a19238a358-62964",
+      "source_sha256": "05d48903fdcd5f753b68ff278a63e8c30eb49c7691f1843993b65eb95a438d96",
+      "task_sha256": "b001283fd29447d4f5265ef1f70e1ab5f061afca41c385988852311a9c424cef"
+    }
+  ]
+}

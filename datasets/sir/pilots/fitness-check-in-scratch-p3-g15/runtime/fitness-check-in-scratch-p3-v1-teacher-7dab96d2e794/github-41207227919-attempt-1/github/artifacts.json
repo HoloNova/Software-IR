@@ -1,0 +1,44 @@
+{
+  "artifacts": [
+    {
+      "archive_download_url": "https://api.github.com/repos/HoloNova/Software-IR/actions/artifacts/13044946579/zip",
+      "created_at": "2026-10-31T13:49:44Z",
+      "digest": "sha256:54e28959cc05c72164f3a3bd4a6b5ab1d27a1766afc57d16fd8c4ce0bdebcc42",
+      "expired": false,
+      "expires_at": "2027-01-29T13:48:29Z",
+      "id": 13044946579,
+      "name": "slm-gate-fitness-check-in-scratch-p3-v1-teacher-7dab96d2e794",
+      "node_id": "MDg6QXJ0aWZhY3QxMzA0NDk0NjU3OQ==",
+      "size_in_bytes": 13300,
+      "updated_at": "2026-10-31T13:49:44Z",
+      "url": "https://api.github.com/repos/HoloNova/Software-IR/actions/artifacts/13044946579",
+      "workflow_run": {
+        "head_branch": "main",
+        "head_repository_id": 1299024893,
+        "head_sha": "6b6d57d7296dd8b2701f0ee61461a44c36de2c0d",
+        "id": 41207227919,
+        "repository_id": 1299024893
+      }
+    },
+    {
+      "archive_download_url": "https://api.github.com/repos/HoloNova/Software-IR/actions/artifacts/13045041311/zip",
+      "created_at": "2026-10-31T13:49:48Z",
+      "digest": "sha256:9da7be4b90e0453c0be77a423227d15bdfca5616ab85a032fc1d477894f0175d",
+      "expired": false,
+      "expires_at": "2027-01-29T13:48:29Z",
+      "id": 13045041311,
+      "name": "slm-gate-surefire-fitness-check-in-scratch-p3-v1-teacher-7dab96d2e794",
+      "node_id": "MDg6QXJ0aWZhY3QxMzA0NTA0MTMxMQ==",
+      "size_in_bytes": 41558,
+      "updated_at": "2026-10-31T13:49:48Z",
+      "url": "https://api.github.com/repos/HoloNova/Software-IR/actions/artifacts/13045041311",
+      "workflow_run": {
+        "head_branch": "main",
+        "head_repository_id": 1299024893,
+        "head_sha": "6b6d57d7296dd8b2701f0ee61461a44c36de2c0d",
+        "id": 41207227919,
+        "repository_id": 1299024893
+      }
+    }
+  ]
+}

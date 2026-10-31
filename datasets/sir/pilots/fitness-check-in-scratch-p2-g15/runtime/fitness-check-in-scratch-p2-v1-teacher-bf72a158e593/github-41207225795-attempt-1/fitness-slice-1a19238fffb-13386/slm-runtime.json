@@ -1,0 +1,37 @@
+{
+  "schema_version" : "sir-runtime-evidence/1",
+  "id" : "fitness-check-in-scratch-p2-v1-teacher-bf72a158e593",
+  "task_sha256" : "1341c30ee8b15161585601bde51f736880f10a9d2baadbb7ff67abd2018b8e6a",
+  "oracle_sha256" : "853d94eb3291378cdfea2fa4b76f0f2f7d896c47bd26e8574d5413427320fa31",
+  "toolchain_core_sha256" : "806ff83b9e8213a6ef1877febfcfa7199ea625f7ca85976d62692b90575d35df",
+  "source_sha256" : "f583db75d6f8a158dcd1a9b1bc4f7fec01a5153e3d613cfa88c6e086fb687fda",
+  "generated_digest" : "69f7b0a347710ddb207239b2ee86bb2e5af4aa99ad59365e74b7397aded7644c",
+  "run_id" : "fitness-slice-1a19238fffb-13386",
+  "gates" : {
+    "static" : "PASSED",
+    "start" : "PASSED",
+    "business" : "FAILED",
+    "build" : "PASSED"
+  },
+  "environment" : {
+    "java" : "21.0.13",
+    "test_revision" : "1",
+    "mysql" : "8.4.13"
+  },
+  "artifacts" : [ {
+    "path" : "fitness-slice-report.txt",
+    "sha256" : "1e7c227485a8ec2702ec6a72883babc15651884f7bff0f55bb6bdd5c2a164ee6"
+  }, {
+    "path" : "logs/maven.stdout.log",
+    "sha256" : "f0c01c716f06e2660115f794132029dc8650cdb3f8f7f3d838e655cfe4fff4f7"
+  }, {
+    "path" : "logs/maven.stderr.log",
+    "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }, {
+    "path" : "logs/spring.stdout.log",
+    "sha256" : "0e843b602a5e458092e32fb3e95a14f5f9bd78521437655fc4285776e1e05c00"
+  }, {
+    "path" : "logs/spring.stderr.log",
+    "sha256" : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  } ]
+}

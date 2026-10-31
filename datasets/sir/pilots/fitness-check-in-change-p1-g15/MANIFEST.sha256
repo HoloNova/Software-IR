@@ -17,3 +17,17 @@ c431cc2afdec4052342040442c8e3e17851e46c27a5fab1b81ab9ea3dba89f81  samples/fitnes
 826d97a99231d6ba22eff3665226de68cf511c3814f3739601b0e7b9d7bebd93  samples/fitness-check-in-change-p1-v1-teacher-2455a8379f28/response.json
 b648a1eb63348f40bc81fb57ba6d6cfd08ffd0bdb2fa1ae9b4ed8d264869c13c  system.md
 8bdca7c16e85f354010cb55d47a9453364619c8231f0e813e6df95d8e795af86  task.json
+39f0bbda1e4c4350b9932239a58899dbb27f7f8a27b976bb562be8aa96cace2e  runtime/fitness-check-in-change-p1-v1-teacher-2455a8379f28/github-41207217493-attempt-1/MANIFEST.sha256
+91d42eacf397c1b600ab0532e246c3d24a1c840ecdecae0ceed7db6cfda70b2c  runtime/fitness-check-in-change-p1-v1-teacher-2455a8379f28/github-41207217493-attempt-1/fitness-slice-1a19238cc27-13447/fitness-slice-report.txt
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  runtime/fitness-check-in-change-p1-v1-teacher-2455a8379f28/github-41207217493-attempt-1/fitness-slice-1a19238cc27-13447/logs/maven.stderr.log
+f3ae9f0517ab4e45e3949404d1a4331750727f005b83870ecf85604da4b944b7  runtime/fitness-check-in-change-p1-v1-teacher-2455a8379f28/github-41207217493-attempt-1/fitness-slice-1a19238cc27-13447/logs/maven.stdout.log
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  runtime/fitness-check-in-change-p1-v1-teacher-2455a8379f28/github-41207217493-attempt-1/fitness-slice-1a19238cc27-13447/logs/spring.stderr.log
+2c672f36a985de77a4a2b6c5654827b62e1258b20db32da1f19ecb7c623b9fe3  runtime/fitness-check-in-change-p1-v1-teacher-2455a8379f28/github-41207217493-attempt-1/fitness-slice-1a19238cc27-13447/logs/spring.stdout.log
+22a5fe60edbd9b004c96aa4e205add196a798e020c7666ab748499c558565a10  runtime/fitness-check-in-change-p1-v1-teacher-2455a8379f28/github-41207217493-attempt-1/fitness-slice-1a19238cc27-13447/slm-runtime.json
+bf610c176165a03ee30f266e941a5bcb9fa067057f97c0e75138b14094a452c9  runtime/fitness-check-in-change-p1-v1-teacher-2455a8379f28/github-41207217493-attempt-1/gate-run.json
+ee0968eb24e57cbf4df8e5f57924fe2669c06f32771ea82d97c1f9849e3a585a  runtime/fitness-check-in-change-p1-v1-teacher-2455a8379f28/github-41207217493-attempt-1/github/13044164304.zip
+df84de362ff9b82ea4a052e4177e4d2cdcdd742ee9daa0464eae5b001cc2526b  runtime/fitness-check-in-change-p1-v1-teacher-2455a8379f28/github-41207217493-attempt-1/github/13045305306.zip
+f27afcfc4552651ad70d245c456d9b25f4ec667e261dfe8953927a33f57bf6e2  runtime/fitness-check-in-change-p1-v1-teacher-2455a8379f28/github-41207217493-attempt-1/github/artifacts.json
+fbf34af2364bfea8ff00b17bc24b6a7349e38f98cad07a01ebaa98a855c898eb  runtime/fitness-check-in-change-p1-v1-teacher-2455a8379f28/github-41207217493-attempt-1/github/run.json
+08618467406f608f2a378e47c40d1c9713f6c7195d422d64c11aa4f644e68004  runtime/fitness-check-in-change-p1-v1-teacher-2455a8379f28/github-41207217493-attempt-1/junit/sir-toolchain-application/target/surefire-reports/TEST-io.kcg.sir.application.conformance.FitnessCheckInBusinessConformanceIT.xml
+b0229c34faab12efbcf5b1346eb205358ec66265106198c659b5cfa8d084b374  runtime/fitness-check-in-change-p1-v1-teacher-2455a8379f28/github-41207217493-attempt-1/junit/sir-toolchain-application/target/surefire-reports/io.kcg.sir.application.conformance.FitnessCheckInBusinessConformanceIT.txt

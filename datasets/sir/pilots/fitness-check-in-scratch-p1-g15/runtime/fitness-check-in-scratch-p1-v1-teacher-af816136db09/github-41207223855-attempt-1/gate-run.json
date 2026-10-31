@@ -1,0 +1,46 @@
+{
+  "artifacts": {
+    "slm-gate-fitness-check-in-scratch-p1-v1-teacher-af816136db09": {
+      "id": 13045385605,
+      "zip_sha256": "4fc403e9185ee1564724aae12b8eeb79295b3866f0c05569c9f24e23787ed232"
+    },
+    "slm-gate-surefire-fitness-check-in-scratch-p1-v1-teacher-af816136db09": {
+      "id": 13044841646,
+      "zip_sha256": "1caa9e00e36a864263e5df2b779f18eb3cccfc236b9214e0d1ba0d24537d7272"
+    }
+  },
+  "checked": "datasets/sir/pilots/fitness-check-in-scratch-p1-g15/checked.jsonl",
+  "checks_failed": 8,
+  "checks_passed": 770,
+  "failed_checks": [
+    "Q 1/2026-01 average is the bare JSON number 1.08 (3.25)",
+    "Q 1/2026-02 average is the bare JSON number 1.42 (4.25)",
+    "Q 2/2026-02 average is the bare JSON number 1.01 (2.01)",
+    "Q08 current month 2026-10 average is the bare JSON number 1.88 (3.75)",
+    "Q08 seeded February is untouched average is the bare JSON number 1.42 (4.25)",
+    "I01 user 1 2026-01 average is the bare JSON number 1.08 (3.25)",
+    "I01 user 1 2026-02 average is the bare JSON number 1.42 (4.25)",
+    "I01 user 2 2026-02 average is the bare JSON number 1.01 (2.01)"
+  ],
+  "gates": {
+    "build": "PASSED",
+    "business": "FAILED",
+    "start": "PASSED",
+    "static": "PASSED"
+  },
+  "head_sha": "6b6d57d7296dd8b2701f0ee61461a44c36de2c0d",
+  "index_before": {
+    "datasets/sir/MANIFEST.sha256": "8c30efb5e088cf561e47a652917bbbd0219f68a7f2473fdb2f1dfc058370d5d9",
+    "datasets/sir/pilots/fitness-check-in-scratch-p1-g15/MANIFEST.sha256": "95a4b68ab3b0e29869053a93795ebfa06f6b0b2ad3b46234b71c88440393cbac"
+  },
+  "inputs": {
+    "bundle": "datasets/sir/pilots/fitness-check-in-scratch-p1-g15",
+    "it": "FitnessCheckInBusinessConformanceIT",
+    "sample_id": "fitness-check-in-scratch-p1-v1-teacher-af816136db09"
+  },
+  "job_conclusion": "failure",
+  "run_attempt": 1,
+  "run_id": 41207223855,
+  "run_url": "https://github.com/HoloNova/Software-IR/actions/runs/41207223855",
+  "workflow": ".github/workflows/slm-business-gate.yml"
+}

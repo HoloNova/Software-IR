@@ -1,0 +1,14 @@
+{
+  "all_four_gates_required": true,
+  "corpus_sha256": "d065ea40d464cf0207df33ad2c86b78e099b5b13e684c2093f98945bfc0e5520",
+  "count": 1,
+  "rows": [
+    {
+      "id": "events-registration-scratch-p3-v1-teacher-b136601c9ef2",
+      "oracle_sha256": "9bac323ea10b86acdc36f16c072546b01bf5b2fc6cfbde6f85eaf245c54ccfe8",
+      "runtime_run_id": "events-slice-1a19238b5a5-62134",
+      "source_sha256": "06aa7ad6a54aaf3800a9ee084964035aa06544b149f8df90d042479668a1f8c1",
+      "task_sha256": "0f4c5565699fb0f9c1f5cb9b37a98e07840f41de3706192938e7b0b84b9fd1b7"
+    }
+  ]
+}
