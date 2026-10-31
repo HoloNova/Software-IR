@@ -1,0 +1,21 @@
+{
+  "actual_model": "deepseek-flash",
+  "created_at": "2026-10-31T06:08:01.090774+00:00",
+  "id": "events-registration-scratch-v1-teacher-3f281a606adc",
+  "raw_response_sha256": "0735877e540db410397cf4d5e4c72831ada1041f7c78e711e45893fb48ae6725",
+  "requested_model": "deepseek-flash",
+  "status": "CANDIDATE_NOT_YET_QUALIFIED",
+  "system_fingerprint": "bc19ba97cbe016479903222bb1578db6",
+  "usage": {
+    "completion_tokens": 1203,
+    "completion_tokens_details": null,
+    "prompt_cache_hit_tokens": 4224,
+    "prompt_cache_miss_tokens": 2622,
+    "prompt_tokens": 6846,
+    "prompt_tokens_details": {
+      "audio_tokens": null,
+      "cached_tokens": 4224
+    },
+    "total_tokens": 8049
+  }
+}

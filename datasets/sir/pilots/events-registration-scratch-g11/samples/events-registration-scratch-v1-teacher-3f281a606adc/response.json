@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "sir 0.3\nsoftware EventsRegistration {\n  metadata { displayName \"EventsRegistration\"; namespace \"example.events\"; }\n  target { language java 21; framework spring_boot; persistence mybatis_plus; database mysql; build maven; interface rest; }\n  sources { }\n  imports { }\n  declarations {\n    type Fee = Money where precision(10, 2), min(0);\n\n    entity User persistent {\n      identity id: Id generated auto;\n      field name: Name where length(1, 100) unique;\n    }\n\n    entity AccessToken persistent {\n      identity id: Token generated uuid;\n      field owner: Ref<User>;\n      field expiresAt: Moment;\n      credential subject owner expires expiresAt;\n    }\n\n    entity Event persistent {\n      identity id: Id generated auto;\n      field organizer: Ref<User>;\n      field title: Name where length(1, 100);\n      field startsAt: Moment;\n      field capacity: Quantity;\n      field registered: Count default 0;\n      field fee: Fee;\n    }\n\n    entity Registration persistent {\n      identity id: Id generated auto;\n      field event: Ref<Event>;\n      field attendee: Ref<User>;\n      field fee: Fee;\n      field registeredAt: Moment;\n      unique (event, attendee);\n    }\n\n    view EventView from Event {\n      field id: Id;\n      field organizer: Ref<User>;\n      field title: Name;\n      field startsAt: Moment;\n      field capacity: Quantity;\n      field registered: Count;\n      field remaining: Count = item.capacity - item.registered;\n      field fee: Fee;\n    }\n\n    view RegistrationView from Registration {\n      field id: Id;\n      field event: Ref<Event>;\n      field attendee: Ref<User>;\n      field fee: Fee;\n      field registeredAt: Moment;\n    }\n\n    input CreateEventInput {\n      field title: Name where length(1, 100);\n      field startsAt: Moment;\n      field capacity: Quantity;\n      field fee: Fee;\n    }\n\n    input ListEventsInput {\n      field page: PageNo;\n      field size: PageSize;\n    }\n\n    input RegisterInput {\n      field id: Id;\n    }\n\n    input MyRegistrationsInput {\n      field page: PageNo;\n      field size: PageSize;\n    }\n\n    input EventRevenueInput {\n      field id: Id;\n    }\n\n    input EventRegistrationCountInput {\n      field id: Id;\n    }\n\n    error BadPage http 400;\n    error EventNotFound http 404;\n    error RegistrationClosed http 409;\n    error AlreadyRegistered http 409;\n    error EventFull http 409;\n    error Forbidden http 403;\n\n    capability CreateEvent {\n      actor Ref<User>;\n      input CreateEventInput;\n      output EventView;\n      requires authenticated;\n      expose command at \"/events\";\n      workflow {\n        create Event as made {\n          organizer: actor;\n          title: input.title;\n          startsAt: input.startsAt;\n          capacity: input.capacity;\n          fee: input.fee;\n        }\n        persist made;\n        return made;\n      }\n    }\n\n    capability ListEvents {\n      input ListEventsInput;\n      output Page<EventView>;\n      fails BadPage;\n      requires readonly;\n      expose query at \"/events\";\n      workflow {\n        find Event where item.startsAt > now() order by startsAt ascending, id ascending Page input.page, input.size else BadPage as events;\n        return events;\n      }\n    }\n\n    capability Register {\n      actor Ref<User>;\n      input RegisterInput;\n      output RegistrationView;\n      fails EventNotFound;\n      fails RegistrationClosed;\n      fails AlreadyRegistered;\n      fails EventFull;\n      requires authenticated;\n      requires atomic;\n      expose command at \"/events/{id}/registrations\";\n      workflow {\n        load Event by input.id as course for update else EventNotFound;\n        validate course.startsAt > now() else RegistrationClosed;\n        exists Registration where item.event == course and item.attendee == actor as found;\n        validate not found else AlreadyRegistered;\n        update course when course.registered < course.capacity else EventFull {\n          registered: course.registered + 1;\n        }\n        create Registration as row {\n          event: course;\n          attendee: actor;\n          fee: course.fee;\n          registeredAt: now();\n        }\n        persist row else AlreadyRegistered;\n        persist course;\n        return row;\n      }\n    }\n\n    capability MyRegistrations {\n      actor Ref<User>;\n      input MyRegistrationsInput;\n      output Page<RegistrationView>;\n      fails BadPage;\n      requires authenticated;\n      requires readonly;\n      expose query at \"/my/registrations\";\n      workflow {\n        find Registration where item.attendee == actor order by registeredAt descending, id descending Page input.page, input.size else BadPage as rows;\n        return rows;\n      }\n    }\n\n    capability EventRevenue {\n      actor Ref<User>;\n      input EventRevenueInput;\n      output Fee;\n      fails EventNotFound;\n      fails Forbidden;\n      requires authenticated;\n      requires readonly;\n      expose query at \"/events/{id}/revenue\";\n      workflow {\n        load Event by input.id as course else EventNotFound;\n        validate course.organizer == actor else Forbidden;\n        sum Registration.fee where item.event == course as total;\n        return total;\n      }\n    }\n\n    capability EventRegistrationCount {\n      actor Ref<User>;\n      input EventRegistrationCountInput;\n      output Serial;\n      fails EventNotFound;\n      fails Forbidden;\n      requires authenticated;\n      requires readonly;\n      expose query at \"/events/{id}/registration-count\";\n      workflow {\n        load Event by input.id as course else EventNotFound;\n        validate course.organizer == actor else Forbidden;\n        count Registration where item.event == course as total;\n        return total;\n      }\n    }\n  }\n}",
+        "function_call": null,
+        "refusal": null,
+        "role": "assistant",
+        "tool_calls": null
+      }
+    }
+  ],
+  "created": 1793426876,
+  "id": "e8c351fb-1bed-4020-91e1-4e57002de1ca",
+  "model": "deepseek-flash",
+  "object": "chat.completion",
+  "service_tier": null,
+  "system_fingerprint": "bc19ba97cbe016479903222bb1578db6",
+  "usage": {
+    "completion_tokens": 1203,
+    "completion_tokens_details": null,
+    "prompt_cache_hit_tokens": 4224,
+    "prompt_cache_miss_tokens": 2622,
+    "prompt_tokens": 6846,
+    "prompt_tokens_details": {
+      "audio_tokens": null,
+      "cached_tokens": 4224
+    },
+    "total_tokens": 8049
+  }
+}

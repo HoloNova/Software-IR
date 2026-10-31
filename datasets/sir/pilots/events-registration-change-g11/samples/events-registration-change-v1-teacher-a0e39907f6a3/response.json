@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "annotations": null,
+        "audio": null,
+        "content": "sir 0.3\n\nsoftware EventSignup {\n  metadata {\n    displayName \"Event Signup\";\n    namespace \"example.events\";\n  }\n  target {\n    language java 21;\n    framework spring_boot;\n    persistence mybatis_plus;\n    database mysql;\n    build maven;\n    interface rest;\n  }\n  sources { }\n  imports { }\n  declarations {\n    type Fee = Money where precision(10, 2), min(0);\n    entity User persistent {\n      identity id: Id generated auto;\n      field name: Name unique;\n    }\n    entity AccessToken persistent {\n      identity id: Token generated uuid;\n      field owner: Ref<User>;\n      field expiresAt: Moment;\n      credential subject owner expires expiresAt;\n    }\n    entity Event persistent {\n      identity id: Id generated auto;\n      field organizer: Ref<User>;\n      field title: Name;\n      field startsAt: Moment;\n      field capacity: Quantity;\n      field registered: Count default 0;\n      field fee: Fee;\n    }\n    entity Registration persistent {\n      identity id: Id generated auto;\n      field event: Ref<Event>;\n      field attendee: Ref<User>;\n      field fee: Fee;\n      field registeredAt: Moment default now();\n      unique (event, attendee);\n    }\n    view EventView from Event {\n      field id: Id;\n      field organizer: Ref<User>;\n      field title: Name;\n      field startsAt: Moment;\n      field capacity: Quantity;\n      field registered: Count;\n      field remaining: Count = item.capacity - item.registered;\n      field fee: Fee;\n    }\n    view RegistrationView from Registration {\n      field id: Id;\n      field event: Ref<Event>;\n      field attendee: Ref<User>;\n      field fee: Fee;\n      field registeredAt: Moment;\n    }\n    input NewEvent {\n      field title: Name;\n      field startsAt: Moment;\n      field capacity: Quantity;\n      field fee: Fee;\n    }\n    input EventIdInput { field id: Id; }\n    input PageQuery { field page: PageNo; field size: PageSize; }\n    error BadPage http 400;\n    error Forbidden http 403;\n    error EventNotFound http 404;\n    error AlreadyRegistered http 409;\n    error EventFull http 409;\n    error RegistrationClosed http 409;\n\n    capability CreateEvent {\n      actor Ref<User>;\n      input NewEvent;\n      output EventView;\n      requires authenticated;\n      requires atomic;\n      expose command at \"/events\";\n      workflow {\n        create Event as made {\n          organizer: actor;\n          title: input.title;\n          startsAt: input.startsAt;\n          capacity: input.capacity;\n          fee: input.fee;\n        }\n        persist made;\n        return made;\n      }\n    }\n    capability ListEvents {\n      input PageQuery;\n      output Page<EventView>;\n      fails BadPage;\n      requires readonly;\n      expose query at \"/events\";\n      workflow {\n        find Event where item.startsAt > now()\n          order by startsAt ascending, id ascending\n          Page input.page, input.size else BadPage as rows;\n        return rows;\n      }\n    }\n    capability Register {\n      actor Ref<User>;\n      input EventIdInput;\n      output RegistrationView;\n      fails AlreadyRegistered;\n      fails EventFull;\n      fails EventNotFound;\n      fails RegistrationClosed;\n      requires authenticated;\n      requires atomic;\n      expose command at \"/events/{id}/registrations\";\n      workflow {\n        load Event by input.id as target for update else EventNotFound;\n        validate target.startsAt > now() else RegistrationClosed;\n        exists Registration where item.event == target and item.attendee == actor as found;\n        validate not found else AlreadyRegistered;\n        update target when target.registered < target.capacity else EventFull {\n          registered: target.registered + 1;\n        }\n        persist target;\n        create Registration as made {\n          event: target;\n          attendee: actor;\n          fee: target.fee;\n        }\n        persist made else AlreadyRegistered;\n        return made;\n      }\n    }\n    capability MyRegistrations {\n      actor Ref<User>;\n      input PageQuery;\n      output Page<RegistrationView>;\n      fails BadPage;\n      requires authenticated;\n      requires readonly;\n      expose query at \"/my/registrations\";\n      workflow {\n        find Registration where item.attendee == actor\n          order by registeredAt descending, id descending\n          Page input.page, input.size else BadPage as rows;\n        return rows;\n      }\n    }\n    capability EventRevenue {\n      actor Ref<User>;\n      input EventIdInput;\n      output Fee;\n      fails EventNotFound;\n      fails Forbidden;\n      requires authenticated;\n      requires readonly;\n      expose query at \"/events/{id}/revenue\";\n      workflow {\n        load Event by input.id as target else EventNotFound;\n        validate target.organizer == actor else Forbidden;\n        sum Registration.fee where item.event == target as total;\n        return total;\n      }\n    }\n    capability EventRegistrationCount {\n      actor Ref<User>;\n      input EventIdInput;\n      output Serial;\n      fails EventNotFound;\n      fails Forbidden;\n      requires authenticated;\n      requires readonly;\n      expose query at \"/events/{id}/registration-count\";\n      workflow {\n        load Event by input.id as target else EventNotFound;\n        validate target.organizer == actor else Forbidden;\n        count Registration where item.event == target as total;\n        return total;\n      }\n    }\n  }\n}",
+        "function_call": null,
+        "refusal": null,
+        "role": "assistant",
+        "tool_calls": null
+      }
+    }
+  ],
+  "created": 1793426870,
+  "id": "814be8ed-e3dd-4d55-9794-b9460e1f784a",
+  "model": "deepseek-flash",
+  "object": "chat.completion",
+  "service_tier": null,
+  "system_fingerprint": "bc19ba97cbe016479903222bb1578db6",
+  "usage": {
+    "completion_tokens": 1136,
+    "completion_tokens_details": null,
+    "prompt_cache_hit_tokens": 7040,
+    "prompt_cache_miss_tokens": 241,
+    "prompt_tokens": 7281,
+    "prompt_tokens_details": {
+      "audio_tokens": null,
+      "cached_tokens": 7040
+    },
+    "total_tokens": 8417
+  }
+}
