@@ -1,0 +1,37 @@
+{
+  "artifacts": {
+    "slm-gate-course-query-slice-scratch-p3-v1-teacher-3a3ccfe3ae82": {
+      "id": 13026613550,
+      "zip_sha256": "320c854a27588920e9f090c42923226648f2688bfd859e19466e020dda74bddd"
+    },
+    "slm-gate-surefire-course-query-slice-scratch-p3-v1-teacher-3a3ccfe3ae82": {
+      "id": 13026992230,
+      "zip_sha256": "912b7ee28ff135abbcdc5966387b1fb4e3a1dfd50c06328aec29fac808517f5a"
+    }
+  },
+  "checked": "datasets/sir/pilots/query-slice-scratch-p3-g10/checked.jsonl",
+  "checks_failed": 0,
+  "checks_passed": 41,
+  "failed_checks": [],
+  "gates": {
+    "build": "PASSED",
+    "business": "PASSED",
+    "start": "PASSED",
+    "static": "PASSED"
+  },
+  "head_sha": "fd37af7f1feed67ca365dbfd0f26514a65006cd1",
+  "index_before": {
+    "datasets/sir/MANIFEST.sha256": "4b4984d4122665cc70549d4e021f4d39b736c8981bec8b439a2960816e1c8684",
+    "datasets/sir/pilots/query-slice-scratch-p3-g10/MANIFEST.sha256": "e7b2e067e01e0ef8b8d46cc25f4381719785323f13b2efb2fb0124a009a68375"
+  },
+  "inputs": {
+    "bundle": "datasets/sir/pilots/query-slice-scratch-p3-g10",
+    "it": "QuerySliceBusinessConformanceIT",
+    "sample_id": "course-query-slice-scratch-p3-v1-teacher-3a3ccfe3ae82"
+  },
+  "job_conclusion": "success",
+  "run_attempt": 1,
+  "run_id": 41160589625,
+  "run_url": "https://github.com/HoloNova/Software-IR/actions/runs/41160589625",
+  "workflow": ".github/workflows/slm-business-gate.yml"
+}

@@ -1,0 +1,42 @@
+{
+  "artifacts": {
+    "slm-gate-auth-crud-access-change-p2-v1-teacher-d57e595f7c07": {
+      "id": 13026488833,
+      "zip_sha256": "b5540f1751d496dbff472517bffcaeadccb44cbaaaf63f832b7335777bfcd8ae"
+    },
+    "slm-gate-surefire-auth-crud-access-change-p2-v1-teacher-d57e595f7c07": {
+      "id": 13026813263,
+      "zip_sha256": "a72e3fc3a85458e3d08ab6efb07bd619aec07540fe37ba5fa63eb4bfa211c388"
+    }
+  },
+  "checked": "datasets/sir/pilots/crud-access-change-p2-g10/checked-r1.jsonl",
+  "checks_failed": 4,
+  "checks_passed": 44,
+  "failed_checks": [
+    "correct role cannot bypass owner (expected=404 actual=200)",
+    "denied patches wrote nothing ([1|1|edited|open|2, 2|1|private|hidden|1])",
+    "rejected patch wrote nothing ([1|1|edited|open|2, 2|1|private|hidden|1])",
+    "owner clean patch (expected=200 actual=409)"
+  ],
+  "gates": {
+    "build": "PASSED",
+    "business": "FAILED",
+    "start": "PASSED",
+    "static": "PASSED"
+  },
+  "head_sha": "fd37af7f1feed67ca365dbfd0f26514a65006cd1",
+  "index_before": {
+    "datasets/sir/MANIFEST.sha256": "d4ba0b58190adf66ab1b92ff90f1ad96954dd67ae5135ac1ffeceb40794f1958",
+    "datasets/sir/pilots/crud-access-change-p2-g10/MANIFEST.sha256": "ffbdfb0dda89c3c553febb7f8716dcfa77cf3c3f1e39fcdb3754d5516281f547"
+  },
+  "inputs": {
+    "bundle": "datasets/sir/pilots/crud-access-change-p2-g10",
+    "it": "CrudAccessBusinessConformanceIT",
+    "sample_id": "auth-crud-access-change-p2-v1-teacher-d57e595f7c07"
+  },
+  "job_conclusion": "failure",
+  "run_attempt": 1,
+  "run_id": 41160582049,
+  "run_url": "https://github.com/HoloNova/Software-IR/actions/runs/41160582049",
+  "workflow": ".github/workflows/slm-business-gate.yml"
+}

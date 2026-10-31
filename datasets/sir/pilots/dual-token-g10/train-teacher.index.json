@@ -1,0 +1,14 @@
+{
+  "all_four_gates_required": true,
+  "corpus_sha256": "bc4791500bd0aaae430950a06917b4071303c5e312fb451a4875ca310435c04f",
+  "count": 1,
+  "rows": [
+    {
+      "id": "auth-dual-token-v1-teacher-d77f23d76937",
+      "oracle_sha256": "1c0e1412b70767cd6d24e1fdae3eae6970a500db87bf2f65b382c727c692b058",
+      "runtime_run_id": "dual-token-slice-1a18fcf4e46-26446",
+      "source_sha256": "93c2e3aef4f4a47ca5be21dd9cc23e668f1a386dfb38d334f780cb88625c4c75",
+      "task_sha256": "9e40f18906c45d3671be2df952ea6b77d8b6795e8a194a36ff22c56fedf880d8"
+    }
+  ]
+}

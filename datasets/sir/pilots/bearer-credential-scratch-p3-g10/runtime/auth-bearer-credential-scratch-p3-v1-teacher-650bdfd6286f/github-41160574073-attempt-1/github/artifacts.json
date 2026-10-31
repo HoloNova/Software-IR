@@ -1,0 +1,44 @@
+{
+  "artifacts": [
+    {
+      "archive_download_url": "https://api.github.com/repos/HoloNova/Software-IR/actions/artifacts/13026703379/zip",
+      "created_at": "2026-10-31T02:35:08Z",
+      "digest": "sha256:aa401f415ec84333d833cbbccd76be90788b0ad6aa7bd2283ed034183783a544",
+      "expired": false,
+      "expires_at": "2027-01-29T02:33:53Z",
+      "id": 13026703379,
+      "name": "slm-gate-auth-bearer-credential-scratch-p3-v1-teacher-650bdfd6286f",
+      "node_id": "MDg6QXJ0aWZhY3QxMzAyNjcwMzM3OQ==",
+      "size_in_bytes": 5655,
+      "updated_at": "2026-10-31T02:35:08Z",
+      "url": "https://api.github.com/repos/HoloNova/Software-IR/actions/artifacts/13026703379",
+      "workflow_run": {
+        "head_branch": "main",
+        "head_repository_id": 1299024893,
+        "head_sha": "fd37af7f1feed67ca365dbfd0f26514a65006cd1",
+        "id": 41160574073,
+        "repository_id": 1299024893
+      }
+    },
+    {
+      "archive_download_url": "https://api.github.com/repos/HoloNova/Software-IR/actions/artifacts/13026768328/zip",
+      "created_at": "2026-10-31T02:35:10Z",
+      "digest": "sha256:e317e75a09cee9be46d7821598f24d849e7ab0a69e1f6cdfae862d416f49b423",
+      "expired": false,
+      "expires_at": "2027-01-29T02:33:53Z",
+      "id": 13026768328,
+      "name": "slm-gate-surefire-auth-bearer-credential-scratch-p3-v1-teacher-650bdfd6286f",
+      "node_id": "MDg6QXJ0aWZhY3QxMzAyNjc2ODMyOA==",
+      "size_in_bytes": 4839,
+      "updated_at": "2026-10-31T02:35:10Z",
+      "url": "https://api.github.com/repos/HoloNova/Software-IR/actions/artifacts/13026768328",
+      "workflow_run": {
+        "head_branch": "main",
+        "head_repository_id": 1299024893,
+        "head_sha": "fd37af7f1feed67ca365dbfd0f26514a65006cd1",
+        "id": 41160574073,
+        "repository_id": 1299024893
+      }
+    }
+  ]
+}

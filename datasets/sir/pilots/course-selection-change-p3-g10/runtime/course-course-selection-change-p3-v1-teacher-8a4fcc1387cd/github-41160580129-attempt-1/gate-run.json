@@ -1,0 +1,37 @@
+{
+  "artifacts": {
+    "slm-gate-course-course-selection-change-p3-v1-teacher-8a4fcc1387cd": {
+      "id": 13026947324,
+      "zip_sha256": "d6c096bedae9194a90dca426d952896e75fe6f5ae96a7f283bdf716105595683"
+    },
+    "slm-gate-surefire-course-course-selection-change-p3-v1-teacher-8a4fcc1387cd": {
+      "id": 13026464067,
+      "zip_sha256": "cf464bff3cfa904f64da7452fc4546953a37613baf41d6353f9af534e43c5274"
+    }
+  },
+  "checked": "datasets/sir/pilots/course-selection-change-p3-g10/checked-r1.jsonl",
+  "checks_failed": 0,
+  "checks_passed": 152,
+  "failed_checks": [],
+  "gates": {
+    "build": "PASSED",
+    "business": "PASSED",
+    "start": "PASSED",
+    "static": "PASSED"
+  },
+  "head_sha": "fd37af7f1feed67ca365dbfd0f26514a65006cd1",
+  "index_before": {
+    "datasets/sir/MANIFEST.sha256": "9a81f752e123ae397dc12dd7dd2b0f63b3de2bc7c656851ab9d8efa16da1c130",
+    "datasets/sir/pilots/course-selection-change-p3-g10/MANIFEST.sha256": "b3a6c0f53a2539558a00adbc792910f5ad653b5fd424926a5cde090c9648f9c8"
+  },
+  "inputs": {
+    "bundle": "datasets/sir/pilots/course-selection-change-p3-g10",
+    "it": "CourseSelectionBusinessConformanceIT",
+    "sample_id": "course-course-selection-change-p3-v1-teacher-8a4fcc1387cd"
+  },
+  "job_conclusion": "success",
+  "run_attempt": 1,
+  "run_id": 41160580129,
+  "run_url": "https://github.com/HoloNova/Software-IR/actions/runs/41160580129",
+  "workflow": ".github/workflows/slm-business-gate.yml"
+}

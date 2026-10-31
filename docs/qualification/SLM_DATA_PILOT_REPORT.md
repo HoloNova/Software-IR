@@ -706,3 +706,37 @@ v8 累计 **4 次 API**，输入 **47722**（缓存 **21888**）、输出 **6055
 本机离线TDD已完成，最终与CI相同入口执行 **139项，零失败/错误/跳过**；标准库trace统计九个文件可执行行总覆盖 **86.66%**，各自均超过80%，不冒充分支覆盖。真实旧材料仅dry-run：#65仍为 **401/25失败**、#66为 **426/0通过**；3963个Git跟踪数据文件及暂存区前后未变。这不是新业务验收或新资格。测试只在临时Git仓库/ZIP执行，外部GH/付费API被替换，指纹/附件/收录检查走真实实现。
 
 verify已接入轻量Python套件并上传`slm-python-contracts`，等待提交后的同SHA结果；本轮 **CI NOT_RUN**，没有本机Maven、应用/数据库、模型调用或训练。AFT诊断超时无fresh快照、独立类型检查未运行，未声称全量检查全绿。合格仍 **49条**、学生 **v4**。尚未提交推送，也未执行4.5临时目录清理。
+
+<a id="slm-v9-g10"></a>
+
+## 第三十一阶段：v9 对 19 道无合格题的采样、修复与业务门（2026-10-31）
+
+`e6f3b1d`（containsLiteral 接受可选文本）的 [verify #207](https://github.com/HoloNova/Software-IR/actions/runs/41159460142) 通过。负责人确认 v9（`e5a7a5a`）后，对 train 集 19 道尚无合格答案的题各新建 `*-g10` 批次，用 v9 各采一次；静态失败的 15 份各按 `repair-general-v1.md` 修一轮，不自动重试。检查器为本机按当时源码编译的 kcg-cli。
+
+| 轮次 | 次数 | 输入（缓存命中） | 输出 | 合计 | 静态通过 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 初采 | 19 | 125,529（78,592） | 33,507 | 159,036 | 4 |
+| 修复 | 15 | 153,141（133,760） | 31,345 | 184,486 | 7 |
+| **合计** | 34 | 278,670（212,352） | 64,852 | **343,522** | **11** |
+
+初采失败中，选课 7 份有 6 份把 `target` 用作名字，新 Parser 提示（`2282ad2`）准确指出它是关键字，修复后多数改对。仍失败的 8 份按一轮额度封存：选课从零写 4 份与改写 p2、CRUD 从零写 p1（给 version 写 default）、token-desk 从零写 p2、write-slice 从零写 p1（把 expectedVersion 当实体字段）。
+
+11 份静态通过者提交为 `fd37af7` 后在同一 SHA 派发业务门，用 `archive-gate` 逐个核验归档：
+
+| 批次 | 业务门 | 业务检查 |
+| --- | --- | --- |
+| `bearer-credential-scratch-p1-g10` | [#67](https://github.com/HoloNova/Software-IR/actions/runs/41160572070) | 36/0 |
+| `bearer-credential-scratch-p3-g10` | [#68](https://github.com/HoloNova/Software-IR/actions/runs/41160574073) | 36/0 |
+| `blog-scratch-g10` | [#69](https://github.com/HoloNova/Software-IR/actions/runs/41160576074) | 426/0 |
+| `course-selection-change-g10` | [#70](https://github.com/HoloNova/Software-IR/actions/runs/41160577979) | 152/0 |
+| `course-selection-change-p3-g10` | [#71](https://github.com/HoloNova/Software-IR/actions/runs/41160580129) | 152/0 |
+| `crud-access-change-p2-g10` | [#72](https://github.com/HoloNova/Software-IR/actions/runs/41160582049) | 44/4 |
+| `crud-access-change-p3-g10` | [#73](https://github.com/HoloNova/Software-IR/actions/runs/41160584205) | 44/4 |
+| `dual-token-g10` | [#74](https://github.com/HoloNova/Software-IR/actions/runs/41160586680) | 35/0 |
+| `query-slice-scratch-p3-g10` | [#75](https://github.com/HoloNova/Software-IR/actions/runs/41160589625) | 41/0 |
+| `relation-slice-scratch-p2-g10` | [#76](https://github.com/HoloNova/Software-IR/actions/runs/41160591769) | 41/0 |
+| `token-desk-scratch-p1-g10` | [#77](https://github.com/HoloNova/Software-IR/actions/runs/41160594424) | START FAILED |
+
+**8 份四门通过并导出**，合格教师答案 **49 → 57 条**（鉴权 29、课程 26、博客 2）。博客从零写首次合格，使用的正是可选关键字写法 `input.keyword is none or ... containsLiteral input.keyword`，这也是 `e6f3b1d` 在真实 MySQL 上的第一份证据；选课改写原题与 p3 首次合格。失败三份：CRUD 改写 p2/p3 同样的 4 项（角色绕过归属、被拒修改仍写库、本人修改返回 409），token-desk 从零写 p1 启动报 `KCG-ACTOR-STARTUP-001`（给合同不要求登录的接口加了认证）。失败证据照样归档，不再追修。
+
+学生数据 **v5**：v4 的 49 条原字节保留，追加 8 条，共 57 条；固定 revision 的三个分词器重测，保留行与 v4 记录逐条相同，最长完整序列 **9,340／7,141 tokens**（v4 为 9,311／7,102）。73 道题中 56 道已有合格答案，**17 道仍无**（train 11、development 2、test 4）。未训练。

@@ -1,0 +1,37 @@
+{
+  "artifacts": {
+    "slm-gate-content-blog-scratch-v1-teacher-6cf0eae071cc": {
+      "id": 13027280430,
+      "zip_sha256": "327ee27621e9970f820086e01196a02f5c3cea32eac3fb0b103dac4e7f7453d3"
+    },
+    "slm-gate-surefire-content-blog-scratch-v1-teacher-6cf0eae071cc": {
+      "id": 13027060874,
+      "zip_sha256": "68233da0552c499901488df29fd4a015d07f95600b3af7aa5d03b6b1d284f133"
+    }
+  },
+  "checked": "datasets/sir/pilots/blog-scratch-g10/checked-r1.jsonl",
+  "checks_failed": 0,
+  "checks_passed": 426,
+  "failed_checks": [],
+  "gates": {
+    "build": "PASSED",
+    "business": "PASSED",
+    "start": "PASSED",
+    "static": "PASSED"
+  },
+  "head_sha": "fd37af7f1feed67ca365dbfd0f26514a65006cd1",
+  "index_before": {
+    "datasets/sir/MANIFEST.sha256": "41f02f665078b0f7f60d671a47b57fcb3926329f2d8deda4910e5a532e9256e7",
+    "datasets/sir/pilots/blog-scratch-g10/MANIFEST.sha256": "5b21e5b5655e8fe5f9701da0753d60f109bf17fdc35365cbcca4f1d3c65fe282"
+  },
+  "inputs": {
+    "bundle": "datasets/sir/pilots/blog-scratch-g10",
+    "it": "BlogBusinessConformanceIT",
+    "sample_id": "content-blog-scratch-v1-teacher-6cf0eae071cc"
+  },
+  "job_conclusion": "success",
+  "run_attempt": 1,
+  "run_id": 41160576074,
+  "run_url": "https://github.com/HoloNova/Software-IR/actions/runs/41160576074",
+  "workflow": ".github/workflows/slm-business-gate.yml"
+}

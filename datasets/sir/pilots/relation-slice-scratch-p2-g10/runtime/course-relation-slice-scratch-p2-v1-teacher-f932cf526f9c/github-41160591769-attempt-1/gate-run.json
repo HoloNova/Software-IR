@@ -1,0 +1,37 @@
+{
+  "artifacts": {
+    "slm-gate-course-relation-slice-scratch-p2-v1-teacher-f932cf526f9c": {
+      "id": 13026668443,
+      "zip_sha256": "515f6e966da6c58b9dd7b3b89e322b6ba3b3bbc519b4be9afdd6700a7d69cef8"
+    },
+    "slm-gate-surefire-course-relation-slice-scratch-p2-v1-teacher-f932cf526f9c": {
+      "id": 13026778447,
+      "zip_sha256": "7ebed4490bc6da75a41fd1116298df64ee16176c84218ec9c1c6c78c74517641"
+    }
+  },
+  "checked": "datasets/sir/pilots/relation-slice-scratch-p2-g10/checked.jsonl",
+  "checks_failed": 0,
+  "checks_passed": 41,
+  "failed_checks": [],
+  "gates": {
+    "build": "PASSED",
+    "business": "PASSED",
+    "start": "PASSED",
+    "static": "PASSED"
+  },
+  "head_sha": "fd37af7f1feed67ca365dbfd0f26514a65006cd1",
+  "index_before": {
+    "datasets/sir/MANIFEST.sha256": "05805664cfbe784d934d1164049beb85fdf1213749d6a47cbb1e152d3139ffef",
+    "datasets/sir/pilots/relation-slice-scratch-p2-g10/MANIFEST.sha256": "299ad04c2cbb09e158dc9bb2a7e998dd71ee3c1f4097763c98232b3bf62d8b99"
+  },
+  "inputs": {
+    "bundle": "datasets/sir/pilots/relation-slice-scratch-p2-g10",
+    "it": "RelationSliceBusinessConformanceIT",
+    "sample_id": "course-relation-slice-scratch-p2-v1-teacher-f932cf526f9c"
+  },
+  "job_conclusion": "success",
+  "run_attempt": 1,
+  "run_id": 41160591769,
+  "run_url": "https://github.com/HoloNova/Software-IR/actions/runs/41160591769",
+  "workflow": ".github/workflows/slm-business-gate.yml"
+}

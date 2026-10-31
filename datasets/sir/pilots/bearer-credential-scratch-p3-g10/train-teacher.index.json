@@ -1,0 +1,14 @@
+{
+  "all_four_gates_required": true,
+  "corpus_sha256": "0bd599a9bc2fc9e58630406494a368a7653007023103c03d41a2a11be6f9913c",
+  "count": 1,
+  "rows": [
+    {
+      "id": "auth-bearer-credential-scratch-p3-v1-teacher-650bdfd6286f",
+      "oracle_sha256": "5c3a07bb8e4a52504fdb53adff9a2cefe7ee2ffe09bcdf58be07fc560520e69b",
+      "runtime_run_id": "bearer-slice-1a18fcf5dbf-34919",
+      "source_sha256": "7410b55415e422ca55816d56a1c2d7c96db70304d06c0eb73cabc966098638da",
+      "task_sha256": "7036254e1f2a6ed7d3790e5a12ca2f92eeac13880ae997c31b69f8fe5bca9af9"
+    }
+  ]
+}

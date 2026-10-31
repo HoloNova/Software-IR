@@ -27,3 +27,17 @@ c63fcef15f4e588d8e4932f48fff22e5b004846285de3f3eaf256ba49cd4f1ab  samples/auth-c
 900abe66a292f282afd9c9b588d8f64fd68d2652508e8b7618467bfdd6e7f015  samples/auth-crud-access-change-p3-v1-teacher-448eeaa24e17/response.json
 ac974d5a74dbfe4b9dfce1e09929b162c43465619bb5daabcf66a2c3f5951c5b  system.md
 eda3de45473ca3f8591f0e8930dcc7ab2b56d7ff3b32ad2bad0a3475088d1c52  task.json
+e4988bf27b10d69c650a53599c503b63edf3adf2a132049950517194a82deadd  runtime/auth-crud-access-change-p3-v1-teacher-448eeaa24e17/github-41160584205-attempt-1/MANIFEST.sha256
+951a17493fea1cfa61b97bb1c16c898eb2bd763d5eb54be350fb4c135b679263  runtime/auth-crud-access-change-p3-v1-teacher-448eeaa24e17/github-41160584205-attempt-1/crud-access-1a18fcf4f53-26597/crud-access-report.txt
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  runtime/auth-crud-access-change-p3-v1-teacher-448eeaa24e17/github-41160584205-attempt-1/crud-access-1a18fcf4f53-26597/logs/maven.stderr.log
+4c9c0315d8f1fb49625d9e73fdd096caa3d5fa3d672c660ca55c7f8ae2f8ea7a  runtime/auth-crud-access-change-p3-v1-teacher-448eeaa24e17/github-41160584205-attempt-1/crud-access-1a18fcf4f53-26597/logs/maven.stdout.log
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  runtime/auth-crud-access-change-p3-v1-teacher-448eeaa24e17/github-41160584205-attempt-1/crud-access-1a18fcf4f53-26597/logs/spring.stderr.log
+e1dc07e3d86ce261547854a4a1e23aa2b410e4e7fd337577432f89684ebba910  runtime/auth-crud-access-change-p3-v1-teacher-448eeaa24e17/github-41160584205-attempt-1/crud-access-1a18fcf4f53-26597/logs/spring.stdout.log
+9c80ce775e86b263d4dd200d29e70034876b02d6b1ee8eefe16cbca20f80f0c1  runtime/auth-crud-access-change-p3-v1-teacher-448eeaa24e17/github-41160584205-attempt-1/crud-access-1a18fcf4f53-26597/slm-runtime.json
+e8a3b4993c3f23d51287a82146b0403b5bfede5379f14cd1b3d0987398d022ec  runtime/auth-crud-access-change-p3-v1-teacher-448eeaa24e17/github-41160584205-attempt-1/gate-run.json
+5e92d1b85ce75a5efb5411113db279450636a3f2a6457ed1295d2b4886e0b02f  runtime/auth-crud-access-change-p3-v1-teacher-448eeaa24e17/github-41160584205-attempt-1/github/13026972292.zip
+c5c0dd8acaabd96f5a6b5bf39c5b5c4823fe739e0420c1670271056a214a4335  runtime/auth-crud-access-change-p3-v1-teacher-448eeaa24e17/github-41160584205-attempt-1/github/13027017047.zip
+a2f4fca586b35160672c034679e8162c6c3eeb61b1945e7618bbb66c095ab6b2  runtime/auth-crud-access-change-p3-v1-teacher-448eeaa24e17/github-41160584205-attempt-1/github/artifacts.json
+cc9da58404a7f0ceef6439ee93cd9735c7e51f2c6ca600c89c3d391c476eeca0  runtime/auth-crud-access-change-p3-v1-teacher-448eeaa24e17/github-41160584205-attempt-1/github/run.json
+b22c474f9fa628b8f01c61277cf8844844806d9a271287e57cfc5d637fd089df  runtime/auth-crud-access-change-p3-v1-teacher-448eeaa24e17/github-41160584205-attempt-1/junit/sir-toolchain-application/target/surefire-reports/TEST-io.kcg.sir.application.conformance.CrudAccessBusinessConformanceIT.xml
+42d8fdfa95d8bceeb35261e18baede7ba3dbbf7f316569a76af8289610813f52  runtime/auth-crud-access-change-p3-v1-teacher-448eeaa24e17/github-41160584205-attempt-1/junit/sir-toolchain-application/target/surefire-reports/io.kcg.sir.application.conformance.CrudAccessBusinessConformanceIT.txt

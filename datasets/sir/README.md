@@ -125,3 +125,7 @@
 负责人另批 43500 tokens 后，三份指定候选各按原 repair 新反馈一次，共输入 **35020**（缓存 **29568**）、输出 **4628**、合计 **39648 tokens**，不自动重试。改写 `bba0b5b48fc4` 修正字段自比较和两处唯一冲突处理，静态无诊断、生成 57 文件；从零新子候选 `275138cf0c55`／`216042934560` 仍有 Optional 两条和自比较一条，且两份新源码逐字节相同，按本轮额度停止。
 
 原响应／父子关系／历史资格不改，新结果分别写入两批的 `checked-r1-<父短ID>.jsonl`；新运行门仍 NOT_RUN。只计划将静态通过的改写候选提交后送业务门，四门通过且归档导出后才增加资格；**当前仍48条、博客0条、学生v3不变，未训练**。原始审批、用量、诊断和差异见 [`research/2026-10-30/blog-g9-repair/`](research/2026-10-30/blog-g9-repair/)，完整记录见[第二十六阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-blog-g9-feedback)。
+
+## v9 补采 g10（8 份新合格，累计 57 条）
+
+19 个 `pilots/*-g10` 批次各用 v9 采一次，失败的 15 份各修一轮，共 34 次调用、343,522 tokens；11 份静态通过并送业务门 #67–#77，8 份四门通过并导出。各批次 `MANIFEST.sha256` 覆盖批次内全部文件，业务门证据由 `archive-gate` 归档到 `runtime/<样本>/github-<run>-attempt-1/`。学生数据为 `student/train-student-v5.jsonl`（v4 的 49 条原字节加 8 条）。详见[第三十一阶段](../../docs/qualification/SLM_DATA_PILOT_REPORT.md#slm-v9-g10)。

@@ -1,0 +1,37 @@
+=== Token desk (Uuid keys, no-op guarded update, unique lookup) business conformance ===
+verdict=FAILED
+runId=token-slice-1a18fcf7942-62048
+schemaName=kcg_conf_run
+advisoryLock=held during the run
+schemaSource=TEST_FIXTURE_DDL
+productInitializeImplemented=false
+productUpdateImplemented=false
+sirResource=EXTERNAL_CANDIDATE:candidate.sir sha256=9fb952f4ad734b72eb643a21e48f069cf9f7c7c865bc1a74e4f845fa1cdd37fd
+fixtureDdl=/conformance/mysql/token-desk-ddl.sql sha256=fec003ab48d0e4f1e1bd6949cb884ec2d3ec6b100e3c050f630f006425aac072
+fixtureSeed=/conformance/mysql/token-desk-seed.sql sha256=a2b431d018c4213aa3c27934298f8da8c0f8d9a555d4e84d29b96a3ce8737741
+generatedFiles=38 combinedSha256=650ef286e5f7ac73733cadda2fade9dfa2f85b5d22ffb016be8f3782d45506b4
+generatedProjectBuild=PASSED (exit 0)
+httpReadiness=NOT_RUN
+readinessDiagnostic=processAlive=false springStdoutBytes=5025 springStderrBytes=0 unreachable=java.net.ConnectException <- java.net.ConnectException <- java.nio.channels.ClosedChannelException
+mysqlRowsBefore=0 mysqlRowsAfter=0
+mavenOffline=false
+javaVersion=21.0.13
+osName=Linux osArch=amd64
+serverPort=18080
+slmMysqlVersion=8.4.13
+slmSampleId=auth-token-desk-scratch-p1-v1-teacher-ef74b20dce95
+slmSourceSha256=9fb952f4ad734b72eb643a21e48f069cf9f7c7c865bc1a74e4f845fa1cdd37fd
+slmGeneratedDigest=db3e8670202f28b0bfde70dc3d16600ef32591c486052a7112937d5bd4236054
+
+checksPassed=8 checksFailed=1
+PASS the SIR slice compiles without errors (warnings remain visible) (diagnostics=[])
+PASS the compiler emitted a generated project (generatedFileCount=38)
+PASS candidate runtime compilation matches full static generation (sourceSha256=9fb952f4ad734b72eb643a21e48f069cf9f7c7c865bc1a74e4f845fa1cdd37fd generatedDigest=db3e8670202f28b0bfde70dc3d16600ef32591c486052a7112937d5bd4236054)
+PASS the generated project builds (mvn clean verify) (exitCode=0)
+PASS the build produced an executable jar (projectRoot=/home/runner/work/Software-IR/Software-IR/ci-work/token-slice-1a18fcf7942-62048/generated-project)
+PASS the generated application process exited (stopped=true)
+PASS the owned schema was dropped and its absence proved (schema=kcg_conf_run)
+PASS the advisory lock for the owned schema was released (released=true)
+FAIL the generated application serves the compiled business route (readinessUrl=http://127.0.0.1:18080/api/get-credential?id=11111111-1111-4111-8111-111111111111)
+
+failure=the generated application never became ready

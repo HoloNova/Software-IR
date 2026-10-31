@@ -1,0 +1,14 @@
+{
+  "all_four_gates_required": true,
+  "corpus_sha256": "31a4bf603d6bd9c4dede9d064b63bbe6a11aa5abc09abe3d822964360b49ff02",
+  "count": 1,
+  "rows": [
+    {
+      "id": "content-blog-scratch-v1-teacher-6cf0eae071cc",
+      "oracle_sha256": "b19875a18b071c0921ad34072f9de4c8c10b668db69fb5415eb3b401d6a7c843",
+      "runtime_run_id": "blog-slice-1a18fcf42d8-18056",
+      "source_sha256": "7ca9e56914bd004b53ad90f0f306af1cdc4f95a14b40f29ef8d9f7d7070b222d",
+      "task_sha256": "3771eae2f437ba6d87c827d7cd216984865be8a7a8ce09ce33a331964d0c62c8"
+    }
+  ]
+}

@@ -1,0 +1,79 @@
+=== Q9 query slice business conformance ===
+verdict=PASSED
+runId=query-slice-1a18fcf8480-22300
+schemaName=kcg_conf_run
+advisoryLock=held during the run
+schemaSource=TEST_FIXTURE_DDL
+productInitializeImplemented=false
+productUpdateImplemented=false
+sirResource=EXTERNAL_CANDIDATE:candidate.sir sha256=76f86348a821d54cca172c04ae807b5f7e0e157846c05668585b1a2586be19cd
+fixtureDdl=/conformance/mysql/course-catalog-ddl.sql sha256=5c6e58adee2d348ef95b49c8002e2f61d46fa5fd4fcd0ca7e01f411e9c8af9f3
+fixtureSeed=/conformance/mysql/course-catalog-seed.sql sha256=d61a9328c286c96ee351bb058f1b8449f49bfe9a06f228783e6651c99393c79b
+generatedFiles=15 combinedSha256=b229dbdadaa2a771a9832d5b99fe22d924d0e2ef1011cce41985e6665992a0c7
+generatedProjectBuild=PASSED (exit 0)
+httpReadiness=READY (200 from /api/search-courses)
+mysqlRowsBefore=7 mysqlRowsAfter=7
+mavenOffline=false
+javaVersion=21.0.13
+osName=Linux osArch=amd64
+serverPort=18080
+slmMysqlVersion=8.4.13
+slmSampleId=course-query-slice-scratch-p3-v1-teacher-3a3ccfe3ae82
+slmSourceSha256=76f86348a821d54cca172c04ae807b5f7e0e157846c05668585b1a2586be19cd
+slmGeneratedDigest=92cd5563ee40e066a6e82102503aedf7cbd863d92449384f998f41c65a3c147d
+
+checksPassed=41 checksFailed=0
+PASS the SIR slice compiles without errors (warnings remain visible) (diagnostics=[])
+PASS the compiler emitted a generated project (generatedFileCount=15)
+PASS candidate runtime compilation matches full static generation (sourceSha256=76f86348a821d54cca172c04ae807b5f7e0e157846c05668585b1a2586be19cd generatedDigest=92cd5563ee40e066a6e82102503aedf7cbd863d92449384f998f41c65a3c147d)
+PASS the generated project builds (mvn clean verify) (exitCode=0)
+PASS the build produced an executable jar (projectRoot=/home/runner/work/Software-IR/Software-IR/ci-work/query-slice-1a18fcf8480-22300/generated-project)
+PASS the generated application serves the compiled business route (readinessUrl=http://127.0.0.1:18080/api/search-courses?keyword=Intro&page=1&size=2)
+PASS the fixture seed is present in the owned schema (seededRowCount=7)
+PASS page 1 of the keyword search returns 200 (expected=200 actual=200)
+PASS page 1 reports the total matching rows ({total=4})
+PASS page 1 echoes the requested page and size ({page=1, size=2})
+PASS page 1 returns the first two courses in declared order (records=[CS101|Intro to Algorithms 100%|30, CS102|Intro to 9_9 Patterns|20])
+PASS the response is the declared projection, not the entity (body={"total":4,"page":1,"size":2,"records":[{"code":"CS101","name":"Intro to Algorithms 100%","capacity":30},{"code":"CS102","name":"Intro to 9_9 Patterns","capacity":20}]})
+PASS page 2 returns 200 (expected=200 actual=200)
+PASS page 2 returns the following two courses in declared order (records=[CS103|Intro to Databases|40, CS104|Intro to Compilers|45])
+PASS page 2 keeps the unpaged total ({total=4})
+PASS a page beyond the data returns 200 (expected=200 actual=200)
+PASS the page beyond the data carries no records (records=[])
+PASS the page beyond the data still reports the total ({total=4})
+PASS the search without page parameters returns 200 (expected=200 actual=200)
+PASS the omitted page and size fall back to the fixed defaults ({page=1, size=20})
+PASS every matching row fits on the default page (records=[CS101|Intro to Algorithms 100%|30, CS102|Intro to 9_9 Patterns|20, CS103|Intro to Databases|40, CS104|Intro to Compilers|45])
+PASS a literal '%' keyword returns 200 (expected=200 actual=200)
+PASS a literal '%' matches only the courses containing '%', not every row (records=[ART101|Art of 100% Painting|15, CS101|Intro to Algorithms 100%|30])
+PASS the '%' search total counts only literal matches ({total=2})
+PASS a keyword containing '_' returns 200 (expected=200 actual=200)
+PASS a literal '_' matches only '9_9' and not '919' (records=[CS102|Intro to 9_9 Patterns|20, MATH201|Math 9_9 Advanced|35])
+PASS the independently counted database matches agree with the reported totals (databaseMatches=4)
+PASS invalid paging (page=0&size=2) returns 400 (expected=400 actual=400)
+PASS the rejected request (page=0&size=2) returns no rows (body={"code":"InvalidPageParam","message":"InvalidPageParam","fields":[]})
+PASS invalid paging (page=10001&size=2) returns 400 (expected=400 actual=400)
+PASS the rejected request (page=10001&size=2) returns no rows (body={"code":"InvalidPageParam","message":"InvalidPageParam","fields":[]})
+PASS invalid paging (page=1&size=0) returns 400 (expected=400 actual=400)
+PASS the rejected request (page=1&size=0) returns no rows (body={"code":"InvalidPageParam","message":"InvalidPageParam","fields":[]})
+PASS invalid paging (page=1&size=101) returns 400 (expected=400 actual=400)
+PASS the rejected request (page=1&size=101) returns no rows (body={"code":"InvalidPageParam","message":"InvalidPageParam","fields":[]})
+PASS a blank keyword is rejected with 400 (expected=400 actual=400)
+PASS a missing keyword is rejected with 400 (expected=400 actual=400)
+PASS the read path never mutated the table (rowsBefore=7, rowsAfter=7)
+PASS the generated application process exited (stopped=true)
+PASS the owned schema was dropped and its absence proved (schema=kcg_conf_run)
+PASS the advisory lock for the owned schema was released (released=true)
+
+A1 page=1 size=2: status=200 body={"total":4,"page":1,"size":2,"records":[{"code":"CS101","name":"Intro to Algorithms 100%","capacity":30},{"code":"CS102","name":"Intro to 9_9 Patterns","capacity":20}]}
+A2 page=2 size=2: status=200 body={"total":4,"page":2,"size":2,"records":[{"code":"CS103","name":"Intro to Databases","capacity":40},{"code":"CS104","name":"Intro to Compilers","capacity":45}]}
+A3 page=3 size=2: status=200 body={"total":4,"page":3,"size":2,"records":[]}
+A4 keyword only (page and size omitted): status=200 body={"total":4,"page":1,"size":20,"records":[{"code":"CS101","name":"Intro to Algorithms 100%","capacity":30},{"code":"CS102","name":"Intro to 9_9 Patterns","capacity":20},{"code":"CS103","name":"Intro to Databases","capacity":40},{"code":"CS104","name":"Intro to Compilers","capacity":45}]}
+A5 keyword=%25: status=200 body={"total":2,"page":1,"size":20,"records":[{"code":"ART101","name":"Art of 100% Painting","capacity":15},{"code":"CS101","name":"Intro to Algorithms 100%","capacity":30}]}
+A6 keyword=9_9: status=200 body={"total":2,"page":1,"size":20,"records":[{"code":"CS102","name":"Intro to 9_9 Patterns","capacity":20},{"code":"MATH201","name":"Math 9_9 Advanced","capacity":35}]}
+A8 invalid paging (page=0&size=2): status=400 body={"code":"InvalidPageParam","message":"InvalidPageParam","fields":[]}
+A8 invalid paging (page=10001&size=2): status=400 body={"code":"InvalidPageParam","message":"InvalidPageParam","fields":[]}
+A8 invalid paging (page=1&size=0): status=400 body={"code":"InvalidPageParam","message":"InvalidPageParam","fields":[]}
+A8 invalid paging (page=1&size=101): status=400 body={"code":"InvalidPageParam","message":"InvalidPageParam","fields":[]}
+A9 blank keyword: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"keyword","code":"NotBlank","message":"must not be blank"}]}
+A9 missing keyword: status=400 body={"code":"INVALID_REQUEST","message":"request payload is invalid","fields":[{"path":"keyword","code":"NotBlank","message":"must not be blank"}]}

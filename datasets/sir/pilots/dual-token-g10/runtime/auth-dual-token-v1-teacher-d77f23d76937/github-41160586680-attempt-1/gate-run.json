@@ -1,0 +1,37 @@
+{
+  "artifacts": {
+    "slm-gate-auth-dual-token-v1-teacher-d77f23d76937": {
+      "id": 13026588683,
+      "zip_sha256": "d2be8569190071be5b790bbb87c6b60113e7621234c47ad53938060da4228ea1"
+    },
+    "slm-gate-surefire-auth-dual-token-v1-teacher-d77f23d76937": {
+      "id": 13026448943,
+      "zip_sha256": "aad667c7e63600ffa9e470167c0bd79c9812efe04b157784d30761416557157a"
+    }
+  },
+  "checked": "datasets/sir/pilots/dual-token-g10/checked-r1.jsonl",
+  "checks_failed": 0,
+  "checks_passed": 35,
+  "failed_checks": [],
+  "gates": {
+    "build": "PASSED",
+    "business": "PASSED",
+    "start": "PASSED",
+    "static": "PASSED"
+  },
+  "head_sha": "fd37af7f1feed67ca365dbfd0f26514a65006cd1",
+  "index_before": {
+    "datasets/sir/MANIFEST.sha256": "9477b22999e9935651b33004880b93339641469dd05835671bf930ec93ca99d2",
+    "datasets/sir/pilots/dual-token-g10/MANIFEST.sha256": "5bef822c51ac618e1ba0d8560ddfa8ed2ae2c477ee485c4ead8fc8c9c2be181d"
+  },
+  "inputs": {
+    "bundle": "datasets/sir/pilots/dual-token-g10",
+    "it": "DualTokenBusinessConformanceIT",
+    "sample_id": "auth-dual-token-v1-teacher-d77f23d76937"
+  },
+  "job_conclusion": "success",
+  "run_attempt": 1,
+  "run_id": 41160586680,
+  "run_url": "https://github.com/HoloNova/Software-IR/actions/runs/41160586680",
+  "workflow": ".github/workflows/slm-business-gate.yml"
+}

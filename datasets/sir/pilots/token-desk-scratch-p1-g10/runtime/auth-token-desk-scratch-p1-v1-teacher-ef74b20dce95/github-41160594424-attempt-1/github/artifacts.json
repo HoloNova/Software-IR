@@ -1,0 +1,44 @@
+{
+  "artifacts": [
+    {
+      "archive_download_url": "https://api.github.com/repos/HoloNova/Software-IR/actions/artifacts/13026673693/zip",
+      "created_at": "2026-10-31T02:35:09Z",
+      "digest": "sha256:50251c4e48e1581809db3226413701dd742e4a2dec0d68335eb18eba5402e678",
+      "expired": false,
+      "expires_at": "2027-01-29T02:34:10Z",
+      "id": 13026673693,
+      "name": "slm-gate-auth-token-desk-scratch-p1-v1-teacher-ef74b20dce95",
+      "node_id": "MDg6QXJ0aWZhY3QxMzAyNjY3MzY5Mw==",
+      "size_in_bytes": 5278,
+      "updated_at": "2026-10-31T02:35:09Z",
+      "url": "https://api.github.com/repos/HoloNova/Software-IR/actions/artifacts/13026673693",
+      "workflow_run": {
+        "head_branch": "main",
+        "head_repository_id": 1299024893,
+        "head_sha": "fd37af7f1feed67ca365dbfd0f26514a65006cd1",
+        "id": 41160594424,
+        "repository_id": 1299024893
+      }
+    },
+    {
+      "archive_download_url": "https://api.github.com/repos/HoloNova/Software-IR/actions/artifacts/13026673695/zip",
+      "created_at": "2026-10-31T02:35:11Z",
+      "digest": "sha256:2168c9bef4a41cdfad03b7572328b76bd05a0a8abfae93573e2f7933481fecb5",
+      "expired": false,
+      "expires_at": "2027-01-29T02:34:10Z",
+      "id": 13026673695,
+      "name": "slm-gate-surefire-auth-token-desk-scratch-p1-v1-teacher-ef74b20dce95",
+      "node_id": "MDg6QXJ0aWZhY3QxMzAyNjY3MzY5NQ==",
+      "size_in_bytes": 6010,
+      "updated_at": "2026-10-31T02:35:11Z",
+      "url": "https://api.github.com/repos/HoloNova/Software-IR/actions/artifacts/13026673695",
+      "workflow_run": {
+        "head_branch": "main",
+        "head_repository_id": 1299024893,
+        "head_sha": "fd37af7f1feed67ca365dbfd0f26514a65006cd1",
+        "id": 41160594424,
+        "repository_id": 1299024893
+      }
+    }
+  ]
+}
