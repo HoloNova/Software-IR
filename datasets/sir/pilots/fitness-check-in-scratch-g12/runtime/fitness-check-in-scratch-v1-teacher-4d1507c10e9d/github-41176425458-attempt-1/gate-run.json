@@ -1,0 +1,42 @@
+{
+  "artifacts": {
+    "slm-gate-fitness-check-in-scratch-v1-teacher-4d1507c10e9d": {
+      "id": 13033820783,
+      "zip_sha256": "cb6d2b62f8acf35d7454b8ec79d22d3f3edd47d53eed2cfc0f3c5a54306168a2"
+    },
+    "slm-gate-surefire-fitness-check-in-scratch-v1-teacher-4d1507c10e9d": {
+      "id": 13032882638,
+      "zip_sha256": "bfc86876e328cff65bfd3e1211fa3400f668dac11722a4f1db616e05ca6932ad"
+    }
+  },
+  "checked": "datasets/sir/pilots/fitness-check-in-scratch-g12/checked-r1.jsonl",
+  "checks_failed": 4,
+  "checks_passed": 774,
+  "failed_checks": [
+    "Q07 visits month omitted has the exact declared error envelope ({\"code\":\"INVALID_REQUEST\",\"message\":\"INVALID_REQUEST\",\"fields\":[{\"path\":\"month\",\"code\":\"NotNull\",\"message\":\"must not be null\"}]})",
+    "Q07 /api/my/month/hours omitted has the exact declared error envelope ({\"code\":\"INVALID_REQUEST\",\"message\":\"INVALID_REQUEST\",\"fields\":[{\"path\":\"month\",\"code\":\"NotNull\",\"message\":\"must not be null\"}]})",
+    "Q07 /api/my/month/average omitted has the exact declared error envelope ({\"code\":\"INVALID_REQUEST\",\"message\":\"INVALID_REQUEST\",\"fields\":[{\"path\":\"month\",\"code\":\"NotNull\",\"message\":\"must not be null\"}]})",
+    "Q07 coach visits month omitted has the exact declared error envelope ({\"code\":\"INVALID_REQUEST\",\"message\":\"INVALID_REQUEST\",\"fields\":[{\"path\":\"month\",\"code\":\"NotNull\",\"message\":\"must not be null\"}]})"
+  ],
+  "gates": {
+    "build": "PASSED",
+    "business": "FAILED",
+    "start": "PASSED",
+    "static": "PASSED"
+  },
+  "head_sha": "18487e4bba987fb58e44e4176882fa3aa88ddd03",
+  "index_before": {
+    "datasets/sir/MANIFEST.sha256": "95d0f3aacf91096122f402d926d76cabe4f70b9db2f6b03d7275ef302107b0df",
+    "datasets/sir/pilots/fitness-check-in-scratch-g12/MANIFEST.sha256": "177d7c9bb679e1039af7c447a4ec72450c872b29f289ddff00bab7a4e7a2066a"
+  },
+  "inputs": {
+    "bundle": "datasets/sir/pilots/fitness-check-in-scratch-g12",
+    "it": "FitnessCheckInBusinessConformanceIT",
+    "sample_id": "fitness-check-in-scratch-v1-teacher-4d1507c10e9d"
+  },
+  "job_conclusion": "failure",
+  "run_attempt": 1,
+  "run_id": 41176425458,
+  "run_url": "https://github.com/HoloNova/Software-IR/actions/runs/41176425458",
+  "workflow": ".github/workflows/slm-business-gate.yml"
+}

@@ -1,0 +1,93 @@
+{
+  "artifacts": {
+    "slm-gate-fitness-check-in-scratch-v1-teacher-3818464cf372": {
+      "id": 13033007515,
+      "zip_sha256": "f744ebb71e573163282e0374e3fada5ef23918dd8b34a0fdf1918348b9b8cf9b"
+    },
+    "slm-gate-surefire-fitness-check-in-scratch-v1-teacher-3818464cf372": {
+      "id": 13033007518,
+      "zip_sha256": "b5dda4b93c2cb1424e4526b9a9d1c22993609cb80147f32f509c8bf4d5956b47"
+    }
+  },
+  "checked": "datasets/sir/pilots/fitness-check-in-scratch-g12/checked-r1.jsonl",
+  "checks_failed": 55,
+  "checks_passed": 723,
+  "failed_checks": [
+    "Q 1/2026-01 average is the bare JSON number 1.08 (3.25)",
+    "Q 1/2026-02 average is the bare JSON number 1.42 (4.25)",
+    "Q 1/2026-04 average (expected=200 actual=400)",
+    "Q 1/2026-04 average is the bare JSON number 0 ({\"code\":\"BadPeriod\",\"message\":\"BadPeriod\",\"fields\":[]})",
+    "Q 2/2026-02 average is the bare JSON number 1.01 (2.01)",
+    "Q 2/2026-01 average (expected=200 actual=400)",
+    "Q 2/2026-01 average is the bare JSON number 0 ({\"code\":\"BadPeriod\",\"message\":\"BadPeriod\",\"fields\":[]})",
+    "Q 3/2026-02 average (expected=200 actual=400)",
+    "Q 3/2026-02 average is the bare JSON number 0 ({\"code\":\"BadPeriod\",\"message\":\"BadPeriod\",\"fields\":[]})",
+    "Q 4/2026-02 average (expected=200 actual=400)",
+    "Q 4/2026-02 average is the bare JSON number 0 ({\"code\":\"BadPeriod\",\"message\":\"BadPeriod\",\"fields\":[]})",
+    "Q06 forged member average (expected=200 actual=400)",
+    "Q06 forged member average is the bare JSON number 0 ({\"code\":\"BadPeriod\",\"message\":\"BadPeriod\",\"fields\":[]})",
+    "Q07 visits month omitted has the exact declared error envelope ({\"code\":\"INVALID_REQUEST\",\"message\":\"request payload is invalid\",\"fields\":[{\"path\":\"month\",\"code\":\"NotBlank\",\"message\":\"must not be blank\"}]})",
+    "Q07 visits month empty has the exact declared error envelope ({\"code\":\"INVALID_REQUEST\",\"message\":\"request payload is invalid\",\"fields\":[{\"path\":\"month\",\"code\":\"NotBlank\",\"message\":\"must not be blank\"}]})",
+    "Q07 /api/my/month/hours omitted has the exact declared error envelope ({\"code\":\"INVALID_REQUEST\",\"message\":\"request payload is invalid\",\"fields\":[{\"path\":\"month\",\"code\":\"NotBlank\",\"message\":\"must not be blank\"}]})",
+    "Q07 /api/my/month/average omitted has the exact declared error envelope ({\"code\":\"INVALID_REQUEST\",\"message\":\"request payload is invalid\",\"fields\":[{\"path\":\"month\",\"code\":\"NotBlank\",\"message\":\"must not be blank\"}]})",
+    "Q07 coach visits month omitted has the exact declared error envelope ({\"code\":\"INVALID_REQUEST\",\"message\":\"request payload is invalid\",\"fields\":[{\"path\":\"month\",\"code\":\"NotBlank\",\"message\":\"must not be blank\"}]})",
+    "Q08 current month 2026-10 average is the bare JSON number 1.88 (3.75)",
+    "Q08 seeded February is untouched average is the bare JSON number 1.42 (4.25)",
+    "I01 user 1 2026-01 average is the bare JSON number 1.08 (3.25)",
+    "I01 user 1 2026-02 average is the bare JSON number 1.42 (4.25)",
+    "I01 user 1 2026-04 average (expected=200 actual=400)",
+    "I01 user 1 2026-04 average is the bare JSON number 0 ({\"code\":\"BadPeriod\",\"message\":\"BadPeriod\",\"fields\":[]})",
+    "I01 user 2 2025-12 average (expected=200 actual=400)",
+    "I01 user 2 2025-12 average is the bare JSON number 0 ({\"code\":\"BadPeriod\",\"message\":\"BadPeriod\",\"fields\":[]})",
+    "I01 user 2 2026-01 average (expected=200 actual=400)",
+    "I01 user 2 2026-01 average is the bare JSON number 0 ({\"code\":\"BadPeriod\",\"message\":\"BadPeriod\",\"fields\":[]})",
+    "I01 user 2 2026-02 average is the bare JSON number 1.01 (2.01)",
+    "I01 user 2 2026-03 average (expected=200 actual=400)",
+    "I01 user 2 2026-03 average is the bare JSON number 0 ({\"code\":\"BadPeriod\",\"message\":\"BadPeriod\",\"fields\":[]})",
+    "I01 user 2 2026-04 average (expected=200 actual=400)",
+    "I01 user 2 2026-04 average is the bare JSON number 0 ({\"code\":\"BadPeriod\",\"message\":\"BadPeriod\",\"fields\":[]})",
+    "I01 user 3 2025-12 average (expected=200 actual=400)",
+    "I01 user 3 2025-12 average is the bare JSON number 0 ({\"code\":\"BadPeriod\",\"message\":\"BadPeriod\",\"fields\":[]})",
+    "I01 user 3 2026-01 average (expected=200 actual=400)",
+    "I01 user 3 2026-01 average is the bare JSON number 0 ({\"code\":\"BadPeriod\",\"message\":\"BadPeriod\",\"fields\":[]})",
+    "I01 user 3 2026-02 average (expected=200 actual=400)",
+    "I01 user 3 2026-02 average is the bare JSON number 0 ({\"code\":\"BadPeriod\",\"message\":\"BadPeriod\",\"fields\":[]})",
+    "I01 user 3 2026-03 average (expected=200 actual=400)",
+    "I01 user 3 2026-03 average is the bare JSON number 0 ({\"code\":\"BadPeriod\",\"message\":\"BadPeriod\",\"fields\":[]})",
+    "I01 user 3 2026-04 average (expected=200 actual=400)",
+    "I01 user 3 2026-04 average is the bare JSON number 0 ({\"code\":\"BadPeriod\",\"message\":\"BadPeriod\",\"fields\":[]})",
+    "I01 user 3 2026-10 average (expected=200 actual=400)",
+    "I01 user 3 2026-10 average is the bare JSON number 0 ({\"code\":\"BadPeriod\",\"message\":\"BadPeriod\",\"fields\":[]})",
+    "I01 user 4 2025-12 average (expected=200 actual=400)",
+    "I01 user 4 2025-12 average is the bare JSON number 0 ({\"code\":\"BadPeriod\",\"message\":\"BadPeriod\",\"fields\":[]})",
+    "I01 user 4 2026-01 average (expected=200 actual=400)",
+    "I01 user 4 2026-01 average is the bare JSON number 0 ({\"code\":\"BadPeriod\",\"message\":\"BadPeriod\",\"fields\":[]})",
+    "I01 user 4 2026-02 average (expected=200 actual=400)",
+    "I01 user 4 2026-02 average is the bare JSON number 0 ({\"code\":\"BadPeriod\",\"message\":\"BadPeriod\",\"fields\":[]})",
+    "I01 user 4 2026-03 average (expected=200 actual=400)",
+    "I01 user 4 2026-03 average is the bare JSON number 0 ({\"code\":\"BadPeriod\",\"message\":\"BadPeriod\",\"fields\":[]})",
+    "I01 user 4 2026-04 average (expected=200 actual=400)",
+    "I01 user 4 2026-04 average is the bare JSON number 0 ({\"code\":\"BadPeriod\",\"message\":\"BadPeriod\",\"fields\":[]})"
+  ],
+  "gates": {
+    "build": "PASSED",
+    "business": "FAILED",
+    "start": "PASSED",
+    "static": "PASSED"
+  },
+  "head_sha": "18487e4bba987fb58e44e4176882fa3aa88ddd03",
+  "index_before": {
+    "datasets/sir/MANIFEST.sha256": "4bd801815d6eace687da525166744577b5f9a330dafeb5fa4e8a26f33d60ca4f",
+    "datasets/sir/pilots/fitness-check-in-scratch-g12/MANIFEST.sha256": "df9eaa8af7daf65031a78d40739be22bcf251962bddfdf6897be48966b366d37"
+  },
+  "inputs": {
+    "bundle": "datasets/sir/pilots/fitness-check-in-scratch-g12",
+    "it": "FitnessCheckInBusinessConformanceIT",
+    "sample_id": "fitness-check-in-scratch-v1-teacher-3818464cf372"
+  },
+  "job_conclusion": "failure",
+  "run_attempt": 1,
+  "run_id": 41176427577,
+  "run_url": "https://github.com/HoloNova/Software-IR/actions/runs/41176427577",
+  "workflow": ".github/workflows/slm-business-gate.yml"
+}
